@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugFixed|Win32">
+      <Configuration>DebugFixed</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFixed|x64">
+      <Configuration>DebugFixed</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseFixed|Win32">
+      <Configuration>ReleaseFixed</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseFixed|x64">
+      <Configuration>ReleaseFixed</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{29a69d43-f6ea-401a-81c3-0d7415b9328c}</ProjectGuid>
+    <RootNamespace>RainLanguage</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4458</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>FIXED_REAL;_DEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4458</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4458</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>FIXED_REAL;NDEBUG;RAINLANGUAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4458</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="RainLanguage\Collections\Dictionary.h" />
+    <ClInclude Include="RainLanguage\Collections\Hash.h" />
+    <ClInclude Include="RainLanguage\Collections\List.h" />
+    <ClInclude Include="RainLanguage\Collections\Set.h" />
+    <ClInclude Include="RainLanguage\Compiler\AbstractLibrary.h" />
+    <ClInclude Include="RainLanguage\Compiler\AbstractLibraryGenerator.h" />
+    <ClInclude Include="RainLanguage\Compiler\Anchor.h" />
+    <ClInclude Include="RainLanguage\Compiler\Character.h" />
+    <ClInclude Include="RainLanguage\Compiler\CompilingDeclaration.h" />
+    <ClInclude Include="RainLanguage\Compiler\CompilingLibrary.h" />
+    <ClInclude Include="RainLanguage\Compiler\Context.h" />
+    <ClInclude Include="RainLanguage\Compiler\DeclarationManager.h" />
+    <ClInclude Include="RainLanguage\Compiler\DeclarationValidityCheck.h" />
+    <ClInclude Include="RainLanguage\Compiler\FileSpace.h" />
+    <ClInclude Include="RainLanguage\Compiler\Lexical.h" />
+    <ClInclude Include="RainLanguage\Compiler\LineReader.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Attribute.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\CreateOperator.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\ExpressionParser.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\ExpressionSplit.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ArrayExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\InvokerExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\LogicExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\OperationExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionNullExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\StructExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\TupleExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\TypeExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\VariableExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\FunctionGenerator.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Generator.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GeneratorParameter.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LocalContext.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LocalReference.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LogicGenerateParameter.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LogicVariable.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\ParserTools.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\StatementGeneratorParameter.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\BlockStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\BranchStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ExitStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ExpressionStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ForStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\JumpStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\LoopStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ReturnStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\SubStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\TryStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\WaitStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\WhileStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\TemporaryVariableBlock.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Token.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\VariableGenerator.h" />
+    <ClInclude Include="RainLanguage\Compiler\Message.h" />
+    <ClInclude Include="RainLanguage\Compiler\Visibility.h" />
+    <ClInclude Include="RainLanguage\DeclarationInfos.h" />
+    <ClInclude Include="RainLanguage\Frame.h" />
+    <ClInclude Include="RainLanguage\ImportLibrary.h" />
+    <ClInclude Include="RainLanguage\Instruct.h" />
+    <ClInclude Include="RainLanguage\KernelDeclarations.h" />
+    <ClInclude Include="RainLanguage\KernelFunctions.h" />
+    <ClInclude Include="RainLanguage\KernelLibraryInfo.h" />
+    <ClInclude Include="RainLanguage\KeyWords.h" />
+    <ClInclude Include="RainLanguage\Library.h" />
+    <ClInclude Include="RainLanguage\Public\Builder.h" />
+    <ClInclude Include="RainLanguage\Public\MemoryAllocator.h" />
+    <ClInclude Include="RainLanguage\Public\Vector.h" />
+    <ClInclude Include="RainLanguage\Public\Rain.h" />
+    <ClInclude Include="RainLanguage\Public\VirtualMachine.h" />
+    <ClInclude Include="RainLanguage\RainLanguage.h" />
+    <ClInclude Include="RainLanguage\Real\MathReal.h" />
+    <ClInclude Include="RainLanguage\Real\Random.h" />
+    <ClInclude Include="RainLanguage\Serialization.h" />
+    <ClInclude Include="RainLanguage\String.h" />
+    <ClInclude Include="RainLanguage\Type.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\Coroutine.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\CoroutineAgency.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\EntityAgency.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\Exceptions.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\HeapAgency.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\Invoker.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\Kernel.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\KernelLibraryGenerator.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\LibraryAgency.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\Caller.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\RuntimeInfo.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\RuntimeLibrary.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\StackFrame.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="RainLanguage\Collections\Hash.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibrary.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibraryCompiling.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibraryKernel.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibraryRely.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\Builder.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\CompilingLibrary.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\Context.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\DeclarationManager.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\DeclarationValidityCheck.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\FileSpaceLink.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\FileSpaceParse.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\FileSpaceTidy.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\Lexical.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LineReader.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\CreateOperator.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\ExpressionParser.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\ExpressionSplit.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ArrayExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\InvokerExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\LogicExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\OperationExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionNullExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\StructExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\TupleExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\TypeExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\VariableExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\FunctionGenerator.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Generator.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GeneratorLibrary.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LocalContext.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LocalReference.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LogicGenerateParameter.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LogicVariable.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\ParserTool.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\BlockStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\BranchStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ExitStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ExpressionStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ForStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\JumpStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\LoopStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ReturnStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\TryStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\WaitStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\WhileStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\TemporaryVariableBlock.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\VariableGenerator.cpp" />
+    <ClCompile Include="RainLanguage\KernelFunctions.cpp" />
+    <ClCompile Include="RainLanguage\KernelLibraryInfo.cpp" />
+    <ClCompile Include="RainLanguage\KeyWords.cpp" />
+    <ClCompile Include="RainLanguage\Library.cpp" />
+    <ClCompile Include="RainLanguage\RainLanguage.cpp" />
+    <ClCompile Include="RainLanguage\Real\Fixed.cpp" />
+    <ClCompile Include="RainLanguage\Real\MathReal.cpp" />
+    <ClCompile Include="RainLanguage\Real\Random.cpp" />
+    <ClCompile Include="RainLanguage\Serialization.cpp" />
+    <ClCompile Include="RainLanguage\String.cpp" />
+    <ClCompile Include="RainLanguage\Type.cpp" />
+    <ClCompile Include="RainLanguage\Vector\Real2.cpp" />
+    <ClCompile Include="RainLanguage\Vector\Real3.cpp" />
+    <ClCompile Include="RainLanguage\Vector\Real4.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\Coroutine.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\CoroutineAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\EntityAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\HeapAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\Invoker.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\Kernel.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\KernelLibraryGenerator.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\LibraryAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\Caller.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\RuntimeInfo.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\RuntimeLibrary.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

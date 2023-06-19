@@ -1,0 +1,582 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\DeclarationInfos.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Frame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\ImportLibrary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Instruct.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\KernelDeclarations.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\KernelFunctions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\KernelLibraryInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\KeyWords.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Library.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\RainLanguage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Serialization.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\String.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Type.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\Coroutine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\CoroutineAgency.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\EntityAgency.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\Exceptions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\HeapAgency.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\Invoker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\Kernel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\KernelLibraryGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\LibraryAgency.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\Caller.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\RuntimeInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\RuntimeLibrary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\VirtualMachine\StackFrame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Real\MathReal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Real\Random.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\AbstractLibrary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\AbstractLibraryGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\Anchor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\Character.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\CompilingDeclaration.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\CompilingLibrary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\Context.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\DeclarationManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\DeclarationValidityCheck.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\FileSpace.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\Lexical.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LineReader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\Message.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\Visibility.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Attribute.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\CreateOperator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\ExpressionParser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\ExpressionSplit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\FunctionGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Generator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GeneratorParameter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LocalContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LocalReference.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LogicGenerateParameter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LogicVariable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\ParserTools.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\StatementGeneratorParameter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\TemporaryVariableBlock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Token.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\VariableGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\BlockStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\BranchStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ExitStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ExpressionStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ForStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\JumpStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\LoopStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ReturnStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\SubStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\TryStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\WaitStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\WhileStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ArrayExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\InvokerExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\LogicExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\OperationExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionNullExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\StructExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\TupleExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\TypeExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\VariableExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Collections\Dictionary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Collections\Hash.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Collections\List.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Collections\Set.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\Rain.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\Vector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\MemoryAllocator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\Builder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\VirtualMachine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\KernelFunctions.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\KernelLibraryInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\KeyWords.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Library.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\RainLanguage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Serialization.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\String.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Type.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\Coroutine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\CoroutineAgency.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\EntityAgency.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\HeapAgency.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\Invoker.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\Kernel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\KernelLibraryGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\LibraryAgency.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\Caller.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\RuntimeInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\RuntimeLibrary.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Real\MathReal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Real\Random.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibrary.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibraryCompiling.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibraryKernel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\AbstractLibraryRely.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\Builder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\CompilingLibrary.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\Context.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\DeclarationManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\DeclarationValidityCheck.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\FileSpaceLink.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\FileSpaceParse.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\FileSpaceTidy.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\Lexical.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LineReader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\CreateOperator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\ExpressionParser.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\ExpressionSplit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\FunctionGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Generator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GeneratorLibrary.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LocalContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LocalReference.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LogicGenerateParameter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LogicVariable.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\ParserTool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\TemporaryVariableBlock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\VariableGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\BlockStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\BranchStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ExitStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ExpressionStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ForStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\JumpStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\LoopStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ReturnStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\TryStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\WaitStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\WhileStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ArrayExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\InvokerExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\LogicExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\OperationExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\QuestionNullExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\StructExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\TupleExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\TypeExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\VariableExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Collections\Hash.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Vector\Real2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Vector\Real3.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Vector\Real4.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Real\Fixed.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

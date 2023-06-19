@@ -1,0 +1,68 @@
+#pragma once
+#include "../RainLanguage.h"
+#include "../Type.h"
+#include "../Public/Vector.h"
+#include "../Public/VirtualMachine.h"
+
+class Kernel;
+struct RuntimeNative;
+class Caller :public CallerWrapper
+{
+private:
+	Kernel* kernel;
+	RuntimeNative* info;
+	uint8* stack;
+	uint32 top;
+	string error;
+	void ParameterTypeAssert(uint32 index, Type type) const;
+	void ParameterTypeAssert(uint32 index, TypeCode typeCode) const;
+	void ReturnTypeAssert(uint32 index, Type type) const;
+	void ReturnTypeAssert(uint32 index, TypeCode typeCode) const;
+public:
+	inline Caller(Kernel* kernel, RuntimeNative* info, uint8* stack, uint32 top) :kernel(kernel), info(info), stack(stack), top(top), error(NULL) {}
+	~Caller();
+	Caller(const Caller&) = delete;
+	Caller(const Caller&&) = delete;
+
+	bool GetBoolParameter(uint32 index) const;
+	uint8 GetByteParameter(uint32 index) const;
+	character GetCharParameter(uint32 index) const;
+	integer GetIntegerParameter(uint32 index) const;
+	real GetRealParameter(uint32 index) const;
+	Real2 GetReal2Parameter(uint32 index) const;
+	Real3 GetReal3Parameter(uint32 index) const;
+	Real4 GetReal4Parameter(uint32 index) const;
+	const character* GetEnumNameParameter(uint32 index, uint32& length) const;
+	integer GetEnumValueParameter(uint32 index) const;
+	const character* GetStringParameter(uint32 index, uint32& length) const;
+	uint64 GetEntityParameter(uint32 index) const;
+
+	void SetReturnValue(uint32 index, bool value);
+	void SetReturnValue(uint32 index, uint8 value);
+	void SetReturnValue(uint32 index, character value);
+	void SetReturnValue(uint32 index, integer value);
+	void SetReturnValue(uint32 index, real value);
+	void SetReturnValue(uint32 index, Real2 value);
+	void SetReturnValue(uint32 index, Real3 value);
+	void SetReturnValue(uint32 index, Real4 value);
+	void SetEnumNameReturnValue(uint32 index, const character* chars, uint32 length);
+	inline void SetEnumNameReturnValue(uint32 index, const character* chars)
+	{
+		uint32 length = 0;
+		while (chars[length])length++;
+		SetEnumNameReturnValue(index, chars, length);
+	}
+	void SetEnumValueReturnValue(uint32 index, integer value);
+	void SetReturnValue(uint32 index, const character* chars, uint32 length);
+	inline void SetReturnValue(uint32 index, const character* chars)
+	{
+		uint32 length = 0;
+		while (chars[length])length++;
+		SetReturnValue(index, chars, length);
+	}
+	void SetEntityReturnValue(uint32 index, uint64 value);
+
+	void SetException(const character* chars, uint32 length);
+	string GetException() const;
+};
+

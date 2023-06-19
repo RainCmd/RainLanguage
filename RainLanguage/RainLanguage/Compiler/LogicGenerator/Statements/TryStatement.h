@@ -1,0 +1,31 @@
+#pragma once
+#include "BlockStatement.h"
+#include "../LogicVariable.h"
+
+class Expression;
+class LocalContext;
+struct CodeLocalAddressReference;
+struct CatchExpressionBlock
+{
+	Expression* exitcode;
+	BlockStatement* catchBlock;
+	inline CatchExpressionBlock(Expression* exitcode, BlockStatement* catchBlock) :exitcode(exitcode), catchBlock(catchBlock) {}
+	~CatchExpressionBlock();
+};
+
+class TryStatement :public Statement
+{
+private:
+	LogicVariable GeneratorCatchBlocks(StatementGeneratorParameter& parameter, CodeLocalAddressReference* finallyAddress);
+public:
+	BlockStatement* tryBlock;
+	List<CatchExpressionBlock> catchBlocks;
+	BlockStatement* finallyBlock;
+	uint32 localExitCode, localFinallyTarget;
+	CodeLocalAddressReference* breakAddress, * loopAddress;
+	TryStatement(const Anchor& anchor, LocalContext* localContext);
+	inline void SetJumpTarget(CodeLocalAddressReference* breakAddress, CodeLocalAddressReference* loopAddress) { this->breakAddress = breakAddress; this->loopAddress = loopAddress; }
+	void Generator(StatementGeneratorParameter& parameter);
+	~TryStatement();
+};
+
