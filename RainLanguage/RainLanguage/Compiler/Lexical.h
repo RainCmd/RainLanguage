@@ -1,6 +1,6 @@
 #pragma once
 #include "Anchor.h"
-#include "LineReader.h"
+#include "Line.h"
 #include "Message.h"
 
 enum class LexicalType

@@ -5,7 +5,7 @@
 #include "CompilingDeclaration.h"
 #include "AbstractLibrary.h"
 #include "Anchor.h"
-#include "LineReader.h"
+#include "Line.h"
 
 struct CompilingSpace;
 struct CompilingLibrary;

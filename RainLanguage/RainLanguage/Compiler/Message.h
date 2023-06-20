@@ -1,7 +1,8 @@
 #pragma once
 #include "../RainLanguage.h"
 #include "../String.h"
-#include "LineReader.h"
+#include "../Public/Builder.h"
+#include "Line.h"
 #include "Anchor.h"
 
 inline ErrorLevel GetLevel(MessageType type) { return (ErrorLevel)((uint32)type >> 24); }
