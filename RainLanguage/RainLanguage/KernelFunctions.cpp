@@ -11,6 +11,7 @@
 #include "VirtualMachine/LibraryAgency.h"
 #include "VirtualMachine/CoroutineAgency.h"
 #include "VirtualMachine/EntityAgency.h"
+#include "Vector/VectorMath.h"
 
 #define RETURN_VALUE(type,index) (*(type*)(stack + ((uint32*)(stack + top + SIZE(Frame)))[index]))
 #define PARAMETER_VALUE(returnCount,type,offset) (*(type*)(stack + top + SIZE(Frame) + (returnCount << 2) + offset))
@@ -994,7 +995,7 @@ String real2_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, 
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
-	RETURN_VALUE(real, 0) = Real2::Angle(a, b);
+	RETURN_VALUE(real, 0) = Angle(a, b);
 	return String();
 }
 
@@ -1002,7 +1003,7 @@ String real2_Cross(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, 
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
-	RETURN_VALUE(real, 0) = Real2::Cross(a, b);
+	RETURN_VALUE(real, 0) = Cross(a, b);
 	return String();
 }
 
@@ -1010,7 +1011,7 @@ String real2_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, re
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
-	RETURN_VALUE(real, 0) = Real2::Dot(a, b);
+	RETURN_VALUE(real, 0) = Dot(a, b);
 	return String();
 }
 
@@ -1019,7 +1020,7 @@ String real2_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, 
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
 	real lerp = PARAMETER_VALUE(1, real, 32);
-	RETURN_VALUE(Real2, 0) = Real2::Lerp(a, b, lerp);
+	RETURN_VALUE(Real2, 0) = Lerp(a, b, lerp);
 	return String();
 }
 
@@ -1027,7 +1028,7 @@ String real2_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, r
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
-	RETURN_VALUE(Real2, 0) = Real2::Max(a, b);
+	RETURN_VALUE(Real2, 0) = Max(a, b);
 	return String();
 }
 
@@ -1035,7 +1036,7 @@ String real2_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, r
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
-	RETURN_VALUE(Real2, 0) = Real2::Min(a, b);
+	RETURN_VALUE(Real2, 0) = Min(a, b);
 	return String();
 }
 
@@ -1043,7 +1044,7 @@ String real3_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real3, 
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
-	RETURN_VALUE(real, 0) = Real3::Angle(a, b);
+	RETURN_VALUE(real, 0) = Angle(a, b);
 	return String();
 }
 
@@ -1051,7 +1052,7 @@ String real3_Cross(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3,
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
-	RETURN_VALUE(Real3, 0) = Real3::Cross(a, b);
+	RETURN_VALUE(Real3, 0) = Cross(a, b);
 	return String();
 }
 
@@ -1059,7 +1060,7 @@ String real3_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real3, re
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
-	RETURN_VALUE(real, 0) = Real3::Dot(a, b);
+	RETURN_VALUE(real, 0) = Dot(a, b);
 	return String();
 }
 
@@ -1068,7 +1069,7 @@ String real3_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, 
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
 	real lerp = PARAMETER_VALUE(1, real, 48);
-	RETURN_VALUE(Real3, 0) = Real3::Lerp(a, b, lerp);
+	RETURN_VALUE(Real3, 0) = Lerp(a, b, lerp);
 	return String();
 }
 
@@ -1076,7 +1077,7 @@ String real3_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, r
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
-	RETURN_VALUE(Real3, 0) = Real3::Max(a, b);
+	RETURN_VALUE(Real3, 0) = Max(a, b);
 	return String();
 }
 
@@ -1084,7 +1085,7 @@ String real3_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, r
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
-	RETURN_VALUE(Real3, 0) = Real3::Min(a, b);
+	RETURN_VALUE(Real3, 0) = Min(a, b);
 	return String();
 }
 
@@ -1092,7 +1093,7 @@ String real4_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real4, 
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
-	RETURN_VALUE(real, 0) = Real4::Angle(a, b);
+	RETURN_VALUE(real, 0) = Angle(a, b);
 	return String();
 }
 
@@ -1100,7 +1101,7 @@ String real4_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real4, re
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
-	RETURN_VALUE(real, 0) = Real4::Dot(a, b);
+	RETURN_VALUE(real, 0) = Dot(a, b);
 	return String();
 }
 
@@ -1109,7 +1110,7 @@ String real4_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, 
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
 	real lerp = PARAMETER_VALUE(1, real, 64);
-	RETURN_VALUE(Real4, 0) = Real4::Lerp(a, b, lerp);
+	RETURN_VALUE(Real4, 0) = Lerp(a, b, lerp);
 	return String();
 }
 
@@ -1117,7 +1118,7 @@ String real4_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, r
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
-	RETURN_VALUE(Real4, 0) = Real4::Max(a, b);
+	RETURN_VALUE(Real4, 0) = Max(a, b);
 	return String();
 }
 
@@ -1125,7 +1126,7 @@ String real4_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, r
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
-	RETURN_VALUE(Real4, 0) = Real4::Min(a, b);
+	RETURN_VALUE(Real4, 0) = Min(a, b);
 	return String();
 }
 #pragma endregion ÊýÑ§¼ÆËã
@@ -1260,55 +1261,55 @@ String real_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//stri
 
 String real2_Normalized(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 real2.()
 {
-	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0).GetNormalized();
+	RETURN_VALUE(Real2, 0) = Normalized(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
 String real2_Magnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real2.()
 {
-	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, Real2, 0).GetMagnitude();
+	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
 String real2_SqrMagnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real2.()
 {
-	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, Real2, 0).GetSqrMagnitude();
+	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
 String real3_Normalized(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 real3.()
 {
-	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0).GetNormalized();
+	RETURN_VALUE(Real3, 0) = Normalized(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
 String real3_Magnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real3.()
 {
-	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, Real3, 0).GetMagnitude();
+	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
 String real3_SqrMagnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real3.()
 {
-	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, Real3, 0).GetSqrMagnitude();
+	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
 String real4_Normalized(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 real4.()
 {
-	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0).GetNormalized();
+	RETURN_VALUE(Real4, 0) = Normalized(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
 String real4_Magnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real4.()
 {
-	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, Real4, 0).GetMagnitude();
+	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
 String real4_SqrMagnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real4.()
 {
-	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, Real4, 0).GetSqrMagnitude();
+	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 

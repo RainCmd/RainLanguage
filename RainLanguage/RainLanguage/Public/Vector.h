@@ -17,18 +17,6 @@ struct RAINLANGUAGE Real2
 	friend Real2 operator / (const real& value, const Real2& vector);
 	bool operator == (const Real2& other) const;
 	bool operator != (const Real2& other) const;
-
-	Real2 GetNormalized() const;
-	real GetSqrMagnitude() const;
-	real GetMagnitude() const;
-	void SetMagnitude(const real& value);
-
-	static Real2 Lerp(const Real2& a, const Real2& b, const real& l);
-	static Real2 Max(const Real2& a, const Real2& b);
-	static Real2 Min(const Real2& a, const Real2& b);
-	static real Angle(const Real2& a, const Real2& b);
-	static real Cross(const Real2& a, const Real2& b);
-	static real Dot(const Real2& a, const Real2& b);
 };
 struct RAINLANGUAGE Real3
 {
@@ -46,18 +34,6 @@ struct RAINLANGUAGE Real3
 	friend Real3 operator / (const real& value, const Real3& vector);
 	bool operator == (const Real3& other) const;
 	bool operator != (const Real3& other) const;
-
-	Real3 GetNormalized() const;
-	real GetSqrMagnitude() const;
-	real GetMagnitude() const;
-	void SetMagnitude(const real& value);
-
-	static Real3 Lerp(const Real3& a, const Real3& b, const real& l);
-	static Real3 Max(const Real3& a, const Real3& b);
-	static Real3 Min(const Real3& a, const Real3& b);
-	static real Angle(const Real3& a, const Real3& b);
-	static Real3 Cross(const Real3& a, const Real3& b);
-	static real Dot(const Real3& a, const Real3& b);
 };
 struct RAINLANGUAGE Real4
 {
@@ -75,15 +51,4 @@ struct RAINLANGUAGE Real4
 	friend Real4 operator / (const real& value, const Real4& vector);
 	bool operator == (const Real4& other) const;
 	bool operator != (const Real4& other) const;
-
-	Real4 GetNormalized() const;
-	real GetSqrMagnitude() const;
-	real GetMagnitude() const;
-	void SetMagnitude(const real& value);
-
-	static Real4 Lerp(const Real4& a, const Real4& b, const real& l);
-	static Real4 Max(const Real4& a, const Real4& b);
-	static Real4 Min(const Real4& a, const Real4& b);
-	static real Angle(const Real4& a, const Real4& b);
-	static real Dot(const Real4& a, const Real4& b);
 };
