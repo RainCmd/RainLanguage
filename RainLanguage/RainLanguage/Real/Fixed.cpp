@@ -7,23 +7,23 @@ Real::Real(integer value) : value(value << DECIMAL) {}
 
 Real Real::operator+() const { return CreateReal(value); }
 
-Real Real::operator++() { return CreateReal(value += DECIMAL); }
+Real Real::operator++() { return CreateReal(value += 1LL << DECIMAL); }
 
 Real Real::operator++(int)
 {
 	integer value = this->value;
-	this->value += DECIMAL;
+	this->value += 1LL << DECIMAL;
 	return CreateReal(value);
 }
 
 Real Real::operator-() const { return CreateReal(-value); }
 
-Real Real::operator--() { return CreateReal(value -= DECIMAL); }
+Real Real::operator--() { return CreateReal(value -= 1LL << DECIMAL); }
 
 Real Real::operator--(int)
 {
 	integer value = this->value;
-	this->value += DECIMAL;
+	this->value -= 1LL << DECIMAL;
 	return CreateReal(value);
 }
 

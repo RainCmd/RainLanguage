@@ -1,6 +1,9 @@
 #pragma once
 #include "Rain.h"
 
+/// <summary>
+/// 错误等级
+/// </summary>
 enum class ErrorLevel :uint32
 {
 	Error,
@@ -14,6 +17,9 @@ enum class ErrorLevel :uint32
 	LoggerLevel4,
 };
 
+/// <summary>
+/// 错误信息
+/// </summary>
 enum class MessageType :uint32
 {
 	ERROR = ((uint32)ErrorLevel::Error) << 24,

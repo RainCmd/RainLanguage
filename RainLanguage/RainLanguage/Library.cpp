@@ -341,12 +341,12 @@ void Deserialize(Deserializer* deserializer, TupleInfo& info)
 	deserializer->Deserialize(info.GetOffsets());
 }
 
-uint8* Serialize(const RainLibrary* library, uint32& size)
+const uint8* Serialize(const RainLibrary* library, uint32& size)
 {
 	return Serialize((Library*)library, size);
 }
 
-const RainLibrary* Deserialize(uint8* data, uint32 size)
+const RainLibrary* Deserialize(const uint8* data, uint32 size)
 {
 	Deserializer deserializer(data, size);
 	StringAgency* stringAgency = deserializer.DeserializeStringAgency();

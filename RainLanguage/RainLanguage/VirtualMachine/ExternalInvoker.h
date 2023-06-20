@@ -2,7 +2,7 @@
 #include "Invoker.h"
 #include "../Public/VirtualMachine.h"
 
-const class ExternalInvoker :InvokerWrapper
+const class ExternalInvoker :public InvokerWrapper
 {
 private:
 	uint64 instanceID;

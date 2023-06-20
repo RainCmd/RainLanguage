@@ -1,6 +1,9 @@
 #pragma once
 #include "Rain.h"
 
+/// <summary>
+/// 二维向量
+/// </summary>
 struct RAINLANGUAGE Real2
 {
 	real x, y;
@@ -9,9 +12,15 @@ struct RAINLANGUAGE Real2
 	Real2 operator - () const;
 	Real2 operator + (const Real2& other) const;
 	Real2 operator - (const Real2& other) const;
+	/// <summary>
+	/// 各分量相乘
+	/// </summary>
 	Real2 operator * (const Real2& other) const;
 	Real2 operator * (const real& other) const;
 	friend Real2 operator * (const real& value, const Real2& vector);
+	/// <summary>
+	/// 各分量相除
+	/// </summary>
 	Real2 operator / (const Real2& other) const;
 	Real2 operator / (const real& other) const;
 	friend Real2 operator / (const real& value, const Real2& vector);
@@ -26,9 +35,15 @@ struct RAINLANGUAGE Real3
 	Real3 operator - () const;
 	Real3 operator + (const Real3& other) const;
 	Real3 operator - (const Real3& other) const;
+	/// <summary>
+	/// 各分量相乘
+	/// </summary>
 	Real3 operator * (const Real3& other) const;
 	Real3 operator * (const real& other) const;
 	friend Real3 operator * (const real& value, const Real3& vector);
+	/// <summary>
+	/// 各分量相除
+	/// </summary>
 	Real3 operator / (const Real3& other) const;
 	Real3 operator / (const real& other) const;
 	friend Real3 operator / (const real& value, const Real3& vector);
@@ -43,9 +58,15 @@ struct RAINLANGUAGE Real4
 	Real4 operator - () const;
 	Real4 operator + (const Real4& other) const;
 	Real4 operator - (const Real4& other) const;
+	/// <summary>
+	/// 各分量相乘
+	/// </summary>
 	Real4 operator * (const Real4& other) const;
 	Real4 operator * (const real& other) const;
 	friend Real4 operator * (const real& value, const Real4& vector);
+	/// <summary>
+	/// 各分量相除
+	/// </summary>
 	Real4 operator / (const Real4& other) const;
 	Real4 operator / (const real& other) const;
 	friend Real4 operator / (const real& value, const Real4& vector);

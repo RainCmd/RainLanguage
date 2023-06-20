@@ -272,16 +272,16 @@ void Invoker::Recycle()
 	{
 		switch (state)
 		{
-			case InvokerState::Unstart:
-				ClearParameters();
-				break;
-			case InvokerState::Running: return;
-			case InvokerState::Completed:
-				ClearReturns();
-				break;
-			case InvokerState::Aborted:
-			case InvokerState::Invalid:
-			default: return;
+		case InvokerState::Unstart:
+			ClearParameters();
+			break;
+		case InvokerState::Running: return;
+		case InvokerState::Completed:
+			ClearReturns();
+			break;
+		case InvokerState::Aborted:
+		case InvokerState::Invalid:
+		default: return;
 		}
 		kernel->coroutineAgency->Recycle(this);
 		frames.Clear();
@@ -333,8 +333,8 @@ void Invoker::PushStackFrame(uint32 pointer)
 		if (kernel->libraryAgency->libraries[i]->codeOffset <= pointer)
 			library = kernel->libraryAgency->libraries[i];
 		else break;
-
-	frames.Add(StackFrame(kernel->stringAgency->Get(library ? library->spaces[0]->name : NULL), pointer));
+	if (library) frames.Add(StackFrame(kernel->stringAgency->Get(library->spaces[0]->name), pointer - library->codeOffset));
+	else frames.Add(StackFrame(String(), pointer));
 }
 
 void Invoker::Start(bool immediately, bool ignoreWait)
