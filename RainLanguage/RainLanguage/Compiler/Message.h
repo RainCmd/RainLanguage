@@ -1,7 +1,7 @@
 #pragma once
 #include "../RainLanguage.h"
 #include "../String.h"
-#include "../Public/Builder.h"
+#include "../Public/BuilderDefinitions.h"
 #include "Line.h"
 #include "Anchor.h"
 

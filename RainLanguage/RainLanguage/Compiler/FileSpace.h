@@ -2,12 +2,12 @@
 #include "../Collections/List.h"
 #include "../RainLanguage.h"
 #include "../String.h"
-#include "LineReader.h"
 #include "Message.h"
 #include "CompilingLibrary.h"
 #include "Anchor.h"
 #include "Visibility.h"
 
+class LineReader;
 struct ParseParameter
 {
 	LineReader* reader;

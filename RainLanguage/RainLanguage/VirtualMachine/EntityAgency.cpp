@@ -1,8 +1,9 @@
 #include "EntityAgency.h"
+#include "../Public/VirtualMachine.h"
 
-EntityAgency::EntityAgency(const StartupParameter& parameter) :top(1), free(NULL), map(parameter.entityCapacity), reference(parameter.onReferenceEntity), release(parameter.onReleaseEntity)
+EntityAgency::EntityAgency(const StartupParameter* parameter) :top(1), free(NULL), map(parameter->entityCapacity), reference(parameter->onReferenceEntity), release(parameter->onReleaseEntity)
 {
-	size = GetPrime(parameter.entityCapacity);
+	size = GetPrime(parameter->entityCapacity);
 	slots = Malloc<Slot>(size);
 }
 

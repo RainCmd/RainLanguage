@@ -4,10 +4,11 @@
 #include "../Collections/List.h"
 #include "../Collections/Dictionary.h"
 #include "../Library.h"
+#include "../Public/VirtualMachineDefinitions.h"
 #include "RuntimeLibrary.h"
-#include "Caller.h"
 #include "KernelLibraryGenerator.h"
 
+struct StartupParameter;
 class Kernel;
 class LibraryAgency
 {
@@ -20,7 +21,7 @@ public:
 	List<RuntimeLibrary*, true> libraries;
 	List<uint8, true> code;
 	List<uint8, true> data;
-	inline LibraryAgency(Kernel* kernel, const StartupParameter& parameter) :kernel(kernel), kernelLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary()), libraryLoader(parameter.libraryLoader), nativeCallerLoader(parameter.nativeCallerLoader), libraries(1), code(0), data(0) {}
+	LibraryAgency(Kernel* kernel, const StartupParameter* parameter);
 	void Init(Library* libraries, uint32 count);
 	uint32 GetTypeStackSize(const Type& type);
 	uint32 GetTypeHeapSize(const Declaration& type);

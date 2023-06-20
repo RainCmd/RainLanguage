@@ -1,8 +1,9 @@
 #pragma once
 #include "../RainLanguage.h"
 #include "../Collections/Dictionary.h"
-#include "../Public/VirtualMachine.h"
+#include "../Public/VirtualMachineDefinitions.h"
 
+struct StartupParameter;
 class EntityAgency
 {
 	struct Slot
@@ -16,7 +17,7 @@ class EntityAgency
 	Dictionary<uint64, Entity, true> map;
 	EntityAction reference, release;
 public:
-	EntityAgency(const StartupParameter& parameter);
+	EntityAgency(const StartupParameter* parameter);
 	Entity Add(uint64 value);
 	uint64 Get(Entity entity) const;
 	inline void Reference(Entity entity)

@@ -1,15 +1,7 @@
 #pragma once
-#include "Rain.h"
+#include "VirtualMachineDefinitions.h"
 #include "Vector.h"
-
-enum class InvokerState :uint8
-{
-	Unstart,
-	Running,
-	Completed,
-	Aborted,
-	Invalid,
-};
+#include "RainLibrary.h"
 
 struct RAINLANGUAGE RainStackFrame
 {
@@ -101,26 +93,6 @@ public:
 	virtual void SetException(const character* chars, uint32 length) = 0;
 };
 
-enum class RainType
-{
-	Internal,
-	Bool,
-	Byte,
-	Character,
-	Integer,
-	Real,
-	Real2,
-	Real3,
-	Real4,
-	Enum,
-	String,
-	Entity,
-};
-
-typedef void (*EntityAction)(uint64);
-typedef void(*OnCaller)(const CallerWrapper* caller);
-typedef OnCaller(*NativeCallerLoader)(const character* fullName, uint32 length, const RainType* parameters, uint32 parametersCount);
-typedef void(*OnExceptionExit)(RainStackFrame* stackFrames, uint32 stackFrameCount, const character* message, uint32 messageLength);
 struct RAINLANGUAGE StartupParameter
 {
 	RainLibrary* libraries;

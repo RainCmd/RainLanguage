@@ -1,4 +1,5 @@
 #include "FileSpace.h"
+#include "LineReader.h"
 #include "Lexical.h"
 #include "../KeyWords.h"
 

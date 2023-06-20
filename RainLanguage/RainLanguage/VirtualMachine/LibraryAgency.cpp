@@ -1,9 +1,13 @@
 #include "LibraryAgency.h"
 #include "../KernelLibraryInfo.h"
 #include "../KernelDeclarations.h"
+#include "../Public/VirtualMachine.h"
 #include "Kernel.h"
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
+#include "Caller.h"
+
+LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary()), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
 void LibraryAgency::Init(Library* libraries, uint32 count)
 {
@@ -310,7 +314,7 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 {
 	RuntimeLibrary* library = GetLibrary(native.library);
 	RuntimeNative* info = &library->natives[native.function];
-	if (!info->invoke)
+	if (!info->caller)
 	{
 		List<character, true> fullName(128);
 		String name = kernel->stringAgency->Get(info->name);
@@ -323,11 +327,11 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 		}
 		List<RainType, true> rainTypes(info->parameters.Count());
 		for (uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));
-		info->invoke = kernel->libraryAgency->nativeCallerLoader(fullName.GetPointer(), fullName.Count(), rainTypes.GetPointer(), rainTypes.Count());
-		ASSERT(info->invoke, "本地函数绑定失败");
+		info->caller = kernel->libraryAgency->nativeCallerLoader(fullName.GetPointer(), fullName.Count(), rainTypes.GetPointer(), rainTypes.Count());
+		ASSERT(info->caller, "本地函数绑定失败");
 	}
 	Caller caller(kernel, info, stack, top);
-	info->invoke(&caller);
+	info->caller(&caller);
 	if (caller.GetException()) return kernel->stringAgency->Get(caller.GetException());
 	else return String();
 }

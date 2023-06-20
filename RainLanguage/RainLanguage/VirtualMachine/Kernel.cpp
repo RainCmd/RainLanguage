@@ -13,10 +13,10 @@ RainKernel* CreateKernel(const StartupParameter& parameter)
 inline Kernel::Kernel(const StartupParameter& parameter) : random(parameter.seed)
 {
 	stringAgency = new StringAgency(parameter.stringCapacity);
-	entityAgency = new EntityAgency(parameter);
-	libraryAgency = new LibraryAgency(this, parameter);
-	heapAgency = new HeapAgency(this, parameter);
-	coroutineAgency = new CoroutineAgency(this, parameter);
+	entityAgency = new EntityAgency(&parameter);
+	libraryAgency = new LibraryAgency(this, &parameter);
+	heapAgency = new HeapAgency(this, &parameter);
+	coroutineAgency = new CoroutineAgency(this, &parameter);
 	libraryAgency->Init((Library*)parameter.libraries, parameter.libraryCount);
 }
 

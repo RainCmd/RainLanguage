@@ -1,5 +1,6 @@
 #include "CoroutineAgency.h"
 #include "Coroutine.h"
+#include "../Public/VirtualMachine.h"
 
 Invoker* CoroutineAgency::GetInvoker()
 {
@@ -7,6 +8,10 @@ Invoker* CoroutineAgency::GetInvoker()
 	invoker->instanceID |= ((uint64)invokerInstance++) << 32;
 	return invoker;
 }
+
+CoroutineAgency::CoroutineAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), head(NULL), free(NULL), coroutines(parameter->coroutineCapacity),
+invokerCount(0), invokerInstance(1), invokerPool(parameter->coroutineCapacity), invokerMap(parameter->coroutineCapacity),
+executeStackCapacity(parameter->executeStackCapacity), onExceptionExit(parameter->onExceptionExit) { }
 
 Invoker* CoroutineAgency::CreateInvoker(const Function& function)
 {

@@ -1,6 +1,8 @@
 #include "../RainLanguage.h"
 #include "../KernelDeclarations.h"
 #include "../Library.h"
+#include "../Public/Builder.h"
+#include "LineReader.h"
 #include "Message.h"
 #include "FileSpace.h"
 #include "DeclarationManager.h"
@@ -171,7 +173,7 @@ public:
 #define COMPILE_TERMINATION_CHECK if (messages->GetMessages(ErrorLevel::Error)->Count())return new Product(messages);
 RainProduct* Build(const BuildParameter& parameter)
 {
-	StringAgency stringAgency = StringAgency(0x10000);
+	StringAgency stringAgency = StringAgency(0x1000);
 	MessageCollector* messages = new MessageCollector(parameter.messageLevel);
 
 	DeclarationManager manager = DeclarationManager(parameter.libraryLoader, &stringAgency, messages, stringAgency.Add(parameter.name));
@@ -181,7 +183,7 @@ RainProduct* Build(const BuildParameter& parameter)
 		LineReader lineReader = LineReader(&stringAgency);
 		for (CodeBuffer codeBuffer = parameter.codeLoader(); codeBuffer.sourceLength; codeBuffer = parameter.codeLoader())
 		{
-			lineReader.Set(codeBuffer);
+			lineReader.Set(&codeBuffer);
 			ParseParameter parseParameter = ParseParameter(&lineReader, messages);
 			new (fileSpaces.Add())FileSpace(&manager.compilingLibrary, INVALID, &parseParameter);
 		}
@@ -207,12 +209,12 @@ RainProduct* Build(const BuildParameter& parameter)
 	COMPILE_TERMINATION_CHECK;
 
 	Generator generator = Generator(&manager);
-	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, parameter.debug);
+	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, parameter.debug ? new ProgramDebugDatabase() : NULL);
 	generator.GeneratorFunction(generatorParameter);
 	relySpaceCollector.Clear();
 	if (messages->GetMessages(ErrorLevel::Error)->Count())
 	{
-		if (parameter.debug) delete generatorParameter.debugDatabase;
+		if (generatorParameter.debugDatabase) delete generatorParameter.debugDatabase;
 		return new Product(messages);
 	}
 

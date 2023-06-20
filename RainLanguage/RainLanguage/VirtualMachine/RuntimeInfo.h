@@ -4,7 +4,7 @@
 #include "../Library.h"
 #include "../ImportLibrary.h"
 #include "../DeclarationInfos.h"
-#include "Caller.h"
+#include "../Public/VirtualMachineDefinitions.h"
 
 class Kernel;
 struct RuntimeMemberVariable;
@@ -138,11 +138,9 @@ struct RuntimeFunction :RuntimeInfo, CallableInfo
 struct RuntimeNative :RuntimeInfo, CallableInfo
 {
 	Handle reflection;
-	OnCaller invoke;
+	OnCaller caller;
 	inline RuntimeNative(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters)
-		:RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), invoke(NULL)
-	{
-	}
+		:RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), caller(NULL) {}
 	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex);
 };
 

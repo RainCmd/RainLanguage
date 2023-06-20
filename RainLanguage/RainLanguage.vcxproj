@@ -83,14 +83,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -277,6 +277,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <DisableSpecificWarnings>4458</DisableSpecificWarnings>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -289,6 +290,9 @@
     <PostBuildEvent>
       <Command>dumpbin /headers $(TargetPath)</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -370,10 +374,13 @@
     <ClInclude Include="RainLanguage\KeyWords.h" />
     <ClInclude Include="RainLanguage\Library.h" />
     <ClInclude Include="RainLanguage\Public\Builder.h" />
+    <ClInclude Include="RainLanguage\Public\BuilderDefinitions.h" />
     <ClInclude Include="RainLanguage\Public\MemoryAllocator.h" />
+    <ClInclude Include="RainLanguage\Public\RainLibrary.h" />
     <ClInclude Include="RainLanguage\Public\Vector.h" />
     <ClInclude Include="RainLanguage\Public\Rain.h" />
     <ClInclude Include="RainLanguage\Public\VirtualMachine.h" />
+    <ClInclude Include="RainLanguage\Public\VirtualMachineDefinitions.h" />
     <ClInclude Include="RainLanguage\RainLanguage.h" />
     <ClInclude Include="RainLanguage\Real\MathReal.h" />
     <ClInclude Include="RainLanguage\Real\Random.h" />
@@ -385,6 +392,7 @@
     <ClInclude Include="RainLanguage\VirtualMachine\CoroutineAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\EntityAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Exceptions.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\ExternalInvoker.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\HeapAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Invoker.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Kernel.h" />
@@ -474,6 +482,7 @@
     <ClCompile Include="RainLanguage\VirtualMachine\Coroutine.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\CoroutineAgency.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\EntityAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\ExternalInvoker.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\HeapAgency.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\Invoker.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\Kernel.cpp" />

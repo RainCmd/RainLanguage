@@ -1,10 +1,11 @@
 #include "LineReader.h"
+#include "../Public/Builder.h"
 #include "Character.h"
 
 void LineReader::ReadBuffer()
 {
 	index = 0;
-	count = reader(buffer, BUFFER_SIZE, data);
+	count = reader(buffer, BUFFER_SIZE);
 }
 
 bool LineReader::Read()
@@ -46,11 +47,10 @@ bool LineReader::ReadLine()
 	else return false;
 }
 
-void LineReader::Set(CodeBuffer buffer)
+void LineReader::Set(CodeBuffer* buffer)
 {
-	reader = buffer.reader;
-	source = stringAgency->Add(buffer.source, buffer.sourceLength);
-	data = buffer.data;
+	reader = buffer->reader;
+	source = stringAgency->Add(buffer->source, buffer->sourceLength);
 	content = String();
 	index = 0;
 	count = 0;

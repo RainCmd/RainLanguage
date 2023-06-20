@@ -5,8 +5,9 @@
 #include "../Type.h"
 #include "../DeclarationInfos.h"
 #include "../KernelDeclarations.h"
-#include "../Public/VirtualMachine.h"
+#include "../Public/VirtualMachineDefinitions.h"
 
+struct StartupParameter;
 class Kernel;
 struct RuntimeClass;
 class HeapAgency
@@ -42,11 +43,7 @@ class HeapAgency
 		return length ? (head->size - 4) / length : 0;
 	}
 public:
-	inline HeapAgency(Kernel* kernel, const StartupParameter& parameter) :kernel(kernel), heads(64), free(NULL), head(NULL), tail(NULL), active(NULL), top(1), size(parameter.heapCapacity > 4 ? parameter.heapCapacity : 4), generation(parameter.heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
-	{
-		destructorCallable.parameters.GetType(0) = TYPE_Handle;
-		heap = Malloc<uint8>(size);
-	}
+	HeapAgency(Kernel* kernel, const StartupParameter* parameter);
 	Handle Alloc(const Type& elementType, integer length);
 	Handle Alloc(const Declaration& declaration);
 	void Alloc(const Type&) = delete;

@@ -5,6 +5,7 @@
 #include "Coroutine.h"
 #include "Invoker.h"
 
+struct StartupParameter;
 class Kernel;
 class CoroutineAgency
 {
@@ -19,10 +20,7 @@ private:
 	Invoker* GetInvoker();
 public:
 	OnExceptionExit onExceptionExit;
-	CoroutineAgency(Kernel* kernel, const StartupParameter& parameter)
-		:kernel(kernel), head(NULL), free(NULL), coroutines(parameter.coroutineCapacity),
-		invokerCount(0), invokerInstance(1), invokerPool(parameter.coroutineCapacity), invokerMap(parameter.coroutineCapacity),
-		executeStackCapacity(parameter.executeStackCapacity), onExceptionExit(parameter.onExceptionExit) { }
+	CoroutineAgency(Kernel* kernel, const StartupParameter* parameter);
 	Invoker* CreateInvoker(const Function& function);
 	Invoker* CreateInvoker(uint32 entry, const CallableInfo* info);
 	void Start(Invoker* invoker, bool immediately, bool ignoreWait);
