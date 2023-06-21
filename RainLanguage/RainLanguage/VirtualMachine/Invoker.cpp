@@ -254,6 +254,16 @@ void Invoker::AppendParameter(Type type)
 	*(Type*)(data.GetPointer() + info->parameters.size) = type;
 }
 
+void Invoker::Reference()
+{
+	kernel->coroutineAgency->Reference(this);
+}
+
+void Invoker::Release()
+{
+	kernel->coroutineAgency->Release(this);
+}
+
 void Invoker::ClearParameters()
 {
 	ReleaseTuple(kernel, data.GetPointer(), info->parameters);

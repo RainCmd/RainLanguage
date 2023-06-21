@@ -60,7 +60,7 @@ bool CheckFunctionReturn(MessageCollector* collector, Statement* statement)
 	else if (ContainAny(statement->type, StatementType::Branch))
 	{
 		BranchStatement* branchStatement = (BranchStatement*)statement;
-		return CheckFunctionReturn(collector, branchStatement->trueBranch) and CheckFunctionReturn(collector, branchStatement->falseBranch);
+		return CheckFunctionReturn(collector, branchStatement->trueBranch) && CheckFunctionReturn(collector, branchStatement->falseBranch);
 	}
 	else if (ContainAny(statement->type, StatementType::Loop))
 	{

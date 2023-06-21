@@ -291,7 +291,7 @@ void Coroutine::Run()
 			{
 				Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
 				Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-				kernel->coroutineAgency->Reference(invoker);
+				invoker->Reference();
 				coroutine = invoker->instanceID;
 				flag = false;
 				instruct += 6 + SIZE(Declaration) + SIZE(Function);
@@ -308,7 +308,7 @@ void Coroutine::Run()
 					ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
 					invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
-					kernel->coroutineAgency->Reference(invoker);
+					invoker->Reference();
 					coroutine = invoker->instanceID;
 					flag = true;
 				}
@@ -337,7 +337,7 @@ void Coroutine::Run()
 				{
 					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
-					kernel->coroutineAgency->Reference(invoker);
+					invoker->Reference();
 					coroutine = invoker->instanceID;
 				}
 				else EXCEPTION_EXIT(BASE_CreateCoroutine, EXCEPTION_NULL_REFERENCE);
@@ -367,7 +367,7 @@ void Coroutine::Run()
 			case FunctionType::Global:
 			{
 				Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-				kernel->coroutineAgency->Reference(invoker);
+				invoker->Reference();
 				coroutine = invoker->instanceID;
 				flag = false;
 			}
@@ -379,7 +379,7 @@ void Coroutine::Run()
 				if (kernel->heapAgency->TryGetType(delegateInfo.target, targetType))
 				{
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-					kernel->coroutineAgency->Reference(invoker);
+					invoker->Reference();
 					invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
 					coroutine = invoker->instanceID;
 					flag = true;
@@ -392,7 +392,7 @@ void Coroutine::Run()
 				if (kernel->heapAgency->IsValid(delegateInfo.target))
 				{
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-					kernel->coroutineAgency->Reference(invoker);
+					invoker->Reference();
 					invoker->SetHandleParameter(0, delegateInfo.target);
 					coroutine = invoker->instanceID;
 					flag = true;
@@ -918,7 +918,7 @@ void Coroutine::Run()
 				if (kernelInvoker)
 				{
 					kernelInvoker->Abort(error);
-					kernel->coroutineAgency->Release(kernelInvoker);
+					kernelInvoker->Release();
 					kernelInvoker = NULL;
 				}
 				EXCEPTION_EXIT(FUNCTION_KernelCall, error);

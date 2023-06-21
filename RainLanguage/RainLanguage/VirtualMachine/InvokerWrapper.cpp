@@ -11,14 +11,14 @@ void InvokerWrapper::ValidAssert() const
 
 InvokerWrapper::InvokerWrapper() :instanceID(0), invoker(NULL) {}
 
-InvokerWrapper::InvokerWrapper(Invoker* invoker) : instanceID(invoker->instanceID), invoker(invoker)
+InvokerWrapper::InvokerWrapper(Invoker* invoker) : instanceID(invoker ? invoker->instanceID : NULL), invoker(invoker)
 {
-	invoker->kernel->coroutineAgency->Reference(invoker);
+	if (IsValid()) invoker->Reference();
 }
 
 InvokerWrapper::InvokerWrapper(const InvokerWrapper& other) : instanceID(other.instanceID), invoker(other.invoker)
 {
-	if (other.IsValid())invoker->kernel->coroutineAgency->Reference(invoker);
+	if (IsValid())invoker->Reference();
 }
 
 InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(other.instanceID), invoker(other.invoker)
@@ -28,7 +28,16 @@ InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(oth
 
 InvokerWrapper::~InvokerWrapper()
 {
-	if (IsValid())invoker->kernel->coroutineAgency->Release(invoker);
+	if (IsValid())invoker->Release();
+}
+
+InvokerWrapper& InvokerWrapper::operator=(const InvokerWrapper& other)
+{
+	if (IsValid())invoker->Release();
+	instanceID = other.instanceID;
+	invoker = other.invoker;
+	if (IsValid())invoker->Reference();
+	return *this;
 }
 
 uint64 InvokerWrapper::GetInstanceID() const

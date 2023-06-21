@@ -63,6 +63,8 @@ public:
 	void SetEntityValueParameter(uint32 index, uint64 value);
 	void AppendParameter(Type type);
 
+	void Reference();
+	void Release();
 	void ClearParameters();
 	void ClearReturns();
 	void Recycle();

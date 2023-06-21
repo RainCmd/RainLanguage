@@ -42,6 +42,8 @@ public:
 	InvokerWrapper(InvokerWrapper&& other) noexcept;
 	~InvokerWrapper();
 
+	InvokerWrapper& operator=(const InvokerWrapper& other);
+
 	/// <summary>
 	/// 获取调用实例ID
 	/// </summary>
