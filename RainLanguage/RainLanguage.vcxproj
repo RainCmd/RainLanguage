@@ -90,7 +90,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -392,7 +392,6 @@
     <ClInclude Include="RainLanguage\VirtualMachine\CoroutineAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\EntityAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Exceptions.h" />
-    <ClInclude Include="RainLanguage\VirtualMachine\ExternalInvoker.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\HeapAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Invoker.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Kernel.h" />
@@ -482,7 +481,7 @@
     <ClCompile Include="RainLanguage\VirtualMachine\Coroutine.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\CoroutineAgency.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\EntityAgency.cpp" />
-    <ClCompile Include="RainLanguage\VirtualMachine\ExternalInvoker.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\InvokerWrapper.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\HeapAgency.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\Invoker.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\Kernel.cpp" />

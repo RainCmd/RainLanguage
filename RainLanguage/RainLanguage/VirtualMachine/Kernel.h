@@ -17,7 +17,7 @@ public:
 	CoroutineAgency* coroutineAgency;
 	Random random;
 	Kernel(const StartupParameter& parameter);
-	InvokerWrapper* CreateInvoker(const RainFunction& function);
+	InvokerWrapper CreateInvoker(const RainFunction& function);
 	const RainFunction FindFunction(const character* name, uint32 nameLength);
 	const RainFunction FindFunction(const character* name);
 	const RainFunction* FindFunctions(const character* name, uint32 nameLength, uint32& count);

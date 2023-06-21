@@ -324,6 +324,15 @@
     <ClInclude Include="RainLanguage\Compiler\Line.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="RainLanguage\Public\BuilderDefinitions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\RainLibrary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\VirtualMachineDefinitions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -582,6 +591,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Real\Fixed.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\InvokerWrapper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

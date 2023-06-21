@@ -25,53 +25,73 @@ struct RAINLANGUAGE RainStackFrame
 		: libraryName(libraryName), libraryNameLength(libraryNameLength), address(address) {}
 };
 
+class Invoker;
 /// <summary>
 /// c++调用雨言
 /// </summary>
 class RAINLANGUAGE InvokerWrapper
 {
+private:
+	uint64 instanceID;
+	Invoker* invoker;
+	void ValidAssert() const;
 public:
-	InvokerWrapper() = default;
-	virtual ~InvokerWrapper() {}
+	InvokerWrapper();
+	InvokerWrapper(Invoker* invoker);
+	InvokerWrapper(const InvokerWrapper& other);
+	InvokerWrapper(InvokerWrapper&& other) noexcept;
+	~InvokerWrapper();
 
 	/// <summary>
 	/// 获取调用实例ID
 	/// </summary>
 	/// <returns>调用的实例ID</returns>
-	virtual uint64 GetInstanceID() const = 0;
+	uint64 GetInstanceID() const;
 	/// <summary>
 	/// 判断是否是一个有效的调用
 	/// </summary>
 	/// <returns>是有效的调用</returns>
-	virtual bool IsValid() const = 0;
+	bool IsValid() const;
 	/// <summary>
 	/// 获取当前调用状态
 	/// </summary>
 	/// <returns>当前调用状态</returns>
-	virtual InvokerState GetState() const = 0;
+	InvokerState GetState() const;
 	/// <summary>
 	/// 获取异常退出时的退出信息
 	/// </summary>
 	/// <param name="length">信息长度</param>
 	/// <returns>信息</returns>
 	/// <exception>如果调用是无效状态会抛异常</exception>
-	virtual const character* GetExitMessage(uint32& length) const = 0;
+	const character* GetExitMessage(uint32& length) const;
+	/// <summary>
+	/// 开始执行协程
+	/// </summary>
+	/// <param name="immediately">true:立即执行 false:下次Update执行</param>
+	/// <param name="ignoreWait">忽略遇到的wait关键字</param>
+	void Start(bool immediately, bool ignoreWait) const;
 	/// <summary>
 	/// 判断当前调用是否是暂停状态
 	/// </summary>
 	/// <returns>是暂停状态</returns>
 	/// <exception>如果调用不是运行状态会抛异常</exception>
-	virtual bool IsPause() const = 0;
+	bool IsPause() const;
 	/// <summary>
 	/// 暂停当前调用
 	/// </summary>
 	/// <exception>如果调用不是运行状态会抛异常</exception>
-	virtual void Pause() const = 0;
+	void Pause() const;
 	/// <summary>
 	/// 恢复当前调用
 	/// </summary>
 	/// <exception>如果调用不是运行状态会抛异常</exception>
-	virtual void Resume() const = 0;
+	void Resume() const;
+	/// <summary>
+	/// 触发异常
+	/// </summary>
+	/// <param name="chars">异常信息</param>
+	/// <param name="length">异常信息长度</param>
+	void Abort(const character* chars, uint32 length) const;
 
 	/// <summary>
 	/// 获取布尔类型的返回值
@@ -79,63 +99,63 @@ public:
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual bool GetBoolReturnValue(uint32 index) const = 0;
+	bool GetBoolReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取字节类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual uint8 GetByteReturnValue(uint32 index) const = 0;
+	uint8 GetByteReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取字符类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual character GetCharReturnValue(uint32 index) const = 0;
+	character GetCharReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取整数类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual integer GetIntegerReturnValue(uint32 index) const = 0;
+	integer GetIntegerReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取实数类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual real GetRealReturnValue(uint32 index) const = 0;
+	real GetRealReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取二维向量类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual Real2 GetReal2ReturnValue(uint32 index) const = 0;
+	Real2 GetReal2ReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取三维向量类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual Real3 GetReal3ReturnValue(uint32 index) const = 0;
+	Real3 GetReal3ReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取四维向量类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual Real4 GetReal4ReturnValue(uint32 index) const = 0;
+	Real4 GetReal4ReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取枚举类型的整数值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>枚举类型的整数值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual integer GetEnumValueReturnValue(uint32 index) const = 0;
+	integer GetEnumValueReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取枚举类型对应的元素名称
 	/// </summary>
@@ -143,7 +163,7 @@ public:
 	/// <param name="length">枚举类型对应的元素名称长度</param>
 	/// <returns>枚举类型对应的元素名称</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual const character* GetEnumNameReturnValue(uint32 index, uint32& length) const = 0;
+	const character* GetEnumNameReturnValue(uint32 index, uint32& length) const;
 	/// <summary>
 	/// 获取字符串类型的返回值
 	/// </summary>
@@ -151,14 +171,14 @@ public:
 	/// <param name="length">字符串长度</param>
 	/// <returns>字符串</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual const character* GetStringReturnValue(uint32 index, uint32& length) const = 0;
+	const character* GetStringReturnValue(uint32 index, uint32& length) const;
 	/// <summary>
 	/// 获取实体类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	virtual uint64 GetEntityReturnValue(uint32 index) const = 0;
+	uint64 GetEntityReturnValue(uint32 index) const;
 
 	/// <summary>
 	/// 设置布尔类型参数
@@ -166,56 +186,56 @@ public:
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, bool value) = 0;
+	void SetParameter(uint32 index, bool value) const;
 	/// <summary>
 	/// 设置字节类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, uint8 value) = 0;
+	void SetParameter(uint32 index, uint8 value) const;
 	/// <summary>
 	/// 设置字符类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, character value) = 0;
+	void SetParameter(uint32 index, character value) const;
 	/// <summary>
 	/// 设置整数类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, integer value) = 0;
+	void SetParameter(uint32 index, integer value) const;
 	/// <summary>
 	/// 设置实数类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, real value) = 0;
+	void SetParameter(uint32 index, real value) const;
 	/// <summary>
 	/// 设置二维向量类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, Real2 value) = 0;
+	void SetParameter(uint32 index, Real2 value) const;
 	/// <summary>
 	/// 设置三维向量类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, Real3 value) = 0;
+	void SetParameter(uint32 index, Real3 value) const;
 	/// <summary>
 	/// 设置四维向量类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, Real4 value) = 0;
+	void SetParameter(uint32 index, Real4 value) const;
 	/// <summary>
 	/// 设置按枚举元素名设置枚举值
 	/// </summary>
@@ -223,21 +243,21 @@ public:
 	/// <param name="chars">名称字符串</param>
 	/// <param name="length">名称字符串长度</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确或名称未找到会抛异常</exception>
-	virtual void SetEnumNameParameter(uint32 index, const character* chars, uint32 length) = 0;
+	void SetEnumNameParameter(uint32 index, const character* chars, uint32 length) const;
 	/// <summary>
 	/// 设置按枚举元素名设置枚举值，名称需要以\0结尾
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="chars">名称字符串</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确或名称未找到会抛异常</exception>
-	virtual void SetEnumNameParameter(uint32 index, const character* chars) = 0;
+	void SetEnumNameParameter(uint32 index, const character* chars) const;
 	/// <summary>
 	/// 以枚举整数值设置参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetEnumValueParameter(uint32 index, integer value) = 0;
+	void SetEnumValueParameter(uint32 index, integer value) const;
 	/// <summary>
 	/// 设置字符串类型参数
 	/// </summary>
@@ -245,21 +265,21 @@ public:
 	/// <param name="chars">字符串</param>
 	/// <param name="length">字符串长度</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, const character* chars, uint32 length) = 0;
+	void SetParameter(uint32 index, const character* chars, uint32 length) const;
 	/// <summary>
 	/// 设置字符串类型参数，字符串需要以\0结尾
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="chars">字符串</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetParameter(uint32 index, const character* chars) = 0;
+	void SetParameter(uint32 index, const character* chars) const;
 	/// <summary>
 	/// 设置实体类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	virtual void SetEntityParameter(uint32 index, uint64 value) = 0;
+	void SetEntityParameter(uint32 index, uint64 value) const;
 };
 
 /// <summary>
@@ -555,7 +575,7 @@ public:
 	/// </summary>
 	/// <param name="function">函数句柄</param>
 	/// <returns>调用</returns>
-	virtual InvokerWrapper* CreateInvoker(const RainFunction& function) = 0;
+	virtual InvokerWrapper CreateInvoker(const RainFunction& function) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
 	/// 查找失败会返回一个无效的句柄

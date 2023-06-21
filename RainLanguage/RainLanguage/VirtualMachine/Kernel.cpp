@@ -4,7 +4,6 @@
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
-#include "ExternalInvoker.h"
 
 RainKernel* CreateKernel(const StartupParameter& parameter)
 {
@@ -21,9 +20,9 @@ inline Kernel::Kernel(const StartupParameter& parameter) : random(parameter.seed
 	libraryAgency->Init((Library*)parameter.libraries, parameter.libraryCount);
 }
 
-InvokerWrapper* Kernel::CreateInvoker(const RainFunction& function)
+InvokerWrapper Kernel::CreateInvoker(const RainFunction& function)
 {
-	return NULL;//todo 创建调用
+	return InvokerWrapper(coroutineAgency->CreateInvoker(*(Function*)&function));
 }
 
 const RainFunction Kernel::FindFunction(const character* name, uint32 nameLength)
