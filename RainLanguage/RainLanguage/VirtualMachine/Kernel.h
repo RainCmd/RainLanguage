@@ -20,8 +20,8 @@ public:
 	InvokerWrapper CreateInvoker(const RainFunction& function);
 	const RainFunction FindFunction(const character* name, uint32 nameLength);
 	const RainFunction FindFunction(const character* name);
-	const RainFunctions FindFunctions(const character* name, uint32 nameLength);
-	const RainFunctions FindFunctions(const character* name);
+	RainFunctions FindFunctions(const character* name, uint32 nameLength);
+	RainFunctions FindFunctions(const character* name);
 	void Update();
 	~Kernel();
 	Kernel(Kernel&) = delete;

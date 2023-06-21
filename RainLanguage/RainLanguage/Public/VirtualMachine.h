@@ -573,9 +573,10 @@ public:
 	RainFunctions(RainFunction* functions, uint32 count) :functions(functions), count(count) {}
 	RainFunctions(const RainFunctions& other) = delete;
 	RainFunctions(RainFunctions& other);
+	RainFunctions(RainFunctions&& other);
 	RainFunctions& operator=(RainFunctions& other);
-	inline RainFunction operator[](uint32 index) { return functions[index]; }
-	inline uint32 Count() { return count; }
+	inline const RainFunction operator[](uint32 index) const { return functions[index]; }
+	inline uint32 Count() const { return count; }
 };
 
 /// <summary>
@@ -615,14 +616,14 @@ public:
 	/// <param name="name">函数名</param>
 	/// <param name="nameLength">函数名长度</param>
 	/// <returns>函数句柄</returns>
-	virtual const RainFunctions FindFunctions(const character* name, uint32 nameLength) = 0;
+	virtual RainFunctions FindFunctions(const character* name, uint32 nameLength) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配所有名称相等的函数
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
 	/// <param name="name">函数名</param>
 	/// <returns>函数句柄</returns>
-	virtual const RainFunctions FindFunctions(const character* name) = 0;
+	virtual RainFunctions FindFunctions(const character* name) = 0;
 
 	/// <summary>
 	/// 更新虚拟机

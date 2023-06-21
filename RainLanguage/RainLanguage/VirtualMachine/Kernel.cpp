@@ -10,7 +10,11 @@ RainFunctions::RainFunctions(RainFunctions& other) :functions(other.functions), 
 	other.functions = NULL;
 	other.count = 0;
 }
-
+RainFunctions::RainFunctions(RainFunctions&& other) : functions(other.functions), count(other.count)
+{
+	other.functions = NULL;
+	other.count = 0;
+}
 RainFunctions& RainFunctions::operator=(RainFunctions& other)
 {
 	delete functions;
@@ -86,18 +90,25 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* 
 
 const RainFunction Kernel::FindFunction(const character* name, uint32 nameLength)
 {
+	Function result;
 	for (uint32 x = 0; x < nameLength; x++)
 		if (name[x] == '.')
 		{
 			String libraryName = stringAgency->Add(name, x);
 			if (libraryName.index == libraryAgency->kernelLibrary.spaces[0]->name)
-				return *(RainFunction*)&::FindFunction(this, &libraryAgency->kernelLibrary, name + x + 1, nameLength - x - 1);
+			{
+				result = ::FindFunction(this, &libraryAgency->kernelLibrary, name + x + 1, nameLength - x - 1);
+				return *(RainFunction*)&result;
+			}
 			for (uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
 				if (libraryName.index == libraryAgency->libraries[y]->spaces[0]->name)
-					return *(RainFunction*)&::FindFunction(this, libraryAgency->libraries[y], name + x + 1, nameLength - x - 1);
+				{
+					result = ::FindFunction(this, libraryAgency->libraries[y], name + x + 1, nameLength - x - 1);
+					return *(RainFunction*)&result;
+				}
 			return RainFunction();
 		}
-	Function result = ::FindFunction(this, &libraryAgency->kernelLibrary, name, nameLength);
+	result = ::FindFunction(this, &libraryAgency->kernelLibrary, name, nameLength);
 	if (result.library != INVALID)return *(RainFunction*)&result;
 	for (uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
 	{
@@ -148,7 +159,7 @@ void FindFunctions(Kernel* kernel, RuntimeLibrary* library, const character* nam
 	else if (start < nameLength) FindFunctions(kernel, library, space, name + start, nameLength - start, results);
 }
 
-const RainFunctions Kernel::FindFunctions(const character* name, uint32 nameLength)
+RainFunctions Kernel::FindFunctions(const character* name, uint32 nameLength)
 {
 	List<Function, true> results(0);
 	for (uint32 x = 0; x < nameLength; x++)
@@ -177,7 +188,7 @@ label_return:
 	return RainFunctions(functions, results.Count());
 }
 
-const RainFunctions Kernel::FindFunctions(const character* name)
+RainFunctions Kernel::FindFunctions(const character* name)
 {
 	uint32 length = 0;
 	while (name[length]) length++;
