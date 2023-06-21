@@ -5,6 +5,22 @@
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
 
+RainFunctions::RainFunctions(RainFunctions& other) :functions(other.functions), count(other.count)
+{
+	other.functions = NULL;
+	other.count = 0;
+}
+
+RainFunctions& RainFunctions::operator=(RainFunctions& other)
+{
+	delete functions;
+	functions = other.functions;
+	count = other.count;
+	other.functions = NULL;
+	other.count = 0;
+	return *this;
+}
+
 RainKernel* CreateKernel(const StartupParameter& parameter)
 {
 	return new Kernel(parameter);
@@ -37,12 +53,12 @@ const RainFunction Kernel::FindFunction(const character* name)
 	return FindFunction(name, length);
 }
 
-const RainFunction* Kernel::FindFunctions(const character* name, uint32 nameLength, uint32& count)
+const RainFunctions Kernel::FindFunctions(const character* name, uint32 nameLength, uint32& count)
 {
-	return nullptr;//todo 查找函数
+	return RainFunctions(NULL, 0);//todo 查找函数
 }
 
-const RainFunction* Kernel::FindFunctions(const character* name, uint32& count)
+const RainFunctions Kernel::FindFunctions(const character* name, uint32& count)
 {
 	uint32 length = 0;
 	while (name[length]) length++;
