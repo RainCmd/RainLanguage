@@ -1,60 +1,27 @@
 #include "LineReader.h"
-#include "../Public/Builder.h"
 #include "Character.h"
-
-void LineReader::ReadBuffer()
-{
-	index = 0;
-	count = reader(buffer, BUFFER_SIZE);
-}
-
-bool LineReader::Read()
-{
-	uint32 start = index;
-	while (index < count)
-		if (buffer[index++] == '\n')
-		{
-			characters.Add(buffer + start, index - start);
-			return false;
-		}
-	return true;
-}
 
 Line LineReader::CurrentLine()
 {
-	return Line(source, indent, line, content);
+	return Line(source, indent, line, stringAgency->Add(buffer + start, end - start));
 }
 
 bool LineReader::ReadLine()
 {
-	line++;
-	characters.Clear();
-	if (index == count)ReadBuffer();
-	if (index < count)
-	{
-		while (Read()) ReadBuffer();
-		indent = 0;
-		for (uint32 i = 0; i < characters.Count(); i++)
-			if (IsBlank(characters[i]))indent += GetIndent(characters[i]);
-			else if (characters[i] == '\\' && i + 1 < characters.Count() && characters[i + 1] == '\\')break;
-			else
-			{
-				content = stringAgency->Add(characters.GetPointer(), characters.Count());
-				return true;
-			}
-		return ReadLine();
-	}
-	else return false;
-}
-
-void LineReader::Set(CodeBuffer* buffer)
-{
-	reader = buffer->reader;
-	source = stringAgency->Add(buffer->source, buffer->sourceLength);
-	content = String();
-	index = 0;
-	count = 0;
-	characters.Clear();
+	bool bank = true;
+	start = end;
 	indent = 0;
-	line = 0;
+	while (end < count)
+		if (buffer[end] == '\n')
+		{
+			if (start < end++) return true;
+			else start = end;
+		}
+		else if (bank && IsBlank(buffer[end])) indent += GetIndent(buffer[end++]);
+		else
+		{
+			end++;
+			bank = false;
+		}
+	return false;
 }

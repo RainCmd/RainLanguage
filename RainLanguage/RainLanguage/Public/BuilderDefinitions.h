@@ -122,5 +122,3 @@ enum class MessageType :uint32
 
 	INVALID = 0xFFFFFFFF
 };
-
-typedef uint32(*CodeReader)(character* buffer, uint32 size);

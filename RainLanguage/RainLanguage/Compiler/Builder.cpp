@@ -180,10 +180,9 @@ RainProduct* Build(const BuildParameter& parameter)
 	List<List<AbstractSpace*, true>> relySpaceCollector(0);
 	{
 		List<FileSpace>fileSpaces = List<FileSpace>(0);
-		LineReader lineReader = LineReader(&stringAgency);
-		for (CodeBuffer codeBuffer = parameter.codeLoader(); codeBuffer.sourceLength; codeBuffer = parameter.codeLoader())
+		while (parameter.codeLoader->LoadNext())
 		{
-			lineReader.Set(&codeBuffer);
+			LineReader lineReader(&stringAgency, stringAgency.Add(parameter.codeLoader->CurrentPath(), parameter.codeLoader->CurrentPathLength()), parameter.codeLoader->CurrentCode(), parameter.codeLoader->CurrentCodeLength());
 			ParseParameter parseParameter = ParseParameter(&lineReader, messages);
 			new (fileSpaces.Add())FileSpace(&manager.compilingLibrary, INVALID, &parseParameter);
 		}

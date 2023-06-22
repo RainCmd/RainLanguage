@@ -3,25 +3,39 @@
 #include "RainLibrary.h"
 
 /// <summary>
-/// 代码数据
+/// 代码加载器
 /// </summary>
-const struct RAINLANGUAGE CodeBuffer
+class RAINLANGUAGE CodeLoader
 {
+public:
 	/// <summary>
-	/// 源码文件名
+	/// 加载下一个代码文件
 	/// </summary>
-	const character* source;
+	/// <returns>true:继续加载代码，false:已全部加载完成</returns>
+	virtual bool LoadNext() = 0;
 	/// <summary>
-	/// 源码文件名长度
+	/// 获取当前代码文件路径
 	/// </summary>
-	uint32 sourceLength;
+	/// <returns>代码文件路径</returns>
+	virtual const character* CurrentPath() = 0;
 	/// <summary>
-	/// 源码读取器
+	/// 获取当前代码文件路径长度
 	/// </summary>
-	CodeReader reader;
-	inline CodeBuffer(const character* source, uint32 sourceLength, CodeReader reader) :source(source), sourceLength(sourceLength), reader(reader) {}
+	/// <returns>代码文件路径长度</returns>
+	virtual uint32 CurrentPathLength() = 0;
+	/// <summary>
+	/// 获取当前代码
+	/// </summary>
+	/// <returns>当前代码</returns>
+	virtual const character* CurrentCode() = 0;
+	/// <summary>
+	/// 获取当前代码长度
+	/// </summary>
+	/// <returns>当前代码长度</returns>
+	virtual uint32 CurrentCodeLength() = 0;
+	virtual ~CodeLoader() {}
 };
-typedef CodeBuffer(*CodeLoader)();
+
 /// <summary>
 /// 编译参数 
 /// </summary>
@@ -38,7 +52,7 @@ const struct RAINLANGUAGE BuildParameter
 	/// <summary>
 	/// 代码加载器
 	/// </summary>
-	CodeLoader codeLoader;
+	CodeLoader* codeLoader;
 	/// <summary>
 	/// 引用库加载器
 	/// </summary>
@@ -48,8 +62,7 @@ const struct RAINLANGUAGE BuildParameter
 	/// </summary>
 	ErrorLevel messageLevel;
 
-	BuildParameter(const character* name, bool debug, const CodeLoader& codeLoader, const LibraryLoader& libraryLoader, const ErrorLevel& messageLevel)
-		: name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), messageLevel(messageLevel) {}
+	BuildParameter(const character* name, bool debug, CodeLoader* codeLoader, const LibraryLoader& libraryLoader, const ErrorLevel& messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), messageLevel(messageLevel) {}
 };
 
 /// <summary>
@@ -96,8 +109,7 @@ public:
 		/// </summary>
 		uint32 messageLength;
 
-		inline ErrorMessage(const character* source, const uint32& sourceLength, const MessageType& type, const uint32& line, const uint32& start, const uint32& length, const character* message, const uint32& messageLength)
-			: source(source), sourceLength(sourceLength), type(type), line(line), start(start), length(length), message(message), messageLength(messageLength) {}
+		inline ErrorMessage(const character* source, const uint32& sourceLength, const MessageType& type, const uint32& line, const uint32& start, const uint32& length, const character* message, const uint32& messageLength) : source(source), sourceLength(sourceLength), type(type), line(line), start(start), length(length), message(message), messageLength(messageLength) {}
 	};
 	RainProduct() = default;
 	virtual ~RainProduct() {}

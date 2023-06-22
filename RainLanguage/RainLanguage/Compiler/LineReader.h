@@ -1,26 +1,16 @@
 #pragma once
-#include "../Public/BuilderDefinitions.h"
 #include "Line.h"
-struct CodeBuffer;
+
 class LineReader
 {
-	const static uint32 BUFFER_SIZE = 0x1000;
 	StringAgency* stringAgency;
 	String source;
-	CodeReader reader;
-	character buffer[BUFFER_SIZE];
-	String content;
-	uint32 index;
-	uint32 count;
-	List<character, true> characters;
-	uint32 indent, line;
-	void ReadBuffer();
-	bool Read();
+	const character* buffer;
+	uint32 count, start, end, indent, line;
 public:
 	Line CurrentLine();
 	bool ReadLine();
-	void Set(CodeBuffer* buffer);
-	inline LineReader(StringAgency* stringAgency) :stringAgency(stringAgency), source(), reader(NULL), buffer{}, content(), index(0), count(0), characters(BUFFER_SIZE), indent(0), line(0) {}
+	inline LineReader(StringAgency* stringAgency, String source, const character* code, uint32 codeLength) :stringAgency(stringAgency), source(source), buffer(code), count(codeLength), start(0), end(0), indent(0), line(0) {}
 };
 
 
