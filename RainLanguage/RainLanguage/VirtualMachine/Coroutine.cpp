@@ -2143,7 +2143,7 @@ void Coroutine::Recycle()
 				const StackFrame& frame = invoker->GetStackFrame()[i];
 				new (frames.Add())RainStackFrame(frame.library.GetPointer(), frame.library.length, frame.address);
 			}
-			kernel->coroutineAgency->onExceptionExit(frames.GetPointer(), frames.Count(), exitMessage.GetPointer(), exitMessage.length);
+			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), exitMessage.GetPointer(), exitMessage.length);
 		}
 		invoker->coroutine = NULL;
 	}

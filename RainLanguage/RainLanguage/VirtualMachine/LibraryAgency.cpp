@@ -294,22 +294,6 @@ const RuntimeFunction* LibraryAgency::GetRuntimeFunction(const MemberFunction& f
 	return GetRuntimeFunction(GetFunction(function));
 }
 
-inline RainType GetRainType(const Type& type)
-{
-	if (type == TYPE_Bool)return RainType::Bool;
-	else if (type == TYPE_Byte)return RainType::Byte;
-	else if (type == TYPE_Char)return RainType::Character;
-	else if (type == TYPE_Integer)return RainType::Integer;
-	else if (type == TYPE_Real)return RainType::Real;
-	else if (type == TYPE_Real2)return RainType::Real2;
-	else if (type == TYPE_Real3)return RainType::Real3;
-	else if (type == TYPE_Real4)return RainType::Real4;
-	else if (type.code == TypeCode::Enum)return RainType::Enum;
-	else if (type == TYPE_String)return RainType::String;
-	else if (type == TYPE_Entity)return RainType::Entity;
-	return RainType::Internal;
-}
-
 String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 top)
 {
 	RuntimeLibrary* library = GetLibrary(native.library);
@@ -327,11 +311,11 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 		}
 		List<RainType, true> rainTypes(info->parameters.Count());
 		for (uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));
-		info->caller = kernel->libraryAgency->nativeCallerLoader(fullName.GetPointer(), fullName.Count(), rainTypes.GetPointer(), rainTypes.Count());
+		info->caller = kernel->libraryAgency->nativeCallerLoader(kernel, fullName.GetPointer(), fullName.Count(), rainTypes.GetPointer(), rainTypes.Count());
 		ASSERT(info->caller, "本地函数绑定失败");
 	}
 	Caller caller(kernel, info, stack, top);
-	info->caller(&caller);
+	info->caller(kernel, &caller);
 	if (caller.GetException()) return kernel->stringAgency->Get(caller.GetException());
 	else return String();
 }

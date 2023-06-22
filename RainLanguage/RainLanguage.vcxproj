@@ -90,7 +90,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
@@ -221,7 +221,8 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>dumpbin /headers $(TargetPath)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
@@ -240,7 +241,8 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>dumpbin /headers $(TargetPath)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -264,7 +266,8 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>dumpbin /headers $(TargetPath)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
@@ -289,7 +292,8 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>dumpbin /headers $(TargetPath)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>

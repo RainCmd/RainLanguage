@@ -564,6 +564,21 @@ public:
 	inline bool IsValid() { return library != 0xFFFFFFFF; }
 };
 
+struct RAINLANGUAGE RainTypes
+{
+private:
+	RainType* types;
+	uint32 count;
+public:
+	RainTypes(RainType* types, uint32 count) :types(types), count(count) {}
+	RainTypes(const RainTypes&) = delete;
+	RainTypes(RainTypes& other);
+	RainTypes(RainTypes&& other)noexcept;
+	RainTypes& operator=(RainTypes& other);
+	inline const RainType operator[](uint32 index) const { return types[index]; }
+	inline uint32 Count() const { return count; }
+};
+
 struct RAINLANGUAGE RainFunctions
 {
 private:
@@ -571,9 +586,9 @@ private:
 	uint32 count;
 public:
 	RainFunctions(RainFunction* functions, uint32 count) :functions(functions), count(count) {}
-	RainFunctions(const RainFunctions& other) = delete;
+	RainFunctions(const RainFunctions&) = delete;
 	RainFunctions(RainFunctions& other);
-	RainFunctions(RainFunctions&& other);
+	RainFunctions(RainFunctions&& other) noexcept;
 	RainFunctions& operator=(RainFunctions& other);
 	inline const RainFunction operator[](uint32 index) const { return functions[index]; }
 	inline uint32 Count() const { return count; }
@@ -624,6 +639,20 @@ public:
 	/// <param name="name">函数名</param>
 	/// <returns>函数句柄</returns>
 	virtual RainFunctions FindFunctions(const character* name) = 0;
+	/// <summary>
+	/// 获取函数参数列表
+	/// </summary>
+	/// <param name="function">函数索引</param>
+	/// <returns>参数列表</returns>
+	/// <exception>无效的函数会抛异常</exception>
+	virtual RainTypes GetFunctionParameters(const RainFunction& function) = 0;
+	/// <summary>
+	/// 获取函数返回值列表
+	/// </summary>
+	/// <param name="function">函数索引</param>
+	/// <returns>返回值列表</returns>
+	/// <exception>无效的函数会抛异常</exception>
+	virtual RainTypes GetFunctionReturns(const RainFunction& function) = 0;
 
 	/// <summary>
 	/// 更新虚拟机

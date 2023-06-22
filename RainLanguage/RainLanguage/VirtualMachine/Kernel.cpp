@@ -4,13 +4,31 @@
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
-
+RainTypes::RainTypes(RainTypes& other) :types(other.types), count(other.count)
+{
+	other.types = NULL;
+	other.count = 0;
+}
+RainTypes::RainTypes(RainTypes&& other) noexcept :types(other.types), count(other.count)
+{
+	other.types = NULL;
+	other.count = 0;
+}
+RainTypes& RainTypes::operator=(RainTypes& other)
+{
+	delete types;
+	types = other.types;
+	count = other.count;
+	other.types = NULL;
+	other.count = 0;
+	return *this;
+}
 RainFunctions::RainFunctions(RainFunctions& other) :functions(other.functions), count(other.count)
 {
 	other.functions = NULL;
 	other.count = 0;
 }
-RainFunctions::RainFunctions(RainFunctions&& other) : functions(other.functions), count(other.count)
+RainFunctions::RainFunctions(RainFunctions&& other) noexcept : functions(other.functions), count(other.count)
 {
 	other.functions = NULL;
 	other.count = 0;
@@ -33,7 +51,7 @@ RainKernel* CreateKernel(const StartupParameter& parameter)
 Kernel::Kernel(const StartupParameter& parameter) : random(parameter.seed)
 {
 	stringAgency = new StringAgency(parameter.stringCapacity);
-	entityAgency = new EntityAgency(&parameter);
+	entityAgency = new EntityAgency(this, &parameter);
 	libraryAgency = new LibraryAgency(this, &parameter);
 	heapAgency = new HeapAgency(this, &parameter);
 	coroutineAgency = new CoroutineAgency(this, &parameter);
@@ -193,6 +211,30 @@ RainFunctions Kernel::FindFunctions(const character* name)
 	uint32 length = 0;
 	while (name[length]) length++;
 	return FindFunctions(name, length);
+}
+
+RainTypes Kernel::GetFunctionParameters(const RainFunction& function)
+{
+	RuntimeFunction* info = libraryAgency->GetFunction(*(Function*)&function);
+	if (info->isPublic)
+	{
+		RainType* types = Malloc<RainType>(info->parameters.Count());
+		for (uint32 i = 0; i < info->parameters.Count(); i++) types[i] = GetRainType(info->parameters.GetType(i));
+		return RainTypes(types, info->parameters.Count());
+	}
+	EXCEPTION("函数未找到");
+}
+
+RainTypes Kernel::GetFunctionReturns(const RainFunction& function)
+{
+	RuntimeFunction* info = libraryAgency->GetFunction(*(Function*)&function);
+	if (info->isPublic)
+	{
+		RainType* types = Malloc<RainType>(info->returns.Count());
+		for (uint32 i = 0; i < info->returns.Count(); i++) types[i] = GetRainType(info->returns.GetType(i));
+		return RainTypes(types, info->returns.Count());
+	}
+	EXCEPTION("函数未找到");
 }
 
 void Kernel::Update()
