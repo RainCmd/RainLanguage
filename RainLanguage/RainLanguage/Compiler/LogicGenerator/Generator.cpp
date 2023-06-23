@@ -5,14 +5,13 @@
 
 void Generator::WriteCode(const String& value)
 {
-	ASSERT_DEBUG(insertAddress == INVALID, "插入状态向代码中写入常量字符串");
 	GeneratorStringAddresses* addresses;
 	if (!codeStrings.TryGet(value, addresses))
 	{
 		addresses = new GeneratorStringAddresses(value);
 		codeStrings.Set(value, addresses);
 	}
-	addresses->addresses.Add(WriteCode((string)NULL));
+	addresses->addresses.Add(AddCodeReference(WriteCode((string)NULL)));
 }
 
 void Generator::BeginInsert(uint32 address)
@@ -24,14 +23,9 @@ void Generator::BeginInsert(uint32 address)
 void Generator::EndInsert()
 {
 	ASSERT_DEBUG(insertAddress != INVALID, "不在插入状态");
-	for (uint32 i = 0; i < codeReferenceAddresses.Count(); i++)
+	for (uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
 		if (insertAddress <= codeReferenceAddresses[i] && !insertCodeReferenceAddresses.Contains(i))
 			codeReferenceAddresses[i] += insert.Count();
-	Dictionary<String, GeneratorStringAddresses*>::Iterator iterator = codeStrings.GetIterator();
-	while (iterator.Next())
-		for (uint32 i = 0; i < iterator.CurrentValue()->addresses.Count(); i++)
-			if (insertAddress <= iterator.CurrentValue()->addresses[i])
-				iterator.CurrentValue()->addresses[i] += insert.Count();
 	code.Insert(insertAddress, insert.GetPointer(), insert.Count());
 	insert.Clear();
 	insertAddress = INVALID;
@@ -53,11 +47,13 @@ void Generator::WriteDataString(String& value, uint32 address)
 void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
 	FunctionGenerator(parameter).Generator(parameter);
+	codeStartReference = codeReferenceAddresses.Count();
 	for (uint32 i = 0, count = parameter.manager->compilingLibrary.functions.Count(); i < count; i++)
 	{
 		CompilingFunction* compiling = &parameter.manager->compilingLibrary.functions[i];
 		compiling->entry = GetPointer();
 		FunctionGenerator(compiling, parameter).Generator(parameter);
+		codeStartReference = codeReferenceAddresses.Count();
 	}
 	for (uint32 i = 0; i < parameter.manager->compilingLibrary.classes.Count(); i++)
 	{
@@ -66,8 +62,12 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 		{
 			compiling->destructorEntry = GetPointer();
 			FunctionGenerator(compiling->declaration, parameter).Generator(parameter);
+			codeStartReference = codeReferenceAddresses.Count();
 		}
 	}
 	for (uint32 i = 0; i < parameter.manager->lambdaGenerators.Count(); i++)
+	{
 		parameter.manager->lambdaGenerators[i]->Generator(parameter);
+		codeStartReference = codeReferenceAddresses.Count();
+	}
 }

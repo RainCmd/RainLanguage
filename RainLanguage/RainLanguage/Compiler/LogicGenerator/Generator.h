@@ -23,12 +23,13 @@ struct Generator
 private:
 	List<uint8, true>code, data, insert;
 	uint32 insertAddress, instructAddress;
+	uint32 codeStartReference;
 	List<uint32, true> codeReferenceAddresses;
 	Set<uint32, true> insertCodeReferenceAddresses;
 	Dictionary<String, GeneratorStringAddresses*> codeStrings, dataStrings;
 	GlobalReference* globalReference;
 public:
-	inline Generator(DeclarationManager* manager) :code(0), data(manager->compilingLibrary.constantSize), insert(0), insertAddress(INVALID), instructAddress(INVALID), codeReferenceAddresses(0), insertCodeReferenceAddresses(0), codeStrings(0), dataStrings(0), globalReference(NULL)
+	inline Generator(DeclarationManager* manager) :code(0), data(manager->compilingLibrary.constantSize), insert(0), insertAddress(INVALID), instructAddress(INVALID), codeStartReference(0), codeReferenceAddresses(0), insertCodeReferenceAddresses(0), codeStrings(0), dataStrings(0), globalReference(NULL)
 	{
 		data.SetCount(manager->compilingLibrary.constantSize);
 		globalReference = new GlobalReference(this, manager);
@@ -42,7 +43,7 @@ public:
 	{
 		if (insertAddress == INVALID)
 		{
-			for (uint32 i = 0; i < codeReferenceAddresses.Count(); i++)
+			for (uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
 				if (codeReferenceAddresses[i] == address)
 					return i;
 			codeReferenceAddresses.Add(address);
@@ -122,26 +123,26 @@ public:
 	{
 		switch (declaration.code)
 		{
-			case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
-			case TypeCode::Struct:
-				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Struct, declaration.index, NULL), address);
-				break;
-			case TypeCode::Enum:
-				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Enum, declaration.index, NULL), address);
-				break;
-			case TypeCode::Handle:
-				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.index, NULL), address);
-				break;
-			case TypeCode::Interface:
-				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Interface, declaration.index, NULL), address);
-				break;
-			case TypeCode::Delegate:
-				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Delegate, declaration.index, NULL), address);
-				break;
-			case TypeCode::Coroutine:
-				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Coroutine, declaration.index, NULL), address);
-				break;
-			default: EXCEPTION("无效的TypeCode");
+		case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
+		case TypeCode::Struct:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Struct, declaration.index, NULL), address);
+			break;
+		case TypeCode::Enum:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Enum, declaration.index, NULL), address);
+			break;
+		case TypeCode::Handle:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.index, NULL), address);
+			break;
+		case TypeCode::Interface:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Interface, declaration.index, NULL), address);
+			break;
+		case TypeCode::Delegate:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Delegate, declaration.index, NULL), address);
+			break;
+		case TypeCode::Coroutine:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Coroutine, declaration.index, NULL), address);
+			break;
+		default: EXCEPTION("无效的TypeCode");
 		}
 	}
 	inline void WriteCodeGlobalReference(const Declaration& declaration)
