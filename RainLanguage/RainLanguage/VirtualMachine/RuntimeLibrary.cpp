@@ -45,14 +45,14 @@ Declaration LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, cons
 	const LocalToGlobalMap& map = maps[declaration.library];
 	switch (declaration.code)
 	{
-		case TypeCode::Invalid:EXCEPTION("无效的类型");
-		case TypeCode::Struct: return Declaration(map.library->index, TypeCode::Struct, map.structs[declaration.index]);
-		case TypeCode::Enum: return Declaration(map.library->index, TypeCode::Enum, map.enums[declaration.index]);
-		case TypeCode::Handle: return Declaration(map.library->index, TypeCode::Handle, map.classes[declaration.index]);
-		case TypeCode::Interface: return Declaration(map.library->index, TypeCode::Interface, map.interfaces[declaration.index]);
-		case TypeCode::Delegate: return Declaration(map.library->index, TypeCode::Delegate, map.delegates[declaration.index]);
-		case TypeCode::Coroutine: return Declaration(map.library->index, TypeCode::Coroutine, map.coroutines[declaration.index]);
-		default:EXCEPTION("无效的类型");
+	case TypeCode::Invalid:EXCEPTION("无效的类型");
+	case TypeCode::Struct: return Declaration(map.library->index, TypeCode::Struct, map.structs[declaration.index]);
+	case TypeCode::Enum: return Declaration(map.library->index, TypeCode::Enum, map.enums[declaration.index]);
+	case TypeCode::Handle: return Declaration(map.library->index, TypeCode::Handle, map.classes[declaration.index]);
+	case TypeCode::Interface: return Declaration(map.library->index, TypeCode::Interface, map.interfaces[declaration.index]);
+	case TypeCode::Delegate: return Declaration(map.library->index, TypeCode::Delegate, map.delegates[declaration.index]);
+	case TypeCode::Coroutine: return Declaration(map.library->index, TypeCode::Coroutine, map.coroutines[declaration.index]);
+	default:EXCEPTION("无效的类型");
 	}
 }
 Type LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const Type& type)
@@ -63,28 +63,28 @@ MemberFunction LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, c
 {
 	switch (function.declaration.code)
 	{
-		case TypeCode::Invalid: break;
-		case TypeCode::Struct:
-			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].structMemberFunctions[function.declaration.index][function.function]);
-		case TypeCode::Enum: break;
-		case TypeCode::Handle:
-			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].classMemberFunctions[function.declaration.index][function.function]);
-		case TypeCode::Interface:
-			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].interfaceMemberFunctions[function.declaration.index][function.function]);
-		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
-		default:
-			break;
+	case TypeCode::Invalid: break;
+	case TypeCode::Struct:
+		return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].structMemberFunctions[function.declaration.index][function.function]);
+	case TypeCode::Enum: break;
+	case TypeCode::Handle:
+		return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].classMemberFunctions[function.declaration.index][function.function]);
+	case TypeCode::Interface:
+		return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].interfaceMemberFunctions[function.declaration.index][function.function]);
+	case TypeCode::Delegate:
+	case TypeCode::Coroutine:
+	default:
+		break;
 	}
 	EXCEPTION("无效的TypeCode");
 }
 
-void CollectInherits(Set<Declaration, true>& inherits, const Declaration& interfaceDeclaration, RuntimeLibrary* runtimeLibrary, List<LocalToGlobalMap>& maps, Library* library)
+void CollectInherits(Set<Declaration, true>& inherits, const Declaration& interfaceDeclaration, RuntimeLibrary* runtimeLibrary, List<LocalToGlobalMap>& maps, const Library* library)
 {
 	inherits.Add(interfaceDeclaration);
 	if (interfaceDeclaration.library == runtimeLibrary->index)
 	{
-		InterfaceDeclarationInfo* info = &library->interfaces[interfaceDeclaration.index];
+		const InterfaceDeclarationInfo* info = &library->interfaces[interfaceDeclaration.index];
 		for (uint32 i = 0; i < info->inherits.Count(); i++)
 			CollectInherits(inherits, LocalToGlobal(runtimeLibrary->index, maps, info->inherits[i]), runtimeLibrary, maps, library);
 	}
@@ -113,7 +113,7 @@ void SetDeclaratioinSpace(uint32 parent, uint32 index, RuntimeLibrary* library)
 		SetDeclaratioinSpace(index, space->children[i], library);
 }
 
-RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, Library* library)
+RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, const Library* library)
 	:kernel(NULL), index(index), codeOffset(MemoryAlignment(kernel->libraryAgency->code.Count(), 2)), dataOffset(MemoryAlignment(kernel->libraryAgency->data.Count(), 2)), spaces(library->spaces.Count()),
 	variables(library->variables.Count()), enums(library->enums.Count()), structs(library->structs.Count()), classes(library->classes.Count()),
 	interfaces(library->interfaces.Count()), delegates(library->delegates.Count()), coroutines(library->coroutines.Count()),
@@ -129,7 +129,7 @@ RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, Library* library)
 
 	for (uint32 x = 0; x < library->codeStrings.Count(); x++)
 	{
-		StringAddresses* codeStrings = &library->codeStrings[x];
+		const StringAddresses* codeStrings = &library->codeStrings[x];
 		String value = kernel->stringAgency->Add(library->stringAgency->Get(codeStrings->value));
 		for (uint32 y = 0; y < codeStrings->addresses.Count(); y++)
 		{
@@ -139,7 +139,7 @@ RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, Library* library)
 	}
 	for (uint32 x = 0; x < library->dataStrings.Count(); x++)
 	{
-		StringAddresses* dataStrings = &library->dataStrings[x];
+		const StringAddresses* dataStrings = &library->dataStrings[x];
 		String value = kernel->stringAgency->Add(library->stringAgency->Get(dataStrings->value));
 		for (uint32 y = 0; y < dataStrings->addresses.Count(); y++)
 		{
@@ -151,12 +151,12 @@ RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, Library* library)
 		*(uint32*)(agency->code.GetPointer() + codeOffset + library->libraryReferences[x]) = index;
 }
 
-void RelocationMethods(RuntimeLibrary* runtimeLibrary, uint32 interfaceIndex, InterfaceDeclarationInfo* info, const List<LocalToGlobalMap>& maps)
+void RelocationMethods(RuntimeLibrary* runtimeLibrary, uint32 interfaceIndex, const  InterfaceDeclarationInfo* info, const List<LocalToGlobalMap>& maps)
 {
 	RuntimeInterface* runtimeInterface = &runtimeLibrary->interfaces[interfaceIndex];
 	for (uint32 i = 0; i < info->relocations.Count(); i++)
 	{
-		Relocation* relocation = &info->relocations[i];
+		const Relocation* relocation = &info->relocations[i];
 		uint32 characteristic = runtimeLibrary->kernel->libraryAgency->GetFunctionCharacteristic(LocalToGlobal(runtimeLibrary->index, maps, relocation->virtualFunction));
 		MemberFunction realizeFunction = LocalToGlobal(runtimeLibrary->index, maps, relocation->realizeFunction);
 		if (relocation->realizeFunction.declaration.library == LIBRARY_SELF && relocation->realizeFunction.declaration.index == interfaceIndex)
@@ -183,7 +183,7 @@ uint32 GetSpace(const List<RuntimeSpace*, true>& spaces, uint32 index, const Imp
 	EXCEPTION("命名空间查找失败");
 }
 
-void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, Library* library, uint32 index)
+void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* library, uint32 index)
 {
 	const ImportLibrary* importLibrary = &library->imports[index];
 	RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(GET_LIBRARY_STRING(importLibrary->spaces[0].name));
@@ -308,10 +308,10 @@ bool IsEquals(const List<Type, true>& left, const TupleInfo& right)
 	return true;
 }
 
-void InitImportData(Kernel* kernel, uint32 importIndex, Library* library, RuntimeLibrary* self, List<LocalToGlobalMap>& maps)
+void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, RuntimeLibrary* self, List<LocalToGlobalMap>& maps)
 {
 	LibraryAgency* agency = kernel->libraryAgency;
-	ImportLibrary* importLibrary = &library->imports[importIndex];
+	const ImportLibrary* importLibrary = &library->imports[importIndex];
 	RuntimeLibrary* runtimeLibrary = maps[importIndex].library;
 	List<Type, true> parameters(0);
 	List<Type, true> returns(0);
@@ -618,7 +618,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, Library* library, Runtim
 	}
 }
 
-void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
+void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 {
 	this->kernel = kernel;
 	LibraryAgency* agency = kernel->libraryAgency;
@@ -634,7 +634,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->variables.Count(); x++)
 	{
-		ReferenceVariableDeclarationInfo* info = &library->variables[x];
+		const ReferenceVariableDeclarationInfo* info = &library->variables[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		new (variables.Add())RuntimeVariable(info->isPublic, nativeAttributes, TO_NATIVE_STRING(info->name), NULL, LocalToGlobal(index, maps, info->type), dataOffset + info->address, info->readonly);
 		for (uint32 y = 0; y < info->references.Count(); y++)
@@ -642,7 +642,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->enums.Count(); x++)
 	{
-		EnumDeclarationInfo* info = &library->enums[x];
+		const EnumDeclarationInfo* info = &library->enums[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		List<RuntimeEnum::Element, true> enumValues(info->elements.Count());
 		for (uint32 y = 0; y < info->elements.Count(); y++)
@@ -651,12 +651,12 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->structs.Count(); x++)
 	{
-		StructDeclarationInfo* info = &library->structs[x];
+		const StructDeclarationInfo* info = &library->structs[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		List<RuntimeMemberVariable> structVariables(info->variables.Count());
 		for (uint32 y = 0; y < info->variables.Count(); y++)
 		{
-			VariableDeclarationInfo* variable = &info->variables[y];
+			const VariableDeclarationInfo* variable = &info->variables[y];
 			TO_NATIVE_ATTRIBUTES(nativeVariableAttributes, variable->attributes);
 			new (structVariables.Add())RuntimeMemberVariable(variable->isPublic, nativeVariableAttributes, TO_NATIVE_STRING(variable->name), NULL, LocalToGlobal(index, maps, variable->type), variable->address, variable->readonly);
 		}
@@ -664,7 +664,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->classes.Count(); x++)
 	{
-		ClassDeclarationInfo* info = &library->classes[x];
+		const ClassDeclarationInfo* info = &library->classes[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		List<Declaration, true>parents(1);
 		Set<Declaration, true>inherits(0);
@@ -674,7 +674,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 			parents.Insert(0, classParent);
 			if (classParent.library == index)
 			{
-				ClassDeclarationInfo* classDeclarationParent = &library->classes[classParent.index];
+				const ClassDeclarationInfo* classDeclarationParent = &library->classes[classParent.index];
 				for (uint32 y = 0; y < classDeclarationParent->inherits.Count(); y++)
 					CollectInherits(inherits, LocalToGlobal(index, maps, classDeclarationParent->inherits[y]), this, maps, library);
 				classParent = LocalToGlobal(index, maps, classDeclarationParent->parent);
@@ -692,7 +692,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 		List<RuntimeMemberVariable> classVariables(info->variables.Count());
 		for (uint32 y = 0; y < info->variables.Count(); y++)
 		{
-			VariableDeclarationInfo* variable = &info->variables[y];
+			const VariableDeclarationInfo* variable = &info->variables[y];
 			TO_NATIVE_ATTRIBUTES(nativeVariableAttributes, variable->attributes);
 			new (classVariables.Add())RuntimeMemberVariable(variable->isPublic, nativeVariableAttributes, TO_NATIVE_STRING(variable->name), 0, LocalToGlobal(index, maps, variable->type), variable->address, variable->readonly);
 		}
@@ -706,7 +706,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->interfaces.Count(); x++)
 	{
-		InterfaceDeclarationInfo* info = &library->interfaces[x];
+		const InterfaceDeclarationInfo* info = &library->interfaces[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		Set<Declaration, true>inherits(info->inherits.Count());
 		for (uint32 y = 0; y < info->inherits.Count(); y++)
@@ -714,7 +714,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 		List<RuntimeInterface::FunctionInfo> interfaceFunctions(info->functions.Count());
 		for (uint32 y = 0; y < info->functions.Count(); y++)
 		{
-			InterfaceDeclarationInfo::FunctionInfo* interfaceFunctionInfo = &info->functions[y];
+			const InterfaceDeclarationInfo::FunctionInfo* interfaceFunctionInfo = &info->functions[y];
 			TO_NATIVE_ATTRIBUTES(nativeFunctionAttributes, interfaceFunctionInfo->attributes);
 			TO_NATIVE_TUPLE(interfaceFunctionReturns, interfaceFunctionInfo->returns);
 			TO_NATIVE_TUPLE(interfaceFunctionParameters, interfaceFunctionInfo->parameters);
@@ -725,7 +725,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->delegates.Count(); x++)
 	{
-		DelegateDeclarationInfo* info = &library->delegates[x];
+		const DelegateDeclarationInfo* info = &library->delegates[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		TO_NATIVE_TUPLE(delegateReturns, info->returns);
 		TO_NATIVE_TUPLE(delegateParameters, info->parameters);
@@ -733,14 +733,14 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->coroutines.Count(); x++)
 	{
-		CoroutineDeclarationInfo* info = &library->coroutines[x];
+		const CoroutineDeclarationInfo* info = &library->coroutines[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		TO_NATIVE_TUPLE(coroutineReturns, info->returns);
 		new (coroutines.Add())RuntimeCoroutine(info->isPublic, nativeAttributes, TO_NATIVE_STRING(info->name), NULL, coroutineReturns);
 	}
 	for (uint32 x = 0; x < library->functions.Count(); x++)
 	{
-		FunctionDeclarationInfo* info = &library->functions[x];
+		const FunctionDeclarationInfo* info = &library->functions[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		TO_NATIVE_TUPLE(functionReturns, info->returns);
 		TO_NATIVE_TUPLE(functionParameters, info->parameters);
@@ -750,7 +750,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 	}
 	for (uint32 x = 0; x < library->natives.Count(); x++)
 	{
-		NativeDeclarationInfo* info = &library->natives[x];
+		const NativeDeclarationInfo* info = &library->natives[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		TO_NATIVE_TUPLE(functionReturns, info->returns);
 		TO_NATIVE_TUPLE(functionParameters, info->parameters);
@@ -791,7 +791,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 #endif // DEBUG
 		for (uint32 x = 0; x < indices.Count(); x++)
 		{
-			InterfaceDeclarationInfo* info = &library->interfaces[indices[x]];
+			const InterfaceDeclarationInfo* info = &library->interfaces[indices[x]];
 			for (uint32 y = 0; y < info->inherits.Count(); y++)
 				if (info->inherits[y].library == LIBRARY_SELF && indexSet.Contains(info->inherits[y].index))
 					goto next_interface;
@@ -812,7 +812,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 #endif // DEBUG
 		for (uint32 x = 0; x < indices.Count(); x++)
 		{
-			ClassDeclarationInfo* info = &library->classes[indices[x]];
+			const ClassDeclarationInfo* info = &library->classes[indices[x]];
 			if (info->parent.library != LIBRARY_SELF || classes[info->parent.index].offset != INVALID)
 			{
 				RuntimeClass* runtimeClass = &classes[indices[x]];
@@ -828,13 +828,13 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, Library* library)
 				runtimeClass->offset = MemoryAlignment(runtimeClass->offset, runtimeClass->alignment);
 				for (uint32 y = 0; y < info->variables.Count(); y++)
 				{
-					ReferenceVariableDeclarationInfo* variableInfo = &info->variables[y];
+					const ReferenceVariableDeclarationInfo* variableInfo = &info->variables[y];
 					for (uint32 z = 0; z < variableInfo->references.Count(); z++)
 						*(uint32*)(agency->code.GetPointer() + codeOffset + variableInfo->references[y].reference) = runtimeClass->offset + variableInfo->address + variableInfo->references[y].offset;
 				}
 				for (uint32 y = 0; y < info->relocations.Count(); y++)
 				{
-					Relocation* relocation = &info->relocations[y];
+					const Relocation* relocation = &info->relocations[y];
 					uint32 characteristic = kernel->libraryAgency->GetFunctionCharacteristic(LocalToGlobal(index, maps, relocation->virtualFunction));
 					MemberFunction realizeFunction = LocalToGlobal(index, maps, relocation->realizeFunction);
 					runtimeClass->relocations.Set(characteristic, realizeFunction);

@@ -20,10 +20,10 @@ public:
 	List<RuntimeCoroutine> coroutines;
 	List<RuntimeFunction> functions;
 	List<RuntimeNative> natives;
-	RuntimeLibrary(Kernel* kernel, uint32 index, Library* library);
+	RuntimeLibrary(Kernel* kernel, uint32 index, const Library* library);
 	RuntimeLibrary(const RuntimeLibrary&) = delete;
 	RuntimeLibrary(const RuntimeLibrary&&) = delete;
-	void InitRuntimeData(Kernel* kernel, Library* library);
+	void InitRuntimeData(Kernel* kernel, const Library* library);
 
 	~RuntimeLibrary();
 };

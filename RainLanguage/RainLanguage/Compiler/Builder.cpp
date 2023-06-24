@@ -155,10 +155,10 @@ public:
 	inline Product(MessageCollector* messageCollector, Library* library, ProgramDebugDatabase* programDebugDatabase) : messageCollector(messageCollector), library(library), programDebugDatabase(programDebugDatabase) {}
 	inline ErrorLevel GetLevel() { return messageCollector->GetLevel(); }
 	inline uint32 GetLevelMessageCount(ErrorLevel level) { return messageCollector->GetMessages(level)->Count(); }
-	inline const ErrorMessage GetErrorMessage(ErrorLevel level, uint32 index)
+	inline const RainErrorMessage GetErrorMessage(ErrorLevel level, uint32 index)
 	{
 		const Message& message = (*messageCollector->GetMessages(level))[index];
-		return ErrorMessage(message.source.GetPointer(), message.source.length, message.type, message.line, message.start, message.length, message.message.GetPointer(), message.message.length);
+		return RainErrorMessage(message.source.GetPointer(), message.source.length, message.type, message.line, message.start, message.length, message.message.GetPointer(), message.message.length);
 	}
 	inline const RainLibrary* GetLibrary() { return library; }
 	inline const ProgramDebugDatabase* GetProgramDebugDatabase() { return programDebugDatabase; }
@@ -182,7 +182,7 @@ RainProduct* Build(const BuildParameter& parameter)
 		List<FileSpace>fileSpaces = List<FileSpace>(0);
 		while (parameter.codeLoader->LoadNext())
 		{
-			LineReader lineReader(&stringAgency, stringAgency.Add(parameter.codeLoader->CurrentPath(), parameter.codeLoader->CurrentPathLength()), parameter.codeLoader->CurrentCode(), parameter.codeLoader->CurrentCodeLength());
+			LineReader lineReader(&stringAgency, stringAgency.Add(parameter.codeLoader->CurrentPath(), parameter.codeLoader->CurrentPathLength()), parameter.codeLoader->CurrentContent(), parameter.codeLoader->CurrentContentLength());
 			ParseParameter parseParameter = ParseParameter(&lineReader, messages);
 			new (fileSpaces.Add())FileSpace(&manager.compilingLibrary, INVALID, &parseParameter);
 		}

@@ -22,7 +22,7 @@ public:
 	List<uint8, true> code;
 	List<uint8, true> data;
 	LibraryAgency(Kernel* kernel, const StartupParameter* parameter);
-	void Init(Library* libraries, uint32 count);
+	void Init(const Library* libraries, uint32 count);
 	uint32 GetTypeStackSize(const Type& type);
 	uint32 GetTypeHeapSize(const Declaration& type);
 	uint8 GetTypeAlignment(const Type& type);
@@ -42,7 +42,7 @@ public:
 	RuntimeFunction* GetMemberFunction(const MemberFunction& function);
 	bool TryGetSpace(const Type& type, uint32& space);
 	RuntimeLibrary* Load(string name);
-	RuntimeLibrary* Load(Library* library);
+	RuntimeLibrary* Load(const Library* library);
 	inline uint32 GetFunctionCharacteristic(const MemberFunction& function)
 	{
 		if (function.declaration.code == TypeCode::Interface)return GetLibrary(function.declaration.library)->interfaces[function.declaration.index].functions[function.function].characteristic;

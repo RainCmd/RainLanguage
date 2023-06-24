@@ -160,6 +160,6 @@ struct RuntimeSpace
 	List<uint32, true> coroutines;
 	List<uint32, true> functions;
 	List<uint32, true> natives;
-	RuntimeSpace(StringAgency* agency, ::Library* library, const Space* space, const List<string, true>& attributes);
+	RuntimeSpace(StringAgency* agency,const Library* library, const Space* space, const List<string, true>& attributes);
 	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex);
 };

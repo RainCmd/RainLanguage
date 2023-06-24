@@ -27,12 +27,12 @@ public:
 	/// 获取当前代码
 	/// </summary>
 	/// <returns>当前代码</returns>
-	virtual const character* CurrentCode() = 0;
+	virtual const character* CurrentContent() = 0;
 	/// <summary>
 	/// 获取当前代码长度
 	/// </summary>
 	/// <returns>当前代码长度</returns>
-	virtual uint32 CurrentCodeLength() = 0;
+	virtual uint32 CurrentContentLength() = 0;
 	virtual ~CodeLoader() {}
 };
 
@@ -74,43 +74,44 @@ class ProgramDebugDatabase
 };
 
 /// <summary>
+/// 错误信息
+/// </summary>
+const struct RAINLANGUAGE RainErrorMessage
+{
+	/// <summary>
+	/// 错误信息所属源文件名
+	/// </summary>
+	const character* source;
+	/// <summary>
+	/// 错误信息所属源文件名长度
+	/// </summary>
+	uint32 sourceLength;
+	/// <summary>
+	/// 错误类型
+	/// </summary>
+	MessageType type;
+	/// <summary>
+	/// 错误位置信息
+	/// </summary>
+	uint32 line, start, length;
+	/// <summary>
+	/// 错误额外信息
+	/// </summary>
+	const character* message;
+	/// <summary>
+	/// 错误额外信息长度
+	/// </summary>
+	uint32 messageLength;
+
+	inline RainErrorMessage(const character* source, const uint32& sourceLength, const MessageType& type, const uint32& line, const uint32& start, const uint32& length, const character* message, const uint32& messageLength) : source(source), sourceLength(sourceLength), type(type), line(line), start(start), length(length), message(message), messageLength(messageLength) {}
+};
+
+/// <summary>
 /// 编译产物
 /// </summary>
 const class RAINLANGUAGE RainProduct
 {
 public:
-	/// <summary>
-	/// 错误信息
-	/// </summary>
-	const struct RAINLANGUAGE ErrorMessage
-	{
-		/// <summary>
-		/// 错误信息所属源文件名
-		/// </summary>
-		const character* source;
-		/// <summary>
-		/// 错误信息所属源文件名长度
-		/// </summary>
-		uint32 sourceLength;
-		/// <summary>
-		/// 错误类型
-		/// </summary>
-		MessageType type;
-		/// <summary>
-		/// 错误位置信息
-		/// </summary>
-		uint32 line, start, length;
-		/// <summary>
-		/// 错误额外信息
-		/// </summary>
-		const character* message;
-		/// <summary>
-		/// 错误额外信息长度
-		/// </summary>
-		uint32 messageLength;
-
-		inline ErrorMessage(const character* source, const uint32& sourceLength, const MessageType& type, const uint32& line, const uint32& start, const uint32& length, const character* message, const uint32& messageLength) : source(source), sourceLength(sourceLength), type(type), line(line), start(start), length(length), message(message), messageLength(messageLength) {}
-	};
 	RainProduct() = default;
 	virtual ~RainProduct() {}
 
@@ -131,7 +132,7 @@ public:
 	/// <param name="level">错误等级</param>
 	/// <param name="index">信息索引</param>
 	/// <returns>错误信息</returns>
-	virtual const ErrorMessage GetErrorMessage(ErrorLevel level, uint32 index) = 0;
+	virtual const RainErrorMessage GetErrorMessage(ErrorLevel level, uint32 index) = 0;
 	/// <summary>
 	/// 获取编译结果
 	/// </summary>
