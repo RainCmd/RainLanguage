@@ -440,7 +440,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS("GetLength", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
-		REGISTER_CLASS(root, "array", KERNEL_TYPE_CLASS_INDEX_Coroutine, TYPE_Handle, EMPTY_DECLARATIONS, 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
+		REGISTER_CLASS(root, "array", KERNEL_TYPE_CLASS_INDEX_Array, TYPE_Handle, EMPTY_DECLARATIONS, 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//space BitConvert
 	{
@@ -544,6 +544,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		{
 			List<KernelLibraryInfo::Enum::Element> elements(5);
 			REGISIER_ENUM_ELEMENT("Invalid", KERNEL_TYPE_CODE_Invalid, KernelReflectionTypeCode::Invalid);
+			REGISIER_ENUM_ELEMENT("Struct", KERNEL_TYPE_CODE_Struct, KernelReflectionTypeCode::Struct);
 			REGISIER_ENUM_ELEMENT("Bool", KERNEL_TYPE_CODE_Bool, KernelReflectionTypeCode::Bool);
 			REGISIER_ENUM_ELEMENT("Byte", KERNEL_TYPE_CODE_Byte, KernelReflectionTypeCode::Byte);
 			REGISIER_ENUM_ELEMENT("Char", KERNEL_TYPE_CODE_Char, KernelReflectionTypeCode::Char);
@@ -561,7 +562,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISIER_ENUM_ELEMENT("Delegate", KERNEL_TYPE_CODE_Delegate, KernelReflectionTypeCode::Delegate);
 			REGISIER_ENUM_ELEMENT("Coroutine", KERNEL_TYPE_CODE_Coroutine, KernelReflectionTypeCode::Coroutine);
 			REGISIER_ENUM_ELEMENT("Array", KERNEL_TYPE_CODE_Array, KernelReflectionTypeCode::Array);
-			REGISIER_ENUM(space, "TypeCode", KERNEL_TYPE_ENUM_INDEX_CoroutineState, elements);
+			REGISIER_ENUM(space, "TypeCode", KERNEL_TYPE_ENUM_INDEX_TypeCode, elements);
 		}
 		//class ReadonlyStrings
 		{

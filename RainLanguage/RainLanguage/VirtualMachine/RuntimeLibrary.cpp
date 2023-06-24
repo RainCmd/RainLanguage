@@ -762,7 +762,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 	for (uint32 i = 0; i < structs.Count(); i++) indices.Add(i);
 	while (indices.Count())
 	{
-#ifdef DEBUG
+#ifdef _DEBUG
 		uint32 count = indices.Count();
 #endif // DEBUG
 		for (uint32 x = 0; x < indices.Count(); x++)
@@ -786,7 +786,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 	for (uint32 i = 0; i < indices.Count(); i++) indexSet.Add(indices[i]);
 	while (indices.Count())
 	{
-#ifdef DEBUG
+#ifdef _DEBUG
 		uint32 count = indices.Count();
 #endif // DEBUG
 		for (uint32 x = 0; x < indices.Count(); x++)
@@ -807,7 +807,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 	for (uint32 i = 0; i < classes.Count(); i++)indices.Add(i);
 	while (indices.Count())
 	{
-#ifdef DEBUG
+#ifdef _DEBUG
 		uint32 count = indices.Count();
 #endif // DEBUG
 		for (uint32 x = 0; x < indices.Count(); x++)

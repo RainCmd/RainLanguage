@@ -4,7 +4,7 @@
 #define TEXT(value) L ## value
 #define EXCEPTION(message) throw L ## message
 #define ASSERT(condition,message) if(!(condition)) EXCEPTION(message);
-#ifdef DEBUG
+#ifdef _DEBUG
 #define ASSERT_DEBUG(condition,message) ASSERT(condition,message);
 #else
 #define ASSERT_DEBUG(condition,message)

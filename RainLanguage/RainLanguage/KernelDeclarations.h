@@ -57,6 +57,7 @@ enum KERNEL_COROUTINE_STATE_INDEX
 enum class KernelReflectionTypeCode
 {
 	Invalid,
+	Struct,
 	Bool,
 	Byte,
 	Char,

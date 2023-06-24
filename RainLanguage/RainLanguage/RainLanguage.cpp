@@ -6,8 +6,9 @@ void* InternalMalloc(uint32 count)
 {
 	if (count)
 	{
-		if (_alloc) return _alloc(count);
-		else return malloc((size_t)count);
+		void* result = _alloc ? _alloc(count) : malloc((size_t)count);
+		ASSERT(result, "ƒ⁄¥Ê∑÷≈‰ ß∞‹");
+		return result;
 	}
 	else return NULL;
 }
@@ -26,10 +27,16 @@ void Mzero(void* pointer, uint32 count)
 	if (count) memset(pointer, 0, (size_t)count);
 }
 
+__realloc _realloc;
 void* InternalRealloc(void* pointer, uint32 count)
 {
-	if (pointer) return realloc(pointer, (size_t)count);
-	else return malloc((size_t)count);
+	if (pointer)
+	{
+		void* result = _realloc ? _realloc(pointer, (size_t)count) : realloc(pointer, (size_t)count);
+		ASSERT(result, "ƒ⁄¥Ê∑÷≈‰ ß∞‹");
+		return result;
+	}
+	else return InternalMalloc(count);
 }
 
 void InternalMcopy(const void* src, void* trg, uint32 length)
@@ -52,8 +59,9 @@ void operator delete(void* pointer)
 	Free(pointer);
 }
 
-void SetMemory(__alloc rainAlloc, __free rainFree)
+void SetMemory(__alloc rainAlloc, __free rainFree, __realloc _rainRealloc)
 {
 	_alloc = rainAlloc;
 	_free = rainFree;
+	_realloc = _rainRealloc;
 }
