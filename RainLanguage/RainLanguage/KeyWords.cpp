@@ -1,5 +1,67 @@
 #include "KeyWords.h"
 
+StringAgency* KeyWordPool = NULL;
+void InitKeyWord()
+{
+	if (KeyWordPool)return;
+	KeyWordPool = new StringAgency(512);
+	KeyWord_namespace = KeyWordPool->Add(TEXT("namespace"));
+	KeyWord_import = KeyWordPool->Add(TEXT("import"));
+	KeyWord_native = KeyWordPool->Add(TEXT("native"));
+	KeyWord_public = KeyWordPool->Add(TEXT("public"));
+	KeyWord_internal = KeyWordPool->Add(TEXT("internal"));
+	KeyWord_space = KeyWordPool->Add(TEXT("space"));
+	KeyWord_protected = KeyWordPool->Add(TEXT("protected"));
+	KeyWord_private = KeyWordPool->Add(TEXT("private"));
+	KeyWord_enum = KeyWordPool->Add(TEXT("enum"));
+	KeyWord_struct = KeyWordPool->Add(TEXT("struct"));
+	KeyWord_class = KeyWordPool->Add(TEXT("class"));
+	KeyWord_interface = KeyWordPool->Add(TEXT("interface"));
+	KeyWord_const = KeyWordPool->Add(TEXT("const"));
+
+	KeyWord_kernel = KeyWordPool->Add(TEXT("kernel"));
+	KeyWord_global = KeyWordPool->Add(TEXT("global"));
+	KeyWord_base = KeyWordPool->Add(TEXT("base"));
+	KeyWord_this = KeyWordPool->Add(TEXT("this"));
+	KeyWord_true = KeyWordPool->Add(TEXT("true"));
+	KeyWord_false = KeyWordPool->Add(TEXT("false"));
+	KeyWord_null = KeyWordPool->Add(TEXT("null"));
+	KeyWord_var = KeyWordPool->Add(TEXT("var"));
+	KeyWord_bool = KeyWordPool->Add(TEXT("bool"));
+	KeyWord_byte = KeyWordPool->Add(TEXT("byte"));
+	KeyWord_char = KeyWordPool->Add(TEXT("char"));
+	KeyWord_integer = KeyWordPool->Add(TEXT("int"));
+	KeyWord_real = KeyWordPool->Add(TEXT("real"));
+	KeyWord_real2 = KeyWordPool->Add(TEXT("real2"));
+	KeyWord_real3 = KeyWordPool->Add(TEXT("real3"));
+	KeyWord_real4 = KeyWordPool->Add(TEXT("real4"));
+	KeyWord_type = KeyWordPool->Add(TEXT("type"));
+	KeyWord_string = KeyWordPool->Add(TEXT("string"));
+	KeyWord_handle = KeyWordPool->Add(TEXT("handle"));
+	KeyWord_entity = KeyWordPool->Add(TEXT("entity"));
+	KeyWord_delegate = KeyWordPool->Add(TEXT("delegate"));
+	KeyWord_coroutine = KeyWordPool->Add(TEXT("coroutine"));
+	KeyWord_array = KeyWordPool->Add(TEXT("array"));
+
+	KeyWord_if = KeyWordPool->Add(TEXT("if"));
+	KeyWord_elif = KeyWordPool->Add(TEXT("elif"));
+	KeyWord_else = KeyWordPool->Add(TEXT("else"));
+	KeyWord_while = KeyWordPool->Add(TEXT("while"));
+	KeyWord_for = KeyWordPool->Add(TEXT("for"));
+	KeyWord_break = KeyWordPool->Add(TEXT("break"));
+	KeyWord_continue = KeyWordPool->Add(TEXT("continue"));
+	KeyWord_return = KeyWordPool->Add(TEXT("return"));
+	KeyWord_is = KeyWordPool->Add(TEXT("is"));
+	KeyWord_as = KeyWordPool->Add(TEXT("as"));
+	KeyWord_start = KeyWordPool->Add(TEXT("start"));
+	KeyWord_new = KeyWordPool->Add(TEXT("new"));
+	KeyWord_wait = KeyWordPool->Add(TEXT("wait"));
+	KeyWord_exit = KeyWordPool->Add(TEXT("exit"));
+	KeyWord_try = KeyWordPool->Add(TEXT("try"));
+	KeyWord_catch = KeyWordPool->Add(TEXT("catch"));
+	KeyWord_finally = KeyWordPool->Add(TEXT("finally"));
+}
+
 bool IsKeyWord(const String& value)
 {
 	if (value == KeyWord_namespace)return true;

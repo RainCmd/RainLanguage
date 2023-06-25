@@ -21,16 +21,15 @@ private:
 	{
 		if (top < size)return false;
 		size = GetPrime(size);
-		Free(buckets);
-		buckets = Malloc<uint32>(size);
-		slots = Realloc<Slot>(slots, top);
+		buckets = Realloc<uint32>(buckets, size);
+		slots = Realloc<Slot>(slots, size);
 		for (uint32 i = 0; i < size; i++)buckets[i] = INVALID;
-		for (uint32 i = 0; i < size; i++)
+		for (uint32 i = 0; i < top; i++)
 		{
 			Slot* slot = slots + i;
 			uint32 bidx = slot->hash % size;
 			slot->next = buckets[bidx];
-			buckets[bidx] = bidx;
+			buckets[bidx] = i;
 		}
 		return true;
 	}
@@ -57,7 +56,7 @@ public:
 		const Dictionary* dictionary;
 		Slot* slot;
 	public:
-		Iterator(const Dictionary* dictionary) :index(0), version(dictionary->version), dictionary(dictionary), slot(NULL){}
+		Iterator(const Dictionary* dictionary) :index(0), version(dictionary->version), dictionary(dictionary), slot(NULL) {}
 		bool Next()
 		{
 			ASSERT(version == dictionary->version, "迭代源已被修改");

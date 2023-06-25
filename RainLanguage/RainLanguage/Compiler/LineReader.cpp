@@ -14,6 +14,7 @@ bool LineReader::ReadLine()
 	while (end < count)
 		if (buffer[end] == '\n')
 		{
+			line++;
 			if (start < end++) return true;
 			else start = end;
 		}

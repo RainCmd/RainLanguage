@@ -2,7 +2,7 @@
 #include "Character.h"
 #define LEXICAL(length,type) lexical = Lexical(segment.source, segment.content.Sub(index, length), segment.line, index, type)
 #define CHECK_NEXT(distance,symbol) (index < segment.content.length + distance && segment.content[index + distance] == symbol)
-#define NEXT(distance) (index < segment.content.length + distance ? segment.content[index + distance] : '\0')
+#define NEXT(distance) (index + distance < segment.content.length ? segment.content[index + distance] : '\0')
 #define MESSAGE(type) MESSAGE2(messages, lexical.anchor, type);
 #define MATCH(symbol)\
 	if (CHECK_NEXT(0, symbol))\

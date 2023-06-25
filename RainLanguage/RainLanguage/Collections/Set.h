@@ -98,7 +98,7 @@ public:
 			}
 			else Mcopy<Slot>(other.slots + i, slots + i, 1);
 	}
-	Set(Set&& other) :buckets(other.buckets), slots(other.slots), top(other.top), size(other.size), free(other.free), version(other.version), count(other.count)
+	Set(Set&& other) noexcept:buckets(other.buckets), slots(other.slots), top(other.top), size(other.size), free(other.free), version(other.version), count(other.count)
 	{
 		other.buckets = NULL;
 		other.slots = NULL;

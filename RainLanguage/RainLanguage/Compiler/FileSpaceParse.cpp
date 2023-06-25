@@ -79,7 +79,6 @@ bool TryParseAttributes(const Line& line, List<Anchor>& attributes, MessageColle
 		return true;
 	}
 	return false;
-
 }
 
 void ParseImport(const Line& line, Lexical& lexical, List<Anchor>* space, MessageCollector* messages)

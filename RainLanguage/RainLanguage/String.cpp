@@ -24,10 +24,10 @@ void StringAgency::GC()
 		{
 			if (slot->position > position)
 			{
-				Mmove(&characters[slot->position], &characters[position], slot->length);
+				Mmove(&characters[slot->position], &characters[position], slot->length + 1);
 				slot->position = position;
 			}
-			position += slot->length;
+			position += slot->length + 1;
 			if (!head)head = tail = index;
 			else
 			{
@@ -45,7 +45,7 @@ void StringAgency::GC()
 			index = gcNext;
 		}
 	}
-	characters.RemoveAt(position, characters.Count() - position);
+	characters.RemoveAt(position + 1, characters.Count() - position - 1);
 	holeChars = 0;
 	holeSlots = 0;
 }
@@ -90,7 +90,7 @@ bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash
 	return false;
 }
 
-StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8), combineHelper(NULL), buckets(NULL), slots(NULL), top(1), free(NULL), head(NULL), tail(NULL), permanent(NULL), holeChars(0), holeSlots(0)
+StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8), helper(NULL), buckets(NULL), slots(NULL), top(1), free(NULL), head(NULL), tail(NULL), permanent(NULL), holeChars(0), holeSlots(0)
 {
 	size = GetPrime(capacity);
 	buckets = Malloc<uint32>(size);
@@ -99,7 +99,7 @@ StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8),
 	for (uint32 i = 0; i < size; i++) buckets[i] = NULL;
 }
 
-StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other.characters.Count()), combineHelper(NULL), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), permanent(other.permanent), holeChars(other.holeChars), holeSlots(other.holeSlots)
+StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other.characters.Count()), helper(NULL), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), permanent(other.permanent), holeChars(other.holeChars), holeSlots(other.holeSlots)
 {
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = Malloc<uint32>(size);
@@ -108,12 +108,12 @@ StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other
 	Mcopy(other.slots, slots, size);
 }
 
-StringAgency::StringAgency(StringAgency&& other)noexcept :characters(other.characters.Count()), combineHelper(other.combineHelper), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), permanent(other.permanent), holeChars(other.holeChars), holeSlots(other.holeSlots)
+StringAgency::StringAgency(StringAgency&& other)noexcept :characters(other.characters.Count()), helper(other.helper), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), permanent(other.permanent), holeChars(other.holeChars), holeSlots(other.holeSlots)
 {
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = other.buckets;
 	slots = other.slots;
-	other.combineHelper = NULL;
+	other.helper = NULL;
 	other.buckets = NULL;
 	other.slots = NULL;
 }
@@ -169,7 +169,7 @@ String StringAgency::Add(const character* value, uint32 length)
 	if (!length)return String();
 	uint32 hash, bidx, sidx;
 	if (TryGetIdx(value, length, hash, bidx, sidx))return String(this, sidx);
-	if (characters.Slack() < length && characters.Slack() + holeChars >= length) GC();
+	if (characters.Slack() < length + 1 && characters.Slack() + holeChars > length) GC();
 	if (free)
 	{
 		sidx = free;
@@ -190,7 +190,7 @@ String StringAgency::Add(const character* value, uint32 length)
 	slot->reference = 0;
 
 	buckets[bidx] = sidx;
-	characters.Add(value, length);
+	characters.Add(value, length); characters.Add('\0');
 
 	if (!head)head = tail = sidx;
 	else
@@ -243,13 +243,47 @@ String StringAgency::Get(uint32 index)
 	return String();
 }
 
+void StringAgency::InitHelper()
+{
+	if (helper) helper->Clear();
+	else helper = new List<character, true>(256);
+}
+
 String StringAgency::Combine(String* values, uint32 count)
 {
-	if (combineHelper) combineHelper->Clear();
-	else combineHelper = new List<character, true>(256);
+	InitHelper();
 	for (uint32 i = 0; i < count; i++)
-		combineHelper->Add(values[i].GetPointer(), values[i].length);
-	return Add(combineHelper->GetPointer(), combineHelper->Count());
+		helper->Add(values[i].GetPointer(), values[i].length);
+	return Add(helper->GetPointer(), helper->Count());
+}
+
+String StringAgency::Sub(const String& source, uint32 start, uint32 length)
+{
+	if (length)
+	{
+		ASSERT(start + length <= source.length, "字符串裁剪越界");
+		InitHelper();
+		helper->Add(source.GetPointer() + start, length);
+		return Add(helper->GetPointer(), length);
+	}
+	return String();
+}
+
+String StringAgency::Replace(const String& source, const String& oldValue, const String& newValue)
+{
+	ASSERT_DEBUG(!source.IsEmpty() && !oldValue.IsEmpty(), "不能对空字符串进行该操作");
+	if (source.length < oldValue.length)return source;
+	InitHelper();
+	uint32 index = source.Find(oldValue, 0), last = 0;
+	while (index != INVALID)
+	{
+		helper->Add(source.GetPointer() + last, index - last);
+		helper->Add(newValue.GetPointer(), newValue.length);
+		last = index + oldValue.length;
+		index = source.Find(oldValue, last);
+	}
+	helper->Add(source.GetPointer(), source.length - last);
+	return Add(helper->GetPointer(), helper->Count());
 }
 
 void StringAgency::Serialize(Serializer* serializer)
@@ -264,7 +298,7 @@ void StringAgency::Serialize(Serializer* serializer)
 	for (uint32 index = head; index; index = slots[index].gcNext) serializer->Serialize(slots[index]);
 }
 
-StringAgency::StringAgency(Deserializer* deserializer) :characters(0), combineHelper(NULL), buckets(NULL), slots(NULL), top(0), free(NULL), head(NULL), tail(NULL), permanent(NULL), holeChars(0), holeSlots(0)
+StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NULL), buckets(NULL), slots(NULL), top(0), free(NULL), head(NULL), tail(NULL), permanent(NULL), holeChars(0), holeSlots(0)
 {
 	top = deserializer->Deserialize<uint32>();
 	size = deserializer->Deserialize<uint32>();
@@ -296,12 +330,12 @@ StringAgency::StringAgency(Deserializer* deserializer) :characters(0), combineHe
 
 StringAgency::~StringAgency()
 {
-	if (combineHelper) delete combineHelper;
+	if (helper) delete helper;
 	if (buckets) Free(buckets);
 	if (slots)Free(slots);
 }
 
-uint32 String::Find(const String& value, uint32 start)
+uint32 String::Find(const String& value, uint32 start) const
 {
 	if (IsEmpty() || value.IsEmpty())return INVALID;
 	for (uint32 x = start, y = 0; x < length; x++)
@@ -322,23 +356,6 @@ uint32 String::Find(const String& value, uint32 start)
 		label_next:;
 		}
 	return INVALID;
-}
-
-String String::Replace(const String& oldValue, const String& newValue)
-{
-	ASSERT_DEBUG(!IsEmpty() && !oldValue.IsEmpty(), "不能对空字符串进行该操作");
-	if (length < oldValue.length)return *this;
-	List<character, true> result(length);
-	uint32 index = Find(oldValue, 0), last = 0;
-	while (index != INVALID)
-	{
-		result.Add(GetPointer() + last, index - last);
-		result.Add(newValue.GetPointer(), newValue.length);
-		last = index + oldValue.length;
-		index = Find(oldValue, last);
-	}
-	result.Add(GetPointer(), length - last);
-	return pool->Add(result.GetPointer(), result.Count());
 }
 
 String ToString(StringAgency* agency, bool value)

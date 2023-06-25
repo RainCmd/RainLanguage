@@ -63,7 +63,7 @@ public:
 	/// 获取异常退出时的退出信息
 	/// </summary>
 	/// <param name="length">信息长度</param>
-	/// <returns>信息</returns>
+	/// <returns>信息(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
 	/// <exception>如果调用是无效状态会抛异常</exception>
 	const character* GetExitMessage(uint32& length) const;
 	/// <summary>
@@ -163,7 +163,7 @@ public:
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="length">枚举类型对应的元素名称长度</param>
-	/// <returns>枚举类型对应的元素名称</returns>
+	/// <returns>枚举类型对应的元素名称(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
 	const character* GetEnumNameReturnValue(uint32 index, uint32& length) const;
 	/// <summary>
@@ -171,7 +171,7 @@ public:
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="length">字符串长度</param>
-	/// <returns>字符串</returns>
+	/// <returns>字符串(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
 	const character* GetStringReturnValue(uint32 index, uint32& length) const;
 	/// <summary>
@@ -354,7 +354,7 @@ public:
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="length">枚举参数名长度</param>
-	/// <returns>枚举参数名</returns>
+	/// <returns>枚举参数名(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
 	/// <exception>如果参数类型不正确会抛异常</exception>
 	virtual const character* GetEnumNameParameter(uint32 index, uint32& length) const = 0;
 	/// <summary>
@@ -369,7 +369,7 @@ public:
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="length">字符串长度</param>
-	/// <returns>字符串</returns>
+	/// <returns>字符串(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
 	/// <exception>如果参数类型不正确会抛异常</exception>
 	virtual const character* GetStringParameter(uint32 index, uint32& length) const = 0;
 	/// <summary>

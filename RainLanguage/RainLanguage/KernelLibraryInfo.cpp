@@ -3,6 +3,7 @@
 #include "Public/VirtualMachine.h"
 #include "Real/MathReal.h"
 #include "VirtualMachine/Exceptions.h"
+#include "KeyWords.h"
 
 #define KERNEL_STRING(text) KernelStringAgency.Add(TEXT(text))
 #define REGISIER_ENUM_ELEMENT(name,index,value)\
@@ -73,7 +74,7 @@ inline TupleInfo CreateTypeList(const Type& type)
 
 inline TupleInfo CreateTypeList(const Type& type1, const Type& type2)
 {
-	TupleInfo result(1);
+	TupleInfo result(2);
 	result.AddElement(type1, 0);
 	result.AddElement(type2, 0);
 	return result;
@@ -81,7 +82,7 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2)
 
 inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3)
 {
-	TupleInfo result(1);
+	TupleInfo result(3);
 	result.AddElement(type1, 0);
 	result.AddElement(type2, 0);
 	result.AddElement(type3, 0);
@@ -90,7 +91,7 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 
 inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3, const Type& type4)
 {
-	TupleInfo result(1);
+	TupleInfo result(4);
 	result.AddElement(type1, 0);
 	result.AddElement(type2, 0);
 	result.AddElement(type3, 0);
@@ -182,6 +183,7 @@ inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 
 KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), coroutines(0), functions(0), dataStrings(0)
 {
+	InitKeyWord();
 	root = new KernelLibraryInfo::Space(KERNEL_STRING("kernel"));
 	//Operation
 	{
@@ -440,7 +442,9 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS("GetLength", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
-		REGISTER_CLASS(root, "array", KERNEL_TYPE_CLASS_INDEX_Array, TYPE_Handle, EMPTY_DECLARATIONS, 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
+		if (!(classes.Count() == KERNEL_TYPE_CLASS_INDEX_Array)) throw L"托管类型索引错误";;; 
+		root->classes.Add(classes.Count());
+		new (classes.Add())KernelLibraryInfo::Class(TYPE_Handle, (List<Declaration, true>(0)), KernelStringAgency.Add(L"array"), 4, MEMORY_ALIGNMENT_4, (List<uint32, true>(0)), (List<KernelLibraryInfo::Variable>(0)), memberFunctions);;
 	}
 	//space BitConvert
 	{

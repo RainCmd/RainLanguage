@@ -18,7 +18,7 @@ private:
 		uint32 reference;
 	};
 	List<character, true> characters;
-	List<character, true>* combineHelper;
+	List<character, true>* helper;
 	uint32* buckets;
 	Slot* slots;
 	uint32 top, size, free, head, tail, permanent, holeChars, holeSlots;
@@ -54,12 +54,15 @@ public:
 		Slot* slot = slots + index;
 		if (!(--slot->reference) && (!permanent || slot->position > slots[permanent].position))
 		{
-			holeChars += slot->length;
+			holeChars += slot->length + 1;
 			holeSlots++;
 			slot->length = 0;
 		}
 	}
+	void InitHelper();
 	String Combine(String* values, uint32 count);
+	String Sub(const String& source, uint32 start, uint32 length);
+	String Replace(const String& source, const String& oldValue, const String& newValue);
 	inline void  Permanent() { permanent = tail; }
 	inline uint32 Count()
 	{
@@ -87,6 +90,15 @@ public:
 	inline String(const String& other) : pool(other.pool), index(other.index), length(other.length), hash(other.hash)
 	{
 		if (pool) pool->Reference(index);
+	}
+	inline String& operator=(const String& other)
+	{
+		pool = other.pool;
+		index = other.index;
+		length = other.length;
+		hash = other.hash;
+		if (pool) pool->Reference(index);
+		return *this;
 	}
 	inline character operator[](uint32 index)const { return pool->characters[pool->slots[this->index].position + index]; }
 	inline bool operator==(const character* other) const
@@ -134,20 +146,19 @@ public:
 	inline const character* GetPointer() const { return pool ? &pool->characters[pool->slots[index].position] : NULL; }
 	inline String Sub(uint32 start, uint32 length) const
 	{
-		const character* pointer = GetPointer();
-		if (pointer && length)
-		{
-			ASSERT_DEBUG(start + length < this->length, "越界");
-			return pool->Add(pointer + start, length);
-		}
+		if (pool && length) return pool->Sub(*this, start, length);
 		else return String(pool, 0);
 	}
 	inline String Sub(uint32 start) const
 	{
 		return Sub(start, length - start);
 	}
-	uint32 Find(const String& value, uint32 start);
-	String Replace(const String& oldValue, const String& newValue);
+	uint32 Find(const String& value, uint32 start) const;
+	inline String Replace(const String& oldValue, const String& newValue) const
+	{
+		ASSERT_DEBUG(!IsEmpty() && !oldValue.IsEmpty(), "不能对空字符串进行该操作");
+		return pool->Replace(*this, oldValue, newValue);
+	}
 	inline bool IsEmpty()const { return !pool || !index; }
 
 	inline ~String()

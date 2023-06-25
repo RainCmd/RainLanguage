@@ -79,7 +79,7 @@ class ProgramDebugDatabase
 const struct RAINLANGUAGE RainErrorMessage
 {
 	/// <summary>
-	/// 错误信息所属源文件名
+	/// 错误信息所属源文件名(指针仅调用时有效，请勿将指针传回虚拟机)
 	/// </summary>
 	const character* source;
 	/// <summary>
@@ -95,7 +95,7 @@ const struct RAINLANGUAGE RainErrorMessage
 	/// </summary>
 	uint32 line, start, length;
 	/// <summary>
-	/// 错误额外信息
+	/// 错误额外信息(指针仅调用时有效，请勿将指针传回虚拟机)
 	/// </summary>
 	const character* message;
 	/// <summary>

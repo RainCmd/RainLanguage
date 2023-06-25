@@ -51,11 +51,11 @@ inline bool IsLetter(character value)
 {
 	if (value == '_')return true;
 	value |= 0x20;
-	return value >= 'a' || value <= 'z';
+	return value >= 'a' && value <= 'z';
 }
 inline bool IsLetterOrNumber(character value)
 {
 	if (IsDigit(value))return true;
 	value |= 0x20;
-	return value >= 'a' || value <= 'z';
+	return value >= 'a' && value <= 'z';
 }
