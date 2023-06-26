@@ -194,7 +194,7 @@ Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
 bool ExpressionParser::TryGetThisValueDeclaration(CompilingDeclaration& declaration)
 {
 	Local local;
-	if (localContext->TryGetLocal(KeyWord_this, local))
+	if (localContext->TryGetLocal(KeyWord_this(), local))
 	{
 		declaration = local.GetDeclaration();
 		return true;
@@ -1159,8 +1159,8 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& anchor, uint32& index, L
 	{
 		if (lexical.type == LexicalType::Word)
 		{
-			if (lexical.anchor.content == KeyWord_global) return TryFindDeclaration(anchor, index, lexical, manager->selfLibaray, declarations);
-			else if (lexical.anchor.content == KeyWord_kernel) return TryFindDeclaration(anchor, index, lexical, manager->kernelLibaray, declarations);
+			if (lexical.anchor.content == KeyWord_global()) return TryFindDeclaration(anchor, index, lexical, manager->selfLibaray, declarations);
+			else if (lexical.anchor.content == KeyWord_kernel()) return TryFindDeclaration(anchor, index, lexical, manager->kernelLibaray, declarations);
 			else if (TryFindDeclaration(lexical.anchor, declarations))
 			{
 				index = lexical.anchor.GetEnd();
@@ -2813,21 +2813,21 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				goto label_error_unexpected_lexcal;
 #pragma endregion
 			case LexicalType::Word:
-				if (lexical.anchor.content == KeyWord_kernel)
+				if (lexical.anchor.content == KeyWord_kernel())
 				{
 					List<CompilingDeclaration, true> declarations(0);
 					if (TryFindDeclaration(anchor, index, lexical, manager->kernelLibaray, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
 						goto label_next_lexical;
 					goto label_parse_fail;
 				}
-				else if (lexical.anchor.content == KeyWord_global)
+				else if (lexical.anchor.content == KeyWord_global())
 				{
 					List<CompilingDeclaration, true> declarations(0);
 					if (TryFindDeclaration(anchor, index, lexical, manager->selfLibaray, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
 						goto label_next_lexical;
 					goto label_parse_fail;
 				}
-				else if (lexical.anchor.content == KeyWord_base)
+				else if (lexical.anchor.content == KeyWord_base())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2875,7 +2875,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_this)
+				else if (lexical.anchor.content == KeyWord_this())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2894,7 +2894,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_true)
+				else if (lexical.anchor.content == KeyWord_true())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2904,7 +2904,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_false)
+				else if (lexical.anchor.content == KeyWord_false())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2914,7 +2914,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_null)
+				else if (lexical.anchor.content == KeyWord_null())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2924,7 +2924,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_var)
+				else if (lexical.anchor.content == KeyWord_var())
 				{
 					if (ContainAny(attribute, Attribute::None))
 					{
@@ -2947,7 +2947,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_bool)
+				else if (lexical.anchor.content == KeyWord_bool())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2957,7 +2957,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_byte)
+				else if (lexical.anchor.content == KeyWord_byte())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2967,7 +2967,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_char)
+				else if (lexical.anchor.content == KeyWord_char())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2977,7 +2977,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_integer)
+				else if (lexical.anchor.content == KeyWord_integer())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2987,7 +2987,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_real)
+				else if (lexical.anchor.content == KeyWord_real())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2997,7 +2997,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_real2)
+				else if (lexical.anchor.content == KeyWord_real2())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3007,7 +3007,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_real3)
+				else if (lexical.anchor.content == KeyWord_real3())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3017,7 +3017,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_real4)
+				else if (lexical.anchor.content == KeyWord_real4())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3027,7 +3027,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_type)
+				else if (lexical.anchor.content == KeyWord_type())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3037,7 +3037,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_string)
+				else if (lexical.anchor.content == KeyWord_string())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3047,7 +3047,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_handle)
+				else if (lexical.anchor.content == KeyWord_handle())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3057,7 +3057,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_entity)
+				else if (lexical.anchor.content == KeyWord_entity())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3067,7 +3067,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_array)
+				else if (lexical.anchor.content == KeyWord_array())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3077,7 +3077,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_interface)
+				else if (lexical.anchor.content == KeyWord_interface())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3087,7 +3087,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_is)
+				else if (lexical.anchor.content == KeyWord_is())
 				{
 					if (ContainAny(attribute, Attribute::Value))
 					{
@@ -3134,7 +3134,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_as)
+				else if (lexical.anchor.content == KeyWord_as())
 				{
 					if (ContainAny(attribute, Attribute::Value))
 					{
@@ -3172,7 +3172,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_start)
+				else if (lexical.anchor.content == KeyWord_start())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -3194,7 +3194,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_new)
+				else if (lexical.anchor.content == KeyWord_new())
 				{
 					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{

@@ -7,7 +7,7 @@ void CodeLocalAddressReference::SetAddress(Generator* generator, uint32 address)
 	assigned = true;
 	this->address = address;
 	for (uint32 i = 0; i < references.Count(); i++)
-		generator->WriteCode(generator->GetReferenceAddress(references[i].referenceAddress), address - generator->AddCodeReference(references[i].instructAddress));
+		generator->WriteCode(references[i].referenceAddress, address - generator->AddCodeReference(references[i].instructAddress));
 }
 
 void CodeLocalAddressReference::AddReference(Generator* generator, uint32 instructAddress)

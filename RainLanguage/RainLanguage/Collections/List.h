@@ -120,8 +120,13 @@ public:
 	{
 		ASSERT(count, "数组越界");
 		count--;
-		if (!IsBitwise) Destruct(values + count, 1);
-		return values[count];
+		if (IsBitwise) return values[count];
+		else
+		{
+			T result = values[count];
+			Destruct(values + count, 1);
+			return result;
+		}
 	}
 	inline T& Peek()
 	{
@@ -180,6 +185,7 @@ public:
 	}
 	inline uint32 Count() const { return count; }
 	inline uint32 Slack() const { return size - count; }
+	inline uint32 Capacity() const { return size; }
 	inline const T* GetPointer() const { return values; }
 	inline T* GetPointer() { return values; }
 	inline void Clear()

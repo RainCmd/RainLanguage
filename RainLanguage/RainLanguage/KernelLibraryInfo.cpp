@@ -3,7 +3,6 @@
 #include "Public/VirtualMachine.h"
 #include "Real/MathReal.h"
 #include "VirtualMachine/Exceptions.h"
-#include "KeyWords.h"
 
 #define KERNEL_STRING(text) KernelStringAgency.Add(TEXT(text))
 #define REGISIER_ENUM_ELEMENT(name,index,value)\
@@ -183,7 +182,6 @@ inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 
 KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), coroutines(0), functions(0), dataStrings(0)
 {
-	InitKeyWord();
 	root = new KernelLibraryInfo::Space(KERNEL_STRING("kernel"));
 	//Operation
 	{

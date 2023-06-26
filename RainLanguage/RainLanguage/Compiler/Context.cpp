@@ -1,5 +1,7 @@
 #include "Context.h"
 #include "AbstractLibrary.h"
+#include "../KeyWords.h"
+#include "../KernelDeclarations.h"
 #include "../Collections/Set.h"
 
 Context::Context(CompilingSpace* space, List<AbstractSpace*, true>* relies) : declaration(), compilingSpace(space), relies(relies) {}
@@ -12,97 +14,97 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 	{
 		switch (declaration.category)
 		{
-			case DeclarationCategory::Invalid: break;
-			case DeclarationCategory::Variable:
-			case DeclarationCategory::Function:
-			case DeclarationCategory::Enum:
+		case DeclarationCategory::Invalid: break;
+		case DeclarationCategory::Variable:
+		case DeclarationCategory::Function:
+		case DeclarationCategory::Enum:
+			if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
+			return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
+		case DeclarationCategory::EnumElement:
+			return IsVisible(manager, manager->compilingLibrary.enums[declaration.definition].declaration);
+		case DeclarationCategory::Struct:
+			if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
+			return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
+		case DeclarationCategory::StructVariable:
+			return IsVisible(manager, manager->compilingLibrary.structs[declaration.definition].declaration);
+		case DeclarationCategory::StructFunction:
+			if (IsVisible(manager, manager->compilingLibrary.structs[declaration.definition].declaration))
 				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
-			case DeclarationCategory::EnumElement:
-				return IsVisible(manager, manager->compilingLibrary.enums[declaration.definition].declaration);
-			case DeclarationCategory::Struct:
-				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
-			case DeclarationCategory::StructVariable:
-				return IsVisible(manager, manager->compilingLibrary.structs[declaration.definition].declaration);
-			case DeclarationCategory::StructFunction:
-				if (IsVisible(manager, manager->compilingLibrary.structs[declaration.definition].declaration))
-					if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return false;
-			case DeclarationCategory::Class:
-				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
-			case DeclarationCategory::Constructor:
-			case DeclarationCategory::ClassVariable:
-			case DeclarationCategory::ClassFunction:
-			{
-				CompilingDeclaration define = manager->compilingLibrary.classes[declaration.definition].declaration;
-				Type definType = define.DefineType();
-				if (IsVisible(manager, define))
-					if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-					else if (this->declaration.category == DeclarationCategory::Class)
-						if (ContainAny(declaration.visibility, Visibility::Protected))
-						{
-							for (Type index = this->declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
-								if (index == definType)
-									return true;
-						}
-						else return define == this->declaration;
-			}
 			return false;
-			case DeclarationCategory::Interface:
+		case DeclarationCategory::Class:
+			if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
+			return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
+		case DeclarationCategory::Constructor:
+		case DeclarationCategory::ClassVariable:
+		case DeclarationCategory::ClassFunction:
+		{
+			CompilingDeclaration define = manager->compilingLibrary.classes[declaration.definition].declaration;
+			Type definType = define.DefineType();
+			if (IsVisible(manager, define))
 				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
-			case DeclarationCategory::InterfaceFunction:
-				return IsVisible(manager, manager->compilingLibrary.interfaces[declaration.definition].declaration);
-			case DeclarationCategory::Delegate:
-			case DeclarationCategory::Coroutine:
-			case DeclarationCategory::Native:
-				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
-			case DeclarationCategory::Lambda:
-			case DeclarationCategory::LambdaClosureValue:
-			case DeclarationCategory::LocalVariable:
-			default: break;
+				else if (this->declaration.category == DeclarationCategory::Class)
+					if (ContainAny(declaration.visibility, Visibility::Protected))
+					{
+						for (Type index = this->declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
+							if (index == definType)
+								return true;
+					}
+					else return define == this->declaration;
+		}
+		return false;
+		case DeclarationCategory::Interface:
+			if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
+			return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
+		case DeclarationCategory::InterfaceFunction:
+			return IsVisible(manager, manager->compilingLibrary.interfaces[declaration.definition].declaration);
+		case DeclarationCategory::Delegate:
+		case DeclarationCategory::Coroutine:
+		case DeclarationCategory::Native:
+			if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
+			return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
+		case DeclarationCategory::Lambda:
+		case DeclarationCategory::LambdaClosureValue:
+		case DeclarationCategory::LocalVariable:
+		default: break;
 		}
 	}
 	else
 	{
 		switch (declaration.category)
 		{
-			case DeclarationCategory::Invalid: break;
-			case DeclarationCategory::Variable:
-			case DeclarationCategory::Function:
-			case DeclarationCategory::Enum: return ContainAny(declaration.visibility, Visibility::Public);
-			case DeclarationCategory::EnumElement: return ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public);
-			case DeclarationCategory::Struct: return ContainAny(declaration.visibility, Visibility::Public);
-			case DeclarationCategory::StructVariable: return ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public);
-			case DeclarationCategory::StructFunction: ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public) && ContainAny(declaration.visibility, Visibility::Public);
-			case DeclarationCategory::Class: return ContainAny(declaration.visibility, Visibility::Public);
-			case DeclarationCategory::Constructor:
-			case DeclarationCategory::ClassVariable:
-			case DeclarationCategory::ClassFunction:
-			{
-				CompilingDeclaration define = manager->GetDeclaration(declaration)->declaration;
-				Type definType = define.DefineType();
-				if (ContainAny(define.visibility, Visibility::Public))
-					if (ContainAny(declaration.visibility, Visibility::Public))return true;
-					else if (this->declaration.category == DeclarationCategory::Class)
-						if (ContainAny(declaration.visibility, Visibility::Protected))
-							for (Type index = this->declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
-								if (index == definType)
-									return true;
-				return false;
-			}
-			case DeclarationCategory::Interface:  return ContainAny(declaration.visibility, Visibility::Public);
-			case DeclarationCategory::InterfaceFunction: return ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public);
-			case DeclarationCategory::Delegate:
-			case DeclarationCategory::Coroutine:
-			case DeclarationCategory::Native: return ContainAny(declaration.visibility, Visibility::Public);
-			case DeclarationCategory::Lambda:
-			case DeclarationCategory::LambdaClosureValue:
-			case DeclarationCategory::LocalVariable:
-			default: break;
+		case DeclarationCategory::Invalid: break;
+		case DeclarationCategory::Variable:
+		case DeclarationCategory::Function:
+		case DeclarationCategory::Enum: return ContainAny(declaration.visibility, Visibility::Public);
+		case DeclarationCategory::EnumElement: return ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public);
+		case DeclarationCategory::Struct: return ContainAny(declaration.visibility, Visibility::Public);
+		case DeclarationCategory::StructVariable: return ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public);
+		case DeclarationCategory::StructFunction: ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public) && ContainAny(declaration.visibility, Visibility::Public);
+		case DeclarationCategory::Class: return ContainAny(declaration.visibility, Visibility::Public);
+		case DeclarationCategory::Constructor:
+		case DeclarationCategory::ClassVariable:
+		case DeclarationCategory::ClassFunction:
+		{
+			CompilingDeclaration define = manager->GetDeclaration(declaration)->declaration;
+			Type definType = define.DefineType();
+			if (ContainAny(define.visibility, Visibility::Public))
+				if (ContainAny(declaration.visibility, Visibility::Public))return true;
+				else if (this->declaration.category == DeclarationCategory::Class)
+					if (ContainAny(declaration.visibility, Visibility::Protected))
+						for (Type index = this->declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
+							if (index == definType)
+								return true;
+			return false;
+		}
+		case DeclarationCategory::Interface:  return ContainAny(declaration.visibility, Visibility::Public);
+		case DeclarationCategory::InterfaceFunction: return ContainAny(manager->GetDeclaration(declaration)->declaration.visibility, Visibility::Public);
+		case DeclarationCategory::Delegate:
+		case DeclarationCategory::Coroutine:
+		case DeclarationCategory::Native: return ContainAny(declaration.visibility, Visibility::Public);
+		case DeclarationCategory::Lambda:
+		case DeclarationCategory::LambdaClosureValue:
+		case DeclarationCategory::LocalVariable:
+		default: break;
 		}
 	}
 	EXCEPTION("无效的定义");
@@ -335,7 +337,23 @@ void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& n
 	if (names.Count() == 1)
 	{
 		String name = names[0].content;
-		if (declaration.category == DeclarationCategory::Struct)
+		if (name == KeyWord_bool()) new (results.Add())CompilingDeclaration(TYPE_Bool.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Bool.index, NULL);
+		else if (name == KeyWord_byte()) new (results.Add())CompilingDeclaration(TYPE_Byte.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Byte.index, NULL);
+		else if (name == KeyWord_char()) new (results.Add())CompilingDeclaration(TYPE_Char.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Char.index, NULL);
+		else if (name == KeyWord_integer()) new (results.Add())CompilingDeclaration(TYPE_Integer.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Integer.index, NULL);
+		else if (name == KeyWord_real()) new (results.Add())CompilingDeclaration(TYPE_Real.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real.index, NULL);
+		else if (name == KeyWord_real2()) new (results.Add())CompilingDeclaration(TYPE_Real2.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real2.index, NULL);
+		else if (name == KeyWord_real3()) new (results.Add())CompilingDeclaration(TYPE_Real3.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real3.index, NULL);
+		else if (name == KeyWord_real4()) new (results.Add())CompilingDeclaration(TYPE_Real4.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real4.index, NULL);
+		else if (name == KeyWord_type()) new (results.Add())CompilingDeclaration(TYPE_Type.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Type.index, NULL);
+		else if (name == KeyWord_string()) new (results.Add())CompilingDeclaration(TYPE_String.library, Visibility::Public, DeclarationCategory::Struct, TYPE_String.index, NULL);
+		else if (name == KeyWord_entity()) new (results.Add())CompilingDeclaration(TYPE_Entity.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Entity.index, NULL);
+		else if (name == KeyWord_handle()) new (results.Add())CompilingDeclaration(TYPE_Handle.library, Visibility::Public, DeclarationCategory::Class, TYPE_Handle.index, NULL);
+		else if (name == KeyWord_interface()) new (results.Add())CompilingDeclaration(TYPE_Interface.library, Visibility::Public, DeclarationCategory::Class, TYPE_Interface.index, NULL);
+		else if (name == KeyWord_delegate()) new (results.Add())CompilingDeclaration(TYPE_Delegate.library, Visibility::Public, DeclarationCategory::Class, TYPE_Delegate.index, NULL);
+		else if (name == KeyWord_coroutine()) new (results.Add())CompilingDeclaration(TYPE_Coroutine.library, Visibility::Public, DeclarationCategory::Class, TYPE_Coroutine.index, NULL);
+		else if (name == KeyWord_array()) new (results.Add())CompilingDeclaration(TYPE_Array.library, Visibility::Public, DeclarationCategory::Class, TYPE_Array.index, NULL);
+		else if (declaration.category == DeclarationCategory::Struct)
 		{
 			AbstractStruct* abstractStruct = &manager->selfLibaray->structs[declaration.index];
 			for (uint32 x = 0; x < abstractStruct->variables.Count(); x++)

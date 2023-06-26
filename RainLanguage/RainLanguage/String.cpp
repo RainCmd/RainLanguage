@@ -3,6 +3,8 @@
 #include "Collections/Hash.h"
 #include "Real/MathReal.h"
 
+#define GC_FLAG 0x80000000
+
 uint32 GetHash(const character* value, uint32 length)
 {
 	uint32 result = 0;
@@ -14,29 +16,12 @@ uint32 GetHash(const character* value, uint32 length)
 void StringAgency::GC()
 {
 	uint32 position = 0;
-	uint32 index = permanent ? slots[permanent].gcNext : head;
-	if (permanent)tail = permanent;
-	else head = tail = NULL;
+	uint32 index = head;
+	head = tail = NULL;
 	while (index)
 	{
 		Slot* slot = slots + index;
-		if (slot->length)
-		{
-			if (slot->position > position)
-			{
-				Mmove(&characters[slot->position], &characters[position], slot->length + 1);
-				slot->position = position;
-			}
-			position += slot->length + 1;
-			if (!head)head = tail = index;
-			else
-			{
-				slots[tail].gcNext = index;
-				tail = index;
-			}
-			index = slot->gcNext;
-		}
-		else
+		if (slot->next == GC_FLAG)
 		{
 			if (tail) slots[tail].gcNext = NULL;
 			uint32 gcNext = slot->gcNext;
@@ -44,17 +29,57 @@ void StringAgency::GC()
 			free = index;
 			index = gcNext;
 		}
+		else
+		{
+			if (slot->position > position)
+			{
+				Mmove(&characters[slot->position], &characters[position], slot->length + 1);
+				slot->position = position;
+			}
+			position += slot->length + 1;
+			if (head)
+			{
+				slots[tail].gcNext = index;
+				tail = index;
+			}
+			else head = tail = index;
+			index = slot->gcNext;
+		}
 	}
 	characters.RemoveAt(position + 1, characters.Count() - position - 1);
-	holeChars = 0;
-	holeSlots = 0;
+	characterGCHold = 0;
+	slotGCHold = 0;
+}
+
+void StringAgency::SlotGC()
+{
+	for (uint32 i = 0; i < size; i++)
+	{
+		uint32 index = buckets[i], prev = 0;
+		while (index)
+		{
+			Slot* slot = slots + index;
+			if (slot->length) prev = index;
+			else
+			{
+				if (prev)slots[prev].next = slot->next;
+				else buckets[i] = slot->next;
+				slot->next = GC_FLAG;
+			}
+			index = slot->next;
+		}
+	}
+	characterGCHold += characterHold;
+	slotGCHold += slotHold;
+	characterHold = 0;
+	slotHold = 0;
 }
 
 bool StringAgency::IsEquals(Slot* slot, const character* value, uint32 length)
 {
 	if (slot->length != length) return false;
 	for (uint32 i = 0; i < length; i++)
-		if (value[i] != characters[i])
+		if (value[i] != characters[i + slot->position])
 			return false;
 	return true;
 }
@@ -90,7 +115,57 @@ bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash
 	return false;
 }
 
-StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8), helper(NULL), buckets(NULL), slots(NULL), top(1), free(NULL), head(NULL), tail(NULL), permanent(NULL), holeChars(0), holeSlots(0)
+string StringAgency::InternalAdd(const character* value, uint32 length)
+{
+	if (!length)return NULL;
+	uint32 hash, bidx, sidx;
+	if (TryGetIdx(value, length, hash, bidx, sidx)) return sidx;
+	if (characters.Slack() < length + 1 && characters.Slack() + characterHold + characterGCHold > length)
+	{
+		if ((characterGCHold << 3) > characters.Capacity()) GC();
+		else if (((characterHold + characterGCHold) << 3) > characters.Capacity())
+		{
+			if (TryResize())bidx = hash % size;
+			GC();
+		}
+	}
+	if (free)
+	{
+		sidx = free;
+		free = slots[free].gcNext;
+	}
+	else
+	{
+		if (TryResize())bidx = hash % size;
+		if (free)
+		{
+			sidx = free;
+			free = slots[free].gcNext;
+		}
+		else sidx = top++;
+	}
+	Slot* slot = slots + sidx;
+	slot->hash = hash;
+	slot->length = length;
+	slot->position = characters.Count();
+	slot->next = buckets[bidx];
+	slot->gcNext = NULL;
+	slot->reference = 0;
+
+	buckets[bidx] = sidx;
+	characters.Add(value, length); characters.Add('\0');
+
+	if (!head)head = tail = sidx;
+	else
+	{
+		slots[tail].gcNext = sidx;
+		tail = sidx;
+	}
+
+	return sidx;
+}
+
+StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8), helper(NULL), buckets(NULL), slots(NULL), top(1), free(NULL), head(NULL), tail(NULL), characterHold(0), slotHold(0), characterGCHold(0), slotGCHold(0)
 {
 	size = GetPrime(capacity);
 	buckets = Malloc<uint32>(size);
@@ -99,7 +174,7 @@ StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8),
 	for (uint32 i = 0; i < size; i++) buckets[i] = NULL;
 }
 
-StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other.characters.Count()), helper(NULL), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), permanent(other.permanent), holeChars(other.holeChars), holeSlots(other.holeSlots)
+StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other.characters.Count()), helper(NULL), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), characterHold(other.characterHold), slotHold(other.slotHold), characterGCHold(other.characterGCHold), slotGCHold(other.slotGCHold)
 {
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = Malloc<uint32>(size);
@@ -108,7 +183,7 @@ StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other
 	Mcopy(other.slots, slots, size);
 }
 
-StringAgency::StringAgency(StringAgency&& other)noexcept :characters(other.characters.Count()), helper(other.helper), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), permanent(other.permanent), holeChars(other.holeChars), holeSlots(other.holeSlots)
+StringAgency::StringAgency(StringAgency&& other)noexcept :characters(other.characters.Count()), helper(other.helper), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), characterHold(other.characterHold), slotHold(other.slotHold), characterGCHold(other.characterGCHold), slotGCHold(other.slotGCHold)
 {
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = other.buckets;
@@ -131,8 +206,10 @@ StringAgency& StringAgency::operator=(const StringAgency& other)noexcept
 	free = other.free;
 	head = other.head;
 	tail = other.tail;
-	holeChars = other.holeChars;
-	holeSlots = other.holeSlots;
+	characterHold = other.characterHold;
+	slotHold = other.slotHold;
+	characterGCHold = other.characterGCHold;
+	slotGCHold = other.slotGCHold;
 	return *this;
 }
 
@@ -149,8 +226,10 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 	free = other.free;
 	head = other.head;
 	tail = other.tail;
-	holeChars = other.holeChars;
-	holeSlots = other.holeSlots;
+	characterHold = other.characterHold;
+	slotHold = other.slotHold;
+	characterGCHold = other.characterGCHold;
+	slotGCHold = other.slotGCHold;
 	other.characters.Clear();
 	other.buckets = NULL;
 	other.slots = NULL;
@@ -159,47 +238,16 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 	other.free = NULL;
 	other.head = NULL;
 	other.tail = NULL;
-	other.holeChars = 0;
-	other.holeSlots = 0;
+	other.characterHold = 0;
+	other.slotHold = 0;
+	other.characterGCHold = 0;
+	other.slotGCHold = 0;
 	return *this;
 }
 
 String StringAgency::Add(const character* value, uint32 length)
 {
-	if (!length)return String();
-	uint32 hash, bidx, sidx;
-	if (TryGetIdx(value, length, hash, bidx, sidx))return String(this, sidx);
-	if (characters.Slack() < length + 1 && characters.Slack() + holeChars > length) GC();
-	if (free)
-	{
-		sidx = free;
-		free = slots[free].gcNext;
-	}
-	else
-	{
-		if (holeSlots)GC();
-		if (TryResize())bidx = hash % size;
-		sidx = top++;
-	}
-	Slot* slot = slots + sidx;
-	slot->hash = hash;
-	slot->length = length;
-	slot->position = characters.Count();
-	slot->next = buckets[bidx];
-	slot->gcNext = NULL;
-	slot->reference = 0;
-
-	buckets[bidx] = sidx;
-	characters.Add(value, length); characters.Add('\0');
-
-	if (!head)head = tail = sidx;
-	else
-	{
-		slots[tail].gcNext = sidx;
-		tail = sidx;
-	}
-
-	return String(this, sidx);
+	return String(this, InternalAdd(value, length));
 }
 
 String StringAgency::Add(const character* value)
@@ -218,23 +266,27 @@ String StringAgency::Add(const String& value)
 
 string StringAgency::AddAndRef(const character* value, uint32 length)
 {
-	String result = Add(value, length);
-	Reference(result.index);
-	return result.index;
+	string result = InternalAdd(value, length);
+	Reference(result);
+	return result;
 }
 
 string StringAgency::AddAndRef(const character* value)
 {
-	String result = Add(value);
-	Reference(result.index);
-	return result.index;
+	uint32 length = 0;
+	while (value[length]) length++;
+	return AddAndRef(value, length);
 }
 
 string StringAgency::AddAndRef(const String& value)
 {
-	String result = Add(value);
-	Reference(result.index);
-	return result.index;
+	if (!value.pool || !value.index || !value.length)return NULL;
+	if (value.pool == this)
+	{
+		Reference(value.index);
+		return value.index;
+	}
+	else return AddAndRef(value.GetPointer(), value.length);
 }
 
 String StringAgency::Get(uint32 index)
@@ -291,18 +343,16 @@ void StringAgency::Serialize(Serializer* serializer)
 	GC();
 	serializer->Serialize(top);
 	serializer->Serialize(size);
-	serializer->Serialize(permanent);
 	serializer->SerializeList(characters);
 	serializer->Serialize(Count());
 	serializer->Serialize(head);
 	for (uint32 index = head; index; index = slots[index].gcNext) serializer->Serialize(slots[index]);
 }
 
-StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NULL), buckets(NULL), slots(NULL), top(0), free(NULL), head(NULL), tail(NULL), permanent(NULL), holeChars(0), holeSlots(0)
+StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NULL), buckets(NULL), slots(NULL), top(0), free(NULL), head(NULL), tail(NULL), characterHold(0), slotHold(0), characterGCHold(0), slotGCHold(0)
 {
 	top = deserializer->Deserialize<uint32>();
 	size = deserializer->Deserialize<uint32>();
-	permanent = deserializer->Deserialize<uint32>();
 	deserializer->Deserialize(characters);
 	uint32 count = deserializer->Deserialize<uint32>();
 	head = deserializer->Deserialize<uint32>();

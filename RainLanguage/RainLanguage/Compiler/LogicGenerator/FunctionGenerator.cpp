@@ -340,14 +340,14 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	}
 	else if (function->declaration.category == DeclarationCategory::StructFunction)
 	{
-		parameters.Add(localContext.AddLocal(KeyWord_this, function->parameters[0].name, function->parameters[0].type));
+		parameters.Add(localContext.AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
 		for (uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(localContext.AddLocal(function->parameters[i].name, function->parameters[i].type));
 		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->structs[function->declaration.definition].declaration, function->space, function->relies), &localContext, function->body, false);
 	}
 	else if (function->declaration.category == DeclarationCategory::Constructor)
 	{
-		Local thisValue = localContext.AddLocal(KeyWord_this, function->parameters[0].name, function->parameters[0].type);
+		Local thisValue = localContext.AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type);
 		parameters.Add(thisValue);
 		for (uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(localContext.AddLocal(function->parameters[i].name, function->parameters[i].type));
@@ -359,7 +359,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 			Lexical lexical;
 			if (!TryAnalysis(compilingConstructor.expression, 0, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则坑定时前面文件解析出错了");
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
-			if (lexical.anchor == KeyWord_this)
+			if (lexical.anchor == KeyWord_this())
 			{
 				for (uint32 i = 0; i < compilingClass.constructors.Count(); i++)
 					if (i != function->declaration.index)
@@ -367,7 +367,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 				if (ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, &constructorInvokerDeclarations, &thisValue) == function->declaration)
 					MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_CONSTRUCTOR_CALL_ITSELF);
 			}
-			else if (lexical.anchor == KeyWord_base)
+			else if (lexical.anchor == KeyWord_base())
 			{
 				AbstractClass* parent = &parameter.manager->GetLibrary(compilingClass.parent.library)->classes[compilingClass.parent.index];
 				if (context.TryFindMember(parameter.manager, parent->name, parent->declaration.DefineType(), constructorInvokerDeclarations))
@@ -405,7 +405,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	}
 	else if (function->declaration.category == DeclarationCategory::ClassFunction)
 	{
-		parameters.Add(localContext.AddLocal(KeyWord_this, function->parameters[0].name, function->parameters[0].type));
+		parameters.Add(localContext.AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
 		for (uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(localContext.AddLocal(function->parameters[i].name, function->parameters[i].type));
 		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition].declaration, function->space, function->relies), &localContext, function->body, false);
@@ -419,7 +419,7 @@ FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, Generator
 {
 	const CompilingClass& compilingClass = parameter.manager->compilingLibrary.classes[declaration.definition];
 	LocalContext localContext = LocalContext();
-	parameters.Add(localContext.AddLocal(KeyWord_this, compilingClass.name, declaration.DefineType()));
+	parameters.Add(localContext.AddLocal(KeyWord_this(), compilingClass.name, declaration.DefineType()));
 	ParseBody(parameter, Context(declaration, compilingClass.space, compilingClass.relies), &localContext, compilingClass.destructor, true);
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
 }
@@ -464,290 +464,293 @@ void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statemen
 
 void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context, LocalContext* localContext, const List<Line>& body, bool destructor)
 {
-	statements->indent = body[0].indent;
-	List<BlockStatement*, true> blockStack(0);
-	blockStack.Add(statements);
-	for (uint32 lineIndex = 0; lineIndex < body.Count(); lineIndex++)
+	if (body.Count())
 	{
-		const Line& line = body[lineIndex];
-		uint32 blockIndent = blockStack.Peek()->indent;
-		Anchor lineAnchor = Anchor(line.source, line.content, line.number, 0);
-		Lexical lexical;
-		if (blockIndent < line.indent)
+		statements->indent = body[0].indent;
+		List<BlockStatement*, true> blockStack(0);
+		blockStack.Add(statements);
+		for (uint32 lineIndex = 0; lineIndex < body.Count(); lineIndex++)
 		{
-			BlockStatement* newBlock = NULL;
-			localContext->PushBlock();
-			if (blockStack.Peek()->statements.Count())
+			const Line& line = body[lineIndex];
+			uint32 blockIndent = blockStack.Peek()->indent;
+			Anchor lineAnchor = Anchor(line.source, line.content, line.number, 0);
+			Lexical lexical;
+			if (blockIndent < line.indent)
 			{
-				Statement* statement = blockStack.Peek()->statements.Peek();
-				if (ContainAll(statement->type, StatementType::Branch))
+				BlockStatement* newBlock = NULL;
+				localContext->PushBlock();
+				if (blockStack.Peek()->statements.Count())
 				{
-					ASSERT_DEBUG(!((BranchStatement*)statement)->trueBranch, "缩进判断逻辑可能有bug");
-					newBlock = ((BranchStatement*)statement)->trueBranch = new BlockStatement(lineAnchor);
-				}
-				else if (ContainAll(statement->type, StatementType::Loop))
-				{
-					ASSERT_DEBUG(!((LoopStatement*)statement)->loopBlock, "缩进判断逻辑可能有bug");
-					newBlock = ((LoopStatement*)statement)->loopBlock = new BlockStatement(lineAnchor);
-				}
-				else if (ContainAll(statement->type, StatementType::Sub))
-				{
-					ASSERT_DEBUG(!*((SubStatement*)statement)->statements, "缩进判断逻辑可能有bug");
-					newBlock = *((SubStatement*)statement)->statements = new BlockStatement(lineAnchor);
-					delete blockStack.Peek()->statements.Pop();
-				}
-				else if (ContainAll(statement->type, StatementType::Try))
-				{
-					TryStatement* tryStatement = (TryStatement*)statement;
-					ASSERT_DEBUG(!tryStatement->finallyBlock, "缩进判断逻辑可能有bug");
-					if (tryStatement->catchBlocks.Count())newBlock = tryStatement->catchBlocks.Peek().catchBlock;
-					else
+					Statement* statement = blockStack.Peek()->statements.Peek();
+					if (ContainAll(statement->type, StatementType::Branch))
 					{
-						if (!tryStatement->tryBlock)tryStatement->tryBlock = new BlockStatement(tryStatement->anchor);
-						newBlock = tryStatement->tryBlock;
+						ASSERT_DEBUG(!((BranchStatement*)statement)->trueBranch, "缩进判断逻辑可能有bug");
+						newBlock = ((BranchStatement*)statement)->trueBranch = new BlockStatement(lineAnchor);
+					}
+					else if (ContainAll(statement->type, StatementType::Loop))
+					{
+						ASSERT_DEBUG(!((LoopStatement*)statement)->loopBlock, "缩进判断逻辑可能有bug");
+						newBlock = ((LoopStatement*)statement)->loopBlock = new BlockStatement(lineAnchor);
+					}
+					else if (ContainAll(statement->type, StatementType::Sub))
+					{
+						ASSERT_DEBUG(!*((SubStatement*)statement)->statements, "缩进判断逻辑可能有bug");
+						newBlock = *((SubStatement*)statement)->statements = new BlockStatement(lineAnchor);
+						delete blockStack.Peek()->statements.Pop();
+					}
+					else if (ContainAll(statement->type, StatementType::Try))
+					{
+						TryStatement* tryStatement = (TryStatement*)statement;
+						ASSERT_DEBUG(!tryStatement->finallyBlock, "缩进判断逻辑可能有bug");
+						if (tryStatement->catchBlocks.Count())newBlock = tryStatement->catchBlocks.Peek().catchBlock;
+						else
+						{
+							if (!tryStatement->tryBlock)tryStatement->tryBlock = new BlockStatement(tryStatement->anchor);
+							newBlock = tryStatement->tryBlock;
+						}
 					}
 				}
+				if (!newBlock)newBlock = new BlockStatement(lineAnchor);
+				newBlock->indent = line.indent;
+				blockStack.Add(newBlock);
 			}
-			if (!newBlock)newBlock = new BlockStatement(lineAnchor);
-			newBlock->indent = line.indent;
-			blockStack.Add(newBlock);
-		}
-		else while (blockStack.Count())
-		{
-			BlockStatement* statement = blockStack.Peek();
-			if (statement->indent > line.indent)
+			else while (blockStack.Count())
 			{
-				blockStack.Pop();
-				localContext->PopBlock();
-			}
-			else if (statement->indent < line.indent)
-			{
-				MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_INDENT);
-				break;
-			}
-			else
-			{
-				if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages) && lexical.anchor != KeyWord_elif && lexical.anchor != KeyWord_else)
+				BlockStatement* statement = blockStack.Peek();
+				if (statement->indent > line.indent)
 				{
-					statement = blockStack.Pop();
-					while (blockStack.Count() && blockStack.Peek()->indent == line.indent)
+					blockStack.Pop();
+					localContext->PopBlock();
+				}
+				else if (statement->indent < line.indent)
+				{
+					MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_INDENT);
+					break;
+				}
+				else
+				{
+					if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages) && lexical.anchor != KeyWord_elif() && lexical.anchor != KeyWord_else())
 					{
 						statement = blockStack.Pop();
-						localContext->PopBlock();
+						while (blockStack.Count() && blockStack.Peek()->indent == line.indent)
+						{
+							statement = blockStack.Pop();
+							localContext->PopBlock();
+						}
+						blockStack.Add(statement);
 					}
-					blockStack.Add(statement);
+					break;
 				}
-				break;
 			}
-		}
-		if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages))
-		{
-			if (lexical.anchor == KeyWord_if) ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
-			else if (lexical.anchor == KeyWord_elif)
+			if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages))
 			{
-				if (blockStack.Peek()->statements.Count())
+				if (lexical.anchor == KeyWord_if()) ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
+				else if (lexical.anchor == KeyWord_elif())
 				{
-					if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Branch))
+					if (blockStack.Peek()->statements.Count())
 					{
-						BranchStatement* statement = (BranchStatement*)blockStack.Peek()->statements.Peek();
-						ASSERT_DEBUG(!statement->falseBranch, "缩进判断逻辑可能有bug");
-						statement->falseBranch = new BlockStatement(lexical.anchor);
-						statement->falseBranch->indent = line.indent;
-						blockStack.Add(statement->falseBranch);
-						localContext->PushBlock();
-						ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
-					}
-					else if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
-					{
-						LoopStatement* statement = (LoopStatement*)blockStack.Peek()->statements.Peek();
-						ASSERT_DEBUG(!statement->elseBlock, "缩进判断逻辑可能有bug");
-						statement->elseBlock = new BlockStatement(lexical.anchor);
-						statement->elseBlock->indent = line.indent;
-						blockStack.Add(statement->elseBlock);
-						localContext->PushBlock();
-						ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
-					}
-					else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-				}
-				else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-			}
-			else if (lexical.anchor == KeyWord_else)
-			{
-				if (blockStack.Peek()->statements.Count())
-				{
-					if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Branch))
-					{
-						BranchStatement* statement = (BranchStatement*)blockStack.Peek()->statements.Peek();
-						if (!statement->falseBranch) blockStack.Peek()->statements.Add(new SubStatement(lexical.anchor, &statement->falseBranch));
-						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-					}
-					else if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
-					{
-						LoopStatement* statement = (LoopStatement*)blockStack.Peek()->statements.Peek();
-						if (!statement->elseBlock) blockStack.Peek()->statements.Add(new SubStatement(lexical.anchor, &statement->elseBlock));
+						if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Branch))
+						{
+							BranchStatement* statement = (BranchStatement*)blockStack.Peek()->statements.Peek();
+							ASSERT_DEBUG(!statement->falseBranch, "缩进判断逻辑可能有bug");
+							statement->falseBranch = new BlockStatement(lexical.anchor);
+							statement->falseBranch->indent = line.indent;
+							blockStack.Add(statement->falseBranch);
+							localContext->PushBlock();
+							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
+						}
+						else if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
+						{
+							LoopStatement* statement = (LoopStatement*)blockStack.Peek()->statements.Peek();
+							ASSERT_DEBUG(!statement->elseBlock, "缩进判断逻辑可能有bug");
+							statement->elseBlock = new BlockStatement(lexical.anchor);
+							statement->elseBlock->indent = line.indent;
+							blockStack.Add(statement->elseBlock);
+							localContext->PushBlock();
+							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
+						}
 						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 					}
 					else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				}
-				else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-				if (TryAnalysis(lineAnchor, lexical.anchor.GetEnd(), lexical, parameter.manager->messages)) MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-			}
-			else if (lexical.anchor == KeyWord_while)
-			{
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				Expression* conditionExpression = NULL;
-				if (parser.TryParse(condition, conditionExpression))
+				else if (lexical.anchor == KeyWord_else())
 				{
-					if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
-						MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
-					blockStack.Peek()->statements.Add(new WhileStatement(lexical.anchor, conditionExpression));
+					if (blockStack.Peek()->statements.Count())
+					{
+						if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Branch))
+						{
+							BranchStatement* statement = (BranchStatement*)blockStack.Peek()->statements.Peek();
+							if (!statement->falseBranch) blockStack.Peek()->statements.Add(new SubStatement(lexical.anchor, &statement->falseBranch));
+							else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+						}
+						else if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
+						{
+							LoopStatement* statement = (LoopStatement*)blockStack.Peek()->statements.Peek();
+							if (!statement->elseBlock) blockStack.Peek()->statements.Add(new SubStatement(lexical.anchor, &statement->elseBlock));
+							else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+						}
+						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+					}
+					else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+					if (TryAnalysis(lineAnchor, lexical.anchor.GetEnd(), lexical, parameter.manager->messages)) MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 				}
-				else blockStack.Peek()->statements.Add(new WhileStatement(lexical.anchor, NULL));
-			}
-			else if (lexical.anchor == KeyWord_for)
-			{
-				Anchor forExpression = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				Anchor front, conditionAndBack;
-				if (Split(forExpression, 0, SplitFlag::Semicolon, front, conditionAndBack, parameter.manager->messages) == LexicalType::Semicolon)
+				else if (lexical.anchor == KeyWord_while())
 				{
 					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-					Expression* frontExpression = NULL, * conditionExpression = NULL, * backExpression = NULL;
-					parser.TryParse(front, frontExpression);
-					Anchor condition, back;
-					if (Split(conditionAndBack, 0, SplitFlag::Semicolon, condition, back, parameter.manager->messages) == LexicalType::Semicolon)
+					Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					Expression* conditionExpression = NULL;
+					if (parser.TryParse(condition, conditionExpression))
 					{
-						parser.TryParse(condition, conditionExpression);
-						parser.TryParse(back, backExpression);
+						if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
+							MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
+						blockStack.Peek()->statements.Add(new WhileStatement(lexical.anchor, conditionExpression));
 					}
-					else parser.TryParse(conditionAndBack, conditionExpression);
-					if (conditionExpression && !(conditionExpression->returns.Count() == 1 && conditionExpression->returns[0] == TYPE_Bool))
-						MESSAGE2(parameter.manager->messages, conditionExpression->anchor, MessageType::ERROR_TYPE_MISMATCH);
-					blockStack.Peek()->statements.Add(new ForStatement(lexical.anchor, conditionExpression, frontExpression, backExpression));
+					else blockStack.Peek()->statements.Add(new WhileStatement(lexical.anchor, NULL));
 				}
-				else MESSAGE2(parameter.manager->messages, forExpression, MessageType::ERROR_MISSING_EXPRESSION);
-			}
-			else if (lexical.anchor == KeyWord_break)
-			{
-				Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Expression* conditionExpression = NULL;
-				if (parser.TryParse(condition, conditionExpression))
+				else if (lexical.anchor == KeyWord_for())
 				{
-					if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
-						MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
-					blockStack.Peek()->statements.Add(new BreakStatement(lexical.anchor, conditionExpression));
-				}
-				else blockStack.Peek()->statements.Add(new BreakStatement(lexical.anchor, NULL));
-			}
-			else if (lexical.anchor == KeyWord_continue)
-			{
-				Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Expression* conditionExpression = NULL;
-				if (parser.TryParse(condition, conditionExpression))
-				{
-					if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
-						MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
-					blockStack.Peek()->statements.Add(new ContinueStatement(lexical.anchor, conditionExpression));
-				}
-				else blockStack.Peek()->statements.Add(new ContinueStatement(lexical.anchor, NULL));
-			}
-			else if (lexical.anchor == KeyWord_return)
-			{
-				Anchor result = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Expression* resultExpression = NULL;
-				if (parser.TryParse(result, resultExpression))
-				{
-					parser.TryAssignmentConvert(resultExpression, Span<Type, true>(&returns));
-					blockStack.Peek()->statements.Add(new ReturnStatement(lexical.anchor, resultExpression));
-				}
-				else blockStack.Peek()->statements.Add(new ReturnStatement(lexical.anchor, NULL));
-			}
-			else if (lexical.anchor == KeyWord_wait)
-			{
-				Anchor frame = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Expression* frameExpression = NULL;
-				if (parser.TryParse(frame, frameExpression))
-				{
-					if (frameExpression->returns.Count() != 1 || (frameExpression->returns[0] != TYPE_Bool && frameExpression->returns[0] != TYPE_Integer && frameExpression->returns[0].code != TypeCode::Coroutine))
-						MESSAGE2(parameter.manager->messages, frame, MessageType::ERROR_TYPE_MISMATCH);
-					blockStack.Peek()->statements.Add(new WaitStatement(lexical.anchor, frameExpression));
-				}
-				else blockStack.Peek()->statements.Add(new WaitStatement(lexical.anchor, NULL));
-			}
-			else if (lexical.anchor == KeyWord_exit)
-			{
-				Anchor exitcode = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Expression* exitcodeExpression = NULL;
-				if (parser.TryParse(exitcode, exitcodeExpression))
-				{
-					if (exitcodeExpression->returns.Count() != 1 || exitcodeExpression->returns[0] != TYPE_String)
-						MESSAGE2(parameter.manager->messages, exitcode, MessageType::ERROR_TYPE_MISMATCH);
-					blockStack.Peek()->statements.Add(new ExitStatement(lexical.anchor, exitcodeExpression));
-				}
-				else MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_MISSING_EXPRESSION);
-			}
-			else if (lexical.anchor == KeyWord_try)
-			{
-				blockStack.Peek()->statements.Add(new TryStatement(lexical.anchor, localContext));
-				if (TryAnalysis(lineAnchor, lexical.anchor.GetEnd(), lexical, parameter.manager->messages))
-					MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-			}
-			else if (lexical.anchor == KeyWord_catch)
-			{
-				if (blockStack.Peek()->statements.Count() && ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Try))
-				{
-					TryStatement* tryStatement = (TryStatement*)blockStack.Peek()->statements.Peek();
-					if (!tryStatement->tryBlock)tryStatement->tryBlock = new BlockStatement(tryStatement->anchor);
-					if (!tryStatement->finallyBlock)
+					Anchor forExpression = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					Anchor front, conditionAndBack;
+					if (Split(forExpression, 0, SplitFlag::Semicolon, front, conditionAndBack, parameter.manager->messages) == LexicalType::Semicolon)
 					{
 						ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-						Anchor exitcode = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-						Expression* exitcodeExpression = NULL;
-						if (parser.TryParse(exitcode, exitcodeExpression))
+						Expression* frontExpression = NULL, * conditionExpression = NULL, * backExpression = NULL;
+						parser.TryParse(front, frontExpression);
+						Anchor condition, back;
+						if (Split(conditionAndBack, 0, SplitFlag::Semicolon, condition, back, parameter.manager->messages) == LexicalType::Semicolon)
 						{
-							if (exitcodeExpression->returns.Count() != 1 || exitcodeExpression->returns[0] != TYPE_String)
-								MESSAGE2(parameter.manager->messages, exitcode, MessageType::ERROR_TYPE_MISMATCH);
-							new (tryStatement->catchBlocks.Add())CatchExpressionBlock(exitcodeExpression, new BlockStatement(lexical.anchor));
+							parser.TryParse(condition, conditionExpression);
+							parser.TryParse(back, backExpression);
 						}
-						else new (tryStatement->catchBlocks.Add())CatchExpressionBlock(NULL, new BlockStatement(lexical.anchor));
+						else parser.TryParse(conditionAndBack, conditionExpression);
+						if (conditionExpression && !(conditionExpression->returns.Count() == 1 && conditionExpression->returns[0] == TYPE_Bool))
+							MESSAGE2(parameter.manager->messages, conditionExpression->anchor, MessageType::ERROR_TYPE_MISMATCH);
+						blockStack.Peek()->statements.Add(new ForStatement(lexical.anchor, conditionExpression, frontExpression, backExpression));
 					}
-					else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+					else MESSAGE2(parameter.manager->messages, forExpression, MessageType::ERROR_MISSING_EXPRESSION);
 				}
-				else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-			}
-			else if (lexical.anchor == KeyWord_finally)
-			{
-				if (blockStack.Peek()->statements.Count())
+				else if (lexical.anchor == KeyWord_break())
 				{
-					if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Try))
+					Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+					Expression* conditionExpression = NULL;
+					if (parser.TryParse(condition, conditionExpression))
 					{
-						TryStatement* statement = (TryStatement*)blockStack.Peek()->statements.Peek();
-						if (!statement->tryBlock)statement->tryBlock = new BlockStatement(statement->anchor);
-						if (!statement->finallyBlock) blockStack.Peek()->statements.Add(new SubStatement(lexical.anchor, &statement->finallyBlock));
+						if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
+							MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
+						blockStack.Peek()->statements.Add(new BreakStatement(lexical.anchor, conditionExpression));
+					}
+					else blockStack.Peek()->statements.Add(new BreakStatement(lexical.anchor, NULL));
+				}
+				else if (lexical.anchor == KeyWord_continue())
+				{
+					Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+					Expression* conditionExpression = NULL;
+					if (parser.TryParse(condition, conditionExpression))
+					{
+						if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
+							MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
+						blockStack.Peek()->statements.Add(new ContinueStatement(lexical.anchor, conditionExpression));
+					}
+					else blockStack.Peek()->statements.Add(new ContinueStatement(lexical.anchor, NULL));
+				}
+				else if (lexical.anchor == KeyWord_return())
+				{
+					Anchor result = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+					Expression* resultExpression = NULL;
+					if (parser.TryParse(result, resultExpression))
+					{
+						parser.TryAssignmentConvert(resultExpression, Span<Type, true>(&returns));
+						blockStack.Peek()->statements.Add(new ReturnStatement(lexical.anchor, resultExpression));
+					}
+					else blockStack.Peek()->statements.Add(new ReturnStatement(lexical.anchor, NULL));
+				}
+				else if (lexical.anchor == KeyWord_wait())
+				{
+					Anchor frame = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+					Expression* frameExpression = NULL;
+					if (parser.TryParse(frame, frameExpression))
+					{
+						if (frameExpression->returns.Count() != 1 || (frameExpression->returns[0] != TYPE_Bool && frameExpression->returns[0] != TYPE_Integer && frameExpression->returns[0].code != TypeCode::Coroutine))
+							MESSAGE2(parameter.manager->messages, frame, MessageType::ERROR_TYPE_MISMATCH);
+						blockStack.Peek()->statements.Add(new WaitStatement(lexical.anchor, frameExpression));
+					}
+					else blockStack.Peek()->statements.Add(new WaitStatement(lexical.anchor, NULL));
+				}
+				else if (lexical.anchor == KeyWord_exit())
+				{
+					Anchor exitcode = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+					Expression* exitcodeExpression = NULL;
+					if (parser.TryParse(exitcode, exitcodeExpression))
+					{
+						if (exitcodeExpression->returns.Count() != 1 || exitcodeExpression->returns[0] != TYPE_String)
+							MESSAGE2(parameter.manager->messages, exitcode, MessageType::ERROR_TYPE_MISMATCH);
+						blockStack.Peek()->statements.Add(new ExitStatement(lexical.anchor, exitcodeExpression));
+					}
+					else MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_MISSING_EXPRESSION);
+				}
+				else if (lexical.anchor == KeyWord_try())
+				{
+					blockStack.Peek()->statements.Add(new TryStatement(lexical.anchor, localContext));
+					if (TryAnalysis(lineAnchor, lexical.anchor.GetEnd(), lexical, parameter.manager->messages))
+						MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
+				}
+				else if (lexical.anchor == KeyWord_catch())
+				{
+					if (blockStack.Peek()->statements.Count() && ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Try))
+					{
+						TryStatement* tryStatement = (TryStatement*)blockStack.Peek()->statements.Peek();
+						if (!tryStatement->tryBlock)tryStatement->tryBlock = new BlockStatement(tryStatement->anchor);
+						if (!tryStatement->finallyBlock)
+						{
+							ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+							Anchor exitcode = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
+							Expression* exitcodeExpression = NULL;
+							if (parser.TryParse(exitcode, exitcodeExpression))
+							{
+								if (exitcodeExpression->returns.Count() != 1 || exitcodeExpression->returns[0] != TYPE_String)
+									MESSAGE2(parameter.manager->messages, exitcode, MessageType::ERROR_TYPE_MISMATCH);
+								new (tryStatement->catchBlocks.Add())CatchExpressionBlock(exitcodeExpression, new BlockStatement(lexical.anchor));
+							}
+							else new (tryStatement->catchBlocks.Add())CatchExpressionBlock(NULL, new BlockStatement(lexical.anchor));
+						}
 						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 					}
 					else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				}
-				else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-				if (TryAnalysis(lineAnchor, lexical.anchor.GetEnd(), lexical, parameter.manager->messages))
-					MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-			}
-			else
-			{
-				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
-				Expression* expression = NULL;
-				if (parser.TryParse(lineAnchor, expression))
+				else if (lexical.anchor == KeyWord_finally())
 				{
-					if (HasBlurryResult(expression)) blockStack.Peek()->statements.Add(new ExpressionStatement(lineAnchor, expression));
-					else
+					if (blockStack.Peek()->statements.Count())
 					{
-						delete expression;
-						MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_TYPE_EQUIVOCAL);
+						if (ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Try))
+						{
+							TryStatement* statement = (TryStatement*)blockStack.Peek()->statements.Peek();
+							if (!statement->tryBlock)statement->tryBlock = new BlockStatement(statement->anchor);
+							if (!statement->finallyBlock) blockStack.Peek()->statements.Add(new SubStatement(lexical.anchor, &statement->finallyBlock));
+							else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+						}
+						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+					}
+					else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+					if (TryAnalysis(lineAnchor, lexical.anchor.GetEnd(), lexical, parameter.manager->messages))
+						MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
+				}
+				else
+				{
+					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
+					Expression* expression = NULL;
+					if (parser.TryParse(lineAnchor, expression))
+					{
+						if (HasBlurryResult(expression)) blockStack.Peek()->statements.Add(new ExpressionStatement(lineAnchor, expression));
+						else
+						{
+							delete expression;
+							MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_TYPE_EQUIVOCAL);
+						}
 					}
 				}
 			}

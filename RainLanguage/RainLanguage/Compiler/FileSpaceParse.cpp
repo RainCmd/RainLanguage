@@ -96,32 +96,36 @@ Visibility ParseVisibility(const Line& line, uint32& index, MessageCollector* me
 	while (TryAnalysis(line, index, lexical, messages) && lexical.type == LexicalType::Word)
 	{
 		index = lexical.anchor.GetEnd();
-		if (lexical.anchor == KeyWord_public)
+		if (lexical.anchor == KeyWord_public())
 		{
 			if (IsClash(visibility, Visibility::Public))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= Visibility::Public;
 		}
-		else if (lexical.anchor == KeyWord_internal)
+		else if (lexical.anchor == KeyWord_internal())
 		{
 			if (IsClash(visibility, Visibility::Internal))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= visibility, Visibility::Internal;
 		}
-		else if (lexical.anchor == KeyWord_space)
+		else if (lexical.anchor == KeyWord_space())
 		{
 			if (IsClash(visibility, Visibility::Space))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= visibility, Visibility::Space;
 		}
-		else if (lexical.anchor == KeyWord_protected)
+		else if (lexical.anchor == KeyWord_protected())
 		{
 			if (IsClash(visibility, Visibility::Protected))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= visibility, Visibility::Protected;
 		}
-		else if (lexical.anchor == KeyWord_private)
+		else if (lexical.anchor == KeyWord_private())
 		{
 			if (IsClash(visibility, Visibility::Private))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= visibility, Visibility::Private;
 		}
-		else break;
+		else
+		{
+			index = lexical.anchor.position;
+			break;
+		}
 	}
 	return visibility;
 }
@@ -211,6 +215,11 @@ label_parse_type:
 				new (types.Add())FileType(names, 0);
 				segmented = true;
 				goto label_parse_type;
+			}
+			else if (names.Count() == 1 && !segmented)
+			{
+				name = names[0];
+				return true;
 			}
 			else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 		}
@@ -305,13 +314,13 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 					return;
 				}
 			}
-			if (lexical.anchor == KeyWord_import)
+			if (lexical.anchor == KeyWord_import())
 			{
 				if (attributes.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_ATTRIBUTE_INVALID);
 				ParseImport(line, lexical, new (imports.Add())List<Anchor>(0), parameter->messages);
 				attributes.Clear();
 			}
-			else if (lexical.anchor == KeyWord_namespace)
+			else if (lexical.anchor == KeyWord_namespace())
 			{
 				ParseChild(line, attributes, lexical.anchor.GetEnd(), parameter);
 				attributes.Clear();
@@ -348,7 +357,7 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 
 	CHECK_VISIABLE(line, Space);
 	Anchor name, expression; FileType type;
-	if (lexical.anchor == KeyWord_const)
+	if (lexical.anchor == KeyWord_const())
 	{
 		if (TryParseVariable(line, lexical.anchor.GetEnd(), name, type, expression, parameter->messages))
 		{
@@ -358,51 +367,51 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 		else MESSAGE2(parameter->messages, line, MessageType::ERROR_NOT_VARIABLE_DECLARATION);
 		attributes.Clear();
 	}
-	else if (lexical.anchor == KeyWord_enum)
+	else if (lexical.anchor == KeyWord_enum())
 	{
 		ParseEnum(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
 		attributes.Clear();
 		return true;
 	}
-	else if (lexical.anchor == KeyWord_struct)
+	else if (lexical.anchor == KeyWord_struct())
 	{
 		ParseStruct(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
 		attributes.Clear();
 		return true;
 	}
-	else if (lexical.anchor == KeyWord_class)
+	else if (lexical.anchor == KeyWord_class())
 	{
 		ParseClass(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
 		attributes.Clear();
 		return true;
 	}
-	else if (lexical.anchor == KeyWord_interface)
+	else if (lexical.anchor == KeyWord_interface())
 	{
 		ParseInterface(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
 		attributes.Clear();
 		return true;
 	}
-	else if (lexical.anchor == KeyWord_delegate)
+	else if (lexical.anchor == KeyWord_delegate())
 	{
 		List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
-		ParseFunctionDeclaration(line, index, name, false, parameters, returns, parameter->messages);
+		ParseFunctionDeclaration(line, lexical.anchor.GetEnd(), name, false, parameters, returns, parameter->messages);
 		(new (delegates.Add())FileDelegate(name, visibility, this, parameters, returns))->attributes.Add(attributes);
 		attributes.Clear();
 	}
-	else if (lexical.anchor == KeyWord_coroutine)
+	else if (lexical.anchor == KeyWord_coroutine())
 	{
 		List<FileType> returns = List<FileType>(0);
-		if (TryParseTuple(line, index, name, false, returns, parameter->messages))
+		if (TryParseTuple(line, lexical.anchor.GetEnd(), name, false, returns, parameter->messages))
 		{
 			CheckLineEnd(line, name.GetEnd(), parameter->messages);
 			(new (coroutines.Add())FileCoroutine(name, visibility, this, returns))->attributes.Add(attributes);
 		}
 		attributes.Clear();
 	}
-	else if (lexical.anchor == KeyWord_native)
+	else if (lexical.anchor == KeyWord_native())
 	{
 		List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
-		ParseFunctionDeclaration(line, index, name, false, parameters, returns, parameter->messages);
+		ParseFunctionDeclaration(line, lexical.anchor.GetEnd(), name, false, parameters, returns, parameter->messages);
 		(new (natives.Add())FileNative(name, visibility, this, parameters, returns))->attributes.Add(attributes);
 		attributes.Clear();
 	}
@@ -566,7 +575,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 							expression = Anchor();
 							if (TryAnalysis(current, index, lexical, parameter->messages))
 							{
-								if (lexical.type == LexicalType::Word && (lexical.anchor == KeyWord_base || lexical.anchor == KeyWord_this))
+								if (lexical.type == LexicalType::Word && (lexical.anchor == KeyWord_base() || lexical.anchor == KeyWord_this()))
 									expression = Anchor(current.source, current.content.Sub(lexical.anchor.position), current.number, lexical.anchor.position);
 								else MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 							}

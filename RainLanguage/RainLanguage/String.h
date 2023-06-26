@@ -21,11 +21,13 @@ private:
 	List<character, true>* helper;
 	uint32* buckets;
 	Slot* slots;
-	uint32 top, size, free, head, tail, permanent, holeChars, holeSlots;
+	uint32 top, size, free, head, tail, characterHold, slotHold, characterGCHold, slotGCHold;
 	void GC();
+	void SlotGC();
 	bool IsEquals(Slot* slot, const character* value, uint32 length);
 	bool TryResize();
 	bool TryGetIdx(const character* value, uint32 length, uint32& hash, uint32& bidx, uint32& sidx);
+	string InternalAdd(const character* value, uint32 length);
 	friend String;
 public:
 	explicit StringAgency(uint32 capacity);
@@ -52,10 +54,10 @@ public:
 		if (!index)return;
 		ASSERT_DEBUG(IsValid(index) && (slots + index)->reference, "释放无引用字符串，逻辑可能有问题");
 		Slot* slot = slots + index;
-		if (!(--slot->reference) && (!permanent || slot->position > slots[permanent].position))
+		if (!(--slot->reference))
 		{
-			holeChars += slot->length + 1;
-			holeSlots++;
+			characterHold += slot->length + 1;
+			slotHold++;
 			slot->length = 0;
 		}
 	}
@@ -63,7 +65,6 @@ public:
 	String Combine(String* values, uint32 count);
 	String Sub(const String& source, uint32 start, uint32 length);
 	String Replace(const String& source, const String& oldValue, const String& newValue);
-	inline void  Permanent() { permanent = tail; }
 	inline uint32 Count()
 	{
 		uint32 result = top;
@@ -93,6 +94,7 @@ public:
 	}
 	inline String& operator=(const String& other)
 	{
+		if (pool) pool->Release(index);
 		pool = other.pool;
 		index = other.index;
 		length = other.length;

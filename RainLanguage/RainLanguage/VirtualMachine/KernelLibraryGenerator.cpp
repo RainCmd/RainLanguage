@@ -98,7 +98,7 @@ void GeneratorFunction(List<FunctionDeclarationInfo>& functions, CodeGenerator& 
 		generator.WriteInstruct(Instruct::FUNCTION_Return);
 	}
 	for (uint32 i = 0; i < space->children.Count(); i++)
-		GeneratorFunction(functions, generator, library, space);
+		GeneratorFunction(functions, generator, library, space->children[i]);
 }
 
 void CollectInherits(const KernelLibraryInfo* library, const Declaration& declaration, Set<Declaration, true>& inherits)

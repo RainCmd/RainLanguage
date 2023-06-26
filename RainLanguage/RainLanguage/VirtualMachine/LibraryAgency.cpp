@@ -7,6 +7,7 @@
 #include "CoroutineAgency.h"
 #include "Caller.h"
 
+//todo kernelLibrary初始化需要在kernel初始化完成之后进行
 LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary()), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
 void LibraryAgency::Init(const Library* libraries, uint32 count)

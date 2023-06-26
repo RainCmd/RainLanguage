@@ -263,6 +263,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 			case '\\':
 				LEXICAL(1, LexicalType::Backslash);
 				return true;
+			case '\n': return false;
 			default:
 				if (IsNumber(segment.content[index]))
 				{

@@ -85,7 +85,7 @@ struct FileStruct :FileDeclaration
 		List<Anchor> attributes;
 		inline Variable(const Anchor& name, const FileType& type) :compiling(NULL), name(name), type(type), attributes(0) {}
 	};
-	CompilingEnum* compiling;
+	CompilingStruct* compiling;
 	List<Variable> variables;
 	List<FileFunction> functions;
 	inline FileStruct(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), compiling(NULL), variables(0), functions(0) {}
