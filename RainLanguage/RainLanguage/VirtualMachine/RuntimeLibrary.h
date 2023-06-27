@@ -10,7 +10,7 @@ public:
 	uint32 index;
 	uint32 codeOffset;
 	uint32 dataOffset;
-	List<RuntimeSpace*, true> spaces;
+	List<RuntimeSpace> spaces;
 	List<RuntimeVariable> variables;
 	List<RuntimeEnum> enums;
 	List<RuntimeStruct> structs;
@@ -24,6 +24,4 @@ public:
 	RuntimeLibrary(const RuntimeLibrary&) = delete;
 	RuntimeLibrary(const RuntimeLibrary&&) = delete;
 	void InitRuntimeData(Kernel* kernel, const Library* library);
-
-	~RuntimeLibrary();
 };

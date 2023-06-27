@@ -7,13 +7,13 @@
 #include "CoroutineAgency.h"
 #include "Caller.h"
 
-//todo kernelLibrary初始化需要在kernel初始化完成之后进行
-LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary()), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
+LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
 void LibraryAgency::Init(const Library* libraries, uint32 count)
 {
-	kernelLibrary.InitRuntimeData(kernel, GetKernelLibrary());
-	kernel->coroutineAgency->CreateInvoker(kernelLibrary.codeOffset, &CallableInfo_EMPTY)->Start(true, true);
+	kernelLibrary = new RuntimeLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary());
+	kernelLibrary->InitRuntimeData(kernel, GetKernelLibrary());
+	kernel->coroutineAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	for (uint32 i = 0; i < count; i++) Load(libraries + i);
 }
 
@@ -64,7 +64,7 @@ uint8 LibraryAgency::GetTypeAlignment(const Type& type)
 
 RuntimeLibrary* LibraryAgency::GetLibrary(uint32 library)
 {
-	if (library == LIBRARY_KERNEL)return &kernelLibrary;
+	if (library == LIBRARY_KERNEL)return kernelLibrary;
 	ASSERT_DEBUG(library != INVALID && library < libraries.Count(), "无效的程序集ID");
 	return libraries[library];
 }
@@ -187,9 +187,9 @@ bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 
 RuntimeLibrary* LibraryAgency::Load(string name)
 {
-	if (name == kernelLibrary.spaces[0]->name)return &kernelLibrary;
+	if (name == kernelLibrary->spaces[0].name)return kernelLibrary;
 	for (uint32 i = 0; i < libraries.Count(); i++)
-		if (libraries[i]->spaces[0]->name == name)
+		if (libraries[i]->spaces[0].name == name)
 			return libraries[i];
 	String libraryName = kernel->stringAgency->Get(name);
 	Library* library = (Library*)libraryLoader(libraryName.GetPointer(), libraryName.length);
@@ -304,10 +304,10 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 		List<character, true> fullName(128);
 		String name = kernel->stringAgency->Get(info->name);
 		fullName.Add(name.GetPointer(), name.length);
-		for (uint32 index = info->space; index; index = library->spaces[index]->parent)
+		for (uint32 index = info->space; index; index = library->spaces[index].parent)
 		{
 			fullName.Insert(0, TEXT('.'));
-			name = kernel->stringAgency->Get(library->spaces[index]->name);
+			name = kernel->stringAgency->Get(library->spaces[index].name);
 			fullName.Insert(0, name.GetPointer(), name.length);
 		}
 		List<RainType, true> rainTypes(info->parameters.Count());

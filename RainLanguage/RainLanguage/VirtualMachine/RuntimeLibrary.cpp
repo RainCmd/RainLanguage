@@ -98,7 +98,7 @@ void CollectInherits(Set<Declaration, true>& inherits, const Declaration& interf
 
 void SetDeclaratioinSpace(uint32 parent, uint32 index, RuntimeLibrary* library)
 {
-	RuntimeSpace* space = library->spaces[index];
+	RuntimeSpace* space = &library->spaces[index];
 	space->parent = parent;
 	SET_DECLARATION_SPACE(variables);
 	SET_DECLARATION_SPACE(enums);
@@ -168,18 +168,18 @@ void RelocationMethods(RuntimeLibrary* runtimeLibrary, uint32 interfaceIndex, co
 }
 
 
-uint32 GetSpace(const List<RuntimeSpace*, true>& spaces, uint32 index, const ImportLibrary* importLibrary, uint32 importIndex)
+uint32 GetSpace(Kernel* kernel, const List<RuntimeSpace>& spaces, uint32 index, const Library* library, const ImportLibrary* importLibrary, uint32 importIndex)
 {
+	uint32 name = TO_NATIVE_STRING(importLibrary->spaces[importIndex].name);
 	if (importIndex)
 	{
-		uint32 name = importLibrary->spaces[importIndex].name;
-		index = GetSpace(spaces, index, importLibrary, importLibrary->spaces[importIndex].parent);
-		RuntimeSpace* space = spaces[index];
+		index = GetSpace(kernel, spaces, index, library, importLibrary, importLibrary->spaces[importIndex].parent);
+		const RuntimeSpace* space = &spaces[index];
 		for (uint32 i = 0; i < space->children.Count(); i++)
-			if (spaces[space->children[i]]->name == name)
+			if (spaces[space->children[i]].name == name)
 				return space->children[i];
 	}
-	else if (spaces[0]->name == importLibrary->spaces[0].name)return 0;
+	else if (spaces[0].name == name)return 0;
 	EXCEPTION("命名空间查找失败");
 }
 
@@ -193,7 +193,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	{
 		const ImportEnum* importEnum = &importLibrary->enums[x];
 		string name = TO_NATIVE_STRING(importEnum->name);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importEnum->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importEnum->space)];
 		for (uint32 y = 0; y < space->enums.Count(); y++)
 		{
 			RuntimeEnum* runtimeEnum = &runtimeLibrary->enums[space->enums[y]];
@@ -211,7 +211,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	{
 		const ImportStruct* importStruct = &importLibrary->structs[x];
 		string name = TO_NATIVE_STRING(importStruct->name);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importStruct->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importStruct->space)];
 		for (uint32 y = 0; y < space->structs.Count(); y++)
 		{
 			RuntimeStruct* runtimeStruct = &runtimeLibrary->structs[space->structs[y]];
@@ -229,7 +229,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	{
 		const ImportClass* importClass = &importLibrary->classes[x];
 		string name = TO_NATIVE_STRING(importClass->name);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importClass->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importClass->space)];
 		for (uint32 y = 0; y < space->classes.Count(); y++)
 		{
 			RuntimeClass* runtimeClass = &runtimeLibrary->classes[space->classes[y]];
@@ -247,7 +247,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	{
 		const ImportInterface* importInterface = &importLibrary->interfaces[x];
 		string name = TO_NATIVE_STRING(importInterface->name);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importInterface->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importInterface->space)];
 		for (uint32 y = 0; y < space->interfaces.Count(); y++)
 		{
 			RuntimeInterface* runtimeInterface = &runtimeLibrary->interfaces[space->interfaces[y]];
@@ -265,7 +265,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	{
 		const ImportDelegate* importDelegate = &importLibrary->delegates[x];
 		string name = TO_NATIVE_STRING(importDelegate->name);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importDelegate->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importDelegate->space)];
 		for (uint32 y = 0; y < space->delegates.Count(); y++)
 		{
 			RuntimeDelegate* runtimeDelegate = &runtimeLibrary->delegates[space->delegates[y]];
@@ -283,7 +283,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	{
 		const ImportCoroutine* importCoroutine = &importLibrary->coroutines[x];
 		string name = TO_NATIVE_STRING(importCoroutine->name);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importCoroutine->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importCoroutine->space)];
 		for (uint32 y = 0; y < space->coroutines.Count(); y++)
 		{
 			RuntimeCoroutine* runtimeCoroutine = &runtimeLibrary->coroutines[space->coroutines[y]];
@@ -321,7 +321,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		const ImportVariable* importVariable = &importLibrary->variables[x];
 		string name = TO_NATIVE_STRING(importVariable->name);
 		Type importVariableType = LocalToGlobal(self->index, maps, importVariable->type);
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importVariable->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importVariable->space)];
 		for (uint32 y = 0; y < space->variables.Count(); y++)
 		{
 			RuntimeVariable* runtimeVariable = &runtimeLibrary->variables[space->variables[y]];
@@ -561,7 +561,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 	for (uint32 x = 0; x < importLibrary->functions.Count(); x++)
 	{
 		const ImportFunction* importFunction = &importLibrary->functions[x];
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importFunction->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importFunction->space)];
 		string name = TO_NATIVE_STRING(importFunction->name);
 		parameters.Clear();
 		for (uint32 y = 0; y < importFunction->parameters.Count(); y++)
@@ -591,7 +591,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 	for (uint32 x = 0; x < importLibrary->natives.Count(); x++)
 	{
 		const ImportNative* importNative = &importLibrary->natives[x];
-		RuntimeSpace* space = runtimeLibrary->spaces[GetSpace(runtimeLibrary->spaces, 0, importLibrary, importNative->space)];
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importNative->space)];
 		string name = TO_NATIVE_STRING(importNative->name);
 		parameters.Clear();
 		for (uint32 y = 0; y < importNative->parameters.Count(); y++)
@@ -854,11 +854,4 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 		}
 		ASSERT_DEBUG(count > indices.Count(), "托管类存在循环继承");
 	}
-}
-
-RuntimeLibrary::~RuntimeLibrary()
-{
-	for (uint32 i = 0; i < spaces.Count(); i++)
-		delete spaces[i];
-	spaces.Clear();
 }

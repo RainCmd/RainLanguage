@@ -60,8 +60,8 @@ inline void Destruct(T* elements, uint32 count)
 #define ENUM_FLAG_OPERATOR(type)\
 inline type operator~(type t) { return (type)~(uint64)t; }\
 inline type operator|(type a, type b) { return (type)((uint64)a | (uint64)b); }\
-inline type operator|=(type a, type b) { return (type)((uint64)a | (uint64)b); }\
+inline type operator|=(type& a, type b) { return a = (type)((uint64)a | (uint64)b); }\
 inline type operator&(type a, type b) { return (type)((uint64)a & (uint64)b); }\
-inline type operator&=(type a, type b) { return (type)((uint64)a & (uint64)b); }\
+inline type operator&=(type& a, type b) { return a = (type)((uint64)a & (uint64)b); }\
 inline bool ContainAny(type source, type other){ return (uint64)source & (uint64)other; }\
 inline bool ContainAll(type source, type other){ return (source & other) == other; }

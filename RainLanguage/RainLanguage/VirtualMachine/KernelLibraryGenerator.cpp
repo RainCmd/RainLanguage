@@ -170,7 +170,7 @@ Library* GetKernelLibrary()
 			new (kernelLibrary->variables.Add())ReferenceVariableDeclarationInfo(true, EMPTY_STRINGS, stringAgency->AddAndRef(source->name), source->type, source->address, true, List<VariableReference, true>(0));
 		}
 
-		for (uint32 x = 1; x < library->enums.Count(); x++)
+		for (uint32 x = 0; x < library->enums.Count(); x++)
 		{
 			const KernelLibraryInfo::Enum* source = &library->enums[x];
 			List<EnumDeclarationInfo::Element, true>elements = List<EnumDeclarationInfo::Element, true>(source->elements.Count());

@@ -77,7 +77,7 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, RuntimeSpace* spa
 
 Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* name, uint32 nameLength)
 {
-	RuntimeSpace* space = library->spaces[0];
+	RuntimeSpace* space = &library->spaces[0];
 	uint32 start = 0;
 	for (uint32 x = 0; x < nameLength; x++)
 		if (x == '.')
@@ -86,9 +86,9 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* 
 			String spaceName = kernel->stringAgency->Add(name + start, x - start);
 			start = x + 1;
 			for (uint32 y = 0; y < space->children.Count(); y++)
-				if (spaceName.index == library->spaces[space->children[y]]->name)
+				if (spaceName.index == library->spaces[space->children[y]].name)
 				{
-					space = library->spaces[space->children[y]];
+					space = &library->spaces[space->children[y]];
 					goto label_next;
 				}
 			return Function();
@@ -98,7 +98,7 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* 
 	{
 		for (uint32 i = 0; i < library->spaces.Count(); i++)
 		{
-			Function result = FindFunction(kernel, library, library->spaces[i], name, nameLength);
+			Function result = FindFunction(kernel, library, &library->spaces[i], name, nameLength);
 			if (result.library != INVALID)return result;
 		}
 	}
@@ -113,20 +113,20 @@ const RainFunction Kernel::FindFunction(const character* name, uint32 nameLength
 		if (name[x] == '.')
 		{
 			String libraryName = stringAgency->Add(name, x);
-			if (libraryName.index == libraryAgency->kernelLibrary.spaces[0]->name)
+			if (libraryName.index == libraryAgency->kernelLibrary->spaces[0].name)
 			{
-				result = ::FindFunction(this, &libraryAgency->kernelLibrary, name + x + 1, nameLength - x - 1);
+				result = ::FindFunction(this, libraryAgency->kernelLibrary, name + x + 1, nameLength - x - 1);
 				return *(RainFunction*)&result;
 			}
 			for (uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
-				if (libraryName.index == libraryAgency->libraries[y]->spaces[0]->name)
+				if (libraryName.index == libraryAgency->libraries[y]->spaces[0].name)
 				{
 					result = ::FindFunction(this, libraryAgency->libraries[y], name + x + 1, nameLength - x - 1);
 					return *(RainFunction*)&result;
 				}
 			return RainFunction();
 		}
-	result = ::FindFunction(this, &libraryAgency->kernelLibrary, name, nameLength);
+	result = ::FindFunction(this, libraryAgency->kernelLibrary, name, nameLength);
 	if (result.library != INVALID)return *(RainFunction*)&result;
 	for (uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
 	{
@@ -156,7 +156,7 @@ void FindFunctions(Kernel* kernel, RuntimeLibrary* library, RuntimeSpace* space,
 
 void FindFunctions(Kernel* kernel, RuntimeLibrary* library, const character* name, uint32 nameLength, List<Function, true>& results)
 {
-	RuntimeSpace* space = library->spaces[0];
+	RuntimeSpace* space = &library->spaces[0];
 	uint32 start = 0;
 	for (uint32 x = 0; x < nameLength; x++)
 		if (x == '.')
@@ -165,15 +165,15 @@ void FindFunctions(Kernel* kernel, RuntimeLibrary* library, const character* nam
 			String spaceName = kernel->stringAgency->Add(name + start, x - start);
 			start = x + 1;
 			for (uint32 y = 0; y < space->children.Count(); y++)
-				if (spaceName.index == library->spaces[space->children[y]]->name)
+				if (spaceName.index == library->spaces[space->children[y]].name)
 				{
-					space = library->spaces[space->children[y]];
+					space = &library->spaces[space->children[y]];
 					goto label_next;
 				}
 			return;
 		label_next:;
 		}
-	if (start == 0) for (uint32 i = 0; i < library->spaces.Count(); i++) FindFunctions(kernel, library, library->spaces[i], name, nameLength, results);
+	if (start == 0) for (uint32 i = 0; i < library->spaces.Count(); i++) FindFunctions(kernel, library, &library->spaces[i], name, nameLength, results);
 	else if (start < nameLength) FindFunctions(kernel, library, space, name + start, nameLength - start, results);
 }
 
@@ -184,20 +184,20 @@ RainFunctions Kernel::FindFunctions(const character* name, uint32 nameLength)
 		if (name[x] == '.')
 		{
 			String libraryName = stringAgency->Add(name, x);
-			if (libraryName.index == libraryAgency->kernelLibrary.spaces[0]->name)
+			if (libraryName.index == libraryAgency->kernelLibrary->spaces[0].name)
 			{
-				::FindFunctions(this, &libraryAgency->kernelLibrary, name + x + 1, nameLength - x - 1, results);
+				::FindFunctions(this, libraryAgency->kernelLibrary, name + x + 1, nameLength - x - 1, results);
 				goto label_return;
 			}
 			for (uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
-				if (libraryName.index == libraryAgency->libraries[y]->spaces[0]->name)
+				if (libraryName.index == libraryAgency->libraries[y]->spaces[0].name)
 				{
 					::FindFunctions(this, libraryAgency->libraries[y], name + x + 1, nameLength - x - 1, results);
 					break;
 				}
 			goto label_return;
 		}
-	::FindFunctions(this, &libraryAgency->kernelLibrary, name, nameLength, results);
+	::FindFunctions(this, libraryAgency->kernelLibrary, name, nameLength, results);
 	for (uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
 		::FindFunctions(this, libraryAgency->libraries[i], name, nameLength, results);
 label_return:

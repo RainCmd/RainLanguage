@@ -58,7 +58,7 @@ void CollectSpace(CompilingSpace* index, List<Space>& spaces, StringAgency* agen
 				space->coroutines.Add(declaration.index);
 				break;
 			case DeclarationCategory::Native:
-				space->coroutines.Add(declaration.index);
+				space->natives.Add(declaration.index);
 				break;
 			case DeclarationCategory::Lambda:
 			case DeclarationCategory::LambdaClosureValue:

@@ -1181,7 +1181,7 @@ String LoadAssembly(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Refle
 	Handle* handle = &RETURN_VALUE(Handle, 0);
 	RuntimeLibrary* library = kernel->libraryAgency->Load(PARAMETER_VALUE(1, string, 0));
 	kernel->heapAgency->StrongRelease(*handle);
-	*handle = library->spaces[0]->GetReflection(kernel, library->index, 0);
+	*handle = library->spaces[0].GetReflection(kernel, library->index, 0);
 	kernel->heapAgency->StrongReference(*handle);
 	return String();
 }
@@ -1194,9 +1194,9 @@ String GetAssembles(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Refle
 	kernel->heapAgency->StrongReference(*handle);
 
 	List<Handle, true> assembles = List<Handle, true>(kernel->libraryAgency->libraries.Count() + 1);
-	assembles.Add(kernel->libraryAgency->kernelLibrary.spaces[0]->GetReflection(kernel, LIBRARY_KERNEL, 0));
+	assembles.Add(kernel->libraryAgency->kernelLibrary->spaces[0].GetReflection(kernel, LIBRARY_KERNEL, 0));
 	for (uint32 i = 0; i < kernel->libraryAgency->libraries.Count(); i++)
-		assembles.Add(kernel->libraryAgency->libraries[i]->spaces[0]->GetReflection(kernel, i, 0));
+		assembles.Add(kernel->libraryAgency->libraries[i]->spaces[0].GetReflection(kernel, i, 0));
 
 	for (uint32 i = 0; i < assembles.Count(); i++)
 	{
@@ -3018,7 +3018,7 @@ String Reflection_Space_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, 
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.attributes)
 	{
-		RuntimeSpace* space = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
+		RuntimeSpace* space = &kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.attributes, TYPE_Reflection_ReadonlyStrings, TYPE_String, space->attributes.Count(), Weak);
 		for (uint32 i = 0; i < space->attributes.Count(); i++)
 		{
@@ -3037,13 +3037,13 @@ String Reflection_Space_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, 
 String Reflection_Space_GetParent(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Space Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
-	RuntimeSpace* space = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
+	RuntimeSpace* space = &kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 	Handle* handle = &RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(*handle);
 	if (space->parent == INVALID)*handle = NULL;
-	else *handle = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[space->parent]->GetReflection(kernel, thisValue.library, space->parent);
+	else *handle = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[space->parent].GetReflection(kernel, thisValue.library, space->parent);
 	kernel->heapAgency->StrongReference(*handle);
-	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(*handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index]->parent);
+	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(*handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].parent);
 	return String();
 }
 
@@ -3053,11 +3053,11 @@ String Reflection_Space_GetChildren(Kernel* kernel, Coroutine*, uint8* stack, ui
 	if (!thisValue.children)
 	{
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
-		RuntimeSpace* space = library->spaces[thisValue.index];
+		RuntimeSpace* space = &library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.children, TYPE_Reflection_ReadonlySpaces, TYPE_Reflection_Space, space->children.Count(), Weak);
 		for (uint32 i = 0; i < space->children.Count(); i++)
 		{
-			Handle handle = library->spaces[space->children[i]]->GetReflection(kernel, thisValue.library, space->children[i]);
+			Handle handle = library->spaces[space->children[i]].GetReflection(kernel, thisValue.library, space->children[i]);
 			*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = handle;
 			kernel->heapAgency->WeakReference(handle);
 		}
@@ -3075,7 +3075,7 @@ String Reflection_Space_GetAssembly(Kernel* kernel, Coroutine*, uint8* stack, ui
 	GET_THIS_VALUE(1, ReflectionSpace);
 	Handle* handle = &RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(*handle);
-	*handle = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[0]->GetReflection(kernel, thisValue.library, 0);
+	*handle = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[0].GetReflection(kernel, thisValue.library, 0);
 	kernel->heapAgency->StrongReference(*handle);
 	return String();
 }
@@ -3085,7 +3085,7 @@ String Reflection_Space_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32
 	GET_THIS_VALUE(1, ReflectionSpace);
 	string* name = &RETURN_VALUE(string, 0);
 	kernel->stringAgency->Release(*name);
-	*name = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index]->name;
+	*name = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].name;
 	kernel->stringAgency->Reference(*name);
 	return String();
 }
@@ -3096,7 +3096,7 @@ String Reflection_Space_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, u
 	if (!thisValue.variables)
 	{
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
-		RuntimeSpace* space = library->spaces[thisValue.index];
+		RuntimeSpace* space = &library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.variables, TYPE_Reflection_ReadonlyVariables, TYPE_Reflection_Variable, space->variables.Count(), Weak);
 		for (uint32 i = 0; i < space->variables.Count(); i++)
 		{
@@ -3119,7 +3119,7 @@ String Reflection_Space_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, u
 	if (!thisValue.functions)
 	{
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
-		RuntimeSpace* space = library->spaces[thisValue.index];
+		RuntimeSpace* space = &library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.functions, TYPE_Reflection_ReadonlyFunctions, TYPE_Reflection_Function, space->functions.Count(), Weak);
 		for (uint32 i = 0; i < space->functions.Count(); i++)
 		{
@@ -3142,7 +3142,7 @@ String Reflection_Space_GetNatives(Kernel* kernel, Coroutine*, uint8* stack, uin
 	if (!thisValue.natives)
 	{
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
-		RuntimeSpace* space = library->spaces[thisValue.index];
+		RuntimeSpace* space = &library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.natives, TYPE_Reflection_ReadonlyNatives, TYPE_Reflection_Native, space->natives.Count(), Weak);
 		for (uint32 i = 0; i < space->natives.Count(); i++)
 		{
@@ -3164,7 +3164,7 @@ String Reflection_Space_GetTypes(Kernel* kernel, Coroutine*, uint8* stack, uint3
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.types)
 	{
-		RuntimeSpace* space = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
+		RuntimeSpace* space = &kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space->enums.Count() + space->structs.Count() + space->classes.Count() + space->interfaces.Count() + space->delegates.Count() + space->coroutines.Count(), Weak);
 		uint32 index = 0;
 		for (uint32 i = 1; i < space->enums.Count(); i++)

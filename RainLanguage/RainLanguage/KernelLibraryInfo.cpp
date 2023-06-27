@@ -397,7 +397,6 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	//struct string
 	{
 		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
-		REGISTER_MEMBER_VARIABLES("value", TYPE_String, 0);
 		List<uint32, true> memberFunctions = List<uint32, true>(5);
 		REGISTER_MEMBER_FUNCTIONS("GetLength", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_String), string_GetLength);
 		REGISTER_MEMBER_FUNCTIONS("GetStringID", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_String), string_GetStringID);
@@ -409,7 +408,6 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	//struct entity
 	{
 		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
-		REGISTER_MEMBER_VARIABLES("value", TYPE_Entity, 0);
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS("GetEntityID", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Entity), entity_GetEntityID);
 		REGISTER_STRUCT(root, "entity", KERNEL_TYPE_STRUCT_INDEX_Entity, SIZE(Entity), MEMORY_ALIGNMENT_4, memberVariables, memberFunctions);

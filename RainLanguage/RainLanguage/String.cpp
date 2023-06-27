@@ -3,8 +3,6 @@
 #include "Collections/Hash.h"
 #include "Real/MathReal.h"
 
-#define GC_FLAG 0x80000000
-
 uint32 GetHash(const character* value, uint32 length)
 {
 	uint32 result = 0;
@@ -21,15 +19,7 @@ void StringAgency::GC()
 	while (index)
 	{
 		Slot* slot = slots + index;
-		if (slot->next == GC_FLAG)
-		{
-			if (tail) slots[tail].gcNext = NULL;
-			uint32 gcNext = slot->gcNext;
-			slot->gcNext = free;
-			free = index;
-			index = gcNext;
-		}
-		else
+		if (slot->length)
 		{
 			if (slot->position > position)
 			{
@@ -45,6 +35,14 @@ void StringAgency::GC()
 			else head = tail = index;
 			index = slot->gcNext;
 		}
+		else
+		{
+			if (tail) slots[tail].gcNext = NULL;
+			uint32 gcNext = slot->gcNext;
+			slot->gcNext = free;
+			free = index;
+			index = gcNext;
+		}
 	}
 	characters.RemoveAt(position + 1, characters.Count() - position - 1);
 	characterGCHold = 0;
@@ -59,12 +57,12 @@ void StringAgency::SlotGC()
 		while (index)
 		{
 			Slot* slot = slots + index;
-			if (slot->length) prev = index;
+			if (slot->reference) prev = index;
 			else
 			{
 				if (prev)slots[prev].next = slot->next;
 				else buckets[i] = slot->next;
-				slot->next = GC_FLAG;
+				slot->length = 0;
 			}
 			index = slot->next;
 		}
@@ -106,10 +104,22 @@ bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash
 	hash = GetHash(value, length);
 	bidx = hash % size;
 	sidx = buckets[bidx];
+	uint32 prev = 0;
 	while (sidx)
 	{
 		Slot* slot = slots + sidx;
 		if (slot->hash == hash && IsEquals(slot, value, length)) return true;
+		else if (slot->reference) prev = sidx;
+		else
+		{
+			if (prev) slots[prev].next = slot->next;
+			else buckets[bidx] = slot->next;
+			characterHold -= slot->length+1;
+			slotHold--;
+			characterGCHold += slot->length + 1;
+			slotGCHold++;
+			slot->length = 0;
+		}
 		sidx = slot->next;
 	}
 	return false;
@@ -125,7 +135,7 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 		if ((characterGCHold << 3) > characters.Capacity()) GC();
 		else if (((characterHold + characterGCHold) << 3) > characters.Capacity())
 		{
-			if (TryResize())bidx = hash % size;
+			SlotGC();
 			GC();
 		}
 	}
@@ -136,13 +146,18 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	}
 	else
 	{
-		if (TryResize())bidx = hash % size;
+		if ((slotHold << 3) > size) SlotGC();
+		if ((slotGCHold << 3) > size) GC();
 		if (free)
 		{
 			sidx = free;
 			free = slots[free].gcNext;
 		}
-		else sidx = top++;
+		else
+		{
+			if (TryResize())bidx = hash % size;
+			sidx = top++;
+		}
 	}
 	Slot* slot = slots + sidx;
 	slot->hash = hash;
@@ -150,7 +165,7 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	slot->position = characters.Count();
 	slot->next = buckets[bidx];
 	slot->gcNext = NULL;
-	slot->reference = 0;
+	slot->reference = 1;
 
 	buckets[bidx] = sidx;
 	characters.Add(value, length); characters.Add('\0');

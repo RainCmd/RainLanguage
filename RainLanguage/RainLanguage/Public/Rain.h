@@ -3,7 +3,7 @@
 #ifdef RAINLANGUAGE_EXPORTS
 #define RAINLANGUAGE _declspec(dllexport)
 #else
-#define RAINLANGUAGE //_declspec(dllimport)
+#define RAINLANGUAGE _declspec(dllimport)
 #endif
 
 typedef unsigned char uint8;

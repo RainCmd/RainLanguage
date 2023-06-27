@@ -343,7 +343,7 @@ void Invoker::PushStackFrame(uint32 pointer)
 		if (kernel->libraryAgency->libraries[i]->codeOffset <= pointer)
 			library = kernel->libraryAgency->libraries[i];
 		else break;
-	if (library) frames.Add(StackFrame(kernel->stringAgency->Get(library->spaces[0]->name), pointer - library->codeOffset));
+	if (library) frames.Add(StackFrame(kernel->stringAgency->Get(library->spaces[0].name), pointer - library->codeOffset));
 	else frames.Add(StackFrame(String(), pointer));
 }
 

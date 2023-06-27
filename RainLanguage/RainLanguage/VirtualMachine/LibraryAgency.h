@@ -15,7 +15,7 @@ class LibraryAgency
 public:
 	uint32 functionCharacteristic = 0;
 	Kernel* kernel;
-	RuntimeLibrary kernelLibrary;
+	RuntimeLibrary* kernelLibrary;
 	LibraryLoader libraryLoader;
 	NativeCallerLoader nativeCallerLoader;
 	List<RuntimeLibrary*, true> libraries;

@@ -43,13 +43,19 @@ public:
 	string AddAndRef(const String& value);
 	String Get(uint32 index);
 	inline bool IsValid(uint32 index) { return index < top && (!index || slots[index].length); }
-	inline void Reference(uint32 index)
+	inline void Reference(string index)
 	{
 		if (!index)return;
 		ASSERT_DEBUG(IsValid(index), "引用无效字符串");
-		slots[index].reference++;
+		Slot* slot = slots + index;
+		if (!slot->reference)
+		{
+			characterHold -= slot->length + 1;
+			slotHold--;
+		}
+		slot->reference++;
 	}
-	inline void Release(uint32 index)
+	inline void Release(string index)
 	{
 		if (!index)return;
 		ASSERT_DEBUG(IsValid(index) && (slots + index)->reference, "释放无引用字符串，逻辑可能有问题");
@@ -58,7 +64,6 @@ public:
 		{
 			characterHold += slot->length + 1;
 			slotHold++;
-			slot->length = 0;
 		}
 	}
 	void InitHelper();
