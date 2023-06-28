@@ -104,22 +104,22 @@ Visibility ParseVisibility(const Line& line, uint32& index, MessageCollector* me
 		else if (lexical.anchor == KeyWord_internal())
 		{
 			if (IsClash(visibility, Visibility::Internal))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
-			visibility |= visibility, Visibility::Internal;
+			visibility |= Visibility::Internal;
 		}
 		else if (lexical.anchor == KeyWord_space())
 		{
 			if (IsClash(visibility, Visibility::Space))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
-			visibility |= visibility, Visibility::Space;
+			visibility |= Visibility::Space;
 		}
 		else if (lexical.anchor == KeyWord_protected())
 		{
 			if (IsClash(visibility, Visibility::Protected))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
-			visibility |= visibility, Visibility::Protected;
+			visibility |= Visibility::Protected;
 		}
 		else if (lexical.anchor == KeyWord_private())
 		{
 			if (IsClash(visibility, Visibility::Private))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
-			visibility |= visibility, Visibility::Private;
+			visibility |= Visibility::Private;
 		}
 		else
 		{

@@ -127,17 +127,21 @@ InvokerDelegateExpression::~InvokerDelegateExpression()
 
 void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 {
-	AbstractFunction* abstractFunction = &parameter.manager->GetLibrary(declaration.library)->functions[declaration.index];
+	AbstractCallable* callable;
+	if (declaration.category == DeclarationCategory::Function)callable = &parameter.manager->GetLibrary(declaration.library)->functions[declaration.index];
+	else if (declaration.category == DeclarationCategory::Native)callable = &parameter.manager->GetLibrary(declaration.library)->natives[declaration.index];
+	else EXCEPTION("其他类型的函数不应该走到这里");
+
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
 	parameters->Generator(parametersParameter);
-	uint32 parameterPoint = SIZE(Frame) + abstractFunction->returns.Count() * 4;
+	uint32 parameterPoint = SIZE(Frame) + callable->returns.Count() * 4;
 	parameter.generator->WriteCode(Instruct::FUNCTION_Ensure);
-	parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size);
+	parameter.generator->WriteCode(parameterPoint + callable->parameters.size);
 	parameter.generator->WriteCode(&returnAddress);
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	GeneratePushReturnPoint(parameter, abstractFunction->returns);
-	GenerateInvokerParameters(parametersParameter, parameterPoint, abstractFunction->parameters);
+	GeneratePushReturnPoint(parameter, callable->returns);
+	GenerateInvokerParameters(parametersParameter, parameterPoint, callable->parameters);
 	if (declaration.category == DeclarationCategory::Function)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_Call);

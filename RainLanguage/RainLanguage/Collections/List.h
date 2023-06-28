@@ -176,7 +176,7 @@ public:
 	inline void SetCount(uint32 count)
 	{
 		ASSERT_DEBUG(IsBitwise, "该操作会导致构造和析构调用次数不成对，不是纯数据类型可能会破坏内存");
-		this->count = size;
+		this->count = count;
 		if (count > size)
 		{
 			size = count;

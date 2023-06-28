@@ -745,12 +745,12 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					Expression* expression = NULL;
 					if (parser.TryParse(lineAnchor, expression))
 					{
-						if (HasBlurryResult(expression)) blockStack.Peek()->statements.Add(new ExpressionStatement(lineAnchor, expression));
-						else
+						if (HasBlurryResult(expression))
 						{
 							delete expression;
 							MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_TYPE_EQUIVOCAL);
 						}
+						else blockStack.Peek()->statements.Add(new ExpressionStatement(lineAnchor, expression));
 					}
 				}
 			}

@@ -39,7 +39,7 @@ struct ExpressionParser
 	bool TryFindDeclaration(const Anchor& name, List<CompilingDeclaration, true>& result);//查找失败不会输出错误信息
 	bool TryFindDeclaration(const Anchor& anchor, uint32& index, Lexical& lexical, AbstractSpace* space, List<CompilingDeclaration, true>& declarations);//查找失败会输出错误信息
 	bool TryFindDeclaration(const Anchor& anchor, uint32& index, List<CompilingDeclaration, true>& declarations);//查找失败会输出错误信息
-	bool TryPushDeclarationsExpression(const Anchor& anchor, uint32& index, List<Expression*, true>expressionStack, const Lexical& lexical, List<CompilingDeclaration, true>& declarations, Attribute& attribute);
+	bool TryPushDeclarationsExpression(const Anchor& anchor, uint32& index, List<Expression*, true>& expressionStack, const Lexical& lexical, List<CompilingDeclaration, true>& declarations, Attribute& attribute);
 	bool TryParseBracket(const Anchor& anchor, uint32& index, SplitFlag flag, Expression*& result);
 	bool TryParseLambda(const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result);
 	bool TryParseAssignment(LexicalType type, const Anchor& left, const Anchor& right, Expression*& result);

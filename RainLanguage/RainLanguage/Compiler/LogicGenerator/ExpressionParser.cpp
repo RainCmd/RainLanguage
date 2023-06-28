@@ -317,7 +317,7 @@ bool ExpressionParser::TryInferLeftValueType(Expression*& expression, const Span
 
 bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Type& type)
 {
-	ASSERT_DEBUG(type == TYPE_Null, "目标类型不可能为NULL");
+	ASSERT_DEBUG(type != TYPE_Null, "目标类型不可能为NULL");
 	ASSERT_DEBUG(expression->returns.Count() == 1, "表达式返回值数量不为一");
 	if (type == TYPE_Blurry)
 	{
@@ -1080,7 +1080,10 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 bool ExpressionParser::PushToken(List<Expression*, true>& expressionStack, List<Token>& tokenStack, const Token& token, Attribute attribute)
 {
 	while (tokenStack.Count() && token.Priority() <= tokenStack.Peek().Priority())
+	{
 		attribute = PopToken(expressionStack, tokenStack.Pop());
+		if (attribute == Attribute::Invalid) return false;
+	}
 	if (ContainAny(token.Precondition(), attribute))
 	{
 		tokenStack.Add(token);
@@ -1184,7 +1187,7 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& anchor, uint32& index, L
 	return false;
 }
 
-bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint32& index, List<Expression*, true> expressionStack, const Lexical& lexical, List<CompilingDeclaration, true>& declarations, Attribute& attribute)
+bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint32& index, List<Expression*, true>& expressionStack, const Lexical& lexical, List<CompilingDeclaration, true>& declarations, Attribute& attribute)
 {
 	if (declarations.Count() == 1)
 	{
@@ -2800,10 +2803,10 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 											}
 										}
 									}
-									stringBuilder.Add(stringBuilder);
+									stringBuilder.Add(element);
 								}
 							}
-							else stringBuilder.Add(stringBuilder);
+							else stringBuilder.Add(element);
 						}
 					}
 					expressionStack.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
@@ -3260,6 +3263,20 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 		index = lexical.anchor.GetEnd();
 	label_next_lexical:;
 	}
+
+	while (tokenStack.Count())
+		if (PopToken(expressionStack, tokenStack.Pop()) == Attribute::Invalid)
+			goto label_parse_fail;
+
+	if (expressionStack.Count() > 1)
+	{
+		List<Type, true> resultReturns(1);
+		for (uint32 i = 0; i < expressionStack.Count(); i++) resultReturns.Add(expressionStack[i]->returns);
+		result = new TupleExpression(anchor, resultReturns, expressionStack);
+	}
+	else if (expressionStack.Count()) result = expressionStack.Pop();
+	else result = GetEmptyTupleExpression();
+	return true;
 
 label_parse_fail:
 	while (expressionStack.Count()) delete expressionStack.Pop();

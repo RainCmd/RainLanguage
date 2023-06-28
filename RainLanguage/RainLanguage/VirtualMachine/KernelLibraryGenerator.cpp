@@ -78,29 +78,6 @@ void ClearVariable(CodeGenerator& generator, Type type, uint32 pointer)
 	}
 }
 
-void GeneratorFunction(List<FunctionDeclarationInfo>& functions, CodeGenerator& generator, const KernelLibraryInfo* library, const KernelLibraryInfo::Space* space)
-{
-	for (uint32 x = 0; x < space->functions.Count(); x++)
-	{
-		uint32 functionIndex = space->functions[x];
-		functions[functionIndex].entry = generator.GetAddress(0);
-		const KernelLibraryInfo::Function* function = &library->functions[functionIndex];
-
-		generator.WriteInstruct(Instruct::FUNCTION_Entrance);
-		generator.Write<uint32>(0);
-		generator.Write<uint32>(0);
-		generator.WriteInstruct(Instruct::FUNCTION_KernelCall);
-		generator.Write(functionIndex);
-		generator.Write<uint32>(9);
-		uint32 parameterPointer = SIZE(Frame) + function->returns.Count() * 4;
-		for (uint32 y = 0; y < function->parameters.Count(); y++)
-			ClearVariable(generator, function->parameters.GetType(y), parameterPointer + function->parameters.GetOffset(y));
-		generator.WriteInstruct(Instruct::FUNCTION_Return);
-	}
-	for (uint32 i = 0; i < space->children.Count(); i++)
-		GeneratorFunction(functions, generator, library, space->children[i]);
-}
-
 void CollectInherits(const KernelLibraryInfo* library, const Declaration& declaration, Set<Declaration, true>& inherits)
 {
 	if (declaration == (Declaration)TYPE_Handle)return;
@@ -259,7 +236,22 @@ Library* GetKernelLibrary()
 			generator.WriteInstruct(Instruct::FUNCTION_Return);
 		}
 
-		GeneratorFunction(kernelLibrary->functions, generator, library, library->root);
+		for (uint32 i = 0; i < library->functions.Count(); i++)
+		{
+			kernelLibrary->functions[i].entry = generator.GetAddress(0);
+			const KernelLibraryInfo::Function* function = &library->functions[i];
+
+			generator.WriteInstruct(Instruct::FUNCTION_Entrance);
+			generator.Write<uint32>(0);
+			generator.Write<uint32>(0);
+			generator.WriteInstruct(Instruct::FUNCTION_KernelCall);
+			generator.Write(i);
+			generator.Write<uint32>(9);
+			uint32 parameterPointer = SIZE(Frame) + function->returns.Count() * 4;
+			for (uint32 y = 0; y < function->parameters.Count(); y++)
+				ClearVariable(generator, function->parameters.GetType(y), parameterPointer + function->parameters.GetOffset(y));
+			generator.WriteInstruct(Instruct::FUNCTION_Return);
+		}
 	}
 	return kernelLibrary;
 }

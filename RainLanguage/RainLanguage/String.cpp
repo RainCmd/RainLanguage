@@ -319,7 +319,7 @@ string StringAgency::AddAndRef(const String& value)
 
 String StringAgency::Get(uint32 index)
 {
-	if (IsValid(index))return String(this, index);
+	if (index && IsValid(index))return String(this, index);
 	return String();
 }
 

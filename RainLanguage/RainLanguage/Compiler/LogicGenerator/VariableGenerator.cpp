@@ -45,21 +45,21 @@ LogicVariable VariableGenerator::DecareTemporary(DeclarationManager* manager, co
 	if (type == TYPE_String)
 	{
 		if (stringTemporaryCount == stringTemporaries.Count())
-			new (stringTemporaries.Add())Variable(new CodeLocalVariableReference(), size * stringTemporaryCount, type);
+			stringTemporaries.Add(new Variable(new CodeLocalVariableReference(), size * stringTemporaryCount, type));
 		Variable* variable = stringTemporaries[stringTemporaryCount++];
 		return LogicVariable(variable->reference, variable->address, type, 0);
 	}
 	else if (type == TYPE_Entity)
 	{
 		if (entityTemporaryCount == entityTemporaries.Count())
-			new (entityTemporaries.Add())Variable(new CodeLocalVariableReference(), size * entityTemporaryCount, type);
+			entityTemporaries.Add(new Variable(new CodeLocalVariableReference(), size * entityTemporaryCount, type));
 		Variable* variable = entityTemporaries[entityTemporaryCount++];
 		return LogicVariable(variable->reference, variable->address, type, 0);
 	}
 	else if (IsHandleType(type))
 	{
 		if (handleTemporaryCount == handleTemporaries.Count())
-			new (handleTemporaries.Add())Variable(new CodeLocalVariableReference(), size * handleTemporaryCount, type);
+			handleTemporaries.Add(new Variable(new CodeLocalVariableReference(), size * handleTemporaryCount, type));
 		Variable* variable = handleTemporaries[handleTemporaryCount++];
 		return LogicVariable(variable->reference, variable->address, type, 0);
 	}
