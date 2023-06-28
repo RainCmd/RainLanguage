@@ -25,7 +25,7 @@ private:
 	void GC();
 	void SlotGC();
 	bool IsEquals(Slot* slot, const character* value, uint32 length);
-	bool TryResize();
+	void Resize();
 	bool TryGetIdx(const character* value, uint32 length, uint32& hash, uint32& bidx, uint32& sidx);
 	string InternalAdd(const character* value, uint32 length);
 	friend String;

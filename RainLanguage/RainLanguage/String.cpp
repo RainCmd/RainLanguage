@@ -82,9 +82,9 @@ bool StringAgency::IsEquals(Slot* slot, const character* value, uint32 length)
 	return true;
 }
 
-bool StringAgency::TryResize()
+void StringAgency::Resize()
 {
-	if (top < size)return false;
+	ASSERT_DEBUG(top < size, "");
 	size = GetPrime(size);
 	buckets = Realloc<uint32>(buckets, size);
 	slots = Realloc<Slot>(slots, size);
@@ -92,11 +92,21 @@ bool StringAgency::TryResize()
 	for (uint32 i = 0; i < top; i++)
 	{
 		Slot* slot = slots + i;
-		uint32 bidx = slot->hash % size;
-		slot->next = buckets[bidx];
-		buckets[bidx] = i;
+		if (slot->reference)
+		{
+			uint32 bidx = slot->hash % size;
+			slot->next = buckets[bidx];
+			buckets[bidx] = i;
+		}
+		else if(slot->length)
+		{
+			characterHold -= slot->length + 1;
+			slotHold--;
+			characterGCHold += slot->length + 1;
+			slotGCHold++;
+			slot->length = 0;
+		}
 	}
-	return true;
 }
 
 bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash, uint32& bidx, uint32& sidx)
@@ -114,7 +124,7 @@ bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash
 		{
 			if (prev) slots[prev].next = slot->next;
 			else buckets[bidx] = slot->next;
-			characterHold -= slot->length+1;
+			characterHold -= slot->length + 1;
 			slotHold--;
 			characterGCHold += slot->length + 1;
 			slotGCHold++;
@@ -155,7 +165,11 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 		}
 		else
 		{
-			if (TryResize())bidx = hash % size;
+			if (top >= size)
+			{
+				Resize();
+				bidx = hash % size;
+			}
 			sidx = top++;
 		}
 	}
@@ -165,7 +179,7 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	slot->position = characters.Count();
 	slot->next = buckets[bidx];
 	slot->gcNext = NULL;
-	slot->reference = 1;
+	slot->reference = 0;
 
 	buckets[bidx] = sidx;
 	characters.Add(value, length); characters.Add('\0');
