@@ -79,27 +79,27 @@ void Coroutine::Run()
 	data[0] = kernel->libraryAgency->code.GetPointer();
 	data[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
-	for (;;)
-		switch ((Instruct)*instruct)
-		{
+label_next_instruct:
+	switch ((Instruct)*instruct)
+	{
 #pragma region Base
 		case Instruct::BASE_PushExitMessage:
 			INSTRUCT_VARIABLE(string, 1) = exitMessage.index;
 			kernel->stringAgency->Reference(exitMessage.index);
 			exitMessage = String();
 			instruct += 5;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_PopExitMessage:
 			exitMessage = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
 			instruct += 5;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_ExitJump:
 			if (exitMessage.IsEmpty())instruct += 5;
 			else instruct += INSTRUCT_VALUE(uint32, 1);
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_Wait:
 			instruct++;
-			if (ignoreWait) break;
+			if (ignoreWait) goto label_next_instruct;
 			else goto label_exit;
 		case Instruct::BASE_WaitFrame:
 			if (ignoreWait)instruct += 5;
@@ -113,7 +113,7 @@ void Coroutine::Run()
 					goto label_exit;
 				}
 			}
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_WaitCoroutine:
 		{
 			Handle handle = INSTRUCT_VARIABLE(Handle, 1);
@@ -122,40 +122,40 @@ void Coroutine::Run()
 			if (!kernel->heapAgency->TryGetPoint(handle, coroutine))EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_NULL_REFERENCE);
 			invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
 			ASSERT_DEBUG(invoker, "协程的引用计数逻辑可能有bug");
-			if (invoker->state < InvokerState::Running) break;
+			if (invoker->state < InvokerState::Running) goto label_next_instruct;
 			else if (ignoreWait) EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_IGNORE_WAIT_BUT_COROUTINE_NOT_COMPLETED);
 			EXCEPTION_JUMP(4, BASE_WaitCoroutine);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_WaitBack:
 			instruct += 5;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_Stackzero:
 			Mzero(data[1] + INSTRUCT_VALUE(uint32, 1), INSTRUCT_VALUE(uint32, 5));
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_Datazero:
 			Mzero(&INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 5));
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_Jump:
 			instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_JumpVariableAddress:
 			instruct += INSTRUCT_VARIABLE(uint32, 1);
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_ConditionJump:
 			if (flag) instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
 			else instruct += 5;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_NullJump:
 			if (INSTRUCT_VARIABLE(Handle, 1)) instruct += 9;
 			else instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 5));
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_Flag:
 			flag = INSTRUCT_VARIABLE(bool, 1);
 			instruct += 5;
-			break;
+			goto label_next_instruct;
 		case Instruct::BASE_CreateObject:
 		{
 			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
@@ -164,7 +164,7 @@ void Coroutine::Run()
 			kernel->heapAgency->StrongReference(handle);
 			instruct += 5 + SIZE(Declaration);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_CreateDelegate:
 		{
 			//Handle&		result
@@ -193,68 +193,67 @@ void Coroutine::Run()
 			Delegate* delegateInfo = (Delegate*)kernel->heapAgency->GetPoint(result);
 			switch (INSTRUCT_VALUE(FunctionType, 5 + SIZE(Declaration)))
 			{
-			case FunctionType::Global:
-				new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration)));
-				instruct += 10 + SIZE(Declaration);
-				break;
-			case FunctionType::Native:
-				new (delegateInfo)Delegate(INSTRUCT_VALUE(Native, 6 + SIZE(Declaration)));
-				instruct += 6 + SIZE(Declaration) + SIZE(Native);
-				break;
-			case FunctionType::Box:
-			{
-				Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
-				if (kernel->heapAgency->IsValid(target))
+				case FunctionType::Global:
+					new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration)));
+					instruct += 10 + SIZE(Declaration);
+					goto label_next_instruct;
+				case FunctionType::Native:
+					new (delegateInfo)Delegate(INSTRUCT_VALUE(Native, 6 + SIZE(Declaration)));
+					instruct += 6 + SIZE(Declaration) + SIZE(Native);
+					goto label_next_instruct;
+				case FunctionType::Box:
 				{
-					new(delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Box);
-					kernel->heapAgency->WeakReference(target);
+					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					if (kernel->heapAgency->IsValid(target))
+					{
+						new(delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Box);
+						kernel->heapAgency->WeakReference(target);
+					}
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Box, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(13 + SIZE(Declaration), BASE_CreateDelegate_Box);
 				}
-				else EXCEPTION_EXIT(BASE_CreateDelegate_Box, EXCEPTION_NULL_REFERENCE);
-				EXCEPTION_JUMP(13 + SIZE(Declaration), BASE_CreateDelegate_Box);
-			}
-			break;
-			case FunctionType::Reality:
-			{
-				Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
-				if (kernel->heapAgency->IsValid(target))
+				goto label_next_instruct;
+				case FunctionType::Reality:
 				{
-					new(delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Reality);
-					kernel->heapAgency->WeakReference(target);
+					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					if (kernel->heapAgency->IsValid(target))
+					{
+						new(delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Reality);
+						kernel->heapAgency->WeakReference(target);
+					}
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(13 + SIZE(Declaration), BASE_CreateDelegate_Reality);
 				}
-				else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, EXCEPTION_NULL_REFERENCE);
-				EXCEPTION_JUMP(13 + SIZE(Declaration), BASE_CreateDelegate_Reality);
-			}
-			break;
-			case FunctionType::Virtual:
-			{
-				Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
-				Type type;
-				if (kernel->heapAgency->TryGetType(target, type))
+				goto label_next_instruct;
+				case FunctionType::Virtual:
 				{
-					new(delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Virtual);
-					kernel->heapAgency->WeakReference(target);
+					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					Type type;
+					if (kernel->heapAgency->TryGetType(target, type))
+					{
+						new(delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Virtual);
+						kernel->heapAgency->WeakReference(target);
+					}
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Virtual);
 				}
-				else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, EXCEPTION_NULL_REFERENCE);
-				EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Virtual);
-			}
-			break;
-			case FunctionType::Abstract:
-			{
-				Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
-				Type type;
-				if (kernel->heapAgency->TryGetType(target, type))
+				goto label_next_instruct;
+				case FunctionType::Abstract:
 				{
-					new(delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Abstract);
-					kernel->heapAgency->WeakReference(target);
+					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					Type type;
+					if (kernel->heapAgency->TryGetType(target, type))
+					{
+						new(delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Abstract);
+						kernel->heapAgency->WeakReference(target);
+					}
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Abstract);
 				}
-				else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, EXCEPTION_NULL_REFERENCE);
-				EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Abstract);
-			}
-			break;
-			default: EXCEPTION("无效的函数类型");
+				goto label_next_instruct;
+				default: EXCEPTION("无效的函数类型");
 			}
 		}
-		break;
 		case Instruct::BASE_CreateCoroutine:
 		{
 			//Handle&		result
@@ -284,67 +283,66 @@ void Coroutine::Run()
 			uint64 coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
 			switch (INSTRUCT_VALUE(FunctionType, 5 + SIZE(Declaration)))
 			{
-			case FunctionType::Global:
-			{
-				Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
-				Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-				invoker->Reference();
-				coroutine = invoker->instanceID;
-				flag = false;
-				instruct += 6 + SIZE(Declaration) + SIZE(Function);
-			}
-			break;
-			case FunctionType::Native: EXCEPTION("无效的函数类型");
-			case FunctionType::Box:
-			{
-				Handle& target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
-				Type targetType;
-				if (kernel->heapAgency->TryGetType(target, targetType))
+				case FunctionType::Global:
 				{
+					Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
+					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
+					invoker->Reference();
+					coroutine = invoker->instanceID;
+					flag = false;
+					instruct += 6 + SIZE(Declaration) + SIZE(Function);
+				}
+				goto label_next_instruct;
+				case FunctionType::Native: EXCEPTION("无效的函数类型");
+				case FunctionType::Box:
+				{
+					Handle& target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					Type targetType;
+					if (kernel->heapAgency->TryGetType(target, targetType))
+					{
+						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
+						ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
+						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+						invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
+						invoker->Reference();
+						coroutine = invoker->instanceID;
+						flag = true;
+					}
+					else EXCEPTION_EXIT(BASE_CreateCoroutine_Box, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine_Box);
+				}
+				goto label_next_instruct;
+				case FunctionType::Reality:
+				{
+					uint8* address = &INSTRUCT_VARIABLE(uint8, 6 + SIZE(Declaration));
 					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-					ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
+					Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
-					invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
-					invoker->Reference();
-					coroutine = invoker->instanceID;
+					if (IsHandleType(targetType)) invoker->SetHandleParameter(0, *(Handle*)address);
+					else invoker->SetStructParameter(0, address, targetType);
 					flag = true;
+					instruct += 6 + SIZE(Declaration) + SIZE(MemberFunction) + SIZE(Type);
 				}
-				else EXCEPTION_EXIT(BASE_CreateCoroutine_Box, EXCEPTION_NULL_REFERENCE);
-				EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine_Box);
-			}
-			break;
-			case FunctionType::Reality:
-			{
-				uint8* address = &INSTRUCT_VARIABLE(uint8, 6 + SIZE(Declaration));
-				MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-				Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
-				Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
-				if (IsHandleType(targetType)) invoker->SetHandleParameter(0, *(Handle*)address);
-				else invoker->SetStructParameter(0, address, targetType);
-				flag = true;
-				instruct += 6 + SIZE(Declaration) + SIZE(MemberFunction) + SIZE(Type);
-			}
-			break;
-			case FunctionType::Virtual:
-			case FunctionType::Abstract:
-			{
-				Handle& target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
-				Type type;
-				if (kernel->heapAgency->TryGetType(target, type))
+				goto label_next_instruct;
+				case FunctionType::Virtual:
+				case FunctionType::Abstract:
 				{
-					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
-					invoker->Reference();
-					coroutine = invoker->instanceID;
+					Handle& target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					Type type;
+					if (kernel->heapAgency->TryGetType(target, type))
+					{
+						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
+						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
+						invoker->Reference();
+						coroutine = invoker->instanceID;
+					}
+					else EXCEPTION_EXIT(BASE_CreateCoroutine, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine);
 				}
-				else EXCEPTION_EXIT(BASE_CreateCoroutine, EXCEPTION_NULL_REFERENCE);
-				EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine);
-			}
-			break;
-			default: EXCEPTION("无效的函数类型");
+				goto label_next_instruct;
+				default: EXCEPTION("无效的函数类型");
 			}
 		}
-		break;
 		case Instruct::BASE_CreateDelegateCoroutine:
 		{
 			//Handle&		result
@@ -361,47 +359,47 @@ void Coroutine::Run()
 			coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
 			switch (delegateInfo.type)
 			{
-			case FunctionType::Global:
-			{
-				Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-				invoker->Reference();
-				coroutine = invoker->instanceID;
-				flag = false;
-			}
-			break;
-			case FunctionType::Native: EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_INVALID_COROUTINE);
-			case FunctionType::Box:
-			{
-				Type targetType;
-				if (kernel->heapAgency->TryGetType(delegateInfo.target, targetType))
+				case FunctionType::Global:
 				{
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 					invoker->Reference();
-					invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
 					coroutine = invoker->instanceID;
-					flag = true;
+					flag = false;
 				}
-				else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
-			}
-			break;
-			case FunctionType::Reality:
-			case FunctionType::Virtual:
-				if (kernel->heapAgency->IsValid(delegateInfo.target))
-				{
-					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-					invoker->Reference();
-					invoker->SetHandleParameter(0, delegateInfo.target);
-					coroutine = invoker->instanceID;
-					flag = true;
-				}
-				else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
 				break;
-			case FunctionType::Abstract:
-			default: EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_INVALID_COROUTINE);
+				case FunctionType::Native: EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_INVALID_COROUTINE);
+				case FunctionType::Box:
+				{
+					Type targetType;
+					if (kernel->heapAgency->TryGetType(delegateInfo.target, targetType))
+					{
+						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+						invoker->Reference();
+						invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
+						coroutine = invoker->instanceID;
+						flag = true;
+					}
+					else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
+				}
+				break;
+				case FunctionType::Reality:
+				case FunctionType::Virtual:
+					if (kernel->heapAgency->IsValid(delegateInfo.target))
+					{
+						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+						invoker->Reference();
+						invoker->SetHandleParameter(0, delegateInfo.target);
+						coroutine = invoker->instanceID;
+						flag = true;
+					}
+					else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
+					break;
+				case FunctionType::Abstract:
+				default: EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_INVALID_COROUTINE);
 			}
 			EXCEPTION_JUMP(8 + SIZE(Declaration), BASE_CreateDelegateCoroutine);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_CreateArray:
 		{
 			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
@@ -416,7 +414,7 @@ void Coroutine::Run()
 			}
 			EXCEPTION_JUMP(SIZE(Type) + 8, BASE_CreateArray);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_ArrayInit:
 		{
 			Handle& array = INSTRUCT_VARIABLE(Handle, 1);
@@ -435,35 +433,35 @@ void Coroutine::Run()
 					}
 				else switch (type.code)
 				{
-				case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
-				case TypeCode::Struct:
-				{
-					RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(type);
-					if (runtimeStruct->stringFields.Count() || runtimeStruct->handleFields.Count() || runtimeStruct->entityFields.Count())
-						for (uint32 i = 0; i < count; i++)
-						{
-							uint8* source = &INSTRUCT_VARIABLE(uint8, 9 + i * 4);
-							Mcopy(source, kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
-							runtimeStruct->WeakReference(kernel, source);
-						}
-					else for (uint32 i = 0; i < count; i++)
-						Mcopy(&INSTRUCT_VARIABLE(uint8, 9 + i * 4), kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
-				}
-				break;
-				case TypeCode::Enum:
-					for (uint32 i = 0; i < count; i++)
-						*(integer*)kernel->heapAgency->GetArrayPoint(array, (integer)i) = INSTRUCT_VARIABLE(integer, 9 + i * 4);
+					case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
+					case TypeCode::Struct:
+					{
+						RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(type);
+						if (runtimeStruct->stringFields.Count() || runtimeStruct->handleFields.Count() || runtimeStruct->entityFields.Count())
+							for (uint32 i = 0; i < count; i++)
+							{
+								uint8* source = &INSTRUCT_VARIABLE(uint8, 9 + i * 4);
+								Mcopy(source, kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
+								runtimeStruct->WeakReference(kernel, source);
+							}
+						else for (uint32 i = 0; i < count; i++)
+							Mcopy(&INSTRUCT_VARIABLE(uint8, 9 + i * 4), kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
+					}
 					break;
-				case TypeCode::Handle:
-				case TypeCode::Interface:
-				case TypeCode::Delegate:
-				case TypeCode::Coroutine:
-				default: EXCEPTION("无效的TypeCode");
+					case TypeCode::Enum:
+						for (uint32 i = 0; i < count; i++)
+							*(integer*)kernel->heapAgency->GetArrayPoint(array, (integer)i) = INSTRUCT_VARIABLE(integer, 9 + i * 4);
+						break;
+					case TypeCode::Handle:
+					case TypeCode::Interface:
+					case TypeCode::Delegate:
+					case TypeCode::Coroutine:
+					default: EXCEPTION("无效的TypeCode");
 				}
 			}
 			EXCEPTION_JUMP(8 + count * 4, BASE_ArrayInit);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_SetCoroutineParameter:
 		{
 			Handle handle = INSTRUCT_VARIABLE(Handle, 1);
@@ -478,55 +476,55 @@ void Coroutine::Run()
 			for (uint32 i = start; i < count; i++, instruct += 5)
 				switch (INSTRUCT_VALUE(BaseType, 0))
 				{
-				case BaseType::Struct:
-					invoker->SetStructParameter(i, &INSTRUCT_VARIABLE(uint8, 1), Type(INSTRUCT_VALUE(Declaration, 5), 0));
-					instruct += SIZE(Declaration);
-					break;
-				case BaseType::Bool:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(bool, 1));
-					break;
-				case BaseType::Byte:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(uint8, 1));
-					break;
-				case BaseType::Char:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(character, 1));
-					break;
-				case BaseType::Integer:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(integer, 1));
-					break;
-				case BaseType::Real:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(real, 1));
-					break;
-				case BaseType::Real2:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(Real2, 1));
-					break;
-				case BaseType::Real3:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(Real3, 1));
-					break;
-				case BaseType::Real4:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(Real4, 1));
-					break;
-				case BaseType::Enum:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(integer, 1), Type(INSTRUCT_VALUE(Declaration, 5), 0));
-					instruct += SIZE(Declaration);
-					break;
-				case BaseType::Type:
-					invoker->SetParameter(i, INSTRUCT_VARIABLE(Type, 1));
-					break;
-				case BaseType::Handle:
-					invoker->SetHandleParameter(i, INSTRUCT_VARIABLE(Handle, 1));
-					break;
-				case BaseType::String:
-					invoker->SetStringParameter(i, INSTRUCT_VARIABLE(string, 1));
-					break;
-				case BaseType::Entity:
-					invoker->SetEntityParameter(i, INSTRUCT_VARIABLE(Entity, 1));
-					break;
-				default: EXCEPTION("无效的类型");
+					case BaseType::Struct:
+						invoker->SetStructParameter(i, &INSTRUCT_VARIABLE(uint8, 1), Type(INSTRUCT_VALUE(Declaration, 5), 0));
+						instruct += SIZE(Declaration);
+						break;
+					case BaseType::Bool:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(bool, 1));
+						break;
+					case BaseType::Byte:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(uint8, 1));
+						break;
+					case BaseType::Char:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(character, 1));
+						break;
+					case BaseType::Integer:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(integer, 1));
+						break;
+					case BaseType::Real:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(real, 1));
+						break;
+					case BaseType::Real2:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(Real2, 1));
+						break;
+					case BaseType::Real3:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(Real3, 1));
+						break;
+					case BaseType::Real4:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(Real4, 1));
+						break;
+					case BaseType::Enum:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(integer, 1), Type(INSTRUCT_VALUE(Declaration, 5), 0));
+						instruct += SIZE(Declaration);
+						break;
+					case BaseType::Type:
+						invoker->SetParameter(i, INSTRUCT_VARIABLE(Type, 1));
+						break;
+					case BaseType::Handle:
+						invoker->SetHandleParameter(i, INSTRUCT_VARIABLE(Handle, 1));
+						break;
+					case BaseType::String:
+						invoker->SetStringParameter(i, INSTRUCT_VARIABLE(string, 1));
+						break;
+					case BaseType::Entity:
+						invoker->SetEntityParameter(i, INSTRUCT_VARIABLE(Entity, 1));
+						break;
+					default: EXCEPTION("无效的类型");
 				}
 			EXCEPTION_JUMP(-1, BASE_SetCoroutineParameter);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_GetCoroutineResult:
 		{
 			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
@@ -541,70 +539,70 @@ void Coroutine::Run()
 			for (uint32 i = 0; i < count; i++, instruct += 9)
 				switch (INSTRUCT_VALUE(BaseType, 0))
 				{
-				case BaseType::Struct:
-					invoker->GetStructReturnValue(INSTRUCT_VALUE(uint32, 5), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(Type, 9));
-					instruct += SIZE(Type);
+					case BaseType::Struct:
+						invoker->GetStructReturnValue(INSTRUCT_VALUE(uint32, 5), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(Type, 9));
+						instruct += SIZE(Type);
+						break;
+					case BaseType::Bool:
+						INSTRUCT_VARIABLE(bool, 1) = invoker->GetBoolReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Byte:
+						INSTRUCT_VARIABLE(uint8, 1) = invoker->GetByteReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Char:
+						INSTRUCT_VARIABLE(character, 1) = invoker->GetCharReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Integer:
+						INSTRUCT_VARIABLE(integer, 1) = invoker->GetIntegerReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Real:
+						INSTRUCT_VARIABLE(real, 1) = invoker->GetRealReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Real2:
+						INSTRUCT_VARIABLE(Real2, 1) = invoker->GetReal2ReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Real3:
+						INSTRUCT_VARIABLE(Real3, 1) = invoker->GetReal3ReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Real4:
+						INSTRUCT_VARIABLE(Real4, 1) = invoker->GetReal4ReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Enum:
+						INSTRUCT_VARIABLE(integer, 1) = invoker->GetEnumReturnValue(INSTRUCT_VALUE(uint32, 5), Type(INSTRUCT_VALUE(Declaration, 9), 1));
+						instruct += SIZE(Declaration);
+						break;
+					case BaseType::Type:
+						INSTRUCT_VARIABLE(Type, 1) = invoker->GetTypeReturnValue(INSTRUCT_VALUE(uint32, 5));
+						break;
+					case BaseType::Handle:
+					{
+						Handle& address = INSTRUCT_VARIABLE(Handle, 1);
+						kernel->heapAgency->StrongRelease(address);
+						address = invoker->GetHandleReturnValue(INSTRUCT_VALUE(uint32, 5));
+						kernel->heapAgency->StrongReference(address);
+					}
 					break;
-				case BaseType::Bool:
-					INSTRUCT_VARIABLE(bool, 1) = invoker->GetBoolReturnValue(INSTRUCT_VALUE(uint32, 5));
+					case BaseType::String:
+					{
+						string& address = INSTRUCT_VARIABLE(string, 1);
+						kernel->stringAgency->Release(address);
+						address = invoker->GetStringReturnValue(INSTRUCT_VALUE(uint32, 5));
+						kernel->stringAgency->Reference(address);
+					}
 					break;
-				case BaseType::Byte:
-					INSTRUCT_VARIABLE(uint8, 1) = invoker->GetByteReturnValue(INSTRUCT_VALUE(uint32, 5));
+					case BaseType::Entity:
+					{
+						Entity& address = INSTRUCT_VARIABLE(Entity, 1);
+						kernel->entityAgency->Release(address);
+						address = invoker->GetEntityReturnValue(INSTRUCT_VALUE(uint32, 5));
+						kernel->entityAgency->Reference(address);
+					}
 					break;
-				case BaseType::Char:
-					INSTRUCT_VARIABLE(character, 1) = invoker->GetCharReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Integer:
-					INSTRUCT_VARIABLE(integer, 1) = invoker->GetIntegerReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Real:
-					INSTRUCT_VARIABLE(real, 1) = invoker->GetRealReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Real2:
-					INSTRUCT_VARIABLE(Real2, 1) = invoker->GetReal2ReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Real3:
-					INSTRUCT_VARIABLE(Real3, 1) = invoker->GetReal3ReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Real4:
-					INSTRUCT_VARIABLE(Real4, 1) = invoker->GetReal4ReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Enum:
-					INSTRUCT_VARIABLE(integer, 1) = invoker->GetEnumReturnValue(INSTRUCT_VALUE(uint32, 5), Type(INSTRUCT_VALUE(Declaration, 9), 1));
-					instruct += SIZE(Declaration);
-					break;
-				case BaseType::Type:
-					INSTRUCT_VARIABLE(Type, 1) = invoker->GetTypeReturnValue(INSTRUCT_VALUE(uint32, 5));
-					break;
-				case BaseType::Handle:
-				{
-					Handle& address = INSTRUCT_VARIABLE(Handle, 1);
-					kernel->heapAgency->StrongRelease(address);
-					address = invoker->GetHandleReturnValue(INSTRUCT_VALUE(uint32, 5));
-					kernel->heapAgency->StrongReference(address);
-				}
-				break;
-				case BaseType::String:
-				{
-					string& address = INSTRUCT_VARIABLE(string, 1);
-					kernel->stringAgency->Release(address);
-					address = invoker->GetStringReturnValue(INSTRUCT_VALUE(uint32, 5));
-					kernel->stringAgency->Reference(address);
-				}
-				break;
-				case BaseType::Entity:
-				{
-					Entity& address = INSTRUCT_VARIABLE(Entity, 1);
-					kernel->entityAgency->Release(address);
-					address = invoker->GetEntityReturnValue(INSTRUCT_VALUE(uint32, 5));
-					kernel->entityAgency->Reference(address);
-				}
-				break;
-				default: EXCEPTION("无效的类型");
+					default: EXCEPTION("无效的类型");
 				}
 			EXCEPTION_JUMP(-1, BASE_GetCoroutineResult);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::BASE_CoroutineStart:
 		{
 			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
@@ -618,7 +616,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(BASE_CoroutineStart, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4, BASE_CoroutineStart);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion Base
 #pragma region 函数
 		case Instruct::FUNCTION_Entrance://函数的第一条指令，用于确保函数执行所需的栈空间大小
@@ -627,14 +625,14 @@ void Coroutine::Run()
 			if (EnsureStackSize(top))EXCEPTION_EXIT(FUNCTION_Entrance, EXCEPTION_STACK_OVERFLOW);
 			EXCEPTION_JUMP(4, FUNCTION_Entrance);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_Ensure:
 		{
 			if (EnsureStackSize(top + INSTRUCT_VALUE(uint32, 1)))EXCEPTION_EXIT(FUNCTION_Ensure, EXCEPTION_STACK_OVERFLOW);//SIZE(Frame)+返回值空间大小+参数空间大小
 			*(Frame*)(stack + top) = Frame(bottom, POINTER + INSTRUCT_VALUE(uint32, 5));
 			EXCEPTION_JUMP(8, FUNCTION_Ensure);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_CustomCallPretreater:
 		{
 			//Handle&		委托对象
@@ -646,70 +644,69 @@ void Coroutine::Run()
 			{
 				switch (delegateInfo.type)
 				{
-				case FunctionType::Global:
-				case FunctionType::Native:
+					case FunctionType::Global:
+					case FunctionType::Native:
+						break;
+					case FunctionType::Box:
+					{
+						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
+						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
+						ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo.target), "无效的装箱对象");
+						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(kernel->heapAgency->GetType(delegateInfo.target));
+						uint8* address = stack + top + parameterStart;
+						if (EnsureStackSize(top + parameterStart + info->size + parameterSize)) EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
+						Mcopy<uint8>(kernel->heapAgency->GetPoint(delegateInfo.target), address, info->size);
+						info->StrongReference(kernel, address);
+						top += MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
+					}
 					break;
-				case FunctionType::Box:
-				{
-					uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
-					uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
-					ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo.target), "无效的装箱对象");
-					const RuntimeStruct* info = kernel->libraryAgency->GetStruct(kernel->heapAgency->GetType(delegateInfo.target));
-					uint8* address = stack + top + parameterStart;
-					if (EnsureStackSize(top + parameterStart + info->size + parameterSize)) EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
-					Mcopy<uint8>(kernel->heapAgency->GetPoint(delegateInfo.target), address, info->size);
-					info->StrongReference(kernel, address);
-					top += MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
-				}
-				break;
-				case FunctionType::Reality:
-				case FunctionType::Virtual:
-				case FunctionType::Abstract:
-				{
-					uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
-					uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
-					if (EnsureStackSize(top + parameterStart + SIZE(handle) + parameterSize))EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
-					kernel->heapAgency->StrongReference(delegateInfo.target);
-					*(Handle*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = delegateInfo.target;
-					top += MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
-				}
-				break;
-				default:
+					case FunctionType::Reality:
+					case FunctionType::Virtual:
+					case FunctionType::Abstract:
+					{
+						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
+						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
+						if (EnsureStackSize(top + parameterStart + SIZE(handle) + parameterSize))EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
+						kernel->heapAgency->StrongReference(delegateInfo.target);
+						*(Handle*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = delegateInfo.target;
+						top += MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
+					}
 					break;
+					default: break;
 				}
 			}
 			else EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(12, FUNCTION_CustomCallPretreater);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushReturnPoint:
 		{
 			uint32 address = INSTRUCT_VALUE(uint32, 5);
 			*(uint32*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = IS_LOCAL(address) ? LOCAL(bottom + LOCAL_ADDRESS(address)) : address;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 #pragma region 参数入栈
 		case Instruct::FUNCTION_PushParameter_1:
 			*(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(uint8, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_2:
 			*(character*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(character, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_4:
 			*(uint32*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(uint32, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_8:
 			*(uint64*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(uint64, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Bitwise:
 			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), stack + top + INSTRUCT_VALUE(uint32, 1), INSTRUCT_VALUE(uint32, 9));
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Struct:
 		{
 			const RuntimeStruct* info = kernel->libraryAgency->GetStruct(Type(INSTRUCT_VALUE(Declaration, 9), 0));
@@ -718,7 +715,7 @@ void Coroutine::Run()
 			Mcopy(address, stack + top + INSTRUCT_VALUE(uint32, 1), info->size);
 			instruct += 9 + SIZE(Declaration);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_String:
 		{
 			string parameter = INSTRUCT_VARIABLE(string, 5);
@@ -726,7 +723,7 @@ void Coroutine::Run()
 			*(string*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = parameter;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Handle:
 		{
 			Handle parameter = INSTRUCT_VARIABLE(Handle, 5);
@@ -734,7 +731,7 @@ void Coroutine::Run()
 			*(Handle*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = parameter;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Entity:
 		{
 			Entity parameter = INSTRUCT_VARIABLE(Entity, 5);
@@ -742,35 +739,35 @@ void Coroutine::Run()
 			*(Entity*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = parameter;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Declaration:
 		{
 			*(Declaration*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VALUE(Declaration, 5);
 			instruct += 5 + SIZE(Declaration);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion 参数入栈
 #pragma region 返回值
 		case Instruct::FUNCTION_ReturnPoint_1:
 			*RETURN_POINT(1) = INSTRUCT_VARIABLE(uint8, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_2:
 			*(uint16*)RETURN_POINT(1) = INSTRUCT_VARIABLE(uint16, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_4:
 			*(uint32*)RETURN_POINT(1) = INSTRUCT_VARIABLE(uint32, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_8:
 			*(uint64*)RETURN_POINT(1) = INSTRUCT_VARIABLE(uint64, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_Bitwise:
 			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), RETURN_POINT(1), INSTRUCT_VALUE(uint32, 9));
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_Struct:
 		{
 			const RuntimeStruct* info = kernel->libraryAgency->GetStruct(Type(INSTRUCT_VALUE(Declaration, 9), 0));
@@ -780,7 +777,7 @@ void Coroutine::Run()
 			info->StrongReference(kernel, address);
 			instruct += 9 + SIZE(Declaration);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_String:
 		{
 			string* address = (string*)RETURN_POINT(1);
@@ -789,7 +786,7 @@ void Coroutine::Run()
 			kernel->stringAgency->Reference(*address);
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_Handle:
 		{
 			Handle* address = (Handle*)RETURN_POINT(1);
@@ -798,7 +795,7 @@ void Coroutine::Run()
 			kernel->heapAgency->StrongReference(*address);
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_Entity:
 		{
 			Entity* address = (Entity*)RETURN_POINT(1);
@@ -807,7 +804,7 @@ void Coroutine::Run()
 			kernel->entityAgency->Reference(*address);
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion 返回值
 		case Instruct::FUNCTION_Return:
 		{
@@ -825,17 +822,17 @@ void Coroutine::Run()
 				instruct = kernel->libraryAgency->code.GetPointer() + frame->pointer;
 			}
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_Call:
 			bottom = top;
 			data[1] = stack + bottom;
 			instruct = kernel->libraryAgency->code.GetPointer() + INSTRUCT_VALUE(uint32, 1);
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_MemberCall:
 			bottom = top;
 			data[1] = stack + bottom;
 			instruct = kernel->libraryAgency->code.GetPointer() + INSTRUCT_VALUE(uint32, 1);
-			break;
+			goto label_next_instruct;
 		case Instruct::FUNCTION_VirtualCall:
 		{
 			Handle handle = INSTRUCT_VARIABLE(Handle, 1);
@@ -850,7 +847,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(FUNCTION_VirtualCall, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4 + SIZE(MemberFunction), FUNCTION_VirtualCall);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_CustomCall:
 		{
 			Delegate delegateInfo;
@@ -858,55 +855,54 @@ void Coroutine::Run()
 			{
 				switch (delegateInfo.type)
 				{
-				case FunctionType::Global:
-					bottom = top;
-					data[1] = stack + bottom;
-					instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
-					goto label_break_FUNCTION_CustomCall;
-				case FunctionType::Native:
-				{
-					String error = kernel->libraryAgency->InvokeNative(Native(delegateInfo.library, delegateInfo.function), stack, top);
-					if (!error.IsEmpty()) EXCEPTION_EXIT(FUNCTION_CustomCall, error);
-					instruct += 5 + SIZE(Handle);
-				}
-				goto label_break_FUNCTION_CustomCall;
-				case FunctionType::Box:
-				{
-					Type type;
-					if (kernel->heapAgency->TryGetType(delegateInfo.target, type))
-					{
-						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
-						top -= MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
+					case FunctionType::Global:
 						bottom = top;
 						data[1] = stack + bottom;
 						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
+						goto label_next_instruct;
+					case FunctionType::Native:
+					{
+						String error = kernel->libraryAgency->InvokeNative(Native(delegateInfo.library, delegateInfo.function), stack, top);
+						if (!error.IsEmpty()) EXCEPTION_EXIT(FUNCTION_CustomCall, error);
+						instruct += 5 + SIZE(Handle);
 					}
-					else EXCEPTION("无效的装箱对象");
-					goto label_break_FUNCTION_CustomCall;
-				}
-				case FunctionType::Reality:
-				case FunctionType::Virtual:
-				case FunctionType::Abstract:
-					top -= MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
-					bottom = top;
-					data[1] = stack + bottom;
-					instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
-					goto label_break_FUNCTION_CustomCall;
-				default: EXCEPTION("无效的函数类型");
+					goto label_next_instruct;
+					case FunctionType::Box:
+					{
+						Type type;
+						if (kernel->heapAgency->TryGetType(delegateInfo.target, type))
+						{
+							const RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
+							top -= MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
+							bottom = top;
+							data[1] = stack + bottom;
+							instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
+						}
+						else EXCEPTION("无效的装箱对象");
+						goto label_next_instruct;
+					}
+					case FunctionType::Reality:
+					case FunctionType::Virtual:
+					case FunctionType::Abstract:
+						top -= MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
+						bottom = top;
+						data[1] = stack + bottom;
+						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
+						goto label_next_instruct;
+					default: EXCEPTION("无效的函数类型");
 				}
 			}
 			else EXCEPTION_EXIT(FUNCTION_CustomCall, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(SIZE(Handle), FUNCTION_CustomCall);
-		label_break_FUNCTION_CustomCall:;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_NativeCall:
 		{
 			String error = kernel->libraryAgency->InvokeNative(INSTRUCT_VALUE(Native, 1), stack, top);
 			if (!error.IsEmpty()) EXCEPTION_EXIT(FUNCTION_NativeCall, error);
 			EXCEPTION_JUMP(SIZE(Handle), FUNCTION_NativeCall);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::FUNCTION_KernelCall:
 		{
 			String error = KernelLibraryInfo::GetKernelLibraryInfo()->functions[INSTRUCT_VALUE(uint32, 1)].invoker(kernel, this, stack, top);
@@ -920,10 +916,10 @@ void Coroutine::Run()
 				}
 				EXCEPTION_EXIT(FUNCTION_KernelCall, error);
 			}
-			if (kernelInvoker)break;
+			if (kernelInvoker)goto label_next_instruct;
 			EXCEPTION_JUMP(4, FUNCTION_KernelCall);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion 函数
 #pragma region 赋值
 		case Instruct::ASSIGNMENT_Box:
@@ -931,35 +927,35 @@ void Coroutine::Run()
 			StrongBox(kernel, INSTRUCT_VARIABLE(Type, 9), &INSTRUCT_VARIABLE(uint8, 5), INSTRUCT_VARIABLE(Handle, 1));
 			instruct += SIZE(Type) + 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Unbox:
 		{
 			String error = StrongUnbox(kernel, INSTRUCT_VARIABLE(Type, 9), INSTRUCT_VARIABLE(Handle, 5), &INSTRUCT_VARIABLE(uint8, 1));
 			if (error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Unbox, error);
 			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Unbox);
 		}
-		break;
+		goto label_next_instruct;
 #pragma region C2V
 		case Instruct::ASSIGNMENT_Const2Variable_1:
 			INSTRUCT_VARIABLE(uint8, 1) = INSTRUCT_VALUE(uint8, 5);
 			instruct += 6;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_2:
 			INSTRUCT_VARIABLE(uint16, 1) = INSTRUCT_VALUE(uint16, 5);
 			instruct += 7;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_4:
 			INSTRUCT_VARIABLE(uint32, 1) = INSTRUCT_VALUE(uint32, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_8:
 			INSTRUCT_VARIABLE(uint64, 1) = INSTRUCT_VALUE(uint64, 5);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_Bitwise:
 			Mcopy(&INSTRUCT_VALUE(uint8, 9), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 5));
 			instruct += INSTRUCT_VALUE(uint32, 5) + 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_Struct:
 		{
 			uint8* address = &INSTRUCT_VARIABLE(uint8, 1);
@@ -971,7 +967,7 @@ void Coroutine::Run()
 			info->StrongReference(kernel, address);
 			instruct += 9 + SIZE(Declaration) + info->size;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_String:
 		{
 			string* address = &INSTRUCT_VARIABLE(string, 1);
@@ -980,7 +976,7 @@ void Coroutine::Run()
 			kernel->stringAgency->Reference(*address);
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_HandleNull:
 		{
 			Handle* address = &INSTRUCT_VARIABLE(Handle, 1);
@@ -988,7 +984,7 @@ void Coroutine::Run()
 			*address = NULL;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_EntityNull:
 		{
 			Entity* address = &INSTRUCT_VARIABLE(Entity, 1);
@@ -996,29 +992,29 @@ void Coroutine::Run()
 			*address = NULL;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion C2V
 #pragma region V2V(对于有引用计数的类型，先引用再释放是防止出现把变量赋值给自己时，如果引用计数为1则可能会在赋值过程中导致引用计数为0而销毁)
 		case Instruct::ASSIGNMENT_Variable2Variable_1:
 			INSTRUCT_VARIABLE(uint8, 1) = INSTRUCT_VARIABLE(uint8, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_2:
 			INSTRUCT_VARIABLE(uint16, 1) = INSTRUCT_VARIABLE(uint16, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_4:
 			INSTRUCT_VARIABLE(uint32, 1) = INSTRUCT_VARIABLE(uint32, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_8:
 			INSTRUCT_VARIABLE(uint64, 1) = INSTRUCT_VARIABLE(uint64, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Bitwise:
 			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 9));
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Struct:
 		{
 			uint8* target = &INSTRUCT_VARIABLE(uint8, 1);
@@ -1030,7 +1026,7 @@ void Coroutine::Run()
 			Mcopy(source, target, info->size);
 			instruct += 9 + SIZE(Declaration);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_String:
 		{
 			string* address = &INSTRUCT_VARIABLE(string, 1);
@@ -1040,7 +1036,7 @@ void Coroutine::Run()
 			*address = value;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Handle:
 		{
 			Handle* address = &INSTRUCT_VARIABLE(Handle, 1);
@@ -1050,7 +1046,7 @@ void Coroutine::Run()
 			*address = value;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Entity:
 		{
 			Entity* address = &INSTRUCT_VARIABLE(Entity, 1);
@@ -1060,7 +1056,7 @@ void Coroutine::Run()
 			*address = value;
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Vector:
 		{
 			real* target = &INSTRUCT_VARIABLE(real, 1);
@@ -1073,7 +1069,7 @@ void Coroutine::Run()
 			}
 			instruct += 13;
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion V2V
 #pragma region V2H
 		case Instruct::ASSIGNMENT_Variable2Handle_1:
@@ -1084,7 +1080,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_1);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_2:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_2);
@@ -1093,7 +1089,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_2);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_4:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_4);
@@ -1102,7 +1098,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_4);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_8:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_8);
@@ -1111,7 +1107,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_8);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Bitwise:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Bitwise);
@@ -1120,7 +1116,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Handle_Bitwise);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Struct:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Struct);
@@ -1135,7 +1131,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12 + SIZE(Declaration), ASSIGNMENT_Variable2Handle_Struct);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_String:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_String);
@@ -1146,7 +1142,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_String);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Handle:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Handle);
@@ -1157,7 +1153,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_Handle);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Entity:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Entity);
@@ -1168,7 +1164,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_Entity);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion V2H
 #pragma region V2A
 		case Instruct::ASSIGNMENT_Variable2Array_1:
@@ -1178,7 +1174,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_1, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_1);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_2:
 		{
 			ARRAY_VARIABLE(1);
@@ -1186,7 +1182,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_2, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_2);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_4:
 		{
 			ARRAY_VARIABLE(1);
@@ -1194,7 +1190,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_4, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_4);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_8:
 		{
 			ARRAY_VARIABLE(1);
@@ -1202,7 +1198,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_8, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_8);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Bitwise:
 		{
 			ARRAY_VARIABLE(1);
@@ -1210,7 +1206,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Variable2Array_Bitwise);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Struct:
 		{
 			ARRAY_VARIABLE(1);
@@ -1225,7 +1221,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Struct, error);
 			EXCEPTION_JUMP(16 + SIZE(Declaration), ASSIGNMENT_Variable2Array_Struct);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_String:
 		{
 			ARRAY_VARIABLE(1);
@@ -1238,7 +1234,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_String, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_String);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Handle:
 		{
 			ARRAY_VARIABLE(1);
@@ -1251,7 +1247,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Handle, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_Handle);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Entity:
 		{
 			ARRAY_VARIABLE(1);
@@ -1264,7 +1260,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Entity, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_Entity);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion V2A
 #pragma region H2V
 		case Instruct::ASSIGNMENT_Handle2Variable_1:
@@ -1275,7 +1271,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_1);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_2:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_2);
@@ -1284,7 +1280,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_2);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_4:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_4);
@@ -1293,7 +1289,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_4);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_8:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_8);
@@ -1302,7 +1298,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_8);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Bitwise:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Bitwise);
@@ -1311,7 +1307,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(16, ASSIGNMENT_Handle2Variable_Bitwise);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Struct:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Struct);
@@ -1327,7 +1323,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12 + SIZE(Declaration), ASSIGNMENT_Handle2Variable_Struct);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_String:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_String);
@@ -1341,7 +1337,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_String);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Handle:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Handle);
@@ -1355,7 +1351,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Handle);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Entity:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Entity);
@@ -1369,7 +1365,7 @@ void Coroutine::Run()
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Entity);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion H2V
 #pragma region A2V
 		case Instruct::ASSIGNMENT_Array2Variable_1:
@@ -1379,7 +1375,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_1, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_1);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_2:
 		{
 			ARRAY_VARIABLE(5);
@@ -1387,7 +1383,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_2, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_2);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_4:
 		{
 			ARRAY_VARIABLE(5);
@@ -1395,7 +1391,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_4, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_4);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_8:
 		{
 			ARRAY_VARIABLE(5);
@@ -1403,7 +1399,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_8, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_8);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Bitwise:
 		{
 			ARRAY_VARIABLE(5);
@@ -1414,7 +1410,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Array2Variable_Bitwise);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Struct:
 		{
 			ARRAY_VARIABLE(5);
@@ -1430,7 +1426,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Struct, error);
 			EXCEPTION_JUMP(16 + SIZE(Declaration), ASSIGNMENT_Array2Variable_Struct);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_String:
 		{
 			ARRAY_VARIABLE(5);
@@ -1444,7 +1440,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_String, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_String);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Handle:
 		{
 			ARRAY_VARIABLE(5);
@@ -1458,7 +1454,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Handle, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_Handle);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Entity:
 		{
 			ARRAY_VARIABLE(5);
@@ -1472,52 +1468,52 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Entity, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_Entity);
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion A2V
 #pragma endregion 赋值
 #pragma region Bool
 		case Instruct::BOOL_Not:
 			INSTRUCT_VARIABLE(bool, 1) = !INSTRUCT_VARIABLE(bool, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::BOOL_Or:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) || INSTRUCT_VARIABLE(bool, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::BOOL_Xor:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) ^ INSTRUCT_VARIABLE(bool, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::BOOL_And:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) && INSTRUCT_VARIABLE(bool, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::BOOL_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) == INSTRUCT_VARIABLE(bool, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::BOOL_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) != INSTRUCT_VARIABLE(bool, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion Bool
 #pragma region Integer
 		case Instruct::INTEGER_Negative:
 			INSTRUCT_VARIABLE(integer, 1) = -INSTRUCT_VARIABLE(integer, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Plus:
 			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) + INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Minus:
 			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) - INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Multiply:
 			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) * INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Divide:
 		{
 			integer value = INSTRUCT_VARIABLE(integer, 9);
@@ -1525,7 +1521,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(INTEGER_Divide, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, INTEGER_Divide);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::INTEGER_Mod:
 		{
 			integer value = INSTRUCT_VARIABLE(integer, 9);
@@ -1533,87 +1529,87 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(INTEGER_Mod, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, INTEGER_Mod);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::INTEGER_And:
 			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) & INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Or:
 			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) | INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Xor:
 			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) ^ INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Inverse:
 			INSTRUCT_VARIABLE(integer, 1) = ~INSTRUCT_VARIABLE(integer, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) == INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) != INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Grater:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) > INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_GraterThanOrEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) >= INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Less:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) < INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_LessThanOrEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) <= INSTRUCT_VARIABLE(integer, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_LeftShift:
 			INSTRUCT_VARIABLE(integer, 1) = (INSTRUCT_VARIABLE(integer, 5) << INSTRUCT_VARIABLE(integer, 9));
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_RightShift:
 			INSTRUCT_VARIABLE(integer, 1) = (INSTRUCT_VARIABLE(integer, 5) >> INSTRUCT_VARIABLE(integer, 9));
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::INTEGER_Increment:
 		{
 			integer& value = INSTRUCT_VARIABLE(integer, 1);
 			value++;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::INTEGER_Decrement:
 		{
 			integer& value = INSTRUCT_VARIABLE(integer, 1);
 			value--;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion Integer
 #pragma region Real
 		case Instruct::REAL_Negative:
 			INSTRUCT_VARIABLE(real, 1) = -INSTRUCT_VARIABLE(real, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Plus:
 			INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) + INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Minus:
 			INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) - INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Multiply:
 			INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Divide:
 		{
 			real value = INSTRUCT_VARIABLE(real, 9);
@@ -1621,71 +1617,71 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(REAL_Divide, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, REAL_Divide);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) == INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) != INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Grater:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) > INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_GraterThanOrEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) >= INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Less:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) < INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_LessThanOrEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) <= INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL_Increment:
 		{
 			real& value = INSTRUCT_VARIABLE(real, 1);
 			value++;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL_Decrement:
 		{
 			real& value = INSTRUCT_VARIABLE(real, 1);
 			value--;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion Real
 #pragma region Real2
 		case Instruct::REAL2_Negative:
 			INSTRUCT_VARIABLE(Real2, 1) = -INSTRUCT_VARIABLE(Real2, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_Plus:
 			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) + INSTRUCT_VARIABLE(Real2, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_Minus:
 			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) - INSTRUCT_VARIABLE(Real2, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_Multiply_rv:
 			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(Real2, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_Multiply_vr:
 			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) * INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_Multiply_vv:
 			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) * INSTRUCT_VARIABLE(Real2, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_Divide_rv:
 		{
 			Real2 value = INSTRUCT_VARIABLE(Real2, 9);
@@ -1693,7 +1689,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(real, 5) / value;
 			EXCEPTION_JUMP(12, REAL2_Divide_rv);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL2_Divide_vr:
 		{
 			real value = INSTRUCT_VARIABLE(real, 9);
@@ -1701,7 +1697,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) / value;
 			EXCEPTION_JUMP(12, REAL2_Divide_vr);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL2_Divide_vv:
 		{
 			Real2 value = INSTRUCT_VARIABLE(Real2, 9);
@@ -1709,41 +1705,41 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) / value;
 			EXCEPTION_JUMP(12, REAL2_Divide_vv);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL2_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real2, 5) == INSTRUCT_VARIABLE(Real2, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL2_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real2, 5) != INSTRUCT_VARIABLE(Real2, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion Real2
 #pragma region Real3
 		case Instruct::REAL3_Negative:
 			INSTRUCT_VARIABLE(Real3, 1) = -INSTRUCT_VARIABLE(Real3, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_Plus:
 			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) + INSTRUCT_VARIABLE(Real3, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_Minus:
 			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) - INSTRUCT_VARIABLE(Real3, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_Multiply_rv:
 			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(Real3, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_Multiply_vr:
 			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) * INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_Multiply_vv:
 			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) * INSTRUCT_VARIABLE(Real3, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_Divide_rv:
 		{
 			Real3 value = INSTRUCT_VARIABLE(Real3, 9);
@@ -1751,7 +1747,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(real, 5) / value;
 			EXCEPTION_JUMP(12, REAL3_Divide_rv);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL3_Divide_vr:
 		{
 			real value = INSTRUCT_VARIABLE(real, 9);
@@ -1759,7 +1755,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) / value;
 			EXCEPTION_JUMP(12, REAL3_Divide_vr);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL3_Divide_vv:
 		{
 			Real3 value = INSTRUCT_VARIABLE(Real3, 9);
@@ -1767,41 +1763,41 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) / value;
 			EXCEPTION_JUMP(12, REAL3_Divide_vv);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL3_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real3, 5) == INSTRUCT_VARIABLE(Real3, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL3_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real3, 5) != INSTRUCT_VARIABLE(Real3, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion Real3
 #pragma region Real4
 		case Instruct::REAL4_Negative:
 			INSTRUCT_VARIABLE(Real4, 1) = -INSTRUCT_VARIABLE(Real4, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_Plus:
 			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) + INSTRUCT_VARIABLE(Real4, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_Minus:
 			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) - INSTRUCT_VARIABLE(Real4, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_Multiply_rv:
 			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(Real4, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_Multiply_vr:
 			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) * INSTRUCT_VARIABLE(real, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_Multiply_vv:
 			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) * INSTRUCT_VARIABLE(Real4, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_Divide_rv:
 		{
 			Real4 value = INSTRUCT_VARIABLE(Real4, 9);
@@ -1809,7 +1805,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(real, 5) / value;
 			EXCEPTION_JUMP(12, REAL4_Divide_rv);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL4_Divide_vr:
 		{
 			real value = INSTRUCT_VARIABLE(real, 9);
@@ -1817,7 +1813,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) / value;
 			EXCEPTION_JUMP(12, REAL4_Divide_vr);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL4_Divide_vv:
 		{
 			Real4 value = INSTRUCT_VARIABLE(Real4, 9);
@@ -1825,15 +1821,15 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) / value;
 			EXCEPTION_JUMP(12, REAL4_Divide_vv);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::REAL4_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real4, 5) == INSTRUCT_VARIABLE(Real4, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::REAL4_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real4, 5) != INSTRUCT_VARIABLE(Real4, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion Real4
 #pragma region String
 		case Instruct::STRING_Release:
@@ -1843,7 +1839,7 @@ void Coroutine::Run()
 			address = NULL;
 			instruct += 5;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::STRING_Element:
 		{
 			String value = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 5));
@@ -1853,7 +1849,7 @@ void Coroutine::Run()
 			else INSTRUCT_VARIABLE(character, 1) = value[(uint32)index];
 			EXCEPTION_JUMP(12, STRING_Element);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::STRING_Combine:
 		{
 			string& address = INSTRUCT_VARIABLE(string, 1);
@@ -1863,7 +1859,7 @@ void Coroutine::Run()
 			address = result.index;
 			instruct += 13;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::STRING_Sub:
 		{
 			string& address = INSTRUCT_VARIABLE(string, 1);
@@ -1882,15 +1878,15 @@ void Coroutine::Run()
 			}
 			EXCEPTION_JUMP(16, STRING_Sub);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::STRING_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(string, 5) == INSTRUCT_VARIABLE(string, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::STRING_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(string, 5) != INSTRUCT_VARIABLE(string, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion String
 #pragma region Handle
 		case Instruct::HANDLE_ArrayCut:
@@ -1955,30 +1951,30 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(HANDLE_ArrayCut, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(16, HANDLE_ArrayCut);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::HANDLE_CheckNull:
 			if (!kernel->heapAgency->IsValid(INSTRUCT_VARIABLE(Handle, 1)))
 				EXCEPTION_EXIT(HANDLE_CheckNull, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4, HANDLE_CheckNull);
-			break;
+			goto label_next_instruct;
 		case Instruct::HANDLE_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Handle, 5) == INSTRUCT_VARIABLE(Handle, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::HANDLE_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Handle, 5) != INSTRUCT_VARIABLE(Handle, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion Handle
 #pragma region Entity
 		case Instruct::ENTITY_Equals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Entity, 5) == INSTRUCT_VARIABLE(Entity, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 		case Instruct::ENTITY_NotEquals:
 			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Entity, 5) != INSTRUCT_VARIABLE(Entity, 9);
 			instruct += 13;
-			break;
+			goto label_next_instruct;
 #pragma endregion Entity
 #pragma region Delegate
 		case Instruct::DELEGATE_Equals:
@@ -1995,7 +1991,7 @@ void Coroutine::Run()
 			}
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::DELEGATE_NotEquals:
 		{
 			Handle left = INSTRUCT_VARIABLE(Handle, 5);
@@ -2010,7 +2006,7 @@ void Coroutine::Run()
 			}
 			instruct += 9;
 		}
-		break;
+		goto label_next_instruct;
 #pragma endregion Delegate
 #pragma region Casting
 		case Instruct::CASTING:
@@ -2030,7 +2026,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(CASTING, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(8 + SIZE(Type), CASTING);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::CASTING_IS:
 		{
 			bool& result = INSTRUCT_VARIABLE(bool, 1);
@@ -2039,7 +2035,7 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(CASTING_IS, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(8 + SIZE(Type), CASTING_IS);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::CASTING_AS:
 		{
 			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
@@ -2061,50 +2057,50 @@ void Coroutine::Run()
 			else EXCEPTION_EXIT(CASTING_AS, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(8 + SIZE(Type), CASTING_AS);
 		}
-		break;
+		goto label_next_instruct;
 		case Instruct::CASTING_R2I:
 			INSTRUCT_VALUE(integer, 1) = (integer)INSTRUCT_VALUE(real, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_I2R:
 			INSTRUCT_VALUE(real, 1) = (real)INSTRUCT_VALUE(integer, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_B2I:
 			INSTRUCT_VALUE(integer, 1) = INSTRUCT_VALUE(uint8, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_I2B:
 			INSTRUCT_VALUE(uint8, 1) = (uint8)INSTRUCT_VALUE(integer, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_C2I:
 			INSTRUCT_VALUE(integer, 1) = INSTRUCT_VALUE(character, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_I2C:
 			INSTRUCT_VALUE(character, 1) = (character)INSTRUCT_VALUE(integer, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_C2B:
 			INSTRUCT_VALUE(uint8, 1) = (uint8)INSTRUCT_VALUE(character, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 		case Instruct::CASTING_B2C:
 			INSTRUCT_VALUE(character, 1) = (character)INSTRUCT_VALUE(uint8, 5);
 			instruct += 9;
-			break;
+			goto label_next_instruct;
 #pragma endregion Casting
 		case Instruct::BREAKPOINT: instruct++;
 			pointer = POINTER;
 			//todo 触发断点事件
-			break;
+			goto label_next_instruct;
 		case Instruct::BREAK: instruct++;
-			break;
+			goto label_next_instruct;
 		case Instruct::NoOperation: instruct++;
-			break;
+			goto label_next_instruct;
 		default: EXCEPTION("代码跑飞了");
-		}
+	}
 label_exit:
 	pointer = POINTER;
 }
@@ -2113,15 +2109,15 @@ void Coroutine::Abort()
 {
 	switch (kernel->libraryAgency->code[pointer])
 	{
-	case (uint8)Instruct::BASE_WaitBack:
-		pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 1);
-		Run();
-		break;
-	case (uint8)Instruct::FUNCTION_KernelCall:
-		pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 5);
-		Run();
-		break;
-	default: EXCEPTION("该函数只有在wait时invoker的abort被调用后才会触发");
+		case (uint8)Instruct::BASE_WaitBack:
+			pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 1);
+			Run();
+			break;
+		case (uint8)Instruct::FUNCTION_KernelCall:
+			pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 5);
+			Run();
+			break;
+		default: EXCEPTION("该函数只有在wait时invoker的abort被调用后才会触发");
 	}
 }
 
