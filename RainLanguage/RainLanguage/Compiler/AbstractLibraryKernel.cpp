@@ -58,7 +58,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 		{
 			AbstractFunction* memberFuntion = &library->functions[abstractStruct->functions[y]];
 			memberFuntion->space = space;
-			memberFuntion->declaration.category = DeclarationCategory::StructFunction;
+			memberFuntion->declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::StructFunction, y, abstractStruct->declaration.index);
 		}
 	}
 	for (uint32 x = 0; x < info->classes.Count(); x++)
@@ -70,7 +70,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 		{
 			AbstractFunction* constructor = &library->functions[abstractClass->constructors[y]];
 			constructor->space = space;
-			constructor->declaration.category = DeclarationCategory::Constructor;
+			constructor->declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Constructor, y, abstractClass->declaration.index);
 		}
 		for (uint32 y = 0; y < abstractClass->variables.Count(); y++)
 			abstractClass->variables[y].space = space;
@@ -78,7 +78,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 		{
 			AbstractFunction* memberFunction = &library->functions[abstractClass->functions[y]];
 			memberFunction->space = space;
-			memberFunction->declaration.category = DeclarationCategory::ClassFunction;
+			memberFunction->declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::ClassFunction, y, abstractClass->declaration.index);
 		}
 	}
 	for (uint32 x = 0; x < info->interfaces.Count(); x++)

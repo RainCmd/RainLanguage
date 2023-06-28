@@ -308,6 +308,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 						else break;
 					}
 					LEXICAL(i, dot ? LexicalType::ConstReal : LexicalType::ConstNumber);
+					return true;
 				}
 				else if (IsLetter(segment.content[index]))
 				{

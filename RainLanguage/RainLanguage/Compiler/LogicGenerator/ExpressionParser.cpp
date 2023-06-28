@@ -688,6 +688,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			delete lambdaBody;
 		}
 	}
+	else if (expression->returns[0] != type) return false;
 	types.Add(type);
 	return true;
 }
@@ -748,7 +749,7 @@ bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<Compiling
 	for (uint32 i = 0; i < declarations.Count(); i++)
 	{
 		uint32 measure; parameterTypes.Clear(); Span<Type, true> targetParameters = manager->GetParameters(declarations[i]);
-		if (TryExplicitTypes(parameter, targetParameters, parameterTypes))
+		if (parameter->returns.Count() == targetParameters.Count() && TryExplicitTypes(parameter, targetParameters, parameterTypes))
 		{
 			Span<Type, true> parameterTypesSpan(&parameterTypes);
 			if (TryConvert(manager, parameterTypesSpan, targetParameters, measure))
@@ -1785,7 +1786,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					if (ContainAny(attribute, Attribute::Method))
 					{
-						ASSERT_DEBUG(ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression), "非函数类型的表达式不应该进这个分支");
+						ASSERT_DEBUG(ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression | ExpressionType::MethodMemberExpression | ExpressionType::MethodVirtualExpression), "非函数类型的表达式不应该进这个分支");
 						if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression))
 						{
 							MethodExpression* methodExpression = (MethodExpression*)expressionStack.Pop();
