@@ -79,7 +79,7 @@ void Coroutine::Run()
 	data[0] = kernel->libraryAgency->code.GetPointer();
 	data[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
-	while (true)
+	for (;;)
 		switch ((Instruct)*instruct)
 		{
 #pragma region Base

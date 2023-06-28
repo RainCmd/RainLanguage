@@ -11,8 +11,9 @@ uint32 GetHash(const character* value, uint32 length)
 	return result;
 }
 
-void StringAgency::GC()
+void StringAgency::GC(const character* pointer)
 {
+	ASSERT(pointer < characters.GetPointer() || pointer >= characters.GetPointer() + characters.Count(), "引用的内存在托管堆内，GC后内存内容可能会发生变化，导致逻辑错误");
 	uint32 position = 0;
 	uint32 index = head;
 	head = tail = NULL;
@@ -82,9 +83,9 @@ bool StringAgency::IsEquals(Slot* slot, const character* value, uint32 length)
 	return true;
 }
 
-void StringAgency::Resize()
+bool StringAgency::TryResize()
 {
-	ASSERT_DEBUG(top < size, "");
+	if (top < size) return false;
 	size = GetPrime(size);
 	buckets = Realloc<uint32>(buckets, size);
 	slots = Realloc<Slot>(slots, size);
@@ -98,7 +99,7 @@ void StringAgency::Resize()
 			slot->next = buckets[bidx];
 			buckets[bidx] = i;
 		}
-		else if(slot->length)
+		else if (slot->length)
 		{
 			characterHold -= slot->length + 1;
 			slotHold--;
@@ -107,6 +108,7 @@ void StringAgency::Resize()
 			slot->length = 0;
 		}
 	}
+	return true;
 }
 
 bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash, uint32& bidx, uint32& sidx)
@@ -137,16 +139,17 @@ bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash
 
 string StringAgency::InternalAdd(const character* value, uint32 length)
 {
+	ASSERT_DEBUG(value < characters.GetPointer() || value >= characters.GetPointer() + characters.Count(), "原则上不允许引用的内存在托管堆内，如果发生GC，这块内存可能会发生变化");
 	if (!length)return NULL;
 	uint32 hash, bidx, sidx;
 	if (TryGetIdx(value, length, hash, bidx, sidx)) return sidx;
 	if (characters.Slack() < length + 1 && characters.Slack() + characterHold + characterGCHold > length)
 	{
-		if ((characterGCHold << 3) > characters.Capacity()) GC();
+		if ((characterGCHold << 3) > characters.Capacity()) GC(value);
 		else if (((characterHold + characterGCHold) << 3) > characters.Capacity())
 		{
 			SlotGC();
-			GC();
+			GC(value);
 		}
 	}
 	if (free)
@@ -157,7 +160,7 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	else
 	{
 		if ((slotHold << 3) > size) SlotGC();
-		if ((slotGCHold << 3) > size) GC();
+		if ((slotGCHold << 3) > size) GC(value);
 		if (free)
 		{
 			sidx = free;
@@ -165,11 +168,7 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 		}
 		else
 		{
-			if (top >= size)
-			{
-				Resize();
-				bidx = hash % size;
-			}
+			if (TryResize())bidx = hash % size;
 			sidx = top++;
 		}
 	}
@@ -369,7 +368,8 @@ String StringAgency::Replace(const String& source, const String& oldValue, const
 
 void StringAgency::Serialize(Serializer* serializer)
 {
-	GC();
+	SlotGC();
+	GC(NULL);
 	serializer->Serialize(top);
 	serializer->Serialize(size);
 	serializer->SerializeList(characters);

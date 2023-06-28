@@ -22,10 +22,10 @@ private:
 	uint32* buckets;
 	Slot* slots;
 	uint32 top, size, free, head, tail, characterHold, slotHold, characterGCHold, slotGCHold;
-	void GC();
+	void GC(const character* pointer);
 	void SlotGC();
 	bool IsEquals(Slot* slot, const character* value, uint32 length);
-	void Resize();
+	bool TryResize();
 	bool TryGetIdx(const character* value, uint32 length, uint32& hash, uint32& bidx, uint32& sidx);
 	string InternalAdd(const character* value, uint32 length);
 	friend String;
