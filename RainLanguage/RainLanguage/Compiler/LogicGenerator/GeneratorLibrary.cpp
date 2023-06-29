@@ -144,7 +144,7 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 
 Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 {
-	Library* result = new Library(new StringAgency(0xff), data, manager.compilingLibrary.dataSize, manager.selfLibaray->variables.Count(), manager.selfLibaray->enums.Count(), manager.selfLibaray->structs.Count(), manager.selfLibaray->classes.Count(), manager.selfLibaray->interfaces.Count(), manager.selfLibaray->delegates.Count(), manager.selfLibaray->coroutines.Count(), manager.selfLibaray->functions.Count(), manager.selfLibaray->natives.Count(), codeStrings.Count(), dataStrings.Count(), globalReference->libraryReferences.Count(), globalReference->libraries.Count());
+	Library* result = new Library(new StringAgency(0xf), data, manager.compilingLibrary.dataSize, manager.selfLibaray->variables.Count(), manager.selfLibaray->enums.Count(), manager.selfLibaray->structs.Count(), manager.selfLibaray->classes.Count(), manager.selfLibaray->interfaces.Count(), manager.selfLibaray->delegates.Count(), manager.selfLibaray->coroutines.Count(), manager.selfLibaray->functions.Count(), manager.selfLibaray->natives.Count(), codeStrings.Count(), dataStrings.Count(), globalReference->libraryReferences.Count(), globalReference->libraries.Count());
 	result->code = code;
 	for (uint32 i = 0; i < globalReference->libraryReferences.Count(); i++) result->libraryReferences.Add(GetReferenceAddress(globalReference->libraryReferences[i]));
 	CollectSpace(&manager.compilingLibrary, result->spaces, result->stringAgency);

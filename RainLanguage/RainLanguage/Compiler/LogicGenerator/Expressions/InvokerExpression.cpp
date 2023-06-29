@@ -80,8 +80,8 @@ void GenerateInvokerParameters(LogicGenerateParameter& parameter, uint32 paramet
 void GenerateInvokerParameters(LogicGenerateParameter& parameter, uint32 parameterPoint, const LogicVariable& thisVariable, TupleInfo& parameters)
 {
 	GenerateInvokerParameter(parameter, parameterPoint + parameters.GetOffset(0), parameters.GetType(0), thisVariable);
-	for (uint32 i = 0; i < parameters.Count(); i++)
-		GenerateInvokerParameter(parameter, parameterPoint + parameters.GetOffset(i + 1), parameters.GetType(i + 1), parameter.results[i]);
+	for (uint32 i = 1; i < parameters.Count(); i++)
+		GenerateInvokerParameter(parameter, parameterPoint + parameters.GetOffset(i), parameters.GetType(i), parameter.results[i - 1]);
 }
 
 void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)

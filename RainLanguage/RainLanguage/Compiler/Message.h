@@ -42,11 +42,11 @@ public:
 	}
 	inline void Add(const Anchor& anchor, MessageType type, const character* message)
 	{
-		Add(anchor.source, type, anchor.line, anchor.position, anchor.content.length, message);
+		Add(anchor.source, type, anchor.line, anchor.position, anchor.content.GetLength(), message);
 	}
 	inline void Add(const Anchor& anchor, MessageType type, const String& message)
 	{
-		Add(anchor.source, type, anchor.line, anchor.position, anchor.content.length, message);
+		Add(anchor.source, type, anchor.line, anchor.position, anchor.content.GetLength(), message);
 	}
 	inline void Add(const List<Anchor>& anchors, MessageType type, const String& message)
 	{
@@ -62,11 +62,11 @@ public:
 	}
 	inline void Add(const Line& line, MessageType type, const character* message)
 	{
-		Add(line.source, type, line.number, 0, line.content.length, message);
+		Add(line.source, type, line.number, 0, line.content.GetLength(), message);
 	}
 	inline void Add(const Line& line, MessageType type, const String& message)
 	{
-		Add(line.source, type, line.number, 0, line.content.length, message);
+		Add(line.source, type, line.number, 0, line.content.GetLength(), message);
 	}
 	inline void Add(const Line& line, MessageType type)
 	{

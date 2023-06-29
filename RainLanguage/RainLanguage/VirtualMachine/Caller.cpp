@@ -84,12 +84,11 @@ Real4 Caller::GetReal4Parameter(uint32 index) const
 	return PARAMETER_VALUE(Real4);
 }
 
-const character* Caller::GetEnumNameParameter(uint32 index, uint32& length) const
+const RainString Caller::GetEnumNameParameter(uint32 index) const
 {
 	ParameterTypeAssert(index, TypeCode::Enum);
 	String name = kernel->libraryAgency->GetEnum(info->parameters.GetType(index))->ToString(PARAMETER_VALUE(integer), kernel->stringAgency);
-	length = name.length;
-	return name.GetPointer();
+	return RainString(name.GetPointer(), name.GetLength());
 }
 
 integer Caller::GetEnumValueParameter(uint32 index) const
@@ -98,12 +97,11 @@ integer Caller::GetEnumValueParameter(uint32 index) const
 	return PARAMETER_VALUE(integer);
 }
 
-const character* Caller::GetStringParameter(uint32 index, uint32& length) const
+const RainString Caller::GetStringParameter(uint32 index) const
 {
 	ParameterTypeAssert(index, TYPE_String);
 	String name = kernel->stringAgency->Get(PARAMETER_VALUE(string));
-	length = name.length;
-	return name.GetPointer();
+	return RainString(name.GetPointer(), name.GetLength());
 }
 
 uint64 Caller::GetEntityParameter(uint32 index) const
@@ -160,12 +158,12 @@ void Caller::SetReturnValue(uint32 index, Real4 value)
 	RETURN_VALUE(Real4) = value;
 }
 
-void Caller::SetEnumNameReturnValue(uint32 index, const character* chars, uint32 length)
+void Caller::SetEnumNameReturnValue(uint32 index, const RainString& elementName)
 {
 	ReturnTypeAssert(index, TypeCode::Enum);
 	Type type = info->returns.GetType(index);
 	const RuntimeEnum* enumInfo = kernel->libraryAgency->GetEnum(type);
-	string name = kernel->stringAgency->Add(chars, length).index;
+	string name = kernel->stringAgency->Add(elementName.value, elementName.length).index;
 	for (uint32 i = 0; i < enumInfo->values.Count(); i++)
 		if (enumInfo->values[i].name == name)
 		{
@@ -181,13 +179,13 @@ void Caller::SetEnumValueReturnValue(uint32 index, integer value)
 	RETURN_VALUE(integer) = value;
 }
 
-void Caller::SetReturnValue(uint32 index, const character* chars, uint32 length)
+void Caller::SetReturnValue(uint32 index, const RainString& value)
 {
 	ReturnTypeAssert(index, TYPE_String);
 	string* address = (string*)RETURN_ADDRESS;
-	string value = kernel->stringAgency->AddAndRef(chars, length);
+	string result = kernel->stringAgency->AddAndRef(value.value, value.length);
 	kernel->stringAgency->Release(*address);
-	*address = value;
+	*address = result;
 }
 
 void Caller::SetEntityReturnValue(uint32 index, uint64 value)
@@ -199,10 +197,10 @@ void Caller::SetEntityReturnValue(uint32 index, uint64 value)
 	kernel->entityAgency->Reference(*address);
 }
 
-void Caller::SetException(const character* chars, uint32 length)
+void Caller::SetException(const RainString& error)
 {
-	kernel->stringAgency->Release(error);
-	error = kernel->stringAgency->AddAndRef(chars, length);
+	kernel->stringAgency->Release(this->error);
+	this->error = kernel->stringAgency->AddAndRef(error.value, error.length);
 }
 
 string Caller::GetException() const

@@ -11,18 +11,13 @@ struct RAINLANGUAGE RainStackFrame
 	/// <summary>
 	/// 库名
 	/// </summary>
-	const character* libraryName;
-	/// <summary>
-	/// 库名长度
-	/// </summary>
-	uint32 libraryNameLength;
+	const RainString libraryName;
 	/// <summary>
 	/// 库本地代码段地址
 	/// </summary>
 	uint32 address;
 
-	RainStackFrame(const character* libraryName, const uint32& libraryNameLength, const uint32& address)
-		: libraryName(libraryName), libraryNameLength(libraryNameLength), address(address) {}
+	RainStackFrame(const RainString& libraryName, const uint32& address) : libraryName(libraryName), address(address) {}
 };
 
 class Invoker;
@@ -62,10 +57,9 @@ public:
 	/// <summary>
 	/// 获取异常退出时的退出信息
 	/// </summary>
-	/// <param name="length">信息长度</param>
-	/// <returns>信息(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
+	/// <returns>信息</returns>
 	/// <exception>如果调用是无效状态会抛异常</exception>
-	const character* GetExitMessage(uint32& length) const;
+	const RainString GetExitMessage() const;
 	/// <summary>
 	/// 开始执行协程
 	/// </summary>
@@ -91,9 +85,8 @@ public:
 	/// <summary>
 	/// 触发异常
 	/// </summary>
-	/// <param name="chars">异常信息</param>
-	/// <param name="length">异常信息长度</param>
-	void Abort(const character* chars, uint32 length) const;
+	/// <param name="error">异常信息</param>
+	void Abort(const RainString& error) const;
 
 	/// <summary>
 	/// 获取布尔类型的返回值
@@ -162,18 +155,16 @@ public:
 	/// 获取枚举类型对应的元素名称
 	/// </summary>
 	/// <param name="index">返回值索引</param>
-	/// <param name="length">枚举类型对应的元素名称长度</param>
-	/// <returns>枚举类型对应的元素名称(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
+	/// <returns>枚举类型对应的元素名称</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	const character* GetEnumNameReturnValue(uint32 index, uint32& length) const;
+	const RainString GetEnumNameReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取字符串类型的返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
-	/// <param name="length">字符串长度</param>
-	/// <returns>字符串(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
+	/// <returns>字符串</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	const character* GetStringReturnValue(uint32 index, uint32& length) const;
+	const RainString GetStringReturnValue(uint32 index) const;
 	/// <summary>
 	/// 获取实体类型的返回值
 	/// </summary>
@@ -242,17 +233,16 @@ public:
 	/// 设置按枚举元素名设置枚举值
 	/// </summary>
 	/// <param name="index">参数索引</param>
-	/// <param name="chars">名称字符串</param>
-	/// <param name="length">名称字符串长度</param>
+	/// <param name="elementName">名称字符串</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确或名称未找到会抛异常</exception>
-	void SetEnumNameParameter(uint32 index, const character* chars, uint32 length) const;
+	void SetEnumNameParameter(uint32 index, const RainString& elementName) const;
 	/// <summary>
 	/// 设置按枚举元素名设置枚举值，名称需要以\0结尾
 	/// </summary>
 	/// <param name="index">参数索引</param>
-	/// <param name="chars">名称字符串</param>
+	/// <param name="elementName">名称字符串</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确或名称未找到会抛异常</exception>
-	void SetEnumNameParameter(uint32 index, const character* chars) const;
+	void SetEnumNameParameter(uint32 index, const character* elementName) const;
 	/// <summary>
 	/// 以枚举整数值设置参数
 	/// </summary>
@@ -264,17 +254,16 @@ public:
 	/// 设置字符串类型参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
-	/// <param name="chars">字符串</param>
-	/// <param name="length">字符串长度</param>
+	/// <param name="value">字符串</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const character* chars, uint32 length) const;
+	void SetParameter(uint32 index, const RainString& value) const;
 	/// <summary>
 	/// 设置字符串类型参数，字符串需要以\0结尾
 	/// </summary>
 	/// <param name="index">参数索引</param>
-	/// <param name="chars">字符串</param>
+	/// <param name="value">字符串</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const character* chars) const;
+	void SetParameter(uint32 index, const character* value) const;
 	/// <summary>
 	/// 设置实体类型参数
 	/// </summary>
@@ -353,10 +342,9 @@ public:
 	/// 获取枚举参数名
 	/// </summary>
 	/// <param name="index">参数索引</param>
-	/// <param name="length">枚举参数名长度</param>
-	/// <returns>枚举参数名(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
+	/// <returns>枚举参数名</returns>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual const character* GetEnumNameParameter(uint32 index, uint32& length) const = 0;
+	virtual const RainString GetEnumNameParameter(uint32 index) const = 0;
 	/// <summary>
 	/// 获取枚举参数整数值
 	/// </summary>
@@ -368,10 +356,9 @@ public:
 	/// 获取字符串参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
-	/// <param name="length">字符串长度</param>
-	/// <returns>字符串(指针仅调用时有效，请勿将指针传回虚拟机)</returns>
+	/// <returns>字符串</returns>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual const character* GetStringParameter(uint32 index, uint32& length) const = 0;
+	virtual const RainString GetStringParameter(uint32 index) const = 0;
 	/// <summary>
 	/// 获取实体参数
 	/// </summary>
@@ -440,17 +427,16 @@ public:
 	/// 以枚举元素名设置返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
-	/// <param name="chars">枚举元素名字符串</param>
-	/// <param name="length">枚举元素名字符串长度</param>
+	/// <param name="elementName">枚举元素名字符串</param>
 	/// <exception>如果返回值类型不正确或元素名未找到会抛异常</exception>
-	virtual void SetEnumNameReturnValue(uint32 index, const character* chars, uint32 length) = 0;
+	virtual void SetEnumNameReturnValue(uint32 index, const RainString& elementName) = 0;
 	/// <summary>
 	/// 以枚举元素名设置返回值，名称需要以\0结尾
 	/// </summary>
 	/// <param name="index">返回值索引</param>
-	/// <param name="chars">枚举元素名字符串</param>
+	/// <param name="elementName">枚举元素名字符串</param>
 	/// <exception>如果返回值类型不正确或元素名未找到会抛异常</exception>
-	virtual void SetEnumNameReturnValue(uint32 index, const character* chars) = 0;
+	virtual void SetEnumNameReturnValue(uint32 index, const character* elementName) = 0;
 	/// <summary>
 	/// 设置枚举返回值
 	/// </summary>
@@ -462,17 +448,16 @@ public:
 	/// 设置字符串返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
-	/// <param name="chars">字符串</param>
-	/// <param name="length">字符串长度</param>
+	/// <param name="value">字符串</param>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, const character* chars, uint32 length) = 0;
+	virtual void SetReturnValue(uint32 index, const RainString& value) = 0;
 	/// <summary>
 	/// 设置字符串返回值，字符串需要以\0结尾
 	/// </summary>
 	/// <param name="index">返回值索引</param>
-	/// <param name="chars">字符串</param>
+	/// <param name="value">字符串</param>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, const character* chars) = 0;
+	virtual void SetReturnValue(uint32 index, const character* value) = 0;
 	/// <summary>
 	/// 设置实体返回值
 	/// </summary>
@@ -484,9 +469,8 @@ public:
 	/// <summary>
 	/// 设置异常信息
 	/// </summary>
-	/// <param name="chars">异常信息字符串 </param>
-	/// <param name="length">异常信息字符串长度</param>
-	virtual void SetException(const character* chars, uint32 length) = 0;
+	/// <param name="error">异常信息字符串 </param>
+	virtual void SetException(const RainString& error) = 0;
 };
 
 /// <summary>
@@ -564,6 +548,9 @@ public:
 	inline bool IsValid() { return library != 0xFFFFFFFF; }
 };
 
+/// <summary>
+/// 类型列表
+/// </summary>
 struct RAINLANGUAGE RainTypes
 {
 private:
@@ -575,10 +562,22 @@ public:
 	RainTypes(RainTypes& other);
 	RainTypes(RainTypes&& other)noexcept;
 	RainTypes& operator=(RainTypes& other);
-	inline const RainType operator[](uint32 index) const { return types[index]; }
+	/// <summary>
+	/// 获取类型数量
+	/// </summary>
+	/// <returns>类型数量</returns>
 	inline uint32 Count() const { return count; }
+	/// <summary>
+	/// 获取类型
+	/// </summary>
+	/// <param name="index">下标</param>
+	/// <returns>类型</returns>
+	inline const RainType operator[](uint32 index) const { return types[index]; }
 };
 
+/// <summary>
+/// 函数句柄列表
+/// </summary>
 struct RAINLANGUAGE RainFunctions
 {
 private:
@@ -590,8 +589,17 @@ public:
 	RainFunctions(RainFunctions& other);
 	RainFunctions(RainFunctions&& other) noexcept;
 	RainFunctions& operator=(RainFunctions& other);
-	inline const RainFunction operator[](uint32 index) const { return functions[index]; }
+	/// <summary>
+	/// 获取句柄数量
+	/// </summary>
+	/// <returns>句柄数量</returns>
 	inline uint32 Count() const { return count; }
+	/// <summary>
+	/// 获取函数句柄
+	/// </summary>
+	/// <param name="index">下标</param>
+	/// <returns>函数句柄</returns>
+	inline const RainFunction operator[](uint32 index) const { return functions[index]; }
 };
 
 /// <summary>
@@ -614,9 +622,8 @@ public:
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
 	/// <param name="name">函数名</param>
-	/// <param name="nameLength">函数名长度</param>
 	/// <returns>函数句柄</returns>
-	virtual const RainFunction FindFunction(const character* name, uint32 nameLength) = 0;
+	virtual const RainFunction FindFunction(const RainString& name) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
 	/// 查找失败会返回一个无效的句柄
@@ -629,9 +636,8 @@ public:
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
 	/// <param name="name">函数名</param>
-	/// <param name="nameLength">函数名长度</param>
 	/// <returns>函数句柄</returns>
-	virtual RainFunctions FindFunctions(const character* name, uint32 nameLength) = 0;
+	virtual RainFunctions FindFunctions(const RainString& name) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配所有名称相等的函数
 	/// 查找失败会返回一个无效的句柄

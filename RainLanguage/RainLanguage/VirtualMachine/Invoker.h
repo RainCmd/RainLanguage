@@ -78,5 +78,5 @@ public:
 	inline List<StackFrame> GetStackFrame() { return frames; }
 	void Start(bool immediately, bool ignoreWait);
 	void Abort(const character* chars, uint32 length);
-	inline void Abort(String message) { Abort(message.GetPointer(), message.length); }
+	inline void Abort(String message) { Abort(message.GetPointer(), message.GetLength()); }
 };

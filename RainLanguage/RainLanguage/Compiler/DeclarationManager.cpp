@@ -214,7 +214,7 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& name)
 			return relies[i];
 	if (loader)
 	{
-		Library* library = (Library*)loader(name.GetPointer(), name.length);
+		Library* library = (Library*)loader(RainString(name.GetPointer(), name.GetLength()));
 		if (library)
 		{
 			uint32 index = relies.Count();

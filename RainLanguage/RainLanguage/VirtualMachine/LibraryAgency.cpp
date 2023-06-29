@@ -33,19 +33,19 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 {
 	switch (declaration.code)
 	{
-	case TypeCode::Struct:
-		if (declaration.library == LIBRARY_KERNEL)return GetKernelLibrary()->structs[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
-		else return GetLibrary(declaration.library)->structs[declaration.index].size;
-	case TypeCode::Enum: return SIZE(integer);
-	case TypeCode::Handle:
-	{
-		if (declaration.library == LIBRARY_KERNEL)return GetKernelLibrary()->classes[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
-		const RuntimeClass* runtimeClass = &GetLibrary(declaration.library)->classes[declaration.index];
-		return runtimeClass->offset + runtimeClass->size;
-	}
-	case TypeCode::Interface: return GetKernelLibrary()->classes[TYPE_Interface.index].size;
-	case TypeCode::Delegate: return GetKernelLibrary()->classes[TYPE_Delegate.index].size;
-	case TypeCode::Coroutine: return GetKernelLibrary()->classes[TYPE_Coroutine.index].size;
+		case TypeCode::Struct:
+			if (declaration.library == LIBRARY_KERNEL)return GetKernelLibrary()->structs[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+			else return GetLibrary(declaration.library)->structs[declaration.index].size;
+		case TypeCode::Enum: return SIZE(integer);
+		case TypeCode::Handle:
+		{
+			if (declaration.library == LIBRARY_KERNEL)return GetKernelLibrary()->classes[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+			const RuntimeClass* runtimeClass = &GetLibrary(declaration.library)->classes[declaration.index];
+			return runtimeClass->offset + runtimeClass->size;
+		}
+		case TypeCode::Interface: return GetKernelLibrary()->classes[TYPE_Interface.index].size;
+		case TypeCode::Delegate: return GetKernelLibrary()->classes[TYPE_Delegate.index].size;
+		case TypeCode::Coroutine: return GetKernelLibrary()->classes[TYPE_Coroutine.index].size;
 	}
 	EXCEPTION("无效的TypeCode");
 }
@@ -74,14 +74,14 @@ RuntimeInfo* LibraryAgency::GetRuntimeInfo(const Type& type)
 	if (type.dimension)return GetClass(type);
 	switch (type.code)
 	{
-	case TypeCode::Invalid: EXCEPTION("无效的类型");
-	case TypeCode::Struct: return GetStruct(type);
-	case TypeCode::Enum: return GetEnum(type);
-	case TypeCode::Handle: return GetClass(type);
-	case TypeCode::Interface: return GetInterface(type);
-	case TypeCode::Delegate: return GetDelegate(type);
-	case TypeCode::Coroutine: return GetCoroutine(type);
-	default: EXCEPTION("类型错误");
+		case TypeCode::Invalid: EXCEPTION("无效的类型");
+		case TypeCode::Struct: return GetStruct(type);
+		case TypeCode::Enum: return GetEnum(type);
+		case TypeCode::Handle: return GetClass(type);
+		case TypeCode::Interface: return GetInterface(type);
+		case TypeCode::Delegate: return GetDelegate(type);
+		case TypeCode::Coroutine: return GetCoroutine(type);
+		default: EXCEPTION("类型错误");
 	}
 }
 
@@ -172,15 +172,15 @@ bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 {
 	switch (type.code)
 	{
-	case TypeCode::Invalid: break;
-	case TypeCode::Struct:
-	case TypeCode::Enum:
-	case TypeCode::Handle:
-	case TypeCode::Interface:
-	case TypeCode::Delegate:
-	case TypeCode::Coroutine:
-		space = GetRuntimeInfo(type)->space;
-		return true;
+		case TypeCode::Invalid: break;
+		case TypeCode::Struct:
+		case TypeCode::Enum:
+		case TypeCode::Handle:
+		case TypeCode::Interface:
+		case TypeCode::Delegate:
+		case TypeCode::Coroutine:
+			space = GetRuntimeInfo(type)->space;
+			return true;
 	}
 	return false;
 }
@@ -192,7 +192,7 @@ RuntimeLibrary* LibraryAgency::Load(string name)
 		if (libraries[i]->spaces[0].name == name)
 			return libraries[i];
 	String libraryName = kernel->stringAgency->Get(name);
-	Library* library = (Library*)libraryLoader(libraryName.GetPointer(), libraryName.length);
+	Library* library = (Library*)libraryLoader(RainString(libraryName.GetPointer(), libraryName.GetLength()));
 	ASSERT(library, "Library加载失败");
 	return Load(library);
 }
@@ -303,12 +303,12 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 	{
 		List<character, true> fullName(128);
 		String name = kernel->stringAgency->Get(info->name);
-		fullName.Add(name.GetPointer(), name.length);
+		fullName.Add(name.GetPointer(), name.GetLength());
 		for (uint32 index = info->space; index; index = library->spaces[index].parent)
 		{
 			fullName.Insert(0, TEXT('.'));
 			name = kernel->stringAgency->Get(library->spaces[index].name);
-			fullName.Insert(0, name.GetPointer(), name.length);
+			fullName.Insert(0, name.GetPointer(), name.GetLength());
 		}
 		List<RainType, true> rainTypes(info->parameters.Count());
 		for (uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));

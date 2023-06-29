@@ -56,11 +56,10 @@ InvokerState InvokerWrapper::GetState() const
 	else return InvokerState::Invalid;
 }
 
-const character* InvokerWrapper::GetExitMessage(uint32& length) const
+const RainString InvokerWrapper::GetExitMessage() const
 {
 	ValidAssert();
-	length = invoker->exitMessage.length;
-	return invoker->exitMessage.GetPointer();
+	return RainString(invoker->exitMessage.GetPointer(), invoker->exitMessage.GetLength());
 }
 
 void InvokerWrapper::Start(bool immediately, bool ignoreWait) const
@@ -86,9 +85,9 @@ void InvokerWrapper::Resume() const
 	invoker->Resume();
 }
 
-void InvokerWrapper::Abort(const character* chars, uint32 length) const
+void InvokerWrapper::Abort(const RainString& error) const
 {
-	invoker->Abort(chars, length);
+	invoker->Abort(error.value, error.length);
 }
 
 bool InvokerWrapper::GetBoolReturnValue(uint32 index) const
@@ -147,22 +146,20 @@ integer InvokerWrapper::GetEnumValueReturnValue(uint32 index) const
 	return invoker->GetEnumReturnValue(index, type);
 }
 
-const character* InvokerWrapper::GetEnumNameReturnValue(uint32 index, uint32& length) const
+const RainString InvokerWrapper::GetEnumNameReturnValue(uint32 index) const
 {
 	ValidAssert();
 	const Type& type = invoker->info->returns.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "返回值类型错误");
 	String result = invoker->kernel->libraryAgency->GetEnum(type)->ToString(invoker->GetEnumReturnValue(index, type), invoker->kernel->stringAgency);
-	length = result.length;
-	return result.GetPointer();
+	return RainString(result.GetPointer(), result.GetLength());
 }
 
-const character* InvokerWrapper::GetStringReturnValue(uint32 index, uint32& length) const
+const RainString InvokerWrapper::GetStringReturnValue(uint32 index) const
 {
 	ValidAssert();
 	String result = invoker->kernel->stringAgency->Get(invoker->GetStringReturnValue(index));
-	length = result.length;
-	return result.GetPointer();
+	return RainString(result.GetPointer(), result.GetLength());
 }
 
 uint64 InvokerWrapper::GetEntityReturnValue(uint32 index) const
@@ -219,13 +216,13 @@ void InvokerWrapper::SetParameter(uint32 index, Real4 value) const
 	invoker->SetParameter(index, value);
 }
 
-void InvokerWrapper::SetEnumNameParameter(uint32 index, const character* chars, uint32 length) const
+void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString& elementName) const
 {
 	ValidAssert();
 	invoker->StateAssert(InvokerState::Unstart);
 	const Type& type = invoker->info->parameters.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "参数类型错误");
-	string name = invoker->kernel->stringAgency->Add(chars, length).index;
+	string name = invoker->kernel->stringAgency->Add(elementName.value, elementName.length).index;
 	const RuntimeEnum* info = invoker->kernel->libraryAgency->GetEnum(type);
 	for (uint32 i = 0; i < info->values.Count(); i++)
 		if (info->values[i].name == name)
@@ -236,11 +233,11 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const character* chars, 
 	EXCEPTION("不存在的枚举");
 }
 
-void InvokerWrapper::SetEnumNameParameter(uint32 index, const character* chars) const
+void InvokerWrapper::SetEnumNameParameter(uint32 index, const character* elementName) const
 {
 	uint32 length = 0;
-	while (chars[length]) length++;
-	SetEnumNameParameter(index, chars, length);
+	while (elementName[length]) length++;
+	SetEnumNameParameter(index, RainString(elementName, length));
 }
 
 void InvokerWrapper::SetEnumValueParameter(uint32 index, integer value) const
@@ -252,18 +249,18 @@ void InvokerWrapper::SetEnumValueParameter(uint32 index, integer value) const
 	invoker->SetParameter(index, value, type);
 }
 
-void InvokerWrapper::SetParameter(uint32 index, const character* chars, uint32 length) const
+void InvokerWrapper::SetParameter(uint32 index, const RainString& value) const
 {
 	ValidAssert();
-	String value = invoker->kernel->stringAgency->Add(chars, length);
-	invoker->SetStringParameter(index, value.index);
+	String parameter = invoker->kernel->stringAgency->Add(value.value, value.length);
+	invoker->SetStringParameter(index, parameter.index);
 }
 
-void InvokerWrapper::SetParameter(uint32 index, const character* chars) const
+void InvokerWrapper::SetParameter(uint32 index, const character* value) const
 {
 	uint32 length = 0;
-	while (chars[length])length++;
-	SetParameter(index, chars, length);
+	while (value[length])length++;
+	SetParameter(index, RainString(value, length));
 }
 
 void InvokerWrapper::SetEntityParameter(uint32 index, uint64 value) const

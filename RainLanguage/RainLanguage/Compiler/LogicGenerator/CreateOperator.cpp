@@ -18,7 +18,7 @@ Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, L
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -61,7 +61,7 @@ Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -104,7 +104,7 @@ Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* par
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -147,7 +147,7 @@ Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* 
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -190,7 +190,7 @@ Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser,
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -229,7 +229,7 @@ Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* pars
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -268,7 +268,7 @@ Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser,
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -311,7 +311,7 @@ Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, 
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -354,7 +354,7 @@ Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser,
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -397,7 +397,7 @@ Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* pars
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -430,7 +430,7 @@ Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* par
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -463,7 +463,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -547,7 +547,7 @@ Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, 
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -593,7 +593,7 @@ Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Li
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -645,7 +645,7 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Li
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -720,7 +720,7 @@ Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, Li
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -756,7 +756,7 @@ Expression* CreateNotOperator(const Anchor& anchor, ExpressionParser* parser, Ex
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -788,7 +788,7 @@ Expression* CreateInverseOperator(const Anchor& anchor, ExpressionParser* parser
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -820,7 +820,7 @@ Expression* CreatePositiveOperator(const Anchor& anchor, ExpressionParser* parse
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -843,7 +843,7 @@ Expression* CreateNegativeOperator(const Anchor& anchor, ExpressionParser* parse
 	AbstractCallable* callable;
 	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->returns.GetTypesSpan()))
+		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
@@ -890,7 +890,7 @@ Expression* CreateIncrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 		AbstractCallable* callable;
 		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->returns.GetTypes()))
+			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
@@ -928,7 +928,7 @@ Expression* CreateDecrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 		AbstractCallable* callable;
 		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->returns.GetTypes()))
+			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
@@ -966,7 +966,7 @@ Expression* CreateIncrementRightOperator(const Anchor& anchor, ExpressionParser*
 		AbstractCallable* callable;
 		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->returns.GetTypes()))
+			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
@@ -1004,7 +1004,7 @@ Expression* CreateDecrementRightOperator(const Anchor& anchor, ExpressionParser*
 		AbstractCallable* callable;
 		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->returns.GetTypes()))
+			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{

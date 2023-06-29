@@ -142,7 +142,11 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	ASSERT_DEBUG(value < characters.GetPointer() || value >= characters.GetPointer() + characters.Count(), "原则上不允许引用的内存在托管堆内，如果发生GC，这块内存可能会发生变化");
 	if (!length)return NULL;
 	uint32 hash, bidx, sidx;
-	if (TryGetIdx(value, length, hash, bidx, sidx)) return sidx;
+	if (TryGetIdx(value, length, hash, bidx, sidx))
+	{
+		Reference(sidx);
+		return sidx;
+	}
 	if (characters.Slack() < length + 1 && characters.Slack() + characterHold + characterGCHold > length)
 	{
 		if ((characterGCHold << 3) > characters.Capacity()) GC(value);
@@ -178,7 +182,7 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	slot->position = characters.Count();
 	slot->next = buckets[bidx];
 	slot->gcNext = NULL;
-	slot->reference = 0;
+	slot->reference = 1;
 
 	buckets[bidx] = sidx;
 	characters.Add(value, length); characters.Add('\0');
@@ -275,7 +279,9 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 
 String StringAgency::Add(const character* value, uint32 length)
 {
-	return String(this, InternalAdd(value, length));
+	String result = String(this, InternalAdd(value, length));
+	slots[result.index].reference--;
+	return result;
 }
 
 String StringAgency::Add(const character* value)
@@ -287,16 +293,14 @@ String StringAgency::Add(const character* value)
 
 String StringAgency::Add(const String& value)
 {
-	if (!value.pool || !value.index || !value.length)return String();
+	if (!value.pool || !value.index)return String();
 	if (value.pool == this)return value;
-	return Add(value.GetPointer(), value.length);
+	return Add(value.GetPointer(), value.GetLength());
 }
 
 string StringAgency::AddAndRef(const character* value, uint32 length)
 {
-	string result = InternalAdd(value, length);
-	Reference(result);
-	return result;
+	return InternalAdd(value, length);
 }
 
 string StringAgency::AddAndRef(const character* value)
@@ -308,13 +312,13 @@ string StringAgency::AddAndRef(const character* value)
 
 string StringAgency::AddAndRef(const String& value)
 {
-	if (!value.pool || !value.index || !value.length)return NULL;
+	if (!value.pool || !value.index)return NULL;
 	if (value.pool == this)
 	{
 		Reference(value.index);
 		return value.index;
 	}
-	else return AddAndRef(value.GetPointer(), value.length);
+	else return AddAndRef(value.GetPointer(), value.GetLength());
 }
 
 String StringAgency::Get(uint32 index)
@@ -333,7 +337,7 @@ String StringAgency::Combine(String* values, uint32 count)
 {
 	InitHelper();
 	for (uint32 i = 0; i < count; i++)
-		helper->Add(values[i].GetPointer(), values[i].length);
+		helper->Add(values[i].GetPointer(), values[i].GetLength());
 	return Add(helper->GetPointer(), helper->Count());
 }
 
@@ -341,7 +345,7 @@ String StringAgency::Sub(const String& source, uint32 start, uint32 length)
 {
 	if (length)
 	{
-		ASSERT(start + length <= source.length, "字符串裁剪越界");
+		ASSERT(start + length <= source.GetLength(), "字符串裁剪越界");
 		InitHelper();
 		helper->Add(source.GetPointer() + start, length);
 		return Add(helper->GetPointer(), length);
@@ -352,17 +356,17 @@ String StringAgency::Sub(const String& source, uint32 start, uint32 length)
 String StringAgency::Replace(const String& source, const String& oldValue, const String& newValue)
 {
 	ASSERT_DEBUG(!source.IsEmpty() && !oldValue.IsEmpty(), "不能对空字符串进行该操作");
-	if (source.length < oldValue.length)return source;
+	if (source.GetLength() < oldValue.GetLength())return source;
 	InitHelper();
 	uint32 index = source.Find(oldValue, 0), last = 0;
 	while (index != INVALID)
 	{
 		helper->Add(source.GetPointer() + last, index - last);
-		helper->Add(newValue.GetPointer(), newValue.length);
-		last = index + oldValue.length;
+		helper->Add(newValue.GetPointer(), newValue.GetLength());
+		last = index + oldValue.GetLength();
 		index = source.Find(oldValue, last);
 	}
-	helper->Add(source.GetPointer(), source.length - last);
+	helper->Add(source.GetPointer(), source.GetLength() - last);
 	return Add(helper->GetPointer(), helper->Count());
 }
 
@@ -417,20 +421,20 @@ StringAgency::~StringAgency()
 uint32 String::Find(const String& value, uint32 start) const
 {
 	if (IsEmpty() || value.IsEmpty())return INVALID;
-	for (uint32 x = start, y = 0; x < length; x++)
+	for (uint32 x = start, y = 0; x < GetLength(); x++)
 		if ((*this)[x] == value[y])
 		{
 			y++;
-			if (y == value.length)
+			if (y == value.GetLength())
 			{
 				y = 0;
-				for (uint32 i = x - value.length; y < value.length; y++)
+				for (uint32 i = x - value.GetLength(); y < value.GetLength(); y++)
 					if ((*this)[i] != value[y])
 					{
 						y = 0;
 						goto label_next;
 					}
-				return x - value.length;
+				return x - value.GetLength();
 			}
 		label_next:;
 		}
@@ -480,8 +484,8 @@ String ToString(StringAgency* agency, real value)
 	value -= integerPart;
 	String fractionalPartString = ToString(agency, MathReal::Floor(value * 1000));
 	character fractionalPartChars[4]{ '.','0','0','0' };
-	for (uint32 i = 0; i < fractionalPartString.length; i++)
-		fractionalPartChars[4 - fractionalPartString.length + i] = fractionalPartString[i];
+	for (uint32 i = 0; i < fractionalPartString.GetLength(); i++)
+		fractionalPartChars[4 - fractionalPartString.GetLength() + i] = fractionalPartString[i];
 	String result = integerPartString + agency->Add(fractionalPartChars, 4);
 	if (negative)result = agency->Add(TEXT("-")) + result;
 	return result;
@@ -494,7 +498,7 @@ String ToString(StringAgency* agency, Handle value)
 
 bool ParseBool(String value)
 {
-	if (value.length == 4)
+	if (value.GetLength() == 4)
 	{
 		for (uint32 i = 0; i < 4; i++)
 			if ((value[i] | 0x20) != TEXT("true")[i])
@@ -514,7 +518,7 @@ integer ParseInteger(String value)
 		negative = true;
 		index++;
 	}
-	while (index < value.length)
+	while (index < value.GetLength())
 	{
 		if (value[index] - 0x30 < 10)
 		{
@@ -537,7 +541,7 @@ real ParseReal(String value)
 		negative = true;
 		index++;
 	}
-	while (index < value.length)
+	while (index < value.GetLength())
 		if (value[index] - 0x30 < 10)
 		{
 			integerPart = integerPart * 10 + (integer)value[index] - 0x30;
@@ -548,7 +552,7 @@ real ParseReal(String value)
 			index++;
 			integer exponential = 1;
 			integer fractionalPart = 0;
-			while (index < value.length)
+			while (index < value.GetLength())
 				if (value[index] - 0x30 < 10)
 				{
 					fractionalPart = fractionalPart * 10 + (integer)value[index] - 0x30;

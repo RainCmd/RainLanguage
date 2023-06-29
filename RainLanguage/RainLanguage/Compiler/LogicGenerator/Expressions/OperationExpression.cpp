@@ -7,6 +7,7 @@ void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter expressionParameter = LogicGenerateParameter(parameter, expression->returns.Count());
 	expression->Generator(expressionParameter);
 	parameter.generator->WriteCode(instruct);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	for (uint32 i = 0; i < expressionParameter.results.Count(); i++) parameter.generator->WriteCode(expressionParameter.results[i]);
 }
 

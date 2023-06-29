@@ -98,7 +98,7 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 	return result;
 }
 
-inline void GetStackSize(KernelLibraryInfo& library, Type& type, uint32 size, uint8 alignment)
+inline void GetStackSize(KernelLibraryInfo& library, Type& type, uint32& size, uint8& alignment)
 {
 	if (type.dimension)type = TYPE_Handle;
 	switch (type.code)
@@ -438,7 +438,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS("GetLength", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
-		if (!(classes.Count() == KERNEL_TYPE_CLASS_INDEX_Array)) throw L"托管类型索引错误";;; 
+		if (!(classes.Count() == KERNEL_TYPE_CLASS_INDEX_Array)) throw L"托管类型索引错误";;;
 		root->classes.Add(classes.Count());
 		new (classes.Add())KernelLibraryInfo::Class(TYPE_Handle, (List<Declaration, true>(0)), KernelStringAgency.Add(L"array"), 4, MEMORY_ALIGNMENT_4, (List<uint32, true>(0)), (List<KernelLibraryInfo::Variable>(0)), memberFunctions);;
 	}

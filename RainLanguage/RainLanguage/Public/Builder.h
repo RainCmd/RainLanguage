@@ -17,22 +17,12 @@ public:
 	/// 获取当前代码文件路径
 	/// </summary>
 	/// <returns>代码文件路径</returns>
-	virtual const character* CurrentPath() = 0;
-	/// <summary>
-	/// 获取当前代码文件路径长度
-	/// </summary>
-	/// <returns>代码文件路径长度</returns>
-	virtual uint32 CurrentPathLength() = 0;
+	virtual const RainString CurrentPath() = 0;
 	/// <summary>
 	/// 获取当前代码
 	/// </summary>
 	/// <returns>当前代码</returns>
-	virtual const character* CurrentContent() = 0;
-	/// <summary>
-	/// 获取当前代码长度
-	/// </summary>
-	/// <returns>当前代码长度</returns>
-	virtual uint32 CurrentContentLength() = 0;
+	virtual const RainString CurrentContent() = 0;
 	virtual ~CodeLoader() {}
 };
 
@@ -44,7 +34,7 @@ const struct RAINLANGUAGE BuildParameter
 	/// <summary>
 	/// 库名
 	/// </summary>
-	const character* name;
+	const RainString name;
 	/// <summary>
 	/// 生成调试信息
 	/// </summary>
@@ -62,7 +52,7 @@ const struct RAINLANGUAGE BuildParameter
 	/// </summary>
 	ErrorLevel messageLevel;
 
-	BuildParameter(const character* name, bool debug, CodeLoader* codeLoader, const LibraryLoader& libraryLoader, const ErrorLevel& messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), messageLevel(messageLevel) {}
+	BuildParameter(const RainString& name, bool debug, CodeLoader* codeLoader, const LibraryLoader& libraryLoader, const ErrorLevel& messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), messageLevel(messageLevel) {}
 };
 
 /// <summary>
@@ -79,13 +69,9 @@ class ProgramDebugDatabase
 const struct RAINLANGUAGE RainErrorMessage
 {
 	/// <summary>
-	/// 错误信息所属源文件名(指针仅调用时有效，请勿将指针传回虚拟机)
+	/// 错误信息所属源文件相对路径
 	/// </summary>
-	const character* source;
-	/// <summary>
-	/// 错误信息所属源文件名长度
-	/// </summary>
-	uint32 sourceLength;
+	const RainString path;
 	/// <summary>
 	/// 错误类型
 	/// </summary>
@@ -95,15 +81,11 @@ const struct RAINLANGUAGE RainErrorMessage
 	/// </summary>
 	uint32 line, start, length;
 	/// <summary>
-	/// 错误额外信息(指针仅调用时有效，请勿将指针传回虚拟机)
+	/// 错误额外信息
 	/// </summary>
-	const character* message;
-	/// <summary>
-	/// 错误额外信息长度
-	/// </summary>
-	uint32 messageLength;
+	const RainString message;
 
-	inline RainErrorMessage(const character* source, const uint32& sourceLength, const MessageType& type, const uint32& line, const uint32& start, const uint32& length, const character* message, const uint32& messageLength) : source(source), sourceLength(sourceLength), type(type), line(line), start(start), length(length), message(message), messageLength(messageLength) {}
+	inline RainErrorMessage(const RainString& path, const MessageType& type, const uint32& line, const uint32& start, const uint32& length, const RainString& message) : path(path), type(type), line(line), start(start), length(length), message(message) {}
 };
 
 /// <summary>

@@ -32,9 +32,9 @@ public:
 	Real2 GetReal2Parameter(uint32 index) const;
 	Real3 GetReal3Parameter(uint32 index) const;
 	Real4 GetReal4Parameter(uint32 index) const;
-	const character* GetEnumNameParameter(uint32 index, uint32& length) const;
+	const RainString GetEnumNameParameter(uint32 index) const;
 	integer GetEnumValueParameter(uint32 index) const;
-	const character* GetStringParameter(uint32 index, uint32& length) const;
+	const RainString GetStringParameter(uint32 index) const;
 	uint64 GetEntityParameter(uint32 index) const;
 
 	void SetReturnValue(uint32 index, bool value);
@@ -45,24 +45,24 @@ public:
 	void SetReturnValue(uint32 index, Real2 value);
 	void SetReturnValue(uint32 index, Real3 value);
 	void SetReturnValue(uint32 index, Real4 value);
-	void SetEnumNameReturnValue(uint32 index, const character* chars, uint32 length);
-	inline void SetEnumNameReturnValue(uint32 index, const character* chars)
+	void SetEnumNameReturnValue(uint32 index, const RainString& elementName);
+	inline void SetEnumNameReturnValue(uint32 index, const character* elementName)
 	{
 		uint32 length = 0;
-		while (chars[length])length++;
-		SetEnumNameReturnValue(index, chars, length);
+		while (elementName[length])length++;
+		SetEnumNameReturnValue(index, RainString(elementName, length));
 	}
 	void SetEnumValueReturnValue(uint32 index, integer value);
-	void SetReturnValue(uint32 index, const character* chars, uint32 length);
-	inline void SetReturnValue(uint32 index, const character* chars)
+	void SetReturnValue(uint32 index, const RainString& value);
+	inline void SetReturnValue(uint32 index, const character* value)
 	{
 		uint32 length = 0;
-		while (chars[length])length++;
-		SetReturnValue(index, chars, length);
+		while (value[length])length++;
+		SetReturnValue(index, RainString(value, length));
 	}
 	void SetEntityReturnValue(uint32 index, uint64 value);
 
-	void SetException(const character* chars, uint32 length);
+	void SetException(const RainString& error);
 	string GetException() const;
 };
 

@@ -149,7 +149,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			sourceParameter.results[i] = parameter.results[i] = parameter.variableGenerator->DecareTemporary(parameter.manager, returns[i]);
 	source->Generator(sourceParameter);
 	for (uint32 i = 0; i < returns.Count(); i++)
-		if (source->returns[i] == returns[i])parameter.results[i] = sourceParameter.results[i];
+		if (source->returns[i] == returns[i]) parameter.results[i] = sourceParameter.results[i];
 		else if (returns[i] == TYPE_Char)
 		{
 			ASSERT_DEBUG(source->returns[i] == TYPE_Byte, "未知的转换类型");

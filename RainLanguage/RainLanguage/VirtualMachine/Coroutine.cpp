@@ -1844,8 +1844,8 @@ label_next_instruct:
 		{
 			String value = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 5));
 			integer index = INSTRUCT_VARIABLE(integer, 9);
-			if (index < 0)index += value.length;
-			if (index < 0 || index >= value.length)EXCEPTION_EXIT(STRING_Element, EXCEPTION_OUT_OF_RANGE)
+			if (index < 0)index += value.GetLength();
+			if (index < 0 || index >= value.GetLength())EXCEPTION_EXIT(STRING_Element, EXCEPTION_OUT_OF_RANGE)
 			else INSTRUCT_VARIABLE(character, 1) = value[(uint32)index];
 			EXCEPTION_JUMP(12, STRING_Element);
 		}
@@ -1866,9 +1866,9 @@ label_next_instruct:
 			String source = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 5));
 			integer start = INSTRUCT_VARIABLE(integer, 9);
 			integer end = INSTRUCT_VARIABLE(integer, 13);
-			if (start < 0)start += source.length;
-			if (end < 0)end += source.length;
-			if (start < 0 || end < start || source.length <= end)EXCEPTION_EXIT(STRING_Sub, EXCEPTION_OUT_OF_RANGE)
+			if (start < 0)start += source.GetLength();
+			if (end < 0)end += source.GetLength();
+			if (start < 0 || end < start || source.GetLength() <= end)EXCEPTION_EXIT(STRING_Sub, EXCEPTION_OUT_OF_RANGE)
 			else
 			{
 				String result = source.Sub((uint32)start, (uint32)(end - start + 1));
@@ -2134,9 +2134,9 @@ void Coroutine::Recycle()
 			for (uint32 i = 0; i < invoker->GetStackFrame().Count(); i++)
 			{
 				const StackFrame& frame = invoker->GetStackFrame()[i];
-				new (frames.Add())RainStackFrame(frame.library.GetPointer(), frame.library.length, frame.address);
+				new (frames.Add())RainStackFrame(RainString(frame.library.GetPointer(), frame.library.GetLength()), frame.address);
 			}
-			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), exitMessage.GetPointer(), exitMessage.length);
+			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), exitMessage.GetPointer(), exitMessage.GetLength());
 		}
 		invoker->coroutine = NULL;
 	}

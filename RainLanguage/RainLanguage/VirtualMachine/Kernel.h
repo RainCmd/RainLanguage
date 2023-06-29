@@ -19,9 +19,9 @@ public:
 	Random random;
 	Kernel(const StartupParameter& parameter);
 	InvokerWrapper CreateInvoker(const RainFunction& function);
-	const RainFunction FindFunction(const character* name, uint32 nameLength);
+	const RainFunction FindFunction(const RainString& name);
 	const RainFunction FindFunction(const character* name);
-	RainFunctions FindFunctions(const character* name, uint32 nameLength);
+	RainFunctions FindFunctions(const RainString& name);
 	RainFunctions FindFunctions(const character* name);
 	RainTypes GetFunctionParameters(const RainFunction& function);
 	RainTypes GetFunctionReturns(const RainFunction& function);

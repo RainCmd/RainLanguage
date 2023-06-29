@@ -87,32 +87,25 @@ private:
 	StringAgency* pool;
 	friend StringAgency;
 public:
-	uint32 index, length, hash;
-	inline String() :pool(NULL), index(0), length(0), hash(0) {}
-	inline String(StringAgency* pool, uint32 index) : pool(pool), index(index), length(pool ? pool->slots[index].length : 0), hash(pool ? pool->slots[index].hash : 0)
-	{
-		if (pool)pool->Reference(index);
-	}
-	inline String(const String& other) : pool(other.pool), index(other.index), length(other.length), hash(other.hash)
-	{
-		if (pool) pool->Reference(index);
-	}
+	uint32 index;
+	inline String() :pool(NULL), index(0) {}
+	inline String(StringAgency* pool, uint32 index) : pool(pool), index(index) { if (pool)pool->Reference(index); }
+	inline String(const String& other) : pool(other.pool), index(other.index) { if (pool) pool->Reference(index); }
 	inline String& operator=(const String& other)
 	{
 		if (pool) pool->Release(index);
 		pool = other.pool;
 		index = other.index;
-		length = other.length;
-		hash = other.hash;
 		if (pool) pool->Reference(index);
 		return *this;
 	}
 	inline character operator[](uint32 index)const { return pool->characters[pool->slots[this->index].position + index]; }
 	inline bool operator==(const character* other) const
 	{
-		uint32 index = 0;
+		uint32 index = 0, length = GetLength();
+		const character* pointer = GetPointer();
 		while (other[index])
-			if (index < length && other[index] == (*this)[index])index++;
+			if (index < length && other[index] == pointer[index])index++;
 			else return false;
 		return index == length;
 	}
@@ -120,23 +113,23 @@ public:
 	inline bool operator==(const String& other) const
 	{
 		if (pool == other.pool)return index == other.index;
-		else if (length == other.length && hash == other.hash)
+		else if (GetLength() == other.GetLength() && GetHash() == other.GetHash())
 		{
-			for (uint32 i = 0; i < length; i++)
+			for (uint32 i = 0; i < GetLength(); i++)
 				if ((*this)[i] != other[i])return false;
 			return true;
 		}
 		return false;
 	}
 	inline bool operator!=(const String& other) const { return !(*this == other); }
-	inline String operator+(const String& other)const
+	inline String operator+(const String& other) const
 	{
 		if (IsEmpty())return other;
 		if (other.IsEmpty())return *this;
 		String array[2] = { *this,other };
 		return pool->Combine(array, 2);
 	}
-	inline String operator+(const character* other)const
+	inline String operator+(const character* other) const
 	{
 		if (IsEmpty())EXCEPTION("获取不到字符串代理");
 		String array[2] = { *this,pool->Add(other) };
@@ -150,6 +143,8 @@ public:
 		if (array[0].IsEmpty())return other;
 		else return other.pool->Combine(array, 2);
 	}
+	inline uint32 GetLength() const { return pool ? pool->slots[index].length : 0; }
+	inline uint32 GetHash() const { return pool ? pool->slots[index].hash : 0; }
 	inline const character* GetPointer() const { return pool ? &pool->characters[pool->slots[index].position] : NULL; }
 	inline String Sub(uint32 start, uint32 length) const
 	{
@@ -158,7 +153,7 @@ public:
 	}
 	inline String Sub(uint32 start) const
 	{
-		return Sub(start, length - start);
+		return Sub(start, GetLength() - start);
 	}
 	uint32 Find(const String& value, uint32 start) const;
 	inline String Replace(const String& oldValue, const String& newValue) const
@@ -173,7 +168,7 @@ public:
 		if (pool)pool->Release(index);
 	}
 };
-inline uint32 GetHash(const String& value) { return value.hash; }
+inline uint32 GetHash(const String& value) { return value.GetHash(); }
 
 String ToString(StringAgency* agency, bool value);
 String ToString(StringAgency* agency, uint8 value);

@@ -809,10 +809,10 @@ String StringConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)/
 	String value = kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0));
 	Handle* handle = &RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(*handle);
-	*handle = kernel->heapAgency->Alloc(Type(TYPE_Byte, 1), (integer)value.length << 1);
+	*handle = kernel->heapAgency->Alloc(Type(TYPE_Byte, 1), (integer)value.GetLength() << 1);
 	kernel->heapAgency->StrongReference(*handle);
 	character* pointer = (character*)kernel->heapAgency->GetArrayPoint(*handle, 0);
-	Mcopy(value.GetPointer(), pointer, value.length);
+	Mcopy(value.GetPointer(), pointer, value.GetLength());
 	return String();
 }
 #pragma endregion ×Ö½ÚÂë×ª»»
@@ -2088,7 +2088,7 @@ String type_GetArrayElementType(Kernel* kernel, Coroutine*, uint8* stack, uint32
 
 String string_GetLength(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer string.()
 {
-	RETURN_VALUE(integer, 0) = kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)).length;
+	RETURN_VALUE(integer, 0) = kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)).GetLength();
 	return String();
 }
 

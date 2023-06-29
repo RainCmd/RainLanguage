@@ -158,7 +158,7 @@ public:
 	inline const RainErrorMessage GetErrorMessage(ErrorLevel level, uint32 index)
 	{
 		const Message& message = (*messageCollector->GetMessages(level))[index];
-		return RainErrorMessage(message.source.GetPointer(), message.source.length, message.type, message.line, message.start, message.length, message.message.GetPointer(), message.message.length);
+		return RainErrorMessage(RainString(message.source.GetPointer(), message.source.GetLength()), message.type, message.line, message.start, message.length, RainString(message.message.GetPointer(), message.message.GetLength()));
 	}
 	inline const RainLibrary* GetLibrary() { return library; }
 	inline const ProgramDebugDatabase* GetProgramDebugDatabase() { return programDebugDatabase; }
@@ -176,13 +176,15 @@ RainProduct* Build(const BuildParameter& parameter)
 	StringAgency stringAgency = StringAgency(0x1000);
 	MessageCollector* messages = new MessageCollector(parameter.messageLevel);
 
-	DeclarationManager manager = DeclarationManager(parameter.libraryLoader, &stringAgency, messages, stringAgency.Add(parameter.name));
+	DeclarationManager manager = DeclarationManager(parameter.libraryLoader, &stringAgency, messages, stringAgency.Add(parameter.name.value, parameter.name.length));
 	List<List<AbstractSpace*, true>> relySpaceCollector(0);
 	{
 		List<FileSpace>fileSpaces = List<FileSpace>(0);
 		while (parameter.codeLoader->LoadNext())
 		{
-			LineReader lineReader(&stringAgency, stringAgency.Add(parameter.codeLoader->CurrentPath(), parameter.codeLoader->CurrentPathLength()), parameter.codeLoader->CurrentContent(), parameter.codeLoader->CurrentContentLength());
+			RainString path = parameter.codeLoader->CurrentPath();
+			RainString content = parameter.codeLoader->CurrentContent();
+			LineReader lineReader(&stringAgency, stringAgency.Add(path.value, path.length), content.value, content.length);
 			ParseParameter parseParameter = ParseParameter(&lineReader, messages);
 			new (fileSpaces.Add())FileSpace(&manager.compilingLibrary, INVALID, &parseParameter);
 		}

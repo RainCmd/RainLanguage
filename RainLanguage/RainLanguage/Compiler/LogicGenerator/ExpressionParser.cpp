@@ -59,7 +59,11 @@
 		parameters.Add(expressionStack.Pop());\
 		parameters.Insert(0, expressionStack.Pop());\
 		Expression* result = Create##name##Operator(token.anchor, this, parameters);\
-		if (result)return result->attribute;\
+		if (result)\
+		{\
+			expressionStack.Add(result);\
+			return result->attribute; \
+		}\
 		else return Attribute::Invalid;\
 	}
 
@@ -101,18 +105,18 @@ bool TryRemoveBracket(const Anchor& anchor, Anchor& result, MessageCollector* me
 
 bool TryCreateVectorMemberExpression(const Anchor& anchor, Expression* target, VectorMemberExpression*& result)
 {
-	if (!anchor.content.length || anchor.content.length > 4)return false;
-	List<uint32, true>indices(anchor.content.length);
+	if (!anchor.content.GetLength() || anchor.content.GetLength() > 4)return false;
+	List<uint32, true>indices(anchor.content.GetLength());
 	if (target->returns.Peek() == TYPE_Real2)
 	{
-		for (uint32 i = 0; i < anchor.content.length; i++)
+		for (uint32 i = 0; i < anchor.content.GetLength(); i++)
 			if (anchor.content[i] == 'x')indices.Add(0);
 			else if (anchor.content[i] == 'y')indices.Add(1);
 			else return false;
 	}
 	else if (target->returns.Peek() == TYPE_Real3)
 	{
-		for (uint32 i = 0; i < anchor.content.length; i++)
+		for (uint32 i = 0; i < anchor.content.GetLength(); i++)
 			if (anchor.content[i] == 'x')indices.Add(0);
 			else if (anchor.content[i] == 'y')indices.Add(1);
 			else if (anchor.content[i] == 'z')indices.Add(2);
@@ -120,7 +124,7 @@ bool TryCreateVectorMemberExpression(const Anchor& anchor, Expression* target, V
 	}
 	else if (target->returns.Peek() == TYPE_Real4)
 	{
-		for (uint32 i = 0; i < anchor.content.length; i++)
+		for (uint32 i = 0; i < anchor.content.GetLength(); i++)
 			if (anchor.content[i] == 'x' || anchor.content[i] == 'r')indices.Add(0);
 			else if (anchor.content[i] == 'y' || anchor.content[i] == 'g')indices.Add(1);
 			else if (anchor.content[i] == 'z' || anchor.content[i] == 'b')indices.Add(2);
@@ -688,8 +692,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			delete lambdaBody;
 		}
 	}
-	else if (expression->returns[0] != type) return false;
-	types.Add(type);
+	types.Add(expression->returns[0]);
 	return true;
 }
 
@@ -712,6 +715,31 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, const Span<Type,
 	return true;
 }
 
+AbstractCallable* GetCallable(DeclarationManager* manager, const Anchor& anchor, List<CompilingDeclaration, true>& results)
+{
+	if (results.Count() > 1)
+		for (uint32 i = 0; i < results.Count(); i++)
+			MESSAGE3(manager->messages, anchor, MessageType::ERROR_DECLARATION_EQUIVOCAL, manager->GetDeclaration(results[i])->GetFullName(manager->stringAgency));
+	CompilingDeclaration& declaration = results.Peek();
+	if (declaration.category == DeclarationCategory::Function || declaration.category == DeclarationCategory::Native || declaration.category == DeclarationCategory::Delegate) return (AbstractCallable*)manager->GetDeclaration(declaration);
+	else if (declaration.category == DeclarationCategory::StructFunction)
+	{
+		AbstractLibrary* library = manager->GetLibrary(declaration.library);
+		return &library->functions[library->structs[declaration.definition].functions[declaration.index]];
+	}
+	else if (declaration.category == DeclarationCategory::ClassFunction)
+	{
+		AbstractLibrary* library = manager->GetLibrary(declaration.library);
+		return &library->functions[library->classes[declaration.definition].functions[declaration.index]];
+	}
+	else if (declaration.category == DeclarationCategory::InterfaceFunction)
+	{
+		AbstractInterface* abstractInterface = (AbstractInterface*)manager->GetDeclaration(declaration);
+		return &abstractInterface->functions[declaration.index];
+	}
+	else EXCEPTION("无效的定义类型");
+}
+
 bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<CompilingDeclaration, true>& declarations, const Span<Type, true>& parameters, AbstractCallable*& callable)
 {
 	uint32 minMeasure = 0;
@@ -732,10 +760,7 @@ bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<Compiling
 	}
 	if (results.Count())
 	{
-		if (results.Count() > 1)
-			for (uint32 i = 0; i < results.Count(); i++)
-				MESSAGE3(manager->messages, anchor, MessageType::ERROR_DECLARATION_EQUIVOCAL, manager->GetDeclaration(results[i])->GetFullName(manager->stringAgency));
-		callable = (AbstractCallable*)manager->GetDeclaration(results.Peek());
+		callable = GetCallable(manager, anchor, results);
 		return true;
 	}
 	return false;
@@ -767,10 +792,7 @@ bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<Compiling
 	}
 	if (results.Count())
 	{
-		if (results.Count() > 1)
-			for (uint32 i = 0; i < results.Count(); i++)
-				MESSAGE3(manager->messages, anchor, MessageType::ERROR_DECLARATION_EQUIVOCAL, manager->GetDeclaration(results[i])->GetFullName(manager->stringAgency));
-		callable = (AbstractCallable*)manager->GetDeclaration(results.Peek());
+		callable = GetCallable(manager, anchor, results);
 		return true;
 	}
 	return false;
@@ -1497,6 +1519,9 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 					case LexicalType::Semicolon:
 						break;
 					case LexicalType::Assignment:
+						goto label_assignment;
+					label_reparse_left_and_assignment:
+						TryParse(left, leftExpression);
 					label_assignment:
 						if (leftExpression->returns.Count() == rightExpression->returns.Count())
 						{
@@ -1523,7 +1548,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateBitAndOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::BitOr:
 					case LexicalType::LogicOr:
 						break;
@@ -1535,7 +1560,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateBitOrOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::BitXor:
 						break;
 					case LexicalType::BitXorAssignment:
@@ -1546,7 +1571,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateBitXorOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Less:
 					case LexicalType::LessEquals:
 					case LexicalType::ShiftLeft:
@@ -1559,7 +1584,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateShiftLeftOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Greater:
 					case LexicalType::GreaterEquals:
 					case LexicalType::ShiftRight:
@@ -1572,7 +1597,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateShiftRightOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Plus:
 					case LexicalType::Increment:
 						break;
@@ -1584,7 +1609,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreatePlusOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Minus:
 					case LexicalType::Decrement:
 					case LexicalType::RealInvoker:
@@ -1597,7 +1622,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateMinusOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Mul:
 						break;
 					case LexicalType::MulAssignment:
@@ -1608,7 +1633,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateMulOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Div:
 						break;
 					case LexicalType::DivAssignment:
@@ -1619,7 +1644,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateDivOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Annotation:
 					case LexicalType::Mod:
 						break;
@@ -1631,7 +1656,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						rightExpression = CreateModOperator(left, this, parameters);
 						if (!rightExpression) return false;
 					}
-					goto label_assignment;
+					goto label_reparse_left_and_assignment;
 					case LexicalType::Not:
 					case LexicalType::NotEquals:
 					case LexicalType::Negate:
@@ -2664,7 +2689,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					integer value = 0;
 					String& content = lexical.anchor.content;
-					for (uint32 i = 2; i < content.length; i++)
+					for (uint32 i = 2; i < content.GetLength(); i++)
 					{
 						character element = content[i];
 						if (element != '_')
@@ -2683,7 +2708,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					integer value = 0;
 					String& content = lexical.anchor.content;
-					for (uint32 i = 2; i < content.length; i++)
+					for (uint32 i = 2; i < content.GetLength(); i++)
 					{
 						integer element = content[i];
 						if (element != '_')
@@ -2703,7 +2728,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					integer value = 0;
 					String& content = lexical.anchor.content;
-					for (uint32 i = 0; i < content.length; i++)
+					for (uint32 i = 0; i < content.GetLength(); i++)
 					{
 						integer element = content[i];
 						if (element != '\'')
@@ -2711,7 +2736,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							value <<= 8;
 							if (element == '\\')
 							{
-								if (++i < content.length)
+								if (++i < content.GetLength())
 								{
 									element = content[i];
 									if (element == 'a') element = '\a';
@@ -2725,16 +2750,16 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									else if (element == 'x')
 									{
 										uint32 value1 = 0, value2 = 0;
-										if (++i < content.length && TryGetHexValue(content[i], value1))
+										if (++i < content.GetLength() && TryGetHexValue(content[i], value1))
 										{
-											if (++i < content.length && TryGetHexValue(content[i], value2)) element = (char)(value1 * 16 + value2);
+											if (++i < content.GetLength() && TryGetHexValue(content[i], value2)) element = (char)(value1 * 16 + value2);
 											else i -= 2;
 										}
 										else i--;
 									}
 									else if (element == 'u')
 									{
-										if (i + 4 < content.length)
+										if (i + 4 < content.GetLength())
 										{
 											uint32 resultChar = 0u, temp = 0;
 											uint32 idx = i;
@@ -2761,15 +2786,15 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					String& content = lexical.anchor.content;
-					List<character, true> stringBuilder(content.length);
-					for (uint32 i = 0; i < content.length; i++)
+					List<character, true> stringBuilder(content.GetLength());
+					for (uint32 i = 0; i < content.GetLength(); i++)
 					{
 						character element = content[i];
 						if (element != '\"')
 						{
 							if (element == '\\')
 							{
-								if (++i < content.length)
+								if (++i < content.GetLength())
 								{
 									element = content[i];
 									if (element == 'a') element = '\a';
@@ -2783,16 +2808,16 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									else if (element == 'x')
 									{
 										uint32 value1 = 0, value2 = 0;
-										if (++i < content.length && TryGetHexValue(content[i], value1))
+										if (++i < content.GetLength() && TryGetHexValue(content[i], value1))
 										{
-											if (++i < content.length && TryGetHexValue(content[i], value2)) element = (char)(value1 * 16 + value2);
+											if (++i < content.GetLength() && TryGetHexValue(content[i], value2)) element = (char)(value1 * 16 + value2);
 											else i -= 2;
 										}
 										else i--;
 									}
 									else if (element == 'u')
 									{
-										if (i + 4 < content.length)
+										if (i + 4 < content.GetLength())
 										{
 											uint32 resultChar = 0u, value = 0;
 											uint32 idx = i;
