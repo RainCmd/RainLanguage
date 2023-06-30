@@ -17,17 +17,17 @@ public:
 	uint32 size, top, bottom, pointer;
 	integer wait;
 	uint8* stack;
-	inline Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(0), wait(0)
-	{
-		stack = Malloc<uint8>(size);
-	}
+	uint8* cacheData[2];
+	Coroutine(Kernel* kernel, uint32 capacity);
 	inline bool EnsureStackSize(uint32 size)
 	{
 		if (size > this->size)
 		{
 			while (size > this->size) this->size += this->size >> 2;
 			if (this->size >= MAX_STACK_SIZE)return true;
+			uint32 pointer = (uint32)(cacheData[1] - stack);
 			stack = Realloc<uint8>(stack, this->size);
+			cacheData[1] = stack + pointer;
 		}
 		return false;
 	}

@@ -13,7 +13,8 @@
 #include "VirtualMachine/EntityAgency.h"
 #include "Vector/VectorMath.h"
 
-#define RETURN_VALUE(type,index) (*(type*)(IS_LOCAL(((uint32*)(stack + top + SIZE(Frame)))[index])?(stack + LOCAL_ADDRESS(((uint32*)(stack + top + SIZE(Frame)))[index])):(kernel->libraryAgency->data.GetPointer() + ((uint32*)(stack + top + SIZE(Frame)))[index])))
+#define RETURN_POINT ((uint32*)(stack + top + SIZE(Frame)))
+#define RETURN_VALUE(type,index) (*(type*)(IS_LOCAL(RETURN_POINT[index]) ? (stack + LOCAL_ADDRESS(RETURN_POINT[index])) : (kernel->libraryAgency->data.GetPointer() + RETURN_POINT[index])))
 #define PARAMETER_VALUE(returnCount,type,offset) (*(type*)(stack + top + SIZE(Frame) + (returnCount << 2) + offset))
 
 #define GET_THIS_VALUE(returnCount,type)\
@@ -1245,8 +1246,6 @@ String integer_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//s
 {
 	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, integer, 0));
 	kernel->stringAgency->Reference(result.index);
-	uint32 value = ((uint32*)(stack + top + SIZE(Frame)))[0];
-	string& str = *(string*)(IS_LOCAL(value) ? (stack + LOCAL_ADDRESS(value)) : (kernel->libraryAgency->data.GetPointer() + (value)));
 	kernel->stringAgency->Release(RETURN_VALUE(string, 0));
 	RETURN_VALUE(string, 0) = result.index;
 	return String();

@@ -11,10 +11,10 @@
 #include "EntityAgency.h"
 #include "Exceptions.h"
 
-#define VARIABLE(offset) (data[offset >> 31] + LOCAL_ADDRESS(offset))
+#define VARIABLE(offset) (cacheData[offset >> 31] + LOCAL_ADDRESS(offset))
 #define INSTRUCT_VALUE(type,offset) (*(type*)(instruct + (offset)))
 #define INSTRUCT_VARIABLE(type,offset) (*(type*)VARIABLE(INSTRUCT_VALUE(uint32, offset)))
-#define RETURN_POINT(offset) GetReturnPoint(kernel, stack, data[1], INSTRUCT_VALUE(uint32, offset))
+#define RETURN_POINT(offset) GetReturnPoint(kernel, stack, cacheData[1], INSTRUCT_VALUE(uint32, offset))
 
 #define POINTER (uint32)(instruct - kernel->libraryAgency->code.GetPointer())
 #define EXCEPTION_EXIT(instructName,message)	{ Exit(kernel->stringAgency->Add(message), POINTER); goto label_exit_jump_##instructName; }
@@ -40,6 +40,13 @@ inline uint8* GetReturnPoint(Kernel* kernel, uint8* stack, uint8* functionStack,
 	uint32 pointer = *(uint32*)(functionStack + offset);
 	if (IS_LOCAL(pointer)) return stack + LOCAL_ADDRESS(pointer);
 	else return kernel->libraryAgency->code.GetPointer() + pointer;
+}
+
+Coroutine::Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(0), wait(0)
+{
+	stack = Malloc<uint8>(size);
+	cacheData[0] = kernel->libraryAgency->data.GetPointer();
+	cacheData[1] = stack;
 }
 
 void Coroutine::Initialize(Invoker* invoker, bool ignoreWait)
@@ -75,9 +82,7 @@ void Coroutine::Exit(const String& message, uint32 pointer)
 void Coroutine::Run()
 {
 	if (pointer == INVALID)return;
-	uint8* data[2];
-	data[0] = kernel->libraryAgency->data.GetPointer();
-	data[1] = stack + bottom;
+	cacheData[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:
 	switch ((Instruct)*instruct)
@@ -131,7 +136,7 @@ label_next_instruct:
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_Stackzero:
-			Mzero(data[1] + INSTRUCT_VALUE(uint32, 1), INSTRUCT_VALUE(uint32, 5));
+			Mzero(cacheData[1] + INSTRUCT_VALUE(uint32, 1), INSTRUCT_VALUE(uint32, 5));
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::BASE_Datazero:
@@ -808,7 +813,7 @@ label_next_instruct:
 #pragma endregion 返回值
 		case Instruct::FUNCTION_Return:
 		{
-			Frame* frame = (Frame*)data[1];
+			Frame* frame = (Frame*)cacheData[1];
 			if (frame->pointer == INVALID)
 			{
 				pointer = INVALID;
@@ -818,19 +823,19 @@ label_next_instruct:
 			{
 				top = bottom;
 				bottom = frame->bottom;
-				data[1] = stack + bottom;
+				cacheData[1] = stack + bottom;
 				instruct = kernel->libraryAgency->code.GetPointer() + frame->pointer;
 			}
 		}
 		goto label_next_instruct;
 		case Instruct::FUNCTION_Call:
 			bottom = top;
-			data[1] = stack + bottom;
+			cacheData[1] = stack + bottom;
 			instruct = kernel->libraryAgency->code.GetPointer() + INSTRUCT_VALUE(uint32, 1);
 			goto label_next_instruct;
 		case Instruct::FUNCTION_MemberCall:
 			bottom = top;
-			data[1] = stack + bottom;
+			cacheData[1] = stack + bottom;
 			instruct = kernel->libraryAgency->code.GetPointer() + INSTRUCT_VALUE(uint32, 1);
 			goto label_next_instruct;
 		case Instruct::FUNCTION_VirtualCall:
@@ -840,7 +845,7 @@ label_next_instruct:
 			if (kernel->heapAgency->TryGetType(handle, type))
 			{
 				bottom = top;
-				data[1] = stack + bottom;
+				cacheData[1] = stack + bottom;
 				LibraryAgency* agency = kernel->libraryAgency;
 				instruct = agency->code.GetPointer() + agency->GetFunctionEntry(agency->GetFunction(INSTRUCT_VALUE(MemberFunction, 5), type));
 			}
@@ -857,7 +862,7 @@ label_next_instruct:
 				{
 					case FunctionType::Global:
 						bottom = top;
-						data[1] = stack + bottom;
+						cacheData[1] = stack + bottom;
 						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						goto label_next_instruct;
 					case FunctionType::Native:
@@ -875,7 +880,7 @@ label_next_instruct:
 							const RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
 							top -= MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
 							bottom = top;
-							data[1] = stack + bottom;
+							cacheData[1] = stack + bottom;
 							instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						}
 						else EXCEPTION("无效的装箱对象");
@@ -886,7 +891,7 @@ label_next_instruct:
 					case FunctionType::Abstract:
 						top -= MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
 						bottom = top;
-						data[1] = stack + bottom;
+						cacheData[1] = stack + bottom;
 						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						goto label_next_instruct;
 					default: EXCEPTION("无效的函数类型");
