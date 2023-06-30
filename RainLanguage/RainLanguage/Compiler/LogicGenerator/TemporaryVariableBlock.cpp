@@ -10,7 +10,7 @@ TemporaryVariableBlock::TemporaryVariableBlock(StatementGeneratorParameter* para
 
 void TemporaryVariableBlock::Finish()
 {
-	parameter->variableGenerator->ResetTemporary(parameter->manager, parameter->generator, temporaryAddress, parameter->finallyAddress);
+	parameter->variableGenerator->ResetTemporary(parameter->manager, parameter->generator, temporaryAddress);
 	if (parameter->finallyAddress->HasReference())
 	{
 		parameter->generator->WriteCode(Instruct::BASE_ExitJump);

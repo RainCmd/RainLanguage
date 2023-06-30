@@ -46,35 +46,35 @@ void ClearVariable(CodeGenerator& generator, Type type, uint32 pointer)
 	if (type.dimension)type = TYPE_Handle;
 	switch (type.code)
 	{
-	case TypeCode::Invalid: EXCEPTION("无效的类型");
-	case TypeCode::Struct:
-		if (type == TYPE_String)
-		{
-			generator.WriteInstruct(Instruct::STRING_Release);
-			generator.Write(pointer);
-		}
-		else if (type == TYPE_Entity)
-		{
-			generator.WriteInstruct(Instruct::ASSIGNMENT_Const2Variable_EntityNull);
-			generator.Write(pointer);
-		}
-		else
-		{
-			const List<KernelLibraryInfo::Variable>& variables = generator.library->structs[type.index].variables;
-			for (uint32 i = 0; i < variables.Count(); i++)
-				ClearVariable(generator, variables[i].type, pointer + variables[i].address);
-		}
-		break;
-	case TypeCode::Enum:
-		break;
-	case TypeCode::Handle:
-	case TypeCode::Interface:
-	case TypeCode::Delegate:
-	case TypeCode::Coroutine:
-		generator.WriteInstruct(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
-		generator.Write(pointer);
-		break;
-	default: EXCEPTION("无效的类型");
+		case TypeCode::Invalid: EXCEPTION("无效的类型");
+		case TypeCode::Struct:
+			if (type == TYPE_String)
+			{
+				generator.WriteInstruct(Instruct::STRING_Release);
+				generator.Write(LOCAL(pointer));
+			}
+			else if (type == TYPE_Entity)
+			{
+				generator.WriteInstruct(Instruct::ASSIGNMENT_Const2Variable_EntityNull);
+				generator.Write(LOCAL(pointer));
+			}
+			else
+			{
+				const List<KernelLibraryInfo::Variable>& variables = generator.library->structs[type.index].variables;
+				for (uint32 i = 0; i < variables.Count(); i++)
+					ClearVariable(generator, variables[i].type, pointer + variables[i].address);
+			}
+			break;
+		case TypeCode::Enum:
+			break;
+		case TypeCode::Handle:
+		case TypeCode::Interface:
+		case TypeCode::Delegate:
+		case TypeCode::Coroutine:
+			generator.WriteInstruct(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
+			generator.Write(LOCAL(pointer));
+			break;
+		default: EXCEPTION("无效的类型");
 	}
 }
 

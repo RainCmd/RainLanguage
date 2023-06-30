@@ -271,7 +271,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < compilingFunction->abstract->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(compilingFunction->abstract->parameters.GetType(y)), compilingFunction->abstract->parameters.GetOffset(y));
 		List<uint32, true> references(0);
 		List<uint32, true>* sourceReferences = NULL;
-		if (globalReference->addressReferences.TryGet(compilingFunction->entry, sourceReferences))
+		if (globalReference->addressReferences.TryGet(x, sourceReferences))
 			for (uint32 y = 0; y < sourceReferences->Count(); y++) references.Add(GetReferenceAddress((*sourceReferences)[y]));
 		new (result->functions.Add())FunctionDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingFunction), returns, parameters, compilingFunction->entry, references);
 	}

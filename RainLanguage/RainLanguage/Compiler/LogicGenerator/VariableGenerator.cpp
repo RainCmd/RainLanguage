@@ -148,21 +148,20 @@ void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 of
 	}
 }
 
-void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address, CodeLocalAddressReference* finallyAddress)
+void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address)
 {
 	stringTemporaryCount = entityTemporaryCount = handleTemporaryCount = 0;
-	if (statementBitwiseTemporaries.Count())
+	if (statementTemporaries.Count())
 	{
 		generator->BeginInsert(address);
-		for (uint32 i = 0; i < statementBitwiseTemporaries.Count(); i++)
-			ClearTemporary(manager, generator, address, 0, statementBitwiseTemporaries[i]->reference, statementBitwiseTemporaries[i]->type);
+		for (uint32 i = 0; i < statementTemporaries.Count(); i++)
+			ClearTemporary(manager, generator, address, 0, statementTemporaries[i]->reference, statementTemporaries[i]->type);
 		generator->EndInsert();
-		if (finallyAddress->HasReference()) generator->WriteCode(finallyAddress);
-		for (uint32 i = 0; i < statementBitwiseTemporaries.Count(); i++)
-			::ResetTemporary(manager, generator, 0, statementBitwiseTemporaries[i]->reference, statementBitwiseTemporaries[i]->type);
+		for (uint32 i = 0; i < statementTemporaries.Count(); i++)
+			::ResetTemporary(manager, generator, 0, statementTemporaries[i]->reference, statementTemporaries[i]->type);
 	}
-	statementBitwiseTemporaries.Clear();
 	statementTemporaries.Clear();
+	statementBitwiseTemporaries.Clear();
 	temporaryAddress = 0;
 }
 
@@ -254,6 +253,7 @@ VariableGenerator::~VariableGenerator()
 	while (iterator.Next()) delete iterator.CurrentValue();
 	locals.Clear();
 	statementTemporaries.Clear();
+	statementBitwiseTemporaries.Clear();
 	for (uint32 i = 0; i < temporaries.Count(); i++) delete temporaries[i];
 	temporaries.Clear();
 	for (uint32 i = 0; i < stringTemporaries.Count(); i++) delete stringTemporaries[i];
