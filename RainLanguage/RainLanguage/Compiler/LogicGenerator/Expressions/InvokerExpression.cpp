@@ -186,8 +186,8 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	parameters->Generator(parametersParameter);
 	uint32 parameterPoint = SIZE(Frame) + abstractFunction->returns.Count() * 4;
 	parameter.generator->WriteCode(Instruct::FUNCTION_Ensure);
-	if (declaration == ENUM_TO_STRING) parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size);
-	else parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size + SIZE(Declaration));
+	if (declaration == ENUM_TO_STRING) parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size + SIZE(Declaration));
+	else parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size);
 	parameter.generator->WriteCode(&returnAddress);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	GeneratePushReturnPoint(parameter, abstractFunction->returns);
