@@ -4,7 +4,7 @@
 /// <summary>
 /// ´íÎóµÈ¼¶
 /// </summary>
-enum class ErrorLevel :uint32
+enum class  ErrorLevel :uint32
 {
 	Error,
 	WarringLevel1,

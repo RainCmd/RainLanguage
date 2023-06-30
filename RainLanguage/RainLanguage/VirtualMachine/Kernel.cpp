@@ -60,6 +60,7 @@ Kernel::Kernel(const StartupParameter& parameter) : random(parameter.seed)
 
 InvokerWrapper Kernel::CreateInvoker(const RainFunction& function)
 {
+	ASSERT(function.IsValid(), "无效的函数");
 	return InvokerWrapper(coroutineAgency->CreateInvoker(*(Function*)&function));
 }
 
@@ -215,6 +216,7 @@ RainFunctions Kernel::FindFunctions(const character* name)
 
 RainTypes Kernel::GetFunctionParameters(const RainFunction& function)
 {
+	ASSERT(function.IsValid(), "无效的函数");
 	RuntimeFunction* info = libraryAgency->GetFunction(*(Function*)&function);
 	if (info->isPublic)
 	{
@@ -227,6 +229,7 @@ RainTypes Kernel::GetFunctionParameters(const RainFunction& function)
 
 RainTypes Kernel::GetFunctionReturns(const RainFunction& function)
 {
+	ASSERT(function.IsValid(), "无效的函数");
 	RuntimeFunction* info = libraryAgency->GetFunction(*(Function*)&function);
 	if (info->isPublic)
 	{

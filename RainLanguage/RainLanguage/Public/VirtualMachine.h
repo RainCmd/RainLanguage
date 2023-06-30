@@ -545,7 +545,7 @@ public:
 	/// 判断是否是个有效的句柄
 	/// </summary>
 	/// <returns>是个有效的句柄</returns>
-	inline bool IsValid() { return library != 0xFFFFFFFF; }
+	inline bool IsValid() const { return library != 0xFFFFFFFF; }
 };
 
 /// <summary>
@@ -616,6 +616,7 @@ public:
 	/// </summary>
 	/// <param name="function">函数句柄</param>
 	/// <returns>调用</returns>
+	/// <exception>无效的函数会抛异常</exception>
 	virtual InvokerWrapper CreateInvoker(const RainFunction& function) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
@@ -650,14 +651,14 @@ public:
 	/// </summary>
 	/// <param name="function">函数索引</param>
 	/// <returns>参数列表</returns>
-	/// <exception>无效的函数会抛异常</exception>
+	/// <exception>无效的函数会抛异常，非公开函数也会抛异常</exception>
 	virtual RainTypes GetFunctionParameters(const RainFunction& function) = 0;
 	/// <summary>
 	/// 获取函数返回值列表
 	/// </summary>
 	/// <param name="function">函数索引</param>
 	/// <returns>返回值列表</returns>
-	/// <exception>无效的函数会抛异常</exception>
+	/// <exception>无效的函数会抛异常，非公开函数也会抛异常</exception>
 	virtual RainTypes GetFunctionReturns(const RainFunction& function) = 0;
 
 	/// <summary>

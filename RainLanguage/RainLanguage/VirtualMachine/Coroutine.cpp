@@ -76,7 +76,7 @@ void Coroutine::Run()
 {
 	if (pointer == INVALID)return;
 	uint8* data[2];
-	data[0] = kernel->libraryAgency->code.GetPointer();
+	data[0] = kernel->libraryAgency->data.GetPointer();
 	data[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:

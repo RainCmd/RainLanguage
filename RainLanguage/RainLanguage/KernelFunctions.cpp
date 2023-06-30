@@ -13,7 +13,7 @@
 #include "VirtualMachine/EntityAgency.h"
 #include "Vector/VectorMath.h"
 
-#define RETURN_VALUE(type,index) (*(type*)(stack + ((uint32*)(stack + top + SIZE(Frame)))[index]))
+#define RETURN_VALUE(type,index) (*(type*)(IS_LOCAL(((uint32*)(stack + top + SIZE(Frame)))[index])?(stack + LOCAL_ADDRESS(((uint32*)(stack + top + SIZE(Frame)))[index])):(kernel->libraryAgency->data.GetPointer() + ((uint32*)(stack + top + SIZE(Frame)))[index])))
 #define PARAMETER_VALUE(returnCount,type,offset) (*(type*)(stack + top + SIZE(Frame) + (returnCount << 2) + offset))
 
 #define GET_THIS_VALUE(returnCount,type)\
@@ -29,103 +29,103 @@
 		kernel->heapAgency->WeakReference(values);
 
 #pragma region 运算符
-String Operation_Less_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool < (integer, integer)
+String Operation_Less_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) < PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Less_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool < (real, real)
+String Operation_Less_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) < PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Less_Equals_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool <= (integer, integer)
+String Operation_Less_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool <= (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) <= PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Less_Equals_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool <= (real, real)
+String Operation_Less_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool <= (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) <= PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Greater_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool > (integer, integer)
+String Operation_Greater_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool > (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) > PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Greater_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool > (real, real)
+String Operation_Greater_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool > (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) > PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Greater_Equals_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool >= (integer, integer)
+String Operation_Greater_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool >= (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) >= PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Greater_Equals_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool >= (real, real)
+String Operation_Greater_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool >= (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) >= PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Equals_bool_bool(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (bool, bool)
+String Operation_Equals_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) == PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Equals_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (integer, integer)
+String Operation_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) == PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Equals_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (real, real)
+String Operation_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) == PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Equals_real2_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (real2, real2)
+String Operation_Equals_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real2, real2)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real2, 0) == PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Equals_real3_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (real3, real3)
+String Operation_Equals_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real3, real3)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real3, 0) == PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Equals_real4_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (real4, real4)
+String Operation_Equals_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real4, real4)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real4, 0) == PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Equals_string_string(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (string, string)
+String Operation_Equals_string_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (string, string)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, string, 0) == PARAMETER_VALUE(1, string, SIZE(string));
 	return String();
 }
 
-String Operation_Equals_handle_handle(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (handle, handle)
+String Operation_Equals_handle_handle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (handle, handle)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Handle, 0) == PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	return String();
 }
 
-String Operation_Equals_entity_entity(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool == (entity, entity)
+String Operation_Equals_entity_entity(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (entity, entity)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Entity, 0) == PARAMETER_VALUE(1, Entity, SIZE(Entity));
 	return String();
@@ -140,55 +140,55 @@ String Operation_Equals_delegate_delegate(Kernel* kernel, Coroutine*, uint8* sta
 	return String();
 }
 
-String Operation_Not_Equals_bool_bool(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (bool, bool)
+String Operation_Not_Equals_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) != PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Not_Equals_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (integer, integer)
+String Operation_Not_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) != PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Not_Equals_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (real, real)
+String Operation_Not_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) != PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Not_Equals_real2_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (real2, real2)
+String Operation_Not_Equals_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real2, real2)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real2, 0) != PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Not_Equals_real3_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (real3, real3)
+String Operation_Not_Equals_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real3, real3)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real3, 0) != PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Not_Equals_real4_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (real4, real4)
+String Operation_Not_Equals_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real4, real4)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real4, 0) != PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Not_Equals_string_string(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (string, string)
+String Operation_Not_Equals_string_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (string, string)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, string, 0) != PARAMETER_VALUE(1, string, SIZE(string));
 	return String();
 }
 
-String Operation_Not_Equals_handle_handle(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (handle, handle)
+String Operation_Not_Equals_handle_handle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (handle, handle)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Handle, 0) != PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	return String();
 }
 
-String Operation_Not_Equals_entity_entity(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool != (entity, entity)
+String Operation_Not_Equals_entity_entity(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (entity, entity)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Entity, 0) != PARAMETER_VALUE(1, Entity, SIZE(Entity));
 	return String();
@@ -203,79 +203,79 @@ String Operation_Not_Equals_delegate_delegate(Kernel* kernel, Coroutine*, uint8*
 	return String();
 }
 
-String Operation_And_bool_bool(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool & (bool, bool)
+String Operation_And_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool & (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) && PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_And_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer & (integer, integer)
+String Operation_And_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer & (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) & PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Or_bool_bool(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool | (bool, bool)
+String Operation_Or_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool | (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) || PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Or_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer | (integer, integer)
+String Operation_Or_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer | (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) | PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Xor_bool_bool(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool ^ (bool, bool)
+String Operation_Xor_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool ^ (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) ^ PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Xor_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer ^ (integer, integer)
+String Operation_Xor_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer ^ (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) ^ PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Left_Shift_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer << (integer, integer)
+String Operation_Left_Shift_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer << (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) << PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Right_Shift_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer >> (integer, integer)
+String Operation_Right_Shift_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer >> (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) >> PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Plus_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer + (integer, integer)
+String Operation_Plus_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer + (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) + PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Plus_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real + (real, real)
+String Operation_Plus_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real + (real, real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) + PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Plus_real2_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 + (real2, real2)
+String Operation_Plus_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 + (real2, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) + PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Plus_real3_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 + (real3, real3)
+String Operation_Plus_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 + (real3, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) + PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Plus_real4_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 + (real4, real4)
+String Operation_Plus_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 + (real4, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) + PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
@@ -483,97 +483,97 @@ String Operation_Plus_handle_string(Kernel* kernel, Coroutine* coroutine, uint8*
 	}
 }
 
-String Operation_Minus_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer - (integer, integer)
+String Operation_Minus_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer - (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) - PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Minus_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real - (real, real)
+String Operation_Minus_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real - (real, real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) - PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Minus_real2_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 - (real2, real2)
+String Operation_Minus_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 - (real2, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) - PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Minus_real3_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 - (real3, real3)
+String Operation_Minus_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 - (real3, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) - PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Minus_real4_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 - (real4, real4)
+String Operation_Minus_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 - (real4, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) - PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Mul_integer_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer * (integer, integer)
+String Operation_Mul_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer * (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) * PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Mul_real_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real * (real, real)
+String Operation_Mul_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real * (real, real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real2_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 * (real2, real)
+String Operation_Mul_real2_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 * (real2, real)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) * PARAMETER_VALUE(1, real, SIZE(Real2));
 	return String();
 }
 
-String Operation_Mul_real3_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 * (real3, real)
+String Operation_Mul_real3_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 * (real3, real)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) * PARAMETER_VALUE(1, real, SIZE(Real3));
 	return String();
 }
 
-String Operation_Mul_real4_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 * (real4, real)
+String Operation_Mul_real4_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 * (real4, real)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) * PARAMETER_VALUE(1, real, SIZE(Real4));
 	return String();
 }
 
-String Operation_Mul_real_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 * (real, real2)
+String Operation_Mul_real_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 * (real, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, Real2, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 * (real, real3)
+String Operation_Mul_real_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 * (real, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, Real3, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 * (real, real4)
+String Operation_Mul_real_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 * (real, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, Real4, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real2_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 * (real2, real2)
+String Operation_Mul_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 * (real2, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) * PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Mul_real3_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 * (real3, real3)
+String Operation_Mul_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 * (real3, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) * PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Mul_real4_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 * (real4, real4)
+String Operation_Mul_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 * (real4, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) * PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
@@ -675,73 +675,73 @@ String Operation_Mod_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, u
 	return String();
 }
 
-String Operation_Not_bool(Kernel*, Coroutine*, uint8* stack, uint32 top)// bool ! (bool)
+String Operation_Not_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool ! (bool)
 {
 	RETURN_VALUE(bool, 0) = !PARAMETER_VALUE(1, bool, 0);
 	return String();
 }
 
-String Operation_Inverse_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer ~ (integer)
+String Operation_Inverse_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer ~ (integer)
 {
 	RETURN_VALUE(integer, 0) = ~PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String Operation_Positive_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer + (integer)
+String Operation_Positive_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer + (integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String Operation_Positive_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real + (real)
+String Operation_Positive_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real + (real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0);
 	return String();
 }
 
-String Operation_Positive_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 + (real2)
+String Operation_Positive_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 + (real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0);
 	return String();
 }
 
-String Operation_Positive_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 + (real3)
+String Operation_Positive_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 + (real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0);
 	return String();
 }
 
-String Operation_Positive_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 + (real4)
+String Operation_Positive_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 + (real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0);
 	return String();
 }
 
-String Operation_Negative_integer(Kernel*, Coroutine*, uint8* stack, uint32 top)// integer - (integer)
+String Operation_Negative_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer - (integer)
 {
 	RETURN_VALUE(integer, 0) = -PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String Operation_Negative_real(Kernel*, Coroutine*, uint8* stack, uint32 top)// real - (real)
+String Operation_Negative_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real - (real)
 {
 	RETURN_VALUE(real, 0) = -PARAMETER_VALUE(1, real, 0);
 	return String();
 }
 
-String Operation_Negative_real2(Kernel*, Coroutine*, uint8* stack, uint32 top)// real2 - (real2)
+String Operation_Negative_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 - (real2)
 {
 	RETURN_VALUE(Real2, 0) = -PARAMETER_VALUE(1, Real2, 0);
 	return String();
 }
 
-String Operation_Negative_real3(Kernel*, Coroutine*, uint8* stack, uint32 top)// real3 - (real3)
+String Operation_Negative_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 - (real3)
 {
 	RETURN_VALUE(Real3, 0) = -PARAMETER_VALUE(1, Real3, 0);
 	return String();
 }
 
-String Operation_Negative_real4(Kernel*, Coroutine*, uint8* stack, uint32 top)// real4 - (real4)
+String Operation_Negative_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 - (real4)
 {
 	RETURN_VALUE(Real4, 0) = -PARAMETER_VALUE(1, Real4, 0);
 	return String();
@@ -769,13 +769,13 @@ String Operation_Decrement_real(Kernel*, Coroutine*, uint8*, uint32)// -- (real)
 #pragma endregion 运算符
 
 #pragma region 字节码转换
-String BytesConvertInteger(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (byte, byte, byte, byte, byte, byte, byte, byte)
+String BytesConvertInteger(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (byte, byte, byte, byte, byte, byte, byte, byte)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String BytesConvertReal(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (byte, byte, byte, byte, byte, byte, byte, byte)
+String BytesConvertReal(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (byte, byte, byte, byte, byte, byte, byte, byte)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0);
 	return String();
@@ -792,13 +792,13 @@ String BytesConvertString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)/
 	return String();
 }
 
-String IntegerConvertBytes(Kernel*, Coroutine*, uint8* stack, uint32 top)//byte, byte, byte, byte, byte, byte, byte, byte (integer)
+String IntegerConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//byte, byte, byte, byte, byte, byte, byte, byte (integer)
 {
 	RETURN_VALUE(uint64, 0) = PARAMETER_VALUE(8, uint64, 0);
 	return String();
 }
 
-String RealConvertBytes(Kernel*, Coroutine*, uint8* stack, uint32 top)//byte, byte, byte, byte, byte, byte, byte, byte (real)
+String RealConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//byte, byte, byte, byte, byte, byte, byte, byte (real)
 {
 	RETURN_VALUE(uint64, 0) = PARAMETER_VALUE(8, uint64, 0);
 	return String();
@@ -818,14 +818,14 @@ String StringConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)/
 #pragma endregion 字节码转换
 
 #pragma region 数学计算
-String integer_Abs(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (integer)
+String integer_Abs(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer)
 {
 	integer value = PARAMETER_VALUE(1, integer, 0);
 	RETURN_VALUE(integer, 0) = value < 0 ? -value : value;
 	return String();
 }
 
-String integer_Clamp(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer, integer)
+String integer_Clamp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer, integer)
 {
 	integer value = PARAMETER_VALUE(1, integer, 0);
 	integer min = PARAMETER_VALUE(1, integer, 8);
@@ -840,7 +840,7 @@ String integer_GetRandomInt(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	return String();
 }
 
-String integer_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer)
+String integer_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer)
 {
 	integer a = PARAMETER_VALUE(1, integer, 0);
 	integer b = PARAMETER_VALUE(1, integer, 8);
@@ -848,7 +848,7 @@ String integer_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (inte
 	return String();
 }
 
-String integer_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer)
+String integer_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer)
 {
 	integer a = PARAMETER_VALUE(1, integer, 0);
 	integer b = PARAMETER_VALUE(1, integer, 8);
@@ -856,32 +856,32 @@ String integer_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (inte
 	return String();
 }
 
-String real_Abs(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Abs(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	real value = PARAMETER_VALUE(1, real, 0);
 	RETURN_VALUE(real, 0) = value < 0 ? -value : value;
 	return String();
 }
 
-String real_Acos(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Acos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Acos(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Asin(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Asin(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Asin(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Atan(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Atan(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Atan(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Atan2(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real)
+String real_Atan2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real)
 {
 	real y = PARAMETER_VALUE(1, real, 0);
 	real x = PARAMETER_VALUE(1, real, 8);
@@ -889,13 +889,13 @@ String real_Atan2(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, re
 	return String();
 }
 
-String real_Ceil(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Ceil(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Ceil(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Clamp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real, real)
+String real_Clamp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real, real)
 {
 	real value = PARAMETER_VALUE(1, real, 0);
 	real min = PARAMETER_VALUE(1, real, 8);
@@ -904,19 +904,19 @@ String real_Clamp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, re
 	return String();
 }
 
-String real_Clamp01(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Clamp01(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Clamp01(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Cos(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Cos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Cos(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Floor(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Floor(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Floor(PARAMETER_VALUE(1, real, 0));
 	return String();
@@ -928,7 +928,7 @@ String real_GetRandomReal(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)/
 	return String();
 }
 
-String real_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real, real)
+String real_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real, real)
 {
 	real a = PARAMETER_VALUE(1, real, 0);
 	real b = PARAMETER_VALUE(1, real, 8);
@@ -937,7 +937,7 @@ String real_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, rea
 	return String();
 }
 
-String real_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real)
+String real_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real)
 {
 	real a = PARAMETER_VALUE(1, real, 0);
 	real b = PARAMETER_VALUE(1, real, 8);
@@ -945,7 +945,7 @@ String real_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real
 	return String();
 }
 
-String real_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real)
+String real_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real)
 {
 	real a = PARAMETER_VALUE(1, real, 0);
 	real b = PARAMETER_VALUE(1, real, 8);
@@ -953,25 +953,25 @@ String real_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real, real
 	return String();
 }
 
-String real_Round(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Round(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Round(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Sign(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Sign(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Sign(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Sin(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Sin(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Sin(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_SinCos(Kernel*, Coroutine*, uint8* stack, uint32 top)//real, real (real)
+String real_SinCos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real, real (real)
 {
 	real value = PARAMETER_VALUE(2, real, 0);
 	RETURN_VALUE(real, 0) = MathReal::Sin(value);
@@ -979,19 +979,19 @@ String real_SinCos(Kernel*, Coroutine*, uint8* stack, uint32 top)//real, real (r
 	return String();
 }
 
-String real_Sqrt(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Sqrt(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Sqrt(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Tan(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Tan(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Tan(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real2_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
+String real2_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -999,7 +999,7 @@ String real2_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, 
 	return String();
 }
 
-String real2_Cross(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
+String real2_Cross(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1007,7 +1007,7 @@ String real2_Cross(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, 
 	return String();
 }
 
-String real2_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
+String real2_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1015,7 +1015,7 @@ String real2_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real2, re
 	return String();
 }
 
-String real2_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2, real)
+String real2_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2, real)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1024,7 +1024,7 @@ String real2_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, 
 	return String();
 }
 
-String real2_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2)
+String real2_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1032,7 +1032,7 @@ String real2_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, r
 	return String();
 }
 
-String real2_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2)
+String real2_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1040,7 +1040,7 @@ String real2_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 (real2, r
 	return String();
 }
 
-String real3_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real3, real3)
+String real3_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1048,7 +1048,7 @@ String real3_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real3, 
 	return String();
 }
 
-String real3_Cross(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
+String real3_Cross(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1056,7 +1056,7 @@ String real3_Cross(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3,
 	return String();
 }
 
-String real3_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real3, real3)
+String real3_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1064,7 +1064,7 @@ String real3_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real3, re
 	return String();
 }
 
-String real3_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3, real)
+String real3_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3, real)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1073,7 +1073,7 @@ String real3_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, 
 	return String();
 }
 
-String real3_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
+String real3_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1081,7 +1081,7 @@ String real3_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, r
 	return String();
 }
 
-String real3_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
+String real3_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1089,7 +1089,7 @@ String real3_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 (real3, r
 	return String();
 }
 
-String real4_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real4, real4)
+String real4_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1097,7 +1097,7 @@ String real4_Angle(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real4, 
 	return String();
 }
 
-String real4_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real4, real4)
+String real4_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1105,7 +1105,7 @@ String real4_Dot(Kernel*, Coroutine*, uint8* stack, uint32 top)//real (real4, re
 	return String();
 }
 
-String real4_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4, real)
+String real4_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4, real)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1114,7 +1114,7 @@ String real4_Lerp(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, 
 	return String();
 }
 
-String real4_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4)
+String real4_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1122,7 +1122,7 @@ String real4_Max(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, r
 	return String();
 }
 
-String real4_Min(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4)
+String real4_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1206,7 +1206,7 @@ String GetAssembles(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Refle
 	return String();
 }
 
-String GetCurrentCoroutineInstantID(Kernel*, Coroutine* coroutine, uint8* stack, uint32 top)//integer ()
+String GetCurrentCoroutineInstantID(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)//integer ()
 {
 	RETURN_VALUE(integer, 0) = (integer)coroutine->instanceID;
 	return String();
@@ -1245,6 +1245,8 @@ String integer_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//s
 {
 	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, integer, 0));
 	kernel->stringAgency->Reference(result.index);
+	uint32 value = ((uint32*)(stack + top + SIZE(Frame)))[0];
+	string& str = *(string*)(IS_LOCAL(value) ? (stack + LOCAL_ADDRESS(value)) : (kernel->libraryAgency->data.GetPointer() + (value)));
 	kernel->stringAgency->Release(RETURN_VALUE(string, 0));
 	RETURN_VALUE(string, 0) = result.index;
 	return String();
@@ -1259,55 +1261,55 @@ String real_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//stri
 	return String();
 }
 
-String real2_Normalized(Kernel*, Coroutine*, uint8* stack, uint32 top)//real2 real2.()
+String real2_Normalized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 real2.()
 {
 	RETURN_VALUE(Real2, 0) = Normalized(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
-String real2_Magnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real2.()
+String real2_Magnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real2.()
 {
 	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
-String real2_SqrMagnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real2.()
+String real2_SqrMagnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real2.()
 {
 	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
-String real3_Normalized(Kernel*, Coroutine*, uint8* stack, uint32 top)//real3 real3.()
+String real3_Normalized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 real3.()
 {
 	RETURN_VALUE(Real3, 0) = Normalized(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
-String real3_Magnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real3.()
+String real3_Magnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real3.()
 {
 	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
-String real3_SqrMagnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real3.()
+String real3_SqrMagnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real3.()
 {
 	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
-String real4_Normalized(Kernel*, Coroutine*, uint8* stack, uint32 top)//real4 real4.()
+String real4_Normalized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 real4.()
 {
 	RETURN_VALUE(Real4, 0) = Normalized(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
-String real4_Magnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real4.()
+String real4_Magnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real4.()
 {
 	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
-String real4_SqrMagnitude(Kernel*, Coroutine*, uint8* stack, uint32 top)//real real4.()
+String real4_SqrMagnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real4.()
 {
 	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real4, 0));
 	return String();
@@ -1720,7 +1722,7 @@ String type_GetSpace(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Refl
 	return String();
 }
 
-String type_GetTypeCode(Kernel*, Coroutine*, uint8* stack, uint32 top)//Reflection.TypeCode type.()
+String type_GetTypeCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.TypeCode type.()
 {
 	Type* type = &PARAMETER_VALUE(1, Type, 0);
 	integer* result = &RETURN_VALUE(integer, 0);
@@ -1774,7 +1776,7 @@ String type_IsAssignable(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 	return String();
 }
 
-String type_IsValid(Kernel*, Coroutine*, uint8* stack, uint32 top)//bool type.()
+String type_IsValid(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool type.()
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0).code != TypeCode::Invalid;
 	return String();
@@ -2072,7 +2074,7 @@ String type_CreateArray(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//h
 	return String();
 }
 
-String type_GetArrayRank(Kernel*, Coroutine*, uint8* stack, uint32 top)
+String type_GetArrayRank(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Type, 0).dimension;
 	return String();
@@ -2092,7 +2094,7 @@ String string_GetLength(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//i
 	return String();
 }
 
-String string_GetStringID(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer string.()
+String string_GetStringID(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer string.()
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, string, 0);
 	return String();
@@ -2116,13 +2118,13 @@ String string_ToReal(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real
 	return String();
 }
 
-String entity_GetEntityID(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer entity.()
+String entity_GetEntityID(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer entity.()
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Entity, 0);
 	return String();
 }
 
-String handle_GetHandleID(Kernel*, Coroutine*, uint8* stack, uint32 top)//integer handle.()
+String handle_GetHandleID(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer handle.()
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Handle, 0);
 	return String();

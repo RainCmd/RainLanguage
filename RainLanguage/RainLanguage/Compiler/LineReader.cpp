@@ -24,5 +24,6 @@ bool LineReader::ReadLine()
 			end++;
 			bank = false;
 		}
-	return false;
+	line++;
+	return start < end;
 }

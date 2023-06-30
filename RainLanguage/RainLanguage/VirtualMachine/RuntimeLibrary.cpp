@@ -389,7 +389,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				parameters.Add(LocalToGlobal(self->index, maps, importFunction->parameters[z]));
 			returns.Clear();
 			for (uint32 z = 0; z < importFunction->returns.Count(); z++)
-				parameters.Add(LocalToGlobal(self->index, maps, importFunction->returns[z]));
+				returns.Add(LocalToGlobal(self->index, maps, importFunction->returns[z]));
 
 			for (uint32 z = 0; z < runtimeStruct->functions.Count(); z++)
 			{
@@ -471,7 +471,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				parameters.Add(LocalToGlobal(self->index, maps, importFunction->parameters[z]));
 			returns.Clear();
 			for (uint32 z = 0; z < importFunction->returns.Count(); z++)
-				parameters.Add(LocalToGlobal(self->index, maps, importFunction->returns[z]));
+				returns.Add(LocalToGlobal(self->index, maps, importFunction->returns[z]));
 
 			for (uint32 z = 0; z < runtimeClass->functions.Count(); z++)
 			{
@@ -509,7 +509,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				parameters.Add(LocalToGlobal(self->index, maps, importFunction->parameters[z]));
 			returns.Clear();
 			for (uint32 z = 0; z < importFunction->returns.Count(); z++)
-				parameters.Add(LocalToGlobal(self->index, maps, importFunction->returns[z]));
+				returns.Add(LocalToGlobal(self->index, maps, importFunction->returns[z]));
 
 			for (uint32 z = 0; z < runtimeInterface->functions.Count(); z++)
 			{
@@ -538,7 +538,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		ASSERT(IsEquals(parameters, runtimeDelegate->parameters), "委托参数类型不匹配");
 		returns.Clear();
 		for (uint32 y = 0; y < importDelegate->returns.Count(); y++)
-			parameters.Add(LocalToGlobal(self->index, maps, importDelegate->returns[y]));
+			returns.Add(LocalToGlobal(self->index, maps, importDelegate->returns[y]));
 		ASSERT(IsEquals(returns, runtimeDelegate->returns), "委托返回值类型不匹配");
 
 		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Delegate, x));
@@ -551,7 +551,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		const RuntimeCoroutine* runtimeCoroutine = &runtimeLibrary->coroutines[maps[importIndex].coroutines[x]];
 		returns.Clear();
 		for (uint32 y = 0; y < importCoroutine->returns.Count(); y++)
-			parameters.Add(LocalToGlobal(self->index, maps, importCoroutine->returns[y]));
+			returns.Add(LocalToGlobal(self->index, maps, importCoroutine->returns[y]));
 		ASSERT(IsEquals(returns, runtimeCoroutine->returns), "携程返回值类型不匹配");
 
 		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Coroutine, x));
@@ -568,7 +568,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 			parameters.Add(LocalToGlobal(self->index, maps, importFunction->parameters[y]));
 		returns.Clear();
 		for (uint32 y = 0; y < importFunction->returns.Count(); y++)
-			parameters.Add(LocalToGlobal(self->index, maps, importFunction->returns[y]));
+			returns.Add(LocalToGlobal(self->index, maps, importFunction->returns[y]));
 
 		for (uint32 y = 0; y < space->functions.Count(); y++)
 		{
@@ -598,7 +598,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 			parameters.Add(LocalToGlobal(self->index, maps, importNative->parameters[y]));
 		returns.Clear();
 		for (uint32 y = 0; y < importNative->returns.Count(); y++)
-			parameters.Add(LocalToGlobal(self->index, maps, importNative->returns[y]));
+			returns.Add(LocalToGlobal(self->index, maps, importNative->returns[y]));
 
 		for (uint32 y = 0; y < space->natives.Count(); y++)
 		{
