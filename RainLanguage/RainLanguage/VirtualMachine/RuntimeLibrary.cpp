@@ -122,7 +122,7 @@ RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, const Library* libr
 	LibraryAgency* agency = kernel->libraryAgency;
 	agency->code.SetCount(codeOffset);
 	agency->code.Add(library->code);
-	agency->data.SetCount(codeOffset);
+	agency->data.SetCount(dataOffset);
 	agency->data.Add(library->constData);
 	agency->data.SetCount(dataOffset + library->dataSize);
 	Mzero(agency->data.GetPointer() + dataOffset + library->constData.Count(), library->dataSize - library->constData.Count());
