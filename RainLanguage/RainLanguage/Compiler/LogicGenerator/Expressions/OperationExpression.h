@@ -20,7 +20,7 @@ class VariableExpression;
 class OperationPostIncrementExpression :public Expression//x++ x--
 {
 public:
-	VariableExpression* variable;
+	VariableExpression* variable;//这个指针由operation析构释放
 	Expression* operation;
 	OperationPostIncrementExpression(const Anchor& anchor, const List<Type, true>& returns, VariableExpression* variable, Expression* operation) :Expression(ExpressionType::OperationPostIncrementExpression, anchor, returns), variable(variable), operation(operation)
 	{
@@ -34,7 +34,7 @@ public:
 class OperationPrevIncrementExpression :public Expression//++x --x
 {
 public:
-	VariableExpression* variable;
+	VariableExpression* variable;//这个指针由operation析构释放
 	Expression* operation;
 	OperationPrevIncrementExpression(const Anchor& anchor, const List<Type, true>& returns, VariableExpression* variable, Expression* operation) :Expression(ExpressionType::OperationPrevIncrementExpression, anchor, returns), variable(variable), operation(operation)
 	{

@@ -21,7 +21,6 @@ void OperationPostIncrementExpression::Generator(LogicGenerateParameter& paramet
 	if (ContainAll(operation->type, ExpressionType::InstructOperationExpression))
 	{
 		LogicGenerateParameter variableParameter = LogicGenerateParameter(parameter, 1);
-		variableParameter.results[0] = parameter.variableGenerator->DecareTemporary(parameter.manager, returns[0]);
 		variable->Generator(variableParameter);
 		operation->Generator(parameter);
 		if (ContainAll(variable->type, ExpressionType::VariableMemberExpression))
@@ -33,7 +32,6 @@ void OperationPostIncrementExpression::Generator(LogicGenerateParameter& paramet
 
 OperationPostIncrementExpression::~OperationPostIncrementExpression()
 {
-	delete variable;
 	delete operation;
 }
 
@@ -46,6 +44,5 @@ void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& paramet
 
 OperationPrevIncrementExpression::~OperationPrevIncrementExpression()
 {
-	delete variable;
 	delete operation;
 }
