@@ -85,6 +85,7 @@ public:
 	Expression(ExpressionType type, const Anchor& anchor, const List<Type, true>& returns) :type(type), anchor(anchor), returns(returns), attribute(Attribute::Invalid) {}
 	virtual void Generator(LogicGenerateParameter& parameter);
 	virtual void GeneratorAssignment(LogicGenerateParameter& parameter);
+	virtual void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	virtual bool TryEvaluation(bool& value, LogicGenerateParameter& parameter);
 	virtual bool TryEvaluation(uint8& value, LogicGenerateParameter& parameter);
 	virtual bool TryEvaluation(character& value, LogicGenerateParameter& parameter);

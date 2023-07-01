@@ -3,26 +3,34 @@
 
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
-	const LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
-	if (parameter.results[0].IsInvalid()) parameter.results[0] = variable;
-	else LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.results[0], variable);
+	parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
 }
 
 void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]), parameter.results[0]);
+	if (parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]), parameter.results[0]);
+}
+
+void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
 }
 
 void VariableGlobalExpression::Generator(LogicGenerateParameter& parameter)
 {
-	const LogicVariable variable = LogicVariable(declaration, returns[0], 0);
-	if (parameter.results[0].IsInvalid()) parameter.results[0] = variable;
-	else LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.results[0], variable);
+	parameter.results[0] = LogicVariable(declaration, returns[0], 0);
 }
 
 void VariableGlobalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(declaration, returns[0], 0), parameter.results[0]);
+	if (parameter.results[0] != LogicVariable(declaration, returns[0], 0))
+		LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(declaration, returns[0], 0), parameter.results[0]);
+}
+
+void VariableGlobalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	parameter.results[index] = LogicVariable(declaration, returns[0], 0);
 }
 
 bool VariableGlobalExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)
@@ -157,25 +165,38 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
 	{
 		ASSERT_DEBUG(declaration.category == DeclarationCategory::StructVariable, "不是结构体字段");
 		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
-		const LogicVariable member = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
-		if (parameter.results[0].IsInvalid())parameter.results[0] = member;
-		else LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.results[0], member);
+		parameter.results[0] = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
 	}
 }
 
 void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-	target->Generator(targetParameter);
-	const Type& type = returns[0];
-	if (IsHandleType(target->returns[0]))LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, parameter.GetResult(0, returns[0]));
-	else
+	if (declaration.category == DeclarationCategory::ClassVariable)
 	{
-		ASSERT_DEBUG(declaration.category == DeclarationCategory::StructVariable, "不是结构体字段");
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, parameter.results[0]);
+	}
+	else if (declaration.category == DeclarationCategory::StructVariable)
+	{
+		if (parameter.results[0] == logicVariable) return;
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
 		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
-		const LogicVariable member = LogicVariable(targetParameter.results[0], type, abstractVariable->address);
-		if (parameter.results[0].IsInvalid())parameter.results[0] = member;
-		else LogicVariabelAssignment(parameter.manager, parameter.generator, member, parameter.results[0]);
+		const LogicVariable member = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, member, parameter.results[0]);
+	}
+	else EXCEPTION("无效的声明类型");
+}
+
+void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	if (declaration.category == DeclarationCategory::StructVariable)
+	{
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
+		parameter.results[index] = logicVariable = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
 	}
 }
 

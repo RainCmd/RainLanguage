@@ -32,7 +32,7 @@ LogicVariable VariableGenerator::GetLocal(DeclarationManager* manager, uint32 in
 	uint8 alignment;
 	uint32 size = manager->GetStackSize(type, alignment);
 	localAddress = MemoryAlignment(localAddress, alignment);
-	variable = new Variable(new CodeLocalVariableReference(), localAddress, type);
+	variable = new Variable(new CodeLocalVariableReference(localAddress), localAddress, type);
 	localAddress += size;
 	locals.Set(index, variable);
 	return LogicVariable(variable->reference, variable->address, variable->type, 0);

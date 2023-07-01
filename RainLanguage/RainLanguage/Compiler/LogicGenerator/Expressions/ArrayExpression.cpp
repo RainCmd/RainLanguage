@@ -4,11 +4,10 @@
 
 void ArrayCreateExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
 	LogicGenerateParameter lengthParameter = LogicGenerateParameter(parameter, 1);
 	length->Generator(lengthParameter);
 	parameter.generator->WriteCode(Instruct::BASE_CreateArray);
-	parameter.generator->WriteCode(result);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCodeGlobalReference(Type(returns[0], returns[0].dimension - 1));
 	parameter.generator->WriteCode(lengthParameter.results[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
@@ -47,7 +46,7 @@ ArrayInitExpression::~ArrayInitExpression()
 	delete elements;
 }
 
-void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, LogicVariable& result, Expression* indexExpression, LogicVariable& arrayVariable)
+void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVariable& result, Expression* indexExpression, LogicVariable& arrayVariable)
 {
 	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
 	indexExpression->Generator(indexParameter);
@@ -123,13 +122,12 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, LogicVariable& 
 
 void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
 	parameter.generator->WriteCode(arrayParameter.results[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	GeneratorArrayEvaluation(parameter, result, indexExpression, arrayParameter.results[0]);
+	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, returns[0]), indexExpression, arrayParameter.results[0]);
 }
 
 void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
@@ -240,13 +238,12 @@ ArrayQuestionEvaluationExpression::~ArrayQuestionEvaluationExpression()
 
 void StringEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, 1);
 	source->Generator(sourceParameter);
 	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 2);
 	index->Generator(indexParameter);
 	parameter.generator->WriteCode(Instruct::STRING_Element);
-	parameter.generator->WriteCode(result);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCode(sourceParameter.results[0]);
 	parameter.generator->WriteCode(indexParameter.results[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
@@ -260,7 +257,6 @@ StringEvaluationExpression::~StringEvaluationExpression()
 
 void ArraySubExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, 1);
 	source->Generator(sourceParameter);
 	if (returns[0].dimension)
@@ -271,9 +267,9 @@ void ArraySubExpression::Generator(LogicGenerateParameter& parameter)
 	}
 	LogicGenerateParameter rangeParameter = LogicGenerateParameter(parameter, 2);
 	range->Generator(rangeParameter);
-	if(returns[0].dimension) parameter.generator->WriteCode(Instruct::HANDLE_ArrayCut);
+	if (returns[0].dimension) parameter.generator->WriteCode(Instruct::HANDLE_ArrayCut);
 	else parameter.generator->WriteCode(Instruct::STRING_Sub);
-	parameter.generator->WriteCode(result);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCode(sourceParameter.results[0]);
 	parameter.generator->WriteCode(rangeParameter.results[0]);
 	parameter.generator->WriteCode(rangeParameter.results[1]);
@@ -288,7 +284,6 @@ ArraySubExpression::~ArraySubExpression()
 
 void ArrayQuestionSubExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, 1);
 	source->Generator(sourceParameter);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
@@ -298,7 +293,7 @@ void ArrayQuestionSubExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter rangeParameter = LogicGenerateParameter(parameter, 2);
 	range->Generator(rangeParameter);
 	parameter.generator->WriteCode(Instruct::HANDLE_ArrayCut);
-	parameter.generator->WriteCode(result);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCode(sourceParameter.results[0]);
 	parameter.generator->WriteCode(rangeParameter.results[0]);
 	parameter.generator->WriteCode(rangeParameter.results[1]);

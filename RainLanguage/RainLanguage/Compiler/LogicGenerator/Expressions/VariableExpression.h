@@ -18,8 +18,10 @@ public:
 	{
 		this->attribute = CombineType(attribute, type);
 	}
+
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 };
 
 class VariableGlobalExpression :public VariableExpression
@@ -32,6 +34,7 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	bool TryEvaluation(bool& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(uint8& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(character& value, LogicGenerateParameter& parameter);
@@ -43,6 +46,7 @@ public:
 
 class VariableMemberExpression :public VariableExpression
 {
+	LogicVariable logicVariable;
 public:
 	Expression* target;
 	CompilingDeclaration declaration;
@@ -52,6 +56,7 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	~VariableMemberExpression();
 };
 

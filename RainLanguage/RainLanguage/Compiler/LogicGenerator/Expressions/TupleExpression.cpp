@@ -29,6 +29,15 @@ void TupleExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 	}
 }
 
+void TupleExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	for (uint32 i = 0; i < expressions.Count(); i++)
+	{
+		expressions[i]->FillResultVariable(parameter, index);
+		index += expressions[i]->returns.Count();
+	}
+}
+
 bool TupleExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)
 {
 	for (uint32 i = 0; i < expressions.Count(); i++)
@@ -109,6 +118,7 @@ bool TupleExpression::TryEvaluationIndices(List<integer, true>& value, LogicGene
 TupleExpression::~TupleExpression()
 {
 	for (uint32 i = 0; i < expressions.Count(); i++) delete expressions[i];
+	expressions.Clear();
 }
 
 void TupleEvaluationExpression::Generator(LogicGenerateParameter& parameter)
@@ -131,6 +141,7 @@ TupleEvaluationExpression::~TupleEvaluationExpression()
 
 void TupleAssignmentExpression::Generator(LogicGenerateParameter& parameter)
 {
+	left->FillResultVariable(parameter, 0);
 	right->Generator(parameter);
 	left->GeneratorAssignment(parameter);
 }

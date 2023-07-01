@@ -13,6 +13,7 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	bool TryEvaluation(bool& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(uint8& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(character& value, LogicGenerateParameter& parameter);

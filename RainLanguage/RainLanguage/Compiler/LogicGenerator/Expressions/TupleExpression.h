@@ -14,6 +14,7 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	bool TryEvaluation(bool& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(uint8& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(character& value, LogicGenerateParameter& parameter);
@@ -41,7 +42,7 @@ public:
 	{
 		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns[0]);
 		else attribute = Attribute::Tuple;
-		attribute |= source->attribute & Attribute::Assignable;
+		attribute |= source->attribute & ~Attribute::Assignable;
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~TupleEvaluationExpression();

@@ -14,13 +14,35 @@ void StructMemberExpression::Generator(LogicGenerateParameter& parameter)
 
 void StructMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
+	if (logicVariables.Count())
+	{
+		for (uint32 i = 0; i < logicVariables.Count(); i++)
+			if (logicVariables[i] != parameter.results[i])
+				LogicVariabelAssignment(parameter.manager, parameter.generator, logicVariables[i], parameter.results[i]);
+	}
+	else
+	{
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		AbstractStruct& abstractStruct = parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
+		target->Generator(targetParameter);
+		for (uint32 i = 0; i < indices.Count(); i++)
+		{
+			AbstractVariable& memberVariable = abstractStruct.variables[(uint32)indices[i]];
+			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(targetParameter.results[0], memberVariable.type, memberVariable.address), parameter.results[i]);
+		}
+	}
+}
+
+void StructMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
 	AbstractStruct* abstractStruct = &parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
 	for (uint32 i = 0; i < indices.Count(); i++)
 	{
 		AbstractVariable* memberVariable = &abstractStruct->variables[(uint32)indices[i]];
-		LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(targetParameter.results[0], memberVariable->type, memberVariable->address), parameter.GetResult(i, returns[i]));
+		new (logicVariables.Add())LogicVariable(targetParameter.results[0], memberVariable->type, memberVariable->address);
+		parameter.results[index + i] = logicVariables[i];
 	}
 }
 
@@ -53,32 +75,57 @@ void VectorMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
-	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
-	parameter.generator->WriteCode(targetParameter.results[0]);
-	uint32 flag = 0;
-	for (uint32 i = 0; i < indices.Count(); i++)
+	if (indices.Count() == 1) parameter.results[0] = LogicVariable(targetParameter.results[0], returns[0], indices[0] * SIZE(real));
+	else
 	{
-		flag <<= 5;
-		flag |= VECTOR_FLAG(i, indices[i]);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
+		parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+		parameter.generator->WriteCode(targetParameter.results[0]);
+		uint32 flag = 0;
+		for (uint32 i = 0; i < indices.Count(); i++)
+		{
+			flag <<= 5;
+			flag |= VECTOR_FLAG(i, indices[i]);
+		}
+		parameter.generator->WriteCode(flag);
 	}
-	parameter.generator->WriteCode(flag);
 }
 
 void VectorMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-	target->Generator(targetParameter);
-	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
-	parameter.generator->WriteCode(targetParameter.results[0]);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
-	uint32 flag = 0;
-	for (uint32 i = 0; i < indices.Count(); i++)
+	if (indices.Count() > 1)
 	{
-		flag <<= 5;
-		flag |= VECTOR_FLAG(indices[i], i);
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
+		parameter.generator->WriteCode(targetParameter.results[0]);
+		parameter.generator->WriteCode(parameter.results[0]);
+		uint32 flag = 0;
+		for (uint32 i = 0; i < indices.Count(); i++)
+		{
+			flag <<= 5;
+			flag |= VECTOR_FLAG(indices[i], i);
+		}
+		parameter.generator->WriteCode(flag);
 	}
-	parameter.generator->WriteCode(flag);
+	else if (parameter.results[0] != logicVariable)
+	{
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
+		parameter.generator->WriteCode(LogicVariable(targetParameter.results[0], returns[0], indices[0] * SIZE(real)));
+		parameter.generator->WriteCode(parameter.results[0]);
+	}
+}
+
+void VectorMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	if (indices.Count() == 1)
+	{
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		parameter.results[index] = logicVariable = LogicVariable(targetParameter.results[0], returns[0], indices[0] * SIZE(real));
+	}
 }
 
 VectorMemberExpression::~VectorMemberExpression()

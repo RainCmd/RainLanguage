@@ -4,10 +4,11 @@
 
 class StructMemberExpression :public Expression
 {
+	List<LogicVariable, true> logicVariables;
 public:
 	Expression* target;
 	List<integer, true> indices;
-	inline StructMemberExpression(const Anchor& anchor, Expression* target, const List<integer, true>& indices, const List<Type, true>& returns) :Expression(ExpressionType::StructMemberExpression, anchor, returns), target(target), indices(indices)
+	inline StructMemberExpression(const Anchor& anchor, Expression* target, const List<integer, true>& indices, const List<Type, true>& returns) :Expression(ExpressionType::StructMemberExpression, anchor, returns), logicVariables(0), target(target), indices(indices)
 	{
 		if (returns.Count() == 1) attribute = CombineType(Attribute::Value, returns.Peek());
 		else attribute = Attribute::Tuple;
@@ -15,6 +16,7 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	~StructMemberExpression();
 };
 
@@ -34,15 +36,17 @@ public:
 
 class VectorMemberExpression :public VariableExpression
 {
+	LogicVariable logicVariable;
 public:
 	Expression* target;
 	List<uint32, true> indices;
-	inline VectorMemberExpression(const Anchor& anchor, Expression* target, const List<uint32, true>& indices, const Type& variableType) :VariableExpression(ExpressionType::VectorMemberExpression, anchor, variableType), target(target), indices(indices)
+	inline VectorMemberExpression(const Anchor& anchor, Expression* target, const List<uint32, true>& indices, const Type& variableType) :VariableExpression(ExpressionType::VectorMemberExpression, anchor, variableType), logicVariable(), target(target), indices(indices)
 	{
 		attribute = target->attribute;
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 	~VectorMemberExpression();
 };
 

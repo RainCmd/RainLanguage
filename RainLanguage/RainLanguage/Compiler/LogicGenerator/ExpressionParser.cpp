@@ -135,6 +135,7 @@ bool TryCreateVectorMemberExpression(const Anchor& anchor, Expression* target, V
 	else if (indices.Count() == 2) result = new VectorMemberExpression(anchor, target, indices, TYPE_Real2);
 	else if (indices.Count() == 3) result = new VectorMemberExpression(anchor, target, indices, TYPE_Real3);
 	else if (indices.Count() == 4) result = new VectorMemberExpression(anchor, target, indices, TYPE_Real4);
+	else return false;
 	return true;
 }
 

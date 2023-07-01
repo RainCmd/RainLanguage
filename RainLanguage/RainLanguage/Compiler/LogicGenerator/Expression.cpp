@@ -7,6 +7,8 @@ void Expression::GeneratorAssignment(LogicGenerateParameter&)
     EXCEPTION("执行抽象类型的函数");
 }
 
+void Expression::FillResultVariable(LogicGenerateParameter&, uint32) {}
+
 bool Expression::TryEvaluation(bool&, LogicGenerateParameter&)
 {
     return false;

@@ -14,6 +14,11 @@ void CastExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 	expression->GeneratorAssignment(parameter);
 }
 
+void CastExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	expression->FillResultVariable(parameter, index);
+}
+
 bool CastExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)
 {
 	return expression->TryEvaluation(value, parameter);

@@ -42,6 +42,7 @@ private:
 	uint32 address;
 	bool assigned;
 public:
+	explicit inline CodeLocalVariableReference(uint32 address) :references(0), address(address), assigned(true) {}
 	inline CodeLocalVariableReference() :references(0), address(0), assigned(false) {}
 	void SetAddress(Generator* generator, uint32 address);
 	void AddReference(Generator* generator, uint32 offset);
