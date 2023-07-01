@@ -1,0 +1,8 @@
+space native Print(string)
+
+space integer Func(integer i)
+    return i
+
+public Main()
+    integer i = 321
+    Print("hellow world " + Func(i++))

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="List&lt;*&gt;">
+		<DisplayString>count = {count}</DisplayString>
+		<Expand>
+			<Item Name="count">count</Item>
+			<Item Name="size">size</Item>
+			<ArrayItems>
+				<Size>count</Size>
+				<ValuePointer>values</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="Dictionary&lt;*&gt;::Slot">
+		<DisplayString>[{key}] {value}</DisplayString>
+	</Type>
+	<Type Name="Dictionary&lt;*&gt;">
+		<DisplayString>count = {count}</DisplayString>
+		<Expand>
+			<Item Name="count">count</Item>
+			<Item Name="size">size</Item>
+			<ArrayItems>
+				<Size>size</Size>
+				<ValuePointer>buckets</ValuePointer>
+			</ArrayItems>
+			<Item Name="top">top</Item>
+			<ArrayItems>
+				<Size>top</Size>
+				<ValuePointer>slots</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="String">
+		<DisplayString Condition="pool!=0">{pool->characters.values+(pool->slots+index)->position,su}</DisplayString>
+		<DisplayString Condition="pool==0">""</DisplayString>
+		<StringView Condition="pool!=0">pool->characters.values + (pool->slots + index)->position,su</StringView>
+		<Expand>
+			<Item Name="index">index</Item>
+			<Item Name="pool">pool</Item>
+			<Item Name="slot">pool->slots + index</Item>
+			<ArrayItems Condition="pool!=0">
+				<Size>(pool->slots+index)->length</Size>
+				<ValuePointer>pool->characters.values+(pool->slots+index)->position</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="StringAgency">
+		<DisplayString>top = {top}, size = {size}</DisplayString>
+		<Expand>
+			<Item Name="characters">characters</Item>
+			<Item Name="free">free</Item>
+			<Item Name="head">head</Item>
+			<Item Name="tail">tail</Item>
+			<Item Name="characterHold">characterHold</Item>
+			<Item Name="slotHold">slotHold</Item>
+			<Item Name="characterGCHold">characterGCHold</Item>
+			<Item Name="slotGCHold">slotGCHold</Item>
+			<ArrayItems>
+				<Size>size</Size>
+				<ValuePointer>buckets</ValuePointer>
+			</ArrayItems>
+			<ArrayItems>
+				<Size>top</Size>
+				<ValuePointer>slots</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="Span&lt;*&gt;">
+		<DisplayString>count = {count}</DisplayString>
+		<Expand>
+			<Item Name="Souce">*source</Item>
+			<Item Name="start">start</Item>
+			<ArrayItems>
+				<Size>count</Size>
+				<ValuePointer>source->values+start</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+</AutoVisualizer>
