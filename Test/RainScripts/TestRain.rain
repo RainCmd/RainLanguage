@@ -1,8 +1,15 @@
 space native Print(string)
 
-space integer Func(integer i)
-    return i
+class SS
+    public integer x
+    public integer y
+    public SS(integer x, integer y)
+        this.x = x
+        this.y = y
+    public string Func()
+        return (x+y).ToString()
 
 public Main()
-    integer i = 321
-    Print("hellow world " + Func(i++))
+    SS ss = SS(123, 456)
+    ss.x++
+    Print("hellow world " + ss.Func())

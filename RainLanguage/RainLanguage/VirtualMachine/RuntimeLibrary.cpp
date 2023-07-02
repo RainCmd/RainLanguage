@@ -45,14 +45,14 @@ Declaration LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, cons
 	const LocalToGlobalMap& map = maps[declaration.library];
 	switch (declaration.code)
 	{
-	case TypeCode::Invalid:EXCEPTION("无效的类型");
-	case TypeCode::Struct: return Declaration(map.library->index, TypeCode::Struct, map.structs[declaration.index]);
-	case TypeCode::Enum: return Declaration(map.library->index, TypeCode::Enum, map.enums[declaration.index]);
-	case TypeCode::Handle: return Declaration(map.library->index, TypeCode::Handle, map.classes[declaration.index]);
-	case TypeCode::Interface: return Declaration(map.library->index, TypeCode::Interface, map.interfaces[declaration.index]);
-	case TypeCode::Delegate: return Declaration(map.library->index, TypeCode::Delegate, map.delegates[declaration.index]);
-	case TypeCode::Coroutine: return Declaration(map.library->index, TypeCode::Coroutine, map.coroutines[declaration.index]);
-	default:EXCEPTION("无效的类型");
+		case TypeCode::Invalid:EXCEPTION("无效的类型");
+		case TypeCode::Struct: return Declaration(map.library->index, TypeCode::Struct, map.structs[declaration.index]);
+		case TypeCode::Enum: return Declaration(map.library->index, TypeCode::Enum, map.enums[declaration.index]);
+		case TypeCode::Handle: return Declaration(map.library->index, TypeCode::Handle, map.classes[declaration.index]);
+		case TypeCode::Interface: return Declaration(map.library->index, TypeCode::Interface, map.interfaces[declaration.index]);
+		case TypeCode::Delegate: return Declaration(map.library->index, TypeCode::Delegate, map.delegates[declaration.index]);
+		case TypeCode::Coroutine: return Declaration(map.library->index, TypeCode::Coroutine, map.coroutines[declaration.index]);
+		default:EXCEPTION("无效的类型");
 	}
 }
 Type LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const Type& type)
@@ -63,18 +63,18 @@ MemberFunction LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, c
 {
 	switch (function.declaration.code)
 	{
-	case TypeCode::Invalid: break;
-	case TypeCode::Struct:
-		return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].structMemberFunctions[function.declaration.index][function.function]);
-	case TypeCode::Enum: break;
-	case TypeCode::Handle:
-		return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].classMemberFunctions[function.declaration.index][function.function]);
-	case TypeCode::Interface:
-		return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].interfaceMemberFunctions[function.declaration.index][function.function]);
-	case TypeCode::Delegate:
-	case TypeCode::Coroutine:
-	default:
-		break;
+		case TypeCode::Invalid: break;
+		case TypeCode::Struct:
+			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].structMemberFunctions[function.declaration.index][function.function]);
+		case TypeCode::Enum: break;
+		case TypeCode::Handle:
+			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].classMemberFunctions[function.declaration.index][function.function]);
+		case TypeCode::Interface:
+			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].interfaceMemberFunctions[function.declaration.index][function.function]);
+		case TypeCode::Delegate:
+		case TypeCode::Coroutine:
+		default:
+			break;
 	}
 	EXCEPTION("无效的TypeCode");
 }
@@ -414,7 +414,8 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 	{
 		const ImportClass* importClass = &importLibrary->classes[x];
 		const RuntimeClass* runtimeClass = &runtimeLibrary->classes[maps[importIndex].classes[x]];
-		ASSERT(LocalToGlobal(self->index, maps, importClass->parent) == runtimeClass->parents.Peek(), "父类类型不匹配");
+		if (importClass->parent.IsValid()) { ASSERT(LocalToGlobal(self->index, maps, importClass->parent) == runtimeClass->parents.Peek(), "父类类型不匹配"); }
+		else ASSERT(runtimeLibrary->index == LIBRARY_KERNEL && maps[importIndex].classes[x] == TYPE_Handle.index, "无效的类型");
 		for (uint32 i = 0; i < importClass->inherits.Count(); i++)
 			ASSERT(runtimeClass->inherits.Contains(LocalToGlobal(self->index, maps, importClass->inherits[i])), "缺少继承类型");
 		List<uint32, true>* memberFunctions = new (maps[importIndex].classMemberFunctions.Add())List<uint32, true>(importClass->functions.Count());
@@ -685,6 +686,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 				Set<Declaration, true>::Iterator iterator = classRuntimeParent->inherits.GetIterator();
 				while (iterator.Next())
 					inherits.Add(iterator.Current());
+				if (classParent == TYPE_Handle) break;
 				classParent = classRuntimeParent->parents.Peek();
 			}
 		}

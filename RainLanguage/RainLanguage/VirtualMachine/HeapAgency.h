@@ -47,7 +47,7 @@ public:
 	Handle Alloc(const Type& elementType, integer length);
 	Handle Alloc(const Declaration& declaration);
 	void Alloc(const Type&) = delete;
-	inline bool IsValid(Handle handle) { return handle && handle < heads.Count() && !heads[handle].type.IsValid(); }
+	inline bool IsValid(Handle handle) { return handle && handle < heads.Count() && heads[handle].type.IsValid(); }
 	inline void StrongReference(Handle handle)
 	{
 		if (IsValid(handle))heads[handle].strong++;

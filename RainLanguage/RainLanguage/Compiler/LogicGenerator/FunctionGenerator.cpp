@@ -412,7 +412,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	}
 	else EXCEPTION("无效的函数类型");
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
-	if (returns.Count() && !CheckFunctionReturn(parameter.manager->messages, statements)) MESSAGE2(parameter.manager->messages, function->name, MessageType::ERROR_MISSING_RETURN);
+	if (function->declaration.category != DeclarationCategory::Constructor && returns.Count() && !CheckFunctionReturn(parameter.manager->messages, statements)) MESSAGE2(parameter.manager->messages, function->name, MessageType::ERROR_MISSING_RETURN);
 }
 
 FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(parameter.manager->compilingLibrary.GetName(declaration)), declaration(declaration), parameters(1), returns(0), statements(new BlockStatement(Anchor()))

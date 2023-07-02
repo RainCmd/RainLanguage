@@ -256,6 +256,7 @@ HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kerne
 {
 	destructorCallable.parameters.AddElement(TYPE_Handle, 0);
 	heap = Malloc<uint8>(size);
+	heads.Add();
 }
 
 Handle HeapAgency::Alloc(const Type& elementType, integer length)

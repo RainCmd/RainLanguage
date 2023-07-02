@@ -93,10 +93,7 @@ public:
 	List<FunctionInfo, true> functions;
 	Dictionary<uint32, MemberFunction, true> relocations;//包含所有继承类的接口和函数
 	uint32 destructor;//析构函数地址，INVALID表示没有析构函数
-	inline RuntimeClass(bool isPublic, const List<string, true>& attributes, string name, uint32 space, List<Declaration, true> parents, Set<Declaration, true> inherits, uint32 size, uint8 alignment, List<uint32, true> constructors, List<RuntimeMemberVariable> variables, List<FunctionInfo, true> functions, uint32 destructor)
-		:RuntimeInfo(isPublic, attributes, name, space), reflectionInherits(NULL), reflectionConstructors(NULL), reflectionFunctions(NULL), reflectionVariables(NULL), parents(parents), inherits(inherits), offset(INVALID), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions), relocations(0), destructor(destructor)
-	{
-	}
+	inline RuntimeClass(bool isPublic, const List<string, true>& attributes, string name, uint32 space, List<Declaration, true> parents, Set<Declaration, true> inherits, uint32 size, uint8 alignment, List<uint32, true> constructors, List<RuntimeMemberVariable> variables, List<FunctionInfo, true> functions, uint32 destructor) : RuntimeInfo(isPublic, attributes, name, space), reflectionInherits(NULL), reflectionConstructors(NULL), reflectionFunctions(NULL), reflectionVariables(NULL), parents(parents), inherits(inherits), offset(INVALID), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions), relocations(0), destructor(destructor) {}
 	inline void ColletcGCFields(Kernel* kernel) { GCFieldInfo::ColletcGCFields(kernel, variables); }
 };
 

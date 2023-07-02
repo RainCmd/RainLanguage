@@ -120,7 +120,7 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 			FIND_DECLARATION(FileType(file->parent, 0));
 			file->compiling->abstract->parent = file->compiling->parent = findType;
 		}
-		else file->compiling->parent = TYPE_Handle;
+		else file->compiling->abstract->parent = file->compiling->parent = TYPE_Handle;
 		for (uint32 y = 0; y < file->inherits.Count(); y++)
 		{
 			FIND_DECLARATION(file->inherits[y]);

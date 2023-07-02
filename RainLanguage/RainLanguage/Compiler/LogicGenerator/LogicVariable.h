@@ -5,6 +5,7 @@
 struct CodeLocalVariableReference;
 struct DeclarationManager;
 struct Generator;
+struct CodeLocalAddressReference;
 struct LogicVariable
 {
 	CompilingDeclaration declaration;
@@ -29,5 +30,5 @@ struct LogicVariable
 };
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right);
-void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember);
-void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, const LogicVariable& right);
+void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember, CodeLocalAddressReference* finallyAddress);
+void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, const LogicVariable& right, CodeLocalAddressReference* finallyAddress);

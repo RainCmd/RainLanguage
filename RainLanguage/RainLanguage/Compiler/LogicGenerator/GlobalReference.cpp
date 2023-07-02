@@ -102,6 +102,7 @@ void GlobalReference::AddAddressReference(const CompilingDeclaration& declaratio
 		uint32 function;
 		if (declaration.category == DeclarationCategory::Function) function = declaration.index;
 		else if (declaration.category == DeclarationCategory::StructFunction) function = manager->selfLibaray->structs[declaration.definition].functions[declaration.index];
+		else if (declaration.category == DeclarationCategory::Constructor) function = manager->selfLibaray->classes[declaration.definition].constructors[declaration.index];
 		else if (declaration.category == DeclarationCategory::ClassFunction) function = manager->selfLibaray->classes[declaration.definition].functions[declaration.index];
 		else EXCEPTION("无效的声明类型");
 		List<uint32, true>* references = NULL;
@@ -289,7 +290,7 @@ Declaration GlobalReference::AddReference(const Declaration& declaration)
 {
 	switch (declaration.code)
 	{
-		case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
+		case TypeCode::Invalid: return declaration;
 		case TypeCode::Struct: ADD_DECLARATION_REFERENCE(Struct, Struct);
 		case TypeCode::Enum: ADD_DECLARATION_REFERENCE(Enum, Enum);
 		case TypeCode::Handle: ADD_DECLARATION_REFERENCE(Class, Handle);

@@ -160,7 +160,7 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
-	if (IsHandleType(target->returns[0]))LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration);
+	if (IsHandleType(target->returns[0]))LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, parameter.finallyAddress);
 	else
 	{
 		ASSERT_DEBUG(declaration.category == DeclarationCategory::StructVariable, "不是结构体字段");
@@ -175,7 +175,7 @@ void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& param
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, parameter.results[0]);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, parameter.results[0], parameter.finallyAddress);
 	}
 	else if (declaration.category == DeclarationCategory::StructVariable)
 	{
@@ -215,7 +215,7 @@ void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& paramet
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
 	parameter.generator->WriteCode(targetParameter.results[0]);
 	parameter.generator->WriteCode(&nullAddress);
-	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration);
+	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, parameter.finallyAddress);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);
 	nullAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());

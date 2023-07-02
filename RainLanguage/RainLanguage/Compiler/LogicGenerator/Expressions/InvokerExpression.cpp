@@ -25,7 +25,7 @@ void GenerateInvokerParameter(LogicGenerateParameter& parameter, uint32 paramete
 		parameter.generator->WriteCode(parameterPoint);
 		parameter.generator->WriteCode(variable);
 	}
-	if (type == TYPE_Bool || type == TYPE_Byte)
+	else if (type == TYPE_Bool || type == TYPE_Byte)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_1);
 		parameter.generator->WriteCode(parameterPoint);
@@ -132,9 +132,10 @@ void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 	else if (declaration.category == DeclarationCategory::Native)callable = &parameter.manager->GetLibrary(declaration.library)->natives[declaration.index];
 	else EXCEPTION("其他类型的函数不应该走到这里");
 
-	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
 	parameters->Generator(parametersParameter);
+
+	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	uint32 parameterPoint = SIZE(Frame) + callable->returns.Count() * 4;
 	parameter.generator->WriteCode(Instruct::FUNCTION_Ensure);
 	parameter.generator->WriteCode(parameterPoint + callable->parameters.size);
@@ -197,7 +198,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_Declaration);
 		parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size);
 		parameter.generator->WriteCodeGlobalReference(declaration);
-		parameter.generator->WriteCode(Declaration());
+		parameter.generator->WriteCode((Declaration)declaration.DefineType());
 	}
 	parameter.generator->WriteCode(Instruct::FUNCTION_MemberCall);
 	parameter.generator->WriteCodeGlobalAddressReference(declaration);
@@ -242,8 +243,11 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	GeneratePushReturnPoint(parameter, abstractFunction->returns);
 	GenerateInvokerParameters(parametersParameter, parameterPoint, targetParameter.results[0], abstractFunction->parameters);
 	parameter.generator->WriteCode(Instruct::FUNCTION_VirtualCall);
+	parameter.generator->WriteCode(targetParameter.results[0]);
 	parameter.generator->WriteCodeGlobalReference(declaration);
-	parameter.generator->WriteCode(MemberFunction());
+	if (declaration.category == DeclarationCategory::InterfaceFunction) parameter.generator->WriteCode(MemberFunction(INVALID, TypeCode::Interface, declaration.definition, declaration.index));
+	else parameter.generator->WriteCode(MemberFunction(INVALID, TypeCode::Handle, declaration.definition, declaration.index));
+	parameter.generator->WriteCode(parameter.finallyAddress);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
@@ -257,6 +261,10 @@ void InvokerConstructorExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
+
+	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
+	parameters->Generator(parametersParameter);
+
 	AbstractLibrary* abstractLibrary = parameter.manager->GetLibrary(declaration.library);
 	AbstractFunction* abstractFunction = &abstractLibrary->functions[abstractLibrary->classes[declaration.definition].constructors[declaration.index]];
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
@@ -264,8 +272,9 @@ void InvokerConstructorExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::FUNCTION_Ensure);
 	parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size);
 	parameter.generator->WriteCode(&returnAddress);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 	GeneratePushReturnPoint(parameter, abstractFunction->returns);
-	GenerateInvokerParameters(parameter, parameterPoint, parameter.results[0], abstractFunction->parameters);
+	GenerateInvokerParameters(parametersParameter, parameterPoint, parameter.results[0], abstractFunction->parameters);
 	parameter.generator->WriteCode(Instruct::FUNCTION_MemberCall);
 	parameter.generator->WriteCodeGlobalAddressReference(declaration);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());

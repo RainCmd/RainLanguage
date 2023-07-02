@@ -132,7 +132,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 	}
 }
 
-void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember)
+void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember, CodeLocalAddressReference* finallyAddress)
 {
 	ASSERT_DEBUG(rightMember.category == DeclarationCategory::ClassVariable, "类型错误");
 	const Type& type = left.type;
@@ -202,9 +202,10 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode((uint32)NULL);
 		generator->WriteCodeGlobalReference((Declaration)type);
 	}
+	generator->WriteCode(finallyAddress);
 }
 
-void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, const LogicVariable& right)
+void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, const LogicVariable& right, CodeLocalAddressReference* finallyAddress)
 {
 	ASSERT_DEBUG(leftMember.category == DeclarationCategory::ClassVariable, "类型错误");
 	const Type& type = right.type;
@@ -274,4 +275,5 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode(right);
 		generator->WriteCodeGlobalReference((Declaration)type);
 	}
+	generator->WriteCode(finallyAddress);
 }

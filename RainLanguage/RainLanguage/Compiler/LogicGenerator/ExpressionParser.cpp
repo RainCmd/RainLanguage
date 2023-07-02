@@ -732,6 +732,11 @@ AbstractCallable* GetCallable(DeclarationManager* manager, const Anchor& anchor,
 		AbstractLibrary* library = manager->GetLibrary(declaration.library);
 		return &library->functions[library->structs[declaration.definition].functions[declaration.index]];
 	}
+	else if (declaration.category == DeclarationCategory::Constructor)
+	{
+		AbstractLibrary* library = manager->GetLibrary(declaration.library);
+		return &library->functions[library->classes[declaration.definition].constructors[declaration.index]];
+	}
 	else if (declaration.category == DeclarationCategory::ClassFunction)
 	{
 		AbstractLibrary* library = manager->GetLibrary(declaration.library);
@@ -2446,7 +2451,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						if (ContainAny(attribute, Attribute::Type))
 						{
 							TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-							ASSERT_DEBUG(typeExpression->type == ExpressionType::TypeExpression, "表达式类型不对");
+							ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
 							if (typeExpression->customType.code == TypeCode::Enum)
 							{
 								Type customType = typeExpression->customType;
@@ -2476,7 +2481,10 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							{
 								if (declarations.Count() == 1 && (declarations.Peek().category == DeclarationCategory::StructVariable || declarations.Peek().category == DeclarationCategory::ClassVariable))
 								{
-									expression = new VariableMemberExpression(identifierLexical.anchor, declarations.Peek(), GetVariableAttribute(declarations.Peek()), expression, type);
+									CompilingDeclaration declaration = declarations.Peek();
+									if (declaration.category == DeclarationCategory::StructVariable)type = manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].type;
+									else if (declaration.category == DeclarationCategory::ClassVariable)type = manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].type;
+									expression = new VariableMemberExpression(identifierLexical.anchor, declaration, GetVariableAttribute(declaration), expression, type);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
 									goto label_next_lexical;
@@ -2541,7 +2549,9 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							{
 								if (declarations.Count() == 1 && declarations.Peek().category == DeclarationCategory::ClassVariable)
 								{
-									expression = new VariableQuestionMemberExpression(identifierLexical.anchor, declarations.Peek(), expression, type);
+									CompilingDeclaration declaration = declarations.Peek();
+									type = manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].type;
+									expression = new VariableQuestionMemberExpression(identifierLexical.anchor, declaration, expression, type);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
 									goto label_next_lexical;

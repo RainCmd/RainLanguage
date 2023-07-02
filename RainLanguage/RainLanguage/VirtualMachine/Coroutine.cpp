@@ -85,6 +85,7 @@ void Coroutine::Run()
 	cacheData[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:
+	pointer = POINTER;
 	switch ((Instruct)*instruct)
 	{
 #pragma region Base
