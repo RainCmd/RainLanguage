@@ -357,30 +357,42 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 		if (!compilingConstructor.expression.content.IsEmpty())
 		{
 			Lexical lexical;
-			if (!TryAnalysis(compilingConstructor.expression, 0, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则坑定时前面文件解析出错了");
+			if (!TryAnalysis(compilingConstructor.expression, 0, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则肯定是前面文件解析出错了");
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
 			if (lexical.anchor == KeyWord_this())
 			{
 				for (uint32 i = 0; i < compilingClass.constructors.Count(); i++)
 					if (i != function->declaration.index)
 						new (constructorInvokerDeclarations.Add())CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Constructor, i, function->declaration.definition);
-				if (ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, &constructorInvokerDeclarations, &thisValue) == function->declaration)
+				if (ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, constructorInvokerDeclarations, &thisValue) == function->declaration)
 					MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_CONSTRUCTOR_CALL_ITSELF);
 			}
 			else if (lexical.anchor == KeyWord_base())
 			{
-				AbstractClass* parent = &parameter.manager->GetLibrary(compilingClass.parent.library)->classes[compilingClass.parent.index];
-				if (context.TryFindMember(parameter.manager, parent->name, parent->declaration.DefineType(), constructorInvokerDeclarations))
-					ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, &constructorInvokerDeclarations, &thisValue);
+				AbstractLibrary* parentLibrary = parameter.manager->GetLibrary(compilingClass.parent.library);
+				AbstractClass* parent = &parentLibrary->classes[compilingClass.parent.index];
+				for (uint32 i = 0; i < parent->constructors.Count(); i++)
+				{
+					AbstractFunction* parentConstructor = &parentLibrary->functions[parent->constructors[i]];
+					if (context.IsVisible(parameter.manager, parentConstructor->declaration))
+						constructorInvokerDeclarations.Add(parentConstructor->declaration);
+				}
+				ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, constructorInvokerDeclarations, &thisValue);
 			}
 			else EXCEPTION("无效的词汇");
 		}
 		else if (compilingClass.parent != TYPE_Handle)
 		{
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
-			AbstractClass* parent = &parameter.manager->GetLibrary(compilingClass.parent.library)->classes[compilingClass.parent.index];
-			if (context.TryFindMember(parameter.manager, parent->name, parent->declaration.DefineType(), constructorInvokerDeclarations))
-				ParseConstructorInvoker(parameter, &context, compilingClass.name, compilingConstructor.expression, &localContext, &constructorInvokerDeclarations, &thisValue);
+			AbstractLibrary* parentLibrary = parameter.manager->GetLibrary(compilingClass.parent.library);
+			AbstractClass* parent = &parentLibrary->classes[compilingClass.parent.index];
+			for (uint32 i = 0; i < parent->constructors.Count(); i++)
+			{
+				AbstractFunction* parentConstructor = &parentLibrary->functions[parent->constructors[i]];
+				if (context.IsVisible(parameter.manager, parentConstructor->declaration))
+					constructorInvokerDeclarations.Add(parentConstructor->declaration);
+			}
+			ParseConstructorInvoker(parameter, &context, compilingClass.name, compilingConstructor.expression, &localContext, constructorInvokerDeclarations, &thisValue);
 		}
 		for (uint32 i = 0; i < compilingClass.variables.Count(); i++)
 		{
@@ -424,22 +436,19 @@ FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, Generator
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
 }
 
-CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParameter& parameter, Context* context, const Anchor& anchor, const Anchor& expression, LocalContext* localContext, List<CompilingDeclaration, true>* declarations, Local* thisValue)
+CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParameter& parameter, Context* context, const Anchor& anchor, const Anchor& expression, LocalContext* localContext, List<CompilingDeclaration, true>& declarations, Local* thisValue)
 {
 	ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), *context, localContext, NULL, false);
 	Expression* parameters = NULL;
 	if (parser.TryParse(expression, parameters))
 	{
 		AbstractCallable* callable = NULL;
-		if (parser.TryGetFunction(anchor, *declarations, parameters, callable))
+		if (parser.TryGetFunction(anchor, declarations, parameters, callable))
 		{
 			if (parser.TryAssignmentConvert(parameters, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
 			{
 				VariableLocalExpression* thisValueExpression = new VariableLocalExpression(thisValue->anchor, thisValue->GetDeclaration(), Attribute::Value, thisValue->type);
-				List<Expression*, true> parameterExpressions(2); parameterExpressions.Add(thisValueExpression); parameterExpressions.Add(parameters);
-				List<Type, true> returns(1); returns.Add(thisValue->type);
-				parameters = new TupleExpression(anchor, returns, parameterExpressions);
-				statements->statements.Add(new ExpressionStatement(anchor, new InvokerFunctionExpression(anchor, returns, parameters, callable->declaration)));
+				statements->statements.Add(new ExpressionStatement(anchor, new InvokerMemberExpression(anchor, callable->returns.GetTypes(), parameters, thisValueExpression, callable->declaration, false)));
 			}
 			else delete parameters;
 			return callable->declaration;

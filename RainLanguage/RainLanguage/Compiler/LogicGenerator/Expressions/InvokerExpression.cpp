@@ -161,12 +161,11 @@ void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	AbstractLibrary* abstractLibrary = parameter.manager->GetLibrary(declaration.library);
-	uint32 functionIndex;
-	if (declaration.category == DeclarationCategory::StructFunction)functionIndex = abstractLibrary->structs[declaration.definition].functions[declaration.index];
-	else if (declaration.category == DeclarationCategory::Constructor)functionIndex = abstractLibrary->classes[declaration.definition].constructors[declaration.index];
-	else if (declaration.category == DeclarationCategory::ClassFunction)functionIndex = abstractLibrary->classes[declaration.definition].functions[declaration.index];
+	AbstractFunction* abstractFunction;
+	if (declaration.category == DeclarationCategory::StructFunction) abstractFunction = &abstractLibrary->functions[abstractLibrary->structs[declaration.definition].functions[declaration.index]];
+	else if (declaration.category == DeclarationCategory::Constructor) abstractFunction = &abstractLibrary->functions[abstractLibrary->classes[declaration.definition].constructors[declaration.index]];
+	else if (declaration.category == DeclarationCategory::ClassFunction) abstractFunction = &abstractLibrary->functions[abstractLibrary->classes[declaration.definition].functions[declaration.index]];
 	else EXCEPTION("语义解析可能有bug");
-	AbstractFunction* abstractFunction = &abstractLibrary->functions[functionIndex];
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
