@@ -264,7 +264,7 @@ Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 	{
 		uint32 characteristic = GetFunctionCharacteristic(function);
 		MemberFunction result;
-		if (GetClass(type)->relocations.TryGet(characteristic, result)) return GetFunction(function);
+		if (GetClass(type)->relocations.TryGet(characteristic, result)) return GetFunction(result);
 		else EXCEPTION("函数映射失败");
 	}
 	EXCEPTION("类型错误");
@@ -312,7 +312,7 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 		}
 		List<RainType, true> rainTypes(info->parameters.Count());
 		for (uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));
-		info->caller = kernel->libraryAgency->nativeCallerLoader(kernel, fullName.GetPointer(), fullName.Count(), rainTypes.GetPointer(), rainTypes.Count());
+		info->caller = kernel->libraryAgency->nativeCallerLoader(kernel, RainString(fullName.GetPointer(), fullName.Count()), rainTypes.GetPointer(), rainTypes.Count());
 		ASSERT(info->caller, "本地函数绑定失败");
 	}
 	Caller caller(kernel, info, stack, top);
