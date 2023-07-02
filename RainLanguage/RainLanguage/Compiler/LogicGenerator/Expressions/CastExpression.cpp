@@ -244,6 +244,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real4, w)));
 			parameter.generator->WriteCode((real)0);
 		}
+		else if (parameter.manager->IsInherit(returns[i], source->returns[i])) parameter.results[i] = sourceParameter.results[i];
 		else if (returns[i] == TYPE_Handle)
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Box);

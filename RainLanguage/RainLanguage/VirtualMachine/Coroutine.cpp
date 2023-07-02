@@ -85,7 +85,6 @@ void Coroutine::Run()
 	cacheData[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:
-	pointer = POINTER;
 	switch ((Instruct)*instruct)
 	{
 #pragma region Base
@@ -849,6 +848,7 @@ label_next_instruct:
 				cacheData[1] = stack + bottom;
 				LibraryAgency* agency = kernel->libraryAgency;
 				instruct = agency->code.GetPointer() + agency->GetFunctionEntry(agency->GetFunction(INSTRUCT_VALUE(MemberFunction, 5), type));
+				goto label_next_instruct;
 			}
 			else EXCEPTION_EXIT(FUNCTION_VirtualCall, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4 + SIZE(MemberFunction), FUNCTION_VirtualCall);

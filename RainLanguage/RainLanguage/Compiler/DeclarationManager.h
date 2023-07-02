@@ -35,6 +35,11 @@ struct DeclarationManager
 		else return relies[library];
 	}
 	bool TryGetInherit(const Type& baseType, const Type& subType, uint32& depth);
+	inline bool IsInherit(const Type& baseType, const Type& subType)
+	{
+		uint32 depth;
+		return TryGetInherit(baseType, subType, depth);
+	}
 	~DeclarationManager();
 };
 

@@ -78,7 +78,7 @@ void LogicVariable::ClearVariable(DeclarationManager* manager, Generator* genera
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right)
 {
-	ASSERT_DEBUG(left.type == right.type, "表达式类型不一致");
+	ASSERT_DEBUG(manager->IsInherit(left.type, right.type), "表达式类型不一致");
 	const Type& type = left.type;
 	if (IsHandleType(type))
 	{
@@ -141,56 +141,49 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_Handle);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 	}
 	else if (type == TYPE_Bool || type == TYPE_Byte)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_1);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 	}
 	else if (type == TYPE_Char)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_2);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 	}
 	else if (type == TYPE_Integer || type == TYPE_Real)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_8);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 	}
 	else if (type == TYPE_String)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_String);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 	}
 	else if (type == TYPE_Entity)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_Entity);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 	}
 	else if (manager->IsBitwise(type))
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_Bitwise);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index].size);
 	}
 	else
@@ -198,8 +191,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode(Instruct::ASSIGNMENT_Handle2Variable_Bitwise);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCodeGlobalReference(rightMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(rightMember, 0);
 		generator->WriteCodeGlobalReference((Declaration)type);
 	}
 	generator->WriteCode(finallyAddress);
@@ -213,56 +205,49 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_Handle);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 	}
 	else if (type == TYPE_Bool || type == TYPE_Byte)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_1);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 	}
 	else if (type == TYPE_Char)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_2);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 	}
 	else if (type == TYPE_Integer || type == TYPE_Real)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_8);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 	}
 	else if (type == TYPE_String)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_String);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 	}
 	else if (type == TYPE_Entity)
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_Entity);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 	}
 	else if (manager->IsBitwise(type))
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_Bitwise);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index].size);
 	}
@@ -270,8 +255,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 	{
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_Bitwise);
 		generator->WriteCode(left);
-		generator->WriteCodeGlobalReference(leftMember);
-		generator->WriteCode((uint32)NULL);
+		generator->WriteCodeGlobalVariableReference(leftMember, 0);
 		generator->WriteCode(right);
 		generator->WriteCodeGlobalReference((Declaration)type);
 	}

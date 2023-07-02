@@ -160,7 +160,7 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
-	if (IsHandleType(target->returns[0]))LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, parameter.finallyAddress);
+	if (IsHandleType(target->returns[0])) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, parameter.finallyAddress);
 	else
 	{
 		ASSERT_DEBUG(declaration.category == DeclarationCategory::StructVariable, "不是结构体字段");

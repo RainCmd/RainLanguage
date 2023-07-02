@@ -832,7 +832,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 				{
 					const ReferenceVariableDeclarationInfo* variableInfo = &info->variables[y];
 					for (uint32 z = 0; z < variableInfo->references.Count(); z++)
-						*(uint32*)(agency->code.GetPointer() + codeOffset + variableInfo->references[y].reference) = runtimeClass->offset + variableInfo->address + variableInfo->references[y].offset;
+						*(uint32*)(agency->code.GetPointer() + codeOffset + variableInfo->references[z].reference) = runtimeClass->offset + variableInfo->address + variableInfo->references[z].offset;
 				}
 				for (uint32 y = 0; y < info->relocations.Count(); y++)
 				{
