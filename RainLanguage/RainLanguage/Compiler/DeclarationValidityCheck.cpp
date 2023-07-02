@@ -400,13 +400,13 @@ void ImplementsCheck(DeclarationManager* manager)
 			AbstractClass* parent = &parentLibrary->classes[typeIndex.index];
 			for (uint32 y = 1; y < define->functions.Count(); y++)
 			{
-				CompilingFunction* member = &manager->compilingLibrary.functions[define->functions[y]];
+				AbstractFunction* member = &manager->selfLibaray->functions[define->functions[y]];
 				for (uint32 z = 1; z < parent->functions.Count(); z++)
 				{
 					AbstractFunction* parentMember = &parentLibrary->functions[parent->functions[z]];
-					if (member->name == parentMember->name && IsEquals(member->abstract->parameters.GetTypes(), 1, parentMember->parameters.GetTypes(), 1))
-						if (!IsEquals(member->returns, parentMember->returns.GetTypes()))
-							MESSAGE3(manager->messages, member->name, MessageType::ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT, parentMember->GetFullName(manager->stringAgency));
+					if (member->name == parentMember->name && IsEquals(member->parameters.GetTypes(), 1, parentMember->parameters.GetTypes(), 1))
+						if (!IsEquals(member->returns.GetTypes(), parentMember->returns.GetTypes()))
+							MESSAGE3(manager->messages, manager->compilingLibrary.functions[define->functions[y]].name, MessageType::ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT, parentMember->GetFullName(manager->stringAgency));
 				}
 			}
 		}

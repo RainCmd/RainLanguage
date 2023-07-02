@@ -340,8 +340,7 @@ void FileSpace::ParseChild(const Line& line, List<Anchor>& attributes, uint32 in
 		CompilingSpace* space = compiling;
 		for (uint32 i = 0; i < name.Count(); i++)
 			space = space->GetChild(name[i].content);
-		FileSpace* child = new (children.Add())FileSpace(space, line.indent, parameter);
-		child->attributes.Add(attributes.GetPointer(), attributes.Count());
+		(new (children.Add())FileSpace(space, line.indent, parameter))->attributes.Add(attributes.GetPointer(), attributes.Count());
 	}
 	else MESSAGE2(parameter->messages, line, MessageType::ERROR_MISSING_NAME);
 }

@@ -1,10 +1,10 @@
 #include "Generator.h"
-#define ATTRIBUTES(compiling) \
-	List<uint32, true> compiling##Attributes = List<uint32, true>(compiling->attributes.Count());\
-	for (uint32 compiling##AttributeIndex = 0; compiling##AttributeIndex < compiling->attributes.Count(); compiling##AttributeIndex++)\
-		compiling##Attributes.Add(result->stringAgency->AddAndRef(compiling->attributes[compiling##AttributeIndex].content));
+#define ATTRIBUTES(source) \
+	List<uint32, true> source##Attributes = List<uint32, true>(source->attributes.Count());\
+	for (uint32 source##AttributeIndex = 0; source##AttributeIndex < source->attributes.Count(); source##AttributeIndex++)\
+		source##Attributes.Add(result->stringAgency->AddAndRef(source->attributes[source##AttributeIndex]));
 
-#define DECLARATION_INFO_PARAMETERS(compiling) ContainAny(compiling->declaration.visibility, Visibility::Public), compiling##Attributes, result->stringAgency->AddAndRef(compiling->name.content)
+#define DECLARATION_INFO_PARAMETERS(source) ContainAny(source->declaration.visibility, Visibility::Public), source##Attributes, result->stringAgency->AddAndRef(source->name)
 
 #define IMPORT_BASE_INFO(importName)\
 	AddSpace(abstract##importName->space, importLibrary->spaces, result->stringAgency);\
@@ -14,10 +14,10 @@
 
 #define IMPORT_INFO_PARAMETER(importName) abstract##importName->space->index, result->stringAgency->AddAndRef(abstract##importName->name), reference##importName##Declaration
 
-void CollectSpace(CompilingSpace* index, List<Space>& spaces, StringAgency* agency)
+void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agency)
 {
 	Space* space = new (spaces.Add())Space(agency->AddAndRef(index->name), index->attributes.Count(), index->children.Count(), 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	for (uint32 i = 0; i < index->attributes.Count(); i++) space->attributes.Add(agency->AddAndRef(index->attributes[i].content));
+	for (uint32 i = 0; i < index->attributes.Count(); i++) space->attributes.Add(agency->AddAndRef(index->attributes[i]));
 	Dictionary<String, List<CompilingDeclaration, true>*>::Iterator declarationsIterator = index->declarations.GetIterator();
 	while (declarationsIterator.Next())
 		for (uint32 i = 0; i < declarationsIterator.CurrentValue()->Count(); i++)
@@ -67,7 +67,7 @@ void CollectSpace(CompilingSpace* index, List<Space>& spaces, StringAgency* agen
 				break;
 			}
 		}
-	Dictionary<String, CompilingSpace*>::Iterator spaceIterator = index->children.GetIterator();
+	Dictionary<String, AbstractSpace*>::Iterator spaceIterator = index->children.GetIterator();
 	while (spaceIterator.Next()) CollectSpace(spaceIterator.CurrentValue(), spaces, agency);
 }
 
@@ -147,143 +147,143 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	Library* result = new Library(new StringAgency(0xf), data, manager.compilingLibrary.dataSize, manager.selfLibaray->variables.Count(), manager.selfLibaray->enums.Count(), manager.selfLibaray->structs.Count(), manager.selfLibaray->classes.Count(), manager.selfLibaray->interfaces.Count(), manager.selfLibaray->delegates.Count(), manager.selfLibaray->coroutines.Count(), manager.selfLibaray->functions.Count(), manager.selfLibaray->natives.Count(), codeStrings.Count(), dataStrings.Count(), globalReference->libraryReferences.Count(), globalReference->libraries.Count());
 	result->code = code;
 	for (uint32 i = 0; i < globalReference->libraryReferences.Count(); i++) result->libraryReferences.Add(GetReferenceAddress(globalReference->libraryReferences[i]));
-	CollectSpace(&manager.compilingLibrary, result->spaces, result->stringAgency);
-	for (uint32 x = 0; x < manager.compilingLibrary.variables.Count(); x++)
+	CollectSpace(manager.selfLibaray, result->spaces, result->stringAgency);
+	for (uint32 x = 0; x < manager.selfLibaray->variables.Count(); x++)
 	{
-		CompilingVariable* compilingVariable = &manager.compilingLibrary.variables[x];
-		ATTRIBUTES(compilingVariable);
+		AbstractVariable* abstractVariable = &manager.selfLibaray->variables[x];
+		ATTRIBUTES(abstractVariable);
 		List<VariableReference, true>* sourceReferences;
 		List<VariableReference, true> references(0);
-		if (globalReference->variableReferences.TryGet(compilingVariable->declaration.index, sourceReferences))
+		if (globalReference->variableReferences.TryGet(abstractVariable->declaration.index, sourceReferences))
 		{
 			references.SetCount(sourceReferences->Count());
 			for (uint32 y = 0; y < sourceReferences->Count(); y++) new (&references[y])VariableReference(GetReferenceAddress((*sourceReferences)[y].reference), (*sourceReferences)[y].offset);
 		}
-		new (result->variables.Add())ReferenceVariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingVariable), globalReference->AddReference(compilingVariable->type), compilingVariable->abstract->address, compilingVariable->abstract->readonly, references);
+		new (result->variables.Add())ReferenceVariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractVariable), globalReference->AddReference(abstractVariable->type), abstractVariable->address, abstractVariable->readonly, references);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.enums.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->enums.Count(); x++)
 	{
-		CompilingEnum* compilingEnum = &manager.compilingLibrary.enums[x];
-		ATTRIBUTES(compilingEnum);
-		List<EnumDeclarationInfo::Element, true> elements(compilingEnum->elements.Count());
-		for (uint32 y = 0; y < compilingEnum->elements.Count(); y++)
+		AbstractEnum* abstractEnum = &manager.selfLibaray->enums[x];
+		ATTRIBUTES(abstractEnum);
+		List<EnumDeclarationInfo::Element, true> elements(abstractEnum->elements.Count());
+		for (uint32 y = 0; y < abstractEnum->elements.Count(); y++)
 		{
-			CompilingEnum::Element& element = compilingEnum->elements[y];
+			CompilingEnum::Element& element = manager.compilingLibrary.enums[x].elements[y];
 			ASSERT_DEBUG(element.calculated, "library构造函数生成逻辑有bug");
 			new (elements.Add())EnumDeclarationInfo::Element(result->stringAgency->AddAndRef(element.name.content), element.value);
 		}
-		new (result->enums.Add())EnumDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingEnum), elements);
+		new (result->enums.Add())EnumDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractEnum), elements);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.structs.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->structs.Count(); x++)
 	{
-		CompilingStruct* compilingStruct = &manager.compilingLibrary.structs[x];
-		ATTRIBUTES(compilingStruct);
-		List<VariableDeclarationInfo> variables(compilingStruct->variables.Count());
-		for (uint32 y = 0; y < compilingStruct->variables.Count(); y++)
+		AbstractStruct* abstractStruct = &manager.selfLibaray->structs[x];
+		ATTRIBUTES(abstractStruct);
+		List<VariableDeclarationInfo> variables(abstractStruct->variables.Count());
+		for (uint32 y = 0; y < abstractStruct->variables.Count(); y++)
 		{
-			CompilingStruct::Variable* variable = &compilingStruct->variables[y];
+			AbstractVariable* variable = &abstractStruct->variables[y];
 			ATTRIBUTES(variable);
-			new (variables.Add())VariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(variable), globalReference->AddReference(variable->type), variable->abstract->address, variable->abstract->readonly);
+			new (variables.Add())VariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(variable), globalReference->AddReference(variable->type), variable->address, variable->readonly);
 		}
-		new (result->structs.Add())StructDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingStruct), variables, compilingStruct->functions, compilingStruct->abstract->size, compilingStruct->abstract->alignment);
+		new (result->structs.Add())StructDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractStruct), variables, abstractStruct->functions, abstractStruct->size, abstractStruct->alignment);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.classes.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->classes.Count(); x++)
 	{
-		CompilingClass* compilingClass = &manager.compilingLibrary.classes[x];
-		ATTRIBUTES(compilingClass);
-		List<Declaration, true> inherits(compilingClass->inherits.Count());
-		for (uint32 y = 0; y < compilingClass->inherits.Count(); y++) inherits.Add(globalReference->AddReference((Declaration)compilingClass->inherits[y]));
-		List<uint32, true> constructors(compilingClass->constructors.Count());
-		for (uint32 y = 0; y < compilingClass->constructors.Count(); y++) constructors.Add(compilingClass->constructors[y].function);
-		List<ReferenceVariableDeclarationInfo> variables(compilingClass->variables.Count());
-		for (uint32 y = 0; y < compilingClass->variables.Count(); y++)
+		AbstractClass* abstractClass = &manager.selfLibaray->classes[x];
+		ATTRIBUTES(abstractClass);
+		List<Declaration, true> inherits(abstractClass->inherits.Count());
+		for (uint32 y = 0; y < abstractClass->inherits.Count(); y++) inherits.Add(globalReference->AddReference((Declaration)abstractClass->inherits[y]));
+		List<uint32, true> constructors(abstractClass->constructors.Count());
+		for (uint32 y = 0; y < abstractClass->constructors.Count(); y++) constructors.Add(abstractClass->constructors[y]);
+		List<ReferenceVariableDeclarationInfo> variables(abstractClass->variables.Count());
+		for (uint32 y = 0; y < abstractClass->variables.Count(); y++)
 		{
-			CompilingClass::Variable* variable = &compilingClass->variables[y];
+			AbstractVariable* variable = &abstractClass->variables[y];
 			ATTRIBUTES(variable);
 			List<VariableReference, true> variableReferences(0);
 			List<VariableReference, true>* sourceVariableReferences = NULL;
 			if (globalReference->memberVariableReferences.TryGet(GlobalReference::MemberVariable(x, y), sourceVariableReferences))
 				for (uint32 z = 0; z < sourceVariableReferences->Count(); z++) new (variableReferences.Add())VariableReference(GetReferenceAddress((*sourceVariableReferences)[z].reference), (*sourceVariableReferences)[z].offset);
-			new (variables.Add())ReferenceVariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(variable), globalReference->AddReference(variable->type), variable->abstract->address, variable->abstract->readonly, variableReferences);
+			new (variables.Add())ReferenceVariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(variable), globalReference->AddReference(variable->type), variable->address, variable->readonly, variableReferences);
 		}
 		Set<Declaration, true> allInherits(0);
 		CollectInherits(manager, Declaration(LIBRARY_SELF, TypeCode::Handle, x), allInherits);
 		List<Relocation, true> relocations(0);
-		for (uint32 y = 0; y < compilingClass->functions.Count(); y++)
+		for (uint32 y = 0; y < abstractClass->functions.Count(); y++)
 		{
 			MemberFunction realize = MemberFunction(globalReference->AddReference(Declaration(LIBRARY_SELF, TypeCode::Handle, x)), y);
 			Set<Declaration, true>::Iterator inheritIterator = allInherits.GetIterator();
-			while (inheritIterator.Next()) CollectRelocation(manager, relocations, realize, &manager.selfLibaray->functions[compilingClass->functions[y]], inheritIterator.Current(), globalReference);
+			while (inheritIterator.Next()) CollectRelocation(manager, relocations, realize, &manager.selfLibaray->functions[abstractClass->functions[y]], inheritIterator.Current(), globalReference);
 		}
-		new (result->classes.Add())ClassDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingClass), globalReference->AddReference((Declaration)compilingClass->parent), inherits, compilingClass->abstract->size, compilingClass->abstract->alignment, constructors, variables, compilingClass->functions, compilingClass->destructorEntry, relocations);
+		new (result->classes.Add())ClassDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractClass), globalReference->AddReference((Declaration)abstractClass->parent), inherits, abstractClass->size, abstractClass->alignment, constructors, variables, abstractClass->functions, manager.compilingLibrary.classes[x].destructorEntry, relocations);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.interfaces.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->interfaces.Count(); x++)
 	{
-		CompilingInterface* compilingInterface = &manager.compilingLibrary.interfaces[x];
-		ATTRIBUTES(compilingInterface);
-		List<Declaration, true> inherits(compilingInterface->inherits.Count());
-		for (uint32 y = 0; y < compilingInterface->inherits.Count(); y++) inherits.Add(globalReference->AddReference((Declaration)compilingInterface->inherits[y]));
-		List<InterfaceDeclarationInfo::FunctionInfo> functions(compilingInterface->functions.Count());
+		AbstractInterface* abstractInterface = &manager.selfLibaray->interfaces[x];
+		ATTRIBUTES(abstractInterface);
+		List<Declaration, true> inherits(abstractInterface->inherits.Count());
+		for (uint32 y = 0; y < abstractInterface->inherits.Count(); y++) inherits.Add(globalReference->AddReference((Declaration)abstractInterface->inherits[y]));
+		List<InterfaceDeclarationInfo::FunctionInfo> functions(abstractInterface->functions.Count());
 		Set<Declaration, true> allInherits(0);
 		CollectInherits(manager, Declaration(LIBRARY_SELF, TypeCode::Interface, x), allInherits);
 		List<Relocation, true> relocations(0);
-		for (uint32 y = 0; y < compilingInterface->functions.Count(); y++)
+		for (uint32 y = 0; y < abstractInterface->functions.Count(); y++)
 		{
-			CompilingInterface::Function* function = &compilingInterface->functions[y];
+			AbstractFunction* function = &abstractInterface->functions[y];
 			ATTRIBUTES(function);
-			TupleInfo returns(function->abstract->returns.Count(), function->abstract->returns.size);
-			for (uint32 z = 0; z < function->abstract->returns.Count(); z++) returns.AddElement(globalReference->AddReference(function->abstract->returns.GetType(z)), function->abstract->returns.GetOffset(z));
-			TupleInfo parameters(function->abstract->parameters.Count(), function->abstract->parameters.size);
-			for (uint32 z = 0; z < function->abstract->parameters.Count(); z++) parameters.AddElement(globalReference->AddReference(function->abstract->parameters.GetType(z)), function->abstract->parameters.GetOffset(z));
-			new (functions.Add())InterfaceDeclarationInfo::FunctionInfo(functionAttributes, result->stringAgency->AddAndRef(function->name.content), returns, parameters);
+			TupleInfo returns(function->returns.Count(), function->returns.size);
+			for (uint32 z = 0; z < function->returns.Count(); z++) returns.AddElement(globalReference->AddReference(function->returns.GetType(z)), function->returns.GetOffset(z));
+			TupleInfo parameters(function->parameters.Count(), function->parameters.size);
+			for (uint32 z = 0; z < function->parameters.Count(); z++) parameters.AddElement(globalReference->AddReference(function->parameters.GetType(z)), function->parameters.GetOffset(z));
+			new (functions.Add())InterfaceDeclarationInfo::FunctionInfo(functionAttributes, result->stringAgency->AddAndRef(function->name), returns, parameters);
 
 			MemberFunction realize = MemberFunction(globalReference->AddReference(Declaration(LIBRARY_SELF, TypeCode::Interface, x)), y);
 			Set<Declaration, true>::Iterator inheritIterator = allInherits.GetIterator();
-			while (inheritIterator.Next()) CollectRelocation(manager, relocations, realize, function->abstract, inheritIterator.Current(), globalReference);
+			while (inheritIterator.Next()) CollectRelocation(manager, relocations, realize, function, inheritIterator.Current(), globalReference);
 		}
-		new (result->interfaces.Add())InterfaceDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingInterface), inherits, functions, relocations);
+		new (result->interfaces.Add())InterfaceDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractInterface), inherits, functions, relocations);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.delegates.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->delegates.Count(); x++)
 	{
-		CompilingDelegate* compilingDelegate = &manager.compilingLibrary.delegates[x];
-		ATTRIBUTES(compilingDelegate);
-		TupleInfo returns(compilingDelegate->abstract->returns.Count(), compilingDelegate->abstract->returns.size);
-		for (uint32 y = 0; y < compilingDelegate->abstract->returns.Count(); y++) returns.AddElement(globalReference->AddReference(compilingDelegate->abstract->returns.GetType(y)), compilingDelegate->abstract->returns.GetOffset(y));
-		TupleInfo parameters(compilingDelegate->abstract->parameters.Count(), compilingDelegate->abstract->parameters.size);
-		for (uint32 y = 0; y < compilingDelegate->abstract->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(compilingDelegate->abstract->parameters.GetType(y)), compilingDelegate->abstract->parameters.GetOffset(y));
-		new (result->delegates.Add())DelegateDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingDelegate), returns, parameters);
+		AbstractDelegate* abstractDelegate = &manager.selfLibaray->delegates[x];
+		ATTRIBUTES(abstractDelegate);
+		TupleInfo returns(abstractDelegate->returns.Count(), abstractDelegate->returns.size);
+		for (uint32 y = 0; y < abstractDelegate->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractDelegate->returns.GetType(y)), abstractDelegate->returns.GetOffset(y));
+		TupleInfo parameters(abstractDelegate->parameters.Count(), abstractDelegate->parameters.size);
+		for (uint32 y = 0; y < abstractDelegate->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(abstractDelegate->parameters.GetType(y)), abstractDelegate->parameters.GetOffset(y));
+		new (result->delegates.Add())DelegateDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractDelegate), returns, parameters);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.coroutines.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->coroutines.Count(); x++)
 	{
-		CompilingCoroutine* compilingCoroutine = &manager.compilingLibrary.coroutines[x];
-		ATTRIBUTES(compilingCoroutine);
-		TupleInfo returns(compilingCoroutine->abstract->returns.Count(), compilingCoroutine->abstract->returns.size);
-		for (uint32 y = 0; y < compilingCoroutine->abstract->returns.Count(); y++) returns.AddElement(globalReference->AddReference(compilingCoroutine->abstract->returns.GetType(y)), compilingCoroutine->abstract->returns.GetOffset(y));
-		new (result->coroutines.Add())CoroutineDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingCoroutine), returns);
+		AbstractCoroutine* abstractCoroutine = &manager.selfLibaray->coroutines[x];
+		ATTRIBUTES(abstractCoroutine);
+		TupleInfo returns(abstractCoroutine->returns.Count(), abstractCoroutine->returns.size);
+		for (uint32 y = 0; y < abstractCoroutine->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractCoroutine->returns.GetType(y)), abstractCoroutine->returns.GetOffset(y));
+		new (result->coroutines.Add())CoroutineDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractCoroutine), returns);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.functions.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->functions.Count(); x++)
 	{
-		CompilingFunction* compilingFunction = &manager.compilingLibrary.functions[x];
-		ATTRIBUTES(compilingFunction);
-		TupleInfo returns(compilingFunction->abstract->returns.Count(), compilingFunction->abstract->returns.size);
-		for (uint32 y = 0; y < compilingFunction->abstract->returns.Count(); y++) returns.AddElement(globalReference->AddReference(compilingFunction->abstract->returns.GetType(y)), compilingFunction->abstract->returns.GetOffset(y));
-		TupleInfo parameters(compilingFunction->abstract->parameters.Count(), compilingFunction->abstract->parameters.size);
-		for (uint32 y = 0; y < compilingFunction->abstract->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(compilingFunction->abstract->parameters.GetType(y)), compilingFunction->abstract->parameters.GetOffset(y));
+		AbstractFunction* abstractFunction = &manager.selfLibaray->functions[x];
+		ATTRIBUTES(abstractFunction);
+		TupleInfo returns(abstractFunction->returns.Count(), abstractFunction->returns.size);
+		for (uint32 y = 0; y < abstractFunction->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractFunction->returns.GetType(y)), abstractFunction->returns.GetOffset(y));
+		TupleInfo parameters(abstractFunction->parameters.Count(), abstractFunction->parameters.size);
+		for (uint32 y = 0; y < abstractFunction->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(abstractFunction->parameters.GetType(y)), abstractFunction->parameters.GetOffset(y));
 		List<uint32, true> references(0);
 		List<uint32, true>* sourceReferences = NULL;
 		if (globalReference->addressReferences.TryGet(x, sourceReferences))
 			for (uint32 y = 0; y < sourceReferences->Count(); y++) references.Add(GetReferenceAddress((*sourceReferences)[y]));
-		new (result->functions.Add())FunctionDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingFunction), returns, parameters, compilingFunction->entry, references);
+		new (result->functions.Add())FunctionDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractFunction), returns, parameters, manager.compilingLibrary.functions[x].entry, references);
 	}
-	for (uint32 x = 0; x < manager.compilingLibrary.natives.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->natives.Count(); x++)
 	{
-		CompilingNative* compilingNative = &manager.compilingLibrary.natives[x];
-		ATTRIBUTES(compilingNative);
-		TupleInfo returns(compilingNative->abstract->returns.Count(), compilingNative->abstract->returns.size);
-		for (uint32 y = 0; y < compilingNative->abstract->returns.Count(); y++) returns.AddElement(globalReference->AddReference(compilingNative->abstract->returns.GetType(y)), compilingNative->abstract->returns.GetOffset(y));
-		TupleInfo parameters(compilingNative->abstract->parameters.Count(), compilingNative->abstract->parameters.size);
-		for (uint32 y = 0; y < compilingNative->abstract->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(compilingNative->abstract->parameters.GetType(y)), compilingNative->abstract->parameters.GetOffset(y));
-		new (result->natives.Add())NativeDeclarationInfo(DECLARATION_INFO_PARAMETERS(compilingNative), returns, parameters);
+		AbstractNative* abstractNative = &manager.selfLibaray->natives[x];
+		ATTRIBUTES(abstractNative);
+		TupleInfo returns(abstractNative->returns.Count(), abstractNative->returns.size);
+		for (uint32 y = 0; y < abstractNative->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractNative->returns.GetType(y)), abstractNative->returns.GetOffset(y));
+		TupleInfo parameters(abstractNative->parameters.Count(), abstractNative->parameters.size);
+		for (uint32 y = 0; y < abstractNative->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(abstractNative->parameters.GetType(y)), abstractNative->parameters.GetOffset(y));
+		new (result->natives.Add())NativeDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractNative), returns, parameters);
 	}
 	Dictionary<String, GeneratorStringAddresses*>::Iterator codeStringIterator = codeStrings.GetIterator();
 	while (codeStringIterator.Next())
@@ -294,11 +294,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			address->addresses[x] = GetReferenceAddress(codeStringIterator.CurrentValue()->addresses[x]);
 	}
 	Dictionary<String, GeneratorStringAddresses*>::Iterator dataStringIterator = dataStrings.GetIterator();
-	while (dataStringIterator.Next())
-	{
-		StringAddresses* address = new (result->dataStrings.Add())StringAddresses(result->stringAgency->AddAndRef(dataStringIterator.CurrentKey()));
-		address->addresses = dataStringIterator.CurrentValue()->addresses;
-	}
+	while (dataStringIterator.Next()) (new (result->dataStrings.Add())StringAddresses(result->stringAgency->AddAndRef(dataStringIterator.CurrentKey())))->addresses = dataStringIterator.CurrentValue()->addresses;
 	for (uint32 x = 0; x < globalReference->libraryReferences.Count(); x++) result->libraryReferences.Add(GetReferenceAddress(globalReference->libraryReferences[x]));
 	for (uint32 x = 0; x < globalReference->libraries.Count(); x++)
 	{

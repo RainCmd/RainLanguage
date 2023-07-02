@@ -40,123 +40,110 @@ struct FileParameter
 struct FileSpace;
 struct FileDeclaration
 {
+	uint32 index;
 	Anchor name;
 	Visibility visibility;
 	FileSpace* space;
 	List<Anchor> attributes;
-	inline FileDeclaration(const Anchor& name, Visibility visibility, FileSpace* space) :name(name), visibility(visibility), space(space), attributes(0) {}
+	inline FileDeclaration(const Anchor& name, Visibility visibility, FileSpace* space) :index(INVALID), name(name), visibility(visibility), space(space), attributes(0) {}
 };
 struct FileVariable :FileDeclaration
 {
-	CompilingVariable* compiling;
 	bool readonly;
 	FileType type;
 	Anchor expression;
-	inline FileVariable(const Anchor& name, Visibility visibility, FileSpace* space, bool readonly, const FileType& type, Anchor expression) :FileDeclaration(name, visibility, space), compiling(NULL), readonly(readonly), type(type), expression(expression) {}
+	inline FileVariable(const Anchor& name, Visibility visibility, FileSpace* space, bool readonly, const FileType& type, Anchor expression) :FileDeclaration(name, visibility, space), readonly(readonly), type(type), expression(expression) {}
 };
 struct FileFunction :FileDeclaration
 {
-	CompilingFunction* compiling;
 	List<FileParameter> parameters;
 	List<FileType> returns;
 	List<Line> body;
-	inline FileFunction(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), compiling(NULL), parameters(parameters), returns(returns), body(0) {}
+	inline FileFunction(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), parameters(parameters), returns(returns), body(0) {}
 };
 struct FileEnum :FileDeclaration
 {
 	struct Element
 	{
-		CompilingEnum::Element* compiling;
 		Anchor name;
 		Anchor expression;
-		inline Element(const Anchor& name, const Anchor& expression) :compiling(NULL), name(name), expression(expression) {}
+		inline Element(const Anchor& name, const Anchor& expression) : name(name), expression(expression) {}
 	};
-	CompilingEnum* compiling;
 	List<Element> elements;
-	inline FileEnum(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), compiling(NULL), elements(0) {}
+	inline FileEnum(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), elements(0) {}
 };
 struct FileStruct :FileDeclaration
 {
 	struct Variable
 	{
-		CompilingStruct::Variable* compiling;
 		Anchor name;
 		FileType type;
 		List<Anchor> attributes;
-		inline Variable(const Anchor& name, const FileType& type) :compiling(NULL), name(name), type(type), attributes(0) {}
+		inline Variable(const Anchor& name, const FileType& type) : name(name), type(type), attributes(0) {}
 	};
-	CompilingStruct* compiling;
 	List<Variable> variables;
 	List<FileFunction> functions;
-	inline FileStruct(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), compiling(NULL), variables(0), functions(0) {}
+	inline FileStruct(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), variables(0), functions(0) {}
 };
 struct FileClass :FileDeclaration
 {
 	struct Variable
 	{
-		CompilingClass::Variable* compiling;
 		Anchor name;
 		Visibility visibility;
 		FileType type;
 		Anchor expression;
 		List<Anchor> attributes;
-		inline Variable(const Anchor& name, Visibility visibility, const FileType& type, const Anchor& expression) :compiling(NULL), name(name), visibility(visibility), type(type), expression(expression), attributes(0) {}
+		inline Variable(const Anchor& name, Visibility visibility, const FileType& type, const Anchor& expression) : name(name), visibility(visibility), type(type), expression(expression), attributes(0) {}
 	};
 	struct Constructor
 	{
-		CompilingClass::Constructor* compiling;
 		Anchor name;
 		Visibility visibility;
 		List<FileParameter> parameters;
 		Anchor expression;
 		List<Line> body;
 		List<Anchor> attributes;
-		inline Constructor(const Anchor name, Visibility visibility, const List<FileParameter>& parameters, const Anchor& expression) :compiling(NULL), name(name), visibility(visibility), parameters(parameters), expression(expression), body(0), attributes(0) {}
+		inline Constructor(const Anchor name, Visibility visibility, const List<FileParameter>& parameters, const Anchor& expression) : name(name), visibility(visibility), parameters(parameters), expression(expression), body(0), attributes(0) {}
 	};
-	CompilingClass* compiling;
 	List<Anchor> parent;
 	List<FileType> inherits;
 	List<Variable> variables;
 	List<Constructor> constructors;
 	List<FileFunction> functions;
 	List<Line> destructor;
-	inline FileClass(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), compiling(NULL), parent(0), inherits(0), variables(0), constructors(0), functions(0), destructor(0) {}
+	inline FileClass(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), parent(0), inherits(0), variables(0), constructors(0), functions(0), destructor(0) {}
 };
 struct FileInterface :FileDeclaration
 {
 	struct Function
 	{
-		CompilingFunctionDeclaration* compiling;
 		Anchor name;
 		List<FileParameter> parameters;
 		List<FileType> returns;
 		List<Anchor> attributes;
-		inline Function(const Anchor& name, const List<FileParameter>& parameters, const List<FileType>& returns) :compiling(NULL), name(name), parameters(parameters), returns(returns), attributes(0) {}
+		inline Function(const Anchor& name, const List<FileParameter>& parameters, const List<FileType>& returns) : name(name), parameters(parameters), returns(returns), attributes(0) {}
 	};
-	CompilingInterface* compiling;
 	List<FileType> inherits;
 	List<Function> functions;
-	inline FileInterface(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), compiling(NULL), inherits(0), functions(0) {}
+	inline FileInterface(const Anchor& name, Visibility visibility, FileSpace* space) :FileDeclaration(name, visibility, space), inherits(0), functions(0) {}
 };
 struct FileDelegate :FileDeclaration
 {
-	CompilingDelegate* compiling;
 	List<FileParameter> parameters;
 	List<FileType> returns;
-	inline FileDelegate(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), compiling(NULL), parameters(parameters), returns(returns) {}
+	inline FileDelegate(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), parameters(parameters), returns(returns) {}
 };
 struct FileCoroutine :FileDeclaration
 {
-	CompilingCoroutine* compiling;
 	List<FileType> returns;
-	inline FileCoroutine(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileType>& returns) :FileDeclaration(name, visibility, space), compiling(NULL), returns(returns) {}
+	inline FileCoroutine(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileType>& returns) :FileDeclaration(name, visibility, space), returns(returns) {}
 };
 struct FileNative :FileDeclaration
 {
-	CompilingNative* compiling;
 	List<FileParameter> parameters;
 	List<FileType> returns;
-	inline FileNative(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), compiling(NULL), parameters(parameters), returns(returns) {}
+	inline FileNative(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), parameters(parameters), returns(returns) {}
 };
 struct DeclarationManager;
 struct FileSpace
@@ -188,5 +175,5 @@ struct FileSpace
 
 	void InitRelies(DeclarationManager* manager);
 	void Tidy(DeclarationManager* manager);
-	void Link(DeclarationManager* manager, List<List<AbstractSpace*, true>>* relySpaceCollector);
+	void Link(DeclarationManager* manager, List<List<AbstractSpace*, true>*, true>* relySpaceCollector);
 };

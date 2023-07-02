@@ -24,9 +24,8 @@ struct CompilingVariable :CompilingDeclarationInfo
 	Type type;
 	Anchor expression;
 	List<AbstractSpace*, true>* relies;
-	AbstractVariable* abstract;
 	bool calculated;
-	inline CompilingVariable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, bool constant, const Anchor& expression) :CompilingDeclarationInfo(name, declaration, attributes, space), constant(constant), type(), expression(expression), relies(NULL), abstract(NULL), calculated(false) {}
+	inline CompilingVariable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, bool constant, const Anchor& expression) :CompilingDeclarationInfo(name, declaration, attributes, space), constant(constant), type(), expression(expression), relies(NULL), calculated(false) {}
 };
 
 struct CompilingFunctionDeclaration :CompilingDeclarationInfo
@@ -46,9 +45,8 @@ struct CompilingFunction :CompilingFunctionDeclaration
 {
 	List<Line> body;
 	List<AbstractSpace*, true>* relies;
-	AbstractFunction* abstract;
 	uint32 entry;
-	inline CompilingFunction(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount, const List<Line>& body) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount), body(body), relies(NULL), abstract(NULL), entry(INVALID) {}
+	inline CompilingFunction(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount, const List<Line>& body) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount), body(body), relies(NULL), entry(INVALID) {}
 };
 
 struct CompilingEnum :CompilingDeclarationInfo
@@ -64,8 +62,7 @@ struct CompilingEnum :CompilingDeclarationInfo
 	};
 	List<Element> elements;
 	List<AbstractSpace*, true>* relies;
-	AbstractEnum* abstract;
-	inline CompilingEnum(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Element>& elements) :CompilingDeclarationInfo(name, declaration, attributes, space), elements(elements), relies(NULL), abstract(NULL) {}
+	inline CompilingEnum(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Element>& elements) :CompilingDeclarationInfo(name, declaration, attributes, space), elements(elements), relies(NULL) {}
 };
 
 struct CompilingStruct :CompilingDeclarationInfo
@@ -76,13 +73,11 @@ struct CompilingStruct :CompilingDeclarationInfo
 		CompilingDeclaration declaration;
 		List<Anchor> attributes;
 		Type type;
-		AbstractVariable* abstract;
-		inline Variable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes) :name(name), declaration(declaration), attributes(attributes), type(), abstract(NULL) {}
+		inline Variable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes) :name(name), declaration(declaration), attributes(attributes), type() {}
 	};
 	List<Variable> variables;
 	List<uint32, true> functions;//²ÎÊý°üº¬this
-	AbstractStruct* abstract;
-	inline CompilingStruct(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Variable>& variables, const List<uint32, true>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), variables(variables), functions(functions), abstract(NULL) {}
+	inline CompilingStruct(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Variable>& variables, const List<uint32, true>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), variables(variables), functions(functions) {}
 };
 
 struct CompilingClass :CompilingDeclarationInfo
@@ -100,8 +95,7 @@ struct CompilingClass :CompilingDeclarationInfo
 		List<Anchor> attributes;
 		Type type;
 		Anchor expression;
-		AbstractVariable* abstract;
-		inline Variable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, const Anchor& expression) :name(name), declaration(declaration), attributes(attributes), type(), expression(expression), abstract(NULL) {}
+		inline Variable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, const Anchor& expression) :name(name), declaration(declaration), attributes(attributes), type(), expression(expression) {}
 	};
 	Type parent;
 	List<Type, true> inherits;
@@ -111,40 +105,34 @@ struct CompilingClass :CompilingDeclarationInfo
 	List<Line> destructor;
 	uint32 destructorEntry;
 	List<AbstractSpace*, true>* relies;
-	AbstractClass* abstract;
-	inline CompilingClass(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Constructor>& constructors, const List<Variable>& variables, const List<uint32, true>& functions, const List<Line>& destructor) :CompilingDeclarationInfo(name, declaration, attributes, space), parent(), inherits(inheritCount), constructors(constructors), variables(variables), functions(functions), destructor(destructor), destructorEntry(INVALID), relies(NULL), abstract(NULL) {}
+	inline CompilingClass(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Constructor>& constructors, const List<Variable>& variables, const List<uint32, true>& functions, const List<Line>& destructor) :CompilingDeclarationInfo(name, declaration, attributes, space), parent(), inherits(inheritCount), constructors(constructors), variables(variables), functions(functions), destructor(destructor), destructorEntry(INVALID), relies(NULL) {}
 };
 
 struct CompilingInterface :CompilingDeclarationInfo
 {
 	struct Function :CompilingFunctionDeclaration
 	{
-		AbstractFunction* abstract;
-		inline Function(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount), abstract(NULL) {}
+		inline Function(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount) {}
 	};
 	List<Type, true> inherits;
 	List<Function> functions;
-	AbstractInterface* abstract;
-	inline CompilingInterface(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Function>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), inherits(inheritCount), functions(functions), abstract(NULL) {}
+	inline CompilingInterface(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Function>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), inherits(inheritCount), functions(functions) {}
 };
 
 struct CompilingDelegate :CompilingFunctionDeclaration
 {
-	AbstractDelegate* abstract;
-	inline CompilingDelegate(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount), abstract(NULL) {}
+	inline CompilingDelegate(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount) {}
 };
 
 struct CompilingCoroutine :CompilingDeclarationInfo
 {
 	List<Type, true> returns;
-	AbstractCoroutine* abstract;
-	inline CompilingCoroutine(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 returnCount) :CompilingDeclarationInfo(name, declaration, attributes, space), returns(returnCount), abstract(NULL) {}
+	inline CompilingCoroutine(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 returnCount) :CompilingDeclarationInfo(name, declaration, attributes, space), returns(returnCount) {}
 };
 
 struct CompilingNative :CompilingFunctionDeclaration
 {
-	AbstractNative* abstract;
-	inline CompilingNative(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount), abstract(NULL) {}
+	inline CompilingNative(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount) {}
 };
 
 struct CompilingSpace

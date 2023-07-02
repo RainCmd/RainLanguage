@@ -9,7 +9,7 @@ CompilingClass* LambdaClosure::GetClosure()
 		closure = new (environment->manager->compilingLibrary.classes.Add())CompilingClass(Anchor(), declaration, List<Anchor>(0), environment->context.compilingSpace, 0, List<CompilingClass::Constructor>(0), List<CompilingClass::Variable>(0), List<uint32, true>(0), List<Line>(0));
 		closure->parent = TYPE_Handle;
 		closure->relies = environment->context.relies;
-		closure->abstract = new (environment->manager->selfLibaray->classes.Add())AbstractClass(closure->name.content, declaration, List<String>(0), environment->context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable>(0), List<uint32, true>(1), (uint32)0, (uint8)0);
+		new (environment->manager->selfLibaray->classes.Add())AbstractClass(closure->name.content, declaration, List<String>(0), environment->context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable>(0), List<uint32, true>(1), (uint32)0, (uint8)0);
 	}
 	return closure;
 }
@@ -19,15 +19,16 @@ CompilingDeclaration LambdaClosure::Convert(const Anchor& name, const CompilingD
 	CompilingDeclaration result;
 	if (map.TryGet(declaration, result)) return result;
 	CompilingClass* closure = GetClosure();
+	AbstractClass* abstractClosure = &environment->manager->selfLibaray->classes[closure->declaration.index];
 	result = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, closure->variables.Count(), closure->declaration.index);
 	CompilingClass::Variable* variable = new (closure->variables.Add())CompilingClass::Variable(name, result, List<Anchor>(0), Anchor());
 	variable->type = environment->GetVariableType(declaration);
 	uint8 alignment;
 	uint32 size = environment->manager->GetStackSize(variable->type, alignment);
-	closure->abstract->size = MemoryAlignment(closure->abstract->size, alignment);
-	variable->abstract = new (closure->abstract->variables.Add())AbstractVariable(name.content, result, List<String>(0), closure->space->abstract, false, variable->type, closure->abstract->size);
-	closure->abstract->size += size;
-	if (alignment > closure->abstract->alignment)closure->abstract->alignment = alignment;
+	abstractClosure->size = MemoryAlignment(abstractClosure->size, alignment);
+	new (abstractClosure->variables.Add())AbstractVariable(name.content, result, List<String>(0), closure->space->abstract, false, variable->type, abstractClosure->size);
+	abstractClosure->size += size;
+	if (alignment > abstractClosure->alignment)abstractClosure->alignment = alignment;
 	map.Set(declaration, result);
 	return result;
 }

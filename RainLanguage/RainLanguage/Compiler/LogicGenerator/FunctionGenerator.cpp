@@ -220,7 +220,8 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			if (pairs[i].variable)
 			{
 				CompilingVariable* variable = pairs[i].variable;
-				uint8* address = parameter.generator->GetConstantPointer(variable->abstract->address);
+				AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[variable->declaration.index];
+				uint8* address = parameter.generator->GetConstantPointer(abstractVariable->address);
 				if (variable->type == TYPE_Bool)
 				{
 					TRY_EVALUATION_CONSTANT_VARIABLE(bool);
@@ -246,7 +247,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 					String value;
 					if (expression->TryEvaluation(value, logicGenerateParameter))
 					{
-						parameter.generator->WriteDataString(value, variable->abstract->address);
+						parameter.generator->WriteDataString(value, abstractVariable->address);
 						variable->calculated = true;
 						pairs.RemoveAtSwap(i--);
 						delete expression;
