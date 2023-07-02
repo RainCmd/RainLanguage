@@ -33,13 +33,13 @@ void BlockStatement::InitJumpTarget(CodeLocalAddressReference* breakAddress, Cod
 		else if (ContainAll(statement->type, StatementType::Branch))
 		{
 			BranchStatement* branchStatement = (BranchStatement*)statement;
-			branchStatement->trueBranch->InitJumpTarget(breakAddress, loopAddress);
-			branchStatement->falseBranch->InitJumpTarget(breakAddress, loopAddress);
+			if (branchStatement->trueBranch) branchStatement->trueBranch->InitJumpTarget(breakAddress, loopAddress);
+			if (branchStatement->falseBranch) branchStatement->falseBranch->InitJumpTarget(breakAddress, loopAddress);
 		}
 		else if (ContainAll(statement->type, StatementType::Loop))
 		{
 			LoopStatement* loopStatement = (LoopStatement*)statement;
-			loopStatement->elseBlock->InitJumpTarget(breakAddress, loopAddress);
+			if(loopStatement->elseBlock) loopStatement->elseBlock->InitJumpTarget(breakAddress, loopAddress);
 		}
 		else if (ContainAll(statement->type, StatementType::Try))
 		{

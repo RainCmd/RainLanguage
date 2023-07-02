@@ -64,7 +64,7 @@ library(LIBRARY_KERNEL), variables(info->variables.Count()), functions(info->fun
 	for (uint32 i = 0; i < info->enums.Count(); i++)
 	{
 		CompilingEnum* compiling = &info->enums[i];
-		List<String>elements = List<String>(compiling->elements.Count());
+		List<String> elements = List<String>(compiling->elements.Count());
 		for (uint32 index = 0; index < compiling->elements.Count(); index++)
 			elements.Add(compiling->elements[index].name.content);
 		compiling->abstract = new (enums.Add())AbstractEnum(DECLARATION_PARAMETERS(compiling), elements);
@@ -72,38 +72,34 @@ library(LIBRARY_KERNEL), variables(info->variables.Count()), functions(info->fun
 	for (uint32 i = 0; i < info->structs.Count(); i++)
 	{
 		CompilingStruct* compiling = &info->structs[i];
-		List<AbstractVariable> memberVariables = List<AbstractVariable>(compiling->variables.Count());
+		compiling->abstract = new (structs.Add())AbstractStruct(DECLARATION_PARAMETERS(compiling), List<AbstractVariable>(compiling->variables.Count()), compiling->functions, INVALID, NULL);
 		for (uint32 index = 0; index < compiling->variables.Count(); index++)
 		{
-			CompilingStruct::Variable* member = &compiling->variables[i];
-			member->abstract = new (memberVariables.Add())AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID);
+			CompilingStruct::Variable* member = &compiling->variables[index];
+			member->abstract = new (compiling->abstract->variables.Add())AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID);
 		}
-		compiling->abstract = new (structs.Add())AbstractStruct(DECLARATION_PARAMETERS(compiling), memberVariables, compiling->functions, INVALID, NULL);
 	}
 	for (uint32 i = 0; i < info->classes.Count(); i++)
 	{
 		CompilingClass* compiling = &info->classes[i];
-		List<uint32, true>constructors = List<uint32, true>(compiling->constructors.Count());
-		for (uint32 index = 0; index < constructors.Count(); index++)
-			constructors.Add(compiling->constructors[index].function);
-		List<AbstractVariable> memberVariables = List<AbstractVariable>(compiling->variables.Count());
+		compiling->abstract = new (classes.Add())AbstractClass(DECLARATION_PARAMETERS(compiling), compiling->parent, compiling->inherits, List<uint32, true>(compiling->constructors.Count()), List<AbstractVariable>(compiling->variables.Count()), compiling->functions, INVALID, NULL);
+		for (uint32 index = 0; index < compiling->constructors.Count(); index++)
+			compiling->abstract->constructors.Add(compiling->constructors[index].function);
 		for (uint32 index = 0; index < compiling->variables.Count(); index++)
 		{
 			CompilingClass::Variable* member = &compiling->variables[index];
-			member->abstract = new (memberVariables.Add())AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID);
+			member->abstract = new (compiling->abstract->variables.Add())AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID);
 		}
-		compiling->abstract = new (classes.Add())AbstractClass(DECLARATION_PARAMETERS(compiling), compiling->parent, compiling->inherits, constructors, memberVariables, compiling->functions, INVALID, NULL);
 	}
 	for (uint32 i = 0; i < info->interfaces.Count(); i++)
 	{
 		CompilingInterface* compiling = &info->interfaces[i];
-		List<AbstractFunction> memberFunctions = List<AbstractFunction>(compiling->functions.Count());
+		compiling->abstract = new (interfaces.Add())AbstractInterface(DECLARATION_PARAMETERS(compiling), compiling->inherits, List<AbstractFunction>(compiling->functions.Count()));
 		for (uint32 index = 0; index < compiling->functions.Count(); index++)
 		{
 			CompilingInterface::Function* member = &compiling->functions[index];
-			member->abstract = new (memberFunctions.Add())AbstractFunction(DECLARATION_PARAMETERS(member), TupleInfo(member->parameters.Count()), TupleInfo(member->returns.Count()));
+			member->abstract = new (compiling->abstract->functions.Add())AbstractFunction(DECLARATION_PARAMETERS(member), TupleInfo(member->parameters.Count()), TupleInfo(member->returns.Count()));
 		}
-		compiling->abstract = new (interfaces.Add())AbstractInterface(DECLARATION_PARAMETERS(compiling), compiling->inherits, memberFunctions);
 	}
 	for (uint32 i = 0; i < info->delegates.Count(); i++)
 	{

@@ -37,7 +37,7 @@ void CheckLineEnd(const Line& line, uint32 startIndex, MessageCollector* message
 	if (TryAnalysis(line, startIndex, lexical, messages))
 		MESSAGE2(messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 }
-bool CheckIndent(const Line& line, uint32& indent, uint32 parentIndent, MessageCollector* messages)
+bool CheckIndent(const Line& line, uint32& indent, uint32 parentIndent)
 {
 	if (indent == INVALID)
 	{
@@ -45,7 +45,6 @@ bool CheckIndent(const Line& line, uint32& indent, uint32 parentIndent, MessageC
 		if (indent <= parentIndent)return false;
 	}
 	else if (line.indent < indent)return false;
-	else if (line.indent > indent)MESSAGE2(messages, line, MessageType::ERROR_INDENT);
 	return true;
 }
 
@@ -135,7 +134,7 @@ void ParseBlock(uint32 parentIndent, List<Line>& lines, ParseParameter* paramete
 	while (parameter->reader->ReadLine())
 	{
 		Line line = parameter->reader->CurrentLine();
-		if (CheckIndent(line, indent, parentIndent, parameter->messages))lines.Add(line);
+		if (CheckIndent(line, indent, parentIndent))lines.Add(line);
 		else break;
 	}
 }
@@ -446,7 +445,7 @@ void FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility,
 	while (parameter->reader->ReadLine())
 	{
 		Line current = parameter->reader->CurrentLine();
-		if (!CheckIndent(current, indent, line.indent, parameter->messages))break;
+		if (!CheckIndent(current, indent, line.indent))break;
 
 		if (TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))
 		{
@@ -471,7 +470,7 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 {
 	Lexical lexical;
 	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))return;
-	CheckLineEnd(line, index, parameter->messages);
+	CheckLineEnd(line, lexical.anchor.GetEnd(), parameter->messages);
 
 	FileStruct* fileStruct = new (structs.Add())FileStruct(lexical.anchor, visibility, this);
 	fileStruct->attributes.Add(attributes);
@@ -481,7 +480,7 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 	{
 	label_parse:
 		Line current = parameter->reader->CurrentLine();
-		if (!CheckIndent(current, indent, line.indent, parameter->messages))break;
+		if (!CheckIndent(current, indent, line.indent))break;
 
 		if (TryParseAttributes(current, attributes, parameter->messages))continue;
 		Anchor name, expression; FileType type;
@@ -535,7 +534,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 	{
 	label_parse:
 		Line current = parameter->reader->CurrentLine();
-		if (!CheckIndent(current, indent, line.indent, parameter->messages))break;
+		if (!CheckIndent(current, indent, line.indent))break;
 
 		if (TryParseAttributes(current, attributes, parameter->messages))continue;
 		visibility = ParseVisibility(current, index, parameter->messages);
@@ -624,7 +623,7 @@ lable_parse_inherits:
 	while (parameter->reader->ReadLine())
 	{
 		Line current = parameter->reader->CurrentLine();
-		if (!CheckIndent(current, indent, line.indent, parameter->messages))break;
+		if (!CheckIndent(current, indent, line.indent))break;
 
 		if (TryParseAttributes(current, attributes, parameter->messages))continue;
 		Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
