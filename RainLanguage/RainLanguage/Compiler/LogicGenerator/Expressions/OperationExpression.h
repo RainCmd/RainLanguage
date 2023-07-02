@@ -16,16 +16,15 @@ public:
 	~InstructOperationExpression();
 };
 
-class VariableExpression;
 class OperationPostIncrementExpression :public Expression//x++ x--
 {
 public:
-	VariableExpression* variable;//这个指针由operation析构释放
-	Expression* operation;
-	OperationPostIncrementExpression(const Anchor& anchor, const List<Type, true>& returns, VariableExpression* variable, Expression* operation) :Expression(ExpressionType::OperationPostIncrementExpression, anchor, returns), variable(variable), operation(operation)
+	Expression* variable;
+	Instruct instruct;
+	OperationPostIncrementExpression(const Anchor& anchor, const Type& returnType, Expression* variable, Instruct instruct) :Expression(ExpressionType::OperationPostIncrementExpression, anchor, List<Type, true>(1)), variable(variable), instruct(instruct)
 	{
-		if (returns.Count() == 1) attribute = CombineType(Attribute::Value, returns.Peek());
-		else attribute = Attribute::Tuple;
+		attribute = CombineType(Attribute::Value, returnType);
+		returns.Add(returnType);
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~OperationPostIncrementExpression();
@@ -34,12 +33,12 @@ public:
 class OperationPrevIncrementExpression :public Expression//++x --x
 {
 public:
-	VariableExpression* variable;//这个指针由operation析构释放
-	Expression* operation;
-	OperationPrevIncrementExpression(const Anchor& anchor, const List<Type, true>& returns, VariableExpression* variable, Expression* operation) :Expression(ExpressionType::OperationPrevIncrementExpression, anchor, returns), variable(variable), operation(operation)
+	Expression* variable;
+	Instruct instruct;
+	OperationPrevIncrementExpression(const Anchor& anchor, const Type& returnType, Expression* variable, Instruct instruct) :Expression(ExpressionType::OperationPrevIncrementExpression, anchor, List<Type, true>(1)), variable(variable), instruct(instruct)
 	{
-		if (returns.Count() == 1) attribute = CombineType(Attribute::Value, returns.Peek());
-		else attribute = Attribute::Tuple;
+		attribute = CombineType(Attribute::Value, returnType);
+		returns.Add(returnType);
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~OperationPrevIncrementExpression();

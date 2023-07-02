@@ -45,7 +45,11 @@
 		}\
 		Expression* parameter = expressionStack.Pop();\
 		Expression* result = Create##name##Operator(token.anchor, this, parameter);\
-		if (result)return result->attribute;\
+		if (result)\
+		{\
+			expressionStack.Add(result);\
+			return result->attribute; \
+		}\
 		else return Attribute::Invalid;\
 	}
 #define BINARY_OPERATOR(name)\
@@ -3250,7 +3254,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				else if (ContainAny(attribute, Attribute::Type))
 				{
 					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-					ASSERT_DEBUG(typeExpression->type == ExpressionType::TypeExpression, "表达式类型不对");
+					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
 					Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
 					delete typeExpression;
 					expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));

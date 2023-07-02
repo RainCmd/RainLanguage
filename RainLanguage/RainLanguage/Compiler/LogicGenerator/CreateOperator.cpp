@@ -894,20 +894,16 @@ Expression* CreateIncrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer)
+					if (ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Increment, parameter);
-						return new OperationPrevIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer) return new OperationPrevIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Increment);
+						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real) return new OperationPrevIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Increment);
+						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
-					else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real)
-					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Increment, parameter);
-						return new OperationPrevIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
-					}
-					MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+					else MESSAGE2(parser->manager->messages, parameter->anchor, MessageType::ERROR_EXPRESSION_UNASSIGNABLE);
 				}
-				Expression* expression = new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
-				return new OperationPrevIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+				else return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 			}
 			else MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_TYPE_MISMATCH);
 		}
@@ -932,20 +928,16 @@ Expression* CreateDecrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer)
+					if (ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Decrement, parameter);
-						return new OperationPrevIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer) return new OperationPrevIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Decrement);
+						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real) return new OperationPrevIncrementExpression(anchor, TYPE_Real, parameter, Instruct::INTEGER_Decrement);
+						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
-					else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real)
-					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Decrement, parameter);
-						return new OperationPrevIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
-					}
-					MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+					else MESSAGE2(parser->manager->messages, parameter->anchor, MessageType::ERROR_EXPRESSION_UNASSIGNABLE);
 				}
-				Expression* expression = new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
-				return new OperationPrevIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+				else return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 			}
 			else MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_TYPE_MISMATCH);
 		}
@@ -970,20 +962,16 @@ Expression* CreateIncrementRightOperator(const Anchor& anchor, ExpressionParser*
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer)
+					if (ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Increment, parameter);
-						return new OperationPostIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer) return new OperationPostIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Increment);
+						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real) return new OperationPostIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Increment);
+						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
-					else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real)
-					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Increment, parameter);
-						return new OperationPostIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
-					}
-					MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+					else MESSAGE2(parser->manager->messages, parameter->anchor, MessageType::ERROR_EXPRESSION_UNASSIGNABLE);
 				}
-				Expression* expression = new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
-				return new OperationPostIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+				else return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 			}
 			else MESSAGE2(parser->manager->messages, parameter->anchor, MessageType::ERROR_TYPE_MISMATCH);
 		}
@@ -1008,20 +996,16 @@ Expression* CreateDecrementRightOperator(const Anchor& anchor, ExpressionParser*
 			{
 				if (callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer)
+					if (ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Decrement, parameter);
-						return new OperationPostIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer) return new OperationPostIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Decrement);
+						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real) return new OperationPostIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Decrement);
+						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
-					else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real)
-					{
-						Expression* expression = new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Decrement, parameter);
-						return new OperationPostIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
-					}
-					MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
+					else MESSAGE2(parser->manager->messages, parameter->anchor, MessageType::ERROR_EXPRESSION_UNASSIGNABLE);
 				}
-				Expression* expression = new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
-				return new OperationPostIncrementExpression(anchor, expression->returns, (VariableExpression*)parameter, expression);
+				else return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 			}
 			else MESSAGE2(parser->manager->messages, parameter->anchor, MessageType::ERROR_TYPE_MISMATCH);
 		}

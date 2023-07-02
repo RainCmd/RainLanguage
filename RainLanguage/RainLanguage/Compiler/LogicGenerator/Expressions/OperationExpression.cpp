@@ -18,31 +18,28 @@ InstructOperationExpression::~InstructOperationExpression()
 
 void OperationPostIncrementExpression::Generator(LogicGenerateParameter& parameter)
 {
-	if (ContainAll(operation->type, ExpressionType::InstructOperationExpression))
-	{
-		LogicGenerateParameter variableParameter = LogicGenerateParameter(parameter, 1);
-		variable->Generator(variableParameter);
-		operation->Generator(parameter);
-		if (ContainAll(variable->type, ExpressionType::VariableMemberExpression))
-			variable->GeneratorAssignment(parameter);
-		parameter.results[0] = variableParameter.results[0];
-	}
-	else operation->Generator(parameter);
+	LogicGenerateParameter variableParameter = LogicGenerateParameter(parameter, 1);
+	variable->Generator(variableParameter);
+	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(variableParameter.results[0]);
+	parameter.generator->WriteCode(instruct);
+	parameter.generator->WriteCode(variableParameter.results[0]);
 }
 
 OperationPostIncrementExpression::~OperationPostIncrementExpression()
 {
-	delete operation;
+	delete variable;
 }
 
 void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& parameter)
 {
-	operation->Generator(parameter);
-	if (ContainAll(variable->type, ExpressionType::VariableMemberExpression) && ContainAll(operation->type, ExpressionType::InstructOperationExpression))
-		variable->GeneratorAssignment(parameter);
+	variable->Generator(parameter);
+	parameter.generator->WriteCode(instruct);
+	parameter.generator->WriteCode(parameter.results[0]);
 }
 
 OperationPrevIncrementExpression::~OperationPrevIncrementExpression()
 {
-	delete operation;
+	delete variable;
 }
