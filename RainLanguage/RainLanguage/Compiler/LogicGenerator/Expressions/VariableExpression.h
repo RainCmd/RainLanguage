@@ -53,6 +53,8 @@ public:
 	inline VariableMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, Expression* target, const Type& type) :VariableExpression(ExpressionType::VariableMemberExpression, anchor, type), declaration(declaration), target(target)
 	{
 		this->attribute = CombineType(attribute, type);
+		if (declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))
+			this->attribute & ~Attribute::Assignable;
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);

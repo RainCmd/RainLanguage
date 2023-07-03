@@ -111,7 +111,7 @@ LogicVariable GetVariable(LogicGenerateParameter& parameter, const CompilingDecl
 	{
 		LogicVariable closure = parameter.variableGenerator->GetLocal(parameter.manager, 0, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
 		LogicVariable result = parameter.variableGenerator->DecareTemporary(parameter.manager, type);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, result, closure, parameter.manager->selfLibaray->classes[declaration.definition].variables[declaration.index].declaration, parameter.finallyAddress);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, result, closure, parameter.manager->selfLibaray->classes[declaration.definition].variables[declaration.index].declaration, 0, parameter.finallyAddress);
 		return result;
 	}
 	EXCEPTION("ÓïÒå½âÎöÂß¼­ÓÐbug");
@@ -125,7 +125,7 @@ void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& pa
 	parameter.generator->WriteCodeGlobalReference(Declaration(LIBRARY_SELF, TypeCode::Handle, closure.index));
 	AbstractClass* abstractClass = &parameter.manager->selfLibaray->classes[closure.index];
 	for (uint32 i = 0; i < abstractClass->variables.Count(); i++)
-		LogicVariabelAssignment(parameter.manager, parameter.generator, closureVariable, abstractClass->variables[i].declaration, GetVariable(parameter, sourceVariables[i], abstractClass->variables[i].type), parameter.finallyAddress);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, closureVariable, abstractClass->variables[i].declaration, 0, GetVariable(parameter, sourceVariables[i], abstractClass->variables[i].type), parameter.finallyAddress);
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);

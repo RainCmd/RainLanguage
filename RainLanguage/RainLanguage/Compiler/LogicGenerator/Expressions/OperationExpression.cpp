@@ -19,6 +19,7 @@ InstructOperationExpression::~InstructOperationExpression()
 void OperationPostIncrementExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter variableParameter = LogicGenerateParameter(parameter, 1);
+	//todo 判断下variable是否来自class字段，如果是，则需要一些额外操作
 	variable->Generator(variableParameter);
 	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
@@ -34,6 +35,7 @@ OperationPostIncrementExpression::~OperationPostIncrementExpression()
 
 void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& parameter)
 {
+	//todo 判断下variable是否来自class字段，如果是，则需要一些额外操作
 	variable->Generator(parameter);
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(parameter.results[0]);

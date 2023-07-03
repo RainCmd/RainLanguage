@@ -159,8 +159,9 @@ bool VariableGlobalExpression::TryEvaluationIndices(List<integer, true>& value, 
 void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+	//todo 如果target是个class字段，这里需要替换成用target+结构体字段offset来赋值
 	target->Generator(targetParameter);
-	if (IsHandleType(target->returns[0])) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, parameter.finallyAddress);
+	if (IsHandleType(target->returns[0])) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, 0, parameter.finallyAddress);
 	else
 	{
 		ASSERT_DEBUG(declaration.category == DeclarationCategory::StructVariable, "不是结构体字段");
@@ -171,21 +172,23 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
 
 void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	if (declaration.category == DeclarationCategory::ClassVariable)
-	{
-		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-		target->Generator(targetParameter);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, parameter.results[0], parameter.finallyAddress);
-	}
-	else if (declaration.category == DeclarationCategory::StructVariable)
+	if (declaration.category == DeclarationCategory::StructVariable)
 	{
 		if (parameter.results[0] == logicVariable) return;
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		//todo 如果target是个class字段，这里需要替换成用target+结构体字段offset来赋值
 		target->Generator(targetParameter);
 		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
 		const LogicVariable member = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
 		LogicVariabelAssignment(parameter.manager, parameter.generator, member, parameter.results[0]);
 	}
+	else if (declaration.category == DeclarationCategory::ClassVariable)
+	{
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, 0, parameter.results[0], parameter.finallyAddress);
+	}
+
 	else EXCEPTION("无效的声明类型");
 }
 
@@ -215,7 +218,7 @@ void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& paramet
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
 	parameter.generator->WriteCode(targetParameter.results[0]);
 	parameter.generator->WriteCode(&nullAddress);
-	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, parameter.finallyAddress);
+	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, 0, parameter.finallyAddress);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);
 	nullAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());

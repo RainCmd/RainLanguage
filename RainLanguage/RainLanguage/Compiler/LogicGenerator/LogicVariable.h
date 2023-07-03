@@ -30,5 +30,5 @@ struct LogicVariable
 };
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right);
-void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember, CodeLocalAddressReference* finallyAddress);
-void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, const LogicVariable& right, CodeLocalAddressReference* finallyAddress);
+void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember, uint32 offset, CodeLocalAddressReference* finallyAddress);
+void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, uint32 offset, const LogicVariable& right, CodeLocalAddressReference* finallyAddress);
