@@ -47,6 +47,9 @@ public:
 class VariableMemberExpression :public VariableExpression
 {
 	LogicVariable logicVariable;
+	void Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type);
+	void GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& type);
 public:
 	Expression* target;
 	CompilingDeclaration declaration;
@@ -56,6 +59,7 @@ public:
 		if (declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))
 			this->attribute & ~Attribute::Assignable;
 	}
+	bool IsReferenceMember();
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);

@@ -36,7 +36,9 @@ public:
 		returns.Add(elementType);
 		attribute = CombineType(Attribute::Assignable | Attribute::Value, elementType);
 	}
+	void Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type);
 	void Generator(LogicGenerateParameter& parameter);
+	void GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	~ArrayEvaluationExpression();
 };
@@ -50,6 +52,7 @@ public:
 		returns.Add(elementType);
 		attribute = CombineType(Attribute::Value, elementType);
 	}
+	void Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type);
 	void Generator(LogicGenerateParameter& parameter);
 	~ArrayQuestionEvaluationExpression();
 };
@@ -79,7 +82,7 @@ public:
 	~ArraySubExpression();
 };
 
-class ArrayQuestionSubExpression :public Expression 
+class ArrayQuestionSubExpression :public Expression
 {
 public:
 	Expression* source, * range;

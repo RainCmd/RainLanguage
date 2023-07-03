@@ -1,5 +1,6 @@
 #include "VariableExpression.h"
 #include "../VariableGenerator.h"
+#include "ArrayExpression.h"
 
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
@@ -156,51 +157,112 @@ bool VariableGlobalExpression::TryEvaluationIndices(List<integer, true>& value, 
 	return false;
 }
 
-void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
-{
-	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-	//todo 如果target是个class字段，这里需要替换成用target+结构体字段offset来赋值
-	target->Generator(targetParameter);
-	if (IsHandleType(target->returns[0])) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, 0, parameter.finallyAddress);
-	else
-	{
-		ASSERT_DEBUG(declaration.category == DeclarationCategory::StructVariable, "不是结构体字段");
-		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
-		parameter.results[0] = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
-	}
-}
-
-void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
+void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
 {
 	if (declaration.category == DeclarationCategory::StructVariable)
 	{
-		if (parameter.results[0] == logicVariable) return;
-		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-		//todo 如果target是个class字段，这里需要替换成用target+结构体字段offset来赋值
-		target->Generator(targetParameter);
-		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
-		const LogicVariable member = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, member, parameter.results[0]);
+		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].address;
+		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
+		{
+			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
+			targetVariable->Generator(parameter, offset, type);
+		}
+		else if (ContainAny(target->type, ExpressionType::ArrayEvaluationExpression))
+		{
+			ArrayEvaluationExpression* targetVariable = (ArrayEvaluationExpression*)target;
+			targetVariable->Generator(parameter, offset, type);
+		}
+		else
+		{
+			LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+			target->Generator(targetParameter);
+			parameter.results[0] = LogicVariable(targetParameter.results[0], type, offset);
+		}
 	}
 	else if (declaration.category == DeclarationCategory::ClassVariable)
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, 0, parameter.results[0], parameter.finallyAddress);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, type), targetParameter.results[0], declaration, offset, parameter.finallyAddress);
 	}
-
 	else EXCEPTION("无效的声明类型");
+}
+
+void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset)
+{
+	if (declaration.category == DeclarationCategory::StructVariable)
+	{
+		if (parameter.results[0] == logicVariable) return;
+		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].address;
+		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
+		{
+			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
+			targetVariable->GeneratorAssignment(parameter, offset);
+		}
+		else if (ContainAny(target->type, ExpressionType::ArrayEvaluationExpression))
+		{
+			ArrayEvaluationExpression* targetVariable = (ArrayEvaluationExpression*)target;
+			targetVariable->GeneratorAssignment(parameter, offset);
+		}
+		else
+		{
+			LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+			target->Generator(targetParameter);
+			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(targetParameter.results[0], parameter.results[0].type, offset), parameter.results[0]);
+		}
+	}
+	else if (declaration.category == DeclarationCategory::ClassVariable)
+	{
+		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+		target->Generator(targetParameter);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, targetParameter.results[0], declaration, offset, parameter.results[0], parameter.finallyAddress);
+	}
+	else EXCEPTION("无效的声明类型");
+}
+
+void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& type)
+{
+	if (declaration.category == DeclarationCategory::StructVariable)
+	{
+		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].address;
+		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
+		{
+			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
+			targetVariable->FillResultVariable(parameter, index, offset, type);
+		}
+		else if (ContainAny(target->type, ExpressionType::VariableLocalExpression | ExpressionType::VariableGlobalExpression))
+		{
+			LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
+			target->Generator(targetParameter);
+			parameter.results[index] = logicVariable = LogicVariable(targetParameter.results[0], type, offset);
+		}
+	}
+}
+
+bool VariableMemberExpression::IsReferenceMember()
+{
+	if (declaration.category == DeclarationCategory::ClassVariable) return true;
+	else if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
+	{
+		VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
+		return targetVariable->IsReferenceMember();
+	}
+	return ContainAny(target->type, ExpressionType::ArrayEvaluationExpression);
+}
+
+void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
+{
+	Generator(parameter, 0, returns[0]);
+}
+
+void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
+{
+	GeneratorAssignment(parameter, 0);
 }
 
 void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
-	if (declaration.category == DeclarationCategory::StructVariable)
-	{
-		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-		target->Generator(targetParameter);
-		AbstractVariable* abstractVariable = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index];
-		parameter.results[index] = logicVariable = LogicVariable(targetParameter.results[0], returns[0], abstractVariable->address);
-	}
+	FillResultVariable(parameter, index, 0, returns[0]);
 }
 
 VariableMemberExpression::~VariableMemberExpression()

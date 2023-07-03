@@ -409,7 +409,7 @@ label_next_instruct:
 		{
 			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
 			Type& elementType = INSTRUCT_VALUE(Type, 5);
-			integer length = INSTRUCT_VALUE(integer, 5 + SIZE(Type));
+			integer length = INSTRUCT_VARIABLE(integer, 5 + SIZE(Type));
 			if (length < 0) EXCEPTION_EXIT(BASE_CreateArray, EXCEPTION_OUT_OF_RANGE)
 			else
 			{

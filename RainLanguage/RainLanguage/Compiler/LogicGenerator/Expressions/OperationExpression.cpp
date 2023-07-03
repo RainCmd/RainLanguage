@@ -1,6 +1,7 @@
 #include "OperationExpression.h"
 #include "../VariableGenerator.h"
 #include "VariableExpression.h"
+#include "ArrayExpression.h"
 
 void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 {
@@ -19,13 +20,22 @@ InstructOperationExpression::~InstructOperationExpression()
 void OperationPostIncrementExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter variableParameter = LogicGenerateParameter(parameter, 1);
-	//todo 判断下variable是否来自class字段，如果是，则需要一些额外操作
 	variable->Generator(variableParameter);
 	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCode(variableParameter.results[0]);
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(variableParameter.results[0]);
+	if (ContainAny(variable->type, ExpressionType::VariableMemberExpression))
+	{
+		VariableMemberExpression* target = (VariableMemberExpression*)variable;
+		if (target->IsReferenceMember()) target->GeneratorAssignment(variableParameter);
+	}
+	else if (ContainAny(variable->type, ExpressionType::ArrayEvaluationExpression))
+	{
+		ArrayEvaluationExpression* target = (ArrayEvaluationExpression*)variable;
+		target->GeneratorAssignment(variableParameter);
+	}
 }
 
 OperationPostIncrementExpression::~OperationPostIncrementExpression()
@@ -35,10 +45,19 @@ OperationPostIncrementExpression::~OperationPostIncrementExpression()
 
 void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& parameter)
 {
-	//todo 判断下variable是否来自class字段，如果是，则需要一些额外操作
 	variable->Generator(parameter);
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(parameter.results[0]);
+	if (ContainAny(variable->type, ExpressionType::VariableMemberExpression))
+	{
+		VariableMemberExpression* memberExpression = (VariableMemberExpression*)variable;
+		if (memberExpression->IsReferenceMember()) memberExpression->GeneratorAssignment(parameter);
+	}
+	else if (ContainAny(variable->type, ExpressionType::ArrayEvaluationExpression))
+	{
+		ArrayEvaluationExpression* target = (ArrayEvaluationExpression*)variable;
+		target->GeneratorAssignment(parameter);
+	}
 }
 
 OperationPrevIncrementExpression::~OperationPrevIncrementExpression()

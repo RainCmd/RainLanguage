@@ -2373,6 +2373,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				Lexical identifierLexical;
 				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
 				{
+					index = identifierLexical.anchor.GetEnd();
 					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
 					{
 						Expression* expression = expressionStack.Pop();
@@ -2388,7 +2389,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								{
 									expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, false);
 									expressionStack.Add(expression);
-									break;
+									attribute = expression->attribute;
+									goto label_next_lexical;
 								}
 								else
 								{

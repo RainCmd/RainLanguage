@@ -882,7 +882,7 @@ Expression* CreateNegativeOperator(const Anchor& anchor, ExpressionParser* parse
 
 Expression* CreateIncrementLeftOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression))
+	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("++"));
@@ -916,7 +916,7 @@ Expression* CreateIncrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 
 Expression* CreateDecrementLeftOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression))
+	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("--"));
@@ -950,7 +950,7 @@ Expression* CreateDecrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 
 Expression* CreateIncrementRightOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression))
+	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("++"));
@@ -984,7 +984,7 @@ Expression* CreateIncrementRightOperator(const Anchor& anchor, ExpressionParser*
 
 Expression* CreateDecrementRightOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression))
+	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("--"));

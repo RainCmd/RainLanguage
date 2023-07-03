@@ -46,7 +46,7 @@ ArrayInitExpression::~ArrayInitExpression()
 	delete elements;
 }
 
-void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVariable& result, Expression* indexExpression, LogicVariable& arrayVariable)
+void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVariable& result, LogicVariable& arrayVariable, Expression* indexExpression, uint32 offset)
 {
 	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
 	indexExpression->Generator(indexParameter);
@@ -56,83 +56,87 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCode(arrayVariable);
 		parameter.generator->WriteCode(indexParameter.results[0]);
-		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
-	else if (IsHandleType(result.type))
+	else
 	{
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Handle);
-		parameter.generator->WriteCode(result);
-		parameter.generator->WriteCode(arrayVariable);
-		parameter.generator->WriteCode(indexParameter.results[0]);
-		parameter.generator->WriteCode((uint32)0);
-		parameter.generator->WriteCode(parameter.finallyAddress);
-	}
-	else switch (result.type.code)
-	{
-		case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
-		case TypeCode::Struct:
-			if (result.type == TYPE_Bool || result.type == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_1);
-			else if (result.type == TYPE_Char)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_2);
-			else if (result.type == TYPE_Integer || result.type == TYPE_Real)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_8);
-			else if (result.type == TYPE_String)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_String);
-			else if (result.type == TYPE_Entity)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Entity);
-			else if (parameter.manager->IsBitwise(result.type))
-			{
-				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
+		Type type = result.type;
+		if (type.dimension) type = TYPE_Array;
+		switch (type.code)
+		{
+			case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
+			case TypeCode::Struct:
+				if (type == TYPE_Bool || type == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_1);
+				else if (type == TYPE_Char) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_2);
+				else if (type == TYPE_Integer || type == TYPE_Real) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_8);
+				else if (type == TYPE_String) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_String);
+				else if (type == TYPE_Entity) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Entity);
+				else if (parameter.manager->IsBitwise(type))
+				{
+					parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
+					parameter.generator->WriteCode(result);
+					parameter.generator->WriteCode(arrayVariable);
+					parameter.generator->WriteCode(indexParameter.results[0]);
+					parameter.generator->WriteCode(offset);
+					parameter.generator->WriteCode(parameter.manager->GetLibrary(type.library)->structs[type.index].size);
+					break;
+				}
+				else
+				{
+					parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
+					parameter.generator->WriteCode(result);
+					parameter.generator->WriteCode(arrayVariable);
+					parameter.generator->WriteCode(indexParameter.results[0]);
+					parameter.generator->WriteCode(offset);
+					parameter.generator->WriteCodeGlobalReference((Declaration)type);
+					break;
+				}
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(arrayVariable);
 				parameter.generator->WriteCode(indexParameter.results[0]);
-				parameter.generator->WriteCode((uint32)0);
-				parameter.generator->WriteCode(parameter.manager->GetLibrary(result.type.library)->structs[result.type.index].size);
-				parameter.generator->WriteCode(parameter.finallyAddress);
-				return;
-			}
-			else
-			{
-				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
+				parameter.generator->WriteCode(offset);
+				break;
+			case TypeCode::Enum:
+				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_8);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(arrayVariable);
 				parameter.generator->WriteCode(indexParameter.results[0]);
-				parameter.generator->WriteCode((uint32)0);
-				parameter.generator->WriteCodeGlobalReference((Declaration)result.type);
-				parameter.generator->WriteCode(parameter.finallyAddress);
-				return;
-			}
-			parameter.generator->WriteCode(result);
-			parameter.generator->WriteCode(arrayVariable);
-			parameter.generator->WriteCode(indexParameter.results[0]);
-			parameter.generator->WriteCode((uint32)0);
-			parameter.generator->WriteCode(parameter.finallyAddress);
-			break;
-		case TypeCode::Enum:
-			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_8);
-			parameter.generator->WriteCode(result);
-			parameter.generator->WriteCode(arrayVariable);
-			parameter.generator->WriteCode(indexParameter.results[0]);
-			parameter.generator->WriteCode((uint32)0);
-			parameter.generator->WriteCode(parameter.finallyAddress);
-			break;
-		case TypeCode::Handle:
-		case TypeCode::Interface:
-		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
-		default: EXCEPTION("无效的TypeCode");
+				parameter.generator->WriteCode(offset);
+				break;
+			case TypeCode::Handle:
+			case TypeCode::Interface:
+			case TypeCode::Delegate:
+			case TypeCode::Coroutine:
+				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Handle);
+				parameter.generator->WriteCode(result);
+				parameter.generator->WriteCode(arrayVariable);
+				parameter.generator->WriteCode(indexParameter.results[0]);
+				parameter.generator->WriteCode(offset);
+				break;
+			default: EXCEPTION("无效的TypeCode");
+		}
 	}
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
-void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter)
+void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
 {
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
 	parameter.generator->WriteCode(arrayParameter.results[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, returns[0]), indexExpression, arrayParameter.results[0]);
+	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, type), arrayParameter.results[0], indexExpression, offset);
 }
 
-void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
+void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
+	Generator(parameter, 0, returns[0]);
+}
+
+void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset)
+{
+	ASSERT_DEBUG(arrayExpression->returns[0] != TYPE_String, "字符串不可赋值");
+	LogicVariable result = parameter.results[0];
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	LogicVariable& arrayVariable = arrayParameter.results[0];
@@ -141,66 +145,67 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
 	indexExpression->Generator(indexParameter);
-	if (IsHandleType(result.type))
-	{
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Handle);
-		parameter.generator->WriteCode(arrayVariable);
-		parameter.generator->WriteCode(indexParameter.results[0]);
-		parameter.generator->WriteCode((uint32)0);
-		parameter.generator->WriteCode(result);
-		parameter.generator->WriteCode(parameter.finallyAddress);
-	}
-	else switch (result.type.code)
+	Type type = result.type;
+	if (type.dimension) type = TYPE_Array;
+	switch (type.code)
 	{
 		case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
 		case TypeCode::Struct:
-			if (result.type == TYPE_Bool || result.type == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_1);
-			else if (result.type == TYPE_Char)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_2);
-			else if (result.type == TYPE_Integer || result.type == TYPE_Real)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_8);
-			else if (result.type == TYPE_String)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_String);
-			else if (result.type == TYPE_Entity)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Entity);
-			else if (parameter.manager->IsBitwise(result.type))
+			if (type == TYPE_Bool || type == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_1);
+			else if (type == TYPE_Char)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_2);
+			else if (type == TYPE_Integer || type == TYPE_Real)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_8);
+			else if (type == TYPE_String)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_String);
+			else if (type == TYPE_Entity)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Entity);
+			else if (parameter.manager->IsBitwise(type))
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Bitwise);
 				parameter.generator->WriteCode(arrayVariable);
 				parameter.generator->WriteCode(indexParameter.results[0]);
-				parameter.generator->WriteCode((uint32)0);
+				parameter.generator->WriteCode(offset);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(parameter.manager->GetLibrary(result.type.library)->structs[result.type.index].size);
-				parameter.generator->WriteCode(parameter.finallyAddress);
-				return;
+				break;
 			}
 			else
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Bitwise);
 				parameter.generator->WriteCode(arrayVariable);
 				parameter.generator->WriteCode(indexParameter.results[0]);
-				parameter.generator->WriteCode((uint32)0);
+				parameter.generator->WriteCode(offset);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCodeGlobalReference((Declaration)result.type);
-				parameter.generator->WriteCode(parameter.finallyAddress);
-				return;
+				break;
 			}
 			parameter.generator->WriteCode(arrayVariable);
 			parameter.generator->WriteCode(indexParameter.results[0]);
-			parameter.generator->WriteCode((uint32)0);
+			parameter.generator->WriteCode(offset);
 			parameter.generator->WriteCode(result);
-			parameter.generator->WriteCode(parameter.finallyAddress);
 			break;
 		case TypeCode::Enum:
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_8);
 			parameter.generator->WriteCode(arrayVariable);
 			parameter.generator->WriteCode(indexParameter.results[0]);
-			parameter.generator->WriteCode((uint32)0);
+			parameter.generator->WriteCode(offset);
 			parameter.generator->WriteCode(result);
-			parameter.generator->WriteCode(parameter.finallyAddress);
 			break;
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
 		case TypeCode::Coroutine:
+			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Handle);
+			parameter.generator->WriteCode(arrayVariable);
+			parameter.generator->WriteCode(indexParameter.results[0]);
+			parameter.generator->WriteCode(offset);
+			parameter.generator->WriteCode(result);
+			break;
 		default: EXCEPTION("无效的TypeCode");
 	}
+	parameter.generator->WriteCode(parameter.finallyAddress);
+}
+
+void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
+{
+	GeneratorAssignment(parameter, 0);
 }
 
 ArrayEvaluationExpression::~ArrayEvaluationExpression()
@@ -209,16 +214,16 @@ ArrayEvaluationExpression::~ArrayEvaluationExpression()
 	delete indexExpression;
 }
 
-void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter)
+void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
 {
-	LogicVariable result = parameter.GetResult(0, returns[0]);
+	LogicVariable result = parameter.GetResult(0, type);
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	CodeLocalAddressReference clearAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
 	parameter.generator->WriteCode(arrayParameter.results[0]);
 	parameter.generator->WriteCode(&clearAddress);
-	GeneratorArrayEvaluation(parameter, result, indexExpression, arrayParameter.results[0]);
+	GeneratorArrayEvaluation(parameter, result, arrayParameter.results[0], indexExpression, offset);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);
@@ -226,8 +231,13 @@ void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parame
 	parameter.generator->WriteCode(Instruct::BASE_Datazero);
 	parameter.generator->WriteCode(result);
 	uint8 alignment;
-	parameter.generator->WriteCode(parameter.manager->GetStackSize(returns[0], alignment));
+	parameter.generator->WriteCode(parameter.manager->GetStackSize(type, alignment));
 	endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+}
+
+void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter)
+{
+	Generator(parameter, 0, returns[0]);
 }
 
 ArrayQuestionEvaluationExpression::~ArrayQuestionEvaluationExpression()
