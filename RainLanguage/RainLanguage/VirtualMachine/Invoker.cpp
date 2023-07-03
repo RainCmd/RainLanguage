@@ -256,12 +256,18 @@ void Invoker::AppendParameter(Type type)
 
 void Invoker::Reference()
 {
-	kernel->coroutineAgency->Reference(this);
+	if (kernel) kernel->coroutineAgency->Reference(this);
+	else hold++;
 }
 
 void Invoker::Release()
 {
-	kernel->coroutineAgency->Release(this);
+	if(kernel) kernel->coroutineAgency->Release(this);
+	else
+	{
+		hold--;
+		if (!hold) delete this;
+	}
 }
 
 void Invoker::ClearParameters()

@@ -18,7 +18,7 @@ InvokerWrapper::InvokerWrapper(Invoker* invoker) : instanceID(invoker ? invoker-
 
 InvokerWrapper::InvokerWrapper(const InvokerWrapper& other) : instanceID(other.instanceID), invoker(other.invoker)
 {
-	if (IsValid())invoker->Reference();
+	if (IsValid()) invoker->Reference();
 }
 
 InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(other.instanceID), invoker(other.invoker)
@@ -28,15 +28,15 @@ InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(oth
 
 InvokerWrapper::~InvokerWrapper()
 {
-	if (IsValid())invoker->Release();
+	if (IsValid()) invoker->Release();
 }
 
 InvokerWrapper& InvokerWrapper::operator=(const InvokerWrapper& other)
 {
-	if (IsValid())invoker->Release();
+	if (IsValid()) invoker->Release();
 	instanceID = other.instanceID;
 	invoker = other.invoker;
-	if (IsValid())invoker->Reference();
+	if (IsValid()) invoker->Reference();
 	return *this;
 }
 
@@ -47,12 +47,12 @@ uint64 InvokerWrapper::GetInstanceID() const
 
 bool InvokerWrapper::IsValid() const
 {
-	return invoker && invoker->instanceID == instanceID;
+	return invoker && invoker->kernel && invoker->instanceID == instanceID;
 }
 
 InvokerState InvokerWrapper::GetState() const
 {
-	if (IsValid())return invoker->state;
+	if (IsValid()) return invoker->state;
 	else return InvokerState::Invalid;
 }
 

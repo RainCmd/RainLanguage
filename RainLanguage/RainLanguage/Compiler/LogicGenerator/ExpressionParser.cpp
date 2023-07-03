@@ -2974,9 +2974,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					if (ContainAny(attribute, Attribute::None))
 					{
-						index = lexical.anchor.GetEnd();
 						Lexical identifier;
-						if (TryAnalysis(anchor, index, identifier, manager->messages) && identifier.type == LexicalType::Word)
+						if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifier, manager->messages) && identifier.type == LexicalType::Word)
 						{
 							if (IsKeyWord(identifier.anchor.content))
 							{
@@ -2985,9 +2984,10 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							}
 							else
 							{
+								index = identifier.anchor.GetEnd();
 								expressionStack.Add(new BlurryVariableDeclarationExpression(identifier.anchor));
 								attribute = Attribute::Assignable;
-								break;
+								goto label_next_lexical;
 							}
 						}
 					}

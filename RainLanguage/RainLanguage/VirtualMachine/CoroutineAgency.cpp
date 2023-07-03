@@ -82,7 +82,9 @@ integer CoroutineAgency::CountCoroutine()
 
 CoroutineAgency::~CoroutineAgency()
 {
-	for (uint32 i = 0; i < invokerPool.Count(); i++)delete invokerPool[i];
+	Dictionary<uint64, Invoker*, true>::Iterator iterator = invokerMap.GetIterator();
+	while (iterator.Next()) iterator.CurrentValue()->kernel = NULL;
+	for (uint32 i = 0; i < invokerPool.Count(); i++) delete invokerPool[i];
 	invokerPool.Clear();
 	while (head)
 	{

@@ -42,9 +42,6 @@ public:
 	inline bool IsRunning() { return exitMessage.IsEmpty() && instanceID; }
 	void Abort();
 	void Recycle();
-	inline ~Coroutine()
-	{
-		Free(stack);
-	}
+	~Coroutine();
 };
 

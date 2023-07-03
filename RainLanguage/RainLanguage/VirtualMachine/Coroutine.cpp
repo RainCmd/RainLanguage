@@ -2145,5 +2145,11 @@ void Coroutine::Recycle()
 			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), exitMessage.GetPointer(), exitMessage.GetLength());
 		}
 		invoker->coroutine = NULL;
+		invoker = NULL;
 	}
+}
+
+Coroutine::~Coroutine()
+{
+	Free(stack);
 }
