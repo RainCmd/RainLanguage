@@ -39,7 +39,7 @@ public:
 		if (wait > 0)wait--;
 		else Run();
 	}
-	inline bool IsRunning() { return exitMessage.IsEmpty() && instanceID; }
+	inline bool IsRunning() { return exitMessage.IsEmpty() && pointer != INVALID; }
 	void Abort();
 	void Recycle();
 	~Coroutine();

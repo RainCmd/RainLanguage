@@ -42,7 +42,7 @@ inline uint8* GetReturnPoint(Kernel* kernel, uint8* stack, uint8* functionStack,
 	else return kernel->libraryAgency->code.GetPointer() + pointer;
 }
 
-Coroutine::Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(0), wait(0)
+Coroutine::Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(INVALID), wait(0), stack(NULL)
 {
 	stack = Malloc<uint8>(size);
 	cacheData[0] = kernel->libraryAgency->data.GetPointer();
@@ -2065,35 +2065,35 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 		case Instruct::CASTING_R2I:
-			INSTRUCT_VALUE(integer, 1) = (integer)INSTRUCT_VALUE(real, 5);
+			INSTRUCT_VARIABLE(integer, 1) = (integer)INSTRUCT_VARIABLE(real, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_I2R:
-			INSTRUCT_VALUE(real, 1) = (real)INSTRUCT_VALUE(integer, 5);
+			INSTRUCT_VARIABLE(real, 1) = (real)INSTRUCT_VARIABLE(integer, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_B2I:
-			INSTRUCT_VALUE(integer, 1) = INSTRUCT_VALUE(uint8, 5);
+			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(uint8, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_I2B:
-			INSTRUCT_VALUE(uint8, 1) = (uint8)INSTRUCT_VALUE(integer, 5);
+			INSTRUCT_VARIABLE(uint8, 1) = (uint8)INSTRUCT_VARIABLE(integer, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_C2I:
-			INSTRUCT_VALUE(integer, 1) = INSTRUCT_VALUE(character, 5);
+			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(character, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_I2C:
-			INSTRUCT_VALUE(character, 1) = (character)INSTRUCT_VALUE(integer, 5);
+			INSTRUCT_VARIABLE(character, 1) = (character)INSTRUCT_VARIABLE(integer, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_C2B:
-			INSTRUCT_VALUE(uint8, 1) = (uint8)INSTRUCT_VALUE(character, 5);
+			INSTRUCT_VARIABLE(uint8, 1) = (uint8)INSTRUCT_VARIABLE(character, 5);
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::CASTING_B2C:
-			INSTRUCT_VALUE(character, 1) = (character)INSTRUCT_VALUE(uint8, 5);
+			INSTRUCT_VARIABLE(character, 1) = (character)INSTRUCT_VARIABLE(uint8, 5);
 			instruct += 9;
 			goto label_next_instruct;
 #pragma endregion Casting
@@ -2146,10 +2146,13 @@ void Coroutine::Recycle()
 		}
 		invoker->coroutine = NULL;
 		invoker = NULL;
+		instanceID = 0;
+		pointer = INVALID;
 	}
 }
 
 Coroutine::~Coroutine()
 {
 	Free(stack);
+	stack = NULL;
 }
