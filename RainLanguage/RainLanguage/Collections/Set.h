@@ -216,16 +216,14 @@ public:
 	Iterator GetIterator() const { return Iterator(this); }
 	~Set()
 	{
-		if (buckets) Free(buckets);
-		buckets = NULL;
+		if (buckets) Free(buckets); buckets = NULL;
 		if (slots)
 		{
 			if (!IsBitwise)
 				while (top--)
 					if (slots[top].hash)
 						Destruct(&slots[top].value, 1);
-			Free(slots);
-			slots = NULL;
+			Free(slots); slots = NULL;
 		}
 	}
 };

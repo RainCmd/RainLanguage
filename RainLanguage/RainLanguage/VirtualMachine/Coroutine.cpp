@@ -2153,6 +2153,5 @@ void Coroutine::Recycle()
 
 Coroutine::~Coroutine()
 {
-	Free(stack);
-	stack = NULL;
+	Free(stack); stack = NULL;
 }

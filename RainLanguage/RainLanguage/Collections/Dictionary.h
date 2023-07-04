@@ -252,8 +252,7 @@ public:
 	Iterator GetIterator() const { return Iterator(this); }
 	~Dictionary()
 	{
-		if (buckets) Free(buckets);
-		buckets = NULL;
+		if (buckets) Free(buckets); buckets = NULL;
 		if (slots)
 		{
 			if (!IsBitwise)
@@ -263,8 +262,7 @@ public:
 						Destruct(&slots[top].key, 1);
 						Destruct(&slots[top].value, 1);
 					}
-			Free(slots);
-			slots = NULL;
+			Free(slots); slots = NULL;
 		}
 	}
 };

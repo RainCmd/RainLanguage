@@ -36,6 +36,7 @@ public:
 	{
 		other.values = NULL;
 		other.count = 0;
+		other.size = 0;
 	}
 	List& operator=(const List& other)
 	{
@@ -59,6 +60,7 @@ public:
 		size = other.size;
 		other.values = NULL;
 		other.count = 0;
+		other.size = 0;
 		return *this;
 	}
 	inline void Add(const T& value)
@@ -217,8 +219,7 @@ public:
 	~List()
 	{
 		if (!IsBitwise) Destruct(values, count);
-		if (values) Free(values);
-		values = NULL;
+		if (values) Free(values); values = NULL;
 	}
 };
 
