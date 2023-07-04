@@ -360,7 +360,7 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 		if (TryParseVariable(line, lexical.anchor.GetEnd(), name, type, expression, parameter->messages))
 		{
 			if (expression.content.IsEmpty())MESSAGE2(parameter->messages, name, MessageType::ERROR_CONSTANT_NOT_ASSIGNMENT)
-			else (new(variables.Add())FileVariable(name, visibility, this, true, type, expression))->attributes.Add(attributes);
+			else (new (variables.Add())FileVariable(name, visibility, this, true, type, expression))->attributes.Add(attributes);
 		}
 		else MESSAGE2(parameter->messages, line, MessageType::ERROR_NOT_VARIABLE_DECLARATION);
 		attributes.Clear();

@@ -648,7 +648,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
 		List<RuntimeEnum::Element, true> enumValues(info->elements.Count());
 		for (uint32 y = 0; y < info->elements.Count(); y++)
-			new(enumValues.Add())RuntimeEnum::Element(TO_NATIVE_STRING(info->elements[y].name), info->elements[y].value);
+			new (enumValues.Add())RuntimeEnum::Element(TO_NATIVE_STRING(info->elements[y].name), info->elements[y].value);
 		new (enums.Add())RuntimeEnum(info->isPublic, nativeAttributes, TO_NATIVE_STRING(info->name), NULL, enumValues);
 	}
 	for (uint32 x = 0; x < library->structs.Count(); x++)

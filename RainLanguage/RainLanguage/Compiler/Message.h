@@ -30,11 +30,11 @@ public:
 	inline const List<Message>* GetMessages(ErrorLevel level) const { return messages + (uint32)level; }
 	inline void Add(const String& source, MessageType type, uint32 line, uint32 start, uint32 length, const character* message)
 	{
-		if (type != MessageType::INVALID) new(GetMessages(::GetLevel(type))->Add())Message(stringAgency.Add(source), type, line, start, length, stringAgency.Add(message));
+		if (type != MessageType::INVALID) new (GetMessages(::GetLevel(type))->Add())Message(stringAgency.Add(source), type, line, start, length, stringAgency.Add(message));
 	}
 	inline void Add(const String& source, MessageType type, uint32 line, uint32 start, uint32 length, const String& message)
 	{
-		if (type != MessageType::INVALID) new(GetMessages(::GetLevel(type))->Add())Message(stringAgency.Add(source), type, line, start, length, stringAgency.Add(message));
+		if (type != MessageType::INVALID) new (GetMessages(::GetLevel(type))->Add())Message(stringAgency.Add(source), type, line, start, length, stringAgency.Add(message));
 	}
 	inline void Add(const String& source, MessageType type, uint32 line, uint32 start, uint32 length)
 	{

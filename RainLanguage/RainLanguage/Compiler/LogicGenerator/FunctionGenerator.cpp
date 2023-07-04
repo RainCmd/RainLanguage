@@ -165,7 +165,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			Expression* expression = NULL;
 			if (parser.TryParse(variable->expression, expression))
 			{
-				if (parser.TryAssignmentConvert(expression, variable->type))new (pairs.Add())ConstantExpressionPair(variable, expression);
+				if (parser.TryAssignmentConvert(expression, variable->type)) new (pairs.Add())ConstantExpressionPair(variable, expression);
 				else { delete expression; expression = NULL; }
 			}
 		}

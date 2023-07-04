@@ -335,7 +335,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			String name = STRING_ID_TO_NATIVE_STRING(source, info->name);
 			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Delegate, library->delegates.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
-			new (library->interfaces.Add())AbstractDelegate(name, declaration, attributes, space, map->LocalToGlobal(info->parameters), map->LocalToGlobal(info->returns));
+			new (library->delegates.Add())AbstractDelegate(name, declaration, attributes, space, map->LocalToGlobal(info->parameters), map->LocalToGlobal(info->returns));
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->coroutines.Count(); x++)

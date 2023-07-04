@@ -211,7 +211,7 @@ label_next_instruct:
 					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
 					if (kernel->heapAgency->IsValid(target))
 					{
-						new(delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Box);
+						new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Box);
 						kernel->heapAgency->WeakReference(target);
 					}
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Box, EXCEPTION_NULL_REFERENCE);
@@ -223,7 +223,7 @@ label_next_instruct:
 					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
 					if (kernel->heapAgency->IsValid(target))
 					{
-						new(delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Reality);
+						new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Reality);
 						kernel->heapAgency->WeakReference(target);
 					}
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, EXCEPTION_NULL_REFERENCE);
@@ -236,7 +236,7 @@ label_next_instruct:
 					Type type;
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
-						new(delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Virtual);
+						new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Virtual);
 						kernel->heapAgency->WeakReference(target);
 					}
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, EXCEPTION_NULL_REFERENCE);
@@ -249,7 +249,7 @@ label_next_instruct:
 					Type type;
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
-						new(delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Abstract);
+						new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type)), target, FunctionType::Abstract);
 						kernel->heapAgency->WeakReference(target);
 					}
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, EXCEPTION_NULL_REFERENCE);

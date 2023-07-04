@@ -224,7 +224,7 @@ Library* GetKernelLibrary()
 		for (uint32 i = 0; i < library->functions.Count(); i++)
 		{
 			const KernelLibraryInfo::Function* source = &library->functions[i];
-			new(kernelLibrary->functions.Add())FunctionDeclarationInfo(true, EMPTY_STRINGS, stringAgency->AddAndRef(source->name), source->returns, source->parameters, INVALID, List<uint32, true>(0));
+			new (kernelLibrary->functions.Add())FunctionDeclarationInfo(true, EMPTY_STRINGS, stringAgency->AddAndRef(source->name), source->returns, source->parameters, INVALID, List<uint32, true>(0));
 		}
 
 		CodeGenerator generator = CodeGenerator(library, &kernelLibrary->code);

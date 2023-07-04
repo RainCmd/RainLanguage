@@ -7,7 +7,7 @@
 		MESSAGE2(manager->messages, library->GetName((*declarations)[y]), MessageType::ERROR_DUPLICATE_DECLARATION);\
 	continue;
 #define ADD_DECLARATIONS {declarations = new List<CompilingDeclaration, true>(1);compiling->declarations.Set(file->name.content, declarations);}
-#define REGISTER_DECLARATION(declaration,visibility,type,set,define) file->index=set.Count(); CompilingDeclaration* declaration = new (declarations->Add())CompilingDeclaration(LIBRARY_SELF, visibility, type, set.Count(), define);
+#define REGISTER_DECLARATION(declaration,visibility,type,set,define) file->index = set.Count(); CompilingDeclaration* declaration = new (declarations->Add())CompilingDeclaration(LIBRARY_SELF, visibility, type, set.Count(), define);
 
 void FileSpace::InitRelies(DeclarationManager* manager)
 {

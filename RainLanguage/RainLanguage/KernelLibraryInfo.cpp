@@ -438,9 +438,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS("GetLength", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
-		if (!(classes.Count() == KERNEL_TYPE_CLASS_INDEX_Array)) throw L"托管类型索引错误";;;
-		root->classes.Add(classes.Count());
-		new (classes.Add())KernelLibraryInfo::Class(TYPE_Handle, (List<Declaration, true>(0)), KernelStringAgency.Add(L"array"), 4, MEMORY_ALIGNMENT_4, (List<uint32, true>(0)), (List<KernelLibraryInfo::Variable>(0)), memberFunctions);;
+		REGISTER_CLASS(root, "array", KERNEL_TYPE_CLASS_INDEX_Array, TYPE_Handle, EMPTY_DECLARATIONS, 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//space BitConvert
 	{

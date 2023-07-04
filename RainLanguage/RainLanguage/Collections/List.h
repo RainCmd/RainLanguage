@@ -30,7 +30,7 @@ public:
 	{
 		values = Malloc<T>(size);
 		if (IsBitwise) Mcopy<T>(other.values, values, count);
-		else for (uint32 i = 0; i < count; i++) new(values + i)T(other.values[i]);
+		else for (uint32 i = 0; i < count; i++) new (values + i)T(other.values[i]);
 	}
 	List(List&& other)noexcept : values(other.values), count(other.count), size(other.size)
 	{
@@ -48,7 +48,7 @@ public:
 		}
 		count = other.count;
 		if (IsBitwise) Mcopy<T>(other.values, values, count);
-		else for (uint32 i = 0; i < count; i++) new(values + i)T(other.values[i]);
+		else for (uint32 i = 0; i < count; i++) new (values + i)T(other.values[i]);
 		return *this;
 	}
 	List& operator=(List&& other)noexcept
@@ -66,7 +66,8 @@ public:
 	inline void Add(const T& value)
 	{
 		TryGrow(1);
-		new (values + count)T(value);
+		if (IsBitwise)values[count] = value;
+		else new (values + count)T(value);
 		count++;
 	}
 	inline void Add(const T* values, uint32 count)

@@ -36,7 +36,7 @@ private:
 	bool TryGetIdx(const Key& key, uint32& hash, uint32& bidx, uint32& sidx) const
 	{
 		hash = GetHash(key);
-		if (!hash)hash = 1;
+		if (!hash) hash = 1;
 		bidx = hash % size;
 		sidx = buckets[bidx];
 		while (sidx != INVALID)
@@ -87,7 +87,7 @@ public:
 	{
 		size = GetPrime(capacity);
 		buckets = Malloc<uint32>(size);
-		for (uint32 i = 0; i < size; i++)buckets[i] = INVALID;
+		for (uint32 i = 0; i < size; i++) buckets[i] = INVALID;
 		top = 0;
 		free = INVALID;
 		count = 0;
@@ -174,7 +174,7 @@ public:
 		{
 			if (free == INVALID)
 			{
-				if (TryResize())bidx = hash % size;
+				if (TryResize()) bidx = hash % size;
 				sidx = top++;
 			}
 			else
@@ -183,8 +183,8 @@ public:
 				free = slots[free].next;
 			}
 			Slot* slot = slots + sidx;
-			new(&slot->key)Key(key);
-			new(&slot->value)Value(value);
+			new (&slot->key)Key(key);
+			new (&slot->value)Value(value);
 			slot->hash = hash;
 			slot->next = buckets[bidx];
 			buckets[bidx] = sidx;
@@ -209,13 +209,13 @@ public:
 		if (TryGetIdx(key, hash, bidx, sidx))
 		{
 			Slot* slot = slots + sidx;
-			if (buckets[bidx] == sidx)buckets[bidx] = slot->next;
+			if (buckets[bidx] == sidx) buckets[bidx] = slot->next;
 			else
 			{
 				Slot* index = slots + bidx;
 				while (index->next != sidx)
 				{
-					if (index->next == INVALID)return false;
+					if (index->next == INVALID) return false;
 					index = slots + index->next;
 				}
 				index->next = slot->next;

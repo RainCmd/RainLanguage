@@ -2758,7 +2758,7 @@ String Reflection_Function_GetSpace(Kernel* kernel, Coroutine*, uint8* stack, ui
 	kernel->heapAgency->StrongRelease(handle);
 	handle = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
 	kernel->heapAgency->StrongReference(handle);
-	new (kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetFunction(thisValue)->space);
+	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetFunction(thisValue)->space);
 	return String();
 }
 
@@ -3193,17 +3193,17 @@ String Reflection_Space_GetTypes(Kernel* kernel, Coroutine*, uint8* stack, uint3
 		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.coroutines.Count(), Weak);
 		uint32 index = 0;
 		for (uint32 i = 1; i < space.enums.Count(); i++)
-			new (kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, i, 0);
 		for (uint32 i = 0; i < space.structs.Count(); i++)
-			new (kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, i, 0);
 		for (uint32 i = 0; i < space.classes.Count(); i++)
-			new (kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, i, 0);
 		for (uint32 i = 0; i < space.interfaces.Count(); i++)
-			new (kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, i, 0);
 		for (uint32 i = 0; i < space.delegates.Count(); i++)
-			new (kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, i, 0);
 		for (uint32 i = 0; i < space.coroutines.Count(); i++)
-			new (kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Coroutine, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Coroutine, i, 0);
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
