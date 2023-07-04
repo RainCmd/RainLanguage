@@ -39,5 +39,5 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 
 WaitStatement::~WaitStatement()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }

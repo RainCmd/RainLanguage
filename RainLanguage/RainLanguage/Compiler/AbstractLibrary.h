@@ -118,9 +118,11 @@ struct AbstractSpace
 	inline ~AbstractSpace()
 	{
 		Dictionary<String, AbstractSpace*>::Iterator childIterator = children.GetIterator();
-		while (childIterator.Next())  delete childIterator.CurrentValue();
+		while (childIterator.Next()) delete childIterator.CurrentValue();
+		children.Clear();
 		Dictionary<String, List<CompilingDeclaration, true>*>::Iterator declarationIterator = declarations.GetIterator();
 		while (declarationIterator.Next()) delete declarationIterator.CurrentValue();
+		declarations.Clear();
 	}
 };
 class KernelLibraryInfo;

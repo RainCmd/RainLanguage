@@ -3,7 +3,7 @@
 
 LoopStatement::~LoopStatement()
 {
-	delete condition;
-	delete loopBlock;
-	delete elseBlock;
+	delete condition; condition = NULL;
+	delete loopBlock; loopBlock = NULL;
+	delete elseBlock; elseBlock = NULL;
 }

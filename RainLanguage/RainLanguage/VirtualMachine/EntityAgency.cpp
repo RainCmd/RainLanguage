@@ -61,4 +61,5 @@ void EntityAgency::Release(Entity entity)
 EntityAgency::~EntityAgency()
 {
 	Free(slots);
+	slots = NULL;
 }

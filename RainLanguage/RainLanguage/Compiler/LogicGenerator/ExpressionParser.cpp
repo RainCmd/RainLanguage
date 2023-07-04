@@ -495,7 +495,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 						lambdaParameters.Add(localContext.AddLocal(String(), lambdaExpression->anchor, closure.closure->declaration.DefineType()));
 						for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
 							lambdaParameters.Add(localContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
-						delete lambdaBody;
+						delete lambdaBody; lambdaBody = NULL;
 						if (!parser.TryParse(lambdaExpression->body, lambdaBody))
 							return false;
 					}
@@ -503,8 +503,8 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					{
 						if (HasBlurryResult(lambdaBody))
 						{
-							delete lambdaBody;
 							MESSAGE2(manager->messages, lambdaExpression->body, MessageType::ERROR_TYPE_EQUIVOCAL);
+							delete lambdaBody;
 							return false;
 						}
 					}
@@ -677,7 +677,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 				localContext.AddLocal(String(), lambdaExpression->anchor, closure.closure->declaration.DefineType());
 				for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
 					localContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
-				delete lambdaBody;
+				delete lambdaBody; lambdaBody = NULL;
 				if (!parser.TryParse(lambdaExpression->body, lambdaBody))
 					return false;
 			}
@@ -867,7 +867,7 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 				{
 					if (leftValue)
 					{
-						delete left;
+						delete left; left = NULL;
 						right->attribute &= Attribute::Value;
 						expressionStack.Add(right);
 						return right->attribute;
@@ -875,8 +875,8 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 					else
 					{
 						MESSAGE2(manager->messages, right->anchor, MessageType::LOGGER_LEVEL4_DISCARDED_EXPRESSION);
-						delete left;
-						delete right;
+						delete left; left = NULL;
+						delete right; right = NULL;
 						ConstantBooleanExpression* expression = new ConstantBooleanExpression(token.anchor, false);
 						expressionStack.Add(expression);
 						return expression->attribute;
@@ -914,15 +914,15 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 					if (leftValue)
 					{
 						MESSAGE2(manager->messages, right->anchor, MessageType::LOGGER_LEVEL4_DISCARDED_EXPRESSION);
-						delete left;
-						delete right;
+						delete left; left = NULL;
+						delete right; right = NULL;
 						ConstantBooleanExpression* expression = new ConstantBooleanExpression(token.anchor, true);
 						expressionStack.Add(expression);
 						return expression->attribute;
 					}
 					else
 					{
-						delete left;
+						delete left; left = NULL;
 						right->attribute &= Attribute::Value;
 						expressionStack.Add(right);
 						return right->attribute;
@@ -985,7 +985,7 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 				Type targetType = ((TypeExpression*)left)->customType;
 				Type& sourceType = right->returns.Peek();
 				uint32 measure; bool convert;
-				delete left;
+				delete left; left = NULL;
 				if (TryConvert(manager, sourceType, targetType, convert, measure))
 				{
 					if (convert)
@@ -1720,7 +1720,7 @@ bool ExpressionParser::TryParseQuestion(const Anchor& condition, const Anchor& e
 				Expression* leftExpression;
 				if (TryParse(left, leftExpression))
 				{
-					Expression* rightExpression;
+					Expression* rightExpression = NULL;
 					if (TryParse(right, rightExpression))
 					{
 						if (TryAssignmentConvert(rightExpression, Span<Type, true>(&leftExpression->returns)))
@@ -1749,7 +1749,7 @@ bool ExpressionParser::TryParseQuestionNull(const Anchor& left, const  Anchor& r
 		{
 			if (leftExpression->returns.Peek() == TYPE_Entity || IsHandleType(leftExpression->returns.Peek()))
 			{
-				Expression* rightExpression;
+				Expression* rightExpression = NULL;
 				if (TryParse(right, rightExpression))
 				{
 					if (rightExpression->returns.Count() == 1 && TryAssignmentConvert(rightExpression, Span<Type, true>(&leftExpression->returns)))
@@ -1833,7 +1833,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									Expression* expression = new InvokerFunctionExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, callable->declaration);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
-									delete methodExpression;
+									delete methodExpression; methodExpression = NULL;
 									goto label_next_lexical;
 								}
 							}
@@ -1854,7 +1854,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
 									methodExpression->target = NULL;
-									delete methodExpression;
+									delete methodExpression; methodExpression = NULL;
 									goto label_next_lexical;
 								}
 							}
@@ -1875,7 +1875,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
 									methodExpression->target = NULL;
-									delete methodExpression;
+									delete methodExpression; methodExpression = NULL;
 									goto label_next_lexical;
 								}
 							}
@@ -1973,7 +1973,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									Expression* expression = new StructConstructorExpression(typeExpression->anchor, abstractStruct->declaration, tuple);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
-									delete typeExpression;
+									delete typeExpression; typeExpression = NULL;
 									goto label_next_lexical;
 								}
 								else if (abstractStruct->variables.Count() == tuple->returns.Count())
@@ -1986,7 +1986,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 										Expression* expression = new StructConstructorExpression(typeExpression->anchor, abstractStruct->declaration, tuple);
 										expressionStack.Add(expression);
 										attribute = expression->attribute;
-										delete typeExpression;
+										delete typeExpression; typeExpression = NULL;
 										goto label_next_lexical;
 									}
 								}
@@ -2085,7 +2085,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								Expression* expression = new TupleEvaluationExpression(source->anchor, returns, source, indices);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
-								delete tuple;
+								delete tuple; tuple = NULL;
 								goto label_next_lexical;
 							}
 							else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
@@ -2114,7 +2114,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								Expression* expression = new CoroutineEvaluationExpression(source->anchor, abstractCoroutine->returns.GetTypes(), source, indices);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
-								delete tuple;
+								delete tuple; tuple = NULL;
 								goto label_next_lexical;
 							}
 							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
@@ -2140,7 +2140,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								Expression* expression = new CoroutineEvaluationExpression(source->anchor, returns, source, indices);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
-								delete tuple;
+								delete tuple; tuple = NULL;
 								goto label_next_lexical;
 							}
 							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
@@ -2169,7 +2169,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							Expression* expression = new ArrayCreateExpression(typeExpression->anchor, tuple, type);
 							expressionStack.Add(expression);
 							attribute = expression->attribute;
-							delete typeExpression;
+							delete typeExpression; typeExpression = NULL;
 							goto label_next_lexical;
 						}
 						else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INVALID_OPERATOR);
@@ -2196,7 +2196,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
-									delete tuple;
+									delete tuple; tuple = NULL;
 									goto label_next_lexical;
 								}
 								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
@@ -2222,7 +2222,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
-									delete tuple;
+									delete tuple; tuple = NULL;
 									goto label_next_lexical;
 								}
 								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
@@ -2252,7 +2252,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							ArrayInitExpression* expression = new ArrayInitExpression(typeExpression->anchor, tuple, Type(elementType, elementType.dimension + 1));
 							expressionStack.Add(expression);
 							attribute = expression->attribute;
-							delete typeExpression;
+							delete typeExpression; typeExpression = NULL;
 							goto label_next_lexical;
 						}
 						else
@@ -2457,7 +2457,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							if (typeExpression->customType.code == TypeCode::Enum)
 							{
 								Type customType = typeExpression->customType;
-								delete typeExpression;
+								delete typeExpression; typeExpression = NULL;
 								List<String>& elements = manager->GetLibrary(customType.library)->enums[customType.index].elements;
 								for (uint32 elementIndex = 0; elementIndex < elements.Count(); elementIndex++)
 									if (elements[elementIndex] == identifierLexical.anchor.content)
@@ -3268,7 +3268,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
 					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
 					Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
-					delete typeExpression;
+					delete typeExpression; typeExpression = NULL;
 					expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
 					attribute = expressionStack.Peek()->attribute;
 					break;
@@ -3329,5 +3329,5 @@ label_parse_fail:
 
 ExpressionParser::~ExpressionParser()
 {
-	if (closure)delete closure;
+	if (closure) delete closure; closure = NULL;
 }

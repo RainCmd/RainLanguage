@@ -267,7 +267,7 @@ void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parame
 
 VariableMemberExpression::~VariableMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& parameter)
@@ -290,5 +290,5 @@ void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& paramet
 
 VariableQuestionMemberExpression::~VariableQuestionMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }

@@ -16,5 +16,5 @@ void ExitStatement::Generator(StatementGeneratorParameter& parameter)
 
 ExitStatement::~ExitStatement()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }

@@ -205,7 +205,7 @@ public:
 		if (index < count) return values[index];
 		else EXCEPTION("数组越界");
 	}
-	inline bool operator==(const List<T, IsBitwise>& other)const
+	inline bool operator==(const List<T, IsBitwise>& other) const
 	{
 		if (count != other.count)return false;
 		for (uint32 i = 0; i < count; i++)
@@ -213,11 +213,12 @@ public:
 				return false;
 		return true;
 	}
-	inline bool operator!=(const List<T, IsBitwise>& other)const { return !(*this == other); }
+	inline bool operator!=(const List<T, IsBitwise>& other) const { return !(*this == other); }
 	~List()
 	{
 		if (!IsBitwise) Destruct(values, count);
-		if (values)Free(values);
+		if (values) Free(values);
+		values = NULL;
 	}
 };
 

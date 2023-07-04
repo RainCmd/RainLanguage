@@ -60,7 +60,7 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 
 MemberFunctionDelegateCreateExpression::~MemberFunctionDelegateCreateExpression()
 {
-	delete source;
+	delete source; source = NULL;
 }
 
 void VirtualFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& parameter)
@@ -95,7 +95,7 @@ void VirtualFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& 
 
 VirtualFunctionDelegateCreateExpression::~VirtualFunctionDelegateCreateExpression()
 {
-	delete source;
+	delete source; source = NULL;
 }
 
 LogicVariable GetVariable(LogicGenerateParameter& parameter, const CompilingDeclaration& declaration, const Type& type)

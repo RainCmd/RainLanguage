@@ -21,5 +21,5 @@ void JumpStatement::Generator(StatementGeneratorParameter& parameter)
 
 JumpStatement::~JumpStatement()
 {
-	delete condition;
+	delete condition; condition = NULL;
 }

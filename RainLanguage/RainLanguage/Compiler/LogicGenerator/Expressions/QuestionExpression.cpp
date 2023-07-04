@@ -22,7 +22,7 @@ void QuestionExpression::Generator(LogicGenerateParameter& parameter)
 
 QuestionExpression::~QuestionExpression()
 {
-	delete condition;
-	delete left;
-	delete right;
+	delete condition; condition = NULL;
+	delete left; left = NULL;
+	delete right; right = NULL;
 }

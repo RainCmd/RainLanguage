@@ -247,14 +247,9 @@ void Kernel::Update()
 
 Kernel::~Kernel()
 {
-	delete stringAgency;
-	stringAgency = NULL;
-	delete entityAgency;
-	entityAgency = NULL;
-	delete libraryAgency;
-	libraryAgency = NULL;
-	delete heapAgency;
-	heapAgency = NULL;
-	delete coroutineAgency;
-	coroutineAgency = NULL;
+	delete stringAgency; stringAgency = NULL;
+	delete entityAgency; entityAgency = NULL;
+	delete libraryAgency; libraryAgency = NULL;
+	delete heapAgency; heapAgency = NULL;
+	delete coroutineAgency; coroutineAgency = NULL;
 }

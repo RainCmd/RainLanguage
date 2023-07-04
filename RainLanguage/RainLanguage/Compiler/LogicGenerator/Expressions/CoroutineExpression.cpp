@@ -9,7 +9,7 @@ void CoroutineCreateExpression::Generator(LogicGenerateParameter& parameter)
 
 CoroutineCreateExpression::~CoroutineCreateExpression()
 {
-	delete source;
+	delete source; source = NULL;
 }
 
 void GeneratCoroutineParameter(LogicGenerateParameter& parameter, Expression* parametersExpression)
@@ -355,5 +355,5 @@ void CoroutineEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 
 CoroutineEvaluationExpression::~CoroutineEvaluationExpression()
 {
-	delete source;
+	delete source; source = NULL;
 }

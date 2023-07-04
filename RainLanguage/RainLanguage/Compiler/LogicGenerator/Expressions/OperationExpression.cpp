@@ -14,7 +14,7 @@ void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 
 InstructOperationExpression::~InstructOperationExpression()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }
 
 void OperationPostIncrementExpression::Generator(LogicGenerateParameter& parameter)
@@ -40,7 +40,7 @@ void OperationPostIncrementExpression::Generator(LogicGenerateParameter& paramet
 
 OperationPostIncrementExpression::~OperationPostIncrementExpression()
 {
-	delete variable;
+	delete variable; variable = NULL;
 }
 
 void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& parameter)
@@ -62,5 +62,5 @@ void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& paramet
 
 OperationPrevIncrementExpression::~OperationPrevIncrementExpression()
 {
-	delete variable;
+	delete variable; variable = NULL;
 }

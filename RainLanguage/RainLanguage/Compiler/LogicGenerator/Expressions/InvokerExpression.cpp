@@ -4,7 +4,7 @@
 
 InvokerExpression::~InvokerExpression()
 {
-	delete parameters;
+	delete parameters; parameters = NULL;
 }
 
 void GeneratePushReturnPoint(LogicGenerateParameter& parameter, TupleInfo& returns)
@@ -122,7 +122,7 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 
 InvokerDelegateExpression::~InvokerDelegateExpression()
 {
-	delete invoker;
+	delete invoker; invoker = NULL;
 }
 
 void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
@@ -206,7 +206,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 
 InvokerMemberExpression::~InvokerMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter)
@@ -252,7 +252,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 
 InvokerVirtualMemberExpression::~InvokerVirtualMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void InvokerConstructorExpression::Generator(LogicGenerateParameter& parameter)

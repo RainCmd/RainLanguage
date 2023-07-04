@@ -18,6 +18,6 @@ void QuestionNullExpression::Generator(LogicGenerateParameter& parameter)
 
 QuestionNullExpression::~QuestionNullExpression()
 {
-	delete left;
-	delete right;
+	delete left; left = NULL;
+	delete right; right = NULL;
 }

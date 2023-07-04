@@ -48,7 +48,7 @@ void StructMemberExpression::FillResultVariable(LogicGenerateParameter& paramete
 
 StructMemberExpression::~StructMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void StructConstructorExpression::Generator(LogicGenerateParameter& parameter)
@@ -67,7 +67,7 @@ void StructConstructorExpression::Generator(LogicGenerateParameter& parameter)
 
 StructConstructorExpression::~StructConstructorExpression()
 {
-	delete parameters;
+	delete parameters; parameters = NULL;
 }
 
 #define VECTOR_FLAG(targetIndex,sourceIndex) (uint32)(0x10 | (targetIndex) | ((sourceIndex) << 2) )
@@ -130,7 +130,7 @@ void VectorMemberExpression::FillResultVariable(LogicGenerateParameter& paramete
 
 VectorMemberExpression::~VectorMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void VectorConstructorExpression::Generator(LogicGenerateParameter& parameter)
@@ -169,5 +169,5 @@ void VectorConstructorExpression::Generator(LogicGenerateParameter& parameter)
 
 VectorConstructorExpression::~VectorConstructorExpression()
 {
-	delete parameters;
+	delete parameters; parameters = NULL;
 }

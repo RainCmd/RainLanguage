@@ -136,7 +136,7 @@ void TupleEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 
 TupleEvaluationExpression::~TupleEvaluationExpression()
 {
-	delete source;
+	delete source; source = NULL;
 }
 
 void TupleAssignmentExpression::Generator(LogicGenerateParameter& parameter)
@@ -148,6 +148,6 @@ void TupleAssignmentExpression::Generator(LogicGenerateParameter& parameter)
 
 TupleAssignmentExpression::~TupleAssignmentExpression()
 {
-	delete left;
-	delete right;
+	delete left; left = NULL;
+	delete right; right = NULL;
 }

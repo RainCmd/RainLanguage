@@ -15,9 +15,11 @@ CompilingSpace::~CompilingSpace()
 {
 	Dictionary<String, CompilingSpace*>::Iterator spaceIterator = children.GetIterator();
 	while (spaceIterator.Next()) delete spaceIterator.CurrentValue();
+	children.Clear();
 
 	Dictionary<String, List<CompilingDeclaration, true>*>::Iterator declarationIterator = declarations.GetIterator();
 	while (declarationIterator.Next()) delete declarationIterator.CurrentValue();
+	declarations.Clear();
 }
 
 Anchor CompilingLibrary::GetName(const CompilingDeclaration& declaration)

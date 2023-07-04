@@ -248,8 +248,8 @@ StringAgency& StringAgency::operator=(const StringAgency& other)noexcept
 StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 {
 	characters.Clear();
-	if (buckets)Free(buckets);
-	if (slots)Free(slots);
+	if (buckets) Free(buckets);
+	if (slots) Free(slots);
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = other.buckets;
 	slots = other.slots;
@@ -413,9 +413,9 @@ StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NU
 
 StringAgency::~StringAgency()
 {
-	if (helper) delete helper;
-	if (buckets) Free(buckets);
-	if (slots)Free(slots);
+	if (helper) delete helper; helper = NULL;
+	if (buckets) Free(buckets); buckets = NULL;
+	if (slots) Free(slots); slots = NULL;
 }
 
 uint32 String::Find(const String& value, uint32 start) const

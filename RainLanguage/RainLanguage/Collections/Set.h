@@ -133,8 +133,8 @@ public:
 			for (uint32 i = 0; i < top; i++)
 				if (slots[i].hash)
 					Destruct(&slots[i].value, 1);
-		if (buckets)Free(buckets);
-		if (slots)Free(slots);
+		if (buckets) Free(buckets);
+		if (slots) Free(slots);
 		buckets = other.buckets;
 		slots = other.slots;
 		top = other.top;
@@ -217,6 +217,7 @@ public:
 	~Set()
 	{
 		if (buckets) Free(buckets);
+		buckets = NULL;
 		if (slots)
 		{
 			if (!IsBitwise)
@@ -224,6 +225,7 @@ public:
 					if (slots[top].hash)
 						Destruct(&slots[top].value, 1);
 			Free(slots);
+			slots = NULL;
 		}
 	}
 };

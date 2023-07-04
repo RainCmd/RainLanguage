@@ -53,6 +53,6 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 
 ForStatement::~ForStatement()
 {
-	delete front;
-	delete back;
+	delete front; front = NULL;
+	delete back; back = NULL;
 }

@@ -132,6 +132,7 @@ public:
 	inline ~HeapAgency()
 	{
 		::Free(heap);
+		heap = NULL;
 	}
 };
 

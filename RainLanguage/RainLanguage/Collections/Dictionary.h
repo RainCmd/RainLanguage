@@ -154,7 +154,7 @@ public:
 					Destruct(&slots[i].value, 1);
 				}
 		if (buckets) Free(buckets);
-		if (slots)Free(slots);
+		if (slots) Free(slots);
 		buckets = other.buckets;
 		slots = other.slots;
 		top = other.top;
@@ -253,6 +253,7 @@ public:
 	~Dictionary()
 	{
 		if (buckets) Free(buckets);
+		buckets = NULL;
 		if (slots)
 		{
 			if (!IsBitwise)
@@ -263,6 +264,7 @@ public:
 						Destruct(&slots[top].value, 1);
 					}
 			Free(slots);
+			slots = NULL;
 		}
 	}
 };

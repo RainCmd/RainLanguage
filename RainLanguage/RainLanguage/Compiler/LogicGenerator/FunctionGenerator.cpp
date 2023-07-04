@@ -30,7 +30,7 @@
 	{\
 		variable->calculated = true;\
 		pairs.RemoveAtSwap(i--);\
-		delete expression;\
+		delete expression; expression = NULL;\
 	}
 
 struct ConstantExpressionPair
@@ -166,7 +166,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			if (parser.TryParse(variable->expression, expression))
 			{
 				if (parser.TryAssignmentConvert(expression, variable->type))new (pairs.Add())ConstantExpressionPair(variable, expression);
-				else delete expression;
+				else { delete expression; expression = NULL; }
 			}
 		}
 	}
@@ -191,7 +191,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 						{
 							element->value = elementValue++;
 							element->calculated = true;
-							delete expression;
+							delete expression; expression = NULL;
 						}
 						else
 						{
@@ -199,7 +199,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 							flag = false;
 						}
 					}
-					else delete expression;
+					else { delete expression; expression = NULL; }
 				}
 			}
 			else if (flag)
@@ -250,7 +250,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 						parameter.generator->WriteDataString(value, abstractVariable->address);
 						variable->calculated = true;
 						pairs.RemoveAtSwap(i--);
-						delete expression;
+						delete expression; expression = NULL;
 					}
 				}
 				else if (variable->type == TYPE_Handle)
@@ -260,7 +260,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 						*(Handle*)address = NULL;
 						variable->calculated = true;
 						pairs.RemoveAtSwap(i--);
-						delete expression;
+						delete expression; expression = NULL;
 					}
 				}
 				else if (variable->type == TYPE_Entity)
@@ -270,7 +270,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 						*(Entity*)address = NULL;
 						variable->calculated = true;
 						pairs.RemoveAtSwap(i--);
-						delete expression;
+						delete expression; expression = NULL;
 					}
 				}
 				else MESSAGE2(parameter.manager->messages, variable->name, MessageType::ERROR_UNSUPPORTED_CONSTANT_TYPES);
@@ -292,7 +292,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 						element->calculated = true;
 					}
 					pairs.RemoveAtSwap(i--);
-					delete expression;
+					delete expression; expression = NULL;
 				}
 			}
 		}
@@ -319,7 +319,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			{
 				if (parser.TryAssignmentConvert(expression, variable->type))
 					statements->statements.Add(new ExpressionStatement(variable->expression, new TupleAssignmentExpression(variable->name, new VariableGlobalExpression(variable->name, variable->declaration, Attribute::Assignable | Attribute::Value, variable->type), expression)));
-				else delete expression;
+				else { delete expression; expression = NULL; }
 			}
 		}
 	}
@@ -410,7 +410,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 						VariableMemberExpression* variableExpression = new VariableMemberExpression(variable->name, variable->declaration, Attribute::Assignable | Attribute::Value, new VariableLocalExpression(thisValue.anchor, thisValue.GetDeclaration(), Attribute::Value, thisValue.type), variable->type);
 						statements->statements.Add(new ExpressionStatement(variable->expression, new TupleAssignmentExpression(variable->name, variableExpression, expression)));
 					}
-					else delete expression;
+					else { delete expression; expression = NULL; }
 				}
 			}
 		}
@@ -451,11 +451,11 @@ CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParamet
 				VariableLocalExpression* thisValueExpression = new VariableLocalExpression(thisValue->anchor, thisValue->GetDeclaration(), Attribute::Value, thisValue->type);
 				statements->statements.Add(new ExpressionStatement(anchor, new InvokerMemberExpression(anchor, callable->returns.GetTypes(), parameters, thisValueExpression, callable->declaration, false)));
 			}
-			else delete parameters;
+			else { delete parameters; parameters = NULL; }
 			return callable->declaration;
 		}
 		else MESSAGE2(parameter.manager->messages, anchor, MessageType::ERROR_CONSTRUCTOR_NOT_FOUND);
-		delete parameters;
+		delete parameters; parameters = NULL;
 	}
 	return CompilingDeclaration();
 }
@@ -757,7 +757,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					{
 						if (HasBlurryResult(expression))
 						{
-							delete expression;
+							delete expression; expression = NULL;
 							MESSAGE2(parameter.manager->messages, lineAnchor, MessageType::ERROR_TYPE_EQUIVOCAL);
 						}
 						else blockStack.Peek()->statements.Add(new ExpressionStatement(lineAnchor, expression));
@@ -806,5 +806,5 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 
 FunctionGenerator::~FunctionGenerator()
 {
-	delete statements;
+	delete statements; statements = NULL;
 }

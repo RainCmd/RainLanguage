@@ -164,9 +164,9 @@ public:
 	inline const ProgramDebugDatabase* GetProgramDebugDatabase() { return programDebugDatabase; }
 	inline ~Product()
 	{
-		delete messageCollector;
-		delete library;
-		delete programDebugDatabase;
+		delete messageCollector; messageCollector = NULL;
+		delete library; library = NULL;
+		delete programDebugDatabase; programDebugDatabase = NULL;
 	}
 };
 
@@ -212,11 +212,12 @@ RainProduct* Build(const BuildParameter& parameter)
 	Generator generator = Generator(&manager);
 	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, parameter.debug ? new ProgramDebugDatabase() : NULL);
 	generator.GeneratorFunction(generatorParameter);
-	for (uint32 i = 0; i < relySpaceCollector.Count(); i++)delete relySpaceCollector[i];
+	for (uint32 i = 0; i < relySpaceCollector.Count(); i++) delete relySpaceCollector[i];
 	relySpaceCollector.Clear();
 	if (messages->GetMessages(ErrorLevel::Error)->Count())
 	{
 		if (generatorParameter.debugDatabase) delete generatorParameter.debugDatabase;
+		generatorParameter.debugDatabase = NULL;
 		return new Product(messages);
 	}
 

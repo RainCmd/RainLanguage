@@ -8,8 +8,8 @@
 
 CatchExpressionBlock::~CatchExpressionBlock()
 {
-	delete exitcode;
-	delete catchBlock;
+	delete exitcode; exitcode = NULL;
+	delete catchBlock; catchBlock = NULL;
 }
 
 LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& parameter, CodeLocalAddressReference* finallyAddress)
@@ -141,7 +141,7 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 
 TryStatement::~TryStatement()
 {
-	delete tryBlock;
+	delete tryBlock; tryBlock = NULL;
 	catchBlocks.Clear();
-	delete finallyBlock;
+	delete finallyBlock; finallyBlock = NULL;
 }

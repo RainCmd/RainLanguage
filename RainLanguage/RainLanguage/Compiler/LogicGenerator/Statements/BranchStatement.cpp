@@ -28,7 +28,7 @@ void BranchStatement::Generator(StatementGeneratorParameter& parameter)
 
 BranchStatement::~BranchStatement()
 {
-	delete condition;
-	delete trueBranch;
-	delete falseBranch;
+	delete condition; condition = NULL;
+	delete trueBranch; trueBranch = NULL;
+	delete falseBranch; falseBranch = NULL;
 }

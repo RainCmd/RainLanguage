@@ -17,8 +17,8 @@ void LogicAndExpression::Generator(LogicGenerateParameter& parameter)
 
 LogicAndExpression::~LogicAndExpression()
 {
-	delete left;
-	delete right;
+	delete left; left = NULL;
+	delete right; right = NULL;
 }
 
 void LogicOrExpression::Generator(LogicGenerateParameter& parameter)
@@ -34,6 +34,6 @@ void LogicOrExpression::Generator(LogicGenerateParameter& parameter)
 
 LogicOrExpression::~LogicOrExpression()
 {
-	delete left;
-	delete right;
+	delete left; left = NULL;
+	delete right; right = NULL;
 }

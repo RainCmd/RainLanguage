@@ -15,7 +15,7 @@ void ArrayCreateExpression::Generator(LogicGenerateParameter& parameter)
 
 ArrayCreateExpression::~ArrayCreateExpression()
 {
-	delete length;
+	delete length; length = NULL;
 }
 
 void ArrayInitExpression::Generator(LogicGenerateParameter& parameter)
@@ -43,7 +43,7 @@ void ArrayInitExpression::Generator(LogicGenerateParameter& parameter)
 
 ArrayInitExpression::~ArrayInitExpression()
 {
-	delete elements;
+	delete elements; elements = NULL;
 }
 
 void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVariable& result, LogicVariable& arrayVariable, Expression* indexExpression, uint32 offset)
@@ -210,8 +210,8 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 
 ArrayEvaluationExpression::~ArrayEvaluationExpression()
 {
-	delete arrayExpression;
-	delete indexExpression;
+	delete arrayExpression; arrayExpression = NULL;
+	delete indexExpression; indexExpression = NULL;
 }
 
 void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
@@ -242,8 +242,8 @@ void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parame
 
 ArrayQuestionEvaluationExpression::~ArrayQuestionEvaluationExpression()
 {
-	delete arrayExpression;
-	delete indexExpression;
+	delete arrayExpression; arrayExpression = NULL;
+	delete indexExpression; indexExpression = NULL;
 }
 
 void StringEvaluationExpression::Generator(LogicGenerateParameter& parameter)
@@ -261,8 +261,8 @@ void StringEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 
 StringEvaluationExpression::~StringEvaluationExpression()
 {
-	delete source;
-	delete index;
+	delete source; source = NULL;
+	delete index; index = NULL;
 }
 
 void ArraySubExpression::Generator(LogicGenerateParameter& parameter)
@@ -288,8 +288,8 @@ void ArraySubExpression::Generator(LogicGenerateParameter& parameter)
 
 ArraySubExpression::~ArraySubExpression()
 {
-	delete source;
-	delete range;
+	delete source; source = NULL;
+	delete range; range = NULL;
 }
 
 void ArrayQuestionSubExpression::Generator(LogicGenerateParameter& parameter)
@@ -313,6 +313,6 @@ void ArrayQuestionSubExpression::Generator(LogicGenerateParameter& parameter)
 
 ArrayQuestionSubExpression::~ArrayQuestionSubExpression()
 {
-	delete source;
-	delete range;
+	delete source; source = NULL;
+	delete range; range = NULL;
 }

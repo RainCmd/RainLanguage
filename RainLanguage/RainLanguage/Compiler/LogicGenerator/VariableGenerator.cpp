@@ -11,7 +11,7 @@ void VariableGenerator::Variable::SetAddress(Generator* generator, uint32 addres
 
 VariableGenerator::Variable::~Variable()
 {
-	delete reference;
+	delete reference; reference = NULL;
 }
 
 VariableGenerator::VariableGenerator(uint32 localAddress) :localAddress(localAddress), temporaryAddress(0), statementTemporaryTop(0), locals(0),

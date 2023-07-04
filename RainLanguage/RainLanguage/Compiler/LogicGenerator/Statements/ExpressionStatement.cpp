@@ -13,5 +13,5 @@ void ExpressionStatement::Generator(StatementGeneratorParameter& parameter)
 
 ExpressionStatement::~ExpressionStatement()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }

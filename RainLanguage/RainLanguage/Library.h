@@ -69,7 +69,7 @@ public:
 	Library(const Library&&) = delete;
 	~Library()
 	{
-		delete stringAgency;
+		delete stringAgency; stringAgency = NULL;
 	}
 };
 

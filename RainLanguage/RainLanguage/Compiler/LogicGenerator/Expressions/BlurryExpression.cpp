@@ -19,7 +19,7 @@ void MethodMemberExpression::Generator(LogicGenerateParameter& parameter)
 
 MethodMemberExpression::~MethodMemberExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void MethodVirtualExpression::Generator(LogicGenerateParameter& parameter)
@@ -29,7 +29,7 @@ void MethodVirtualExpression::Generator(LogicGenerateParameter& parameter)
 
 MethodVirtualExpression::~MethodVirtualExpression()
 {
-	delete target;
+	delete target; target = NULL;
 }
 
 void BlurryCoroutineExpression::Generator(LogicGenerateParameter& parameter)
@@ -39,7 +39,7 @@ void BlurryCoroutineExpression::Generator(LogicGenerateParameter& parameter)
 
 BlurryCoroutineExpression::~BlurryCoroutineExpression()
 {
-	delete invoker;
+	delete invoker; invoker = NULL;
 }
 
 void BlurryLambdaExpression::Generator(LogicGenerateParameter& parameter)
@@ -54,5 +54,5 @@ void BlurrySetExpression::Generator(LogicGenerateParameter& parameter)
 
 BlurrySetExpression::~BlurrySetExpression()
 {
-	delete tuple;
+	delete tuple; tuple = NULL;
 }

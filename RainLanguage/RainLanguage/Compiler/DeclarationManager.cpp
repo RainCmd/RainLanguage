@@ -326,12 +326,12 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 
 DeclarationManager::~DeclarationManager()
 {
-	delete kernelLibaray;
-	delete selfLibaray;
-	for (uint32 i = 0; i < relies.Count(); i++)
-		delete relies[i];
-	for (uint32 i = 0; i < lambdaGenerators.Count(); i++)
-		delete lambdaGenerators[i];
+	delete kernelLibaray; kernelLibaray = NULL;
+	delete selfLibaray; selfLibaray = NULL;
+	for (uint32 i = 0; i < relies.Count(); i++) delete relies[i];
+	relies.Clear();
+	for (uint32 i = 0; i < lambdaGenerators.Count(); i++) delete lambdaGenerators[i];
+	lambdaGenerators.Clear();
 }
 
 

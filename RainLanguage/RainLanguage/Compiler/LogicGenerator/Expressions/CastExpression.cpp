@@ -61,7 +61,7 @@ bool CastExpression::TryEvaluationIndices(List<integer, true>& value, LogicGener
 
 CastExpression::~CastExpression()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }
 
 void IsCastExpression::Generator(LogicGenerateParameter& parameter)
@@ -90,7 +90,7 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 
 IsCastExpression::~IsCastExpression()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }
 
 void AsCastExpression::Generator(LogicGenerateParameter& parameter)
@@ -106,7 +106,7 @@ void AsCastExpression::Generator(LogicGenerateParameter& parameter)
 
 AsCastExpression::~AsCastExpression()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }
 
 void HandleCastExpression::Generator(LogicGenerateParameter& parameter)
@@ -122,7 +122,7 @@ void HandleCastExpression::Generator(LogicGenerateParameter& parameter)
 
 HandleCastExpression::~HandleCastExpression()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }
 
 bool TupleCastExpression::TryEvaluation(uint8& value, LogicGenerateParameter& parameter)
@@ -257,7 +257,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 
 TupleCastExpression::~TupleCastExpression()
 {
-	delete source;
+	delete source; source = NULL;
 }
 
 void UnboxExpression::Generator(LogicGenerateParameter& parameter)
@@ -272,5 +272,5 @@ void UnboxExpression::Generator(LogicGenerateParameter& parameter)
 
 UnboxExpression::~UnboxExpression()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }

@@ -48,5 +48,5 @@ void ReturnStatement::Generator(StatementGeneratorParameter& parameter)
 
 ReturnStatement::~ReturnStatement()
 {
-	delete expression;
+	delete expression; expression = NULL;
 }
