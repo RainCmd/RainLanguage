@@ -358,7 +358,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS("Normalized", CreateTypeList(TYPE_Real4), CreateTypeList(TYPE_Real4), real4_Normalized);
 		REGISTER_MEMBER_FUNCTIONS("Magnitude", CreateTypeList(TYPE_Real), CreateTypeList(TYPE_Real4), real4_Magnitude);
 		REGISTER_MEMBER_FUNCTIONS("SqrMagnitude", CreateTypeList(TYPE_Real), CreateTypeList(TYPE_Real4), real4_SqrMagnitude);
-		REGISTER_STRUCT(root, "real3", KERNEL_TYPE_STRUCT_INDEX_Real4, SIZE(Real4), MEMORY_ALIGNMENT_REAL, memberVariables, memberFunctions);
+		REGISTER_STRUCT(root, "real4", KERNEL_TYPE_STRUCT_INDEX_Real4, SIZE(Real4), MEMORY_ALIGNMENT_REAL, memberVariables, memberFunctions);
 	}
 	//struct enum
 	{

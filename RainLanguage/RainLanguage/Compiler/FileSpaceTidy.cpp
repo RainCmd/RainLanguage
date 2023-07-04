@@ -65,8 +65,8 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		FileFunction* file = &functions[x];
 		if (TRY_GET_DECLARATIONS)
 		{
-			if ((*declarations)[0].category != DeclarationCategory::Function && (*declarations)[0].category != DeclarationCategory::Native)
-				DUPLICATE_DECLARATION;
+			DeclarationCategory category = (*declarations)[0].category;
+			if (category != DeclarationCategory::Function && category != DeclarationCategory::Native) { DUPLICATE_DECLARATION; }
 		}
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Function, library->functions, NULL);
@@ -178,8 +178,8 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		FileNative* file = &natives[x];
 		if (TRY_GET_DECLARATIONS)
 		{
-			if ((*declarations)[0].category != DeclarationCategory::Function && (*declarations)[0].category != DeclarationCategory::Native)
-				DUPLICATE_DECLARATION;
+			DeclarationCategory category = (*declarations)[0].category;
+			if (category != DeclarationCategory::Function && category != DeclarationCategory::Native) { DUPLICATE_DECLARATION; }
 		}
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Native, library->natives, NULL);
