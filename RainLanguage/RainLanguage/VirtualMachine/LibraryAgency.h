@@ -77,6 +77,7 @@ public:
 	String InvokeNative(const Native& native, uint8* stack, uint32 top);
 	inline ~LibraryAgency()
 	{
+		delete kernelLibrary;
 		for (uint32 i = 0; i < libraries.Count(); i++) delete libraries[i];
 		libraries.Clear();
 	}

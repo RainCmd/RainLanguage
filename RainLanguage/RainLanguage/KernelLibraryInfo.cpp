@@ -3,8 +3,9 @@
 #include "Public/VirtualMachine.h"
 #include "Real/MathReal.h"
 #include "VirtualMachine/Exceptions.h"
+#include "ClearStaticCache.h"
 
-#define KERNEL_STRING(text) KernelStringAgency.Add(TEXT(text))
+#define KERNEL_STRING(text) stringAgency.Add(TEXT(text))
 #define REGISIER_ENUM_ELEMENT(name,index,value)\
 		ASSERT_DEBUG(elements.Count() == index, "Ã¶¾ÙÔªËØË÷Òý´íÎó");\
 		new (elements.Add())KernelLibraryInfo::Enum::Element(KERNEL_STRING(name), (integer)value);
@@ -55,13 +56,26 @@
 #define EMPTY_DECLARATIONS (List<Declaration, true>(0))
 #define EMPTY_VARIABLES (List<KernelLibraryInfo::Variable>(0))
 
-static StringAgency KernelStringAgency = StringAgency(1024);
-
+KernelLibraryInfo::Space::~Space()
+{
+	for (uint32 i = 0; i < children.Count(); i++) delete children[i];
+	children.Clear();
+}
+KernelLibraryInfo::~KernelLibraryInfo()
+{
+	delete root; root = NULL;
+}
 static KernelLibraryInfo* kernelLibraryInfo = NULL;
 const KernelLibraryInfo* KernelLibraryInfo::GetKernelLibraryInfo()
 {
-	if (kernelLibraryInfo == NULL)kernelLibraryInfo = new KernelLibraryInfo();
+	if (kernelLibraryInfo == NULL) kernelLibraryInfo = new KernelLibraryInfo();
 	return kernelLibraryInfo;
+}
+
+void ClearKernelLibraryInfo()
+{
+	delete kernelLibraryInfo;
+	kernelLibraryInfo = NULL;
 }
 
 inline TupleInfo CreateTypeList(const Type& type)
@@ -180,7 +194,7 @@ inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 	}
 }
 
-KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), coroutines(0), functions(0), dataStrings(0)
+KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), coroutines(0), functions(0), dataStrings(0), stringAgency(1024)
 {
 	root = new KernelLibraryInfo::Space(KERNEL_STRING("kernel"));
 	//Operation
@@ -755,7 +769,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 uint32 KernelLibraryInfo::AddData(const character* value)
 {
 	uint32 address = data.Count();
-	string result = KernelStringAgency.AddAndRef(value);
+	string result = stringAgency.AddAndRef(value);
 	for (uint32 i = 0; i < dataStrings.Count(); i++)
 		if (dataStrings[i].value == result)
 		{

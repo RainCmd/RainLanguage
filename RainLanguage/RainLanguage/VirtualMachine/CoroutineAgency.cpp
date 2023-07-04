@@ -46,7 +46,7 @@ void CoroutineAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 	else 
 	{
 		Recycle(coroutine);
-		if (!invoker->hold)invoker->Recycle();
+		if (!invoker->hold) invoker->Recycle();
 	}
 }
 

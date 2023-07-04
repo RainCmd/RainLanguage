@@ -175,4 +175,5 @@ public:
 	}
 	void GeneratorFunction(GeneratorParameter& parameter);
 	Library* GeneratorLibrary(DeclarationManager& manager);
+	~Generator();
 };

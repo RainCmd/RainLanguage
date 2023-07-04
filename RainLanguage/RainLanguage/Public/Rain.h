@@ -99,3 +99,8 @@ struct RAINLANGUAGE RainString
 		return RainString(value, length);
 	}
 };
+/// <summary>
+/// 清理编译和运行时缓存的静态变量
+/// </summary>
+/// <returns></returns>
+RAINLANGUAGE void ClearStaticCache();

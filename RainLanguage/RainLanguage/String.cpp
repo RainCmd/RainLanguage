@@ -197,32 +197,36 @@ string StringAgency::InternalAdd(const character* value, uint32 length)
 	return sidx;
 }
 
-StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8), helper(NULL), buckets(NULL), slots(NULL), top(1), free(NULL), head(NULL), tail(NULL), characterHold(0), slotHold(0), characterGCHold(0), slotGCHold(0)
+StringAgency::StringAgency(uint32 capacity) :characters(GetPrime(capacity) * 8), helper(NULL), buckets(NULL), slots(NULL), top(1), free(NULL), head(NULL), tail(NULL), characterHold(0), slotHold(0), characterGCHold(0), slotGCHold(0), share(NULL)
 {
 	size = GetPrime(capacity);
 	buckets = Malloc<uint32>(size);
 	slots = Malloc<Slot>(size);
 	slots[0] = { 0, 0, 1, NULL, NULL, 0 };
 	for (uint32 i = 0; i < size; i++) buckets[i] = NULL;
+	share = new StringShare(this);
 }
 
-StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other.characters.Count()), helper(NULL), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), characterHold(other.characterHold), slotHold(other.slotHold), characterGCHold(other.characterGCHold), slotGCHold(other.slotGCHold)
+StringAgency::StringAgency(const StringAgency& other) noexcept :characters(other.characters.Count()), helper(NULL), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), characterHold(other.characterHold), slotHold(other.slotHold), characterGCHold(other.characterGCHold), slotGCHold(other.slotGCHold), share(NULL)
 {
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = Malloc<uint32>(size);
 	Mcopy(other.buckets, buckets, size);
 	slots = Malloc<Slot>(size);
 	Mcopy(other.slots, slots, size);
+	share = new StringShare(this);
 }
 
-StringAgency::StringAgency(StringAgency&& other)noexcept :characters(other.characters.Count()), helper(other.helper), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), characterHold(other.characterHold), slotHold(other.slotHold), characterGCHold(other.characterGCHold), slotGCHold(other.slotGCHold)
+StringAgency::StringAgency(StringAgency&& other)noexcept :characters(other.characters.Count()), helper(other.helper), top(other.top), size(other.size), free(other.free), head(other.head), tail(other.tail), characterHold(other.characterHold), slotHold(other.slotHold), characterGCHold(other.characterGCHold), slotGCHold(other.slotGCHold), share(other.share)
 {
 	characters.Add(other.characters.GetPointer(), other.characters.Count());
 	buckets = other.buckets;
 	slots = other.slots;
+	share->pool = this;
 	other.helper = NULL;
 	other.buckets = NULL;
 	other.slots = NULL;
+	other.share = NULL;
 }
 
 StringAgency& StringAgency::operator=(const StringAgency& other)noexcept
@@ -242,6 +246,9 @@ StringAgency& StringAgency::operator=(const StringAgency& other)noexcept
 	slotHold = other.slotHold;
 	characterGCHold = other.characterGCHold;
 	slotGCHold = other.slotGCHold;
+	share->pool = NULL;
+	share->Release();
+	share = new StringShare(this);
 	return *this;
 }
 
@@ -262,6 +269,10 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 	slotHold = other.slotHold;
 	characterGCHold = other.characterGCHold;
 	slotGCHold = other.slotGCHold;
+	share->pool = NULL;
+	share->Release();
+	share = other.share;
+	share->pool = this;
 	other.characters.Clear();
 	other.buckets = NULL;
 	other.slots = NULL;
@@ -274,12 +285,13 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 	other.slotHold = 0;
 	other.characterGCHold = 0;
 	other.slotGCHold = 0;
+	other.share = NULL;
 	return *this;
 }
 
 String StringAgency::Add(const character* value, uint32 length)
 {
-	String result = String(this, InternalAdd(value, length));
+	String result = String(share, InternalAdd(value, length));
 	slots[result.index].reference--;
 	return result;
 }
@@ -293,9 +305,9 @@ String StringAgency::Add(const character* value)
 
 String StringAgency::Add(const String& value)
 {
-	if (!value.pool || !value.index)return String();
-	if (value.pool == this)return value;
-	return Add(value.GetPointer(), value.GetLength());
+	if (value.IsEmpty()) return String();
+	else if (value.share == share) return value;
+	else return Add(value.GetPointer(), value.GetLength());
 }
 
 string StringAgency::AddAndRef(const character* value, uint32 length)
@@ -312,8 +324,8 @@ string StringAgency::AddAndRef(const character* value)
 
 string StringAgency::AddAndRef(const String& value)
 {
-	if (!value.pool || !value.index)return NULL;
-	if (value.pool == this)
+	if (value.IsEmpty()) return NULL;
+	else if (value.share == share)
 	{
 		Reference(value.index);
 		return value.index;
@@ -323,8 +335,8 @@ string StringAgency::AddAndRef(const String& value)
 
 String StringAgency::Get(uint32 index)
 {
-	if (index && IsValid(index))return String(this, index);
-	return String();
+	if (index && IsValid(index)) return String(share, index);
+	else return String();
 }
 
 void StringAgency::InitHelper()
@@ -382,26 +394,26 @@ void StringAgency::Serialize(Serializer* serializer)
 	for (uint32 index = head; index; index = slots[index].gcNext) serializer->Serialize(slots[index]);
 }
 
-StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NULL), buckets(NULL), slots(NULL), top(0), free(NULL), head(NULL), tail(NULL), characterHold(0), slotHold(0), characterGCHold(0), slotGCHold(0)
+StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NULL), buckets(NULL), slots(NULL), top(0), free(NULL), head(NULL), tail(NULL), characterHold(0), slotHold(0), characterGCHold(0), slotGCHold(0), share(NULL)
 {
 	top = deserializer->Deserialize<uint32>();
 	size = deserializer->Deserialize<uint32>();
 	deserializer->Deserialize(characters);
 	uint32 count = deserializer->Deserialize<uint32>();
-	head = deserializer->Deserialize<uint32>();
+	tail = head = deserializer->Deserialize<uint32>();
 	buckets = Malloc<uint32>(size);
 	for (uint32 i = 0; i < size; i++) buckets[i] = NULL;
 	slots = Malloc<Slot>(size);
 	for (uint32 i = 0; i < top; i++) slots[i].length = 0;
-	for (uint32 index = head; count; count--)
+	while (count--)
 	{
-		Slot& slot = slots[index];
+		Slot& slot = slots[tail];
 		slot = deserializer->Deserialize<Slot>();
 		ASSERT_DEBUG(slot.length, "这个字符串应该在序列化前就被gc掉的");
 		uint32 bidx = slot.hash % size;
 		slot.next = buckets[bidx];
-		buckets[bidx] = index;
-		index = slot.gcNext;
+		buckets[bidx] = tail;
+		tail = slot.gcNext;
 	}
 	for (uint32 i = 1; i < top; i++)
 		if (slots[i].length)
@@ -416,6 +428,11 @@ StringAgency::~StringAgency()
 	if (helper) delete helper; helper = NULL;
 	if (buckets) Free(buckets); buckets = NULL;
 	if (slots) Free(slots); slots = NULL;
+	if (share)
+	{
+		share->pool = NULL;
+		share->Release();
+	}
 }
 
 uint32 String::Find(const String& value, uint32 start) const

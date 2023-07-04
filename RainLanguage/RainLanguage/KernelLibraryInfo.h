@@ -411,6 +411,7 @@ public:
 		{
 			parent->children.Add(this);
 		}
+		~Space();
 	};
 	struct Variable
 	{
@@ -494,8 +495,10 @@ public:
 	List<StringAddresses>dataStrings;
 	KernelLibraryInfo(const KernelLibraryInfo&) = delete;
 	KernelLibraryInfo(const KernelLibraryInfo&&) = delete;
+	~KernelLibraryInfo();
 	static const KernelLibraryInfo* GetKernelLibraryInfo();
 private:
+	StringAgency stringAgency;
 	KernelLibraryInfo();
 	inline uint32 AddData(real value)
 	{

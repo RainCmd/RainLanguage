@@ -5,6 +5,18 @@
 struct String;
 struct Serializer;
 struct Deserializer;
+class StringAgency;
+struct StringShare
+{
+	StringAgency* pool;
+	uint64 count;
+	StringShare(StringAgency* pool) : pool(pool), count(1) {}
+	inline void Reference() { count++; }
+	inline void Release()
+	{
+		if (!(--count)) delete this;
+	}
+};
 class StringAgency
 {
 private:
@@ -22,6 +34,7 @@ private:
 	uint32* buckets;
 	Slot* slots;
 	uint32 top, size, free, head, tail, characterHold, slotHold, characterGCHold, slotGCHold;
+	StringShare* share;
 	void GC(const character* pointer);
 	void SlotGC();
 	bool IsEquals(Slot* slot, const character* value, uint32 length);
@@ -84,39 +97,61 @@ public:
 const struct String
 {
 private:
-	StringAgency* pool;
+	StringShare* share;
 	friend StringAgency;
 public:
 	uint32 index;
-	inline String() :pool(NULL), index(0) {}
-	inline String(StringAgency* pool, uint32 index) : pool(pool), index(index) { if (pool)pool->Reference(index); }
-	inline String(const String& other) : pool(other.pool), index(other.index) { if (pool) pool->Reference(index); }
+	inline String() :share(NULL), index(0) {}
+	inline String(StringShare* share, uint32 index) : share(share), index(index)
+	{
+		if (share)
+		{
+			share->Reference();
+			if (share->pool) share->pool->Reference(index);
+		}
+	}
+	inline String(const String& other) : share(other.share), index(other.index)
+	{
+		if (share)
+		{
+			share->Reference();
+			if (share->pool) share->pool->Reference(index);
+		}
+	}
 	inline String& operator=(const String& other)
 	{
-		if (pool) pool->Release(index);
-		pool = other.pool;
+		if (share)
+		{
+			if (share->pool) share->pool->Release(index);
+			share->Release();
+		}
+		share = other.share;
 		index = other.index;
-		if (pool) pool->Reference(index);
+		if (share)
+		{
+			share->Reference();
+			if (share->pool) share->pool->Reference(index);
+		}
 		return *this;
 	}
-	inline character operator[](uint32 index)const { return pool->characters[pool->slots[this->index].position + index]; }
+	inline character operator[](uint32 index) const { return share->pool->characters[share->pool->slots[this->index].position + index]; }
 	inline bool operator==(const character* other) const
 	{
 		uint32 index = 0, length = GetLength();
 		const character* pointer = GetPointer();
 		while (other[index])
-			if (index < length && other[index] == pointer[index])index++;
+			if (index < length && other[index] == pointer[index]) index++;
 			else return false;
 		return index == length;
 	}
 	inline bool operator!=(const character* other) const { return !(*this == other); }
 	inline bool operator==(const String& other) const
 	{
-		if (pool == other.pool)return index == other.index;
+		if (share == other.share) return index == other.index;
 		else if (GetLength() == other.GetLength() && GetHash() == other.GetHash())
 		{
 			for (uint32 i = 0; i < GetLength(); i++)
-				if ((*this)[i] != other[i])return false;
+				if ((*this)[i] != other[i]) return false;
 			return true;
 		}
 		return false;
@@ -127,29 +162,29 @@ public:
 		if (IsEmpty())return other;
 		if (other.IsEmpty())return *this;
 		String array[2] = { *this,other };
-		return pool->Combine(array, 2);
+		return share->pool->Combine(array, 2);
 	}
 	inline String operator+(const character* other) const
 	{
-		if (IsEmpty())EXCEPTION("获取不到字符串代理");
-		String array[2] = { *this,pool->Add(other) };
+		if (IsEmpty()) EXCEPTION("获取不到字符串代理");
+		String array[2] = { *this, share->pool->Add(other) };
 		if (array[1].IsEmpty())return *this;
-		else return pool->Combine(array, 2);
+		else return share->pool->Combine(array, 2);
 	}
 	inline friend String operator+(const character* text, const String& other)
 	{
-		if (other.IsEmpty())EXCEPTION("获取不到字符串代理");
-		String array[2] = { other.pool->Add(text),other };
+		if (other.IsEmpty()) EXCEPTION("获取不到字符串代理");
+		String array[2] = { other.share->pool->Add(text),other };
 		if (array[0].IsEmpty())return other;
-		else return other.pool->Combine(array, 2);
+		else return other.share->pool->Combine(array, 2);
 	}
-	inline uint32 GetLength() const { return pool ? pool->slots[index].length : 0; }
-	inline uint32 GetHash() const { return pool ? pool->slots[index].hash : 0; }
-	inline const character* GetPointer() const { return pool ? &pool->characters[pool->slots[index].position] : NULL; }
+	inline uint32 GetLength() const { return share && share->pool ? share->pool->slots[index].length : 0; }
+	inline uint32 GetHash() const { return share && share->pool ? share->pool->slots[index].hash : 0; }
+	inline const character* GetPointer() const { return share && share->pool ? &share->pool->characters[share->pool->slots[index].position] : NULL; }
 	inline String Sub(uint32 start, uint32 length) const
 	{
-		if (pool && length) return pool->Sub(*this, start, length);
-		else return String(pool, 0);
+		if (share && length) return share->pool->Sub(*this, start, length);
+		else return String(NULL, 0);
 	}
 	inline String Sub(uint32 start) const
 	{
@@ -159,13 +194,17 @@ public:
 	inline String Replace(const String& oldValue, const String& newValue) const
 	{
 		ASSERT_DEBUG(!IsEmpty() && !oldValue.IsEmpty(), "不能对空字符串进行该操作");
-		return pool->Replace(*this, oldValue, newValue);
+		return share->pool->Replace(*this, oldValue, newValue);
 	}
-	inline bool IsEmpty()const { return !pool || !index; }
+	inline bool IsEmpty()const { return !share || !share->pool || !index; }
 
 	inline ~String()
 	{
-		if (pool)pool->Release(index);
+		if (share)
+		{
+			if (share->pool) share->pool->Release(index);
+			share->Release();
+		}
 	}
 };
 inline uint32 GetHash(const String& value) { return value.GetHash(); }

@@ -29,6 +29,11 @@ InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(oth
 InvokerWrapper::~InvokerWrapper()
 {
 	if (IsValid()) invoker->Release();
+	else if (invoker && invoker->instanceID == instanceID)
+	{
+		invoker->hold--;
+		if (!invoker->hold) delete invoker;
+	}
 }
 
 InvokerWrapper& InvokerWrapper::operator=(const InvokerWrapper& other)

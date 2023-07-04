@@ -71,3 +71,14 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 		codeStartReference = codeReferenceAddresses.Count();
 	}
 }
+
+Generator::~Generator()
+{
+	delete globalReference;
+	Dictionary<String, GeneratorStringAddresses*>::Iterator codeStringIterator = codeStrings.GetIterator();
+	while (codeStringIterator.Next()) delete codeStringIterator.CurrentValue();
+	codeStrings.Clear();
+	Dictionary<String, GeneratorStringAddresses*>::Iterator dataStringIterator = dataStrings.GetIterator();
+	while (dataStringIterator.Next()) delete dataStringIterator.CurrentValue();
+	dataStrings.Clear();
+}

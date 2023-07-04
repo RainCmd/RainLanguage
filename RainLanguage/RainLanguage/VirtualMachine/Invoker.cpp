@@ -262,7 +262,7 @@ void Invoker::Reference()
 
 void Invoker::Release()
 {
-	if(kernel) kernel->coroutineAgency->Release(this);
+	if (kernel) kernel->coroutineAgency->Release(this);
 	else
 	{
 		hold--;
@@ -284,20 +284,21 @@ void Invoker::ClearReturns()
 
 void Invoker::Recycle()
 {
+	ASSERT_DEBUG(instanceID >> 32, "回收逻辑可能有问题");
 	if (kernel)
 	{
 		switch (state)
 		{
-		case InvokerState::Unstart:
-			ClearParameters();
-			break;
-		case InvokerState::Running: return;
-		case InvokerState::Completed:
-			ClearReturns();
-			break;
-		case InvokerState::Aborted:
-		case InvokerState::Invalid:
-		default: return;
+			case InvokerState::Unstart:
+				ClearParameters();
+				break;
+			case InvokerState::Running: return;
+			case InvokerState::Completed:
+				ClearReturns();
+				break;
+			case InvokerState::Aborted:
+			case InvokerState::Invalid:
+			default: return;
 		}
 		kernel->coroutineAgency->Recycle(this);
 		frames.Clear();

@@ -179,7 +179,7 @@ RainProduct* Build(const BuildParameter& parameter)
 	DeclarationManager manager = DeclarationManager(parameter.libraryLoader, &stringAgency, messages, stringAgency.Add(parameter.name.value, parameter.name.length));
 	List<List<AbstractSpace*, true>*, true> relySpaceCollector(0);
 
-	List<FileSpace>fileSpaces = List<FileSpace>(0);
+	List<FileSpace> fileSpaces = List<FileSpace>(0);
 	while (parameter.codeLoader->LoadNext())
 	{
 		RainString path = parameter.codeLoader->CurrentPath();
