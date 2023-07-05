@@ -124,7 +124,7 @@ const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclarat
 			return Span<Type, true>(&library->functions[library->classes[declaration.definition].functions[declaration.index]].parameters.GetTypes(), 1);
 		case DeclarationCategory::Interface: break;
 		case DeclarationCategory::InterfaceFunction:
-			return Span<Type, true>(&library->interfaces[declaration.definition].functions[declaration.index].parameters.GetTypes());
+			return Span<Type, true>(&library->interfaces[declaration.definition].functions[declaration.index].parameters.GetTypes(), 1);
 		case DeclarationCategory::Delegate:
 			return Span<Type, true>(&library->delegates[declaration.index].parameters.GetTypes());
 		case DeclarationCategory::Coroutine: break;

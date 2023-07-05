@@ -213,13 +213,13 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 
 bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectType)
 {
-	if (variableType == objectType)return true;
+	if (variableType == objectType) return true;
 	else if (!variableType.dimension)
 	{
 		if (objectType.dimension) return variableType == TYPE_Handle || variableType == TYPE_Array;
 		else if (objectType.code == TypeCode::Handle)
 		{
-			if (variableType == TYPE_Handle)return true;
+			if (variableType == TYPE_Handle) return true;
 			else if (variableType == TYPE_Interface) return (bool)GetClass(objectType)->inherits.Count();
 			else if (variableType.code == TypeCode::Handle)
 			{
@@ -227,11 +227,11 @@ bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectTyp
 				const RuntimeClass* subInfo = GetClass(objectType);
 				return baseInfo->parents.Count() < subInfo->parents.Count() && subInfo->parents[baseInfo->parents.Count()] == variableType;
 			}
-			else if (variableType.code == TypeCode::Interface)return GetClass(objectType)->inherits.Contains(variableType);
+			else if (variableType.code == TypeCode::Interface) return GetClass(objectType)->inherits.Contains(variableType);
 		}
 		else if (objectType.code == TypeCode::Interface)
 		{
-			if (variableType == TYPE_Handle || variableType == TYPE_Interface)return true;
+			if (variableType == TYPE_Handle || variableType == TYPE_Interface) return true;
 			else if (variableType.code == TypeCode::Interface)
 				return GetLibrary(objectType.library)->interfaces[objectType.index].inherits.Contains(variableType);
 		}

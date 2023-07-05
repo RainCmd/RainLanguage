@@ -39,9 +39,9 @@ struct LocalToGlobalMap
 
 Declaration LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const Declaration& declaration)
 {
-	if (!declaration.IsValid())return declaration;
-	if (declaration.library == LIBRARY_KERNEL)return declaration;
-	if (declaration.library == LIBRARY_SELF)return Declaration(index, declaration.code, declaration.index);
+	if (!declaration.IsValid()) return declaration;
+	if (declaration.library == LIBRARY_KERNEL) return declaration;
+	if (declaration.library == LIBRARY_SELF) return Declaration(index, declaration.code, declaration.index);
 	const LocalToGlobalMap& map = maps[declaration.library];
 	switch (declaration.code)
 	{
@@ -668,8 +668,10 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 	{
 		const ClassDeclarationInfo* info = &library->classes[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
-		List<Declaration, true>parents(1);
-		Set<Declaration, true>inherits(0);
+		List<Declaration, true> parents(1);
+		Set<Declaration, true> inherits(0);
+		for (uint32 y = 0; y < info->inherits.Count(); y++)
+			CollectInherits(inherits, LocalToGlobal(index, maps, info->inherits[y]), this, maps, library);
 		Declaration classParent = LocalToGlobal(index, maps, info->parent);
 		while (classParent.IsValid())
 		{

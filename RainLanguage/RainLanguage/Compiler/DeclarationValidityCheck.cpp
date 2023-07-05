@@ -378,7 +378,7 @@ bool TryFindFunction(DeclarationManager* manager, CompilingClass* define, Abstra
 	for (uint32 i = 0; i < define->functions.Count(); i++)
 	{
 		AbstractFunction* member = &manager->selfLibaray->functions[define->functions[i]];
-		if (member->name == function->name && IsEquals(member->parameters.GetTypes(), 1, function->parameters.GetTypes(), 0))
+		if (member->name == function->name && IsEquals(member->parameters.GetTypes(), 1, function->parameters.GetTypes(), 1))
 		{
 			if (!IsEquals(member->returns.GetTypes(), function->returns.GetTypes()))
 				MESSAGE2(manager->messages, manager->compilingLibrary.functions[define->functions[i]].name, MessageType::ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT);

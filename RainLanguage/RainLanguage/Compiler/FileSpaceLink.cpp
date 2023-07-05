@@ -2,7 +2,7 @@
 #include "Context.h"
 #include "../KernelDeclarations.h"
 
-#define FIND_DECLARATION(type) declarations.Clear();context.FindDeclaration(manager, type.name, declarations);Type findType = type.GetType(manager, declarations);
+#define FIND_DECLARATION(type) declarations.Clear();context.FindDeclaration(manager, type.name, declarations); Type findType = type.GetType(manager, declarations);
 
 Type FileType::GetType(DeclarationManager* manager, const List<CompilingDeclaration, true>& declarations)
 {
@@ -203,6 +203,10 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 	for (uint32 x = 0; x < interfaces.Count(); x++)
 	{
 		FileInterface* file = &interfaces[x];
+		CompilingDeclaration fileDeclaratioin;
+		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("自己的命名空间中找不到自己的定义");
+		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Interface, "定义类型错误");
+		Type fileType = Type(LIBRARY_SELF, TypeCode::Interface, fileDeclaratioin.index, 0);
 		CompilingInterface* compilingInterface = &manager->compilingLibrary.interfaces[file->index];
 		AbstractInterface* abstractInterface = &manager->selfLibaray->interfaces[file->index];
 		for (uint32 y = 0; y < file->inherits.Count(); y++)
@@ -224,6 +228,8 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 			FileInterface::Function* member = &file->functions[y];
 			CompilingInterface::Function* compilingMember = &compilingInterface->functions[y];
 			AbstractFunction* abstractMember = &abstractInterface->functions[y];
+			new (compilingMember->parameters.Add())CompilingFunctionDeclaration::Parameter(file->name, fileType);
+			abstractMember->parameters.AddElement(fileType, 0);
 			for (uint32 z = 0; z < member->parameters.Count(); z++)
 			{
 				FIND_DECLARATION(member->parameters[z].type);
