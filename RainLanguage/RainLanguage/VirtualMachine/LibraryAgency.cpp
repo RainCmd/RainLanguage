@@ -301,10 +301,10 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 	RuntimeNative* info = &library->natives[native.function];
 	if (!info->caller)
 	{
-		List<character, true> fullName(128);
+		List<character, true> fullName(32);
 		String name = kernel->stringAgency->Get(info->name);
 		fullName.Add(name.GetPointer(), name.GetLength());
-		for (uint32 index = info->space; index; index = library->spaces[index].parent)
+		for (uint32 index = info->space; index != INVALID; index = library->spaces[index].parent)
 		{
 			fullName.Insert(0, TEXT('.'));
 			name = kernel->stringAgency->Get(library->spaces[index].name);
