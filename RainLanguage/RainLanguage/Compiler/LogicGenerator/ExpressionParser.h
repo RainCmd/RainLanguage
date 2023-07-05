@@ -47,6 +47,5 @@ struct ExpressionParser
 	bool TryParseQuestionNull(const Anchor& left, const  Anchor& right, Expression*& result);
 	bool TryParse(const Anchor& left, const  Anchor& right, Expression*& result);
 	bool TryParse(const Anchor& anchor, Expression*& result);
-	~ExpressionParser();
 };
 

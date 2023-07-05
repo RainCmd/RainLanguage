@@ -696,6 +696,8 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			}
 			delete lambdaBody;
 		}
+		types.Add(type);
+		return true;
 	}
 	types.Add(expression->returns[0]);
 	return true;
@@ -3330,9 +3332,4 @@ label_parse_fail:
 	while (expressionStack.Count()) delete expressionStack.Pop();
 	result = NULL;
 	return false;
-}
-
-ExpressionParser::~ExpressionParser()
-{
-	if (closure) delete closure; closure = NULL;
 }
