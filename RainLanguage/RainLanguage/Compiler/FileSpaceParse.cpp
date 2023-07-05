@@ -626,7 +626,7 @@ lable_parse_inherits:
 
 		if (TryParseAttributes(current, attributes, parameter->messages))continue;
 		Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
-		ParseFunctionDeclaration(current, index, name, false, parameters, returns, parameter->messages);
+		ParseFunctionDeclaration(current, 0, name, false, parameters, returns, parameter->messages);
 		(new (fileInterface->functions.Add())FileInterface::Function(name, parameters, returns))->attributes.Add(attributes);
 		attributes.Clear();
 	}

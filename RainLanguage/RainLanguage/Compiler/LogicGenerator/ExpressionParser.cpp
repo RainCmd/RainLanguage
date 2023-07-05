@@ -271,7 +271,7 @@ bool ExpressionParser::TryAssignmentConvert(Expression*& source, const Span<Type
 			List<uint32, true> casts(0);
 			bool convert; uint32 value;
 			for (uint32 i = 0; i < types.Count(); i++)
-				if (TryConvert(manager, source->returns[i], types[i], convert, value)) { if (convert)casts.Add(i); }
+				if (TryConvert(manager, source->returns[i], types[i], convert, value)) { if (convert) casts.Add(i); }
 				else
 				{
 					MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_MISMATCH);
@@ -2774,7 +2774,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 										uint32 value1 = 0, value2 = 0;
 										if (++i < content.GetLength() && TryGetHexValue(content[i], value1))
 										{
-											if (++i < content.GetLength() && TryGetHexValue(content[i], value2)) element = (char)(value1 * 16 + value2);
+											if (++i < content.GetLength() && TryGetHexValue(content[i], value2)) element = value1 * 16 + value2;
 											else i -= 2;
 										}
 										else i--;

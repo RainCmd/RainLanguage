@@ -30,68 +30,68 @@ bool IsReloadable(LexicalType type)
 {
 	switch (type)
 	{
-	case LexicalType::Unknow:
-	case LexicalType::BracketLeft0:
-	case LexicalType::BracketLeft1:
-	case LexicalType::BracketLeft2:
-	case LexicalType::BracketRight0:
-	case LexicalType::BracketRight1:
-	case LexicalType::BracketRight2:
-	case LexicalType::Comma:
-	case LexicalType::Semicolon:
-	case LexicalType::Assignment: break;
-	case LexicalType::Equals: return true;
-	case LexicalType::Lambda: break;
-	case LexicalType::BitAnd: return true;
-	case LexicalType::LogicAnd:
-	case LexicalType::BitAndAssignment: break;
-	case LexicalType::BitOr: return true;
-	case LexicalType::LogicOr:
-	case LexicalType::BitOrAssignment: break;
-	case LexicalType::BitXor: return true;
-	case LexicalType::BitXorAssignment: break;
-	case LexicalType::Less:
-	case LexicalType::LessEquals:
-	case LexicalType::ShiftLeft: return true;
-	case LexicalType::ShiftLeftAssignment: break;
-	case LexicalType::Greater:
-	case LexicalType::GreaterEquals:
-	case LexicalType::ShiftRight: return true;
-	case LexicalType::ShiftRightAssignment: break;
-	case LexicalType::Plus:
-	case LexicalType::Increment: return true;
-	case LexicalType::PlusAssignment: break;
-	case LexicalType::Minus:
-	case LexicalType::Decrement: return true;
-	case LexicalType::RealInvoker:
-	case LexicalType::MinusAssignment: break;
-	case LexicalType::Mul: return true;
-	case LexicalType::MulAssignment: break;
-	case LexicalType::Div: return true;
-	case LexicalType::DivAssignment: 
-	case LexicalType::Annotation: break;
-	case LexicalType::Mod: return true;
-	case LexicalType::ModAssignment: break;
-	case LexicalType::Not:
-	case LexicalType::NotEquals:
-	case LexicalType::Negate: return true;
-	case LexicalType::Dot:
-	case LexicalType::Question:
-	case LexicalType::QuestionDot:
-	case LexicalType::QuestionRealInvoke:
-	case LexicalType::QuestionInvoke:
-	case LexicalType::QuestionIndex:
-	case LexicalType::QuestionNull:
-	case LexicalType::Colon:
-	case LexicalType::ConstReal:
-	case LexicalType::ConstNumber:
-	case LexicalType::ConstBinary:
-	case LexicalType::ConstHexadecimal:
-	case LexicalType::ConstChars:
-	case LexicalType::ConstString:
-	case LexicalType::Word:
-	case LexicalType::Backslash:
-	default: break;
+		case LexicalType::Unknow:
+		case LexicalType::BracketLeft0:
+		case LexicalType::BracketLeft1:
+		case LexicalType::BracketLeft2:
+		case LexicalType::BracketRight0:
+		case LexicalType::BracketRight1:
+		case LexicalType::BracketRight2:
+		case LexicalType::Comma:
+		case LexicalType::Semicolon:
+		case LexicalType::Assignment: break;
+		case LexicalType::Equals: return true;
+		case LexicalType::Lambda: break;
+		case LexicalType::BitAnd: return true;
+		case LexicalType::LogicAnd:
+		case LexicalType::BitAndAssignment: break;
+		case LexicalType::BitOr: return true;
+		case LexicalType::LogicOr:
+		case LexicalType::BitOrAssignment: break;
+		case LexicalType::BitXor: return true;
+		case LexicalType::BitXorAssignment: break;
+		case LexicalType::Less:
+		case LexicalType::LessEquals:
+		case LexicalType::ShiftLeft: return true;
+		case LexicalType::ShiftLeftAssignment: break;
+		case LexicalType::Greater:
+		case LexicalType::GreaterEquals:
+		case LexicalType::ShiftRight: return true;
+		case LexicalType::ShiftRightAssignment: break;
+		case LexicalType::Plus:
+		case LexicalType::Increment: return true;
+		case LexicalType::PlusAssignment: break;
+		case LexicalType::Minus:
+		case LexicalType::Decrement: return true;
+		case LexicalType::RealInvoker:
+		case LexicalType::MinusAssignment: break;
+		case LexicalType::Mul: return true;
+		case LexicalType::MulAssignment: break;
+		case LexicalType::Div: return true;
+		case LexicalType::DivAssignment:
+		case LexicalType::Annotation: break;
+		case LexicalType::Mod: return true;
+		case LexicalType::ModAssignment: break;
+		case LexicalType::Not:
+		case LexicalType::NotEquals:
+		case LexicalType::Negate: return true;
+		case LexicalType::Dot:
+		case LexicalType::Question:
+		case LexicalType::QuestionDot:
+		case LexicalType::QuestionRealInvoke:
+		case LexicalType::QuestionInvoke:
+		case LexicalType::QuestionIndex:
+		case LexicalType::QuestionNull:
+		case LexicalType::Colon:
+		case LexicalType::ConstReal:
+		case LexicalType::ConstNumber:
+		case LexicalType::ConstBinary:
+		case LexicalType::ConstHexadecimal:
+		case LexicalType::ConstChars:
+		case LexicalType::ConstString:
+		case LexicalType::Word:
+		case LexicalType::Backslash:
+		default: break;
 	}
 	return false;
 }
@@ -435,7 +435,7 @@ bool TryExtractName(const Anchor& segment, uint32 start, uint32& index, List<Anc
 	Lexical lexical;
 	while (TryAnalysis(segment, index, lexical, messages))
 	{
-		if (lexical.type == LexicalType::Word)name->Add(lexical.anchor);
+		if (lexical.type == LexicalType::Word) name->Add(lexical.anchor);
 		else break;
 		index = lexical.anchor.GetEnd();
 		if (TryAnalysis(segment, index, lexical, messages) && lexical.type == LexicalType::Dot)

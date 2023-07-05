@@ -142,9 +142,9 @@ const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclarat
 Type DeclarationManager::GetParent(const Type& type)
 {
 	ASSERT_DEBUG(type.code == TypeCode::Handle, "不是托管类型声明");
-	if (type.dimension)return TYPE_Array;
-	else if (type.library == LIBRARY_KERNEL)return kernelLibaray->classes[type.index].parent;
-	else if (type.library == LIBRARY_SELF)return compilingLibrary.classes[type.index].parent;
+	if (type.dimension) return TYPE_Array;
+	else if (type.library == LIBRARY_KERNEL) return kernelLibaray->classes[type.index].parent;
+	else if (type.library == LIBRARY_SELF) return compilingLibrary.classes[type.index].parent;
 	else return relies[type.library]->classes[type.index].parent;
 }
 
@@ -227,12 +227,13 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& name)
 	return NULL;
 }
 
-bool TryGetInherit(DeclarationManager* manager, Type subType, Type baseType, uint32 depth)
+bool TryGetInterfaceInherit(DeclarationManager* manager, Type subType, Type baseType, uint32& depth)
 {
+	if (subType == baseType) return true;
 	AbstractInterface* index = &manager->GetLibrary(subType.library)->interfaces[subType.index];
 	depth++;
 	for (uint32 i = 0; i < index->inherits.Count(); i++)
-		if (index->inherits[i] == baseType || TryGetInherit(manager, index->inherits[i], baseType, depth))
+		if (TryGetInterfaceInherit(manager, index->inherits[i], baseType, depth))
 			return true;
 	depth--;
 	return false;
@@ -301,7 +302,7 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 			else if (baseType.code == TypeCode::Interface)
 			{
 				depth = 0;
-				return ::TryGetInherit(this, subType, baseType, depth);
+				return TryGetInterfaceInherit(this, subType, baseType, depth);
 			}
 		}
 		else if (subType.code == TypeCode::Handle)
@@ -313,7 +314,7 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 				AbstractClass* declaration = &GetLibrary(index.library)->classes[index.index];
 				if (baseType.code == TypeCode::Interface)
 					for (uint32 i = 0; i < declaration->inherits.Count(); i++)
-						if (::TryGetInherit(this, declaration->inherits[i], baseType, depth))
+						if (TryGetInterfaceInherit(this, declaration->inherits[i], baseType, depth))
 							return true;
 				depth++;
 				index = GetParent(index);
