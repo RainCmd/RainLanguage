@@ -1916,6 +1916,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								Expression* expression = new VectorConstructorExpression(lexical.anchor, 2, tuple);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
+								delete typeExpression; typeExpression = NULL;
 								goto label_next_lexical;
 							}
 						}
@@ -1926,6 +1927,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								Expression* expression = new VectorConstructorExpression(lexical.anchor, 3, tuple);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
+								delete typeExpression; typeExpression = NULL;
 								goto label_next_lexical;
 							}
 						}
@@ -1936,6 +1938,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								Expression* expression = new VectorConstructorExpression(lexical.anchor, 4, tuple);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
+								delete typeExpression; typeExpression = NULL;
 								goto label_next_lexical;
 							}
 						}
@@ -1957,12 +1960,14 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 										InvokerConstructorExpression* expression = new InvokerConstructorExpression(typeExpression->anchor, type, tuple, callable->declaration);
 										expressionStack.Add(expression);
 										attribute = expression->attribute;
+										delete typeExpression; typeExpression = NULL;
 										goto label_next_lexical;
 									}
 								}
 								else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_CONSTRUCTOR_NOT_FOUND);
 								expressionStack.Add(typeExpression);
 								expressionStack.Add(tuple);
+								delete typeExpression; typeExpression = NULL;
 								goto label_parse_fail;
 							}
 							else if (type.code == TypeCode::Struct)

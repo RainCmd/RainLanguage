@@ -165,19 +165,6 @@ void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* g
 	temporaryAddress = 0;
 }
 
-uint32 VariableGenerator::GetHoldMemory(DeclarationManager* manager)
-{
-	uint32 result = localAddress;
-	uint8 alignment;
-	uint32 size = manager->GetStackSize(TYPE_String, alignment);
-	result = MemoryAlignment(result, alignment) + stringTemporaries.Count() * size;
-	size = manager->GetStackSize(TYPE_Entity, alignment);
-	result = MemoryAlignment(result, alignment) + entityTemporaries.Count() * size;
-	size = manager->GetStackSize(TYPE_Handle, alignment);
-	result = MemoryAlignment(result, alignment) + handleTemporaries.Count() * size;
-	return result;
-}
-
 void ResetLocal(DeclarationManager* manager, Generator* generator, uint32 address, const Type& type)
 {
 	if (type.dimension)

@@ -30,7 +30,7 @@ public:
 	LogicVariable GetLocal(DeclarationManager* manager, uint32 index, const Type& type);
 	LogicVariable DecareTemporary(DeclarationManager* manager, const Type& type);
 	void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address);
-	uint32 GetHoldMemory(DeclarationManager* manager);
+	inline uint32 GetHoldMemory() { return localAddress; }
 	uint32 Generate(DeclarationManager* manager, Generator* generator);
 	~VariableGenerator();
 };

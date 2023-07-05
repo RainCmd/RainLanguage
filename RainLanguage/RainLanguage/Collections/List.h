@@ -13,7 +13,7 @@ private:
 		count += this->count;
 		if (count > size)
 		{
-			if (size < 4)size = 4;
+			if (size < 4) size = 4;
 			while (size < count) size += size >> 1;
 			values = Realloc<T>(values, size);
 			return true;

@@ -786,12 +786,12 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	parameter.generator->WriteCode(&stackSize);
 	parameter.generator->WriteCode(&finallyAddress);
 	uint32 entryPoint = parameter.generator->GetPointer();
-	uint32 localPoint = variableGenerator.GetHoldMemory(parameter.manager);
+	uint32 localPoint = variableGenerator.GetHoldMemory();
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
 	statements->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator), MEMORY_ALIGNMENT_MAX));
-	uint32 holdSize = variableGenerator.GetHoldMemory(parameter.manager) - localPoint;
+	uint32 holdSize = variableGenerator.GetHoldMemory() - localPoint;
 	if (holdSize)
 	{
 		parameter.generator->BeginInsert(entryPoint);

@@ -173,7 +173,7 @@ public:
 #define COMPILE_TERMINATION_CHECK if (messages->GetMessages(ErrorLevel::Error)->Count())return new Product(messages);
 RainProduct* Build(const BuildParameter& parameter)
 {
-	StringAgency stringAgency = StringAgency(0x1000);
+	StringAgency stringAgency = StringAgency(0x100);
 	MessageCollector* messages = new MessageCollector(parameter.messageLevel);
 
 	DeclarationManager manager = DeclarationManager(parameter.libraryLoader, &stringAgency, messages, stringAgency.Add(parameter.name.value, parameter.name.length));

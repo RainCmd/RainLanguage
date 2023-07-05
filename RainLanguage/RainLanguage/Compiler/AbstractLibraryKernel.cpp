@@ -103,7 +103,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 	}
 }
 AbstractLibrary::AbstractLibrary(const KernelLibraryInfo* info, const AbstractParameter& parameter) :AbstractSpace(NULL, TO_NATIVE_STRING(KeyWord_kernel()), EMPTY_STRINGS), library(LIBRARY_KERNEL),
-variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(interfaces.Count()), delegates(info->delegates.Count()), coroutines(coroutines.Count()), natives(0)
+variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), coroutines(info->coroutines.Count()), natives(0)
 {
 	for (uint32 i = 0; i < info->variables.Count(); i++)
 	{
