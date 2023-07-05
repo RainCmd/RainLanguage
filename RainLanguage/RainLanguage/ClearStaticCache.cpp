@@ -5,4 +5,5 @@ void ClearStaticCache()
 {
 	ClearKernelLibrary();
 	ClearKernelLibraryInfo();
+	ClearKeyWorlds();
 }

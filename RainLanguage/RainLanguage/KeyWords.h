@@ -2,7 +2,6 @@
 #include "RainLanguage.h"
 #include "String.h"
 
-bool IsKeyWord(const String& value);
 //KernelLibraryInfo.cpp 中不少地方是直接写死的字符串，如果要改的话注意两边同步
 String KeyWord_namespace();
 String KeyWord_import();
@@ -59,3 +58,5 @@ String KeyWord_exit();
 String KeyWord_try();
 String KeyWord_catch();
 String KeyWord_finally();
+
+bool IsKeyWord(const String& value);
