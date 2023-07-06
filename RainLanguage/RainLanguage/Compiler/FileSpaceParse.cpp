@@ -444,9 +444,9 @@ void FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility,
 	while (parameter->reader->ReadLine())
 	{
 		Line current = parameter->reader->CurrentLine();
-		if (!CheckIndent(current, indent, line.indent))break;
+		if (!CheckIndent(current, indent, line.indent)) break;
 
-		if (TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))
+		if (TryGetNextLexical(current, 0, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))
 		{
 			Anchor name = lexical.anchor;
 			if (TryAnalysis(current, lexical.anchor.GetEnd(), lexical, parameter->messages))

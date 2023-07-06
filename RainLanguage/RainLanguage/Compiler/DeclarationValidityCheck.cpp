@@ -184,6 +184,13 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 	{
 		CompilingEnum* compiling = library->enums[x];
 		if (IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		for (uint32 y = 0; y < compiling->elements.Count(); y++)
+			for (uint32 z = 0; z < compiling->elements.Count(); z++)
+				if (y != z && compiling->elements[y]->name.content == compiling->elements[z]->name.content)
+				{
+					MESSAGE2(manager->messages, compiling->elements[y]->name, MessageType::ERROR_DUPLICATION_NAME);
+					break;
+				}
 	}
 	for (uint32 x = 0; x < library->structs.Count(); x++)
 	{

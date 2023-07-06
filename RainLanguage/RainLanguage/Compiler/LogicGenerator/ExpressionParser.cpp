@@ -2487,7 +2487,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							Expression* expression = expressionStack.Pop();
 							ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
 							Type type = expression->returns[0];
-							if (type.dimension)type = TYPE_Array;
+							if (type.dimension) type = TYPE_Array;
 							List<CompilingDeclaration, true> declarations(0);
 							if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
 							{

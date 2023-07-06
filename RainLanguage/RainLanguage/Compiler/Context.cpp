@@ -261,20 +261,11 @@ void FindMember(DeclarationManager* manager, const String& name, AbstractInterfa
 	}
 }
 
-bool Context::TryFindMember(DeclarationManager* manager, const String& name, const Type& type, List<CompilingDeclaration, true>& results)
+bool Context::TryFindMember(DeclarationManager* manager, const String& name, Type type, List<CompilingDeclaration, true>& results)
 {
+	if (type.code == TypeCode::Enum) type = TYPE_Enum;
 	AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
-	if (type.code == TypeCode::Enum)
-	{
-		AbstractEnum* abstractEnum = abstractLibrary->enums[type.index];
-		for (uint32 i = 0; i < abstractEnum->elements.Count(); i++)
-			if (abstractEnum->elements[i] == name)
-			{
-				new (results.Add())CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::EnumElement, i, type.index);
-				return true;
-			}
-	}
-	else if (type.code == TypeCode::Struct)
+	if (type.code == TypeCode::Struct)
 	{
 		AbstractStruct* abstractStruct = abstractLibrary->structs[type.index];
 		for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)

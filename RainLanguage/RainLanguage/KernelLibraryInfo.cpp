@@ -378,7 +378,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(3);
 		REGISTER_MEMBER_FUNCTIONS("ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Enum), enum_ToString);
-		REGISTER_STRUCT_INTERNAL("enum", KERNEL_TYPE_STRUCT_INDEX_Enum, SIZE(integer), MEMORY_ALIGNMENT_8, EMPTY_VARIABLES, EMPTY_INDICES);
+		REGISTER_STRUCT_INTERNAL("enum", KERNEL_TYPE_STRUCT_INDEX_Enum, SIZE(integer), MEMORY_ALIGNMENT_8, EMPTY_VARIABLES, memberFunctions);//todo 该类型没有所属命名空间，创建抽象定义树时，成员函数需要单独处理
 	}
 	//struct type
 	{
