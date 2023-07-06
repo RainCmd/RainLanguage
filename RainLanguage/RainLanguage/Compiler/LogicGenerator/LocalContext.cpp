@@ -43,6 +43,7 @@ void LocalContext::Reset()
 	for (uint32 i = 0; i < localDeclarations.Count(); i++)
 		delete localDeclarations[i];
 	localDeclarations.Clear();
+	index = 0;
 }
 
 LocalContext::~LocalContext()

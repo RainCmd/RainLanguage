@@ -547,7 +547,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					}
 					lambdaFunction->returns = abstractDelegate->returns.GetTypes();
 					List<Statement*, true> statements(0);
-					if (abstractDelegate->returns.Count())statements.Add(new ReturnStatement(lambdaBody->anchor, lambdaBody));
+					if (abstractDelegate->returns.Count()) statements.Add(new ReturnStatement(lambdaBody->anchor, lambdaBody));
 					else statements.Add(new ExpressionStatement(lambdaBody->anchor, lambdaBody));
 					LambdaGenerator* lambdaGenerator = new LambdaGenerator(lambdaExpression->anchor, closure.closure, abstractDelegate->returns.Count(), lambdaParameters, statements);
 					manager->lambdaGenerators.Add(lambdaGenerator);

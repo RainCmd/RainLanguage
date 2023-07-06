@@ -976,26 +976,26 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_String:
 		{
-			string* address = &INSTRUCT_VARIABLE(string, 1);
-			kernel->stringAgency->Release(*address);
-			*address = INSTRUCT_VALUE(string, 5);
-			kernel->stringAgency->Reference(*address);
+			string& address = INSTRUCT_VARIABLE(string, 1);
+			kernel->stringAgency->Release(address);
+			address = INSTRUCT_VALUE(string, 5);
+			kernel->stringAgency->Reference(address);
 			instruct += 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_HandleNull:
 		{
-			Handle* address = &INSTRUCT_VARIABLE(Handle, 1);
-			kernel->heapAgency->StrongRelease(*address);
-			*address = NULL;
+			Handle& address = INSTRUCT_VARIABLE(Handle, 1);
+			kernel->heapAgency->StrongRelease(address);
+			address = NULL;
 			instruct += 5;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_EntityNull:
 		{
-			Entity* address = &INSTRUCT_VARIABLE(Entity, 1);
-			kernel->entityAgency->Release(*address);
-			*address = NULL;
+			Entity& address = INSTRUCT_VARIABLE(Entity, 1);
+			kernel->entityAgency->Release(address);
+			address = NULL;
 			instruct += 5;
 		}
 		goto label_next_instruct;
@@ -1350,9 +1350,9 @@ label_next_instruct:
 
 			{
 				Handle& target = INSTRUCT_VARIABLE(Handle, 1);
-				kernel->heapAgency->WeakRelease(target);
+				kernel->heapAgency->StrongRelease(target);
 				target = *(Handle*)address;
-				kernel->heapAgency->WeakReference(*(Handle*)address);
+				kernel->heapAgency->StrongReference(*(Handle*)address);
 			}
 
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Handle);
