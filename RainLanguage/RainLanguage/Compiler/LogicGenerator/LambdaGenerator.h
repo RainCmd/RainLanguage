@@ -14,5 +14,6 @@ public:
 	List<Statement*, true> statements;
 	inline LambdaGenerator(const Anchor& anchor, bool closure, uint32 returnCount, const List<Local>& parameters, const List<Statement*, true>& statements) :anchor(anchor), closure(closure), returnSize(returnCount * 4), parameters(parameters), statements(statements) {}
 	void Generator(GeneratorParameter& parameter);
+	~LambdaGenerator();
 };
 

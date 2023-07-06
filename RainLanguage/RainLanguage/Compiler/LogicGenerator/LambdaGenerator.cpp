@@ -42,3 +42,9 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	parameter.generator->WriteCode(Instruct::FUNCTION_Return);
 	parameter.generator->CodeMemoryAlignment(MEMORY_ALIGNMENT_MAX);
 }
+
+LambdaGenerator::~LambdaGenerator()
+{
+	for (uint32 i = 0; i < statements.Count(); i++) delete statements[i];
+	statements.Clear();
+}

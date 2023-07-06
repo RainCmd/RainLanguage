@@ -48,7 +48,8 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
 	FunctionGenerator(parameter).Generator(parameter);
 	codeStartReference = codeReferenceAddresses.Count();
-	for (uint32 i = 0, count = parameter.manager->compilingLibrary.functions.Count(); i < count; i++)
+	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
+	for (uint32 i = 0; i < functionCount; i++)
 	{
 		CompilingFunction* compiling = parameter.manager->compilingLibrary.functions[i];
 		compiling->entry = GetPointer();
@@ -67,6 +68,7 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 	}
 	for (uint32 i = 0; i < parameter.manager->lambdaGenerators.Count(); i++)
 	{
+		parameter.manager->compilingLibrary.functions[functionCount + i]->entry = GetPointer();
 		parameter.manager->lambdaGenerators[i]->Generator(parameter);
 		codeStartReference = codeReferenceAddresses.Count();
 	}

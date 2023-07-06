@@ -519,6 +519,8 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 
 					if (closure.closure)
 					{
+						closure.closure->functions.Add(lambdaDeclaration.index);
+						manager->selfLibaray->classes[closure.closure->declaration.index]->functions.Add(lambdaDeclaration.index);
 						expression = new LambdaClosureDelegateCreateExpression(lambdaExpression->anchor, type, closure.closure->declaration, closure.GetClosureVariables(lambdaDeclaration.index));
 						TupleInfo lambdaFuncioinParameters = TupleInfo(lambdaFunction->parameters.Count());
 						new (lambdaFunction->parameters.Add())CompilingFunctionDeclaration::Parameter(lambdaExpression->anchor, closure.closure->declaration.DefineType());

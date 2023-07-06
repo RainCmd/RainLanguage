@@ -179,7 +179,7 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint
 			parameter.results[0] = LogicVariable(targetParameter.results[0], type, offset);
 		}
 	}
-	else if (declaration.category == DeclarationCategory::ClassVariable)
+	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue)
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
@@ -211,7 +211,7 @@ void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& param
 			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(targetParameter.results[0], parameter.results[0].type, offset), parameter.results[0]);
 		}
 	}
-	else if (declaration.category == DeclarationCategory::ClassVariable)
+	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue)
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
@@ -241,7 +241,7 @@ void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parame
 
 bool VariableMemberExpression::IsReferenceMember()
 {
-	if (declaration.category == DeclarationCategory::ClassVariable) return true;
+	if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) return true;
 	else if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
 	{
 		VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;

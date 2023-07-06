@@ -60,7 +60,7 @@ void GlobalReference::AddVariableReference(const CompilingDeclaration& declarati
 			}
 			new (references->Add())VariableReference(reference, offset);
 		}
-		else if (declaration.category == DeclarationCategory::ClassVariable)
+		else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue)
 		{
 			MemberVariable member = MemberVariable(declaration.definition, declaration.index);
 			List<VariableReference, true>* references = NULL;

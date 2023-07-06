@@ -673,7 +673,7 @@ label_next_instruct:
 						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
 						if (EnsureStackSize(top + parameterStart + SIZE(handle) + parameterSize))EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
 						kernel->heapAgency->StrongReference(delegateInfo.target);
-						*(Handle*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = delegateInfo.target;
+						*(Handle*)(stack + top + parameterStart) = delegateInfo.target;
 						top += MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
 					}
 					break;

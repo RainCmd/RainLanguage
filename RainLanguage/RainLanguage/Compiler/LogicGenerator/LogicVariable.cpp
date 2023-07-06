@@ -134,7 +134,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember, uint32 offset, CodeLocalAddressReference* finallyAddress)
 {
-	ASSERT_DEBUG(rightMember.category == DeclarationCategory::ClassVariable, "类型错误");
+	ASSERT_DEBUG(rightMember.category == DeclarationCategory::ClassVariable || rightMember.category == DeclarationCategory::LambdaClosureValue, "类型错误");
 	const Type& type = left.type;
 	if (IsHandleType(type))
 	{
@@ -199,7 +199,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, uint32 offset, const LogicVariable& right, CodeLocalAddressReference* finallyAddress)
 {
-	ASSERT_DEBUG(leftMember.category == DeclarationCategory::ClassVariable, "类型错误");
+	ASSERT_DEBUG(leftMember.category == DeclarationCategory::ClassVariable || leftMember.category == DeclarationCategory::LambdaClosureValue, "类型错误");
 	const Type& type = right.type;
 	if (IsHandleType(type))
 	{

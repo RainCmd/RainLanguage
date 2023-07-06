@@ -114,9 +114,11 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(invokerParameter.results[0]);
 	parameter.generator->WriteCode(parameterPoint);
 	parameter.generator->WriteCode(abstractDelegate->parameters.size);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 	GenerateInvokerParameters(parametersParameter, parameterPoint, abstractDelegate->parameters);
 	parameter.generator->WriteCode(Instruct::FUNCTION_CustomCall);
 	parameter.generator->WriteCode(invokerParameter.results[0]);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
