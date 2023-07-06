@@ -88,9 +88,9 @@ void ClearTemporary(DeclarationManager* manager, Generator* generator, uint32 ad
 			else if (type == TYPE_String || type == TYPE_Entity) goto label_clear_stack_instruct;
 			else
 			{
-				List<AbstractVariable>& variables = manager->GetLibrary(type.library)->structs[type.index].variables;
+				List<AbstractVariable*, true>& variables = manager->GetLibrary(type.library)->structs[type.index]->variables;
 				for (uint32 i = 0; i < variables.Count(); i++)
-					ClearTemporary(manager, generator, address, offset + variables[i].address, reference, variables[i].type);
+					ClearTemporary(manager, generator, address, offset + variables[i]->address, reference, variables[i]->type);
 			}
 			break;
 		case TypeCode::Enum: break;
@@ -131,9 +131,9 @@ void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 of
 			}
 			else if (!(type == TYPE_Bool || type == TYPE_Byte || type == TYPE_Char || type == TYPE_Integer || type == TYPE_Real || type == TYPE_Real2 || type == TYPE_Real3 || type == TYPE_Real4 || type == TYPE_Enum || type == TYPE_Type))
 			{
-				List<AbstractVariable>& variables = manager->GetLibrary(type.library)->structs[type.index].variables;
+				List<AbstractVariable*, true>& variables = manager->GetLibrary(type.library)->structs[type.index]->variables;
 				for (uint32 i = 0; i < variables.Count(); i++)
-					ResetTemporary(manager, generator, offset + variables[i].address, reference, variables[i].type);
+					ResetTemporary(manager, generator, offset + variables[i]->address, reference, variables[i]->type);
 			}
 			break;
 		case TypeCode::Enum: break;
@@ -189,9 +189,9 @@ void ResetLocal(DeclarationManager* manager, Generator* generator, uint32 addres
 			}
 			else
 			{
-				List<AbstractVariable>& variables = manager->GetLibrary(type.library)->structs[type.index].variables;
+				List<AbstractVariable*, true>& variables = manager->GetLibrary(type.library)->structs[type.index]->variables;
 				for (uint32 i = 0; i < variables.Count(); i++)
-					ResetLocal(manager, generator, address + variables[i].address, variables[i].type);
+					ResetLocal(manager, generator, address + variables[i]->address, variables[i]->type);
 			}
 			break;
 		case TypeCode::Enum: break;

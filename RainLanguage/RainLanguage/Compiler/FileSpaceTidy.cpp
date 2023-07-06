@@ -58,7 +58,7 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Variable, library->variables, NULL);
-		new (library->variables.Add())CompilingVariable(file->name, *declaration, file->attributes, compiling, file->readonly, file->expression);
+		library->variables.Add(new CompilingVariable(file->name, *declaration, file->attributes, compiling, file->readonly, file->expression));
 	}
 	for (uint32 x = 0; x < functions.Count(); x++)
 	{
@@ -70,7 +70,7 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		}
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Function, library->functions, NULL);
-		new (library->functions.Add())CompilingFunction(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count(), file->body);
+		library->functions.Add(new CompilingFunction(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count(), file->body));
 	}
 	for (uint32 x = 0; x < enums.Count(); x++)
 	{
@@ -78,13 +78,13 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Enum, library->enums, NULL);
-		new (library->enums.Add())CompilingEnum(file->name, *declaration, file->attributes, compiling, List< CompilingEnum::Element>(file->elements.Count()));
-		List<CompilingEnum::Element>& elements = library->enums.Peek().elements;
+		library->enums.Add(new CompilingEnum(file->name, *declaration, file->attributes, compiling, List<CompilingEnum::Element*, true>(file->elements.Count())));
+		List<CompilingEnum::Element*, true>& elements = library->enums.Peek()->elements;
 		for (uint32 y = 0; y < file->elements.Count(); y++)
 		{
 			FileEnum::Element* member = &file->elements[y];
 			CompilingDeclaration elementDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::EnumElement, elements.Count(), declaration->index);
-			new (elements.Add())CompilingEnum::Element(member->name, elementDeclaration, member->expression);
+			elements.Add(new CompilingEnum::Element(member->name, elementDeclaration, member->expression));
 		}
 	}
 	for (uint32 x = 0; x < structs.Count(); x++)
@@ -93,21 +93,21 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Struct, library->structs, NULL);
-		new (library->structs.Add())CompilingStruct(file->name, *declaration, file->attributes, compiling, List<CompilingStruct::Variable>(file->variables.Count()), List<uint32, true>(file->functions.Count()));
-		List<CompilingStruct::Variable>& memberVariables = library->structs.Peek().variables;
+		library->structs.Add(new CompilingStruct(file->name, *declaration, file->attributes, compiling, List<CompilingStruct::Variable*, true>(file->variables.Count()), List<uint32, true>(file->functions.Count())));
+		List<CompilingStruct::Variable*, true>& memberVariables = library->structs.Peek()->variables;
 		for (uint32 y = 0; y < file->variables.Count(); y++)
 		{
 			FileStruct::Variable* member = &file->variables[y];
 			CompilingDeclaration memberDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::StructVariable, memberVariables.Count(), declaration->index);
-			new (memberVariables.Add())CompilingStruct::Variable(member->name, memberDeclaration, member->attributes);
+			memberVariables.Add(new CompilingStruct::Variable(member->name, memberDeclaration, member->attributes));
 		}
-		List<uint32, true>& memberFunctions = library->structs.Peek().functions;
+		List<uint32, true>& memberFunctions = library->structs.Peek()->functions;
 		for (uint32 y = 0; y < file->functions.Count(); y++)
 		{
 			FileFunction* member = &file->functions[y];
 			CompilingDeclaration memberDeclaration(LIBRARY_SELF, member->visibility, DeclarationCategory::StructFunction, memberFunctions.Count(), declaration->index);
 			memberFunctions.Add(library->functions.Count());
-			new (library->functions.Add())CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, member->returns.Count(), member->body);
+			library->functions.Add(new CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, member->returns.Count(), member->body));
 		}
 	}
 	for (uint32 x = 0; x < classes.Count(); x++)
@@ -116,30 +116,30 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Class, library->classes, 0);
-		new (library->classes.Add())CompilingClass(file->name, *declaration, file->attributes, compiling, file->inherits.Count(), List<CompilingClass::Constructor>(file->constructors.Count()), List<CompilingClass::Variable>(file->variables.Count()), List<uint32, true>(file->functions.Count()), file->destructor);
-		List<CompilingClass::Constructor>& constructors = library->classes.Peek().constructors;
+		library->classes.Add(new CompilingClass(file->name, *declaration, file->attributes, compiling, file->inherits.Count(), List<CompilingClass::Constructor*, true>(file->constructors.Count()), List<CompilingClass::Variable*, true>(file->variables.Count()), List<uint32, true>(file->functions.Count()), file->destructor));
+		List<CompilingClass::Constructor*, true>& constructors = library->classes.Peek()->constructors;
 		for (uint32 y = 0; y < file->constructors.Count(); y++)
 		{
 			FileClass::Constructor* member = &file->constructors[y];
 			CompilingDeclaration memberDeclaration(LIBRARY_SELF, member->visibility, DeclarationCategory::Constructor, constructors.Count(), declaration->index);
-			new (constructors.Add())CompilingClass::Constructor(library->functions.Count(), member->expression);
-			new (library->functions.Add())CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, 1, member->body);
+			constructors.Add(new CompilingClass::Constructor(library->functions.Count(), member->expression));
+			library->functions.Add(new CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, 1, member->body));
 		}
-		List<CompilingClass::Variable>& memberVariables = library->classes.Peek().variables;
+		List<CompilingClass::Variable*, true>& memberVariables = library->classes.Peek()->variables;
 		for (uint32 y = 0; y < file->variables.Count(); y++)
 		{
 			FileClass::Variable* member = &file->variables[y];
 			CompilingDeclaration memberDeclaration(LIBRARY_SELF, member->visibility, DeclarationCategory::ClassVariable, memberVariables.Count(), declaration->index);
-			new (memberVariables.Add())CompilingClass::Variable(member->name, memberDeclaration, member->attributes, member->expression);
+			memberVariables.Add(new CompilingClass::Variable(member->name, memberDeclaration, member->attributes, member->expression));
 		}
-		List<uint32, true>& memberFunctions = library->classes.Peek().functions;
+		List<uint32, true>& memberFunctions = library->classes.Peek()->functions;
 		for (uint32 y = 0; y < file->functions.Count(); y++)
 		{
 			FileFunction* member = &file->functions[y];
 			CompilingDeclaration memberDeclaration(LIBRARY_SELF, member->visibility, DeclarationCategory::ClassFunction, memberFunctions.Count(), declaration->index);
 			member->index = library->functions.Count();
 			memberFunctions.Add(library->functions.Count());
-			new (library->functions.Add())CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, member->returns.Count(), member->body);
+			library->functions.Add(new CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, member->returns.Count(), member->body));
 		}
 	}
 	for (uint32 x = 0; x < interfaces.Count(); x++)
@@ -148,13 +148,13 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Interface, library->interfaces, NULL);
-		new (library->interfaces.Add())CompilingInterface(file->name, *declaration, file->attributes, compiling, file->inherits.Count(), List<CompilingInterface::Function>(file->functions.Count()));
-		List<CompilingInterface::Function>& memberFunctions = library->interfaces.Peek().functions;
+		library->interfaces.Add(new CompilingInterface(file->name, *declaration, file->attributes, compiling, file->inherits.Count(), List<CompilingInterface::Function*, true>(file->functions.Count())));
+		List<CompilingInterface::Function*, true>& memberFunctions = library->interfaces.Peek()->functions;
 		for (uint32 y = 0; y < file->functions.Count(); y++)
 		{
 			FileInterface::Function* member = &file->functions[y];
 			CompilingDeclaration memberDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::InterfaceFunction, memberFunctions.Count(), declaration->index);
-			new (memberFunctions.Add())CompilingInterface::Function(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count(), member->returns.Count());
+			memberFunctions.Add(new CompilingInterface::Function(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count(), member->returns.Count()));
 		}
 	}
 	for (uint32 x = 0; x < delegates.Count(); x++)
@@ -163,7 +163,7 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Delegate, library->delegates, NULL);
-		new (library->delegates.Add())CompilingDelegate(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count());
+		library->delegates.Add(new CompilingDelegate(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count()));
 	}
 	for (uint32 x = 0; x < coroutines.Count(); x++)
 	{
@@ -171,7 +171,7 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Coroutine, library->coroutines, NULL);
-		new (library->coroutines.Add())CompilingCoroutine(file->name, *declaration, file->attributes, compiling, file->returns.Count());
+		library->coroutines.Add(new CompilingCoroutine(file->name, *declaration, file->attributes, compiling, file->returns.Count()));
 	}
 	for (uint32 x = 0; x < natives.Count(); x++)
 	{
@@ -183,6 +183,6 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		}
 		else ADD_DECLARATIONS;
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Native, library->natives, NULL);
-		new (library->natives.Add())CompilingNative(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count());
+		library->natives.Add(new CompilingNative(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count()));
 	}
 }

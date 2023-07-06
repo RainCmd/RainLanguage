@@ -53,67 +53,67 @@ library(LIBRARY_KERNEL), variables(info->variables.Count()), functions(info->fun
 	CreateSelfAbstractSpace(this, info, info, parameter.messages);
 	for (uint32 i = 0; i < info->variables.Count(); i++)
 	{
-		CompilingVariable* compiling = &info->variables[i];
-		new (variables.Add())AbstractVariable(DECLARATION_PARAMETERS(compiling), compiling->constant, compiling->type, INVALID);
+		CompilingVariable* compiling = info->variables[i];
+		variables.Add(new AbstractVariable(DECLARATION_PARAMETERS(compiling), compiling->constant, compiling->type, INVALID));
 	}
 	for (uint32 i = 0; i < info->functions.Count(); i++)
 	{
-		CompilingFunction* compiling = &info->functions[i];
-		new (functions.Add())AbstractFunction(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count()));
+		CompilingFunction* compiling = info->functions[i];
+		functions.Add(new AbstractFunction(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count())));
 	}
 	for (uint32 i = 0; i < info->enums.Count(); i++)
 	{
-		CompilingEnum* compiling = &info->enums[i];
+		CompilingEnum* compiling = info->enums[i];
 		List<String> elements = List<String>(compiling->elements.Count());
 		for (uint32 index = 0; index < compiling->elements.Count(); index++)
-			elements.Add(compiling->elements[index].name.content);
-		new (enums.Add())AbstractEnum(DECLARATION_PARAMETERS(compiling), elements);
+			elements.Add(compiling->elements[index]->name.content);
+		enums.Add(new AbstractEnum(DECLARATION_PARAMETERS(compiling), elements));
 	}
 	for (uint32 i = 0; i < info->structs.Count(); i++)
 	{
-		CompilingStruct* compiling = &info->structs[i];
-		new (structs.Add())AbstractStruct(DECLARATION_PARAMETERS(compiling), List<AbstractVariable>(compiling->variables.Count()), compiling->functions, INVALID, NULL);
+		CompilingStruct* compiling = info->structs[i];
+		structs.Add(new AbstractStruct(DECLARATION_PARAMETERS(compiling), List<AbstractVariable*, true>(compiling->variables.Count()), compiling->functions, INVALID, NULL));
 		for (uint32 index = 0; index < compiling->variables.Count(); index++)
 		{
-			CompilingStruct::Variable* member = &compiling->variables[index];
-			new (structs.Peek().variables.Add())AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID);
+			CompilingStruct::Variable* member = compiling->variables[index];
+			structs.Peek()->variables.Add(new AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID));
 		}
 	}
 	for (uint32 i = 0; i < info->classes.Count(); i++)
 	{
-		CompilingClass* compiling = &info->classes[i];
-		new (classes.Add())AbstractClass(DECLARATION_PARAMETERS(compiling), compiling->parent, compiling->inherits, List<uint32, true>(compiling->constructors.Count()), List<AbstractVariable>(compiling->variables.Count()), compiling->functions, INVALID, NULL);
+		CompilingClass* compiling = info->classes[i];
+		classes.Add(new AbstractClass(DECLARATION_PARAMETERS(compiling), compiling->parent, compiling->inherits, List<uint32, true>(compiling->constructors.Count()), List<AbstractVariable*, true>(compiling->variables.Count()), compiling->functions, INVALID, NULL));
 		for (uint32 index = 0; index < compiling->constructors.Count(); index++)
-			classes.Peek().constructors.Add(compiling->constructors[index].function);
+			classes.Peek()->constructors.Add(compiling->constructors[index]->function);
 		for (uint32 index = 0; index < compiling->variables.Count(); index++)
 		{
-			CompilingClass::Variable* member = &compiling->variables[index];
-			new (classes.Peek().variables.Add())AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID);
+			CompilingClass::Variable* member = compiling->variables[index];
+			classes.Peek()->variables.Add(new AbstractVariable(member->name.content, member->declaration, ToNativeAttributes(&member->attributes, parameter.messages), compiling->space->abstract, false, member->type, INVALID));
 		}
 	}
 	for (uint32 i = 0; i < info->interfaces.Count(); i++)
 	{
-		CompilingInterface* compiling = &info->interfaces[i];
-		new (interfaces.Add())AbstractInterface(DECLARATION_PARAMETERS(compiling), compiling->inherits, List<AbstractFunction>(compiling->functions.Count()));
+		CompilingInterface* compiling = info->interfaces[i];
+		interfaces.Add(new AbstractInterface(DECLARATION_PARAMETERS(compiling), compiling->inherits, List<AbstractFunction*, true>(compiling->functions.Count())));
 		for (uint32 index = 0; index < compiling->functions.Count(); index++)
 		{
-			CompilingInterface::Function* member = &compiling->functions[index];
-			new (interfaces.Peek().functions.Add())AbstractFunction(DECLARATION_PARAMETERS(member), TupleInfo(member->parameters.Count()), TupleInfo(member->returns.Count()));
+			CompilingInterface::Function* member = compiling->functions[index];
+			interfaces.Peek()->functions.Add(new AbstractFunction(DECLARATION_PARAMETERS(member), TupleInfo(member->parameters.Count()), TupleInfo(member->returns.Count())));
 		}
 	}
 	for (uint32 i = 0; i < info->delegates.Count(); i++)
 	{
-		CompilingDelegate* compiling = &info->delegates[i];
-		new (delegates.Add())AbstractDelegate(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count()));
+		CompilingDelegate* compiling = info->delegates[i];
+		delegates.Add(new AbstractDelegate(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count())));
 	}
 	for (uint32 i = 0; i < info->coroutines.Count(); i++)
 	{
-		CompilingCoroutine* compiling = &info->coroutines[i];
-		new (coroutines.Add())AbstractCoroutine(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->returns.Count()));
+		CompilingCoroutine* compiling = info->coroutines[i];
+		coroutines.Add(new AbstractCoroutine(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->returns.Count())));
 	}
 	for (uint32 i = 0; i < info->natives.Count(); i++)
 	{
-		CompilingNative* compiling = &info->natives[i];
-		new (natives.Add())AbstractNative(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count()));
+		CompilingNative* compiling = info->natives[i];
+		natives.Add(new AbstractNative(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count())));
 	}
 }

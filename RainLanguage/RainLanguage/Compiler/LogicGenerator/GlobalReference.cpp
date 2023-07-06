@@ -101,9 +101,9 @@ void GlobalReference::AddAddressReference(const CompilingDeclaration& declaratio
 	{
 		uint32 function;
 		if (declaration.category == DeclarationCategory::Function) function = declaration.index;
-		else if (declaration.category == DeclarationCategory::StructFunction) function = manager->selfLibaray->structs[declaration.definition].functions[declaration.index];
-		else if (declaration.category == DeclarationCategory::Constructor) function = manager->selfLibaray->classes[declaration.definition].constructors[declaration.index];
-		else if (declaration.category == DeclarationCategory::ClassFunction) function = manager->selfLibaray->classes[declaration.definition].functions[declaration.index];
+		else if (declaration.category == DeclarationCategory::StructFunction) function = manager->selfLibaray->structs[declaration.definition]->functions[declaration.index];
+		else if (declaration.category == DeclarationCategory::Constructor) function = manager->selfLibaray->classes[declaration.definition]->constructors[declaration.index];
+		else if (declaration.category == DeclarationCategory::ClassFunction) function = manager->selfLibaray->classes[declaration.definition]->functions[declaration.index];
 		else EXCEPTION("无效的声明类型");
 		List<uint32, true>* references = NULL;
 		if (!addressReferences.TryGet(function, references))
@@ -149,7 +149,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->variables);
-			AddReference(GetGlobalReferenceCompilingDeclaration(manager->GetLibrary(declaration.library)->variables[declaration.index].type));
+			AddReference(GetGlobalReferenceCompilingDeclaration(manager->GetLibrary(declaration.library)->variables[declaration.index]->type));
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Variable, index, NULL);
 		}
 		case DeclarationCategory::Function:
@@ -157,7 +157,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->functions);
-			AbstractFunction* function = &manager->GetLibrary(declaration.library)->functions[declaration.index];
+			AbstractFunction* function = manager->GetLibrary(declaration.library)->functions[declaration.index];
 			for (uint32 i = 0; i < function->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->parameters.GetType(i)));
 			for (uint32 i = 0; i < function->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->returns.GetType(i)));
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Function, index, NULL);
@@ -175,12 +175,12 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->structs);
-			AbstractStruct* abstractStruct = &manager->GetLibrary(declaration.library)->structs[declaration.index];
+			AbstractStruct* abstractStruct = manager->GetLibrary(declaration.library)->structs[declaration.index];
 			GlobalReferenceStruct* globalReferenceStruct = &library->structs[index];
 			for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
 			{
 				new (globalReferenceStruct->variables.Add())GlobalReferenceStruct::Variable(i);
-				AddReference(GetGlobalReferenceCompilingDeclaration(abstractStruct->variables[i].type));
+				AddReference(GetGlobalReferenceCompilingDeclaration(abstractStruct->variables[i]->type));
 				declarationMap.Set(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::StructVariable, i, declaration.index), CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::StructVariable, i, index));
 			}
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Struct, index, NULL);
@@ -195,7 +195,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			CompilingDeclaration definition = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Struct, declaration.definition, NULL));
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, definition.library, definition.index, libraries[definition.library].structs[definition.index].functions);
 			AbstractLibrary* library = manager->GetLibrary(declaration.library);
-			AbstractFunction* function = &library->functions[library->structs[declaration.definition].functions[declaration.index]];
+			AbstractFunction* function = library->functions[library->structs[declaration.definition]->functions[declaration.index]];
 			for (uint32 i = 0; i < function->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->parameters.GetType(i)));
 			for (uint32 i = 0; i < function->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->returns.GetType(i)));
 			return CompilingDeclaration(definition.library, Visibility::None, DeclarationCategory::StructFunction, index, definition.index);
@@ -212,7 +212,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			CompilingDeclaration definition = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.definition, NULL));
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, definition.library, definition.index, libraries[definition.library].classes[definition.index].constructors);
 			AbstractLibrary* library = manager->GetLibrary(declaration.library);
-			AbstractFunction* function = &library->functions[library->classes[declaration.definition].constructors[declaration.index]];
+			AbstractFunction* function = library->functions[library->classes[declaration.definition]->constructors[declaration.index]];
 			for (uint32 i = 0; i < function->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->parameters.GetType(i)));
 			for (uint32 i = 0; i < function->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->returns.GetType(i)));
 			return CompilingDeclaration(definition.library, Visibility::None, DeclarationCategory::Constructor, index, definition.index);
@@ -221,7 +221,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 		{
 			CompilingDeclaration definition = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.definition, NULL));
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, definition.library, definition.index, libraries[definition.library].classes[definition.index].variables);
-			AddReference(GetGlobalReferenceCompilingDeclaration(manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].type));
+			AddReference(GetGlobalReferenceCompilingDeclaration(manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type));
 			return CompilingDeclaration(definition.library, Visibility::None, DeclarationCategory::ClassVariable, index, definition.index);
 		}
 		case DeclarationCategory::ClassFunction:
@@ -229,7 +229,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			CompilingDeclaration definition = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.definition, NULL));
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, definition.library, definition.index, libraries[definition.library].classes[definition.index].functions);
 			AbstractLibrary* library = manager->GetLibrary(declaration.library);
-			AbstractFunction* function = &library->functions[library->classes[declaration.definition].functions[declaration.index]];
+			AbstractFunction* function = library->functions[library->classes[declaration.definition]->functions[declaration.index]];
 			for (uint32 i = 0; i < function->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->parameters.GetType(i)));
 			for (uint32 i = 0; i < function->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->returns.GetType(i)));
 			return CompilingDeclaration(definition.library, Visibility::None, DeclarationCategory::ClassFunction, index, definition.index);
@@ -245,7 +245,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 		{
 			CompilingDeclaration definition = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Interface, declaration.definition, NULL));
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, definition.library, definition.index, libraries[definition.library].interfaces[definition.index].functions);
-			AbstractFunction* function = &manager->GetLibrary(declaration.library)->interfaces[declaration.definition].functions[declaration.index];
+			AbstractFunction* function = manager->GetLibrary(declaration.library)->interfaces[declaration.definition]->functions[declaration.index];
 			for (uint32 i = 0; i < function->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->parameters.GetType(i)));
 			for (uint32 i = 0; i < function->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(function->returns.GetType(i)));
 			return CompilingDeclaration(definition.library, Visibility::None, DeclarationCategory::InterfaceFunction, index, definition.index);
@@ -255,7 +255,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->delegates);
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(declaration.library)->delegates[declaration.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(declaration.library)->delegates[declaration.index];
 			for (uint32 i = 0; i < abstractDelegate->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(abstractDelegate->parameters.GetType(i)));
 			for (uint32 i = 0; i < abstractDelegate->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(abstractDelegate->returns.GetType(i)));
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Delegate, index, NULL);
@@ -265,7 +265,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->coroutines);
-			AbstractCoroutine* cbstractCoroutine = &manager->GetLibrary(declaration.library)->coroutines[declaration.index];
+			AbstractCoroutine* cbstractCoroutine = manager->GetLibrary(declaration.library)->coroutines[declaration.index];
 			for (uint32 i = 0; i < cbstractCoroutine->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(cbstractCoroutine->returns.GetType(i)));
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Coroutine, index, NULL);
 		}
@@ -274,7 +274,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->natives);
-			AbstractNative* native = &manager->GetLibrary(declaration.library)->natives[declaration.index];
+			AbstractNative* native = manager->GetLibrary(declaration.library)->natives[declaration.index];
 			for (uint32 i = 0; i < native->parameters.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(native->parameters.GetType(i)));
 			for (uint32 i = 0; i < native->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(native->returns.GetType(i)));
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Native, index, NULL);

@@ -21,14 +21,14 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
 				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
 			case DeclarationCategory::EnumElement:
-				return IsVisible(manager, manager->compilingLibrary.enums[declaration.definition].declaration);
+				return IsVisible(manager, manager->compilingLibrary.enums[declaration.definition]->declaration);
 			case DeclarationCategory::Struct:
 				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
 				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
 			case DeclarationCategory::StructVariable:
-				return IsVisible(manager, manager->compilingLibrary.structs[declaration.definition].declaration);
+				return IsVisible(manager, manager->compilingLibrary.structs[declaration.definition]->declaration);
 			case DeclarationCategory::StructFunction:
-				if (IsVisible(manager, manager->compilingLibrary.structs[declaration.definition].declaration))
+				if (IsVisible(manager, manager->compilingLibrary.structs[declaration.definition]->declaration))
 					if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
 				return false;
 			case DeclarationCategory::Class:
@@ -38,7 +38,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			case DeclarationCategory::ClassVariable:
 			case DeclarationCategory::ClassFunction:
 			{
-				CompilingDeclaration define = manager->compilingLibrary.classes[declaration.definition].declaration;
+				CompilingDeclaration define = manager->compilingLibrary.classes[declaration.definition]->declaration;
 				Type definType = define.DefineType();
 				if (IsVisible(manager, define))
 					if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
@@ -56,7 +56,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 				if (ContainAny(declaration.visibility, Visibility::Public | Visibility::Internal)) return true;
 				return manager->GetDeclaration(declaration)->space->Contain(compilingSpace->abstract);
 			case DeclarationCategory::InterfaceFunction:
-				return IsVisible(manager, manager->compilingLibrary.interfaces[declaration.definition].declaration);
+				return IsVisible(manager, manager->compilingLibrary.interfaces[declaration.definition]->declaration);
 			case DeclarationCategory::Delegate:
 			case DeclarationCategory::Coroutine:
 			case DeclarationCategory::Native:
@@ -154,16 +154,16 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 	if (declaration.category == DeclarationCategory::Struct)
 	{
 		AbstractLibrary* library = manager->GetLibrary(declaration.library);
-		AbstractStruct* abstractStruct = &library->structs[declaration.index];
+		AbstractStruct* abstractStruct = library->structs[declaration.index];
 		for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
-			if (abstractStruct->variables[i].name == name.content)
+			if (abstractStruct->variables[i]->name == name.content)
 			{
-				results.Add(abstractStruct->variables[i].declaration);
+				results.Add(abstractStruct->variables[i]->declaration);
 				return true;
 			}
 		for (uint32 i = 0; i < abstractStruct->functions.Count(); i++)
-			if (library->functions[abstractStruct->functions[i]].name == name.content)
-				results.Add(library->functions[abstractStruct->functions[i]].declaration);
+			if (library->functions[abstractStruct->functions[i]]->name == name.content)
+				results.Add(library->functions[abstractStruct->functions[i]]->declaration);
 		if (results.Count()) return true;
 	}
 	else if (declaration.category == DeclarationCategory::Class)
@@ -171,10 +171,10 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 		for (Type index = declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
 		{
 			AbstractLibrary* library = manager->GetLibrary(index.library);
-			AbstractClass* abstractClass = &library->classes[index.index];
+			AbstractClass* abstractClass = library->classes[index.index];
 			for (uint32 i = 0; i < abstractClass->variables.Count(); i++)
 			{
-				AbstractVariable* member = &abstractClass->variables[i];
+				AbstractVariable* member = abstractClass->variables[i];
 				if (member->name == name.content && IsVisible(manager, member->declaration))
 				{
 					results.Add(member->declaration);
@@ -183,7 +183,7 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 			}
 			for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 			{
-				AbstractFunction* member = &library->functions[abstractClass->functions[i]];
+				AbstractFunction* member = library->functions[abstractClass->functions[i]];
 				if (member->name == name.content && IsVisible(manager, member->declaration))
 					results.Add(member->declaration);
 			}
@@ -237,10 +237,10 @@ void ColletOverrideFunction(Set<CompilingDeclaration, true>& filter, Declaration
 	while (abstractClass->parent.library != INVALID)
 	{
 		abstractLibrary = manager->GetLibrary(abstractClass->parent.library);
-		abstractClass = &abstractLibrary->classes[abstractClass->parent.index];
+		abstractClass = abstractLibrary->classes[abstractClass->parent.index];
 		for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 		{
-			AbstractFunction* member = &abstractLibrary->functions[abstractClass->functions[i]];
+			AbstractFunction* member = abstractLibrary->functions[abstractClass->functions[i]];
 			if (member->name == function->name && IsEquals(member->parameters.GetTypes(), function->parameters.GetTypes()))
 				filter.Add(member->declaration);
 		}
@@ -251,13 +251,13 @@ void FindMember(DeclarationManager* manager, const String& name, AbstractInterfa
 {
 	for (uint32 i = 0; i < abstractInterface->functions.Count(); i++)
 	{
-		AbstractFunction* member = &abstractInterface->functions[i];
+		AbstractFunction* member = abstractInterface->functions[i];
 		if (member->name == name)results.Add(member->declaration);
 	}
 	for (uint32 i = 0; i < abstractInterface->inherits.Count(); i++)
 	{
 		Type& parent = abstractInterface->inherits[i];
-		FindMember(manager, name, &manager->GetLibrary(parent.library)->interfaces[parent.index], results);
+		FindMember(manager, name, manager->GetLibrary(parent.library)->interfaces[parent.index], results);
 	}
 }
 
@@ -266,7 +266,7 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, con
 	AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
 	if (type.code == TypeCode::Enum)
 	{
-		AbstractEnum* abstractEnum = &abstractLibrary->enums[type.index];
+		AbstractEnum* abstractEnum = abstractLibrary->enums[type.index];
 		for (uint32 i = 0; i < abstractEnum->elements.Count(); i++)
 			if (abstractEnum->elements[i] == name)
 			{
@@ -276,10 +276,10 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, con
 	}
 	else if (type.code == TypeCode::Struct)
 	{
-		AbstractStruct* abstractStruct = &abstractLibrary->structs[type.index];
+		AbstractStruct* abstractStruct = abstractLibrary->structs[type.index];
 		for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
 		{
-			AbstractVariable* member = &abstractStruct->variables[i];
+			AbstractVariable* member = abstractStruct->variables[i];
 			if (member->name == name)
 			{
 				results.Add(member->declaration);
@@ -288,7 +288,7 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, con
 		}
 		for (uint32 i = 0; i < abstractStruct->functions.Count(); i++)
 		{
-			AbstractFunction* member = &abstractLibrary->functions[abstractStruct->functions[i]];
+			AbstractFunction* member = abstractLibrary->functions[abstractStruct->functions[i]];
 			if (member->name == name && IsVisible(manager, member->declaration))
 				results.Add(member->declaration);
 		}
@@ -296,13 +296,13 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, con
 	}
 	else if (type.code == TypeCode::Handle)
 	{
-		AbstractClass* abstractClass = &abstractLibrary->classes[type.index];
+		AbstractClass* abstractClass = abstractLibrary->classes[type.index];
 		Set<CompilingDeclaration, true> filter(0);
 		while (true)
 		{
 			for (uint32 i = 0; i < abstractClass->variables.Count(); i++)
 			{
-				AbstractVariable* member = &abstractClass->variables[i];
+				AbstractVariable* member = abstractClass->variables[i];
 				if (member->name == name)
 				{
 					results.Add(member->declaration);
@@ -311,7 +311,7 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, con
 			}
 			for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 			{
-				AbstractFunction* member = &abstractLibrary->functions[abstractClass->functions[i]];
+				AbstractFunction* member = abstractLibrary->functions[abstractClass->functions[i]];
 				if (member->name == name && !filter.Contains(member->declaration) && IsVisible(manager, member->declaration))
 				{
 					results.Add(member->declaration);
@@ -320,13 +320,13 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, con
 			}
 			if (abstractClass->parent.library == INVALID)break;
 			abstractLibrary = manager->GetLibrary(abstractClass->parent.library);
-			abstractClass = &abstractLibrary->classes[abstractClass->parent.index];
+			abstractClass = abstractLibrary->classes[abstractClass->parent.index];
 		}
 		if (results.Count())return true;
 	}
 	else if (type.code == TypeCode::Interface)
 	{
-		FindMember(manager, name, &abstractLibrary->interfaces[type.index], results);
+		FindMember(manager, name, abstractLibrary->interfaces[type.index], results);
 		if (results.Count())return true;
 	}
 	return false;
@@ -355,29 +355,29 @@ void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& n
 		else if (name == KeyWord_array()) new (results.Add())CompilingDeclaration(TYPE_Array.library, Visibility::Public, DeclarationCategory::Class, TYPE_Array.index, NULL);
 		else if (declaration.category == DeclarationCategory::Struct)
 		{
-			AbstractStruct* abstractStruct = &manager->selfLibaray->structs[declaration.index];
+			AbstractStruct* abstractStruct = manager->selfLibaray->structs[declaration.index];
 			for (uint32 x = 0; x < abstractStruct->variables.Count(); x++)
-				if (abstractStruct->variables[x].name == name)
-					results.Add(abstractStruct->variables[x].declaration);
+				if (abstractStruct->variables[x]->name == name)
+					results.Add(abstractStruct->variables[x]->declaration);
 			for (uint32 x = 0; x < abstractStruct->functions.Count(); x++)
-				if (manager->selfLibaray->functions[abstractStruct->functions[x]].name == name)
-					results.Add(manager->selfLibaray->functions[abstractStruct->functions[x]].declaration);
+				if (manager->selfLibaray->functions[abstractStruct->functions[x]]->name == name)
+					results.Add(manager->selfLibaray->functions[abstractStruct->functions[x]]->declaration);
 		}
 		else if (declaration.category == DeclarationCategory::Class)
 		{
 			for (Type index = declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
 			{
 				AbstractLibrary* abstractLibrary = manager->GetLibrary(index.library);
-				AbstractClass* abstractClass = &abstractLibrary->classes[index.index];
+				AbstractClass* abstractClass = abstractLibrary->classes[index.index];
 				for (uint32 x = 0; x < abstractClass->variables.Count(); x++)
 				{
-					AbstractVariable* member = &abstractClass->variables[x];
+					AbstractVariable* member = abstractClass->variables[x];
 					if (member->name == name && IsVisible(manager, member->declaration))
 						results.Add(member->declaration);
 				}
 				for (uint32 x = 0; x < abstractClass->functions.Count(); x++)
 				{
-					AbstractFunction* member = &abstractLibrary->functions[abstractClass->functions[x]];
+					AbstractFunction* member = abstractLibrary->functions[abstractClass->functions[x]];
 					if (member->name == name && IsVisible(manager, member->declaration))
 						results.Add(member->declaration);
 				}

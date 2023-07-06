@@ -16,6 +16,7 @@ struct CompilingDeclarationInfo
 	List<Anchor> attributes;
 	CompilingSpace* space;
 	inline CompilingDeclarationInfo(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space) :name(name), declaration(declaration), attributes(attributes), space(space) {}
+	virtual ~CompilingDeclarationInfo();
 };
 
 struct CompilingVariable :CompilingDeclarationInfo
@@ -60,9 +61,10 @@ struct CompilingEnum :CompilingDeclarationInfo
 		bool calculated;
 		inline Element(Anchor name, const CompilingDeclaration& declaration, Anchor expression) :name(name), declaration(declaration), expression(expression), value(NULL), calculated(false) {}
 	};
-	List<Element> elements;
+	List<Element*, true> elements;
 	List<AbstractSpace*, true>* relies;
-	inline CompilingEnum(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Element>& elements) :CompilingDeclarationInfo(name, declaration, attributes, space), elements(elements), relies(NULL) {}
+	inline CompilingEnum(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Element*, true>& elements) :CompilingDeclarationInfo(name, declaration, attributes, space), elements(elements), relies(NULL) {}
+	~CompilingEnum();
 };
 
 struct CompilingStruct :CompilingDeclarationInfo
@@ -75,9 +77,10 @@ struct CompilingStruct :CompilingDeclarationInfo
 		Type type;
 		inline Variable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes) :name(name), declaration(declaration), attributes(attributes), type() {}
 	};
-	List<Variable> variables;
+	List<Variable*, true> variables;
 	List<uint32, true> functions;//参数包含this
-	inline CompilingStruct(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Variable>& variables, const List<uint32, true>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), variables(variables), functions(functions) {}
+	inline CompilingStruct(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Variable*, true>& variables, const List<uint32, true>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), variables(variables), functions(functions) {}
+	~CompilingStruct();
 };
 
 struct CompilingClass :CompilingDeclarationInfo
@@ -99,13 +102,14 @@ struct CompilingClass :CompilingDeclarationInfo
 	};
 	Type parent;
 	List<Type, true> inherits;
-	List<Constructor> constructors;//参数包含this，有唯一返回值this
-	List<Variable> variables;
+	List<Constructor*, true> constructors;//参数包含this，有唯一返回值this
+	List<Variable*, true> variables;
 	List<uint32, true> functions;//参数包含this
 	List<Line> destructor;
 	uint32 destructorEntry;
 	List<AbstractSpace*, true>* relies;
-	inline CompilingClass(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Constructor>& constructors, const List<Variable>& variables, const List<uint32, true>& functions, const List<Line>& destructor) :CompilingDeclarationInfo(name, declaration, attributes, space), parent(), inherits(inheritCount), constructors(constructors), variables(variables), functions(functions), destructor(destructor), destructorEntry(INVALID), relies(NULL) {}
+	inline CompilingClass(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Constructor*, true>& constructors, const List<Variable*, true>& variables, const List<uint32, true>& functions, const List<Line>& destructor) :CompilingDeclarationInfo(name, declaration, attributes, space), parent(), inherits(inheritCount), constructors(constructors), variables(variables), functions(functions), destructor(destructor), destructorEntry(INVALID), relies(NULL) {}
+	~CompilingClass();
 };
 
 struct CompilingInterface :CompilingDeclarationInfo
@@ -115,8 +119,9 @@ struct CompilingInterface :CompilingDeclarationInfo
 		inline Function(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount) {}
 	};
 	List<Type, true> inherits;
-	List<Function> functions;
-	inline CompilingInterface(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Function>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), inherits(inheritCount), functions(functions) {}
+	List<Function*, true> functions;
+	inline CompilingInterface(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 inheritCount, const List<Function*, true>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), inherits(inheritCount), functions(functions) {}
+	~CompilingInterface();
 };
 
 struct CompilingDelegate :CompilingFunctionDeclaration
@@ -145,21 +150,22 @@ struct CompilingSpace
 	List<Anchor> attributes;
 	inline CompilingSpace(CompilingSpace* parent, const String& name) :parent(parent), abstract(NULL), name(name), children(0), declarations(0), attributes(0) {}
 	CompilingSpace* GetChild(const String& name);
-	~CompilingSpace();
+	virtual ~CompilingSpace();
 };
 
 struct CompilingLibrary :CompilingSpace
 {
-	List<CompilingVariable> variables;
-	List<CompilingFunction> functions;
-	List<CompilingEnum> enums;
-	List<CompilingStruct> structs;
-	List<CompilingClass> classes;
-	List<CompilingInterface> interfaces;
-	List<CompilingDelegate> delegates;
-	List<CompilingCoroutine> coroutines;
-	List<CompilingNative> natives;
+	List<CompilingVariable*, true> variables;
+	List<CompilingFunction*, true> functions;
+	List<CompilingEnum*, true> enums;
+	List<CompilingStruct*, true> structs;
+	List<CompilingClass*, true> classes;
+	List<CompilingInterface*, true> interfaces;
+	List<CompilingDelegate*, true> delegates;
+	List<CompilingCoroutine*, true> coroutines;
+	List<CompilingNative*, true> natives;
 	uint32 constantSize, dataSize;
 	CompilingLibrary(const String& name) : CompilingSpace(NULL, name), variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), natives(0), constantSize(INVALID), dataSize(INVALID) {}
 	Anchor GetName(const CompilingDeclaration& declaration);
+	~CompilingLibrary();
 };

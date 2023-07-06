@@ -31,73 +31,73 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 
 	for (uint32 i = 0; i < info->variables.Count(); i++)
 	{
-		AbstractVariable* abstractVariable = &library->variables[info->variables[i]];
+		AbstractVariable* abstractVariable = library->variables[info->variables[i]];
 		abstractVariable->space = space;
 		SpaceAddDeclaration(space, abstractVariable->name, abstractVariable->declaration);
 	}
 	for (uint32 i = 0; i < info->functions.Count(); i++)
 	{
-		AbstractFunction* abstractFunction = &library->functions[info->functions[i]];
+		AbstractFunction* abstractFunction = library->functions[info->functions[i]];
 		abstractFunction->space = space;
 		SpaceAddDeclaration(space, abstractFunction->name, abstractFunction->declaration);
 	}
 	for (uint32 i = 0; i < info->enums.Count(); i++)
 	{
-		AbstractEnum* abstractEnum = &library->enums[info->enums[i]];
+		AbstractEnum* abstractEnum = library->enums[info->enums[i]];
 		abstractEnum->space = space;
 		SpaceAddDeclaration(space, abstractEnum->name, abstractEnum->declaration);
 	}
 	for (uint32 x = 0; x < info->structs.Count(); x++)
 	{
-		AbstractStruct* abstractStruct = &library->structs[info->structs[x]];
+		AbstractStruct* abstractStruct = library->structs[info->structs[x]];
 		abstractStruct->space = space;
 		SpaceAddDeclaration(space, abstractStruct->name, abstractStruct->declaration);
 		for (uint32 y = 0; y < abstractStruct->variables.Count(); y++)
-			abstractStruct->variables[y].space = space;
+			abstractStruct->variables[y]->space = space;
 		for (uint32 y = 0; y < abstractStruct->functions.Count(); y++)
 		{
-			AbstractFunction* memberFuntion = &library->functions[abstractStruct->functions[y]];
+			AbstractFunction* memberFuntion = library->functions[abstractStruct->functions[y]];
 			memberFuntion->space = space;
 			memberFuntion->declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::StructFunction, y, abstractStruct->declaration.index);
 		}
 	}
 	for (uint32 x = 0; x < info->classes.Count(); x++)
 	{
-		AbstractClass* abstractClass = &library->classes[info->classes[x]];
+		AbstractClass* abstractClass = library->classes[info->classes[x]];
 		abstractClass->space = space;
 		SpaceAddDeclaration(space, abstractClass->name, abstractClass->declaration);
 		for (uint32 y = 0; y < abstractClass->constructors.Count(); y++)
 		{
-			AbstractFunction* constructor = &library->functions[abstractClass->constructors[y]];
+			AbstractFunction* constructor = library->functions[abstractClass->constructors[y]];
 			constructor->space = space;
 			constructor->declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Constructor, y, abstractClass->declaration.index);
 		}
 		for (uint32 y = 0; y < abstractClass->variables.Count(); y++)
-			abstractClass->variables[y].space = space;
+			abstractClass->variables[y]->space = space;
 		for (uint32 y = 0; y < abstractClass->functions.Count(); y++)
 		{
-			AbstractFunction* memberFunction = &library->functions[abstractClass->functions[y]];
+			AbstractFunction* memberFunction = library->functions[abstractClass->functions[y]];
 			memberFunction->space = space;
 			memberFunction->declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::ClassFunction, y, abstractClass->declaration.index);
 		}
 	}
 	for (uint32 x = 0; x < info->interfaces.Count(); x++)
 	{
-		AbstractInterface* abstractInterface = &library->interfaces[info->interfaces[x]];
+		AbstractInterface* abstractInterface = library->interfaces[info->interfaces[x]];
 		abstractInterface->space = space;
 		SpaceAddDeclaration(space, abstractInterface->name, abstractInterface->declaration);
 		for (uint32 y = 0; y < abstractInterface->functions.Count(); y++)
-			abstractInterface->functions[y].space = space;
+			abstractInterface->functions[y]->space = space;
 	}
 	for (uint32 x = 0; x < info->delegates.Count(); x++)
 	{
-		AbstractDelegate* abstractDelegate = &library->delegates[info->delegates[x]];
+		AbstractDelegate* abstractDelegate = library->delegates[info->delegates[x]];
 		abstractDelegate->space = space;
 		SpaceAddDeclaration(space, abstractDelegate->name, abstractDelegate->declaration);
 	}
 	for (uint32 x = 0; x < info->coroutines.Count(); x++)
 	{
-		AbstractCoroutine* abstractCoroutine = &library->coroutines[info->coroutines[x]];
+		AbstractCoroutine* abstractCoroutine = library->coroutines[info->coroutines[x]];
 		abstractCoroutine->space = space;
 		SpaceAddDeclaration(space, abstractCoroutine->name, abstractCoroutine->declaration);
 	}
@@ -109,47 +109,47 @@ variables(info->variables.Count()), functions(info->functions.Count()), enums(in
 	{
 		const KernelLibraryInfo::GlobalVariable* kernelVariable = &info->variables[i];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Variable, i, NULL);
-		new (variables.Add())AbstractVariable(TO_NATIVE_STRING(kernelVariable->name), declaration, EMPTY_STRINGS, NULL, true, kernelVariable->type, kernelVariable->address);
+		variables.Add(new AbstractVariable(TO_NATIVE_STRING(kernelVariable->name), declaration, EMPTY_STRINGS, NULL, true, kernelVariable->type, kernelVariable->address));
 	}
 	for (uint32 i = 0; i < info->functions.Count(); i++)
 	{
 		const KernelLibraryInfo::Function* kernelFunction = &info->functions[i];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Function, i, NULL);
-		new (functions.Add())AbstractFunction(TO_NATIVE_STRING(kernelFunction->name), declaration, EMPTY_STRINGS, NULL, kernelFunction->parameters, kernelFunction->returns);
+		functions.Add(new AbstractFunction(TO_NATIVE_STRING(kernelFunction->name), declaration, EMPTY_STRINGS, NULL, kernelFunction->parameters, kernelFunction->returns));
 	}
 	for (uint32 x = 0; x < info->enums.Count(); x++)
 	{
 		const KernelLibraryInfo::Enum* kernelEnum = &info->enums[x];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Enum, x, NULL);
-		List<String> elements = List<String>(0);
+		List<String> elements = List<String>(kernelEnum->elements.Count());
 		for (uint32 y = 0; y < kernelEnum->elements.Count(); y++)
 			elements.Add(TO_NATIVE_STRING(kernelEnum->elements[y].name));
-		new (enums.Add())AbstractEnum(TO_NATIVE_STRING(kernelEnum->name), declaration, EMPTY_STRINGS, NULL, elements);
+		enums.Add(new AbstractEnum(TO_NATIVE_STRING(kernelEnum->name), declaration, EMPTY_STRINGS, NULL, elements));
 	}
 	for (uint32 x = 0; x < info->structs.Count(); x++)
 	{
 		const KernelLibraryInfo::Struct* kernelStruct = &info->structs[x];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Struct, x, NULL);
-		List<AbstractVariable> abstractVariables = List<AbstractVariable>(0);
+		List<AbstractVariable*, true> abstractVariables = List<AbstractVariable*, true>(kernelStruct->variables.Count());
 		for (uint32 y = 0; y < kernelStruct->variables.Count(); y++)
 		{
 			const KernelLibraryInfo::Variable* memberVariable = &kernelStruct->variables[y];
 			CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::StructVariable, y, x);
-			new (abstractVariables.Add())AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address);
+			abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
 		}
-		new (structs.Add())AbstractStruct(TO_NATIVE_STRING(kernelStruct->name), declaration, EMPTY_STRINGS, NULL, abstractVariables, kernelStruct->functions, kernelStruct->size, kernelStruct->alignment);
+		structs.Add(new AbstractStruct(TO_NATIVE_STRING(kernelStruct->name), declaration, EMPTY_STRINGS, NULL, abstractVariables, kernelStruct->functions, kernelStruct->size, kernelStruct->alignment));
 	}
 	for (uint32 x = 0; x < info->classes.Count(); x++)
 	{
 		const KernelLibraryInfo::Class* kernelClass = &info->classes[x];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Class, x, NULL);
 
-		List<AbstractVariable> abstractVariables = List<AbstractVariable>(0);
+		List<AbstractVariable*, true> abstractVariables = List<AbstractVariable*, true>(kernelClass->variables.Count());
 		for (uint32 y = 0; y < kernelClass->variables.Count(); y++)
 		{
 			const KernelLibraryInfo::Variable* memberVariable = &kernelClass->variables[y];
 			CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::ClassVariable, y, x);
-			new (abstractVariables.Add())AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address);
+			abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
 		}
 
 		new (classes.Add())AbstractClass(TO_NATIVE_STRING(kernelClass->name), declaration, EMPTY_STRINGS, NULL, Type(kernelClass->parent, 0), KernelToCompiling(kernelClass->inherits), kernelClass->constructors, abstractVariables, kernelClass->functions, kernelClass->size, kernelClass->alignment);
@@ -158,26 +158,26 @@ variables(info->variables.Count()), functions(info->functions.Count()), enums(in
 	{
 		const KernelLibraryInfo::Interface* kernelInterface = &info->interfaces[x];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Interface, x, NULL);
-		List<AbstractFunction> abstractFunction = List<AbstractFunction>(0);
+		List<AbstractFunction*, true> abstractFunction = List<AbstractFunction*, true>(kernelInterface->functions.Count());
 		for (uint32 y = 0; y < kernelInterface->functions.Count(); y++)
 		{
 			const KernelLibraryInfo::Interface::Function* memberFunction = &kernelInterface->functions[y];
 			CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::InterfaceFunction, y, x);
-			new (abstractFunction.Add())AbstractFunction(TO_NATIVE_STRING(memberFunction->name), memberDeclaration, EMPTY_STRINGS, NULL, memberFunction->parameters, memberFunction->returns);
+			abstractFunction.Add(new AbstractFunction(TO_NATIVE_STRING(memberFunction->name), memberDeclaration, EMPTY_STRINGS, NULL, memberFunction->parameters, memberFunction->returns));
 		}
-		new (interfaces.Add())AbstractInterface(TO_NATIVE_STRING(kernelInterface->name), declaration, EMPTY_STRINGS, NULL, KernelToCompiling(kernelInterface->inherits), abstractFunction);
+		interfaces.Add(new AbstractInterface(TO_NATIVE_STRING(kernelInterface->name), declaration, EMPTY_STRINGS, NULL, KernelToCompiling(kernelInterface->inherits), abstractFunction));
 	}
 	for (uint32 x = 0; x < info->delegates.Count(); x++)
 	{
 		const KernelLibraryInfo::Delegate* kernelDelegate = &info->delegates[x];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Delegate, x, NULL);
-		new (delegates.Add())AbstractDelegate(TO_NATIVE_STRING(kernelDelegate->name), declaration, EMPTY_STRINGS, NULL, kernelDelegate->parameters, kernelDelegate->returns);
+		delegates.Add(new AbstractDelegate(TO_NATIVE_STRING(kernelDelegate->name), declaration, EMPTY_STRINGS, NULL, kernelDelegate->parameters, kernelDelegate->returns));
 	}
 	for (uint32 x = 0; x < info->coroutines.Count(); x++)
 	{
 		const KernelLibraryInfo::Coroutine* kernelCoroutine = &info->coroutines[x];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Coroutine, x, NULL);
-		new (coroutines.Add())AbstractCoroutine(TO_NATIVE_STRING(kernelCoroutine->name), declaration, EMPTY_STRINGS, NULL, kernelCoroutine->returns);
+		coroutines.Add(new AbstractCoroutine(TO_NATIVE_STRING(kernelCoroutine->name), declaration, EMPTY_STRINGS, NULL, kernelCoroutine->returns));
 	}
 	CreateKernelAbstractSpace(this, info->root, this, parameter);
 }

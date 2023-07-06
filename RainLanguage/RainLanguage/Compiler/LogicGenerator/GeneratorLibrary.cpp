@@ -87,7 +87,7 @@ void CollectInherits(DeclarationManager& manager, const Declaration& declaration
 	if (declaration == (Declaration)TYPE_Handle)return;
 	if (declaration.code == TypeCode::Handle)
 	{
-		AbstractClass* abstractClass = &manager.GetLibrary(declaration.library)->classes[declaration.index];
+		AbstractClass* abstractClass = manager.GetLibrary(declaration.library)->classes[declaration.index];
 		inherits.Add((Declaration)abstractClass->parent);
 		CollectInherits(manager, (Declaration)abstractClass->parent, inherits);
 		for (uint32 i = 0; i < abstractClass->inherits.Count(); i++)
@@ -98,7 +98,7 @@ void CollectInherits(DeclarationManager& manager, const Declaration& declaration
 	}
 	else if (declaration.code == TypeCode::Interface)
 	{
-		AbstractInterface* abstractInterface = &manager.GetLibrary(declaration.library)->interfaces[declaration.index];
+		AbstractInterface* abstractInterface = manager.GetLibrary(declaration.library)->interfaces[declaration.index];
 		for (uint32 i = 0; i < abstractInterface->inherits.Count(); i++)
 		{
 			inherits.Add((Declaration)abstractInterface->inherits[i]);
@@ -113,10 +113,10 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 	if (declaration.code == TypeCode::Handle)
 	{
 		AbstractLibrary* library = manager.GetLibrary(declaration.library);
-		AbstractClass* abstractClass = &library->classes[declaration.index];
+		AbstractClass* abstractClass = library->classes[declaration.index];
 		for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 		{
-			AbstractFunction* function = &library->functions[abstractClass->functions[i]];
+			AbstractFunction* function = library->functions[abstractClass->functions[i]];
 			if (function->name == sourceFunction->name && IsEquals(function->parameters.GetTypes(), 1, sourceFunction->parameters.GetTypes(), 1))
 			{
 				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "前面继承检查逻辑可能有Bug");
@@ -127,10 +127,10 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 	}
 	else if (declaration.code == TypeCode::Interface)
 	{
-		AbstractInterface* abstractInterface = &manager.GetLibrary(declaration.library)->interfaces[declaration.index];
+		AbstractInterface* abstractInterface = manager.GetLibrary(declaration.library)->interfaces[declaration.index];
 		for (uint32 i = 0; i < abstractInterface->functions.Count(); i++)
 		{
-			AbstractFunction* function = &abstractInterface->functions[i];
+			AbstractFunction* function = abstractInterface->functions[i];
 			if (function->name == sourceFunction->name && IsEquals(function->parameters.GetTypes(), 1, sourceFunction->parameters.GetTypes(), 1))
 			{
 				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "前面继承检查逻辑可能有Bug");
@@ -150,7 +150,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	CollectSpace(manager.selfLibaray, result->spaces, result->stringAgency);
 	for (uint32 x = 0; x < manager.selfLibaray->variables.Count(); x++)
 	{
-		AbstractVariable* abstractVariable = &manager.selfLibaray->variables[x];
+		AbstractVariable* abstractVariable = manager.selfLibaray->variables[x];
 		ATTRIBUTES(abstractVariable);
 		List<VariableReference, true>* sourceReferences;
 		List<VariableReference, true> references(0);
@@ -163,25 +163,25 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->enums.Count(); x++)
 	{
-		AbstractEnum* abstractEnum = &manager.selfLibaray->enums[x];
+		AbstractEnum* abstractEnum = manager.selfLibaray->enums[x];
 		ATTRIBUTES(abstractEnum);
 		List<EnumDeclarationInfo::Element, true> elements(abstractEnum->elements.Count());
 		for (uint32 y = 0; y < abstractEnum->elements.Count(); y++)
 		{
-			CompilingEnum::Element& element = manager.compilingLibrary.enums[x].elements[y];
-			ASSERT_DEBUG(element.calculated, "library构造函数生成逻辑有bug");
-			new (elements.Add())EnumDeclarationInfo::Element(result->stringAgency->AddAndRef(element.name.content), element.value);
+			CompilingEnum::Element* element = manager.compilingLibrary.enums[x]->elements[y];
+			ASSERT_DEBUG(element->calculated, "library构造函数生成逻辑有bug");
+			new (elements.Add())EnumDeclarationInfo::Element(result->stringAgency->AddAndRef(element->name.content), element->value);
 		}
 		new (result->enums.Add())EnumDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractEnum), elements);
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->structs.Count(); x++)
 	{
-		AbstractStruct* abstractStruct = &manager.selfLibaray->structs[x];
+		AbstractStruct* abstractStruct = manager.selfLibaray->structs[x];
 		ATTRIBUTES(abstractStruct);
 		List<VariableDeclarationInfo> variables(abstractStruct->variables.Count());
 		for (uint32 y = 0; y < abstractStruct->variables.Count(); y++)
 		{
-			AbstractVariable* variable = &abstractStruct->variables[y];
+			AbstractVariable* variable = abstractStruct->variables[y];
 			ATTRIBUTES(variable);
 			new (variables.Add())VariableDeclarationInfo(DECLARATION_INFO_PARAMETERS(variable), globalReference->AddReference(variable->type), variable->address, variable->readonly);
 		}
@@ -189,7 +189,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->classes.Count(); x++)
 	{
-		AbstractClass* abstractClass = &manager.selfLibaray->classes[x];
+		AbstractClass* abstractClass = manager.selfLibaray->classes[x];
 		ATTRIBUTES(abstractClass);
 		List<Declaration, true> inherits(abstractClass->inherits.Count());
 		for (uint32 y = 0; y < abstractClass->inherits.Count(); y++) inherits.Add(globalReference->AddReference((Declaration)abstractClass->inherits[y]));
@@ -198,7 +198,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		List<ReferenceVariableDeclarationInfo> variables(abstractClass->variables.Count());
 		for (uint32 y = 0; y < abstractClass->variables.Count(); y++)
 		{
-			AbstractVariable* variable = &abstractClass->variables[y];
+			AbstractVariable* variable = abstractClass->variables[y];
 			ATTRIBUTES(variable);
 			List<VariableReference, true> variableReferences(0);
 			List<VariableReference, true>* sourceVariableReferences = NULL;
@@ -213,13 +213,13 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		{
 			MemberFunction realize = MemberFunction(globalReference->AddReference(Declaration(LIBRARY_SELF, TypeCode::Handle, x)), y);
 			Set<Declaration, true>::Iterator inheritIterator = allInherits.GetIterator();
-			while (inheritIterator.Next()) CollectRelocation(manager, relocations, realize, &manager.selfLibaray->functions[abstractClass->functions[y]], inheritIterator.Current(), globalReference);
+			while (inheritIterator.Next()) CollectRelocation(manager, relocations, realize, manager.selfLibaray->functions[abstractClass->functions[y]], inheritIterator.Current(), globalReference);
 		}
-		new (result->classes.Add())ClassDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractClass), globalReference->AddReference((Declaration)abstractClass->parent), inherits, abstractClass->size, abstractClass->alignment, constructors, variables, abstractClass->functions, manager.compilingLibrary.classes[x].destructorEntry, relocations);
+		new (result->classes.Add())ClassDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractClass), globalReference->AddReference((Declaration)abstractClass->parent), inherits, abstractClass->size, abstractClass->alignment, constructors, variables, abstractClass->functions, manager.compilingLibrary.classes[x]->destructorEntry, relocations);
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->interfaces.Count(); x++)
 	{
-		AbstractInterface* abstractInterface = &manager.selfLibaray->interfaces[x];
+		AbstractInterface* abstractInterface = manager.selfLibaray->interfaces[x];
 		ATTRIBUTES(abstractInterface);
 		List<Declaration, true> inherits(abstractInterface->inherits.Count());
 		for (uint32 y = 0; y < abstractInterface->inherits.Count(); y++) inherits.Add(globalReference->AddReference((Declaration)abstractInterface->inherits[y]));
@@ -229,7 +229,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		List<Relocation, true> relocations(0);
 		for (uint32 y = 0; y < abstractInterface->functions.Count(); y++)
 		{
-			AbstractFunction* function = &abstractInterface->functions[y];
+			AbstractFunction* function = abstractInterface->functions[y];
 			ATTRIBUTES(function);
 			TupleInfo returns(function->returns.Count(), function->returns.size);
 			for (uint32 z = 0; z < function->returns.Count(); z++) returns.AddElement(globalReference->AddReference(function->returns.GetType(z)), function->returns.GetOffset(z));
@@ -245,7 +245,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->delegates.Count(); x++)
 	{
-		AbstractDelegate* abstractDelegate = &manager.selfLibaray->delegates[x];
+		AbstractDelegate* abstractDelegate = manager.selfLibaray->delegates[x];
 		ATTRIBUTES(abstractDelegate);
 		TupleInfo returns(abstractDelegate->returns.Count(), abstractDelegate->returns.size);
 		for (uint32 y = 0; y < abstractDelegate->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractDelegate->returns.GetType(y)), abstractDelegate->returns.GetOffset(y));
@@ -255,7 +255,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->coroutines.Count(); x++)
 	{
-		AbstractCoroutine* abstractCoroutine = &manager.selfLibaray->coroutines[x];
+		AbstractCoroutine* abstractCoroutine = manager.selfLibaray->coroutines[x];
 		ATTRIBUTES(abstractCoroutine);
 		TupleInfo returns(abstractCoroutine->returns.Count(), abstractCoroutine->returns.size);
 		for (uint32 y = 0; y < abstractCoroutine->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractCoroutine->returns.GetType(y)), abstractCoroutine->returns.GetOffset(y));
@@ -263,7 +263,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->functions.Count(); x++)
 	{
-		AbstractFunction* abstractFunction = &manager.selfLibaray->functions[x];
+		AbstractFunction* abstractFunction = manager.selfLibaray->functions[x];
 		ATTRIBUTES(abstractFunction);
 		TupleInfo returns(abstractFunction->returns.Count(), abstractFunction->returns.size);
 		for (uint32 y = 0; y < abstractFunction->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractFunction->returns.GetType(y)), abstractFunction->returns.GetOffset(y));
@@ -273,11 +273,11 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		List<uint32, true>* sourceReferences = NULL;
 		if (globalReference->addressReferences.TryGet(x, sourceReferences))
 			for (uint32 y = 0; y < sourceReferences->Count(); y++) references.Add(GetReferenceAddress((*sourceReferences)[y]));
-		new (result->functions.Add())FunctionDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractFunction), returns, parameters, manager.compilingLibrary.functions[x].entry, references);
+		new (result->functions.Add())FunctionDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractFunction), returns, parameters, manager.compilingLibrary.functions[x]->entry, references);
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->natives.Count(); x++)
 	{
-		AbstractNative* abstractNative = &manager.selfLibaray->natives[x];
+		AbstractNative* abstractNative = manager.selfLibaray->natives[x];
 		ATTRIBUTES(abstractNative);
 		TupleInfo returns(abstractNative->returns.Count(), abstractNative->returns.size);
 		for (uint32 y = 0; y < abstractNative->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractNative->returns.GetType(y)), abstractNative->returns.GetOffset(y));
@@ -306,7 +306,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.variables.Count(); y++)
 		{
 			GlobalReferenceVariable& referenceVariable = referenceLibrary.variables[y];
-			AbstractVariable* abstractVariable = &library->variables[referenceVariable.index];
+			AbstractVariable* abstractVariable = library->variables[referenceVariable.index];
 			IMPORT_BASE_INFO(Variable);
 			List<VariableReference, true> addressReferences(referenceVariable.addressReferences.Count());
 			for (uint32 z = 0; z < referenceVariable.addressReferences.Count(); z++)
@@ -316,7 +316,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.enums.Count(); y++)
 		{
 			GlobalReferenceEnum& referenceEnum = referenceLibrary.enums[y];
-			AbstractEnum* abstractEnum = &library->enums[referenceEnum.index];
+			AbstractEnum* abstractEnum = library->enums[referenceEnum.index];
 			IMPORT_BASE_INFO(Enum);
 			List<ImportEnum::Element> elements(referenceEnum.elements.Count());
 			for (uint32 z = 0; z < referenceEnum.elements.Count(); z++)
@@ -331,13 +331,13 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.structs.Count(); y++)
 		{
 			GlobalReferenceStruct& referenceStruct = referenceLibrary.structs[y];
-			AbstractStruct* abstractStruct = &library->structs[referenceStruct.index];
+			AbstractStruct* abstractStruct = library->structs[referenceStruct.index];
 			IMPORT_BASE_INFO(Struct);
 			List<ImportStruct::Variable> memberVariables(referenceStruct.variables.Count());
 			for (uint32 z = 0; z < referenceStruct.variables.Count(); z++)
 			{
 				GlobalReferenceStruct::Variable& referenceMember = referenceStruct.variables[z];
-				AbstractVariable* abstractMember = &abstractStruct->variables[referenceMember.index];
+				AbstractVariable* abstractMember = abstractStruct->variables[referenceMember.index];
 				List<uint32, true> memberReferences(referenceMember.references.Count());
 				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
 				new (memberVariables.Add())ImportStruct::Variable(globalReference->AddReference(abstractMember->type), memberReferences);
@@ -346,7 +346,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			for (uint32 z = 0; z < referenceStruct.functions.Count(); z++)
 			{
 				GlobalReferenceFunction& referenceMember = referenceStruct.functions[z];
-				AbstractFunction* abstractMember = &library->functions[abstractStruct->functions[referenceMember.index]];
+				AbstractFunction* abstractMember = library->functions[abstractStruct->functions[referenceMember.index]];
 				List<uint32, true> memberReferences(referenceMember.references.Count());
 				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
@@ -362,7 +362,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.classes.Count(); y++)
 		{
 			GlobalReferenceClass& referenceClass = referenceLibrary.classes[y];
-			AbstractClass* abstractClass = &library->classes[referenceClass.index];
+			AbstractClass* abstractClass = library->classes[referenceClass.index];
 			IMPORT_BASE_INFO(Class);
 			List<Declaration, true> inherits(abstractClass->inherits.Count());
 			for (uint32 z = 0; z < abstractClass->inherits.Count(); z++) inherits.Add(globalReference->AddReference((Declaration)abstractClass->inherits[z]));
@@ -370,7 +370,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			for (uint32 z = 0; z < referenceClass.variables.Count(); z++)
 			{
 				GlobalReferenceClass::Variable& referenceMember = referenceClass.variables[z];
-				AbstractVariable* abstractMember = &abstractClass->variables[referenceMember.index];
+				AbstractVariable* abstractMember = abstractClass->variables[referenceMember.index];
 				List<uint32, true> memberReferences(referenceMember.references.Count());
 				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
 				List<VariableReference, true> memberAddressReferences(referenceMember.addressReferences.Count());
@@ -381,7 +381,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			for (uint32 z = 0; z < referenceClass.constructors.Count(); z++)
 			{
 				GlobalReferenceFunction& referenceMember = referenceClass.constructors[z];
-				AbstractFunction* abstractMember = &library->functions[abstractClass->constructors[referenceMember.index]];
+				AbstractFunction* abstractMember = library->functions[abstractClass->constructors[referenceMember.index]];
 				List<uint32, true> memberReferences(referenceMember.references.Count());
 				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
@@ -394,7 +394,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			for (uint32 z = 0; z < referenceClass.functions.Count(); z++)
 			{
 				GlobalReferenceFunction& referenceMember = referenceClass.functions[z];
-				AbstractFunction* abstractMember = &library->functions[abstractClass->functions[referenceMember.index]];
+				AbstractFunction* abstractMember = library->functions[abstractClass->functions[referenceMember.index]];
 				List<uint32, true> memberReferences(referenceMember.references.Count());
 				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
@@ -410,13 +410,13 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.interfaces.Count(); y++)
 		{
 			GlobalReferenceInterface& referenceInterface = referenceLibrary.interfaces[y];
-			AbstractInterface* abstractInterface = &library->interfaces[referenceInterface.index];
+			AbstractInterface* abstractInterface = library->interfaces[referenceInterface.index];
 			IMPORT_BASE_INFO(Interface);
 			List<ImportInterface::Function> memberFunctions(referenceInterface.functions.Count());
 			for (uint32 z = 0; z < referenceInterface.functions.Count(); z++)
 			{
 				GlobalReferenceInterface::Function& referenceMember = referenceInterface.functions[z];
-				AbstractFunction* abstractMember = &abstractInterface->functions[referenceMember.index];
+				AbstractFunction* abstractMember = abstractInterface->functions[referenceMember.index];
 				List<uint32, true> memberReferences(referenceMember.references.Count());
 				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
@@ -430,7 +430,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.delegates.Count(); y++)
 		{
 			GlobalReferenceDelegate& referenceDelegate = referenceLibrary.delegates[y];
-			AbstractDelegate* abstractDelegate = &library->delegates[referenceDelegate.index];
+			AbstractDelegate* abstractDelegate = library->delegates[referenceDelegate.index];
 			IMPORT_BASE_INFO(Delegate);
 			List<Type, true> parameters(abstractDelegate->parameters.Count());
 			for (uint32 z = 0; z < abstractDelegate->parameters.Count(); z++) parameters.Add(globalReference->AddReference(abstractDelegate->parameters.GetType(z)));
@@ -441,7 +441,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.coroutines.Count(); y++)
 		{
 			GlobalReferenceCoroutine& referenceCoroutine = referenceLibrary.coroutines[y];
-			AbstractCoroutine* abstractCoroutine = &library->coroutines[referenceCoroutine.index];
+			AbstractCoroutine* abstractCoroutine = library->coroutines[referenceCoroutine.index];
 			IMPORT_BASE_INFO(Coroutine);
 			List<Type, true> returns(abstractCoroutine->returns.Count());
 			for (uint32 z = 0; z < abstractCoroutine->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractCoroutine->returns.GetType(z)));
@@ -450,7 +450,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.functions.Count(); y++)
 		{
 			GlobalReferenceFunction& referenceFunction = referenceLibrary.functions[y];
-			AbstractFunction* abstractFunction = &library->functions[referenceFunction.index];
+			AbstractFunction* abstractFunction = library->functions[referenceFunction.index];
 			IMPORT_BASE_INFO(Function);
 			List<Type, true> parameters(abstractFunction->parameters.Count());
 			for (uint32 z = 0; z < abstractFunction->parameters.Count(); z++) parameters.Add(globalReference->AddReference(abstractFunction->parameters.GetType(z)));
@@ -463,7 +463,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < referenceLibrary.natives.Count(); y++)
 		{
 			GlobalReferenceNative& referenceNative = referenceLibrary.natives[y];
-			AbstractNative* abstractNative = &library->natives[referenceNative.index];
+			AbstractNative* abstractNative = library->natives[referenceNative.index];
 			IMPORT_BASE_INFO(Native);
 			List<Type, true> parameters(abstractNative->parameters.Count());
 			for (uint32 z = 0; z < abstractNative->parameters.Count(); z++) parameters.Add(globalReference->AddReference(abstractNative->parameters.GetType(z)));

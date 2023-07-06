@@ -37,11 +37,11 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 	for (uint32 x = 0; x < library->structs.Count(); x++)
 	{
 		uint32 size = 0; uint8 alignment = 0;
-		AbstractStruct* abstractStruct = &library->structs[x];
+		AbstractStruct* abstractStruct = library->structs[x];
 		for (uint32 y = 0; y < abstractStruct->variables.Count(); y++)
 		{
-			AbstractVariable* member = &abstractStruct->variables[y];
-			if (member->type.library == LIBRARY_SELF && member->type.code == TypeCode::Struct && !member->type.dimension && library->structs[member->type.index].size == INVALID)
+			AbstractVariable* member = abstractStruct->variables[y];
+			if (member->type.library == LIBRARY_SELF && member->type.code == TypeCode::Struct && !member->type.dimension && library->structs[member->type.index]->size == INVALID)
 				goto label_next_struct;
 			else
 			{
@@ -64,8 +64,8 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 			AbstractStruct* abstractStruct = structs[x];
 			for (uint32 y = 0; y < abstractStruct->variables.Count(); y++)
 			{
-				AbstractVariable* member = &abstractStruct->variables[y];
-				if (member->type.library == LIBRARY_SELF && member->type.code == TypeCode::Struct && !member->type.dimension && library->structs[member->type.index].size == INVALID) goto label_next_struct2;
+				AbstractVariable* member = abstractStruct->variables[y];
+				if (member->type.library == LIBRARY_SELF && member->type.code == TypeCode::Struct && !member->type.dimension && library->structs[member->type.index]->size == INVALID) goto label_next_struct2;
 				else
 				{
 					uint8 memberAlignment;
@@ -84,10 +84,10 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 	for (uint32 x = 0; x < library->classes.Count(); x++)
 	{
 		uint32 size = 0; uint8 alignment = 0;
-		AbstractClass* abstractClass = &library->classes[x];
+		AbstractClass* abstractClass = library->classes[x];
 		for (uint32 y = 0; y < abstractClass->variables.Count(); y++)
 		{
-			AbstractVariable* member = &abstractClass->variables[y];
+			AbstractVariable* member = abstractClass->variables[y];
 			uint8 memberAlignment;
 			uint32 memberSize = manager->GetStackSize(member->type, memberAlignment);
 			MemoryAlignment(size, member->address, memberAlignment, memberSize);
@@ -99,25 +99,25 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 
 	uint32 address = 0;
 	for (uint32 i = 0; i < library->variables.Count(); i++)
-		if (library->variables[i].readonly)
+		if (library->variables[i]->readonly)
 		{
 			uint8 memberAlignment;
-			uint32 memberSize = manager->GetStackSize(library->variables[i].type, memberAlignment);
-			MemoryAlignment(address, library->variables[i].address, memberAlignment, memberSize);
+			uint32 memberSize = manager->GetStackSize(library->variables[i]->type, memberAlignment);
+			MemoryAlignment(address, library->variables[i]->address, memberAlignment, memberSize);
 		}
 	manager->compilingLibrary.constantSize = address;
 	for (uint32 i = 0; i < library->variables.Count(); i++)
-		if (!library->variables[i].readonly)
+		if (!library->variables[i]->readonly)
 		{
 			uint8 memberAlignment;
-			uint32 memberSize = manager->GetStackSize(library->variables[i].type, memberAlignment);
-			MemoryAlignment(address, library->variables[i].address, memberAlignment, memberSize);
+			uint32 memberSize = manager->GetStackSize(library->variables[i]->type, memberAlignment);
+			MemoryAlignment(address, library->variables[i]->address, memberAlignment, memberSize);
 		}
 	manager->compilingLibrary.dataSize = address;
 
 	for (uint32 x = 0; x < library->functions.Count(); x++)
 	{
-		AbstractFunction* function = &library->functions[x];
+		AbstractFunction* function = library->functions[x];
 		if (function->declaration.category == DeclarationCategory::StructFunction || function->declaration.category == DeclarationCategory::Constructor || function->declaration.category == DeclarationCategory::ClassFunction)
 			CalculatedMemberFunctionParameterTupleInfo(manager, function->parameters);
 		else CalculatedTupleInfo(manager, function->parameters);
@@ -125,23 +125,23 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 	}
 	for (uint32 x = 0; x < library->interfaces.Count(); x++)
 	{
-		for (uint32 y = 0; y < library->interfaces[x].functions.Count(); y++)
+		for (uint32 y = 0; y < library->interfaces[x]->functions.Count(); y++)
 		{
-			CalculatedMemberFunctionParameterTupleInfo(manager, library->interfaces[x].functions[y].parameters);
-			CalculatedTupleInfo(manager, library->interfaces[x].functions[y].returns);
+			CalculatedMemberFunctionParameterTupleInfo(manager, library->interfaces[x]->functions[y]->parameters);
+			CalculatedTupleInfo(manager, library->interfaces[x]->functions[y]->returns);
 		}
 	}
 	for (uint32 x = 0; x < library->delegates.Count(); x++)
 	{
-		CalculatedTupleInfo(manager, library->delegates[x].parameters);
-		CalculatedTupleInfo(manager, library->delegates[x].returns);
+		CalculatedTupleInfo(manager, library->delegates[x]->parameters);
+		CalculatedTupleInfo(manager, library->delegates[x]->returns);
 	}
 	for (uint32 x = 0; x < library->coroutines.Count(); x++)
-		CalculatedTupleInfo(manager, library->coroutines[x].returns);
+		CalculatedTupleInfo(manager, library->coroutines[x]->returns);
 	for (uint32 x = 0; x < library->natives.Count(); x++)
 	{
-		CalculatedTupleInfo(manager, library->natives[x].parameters);
-		CalculatedTupleInfo(manager, library->natives[x].returns);
+		CalculatedTupleInfo(manager, library->natives[x]->parameters);
+		CalculatedTupleInfo(manager, library->natives[x]->returns);
 	}
 }
 

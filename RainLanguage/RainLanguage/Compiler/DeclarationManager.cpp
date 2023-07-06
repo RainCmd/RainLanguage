@@ -16,22 +16,22 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(const CompilingDeclarati
 	switch (declaration.category)
 	{
 		case DeclarationCategory::Invalid: break;
-		case DeclarationCategory::Variable: return &library->variables[declaration.index];
-		case DeclarationCategory::Function: return &library->functions[declaration.index];
-		case DeclarationCategory::Enum: return &library->enums[declaration.index];
-		case DeclarationCategory::EnumElement: return &library->enums[declaration.definition];
-		case DeclarationCategory::Struct: return &library->structs[declaration.index];
+		case DeclarationCategory::Variable: return library->variables[declaration.index];
+		case DeclarationCategory::Function: return library->functions[declaration.index];
+		case DeclarationCategory::Enum: return library->enums[declaration.index];
+		case DeclarationCategory::EnumElement: return library->enums[declaration.definition];
+		case DeclarationCategory::Struct: return library->structs[declaration.index];
 		case DeclarationCategory::StructVariable:
-		case DeclarationCategory::StructFunction: return &library->structs[declaration.definition];
-		case DeclarationCategory::Class: return &library->classes[declaration.index];
+		case DeclarationCategory::StructFunction: return library->structs[declaration.definition];
+		case DeclarationCategory::Class: return library->classes[declaration.index];
 		case DeclarationCategory::Constructor:
 		case DeclarationCategory::ClassVariable:
-		case DeclarationCategory::ClassFunction: return &library->classes[declaration.definition];
-		case DeclarationCategory::Interface: return &library->interfaces[declaration.index];
-		case DeclarationCategory::InterfaceFunction: return &library->interfaces[declaration.definition];
-		case DeclarationCategory::Delegate: return &library->delegates[declaration.index];
-		case DeclarationCategory::Coroutine: return &library->coroutines[declaration.index];
-		case DeclarationCategory::Native: return &library->natives[declaration.index];
+		case DeclarationCategory::ClassFunction: return library->classes[declaration.definition];
+		case DeclarationCategory::Interface: return library->interfaces[declaration.index];
+		case DeclarationCategory::InterfaceFunction: return library->interfaces[declaration.definition];
+		case DeclarationCategory::Delegate: return library->delegates[declaration.index];
+		case DeclarationCategory::Coroutine: return library->coroutines[declaration.index];
+		case DeclarationCategory::Native: return library->natives[declaration.index];
 		case DeclarationCategory::Lambda:
 		case DeclarationCategory::LambdaClosureValue:
 		case DeclarationCategory::LocalVariable:
@@ -71,29 +71,29 @@ List<Type, true>& DeclarationManager::GetReturns(const CompilingDeclaration& dec
 		case DeclarationCategory::Invalid:
 		case DeclarationCategory::Variable: break;
 		case DeclarationCategory::Function:
-			return library->functions[declaration.index].returns.GetTypes();
+			return library->functions[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Enum:
 		case DeclarationCategory::EnumElement:
 		case DeclarationCategory::Struct:
 		case DeclarationCategory::StructVariable: break;
 		case DeclarationCategory::StructFunction:
-			return library->functions[library->structs[declaration.definition].functions[declaration.index]].returns.GetTypes();
+			return library->functions[library->structs[declaration.definition]->functions[declaration.index]]->returns.GetTypes();
 		case DeclarationCategory::Class:
 		case DeclarationCategory::Constructor:
 		case DeclarationCategory::ClassVariable: break;
 		case DeclarationCategory::ClassFunction:
-			return library->functions[library->classes[declaration.definition].functions[declaration.index]].returns.GetTypes();
+			return library->functions[library->classes[declaration.definition]->functions[declaration.index]]->returns.GetTypes();
 		case DeclarationCategory::Interface: break;
 		case DeclarationCategory::InterfaceFunction:
-			return library->interfaces[declaration.definition].functions[declaration.index].returns.GetTypes();
+			return library->interfaces[declaration.definition]->functions[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Delegate:
-			return library->delegates[declaration.index].returns.GetTypes();
+			return library->delegates[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Coroutine:
-			return library->coroutines[declaration.index].returns.GetTypes();
+			return library->coroutines[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Native:
-			return library->natives[declaration.index].returns.GetTypes();
+			return library->natives[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Lambda:
-			return library->functions[declaration.index].returns.GetTypes();
+			return library->functions[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::LambdaClosureValue:
 		case DeclarationCategory::LocalVariable:
 		default: break;
@@ -109,29 +109,29 @@ const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclarat
 		case DeclarationCategory::Invalid:
 		case DeclarationCategory::Variable: break;
 		case DeclarationCategory::Function:
-			return Span<Type, true>(&library->functions[declaration.index].parameters.GetTypes());
+			return Span<Type, true>(&library->functions[declaration.index]->parameters.GetTypes());
 		case DeclarationCategory::Enum:
 		case DeclarationCategory::EnumElement:
 		case DeclarationCategory::Struct:
 		case DeclarationCategory::StructVariable: break;
 		case DeclarationCategory::StructFunction:
-			return Span<Type, true>(&library->functions[library->structs[declaration.definition].functions[declaration.index]].parameters.GetTypes(), 1);
+			return Span<Type, true>(&library->functions[library->structs[declaration.definition]->functions[declaration.index]]->parameters.GetTypes(), 1);
 		case DeclarationCategory::Class: break;
 		case DeclarationCategory::Constructor:
-			return Span<Type, true>(&library->functions[library->classes[declaration.definition].constructors[declaration.index]].parameters.GetTypes(), 1);
+			return Span<Type, true>(&library->functions[library->classes[declaration.definition]->constructors[declaration.index]]->parameters.GetTypes(), 1);
 		case DeclarationCategory::ClassVariable: break;
 		case DeclarationCategory::ClassFunction:
-			return Span<Type, true>(&library->functions[library->classes[declaration.definition].functions[declaration.index]].parameters.GetTypes(), 1);
+			return Span<Type, true>(&library->functions[library->classes[declaration.definition]->functions[declaration.index]]->parameters.GetTypes(), 1);
 		case DeclarationCategory::Interface: break;
 		case DeclarationCategory::InterfaceFunction:
-			return Span<Type, true>(&library->interfaces[declaration.definition].functions[declaration.index].parameters.GetTypes(), 1);
+			return Span<Type, true>(&library->interfaces[declaration.definition]->functions[declaration.index]->parameters.GetTypes(), 1);
 		case DeclarationCategory::Delegate:
-			return Span<Type, true>(&library->delegates[declaration.index].parameters.GetTypes());
+			return Span<Type, true>(&library->delegates[declaration.index]->parameters.GetTypes());
 		case DeclarationCategory::Coroutine: break;
 		case DeclarationCategory::Native:
-			return Span<Type, true>(&library->natives[declaration.index].parameters.GetTypes());
+			return Span<Type, true>(&library->natives[declaration.index]->parameters.GetTypes());
 		case DeclarationCategory::Lambda:
-			return Span<Type, true>(&library->functions[declaration.index].parameters.GetTypes());
+			return Span<Type, true>(&library->functions[declaration.index]->parameters.GetTypes());
 		case DeclarationCategory::LambdaClosureValue:
 		case DeclarationCategory::LocalVariable:
 		default: break;
@@ -143,9 +143,9 @@ Type DeclarationManager::GetParent(const Type& type)
 {
 	ASSERT_DEBUG(type.code == TypeCode::Handle, "不是托管类型声明");
 	if (type.dimension) return TYPE_Array;
-	else if (type.library == LIBRARY_KERNEL) return kernelLibaray->classes[type.index].parent;
-	else if (type.library == LIBRARY_SELF) return compilingLibrary.classes[type.index].parent;
-	else return relies[type.library]->classes[type.index].parent;
+	else if (type.library == LIBRARY_KERNEL) return kernelLibaray->classes[type.index]->parent;
+	else if (type.library == LIBRARY_SELF) return compilingLibrary.classes[type.index]->parent;
+	else return relies[type.library]->classes[type.index]->parent;
 }
 
 uint32 DeclarationManager::GetStackSize(const Type& type, uint8& alignment)
@@ -160,13 +160,13 @@ uint32 DeclarationManager::GetStackSize(const Type& type, uint8& alignment)
 		case TypeCode::Invalid: break;
 		case TypeCode::Struct:
 		{
-			AbstractStruct* info = &GetLibrary(type.library)->structs[type.index];
+			AbstractStruct* info = GetLibrary(type.library)->structs[type.index];
 			alignment = info->alignment;
 			return info->size;
 		}
 		case TypeCode::Enum:
 			alignment = MEMORY_ALIGNMENT_8;
-			return kernelLibaray->structs[TYPE_Enum.index].size;
+			return kernelLibaray->structs[TYPE_Enum.index]->size;
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
@@ -189,9 +189,9 @@ bool DeclarationManager::IsBitwise(const Type& type)
 			else if (type == TYPE_String || type == TYPE_Entity) return false;
 			else
 			{
-				AbstractStruct* info = &GetLibrary(type.library)->structs[type.index];
+				AbstractStruct* info = GetLibrary(type.library)->structs[type.index];
 				for (uint32 i = 0; i < info->variables.Count(); i++)
-					if (!IsBitwise(info->variables[i].type))
+					if (!IsBitwise(info->variables[i]->type))
 						return false;
 				return true;
 			}
@@ -230,7 +230,7 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& name)
 bool TryGetInterfaceInherit(DeclarationManager* manager, Type subType, Type baseType, uint32& depth)
 {
 	if (subType == baseType) return true;
-	AbstractInterface* index = &manager->GetLibrary(subType.library)->interfaces[subType.index];
+	AbstractInterface* index = manager->GetLibrary(subType.library)->interfaces[subType.index];
 	depth++;
 	for (uint32 i = 0; i < index->inherits.Count(); i++)
 		if (TryGetInterfaceInherit(manager, index->inherits[i], baseType, depth))
@@ -311,7 +311,7 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 			depth = 0;
 			while (index.code == TypeCode::Handle)
 			{
-				AbstractClass* declaration = &GetLibrary(index.library)->classes[index.index];
+				AbstractClass* declaration = GetLibrary(index.library)->classes[index.index];
 				if (baseType.code == TypeCode::Interface)
 					for (uint32 i = 0; i < declaration->inherits.Count(); i++)
 						if (TryGetInterfaceInherit(this, declaration->inherits[i], baseType, depth))

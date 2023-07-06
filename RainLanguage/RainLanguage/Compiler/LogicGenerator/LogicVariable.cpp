@@ -45,7 +45,7 @@ void LogicVariable::ClearVariable(DeclarationManager* manager, Generator* genera
 			}
 			else
 			{
-				AbstractStruct* abstractStruct = &manager->GetLibrary(type.library)->structs[type.index];
+				AbstractStruct* abstractStruct = manager->GetLibrary(type.library)->structs[type.index];
 				if (manager->IsBitwise(type))
 				{
 					if (abstractStruct->size)
@@ -56,7 +56,7 @@ void LogicVariable::ClearVariable(DeclarationManager* manager, Generator* genera
 					}
 				}
 				else for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
-					LogicVariable(*this, abstractStruct->variables[i].type, abstractStruct->variables[i].address).ClearVariable(manager, generator);
+					LogicVariable(*this, abstractStruct->variables[i]->type, abstractStruct->variables[i]->address).ClearVariable(manager, generator);
 			}
 			break;
 		case TypeCode::Enum:
@@ -121,7 +121,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
 		generator->WriteCode(left);
 		generator->WriteCode(right);
-		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index].size);
+		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index]->size);
 	}
 	else
 	{
@@ -184,7 +184,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode(left);
 		generator->WriteCode(right);
 		generator->WriteCodeGlobalVariableReference(rightMember, offset);
-		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index].size);
+		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index]->size);
 	}
 	else
 	{
@@ -249,7 +249,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 		generator->WriteCode(left);
 		generator->WriteCodeGlobalVariableReference(leftMember, offset);
 		generator->WriteCode(right);
-		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index].size);
+		generator->WriteCode(manager->GetLibrary(type.library)->structs[type.index]->size);
 	}
 	else
 	{

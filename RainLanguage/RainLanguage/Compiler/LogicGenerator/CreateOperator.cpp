@@ -508,7 +508,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 			{
 				if (!right->returns.Peek().dimension && right->returns.Peek().code == TypeCode::Enum)
 				{
-					AbstractCallable* enumToString = &parser->manager->kernelLibaray->functions[parser->manager->kernelLibaray->structs[MEMBER_FUNCTION_Enum_ToString.declaration.index].functions[MEMBER_FUNCTION_Enum_ToString.function]];
+					AbstractCallable* enumToString = parser->manager->kernelLibaray->functions[parser->manager->kernelLibaray->structs[MEMBER_FUNCTION_Enum_ToString.declaration.index]->functions[MEMBER_FUNCTION_Enum_ToString.function]];
 					Expression* toStringExpression = new InvokerMemberExpression(right->anchor, enumToString->returns.GetTypes(), GetEmptyTupleExpression(), right, enumToString->declaration, false);
 					tupleExpression->expressions[1] = toStringExpression;
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);
@@ -523,7 +523,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 			{
 				if (right->returns.Peek() == TYPE_String)
 				{
-					AbstractCallable* enumToString = &parser->manager->kernelLibaray->functions[parser->manager->kernelLibaray->structs[MEMBER_FUNCTION_Enum_ToString.declaration.index].functions[MEMBER_FUNCTION_Enum_ToString.function]];
+					AbstractCallable* enumToString = parser->manager->kernelLibaray->functions[parser->manager->kernelLibaray->structs[MEMBER_FUNCTION_Enum_ToString.declaration.index]->functions[MEMBER_FUNCTION_Enum_ToString.function]];
 					Expression* toStringExpression = new InvokerMemberExpression(left->anchor, enumToString->returns.GetTypes(), GetEmptyTupleExpression(), left, enumToString->declaration, false);
 					tupleExpression->expressions[0] = toStringExpression;
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);

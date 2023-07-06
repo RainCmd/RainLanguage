@@ -4,10 +4,10 @@ void StructMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
-	AbstractStruct* abstractStruct = &parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
+	AbstractStruct* abstractStruct = parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
 	for (uint32 i = 0; i < indices.Count(); i++)
 	{
-		AbstractVariable* memberVariable = &abstractStruct->variables[(uint32)indices[i]];
+		AbstractVariable* memberVariable = abstractStruct->variables[(uint32)indices[i]];
 		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(i, returns[i]), LogicVariable(targetParameter.results[0], memberVariable->type, memberVariable->address));
 	}
 }
@@ -23,12 +23,12 @@ void StructMemberExpression::GeneratorAssignment(LogicGenerateParameter& paramet
 	else
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
-		AbstractStruct& abstractStruct = parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
+		AbstractStruct* abstractStruct = parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
 		target->Generator(targetParameter);
 		for (uint32 i = 0; i < indices.Count(); i++)
 		{
-			AbstractVariable& memberVariable = abstractStruct.variables[(uint32)indices[i]];
-			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(targetParameter.results[0], memberVariable.type, memberVariable.address), parameter.results[i]);
+			AbstractVariable* memberVariable = abstractStruct->variables[(uint32)indices[i]];
+			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(targetParameter.results[0], memberVariable->type, memberVariable->address), parameter.results[i]);
 		}
 	}
 }
@@ -37,10 +37,10 @@ void StructMemberExpression::FillResultVariable(LogicGenerateParameter& paramete
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
-	AbstractStruct* abstractStruct = &parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
+	AbstractStruct* abstractStruct = parameter.manager->GetLibrary(target->returns[0].library)->structs[target->returns[0].index];
 	for (uint32 i = 0; i < indices.Count(); i++)
 	{
-		AbstractVariable* memberVariable = &abstractStruct->variables[(uint32)indices[i]];
+		AbstractVariable* memberVariable = abstractStruct->variables[(uint32)indices[i]];
 		new (logicVariables.Add())LogicVariable(targetParameter.results[0], memberVariable->type, memberVariable->address);
 		parameter.results[index + i] = logicVariables[i];
 	}
@@ -58,9 +58,9 @@ void StructConstructorExpression::Generator(LogicGenerateParameter& parameter)
 	LogicVariable result = parameter.GetResult(0, returns[0]);
 	if (parameters->returns.Count())
 	{
-		AbstractStruct* abstractStruct = &parameter.manager->GetLibrary(declaration.library)->structs[declaration.index];
+		AbstractStruct* abstractStruct = parameter.manager->GetLibrary(declaration.library)->structs[declaration.index];
 		for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
-			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(result, abstractStruct->variables[i].type, abstractStruct->variables[i].address), parametersParameter.results[i]);
+			LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(result, abstractStruct->variables[i]->type, abstractStruct->variables[i]->address), parametersParameter.results[i]);
 	}
 	else result.ClearVariable(parameter.manager, parameter.generator);
 }

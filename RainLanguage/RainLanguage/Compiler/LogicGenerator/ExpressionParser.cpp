@@ -162,17 +162,17 @@ Attribute ExpressionParser::GetVariableAttribute(const CompilingDeclaration& dec
 	switch (declaration.category)
 	{
 		case DeclarationCategory::Variable:
-			if (manager->GetLibrary(declaration.library)->variables[declaration.index].readonly)
+			if (manager->GetLibrary(declaration.library)->variables[declaration.index]->readonly)
 			{
 				if (declaration.library == LIBRARY_KERNEL || declaration.library == LIBRARY_SELF)return Attribute::Constant;
 				else return Attribute::Value;
 			}
 			else return Attribute::Assignable | Attribute::Value;
 		case DeclarationCategory::StructVariable:
-			if (manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].readonly)return Attribute::Value;
+			if (manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
 			else return Attribute::Assignable | Attribute::Value;
 		case DeclarationCategory::ClassVariable:
-			if (manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].readonly)return Attribute::Value;
+			if (manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
 			else return Attribute::Assignable | Attribute::Value;
 		case DeclarationCategory::LambdaClosureValue:
 		case DeclarationCategory::LocalVariable:
@@ -186,11 +186,11 @@ Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
 	switch (declaration.category)
 	{
 		case DeclarationCategory::Variable:
-			return manager->GetLibrary(declaration.library)->variables[declaration.index].type;
+			return manager->GetLibrary(declaration.library)->variables[declaration.index]->type;
 		case DeclarationCategory::StructVariable:
-			return manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].type;
+			return manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->type;
 		case DeclarationCategory::ClassVariable:
-			return manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].type;
+			return manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
 		case DeclarationCategory::LambdaClosureValue:
 			if (closure)return closure->GetVariableType(declaration);
 			else EXCEPTION("不在闭包中");
@@ -375,7 +375,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		if (!type.dimension && type.code == TypeCode::Delegate)
 		{
 			AbstractCallable* callable;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))
 			{
 				if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
@@ -403,7 +403,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		if (!type.dimension && type.code == TypeCode::Delegate)
 		{
 			AbstractCallable* callable;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))
 			{
 				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
@@ -431,7 +431,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		if (!type.dimension && type.code == TypeCode::Delegate)
 		{
 			AbstractCallable* callable;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))
 			{
 				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
@@ -458,7 +458,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		BlurryCoroutineExpression* coroutineExpression = (BlurryCoroutineExpression*)expression;
 		if (!type.dimension && type.code == TypeCode::Coroutine)
 		{
-			if (IsEquals(manager->GetLibrary(type.library)->coroutines[type.index].returns.GetTypes(), coroutineExpression->returns))
+			if (IsEquals(manager->GetLibrary(type.library)->coroutines[type.index]->returns.GetTypes(), coroutineExpression->returns))
 			{
 				expression = new CoroutineCreateExpression(coroutineExpression->anchor, coroutineExpression->invoker, type, coroutineExpression->start);
 				coroutineExpression->invoker = NULL;
@@ -475,7 +475,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		BlurryLambdaExpression* lambdaExpression = (BlurryLambdaExpression*)expression;
 		if (!type.dimension && type.code == TypeCode::Delegate)
 		{
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (lambdaExpression->parameters.Count() == abstractDelegate->parameters.Count())
 			{
 				LocalContext localContext = LocalContext();
@@ -533,14 +533,14 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 							lambdaFuncioinParameters.AddElement(parameterType, address);
 							lambdaFuncioinParameters.size = address + size;
 						}
-						new (manager->selfLibaray->functions.Add())AbstractFunction(lambdaExpression->anchor.content, lambdaDeclaration, List<String>(0), context.compilingSpace->abstract, lambdaFuncioinParameters, abstractDelegate->returns);
+						manager->selfLibaray->functions.Add(new AbstractFunction(lambdaExpression->anchor.content, lambdaDeclaration, List<String>(0), context.compilingSpace->abstract, lambdaFuncioinParameters, abstractDelegate->returns));
 					}
 					else
 					{
 						expression = new LambdaDelegateCreateExpression(lambdaExpression->anchor, type, lambdaDeclaration);
 						for (uint32 i = 0; i < abstractDelegate->parameters.Count(); i++)
 							new (lambdaFunction->parameters.Add())CompilingFunctionDeclaration::Parameter(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
-						new (manager->selfLibaray->functions.Add())AbstractFunction(lambdaExpression->anchor.content, lambdaDeclaration, List<String>(0), context.compilingSpace->abstract, abstractDelegate->parameters, abstractDelegate->returns);
+						manager->selfLibaray->functions.Add(new AbstractFunction(lambdaExpression->anchor.content, lambdaDeclaration, List<String>(0), context.compilingSpace->abstract, abstractDelegate->parameters, abstractDelegate->returns));
 					}
 					lambdaFunction->returns = abstractDelegate->returns.GetTypes();
 					List<Statement*, true> statements(0);
@@ -601,7 +601,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			if (type.dimension || type.code != TypeCode::Delegate) return false;
 			MethodExpression* methodExpression = (MethodExpression*)expression;
 			AbstractCallable* callable;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable)) return false;
 			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
 			{
@@ -619,7 +619,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			MethodMemberExpression* methodExpression = (MethodMemberExpression*)expression;
 			if (type.dimension || type.code != TypeCode::Delegate) return false;
 			AbstractCallable* callable;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable)) return false;
 			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
 			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
@@ -638,7 +638,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			MethodVirtualExpression* methodExpression = (MethodVirtualExpression*)expression;
 			if (type.dimension || type.code != TypeCode::Delegate) return false;
 			AbstractCallable* callable;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))return false;
 			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
 			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
@@ -655,13 +655,13 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 		else if (ContainAll(expression->type, ExpressionType::BlurryCoroutineExpression))
 		{
 			if (type.dimension || type.code != TypeCode::Coroutine) return false;
-			if (!IsEquals(manager->GetLibrary(type.library)->coroutines[type.index].returns.GetTypes(), expression->returns)) return false;
+			if (!IsEquals(manager->GetLibrary(type.library)->coroutines[type.index]->returns.GetTypes(), expression->returns)) return false;
 		}
 		else if (ContainAll(expression->type, ExpressionType::BlurryLambdaExpression))
 		{
 			BlurryLambdaExpression* lambdaExpression = (BlurryLambdaExpression*)expression;
 			if (type.dimension || type.code != TypeCode::Delegate) return false;
-			AbstractDelegate* abstractDelegate = &manager->GetLibrary(type.library)->delegates[type.index];
+			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (lambdaExpression->parameters.Count() != abstractDelegate->parameters.Count()) return false;
 			LocalContext localContext = LocalContext();
 			for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
@@ -732,22 +732,22 @@ AbstractCallable* GetCallable(DeclarationManager* manager, const Anchor& anchor,
 	else if (declaration.category == DeclarationCategory::StructFunction)
 	{
 		AbstractLibrary* library = manager->GetLibrary(declaration.library);
-		return &library->functions[library->structs[declaration.definition].functions[declaration.index]];
+		return library->functions[library->structs[declaration.definition]->functions[declaration.index]];
 	}
 	else if (declaration.category == DeclarationCategory::Constructor)
 	{
 		AbstractLibrary* library = manager->GetLibrary(declaration.library);
-		return &library->functions[library->classes[declaration.definition].constructors[declaration.index]];
+		return library->functions[library->classes[declaration.definition]->constructors[declaration.index]];
 	}
 	else if (declaration.category == DeclarationCategory::ClassFunction)
 	{
 		AbstractLibrary* library = manager->GetLibrary(declaration.library);
-		return &library->functions[library->classes[declaration.definition].functions[declaration.index]];
+		return library->functions[library->classes[declaration.definition]->functions[declaration.index]];
 	}
 	else if (declaration.category == DeclarationCategory::InterfaceFunction)
 	{
 		AbstractInterface* abstractInterface = (AbstractInterface*)manager->GetDeclaration(declaration);
-		return &abstractInterface->functions[declaration.index];
+		return abstractInterface->functions[declaration.index];
 	}
 	else EXCEPTION("无效的定义类型");
 }
@@ -1949,10 +1949,10 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							if (type.code == TypeCode::Handle)
 							{
 								AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
-								AbstractClass* abstractClass = &abstractLibrary->classes[type.index];
+								AbstractClass* abstractClass = abstractLibrary->classes[type.index];
 								List<CompilingDeclaration, true> declarations(abstractClass->constructors.Count());
 								for (uint32 i = 0; i < abstractClass->constructors.Count(); i++)
-									declarations.Add(abstractLibrary->functions[abstractClass->constructors[i]].declaration);
+									declarations.Add(abstractLibrary->functions[abstractClass->constructors[i]]->declaration);
 								AbstractCallable* callable;
 								if (TryGetFunction(typeExpression->anchor, declarations, tuple, callable))
 								{
@@ -1987,7 +1987,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								{
 									List<Type, true> members(abstractStruct->variables.Count());
 									for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
-										members.Add(abstractStruct->variables[i].type);
+										members.Add(abstractStruct->variables[i]->type);
 									if (TryAssignmentConvert(tuple, Span<Type, true>(&members)))
 									{
 										Expression* expression = new StructConstructorExpression(typeExpression->anchor, abstractStruct->declaration, tuple);
@@ -2198,7 +2198,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
 									{
 										indices.Add(i);
-										returns.Add(abstractStruct->variables[i].type);
+										returns.Add(abstractStruct->variables[i]->type);
 									}
 									Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
 									expressionStack.Add(expression);
@@ -2225,7 +2225,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 										}
 									}
 									List<Type, true> returns(indices.Count());
-									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractStruct->variables[(uint32)indices[i]].type);
+									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractStruct->variables[(uint32)indices[i]]->type);
 									Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
@@ -2465,7 +2465,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							{
 								Type customType = typeExpression->customType;
 								delete typeExpression; typeExpression = NULL;
-								List<String>& elements = manager->GetLibrary(customType.library)->enums[customType.index].elements;
+								List<String>& elements = manager->GetLibrary(customType.library)->enums[customType.index]->elements;
 								for (uint32 elementIndex = 0; elementIndex < elements.Count(); elementIndex++)
 									if (elements[elementIndex] == identifierLexical.anchor.content)
 									{
@@ -2491,8 +2491,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								if (declarations.Count() == 1 && (declarations.Peek().category == DeclarationCategory::StructVariable || declarations.Peek().category == DeclarationCategory::ClassVariable))
 								{
 									CompilingDeclaration declaration = declarations.Peek();
-									if (declaration.category == DeclarationCategory::StructVariable)type = manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].type;
-									else if (declaration.category == DeclarationCategory::ClassVariable)type = manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].type;
+									if (declaration.category == DeclarationCategory::StructVariable) type = manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->type;
+									else if (declaration.category == DeclarationCategory::ClassVariable) type = manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
 									expression = new VariableMemberExpression(identifierLexical.anchor, declaration, GetVariableAttribute(declaration), expression, type);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
@@ -2559,7 +2559,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								if (declarations.Count() == 1 && declarations.Peek().category == DeclarationCategory::ClassVariable)
 								{
 									CompilingDeclaration declaration = declarations.Peek();
-									type = manager->GetLibrary(declaration.library)->classes[declaration.definition].variables[declaration.index].type;
+									type = manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
 									expression = new VariableQuestionMemberExpression(identifierLexical.anchor, declaration, expression, type);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;

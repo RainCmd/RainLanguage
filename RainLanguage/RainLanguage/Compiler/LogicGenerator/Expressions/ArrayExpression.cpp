@@ -77,7 +77,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 					parameter.generator->WriteCode(arrayVariable);
 					parameter.generator->WriteCode(indexParameter.results[0]);
 					parameter.generator->WriteCode(offset);
-					parameter.generator->WriteCode(parameter.manager->GetLibrary(type.library)->structs[type.index].size);
+					parameter.generator->WriteCode(parameter.manager->GetLibrary(type.library)->structs[type.index]->size);
 					break;
 				}
 				else
@@ -163,7 +163,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 				parameter.generator->WriteCode(indexParameter.results[0]);
 				parameter.generator->WriteCode(offset);
 				parameter.generator->WriteCode(result);
-				parameter.generator->WriteCode(parameter.manager->GetLibrary(result.type.library)->structs[result.type.index].size);
+				parameter.generator->WriteCode(parameter.manager->GetLibrary(result.type.library)->structs[result.type.index]->size);
 				break;
 			}
 			else

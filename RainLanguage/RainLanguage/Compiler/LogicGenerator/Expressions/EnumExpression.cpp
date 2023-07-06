@@ -6,7 +6,7 @@ void EnumElementExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	if (element.library == LIBRARY_SELF)
 	{
-		CompilingEnum::Element* compiling = &parameter.manager->compilingLibrary.enums[element.definition].elements[element.index];
+		CompilingEnum::Element* compiling = parameter.manager->compilingLibrary.enums[element.definition]->elements[element.index];
 		ASSERT_DEBUG(compiling->calculated, "library构造函数生成逻辑可能有bug");
 		parameter.generator->WriteCode(compiling->value);
 	}
@@ -17,7 +17,7 @@ bool EnumElementExpression::TryEvaluation(integer& value, LogicGenerateParameter
 {
 	if (element.library == LIBRARY_SELF)
 	{
-		CompilingEnum::Element* compiling = &parameter.manager->compilingLibrary.enums[element.definition].elements[element.index];
+		CompilingEnum::Element* compiling = parameter.manager->compilingLibrary.enums[element.definition]->elements[element.index];
 		if (compiling->calculated)
 		{
 			value = compiling->value;

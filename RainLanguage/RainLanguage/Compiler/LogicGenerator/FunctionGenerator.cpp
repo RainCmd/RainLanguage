@@ -155,7 +155,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 	LogicGenerateParameter logicGenerateParameter = LogicGenerateParameter(parameter);
 	for (uint32 i = 0; i < parameter.manager->compilingLibrary.variables.Count(); i++)
 	{
-		CompilingVariable* variable = &parameter.manager->compilingLibrary.variables[i];
+		CompilingVariable* variable = parameter.manager->compilingLibrary.variables[i];
 		if (variable->constant)
 		{
 			ASSERT_DEBUG(!variable->expression.content.IsEmpty(), "常量没有赋值表达式，这个应该在定义解析时过滤");
@@ -172,11 +172,11 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 	}
 	for (uint32 x = 0; x < parameter.manager->compilingLibrary.enums.Count(); x++)
 	{
-		CompilingEnum* enumerate = &parameter.manager->compilingLibrary.enums[x];
+		CompilingEnum* enumerate = parameter.manager->compilingLibrary.enums[x];
 		integer elementValue = 0; bool flag = true;
 		for (uint32 y = 0; y < enumerate->elements.Count(); y++)
 		{
-			CompilingEnum::Element* element = &enumerate->elements[y];
+			CompilingEnum::Element* element = enumerate->elements[y];
 			if (!element->expression.content.IsEmpty())
 			{
 				Context context = Context(enumerate->space, enumerate->relies);
@@ -220,7 +220,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			if (pairs[i].variable)
 			{
 				CompilingVariable* variable = pairs[i].variable;
-				AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[variable->declaration.index];
+				AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[variable->declaration.index];
 				uint8* address = parameter.generator->GetConstantPointer(abstractVariable->address);
 				if (variable->type == TYPE_Bool)
 				{
@@ -278,7 +278,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			else
 			{
 				CompilingEnum* enumerate = pairs[i].enumerate;
-				CompilingEnum::Element* element = &enumerate->elements[pairs[i].enumElementIndex];
+				CompilingEnum::Element* element = enumerate->elements[pairs[i].enumElementIndex];
 				integer elementValue;
 				if (expression->TryEvaluation(elementValue, logicGenerateParameter))
 				{
@@ -286,7 +286,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 					element->calculated = true;
 					for (uint32 index = pairs[i].enumElementIndex + 1; index < enumerate->elements.Count(); index++)
 					{
-						element = &enumerate->elements[index];
+						element = enumerate->elements[index];
 						if (element->calculated || !element->expression.content.IsEmpty())break;
 						element->value = elementValue++;
 						element->calculated = true;
@@ -300,7 +300,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		{
 			for (uint32 i = 0; i < pairs.Count(); i++)
 				if (pairs[i].variable) MESSAGE2(parameter.manager->messages, pairs[i].variable->expression, MessageType::ERROR_GENERATOR_CONSTANT_EVALUATION_FAIL)
-				else MESSAGE2(parameter.manager->messages, pairs[i].enumerate->elements[pairs[i].enumElementIndex].expression, MessageType::ERROR_GENERATOR_CONSTANT_EVALUATION_FAIL);
+				else MESSAGE2(parameter.manager->messages, pairs[i].enumerate->elements[pairs[i].enumElementIndex]->expression, MessageType::ERROR_GENERATOR_CONSTANT_EVALUATION_FAIL);
 			break;
 		}
 	}
@@ -308,7 +308,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 
 	for (uint32 i = 0; i < parameter.manager->compilingLibrary.variables.Count(); i++)
 	{
-		CompilingVariable* variable = &parameter.manager->compilingLibrary.variables[i];
+		CompilingVariable* variable = parameter.manager->compilingLibrary.variables[i];
 		if (!variable->constant && !variable->expression.content.IsEmpty())
 		{
 			Context context = Context(variable->space, variable->relies);
@@ -344,7 +344,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 		parameters.Add(localContext.AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
 		for (uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(localContext.AddLocal(function->parameters[i].name, function->parameters[i].type));
-		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->structs[function->declaration.definition].declaration, function->space, function->relies), &localContext, function->body, false);
+		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->structs[function->declaration.definition]->declaration, function->space, function->relies), &localContext, function->body, false);
 	}
 	else if (function->declaration.category == DeclarationCategory::Constructor)
 	{
@@ -352,52 +352,52 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 		parameters.Add(thisValue);
 		for (uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(localContext.AddLocal(function->parameters[i].name, function->parameters[i].type));
-		const CompilingClass& compilingClass = parameter.manager->compilingLibrary.classes[function->declaration.definition];
-		const CompilingClass::Constructor& compilingConstructor = compilingClass.constructors[function->declaration.index];
-		Context context(compilingClass.space, compilingClass.relies);
-		if (!compilingConstructor.expression.content.IsEmpty())
+		const CompilingClass* compilingClass = parameter.manager->compilingLibrary.classes[function->declaration.definition];
+		const CompilingClass::Constructor* compilingConstructor = compilingClass->constructors[function->declaration.index];
+		Context context(compilingClass->space, compilingClass->relies);
+		if (!compilingConstructor->expression.content.IsEmpty())
 		{
 			Lexical lexical;
-			if (!TryAnalysis(compilingConstructor.expression, 0, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则肯定是前面文件解析出错了");
+			if (!TryAnalysis(compilingConstructor->expression, 0, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则肯定是前面文件解析出错了");
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
 			if (lexical.anchor == KeyWord_this())
 			{
-				for (uint32 i = 0; i < compilingClass.constructors.Count(); i++)
+				for (uint32 i = 0; i < compilingClass->constructors.Count(); i++)
 					if (i != function->declaration.index)
 						new (constructorInvokerDeclarations.Add())CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Constructor, i, function->declaration.definition);
-				if (ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, constructorInvokerDeclarations, &thisValue) == function->declaration)
+				if (ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, constructorInvokerDeclarations, &thisValue) == function->declaration)
 					MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_CONSTRUCTOR_CALL_ITSELF);
 			}
 			else if (lexical.anchor == KeyWord_base())
 			{
-				AbstractLibrary* parentLibrary = parameter.manager->GetLibrary(compilingClass.parent.library);
-				AbstractClass* parent = &parentLibrary->classes[compilingClass.parent.index];
+				AbstractLibrary* parentLibrary = parameter.manager->GetLibrary(compilingClass->parent.library);
+				AbstractClass* parent = parentLibrary->classes[compilingClass->parent.index];
 				for (uint32 i = 0; i < parent->constructors.Count(); i++)
 				{
-					AbstractFunction* parentConstructor = &parentLibrary->functions[parent->constructors[i]];
+					AbstractFunction* parentConstructor = parentLibrary->functions[parent->constructors[i]];
 					if (context.IsVisible(parameter.manager, parentConstructor->declaration))
 						constructorInvokerDeclarations.Add(parentConstructor->declaration);
 				}
-				ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor.expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, constructorInvokerDeclarations, &thisValue);
+				ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), &localContext, constructorInvokerDeclarations, &thisValue);
 			}
 			else EXCEPTION("无效的词汇");
 		}
-		else if (compilingClass.parent != TYPE_Handle)
+		else if (compilingClass->parent != TYPE_Handle)
 		{
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
-			AbstractLibrary* parentLibrary = parameter.manager->GetLibrary(compilingClass.parent.library);
-			AbstractClass* parent = &parentLibrary->classes[compilingClass.parent.index];
+			AbstractLibrary* parentLibrary = parameter.manager->GetLibrary(compilingClass->parent.library);
+			AbstractClass* parent = parentLibrary->classes[compilingClass->parent.index];
 			for (uint32 i = 0; i < parent->constructors.Count(); i++)
 			{
-				AbstractFunction* parentConstructor = &parentLibrary->functions[parent->constructors[i]];
+				AbstractFunction* parentConstructor = parentLibrary->functions[parent->constructors[i]];
 				if (context.IsVisible(parameter.manager, parentConstructor->declaration))
 					constructorInvokerDeclarations.Add(parentConstructor->declaration);
 			}
-			ParseConstructorInvoker(parameter, &context, compilingClass.name, compilingConstructor.expression, &localContext, constructorInvokerDeclarations, &thisValue);
+			ParseConstructorInvoker(parameter, &context, compilingClass->name, compilingConstructor->expression, &localContext, constructorInvokerDeclarations, &thisValue);
 		}
-		for (uint32 i = 0; i < compilingClass.variables.Count(); i++)
+		for (uint32 i = 0; i < compilingClass->variables.Count(); i++)
 		{
-			const CompilingClass::Variable* variable = &compilingClass.variables[i];
+			const CompilingClass::Variable* variable = compilingClass->variables[i];
 			if (!variable->expression.content.IsEmpty())
 			{
 				LocalContext constructorMemberLocalContext = LocalContext();
@@ -414,14 +414,14 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 				}
 			}
 		}
-		ParseBody(parameter, Context(compilingClass.declaration, function->space, function->relies), &localContext, function->body, false);
+		ParseBody(parameter, Context(compilingClass->declaration, function->space, function->relies), &localContext, function->body, false);
 	}
 	else if (function->declaration.category == DeclarationCategory::ClassFunction)
 	{
 		parameters.Add(localContext.AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
 		for (uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(localContext.AddLocal(function->parameters[i].name, function->parameters[i].type));
-		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition].declaration, function->space, function->relies), &localContext, function->body, false);
+		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition]->declaration, function->space, function->relies), &localContext, function->body, false);
 	}
 	else EXCEPTION("无效的函数类型");
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
@@ -430,10 +430,10 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 
 FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(parameter.manager->compilingLibrary.GetName(declaration)), declaration(declaration), parameters(1), returns(0), statements(new BlockStatement(Anchor()))
 {
-	const CompilingClass& compilingClass = parameter.manager->compilingLibrary.classes[declaration.definition];
+	const CompilingClass* compilingClass = parameter.manager->compilingLibrary.classes[declaration.definition];
 	LocalContext localContext = LocalContext();
-	parameters.Add(localContext.AddLocal(KeyWord_this(), compilingClass.name, declaration.DefineType()));
-	ParseBody(parameter, Context(declaration, compilingClass.space, compilingClass.relies), &localContext, compilingClass.destructor, true);
+	parameters.Add(localContext.AddLocal(KeyWord_this(), compilingClass->name, declaration.DefineType()));
+	ParseBody(parameter, Context(declaration, compilingClass->space, compilingClass->relies), &localContext, compilingClass->destructor, true);
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
 }
 

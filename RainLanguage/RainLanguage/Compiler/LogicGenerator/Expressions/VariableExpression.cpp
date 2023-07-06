@@ -38,7 +38,7 @@ bool VariableGlobalExpression::TryEvaluation(bool& value, LogicGenerateParameter
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			value = *(bool*)parameter.generator->GetConstantPointer(abstractVariable->address);
@@ -52,7 +52,7 @@ bool VariableGlobalExpression::TryEvaluation(uint8& value, LogicGenerateParamete
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			value = *parameter.generator->GetConstantPointer(abstractVariable->address);
@@ -66,7 +66,7 @@ bool VariableGlobalExpression::TryEvaluation(character& value, LogicGeneratePara
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			value = *(character*)parameter.generator->GetConstantPointer(abstractVariable->address);
@@ -80,7 +80,7 @@ bool VariableGlobalExpression::TryEvaluation(integer& value, LogicGenerateParame
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			value = *(integer*)parameter.generator->GetConstantPointer(abstractVariable->address);
@@ -94,7 +94,7 @@ bool VariableGlobalExpression::TryEvaluation(real& value, LogicGenerateParameter
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			value = *(real*)parameter.generator->GetConstantPointer(abstractVariable->address);
@@ -108,7 +108,7 @@ bool VariableGlobalExpression::TryEvaluation(String& value, LogicGenerateParamet
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			value = parameter.generator->GetDataConstantString(abstractVariable->address, parameter.manager->stringAgency);
@@ -122,7 +122,7 @@ bool VariableGlobalExpression::TryEvaluationIndices(List<integer, true>& value, 
 {
 	if (declaration.library == LIBRARY_SELF)
 	{
-		AbstractVariable* abstractVariable = &parameter.manager->selfLibaray->variables[declaration.index];
+		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
 		if (abstractVariable->readonly)
 		{
 			if (returns[0] == TYPE_Byte)
@@ -161,7 +161,7 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint
 {
 	if (declaration.category == DeclarationCategory::StructVariable)
 	{
-		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].address;
+		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->address;
 		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
 		{
 			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
@@ -193,7 +193,7 @@ void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& param
 	if (declaration.category == DeclarationCategory::StructVariable)
 	{
 		if (parameter.results[0] == logicVariable) return;
-		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].address;
+		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->address;
 		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
 		{
 			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
@@ -224,7 +224,7 @@ void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parame
 {
 	if (declaration.category == DeclarationCategory::StructVariable)
 	{
-		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition].variables[declaration.index].address;
+		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->address;
 		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
 		{
 			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;

@@ -24,6 +24,7 @@ struct AbstractDeclaration
 	AbstractSpace* space;
 	inline AbstractDeclaration(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space) :name(name), declaration(declaration), attributes(attributes), space(space) {}
 	String GetFullName(StringAgency* stringAgency);
+	virtual ~AbstractDeclaration();
 };
 struct AbstractVariable :AbstractDeclaration
 {
@@ -49,28 +50,31 @@ struct AbstractEnum :AbstractDeclaration
 };
 struct AbstractStruct :AbstractDeclaration
 {
-	List<AbstractVariable> variables;
+	List<AbstractVariable*, true> variables;
 	List<uint32, true> functions;//参数包含this
 	uint32 size;
 	uint8 alignment;
-	inline AbstractStruct(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const List<AbstractVariable>& variables, const List<uint32, true> functions, uint32 size, uint8 alignment) :AbstractDeclaration(name, declaration, attributes, space), variables(variables), functions(functions), size(size), alignment(alignment) {}
+	inline AbstractStruct(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const List<AbstractVariable*, true>& variables, const List<uint32, true> functions, uint32 size, uint8 alignment) :AbstractDeclaration(name, declaration, attributes, space), variables(variables), functions(functions), size(size), alignment(alignment) {}
+	~AbstractStruct();
 };
 struct AbstractClass :AbstractDeclaration
 {
 	Type parent;
 	List<Type, true> inherits;
 	List<uint32, true> constructors;//参数包含this
-	List<AbstractVariable> variables;
+	List<AbstractVariable*, true> variables;
 	List<uint32, true> functions;//参数包含this
 	uint32 size;
 	uint8 alignment;
-	inline AbstractClass(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const Type& parent, const List<Type, true>& inherits, const List<uint32, true>& constructors, const List<AbstractVariable>& variables, const List<uint32, true> functions, uint32 size, uint8 alignment) :AbstractDeclaration(name, declaration, attributes, space), parent(parent), inherits(inherits), constructors(constructors), variables(variables), functions(functions), size(size), alignment(alignment) {}
+	inline AbstractClass(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const Type& parent, const List<Type, true>& inherits, const List<uint32, true>& constructors, const List<AbstractVariable*, true>& variables, const List<uint32, true> functions, uint32 size, uint8 alignment) :AbstractDeclaration(name, declaration, attributes, space), parent(parent), inherits(inherits), constructors(constructors), variables(variables), functions(functions), size(size), alignment(alignment) {}
+	~AbstractClass();
 };
 struct AbstractInterface :AbstractDeclaration
 {
 	List<Type, true> inherits;
-	List<AbstractFunction> functions;
-	inline AbstractInterface(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const List<Type, true>& inherits, const List<AbstractFunction> functions) :AbstractDeclaration(name, declaration, attributes, space), inherits(inherits), functions(functions) {}
+	List<AbstractFunction*, true> functions;
+	inline AbstractInterface(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const List<Type, true>& inherits, const List<AbstractFunction*, true> functions) :AbstractDeclaration(name, declaration, attributes, space), inherits(inherits), functions(functions) {}
+	~AbstractInterface();
 };
 struct AbstractDelegate :AbstractCallable
 {
@@ -115,34 +119,27 @@ struct AbstractSpace
 		return false;
 	}
 	String GetFullName(StringAgency* stringAgency);
-	inline ~AbstractSpace()
-	{
-		Dictionary<String, AbstractSpace*>::Iterator childIterator = children.GetIterator();
-		while (childIterator.Next()) delete childIterator.CurrentValue();
-		children.Clear();
-		Dictionary<String, List<CompilingDeclaration, true>*>::Iterator declarationIterator = declarations.GetIterator();
-		while (declarationIterator.Next()) delete declarationIterator.CurrentValue();
-		declarations.Clear();
-	}
+	virtual ~AbstractSpace();
 };
 class KernelLibraryInfo;
 struct CompilingLibrary;
 struct AbstractLibrary :AbstractSpace
 {
 	uint32 library;
-	List<AbstractVariable> variables;
-	List<AbstractFunction> functions;
-	List<AbstractEnum> enums;
-	List<AbstractStruct> structs;
-	List<AbstractClass> classes;
-	List<AbstractInterface> interfaces;
-	List<AbstractDelegate> delegates;
-	List<AbstractCoroutine> coroutines;
-	List<AbstractNative> natives;
+	List<AbstractVariable*, true> variables;
+	List<AbstractFunction*, true> functions;
+	List<AbstractEnum*, true> enums;
+	List<AbstractStruct*, true> structs;
+	List<AbstractClass*, true> classes;
+	List<AbstractInterface*, true> interfaces;
+	List<AbstractDelegate*, true> delegates;
+	List<AbstractCoroutine*, true> coroutines;
+	List<AbstractNative*, true> natives;
 
 	AbstractLibrary(const Library* library, uint32 index, const AbstractParameter& parameter);
 	AbstractLibrary(CompilingLibrary* info, const AbstractParameter& parameter);
 	AbstractLibrary(const KernelLibraryInfo* info, const AbstractParameter& parameter);
+	~AbstractLibrary();
 	static AbstractLibrary* GetKernelAbstractLibrary(const AbstractParameter& parameter);
 };
 

@@ -50,14 +50,14 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 	codeStartReference = codeReferenceAddresses.Count();
 	for (uint32 i = 0, count = parameter.manager->compilingLibrary.functions.Count(); i < count; i++)
 	{
-		CompilingFunction* compiling = &parameter.manager->compilingLibrary.functions[i];
+		CompilingFunction* compiling = parameter.manager->compilingLibrary.functions[i];
 		compiling->entry = GetPointer();
 		FunctionGenerator(compiling, parameter).Generator(parameter);
 		codeStartReference = codeReferenceAddresses.Count();
 	}
 	for (uint32 i = 0; i < parameter.manager->compilingLibrary.classes.Count(); i++)
 	{
-		CompilingClass* compiling = &parameter.manager->compilingLibrary.classes[i];
+		CompilingClass* compiling = parameter.manager->compilingLibrary.classes[i];
 		if (compiling->destructor.Count())
 		{
 			compiling->destructorEntry = GetPointer();
