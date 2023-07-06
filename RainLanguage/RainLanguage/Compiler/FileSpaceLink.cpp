@@ -152,20 +152,33 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 				else MESSAGE2(manager->messages, file->inherits[y].name, MessageType::ERROR_DUPLICATE_INHERITANCE);
 			}
 		}
-		for (uint32 y = 0; y < file->constructors.Count(); y++)
+		if (file->constructors.Count())
 		{
-			FileClass::Constructor* member = &file->constructors[y];
-			CompilingFunction* compilingMember = manager->compilingLibrary.functions[compilingClass->constructors[y]->function];
-			AbstractFunction* abstractMember = manager->selfLibaray->functions[compilingClass->constructors[y]->function];
+			for (uint32 y = 0; y < file->constructors.Count(); y++)
+			{
+				FileClass::Constructor* member = &file->constructors[y];
+				CompilingFunction* compilingMember = manager->compilingLibrary.functions[compilingClass->constructors[y]->function];
+				AbstractFunction* abstractMember = manager->selfLibaray->functions[compilingClass->constructors[y]->function];
+				new (compilingMember->parameters.Add())CompilingFunctionDeclaration::Parameter(file->name, fileType);
+				abstractMember->parameters.AddElement(fileType, 0);
+				for (uint32 z = 0; z < member->parameters.Count(); z++)
+				{
+					FileParameter* parameter = &member->parameters[z];
+					FIND_DECLARATION(parameter->type);
+					new (compilingMember->parameters.Add())CompilingFunctionDeclaration::Parameter(parameter->name, findType);
+					abstractMember->parameters.AddElement(findType, 0);
+				}
+				compilingMember->returns.Add(fileType);
+				abstractMember->returns.AddElement(fileType, 0);
+				compilingMember->relies = relies;
+			}
+		}
+		else
+		{
+			CompilingFunction* compilingMember = manager->compilingLibrary.functions[compilingClass->constructors[0]->function];
+			AbstractFunction* abstractMember = manager->selfLibaray->functions[compilingClass->constructors[0]->function];
 			new (compilingMember->parameters.Add())CompilingFunctionDeclaration::Parameter(file->name, fileType);
 			abstractMember->parameters.AddElement(fileType, 0);
-			for (uint32 z = 0; z < member->parameters.Count(); z++)
-			{
-				FileParameter* parameter = &member->parameters[z];
-				FIND_DECLARATION(parameter->type);
-				new (compilingMember->parameters.Add())CompilingFunctionDeclaration::Parameter(parameter->name, findType);
-				abstractMember->parameters.AddElement(findType, 0);
-			}
 			compilingMember->returns.Add(fileType);
 			abstractMember->returns.AddElement(fileType, 0);
 			compilingMember->relies = relies;

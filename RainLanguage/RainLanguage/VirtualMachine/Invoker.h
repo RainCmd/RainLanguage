@@ -75,7 +75,6 @@ public:
 	void GetParameters(uint8* pointer);
 	void GetReturns(const Handle results);
 	void PushStackFrame(uint32 pointer);
-	inline List<StackFrame> GetStackFrame() { return frames; }
 	void Start(bool immediately, bool ignoreWait);
 	void Abort(const character* chars, uint32 length);
 	inline void Abort(String message) { Abort(message.GetPointer(), message.GetLength()); }

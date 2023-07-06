@@ -577,7 +577,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Spa
 		}
 		return true;
 	}
-	else if (expression->returns.Count() == 1)return TryInferRightValueType(expression, types[0]);
+	else if (expression->returns.Count() == 1) return TryInferRightValueType(expression, types[0]);
 	ASSERT_DEBUG(!CheckBlurry(expression->returns), "表达式类型错误");
 	return true;
 }

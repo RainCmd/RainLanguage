@@ -85,7 +85,7 @@ enum class RainType
 class RainKernel;
 struct RainStackFrame;
 class CallerWrapper;
-typedef void (*EntityAction)(RainKernel*, uint64);
-typedef void(*OnCaller)(RainKernel*, const CallerWrapper* caller);
-typedef OnCaller(*NativeCallerLoader)(RainKernel*, const RainString fullName, const RainType* parameters, uint32 parametersCount);
-typedef void(*OnExceptionExit)(RainKernel*, RainStackFrame* stackFrames, uint32 stackFrameCount, const character* message, uint32 messageLength);
+typedef void (*EntityAction)(RainKernel* kernel, uint64);
+typedef void(*OnCaller)(RainKernel* kernel, const CallerWrapper* caller);
+typedef OnCaller(*NativeCallerLoader)(RainKernel* kernel, const RainString fullName, const RainType* parameters, uint32 parametersCount);
+typedef void(*OnExceptionExit)(RainKernel* kernel, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message);

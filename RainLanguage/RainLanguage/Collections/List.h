@@ -242,8 +242,7 @@ public:
 	inline List<T, IsBitwise> ToList() const
 	{
 		List<T, IsBitwise> result(count);
-		for (uint32 i = 0; i < count; i++)
-			result.Add((*source)[start + i]);
+		result.Add(source->GetPointer() + start, count);
 		return result;
 	}
 };

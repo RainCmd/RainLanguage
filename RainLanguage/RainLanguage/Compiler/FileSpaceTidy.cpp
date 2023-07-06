@@ -118,12 +118,21 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Class, library->classes, 0);
 		library->classes.Add(new CompilingClass(file->name, *declaration, file->attributes, compiling, file->inherits.Count(), List<CompilingClass::Constructor*, true>(file->constructors.Count()), List<CompilingClass::Variable*, true>(file->variables.Count()), List<uint32, true>(file->functions.Count()), file->destructor));
 		List<CompilingClass::Constructor*, true>& constructors = library->classes.Peek()->constructors;
-		for (uint32 y = 0; y < file->constructors.Count(); y++)
+		if (file->constructors.Count())
 		{
-			FileClass::Constructor* member = &file->constructors[y];
-			CompilingDeclaration memberDeclaration(LIBRARY_SELF, member->visibility, DeclarationCategory::Constructor, constructors.Count(), declaration->index);
-			constructors.Add(new CompilingClass::Constructor(library->functions.Count(), member->expression));
-			library->functions.Add(new CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, 1, member->body));
+			for (uint32 y = 0; y < file->constructors.Count(); y++)
+			{
+				FileClass::Constructor* member = &file->constructors[y];
+				CompilingDeclaration memberDeclaration(LIBRARY_SELF, member->visibility, DeclarationCategory::Constructor, constructors.Count(), declaration->index);
+				constructors.Add(new CompilingClass::Constructor(library->functions.Count(), member->expression));
+				library->functions.Add(new CompilingFunction(member->name, memberDeclaration, member->attributes, compiling, member->parameters.Count() + 1, 1, member->body));
+			}
+		}
+		else
+		{
+			CompilingDeclaration memberDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::Constructor, constructors.Count(), declaration->index);
+			constructors.Add(new CompilingClass::Constructor(library->functions.Count(), Anchor()));
+			library->functions.Add(new CompilingFunction(file->name, memberDeclaration, List<Anchor>(0), compiling, 1, 1, List<Line>(0)));
 		}
 		List<CompilingClass::Variable*, true>& memberVariables = library->classes.Peek()->variables;
 		for (uint32 y = 0; y < file->variables.Count(); y++)

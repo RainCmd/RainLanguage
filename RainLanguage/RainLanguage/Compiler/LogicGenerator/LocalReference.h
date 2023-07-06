@@ -28,10 +28,13 @@ private:
 	List<LocalAddressReference, true> references;
 	uint32 address;
 	bool assigned;
+	CodeLocalAddressReference* target;
+	void AddReferences(Generator* generator, List<LocalAddressReference, true>& references);
 public:
-	inline CodeLocalAddressReference() :references(0), address(0), assigned(false) {}
-	inline bool HasReference() { return references.Count() > 0; }
+	inline CodeLocalAddressReference() : references(0), address(0), assigned(false), target(NULL) {}
+	inline bool IsAssigned() { return assigned; }
 	void SetAddress(Generator* generator, uint32 address);
+	void SetTarget(Generator* generator, CodeLocalAddressReference* target);
 	void AddReference(Generator* generator, uint32 instructAddress);
 };
 
@@ -43,7 +46,7 @@ private:
 	bool assigned;
 public:
 	explicit inline CodeLocalVariableReference(uint32 address) :references(0), address(address), assigned(true) {}
-	inline CodeLocalVariableReference() :references(0), address(0), assigned(false) {}
+	inline CodeLocalVariableReference() : references(0), address(0), assigned(false) {}
 	void SetAddress(Generator* generator, uint32 address);
 	void AddReference(Generator* generator, uint32 offset);
 };

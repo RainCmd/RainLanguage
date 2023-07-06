@@ -2136,13 +2136,13 @@ void Coroutine::Recycle()
 		invoker->state = InvokerState::Completed;
 		if (!exitMessage.IsEmpty() && kernel->coroutineAgency->onExceptionExit)
 		{
-			List<RainStackFrame> frames(invoker->GetStackFrame().Count());
-			for (uint32 i = 0; i < invoker->GetStackFrame().Count(); i++)
+			List<RainStackFrame> frames(invoker->frames.Count());
+			for (uint32 i = 0; i < invoker->frames.Count(); i++)
 			{
-				const StackFrame& frame = invoker->GetStackFrame()[i];
+				const StackFrame& frame = invoker->frames[i];
 				new (frames.Add())RainStackFrame(RainString(frame.library.GetPointer(), frame.library.GetLength()), frame.address);
 			}
-			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), exitMessage.GetPointer(), exitMessage.GetLength());
+			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
 		}
 		invoker->coroutine = NULL;
 		invoker = NULL;

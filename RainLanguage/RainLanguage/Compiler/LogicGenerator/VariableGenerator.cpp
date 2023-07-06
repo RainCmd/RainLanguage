@@ -148,7 +148,7 @@ void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 of
 	}
 }
 
-void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address)
+void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address, CodeLocalAddressReference* finallyAddress)
 {
 	stringTemporaryCount = entityTemporaryCount = handleTemporaryCount = 0;
 	if (statementTemporaries.Count())
@@ -156,6 +156,7 @@ void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* g
 		generator->BeginInsert(address);
 		for (uint32 i = 0; i < statementTemporaries.Count(); i++)
 			ClearTemporary(manager, generator, address, 0, statementTemporaries[i]->reference, statementTemporaries[i]->type);
+		finallyAddress->SetAddress(generator, generator->GetPointer());
 		generator->EndInsert();
 		for (uint32 i = 0; i < statementTemporaries.Count(); i++)
 			::ResetTemporary(manager, generator, 0, statementTemporaries[i]->reference, statementTemporaries[i]->type);
