@@ -514,7 +514,8 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 						return false;
 					}
 					CompilingDeclaration lambdaDeclaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Lambda, manager->selfLibaray->functions.Count(), manager->lambdaGenerators.Count());
-					CompilingFunction* lambdaFunction = new (manager->compilingLibrary.functions.Add())CompilingFunction(lambdaExpression->anchor, lambdaDeclaration, List<Anchor>(0), context.compilingSpace, abstractDelegate->parameters.Count(), abstractDelegate->returns.Count(), List<Line>(0));
+					CompilingFunction* lambdaFunction = new CompilingFunction(lambdaExpression->anchor, lambdaDeclaration, List<Anchor>(0), context.compilingSpace, abstractDelegate->parameters.Count(), abstractDelegate->returns.Count(), List<Line>(0));
+					manager->compilingLibrary.functions.Add(lambdaFunction);
 
 					if (closure.closure)
 					{

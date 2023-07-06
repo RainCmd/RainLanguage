@@ -152,7 +152,7 @@ variables(info->variables.Count()), functions(info->functions.Count()), enums(in
 			abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
 		}
 
-		new (classes.Add())AbstractClass(TO_NATIVE_STRING(kernelClass->name), declaration, EMPTY_STRINGS, NULL, Type(kernelClass->parent, 0), KernelToCompiling(kernelClass->inherits), kernelClass->constructors, abstractVariables, kernelClass->functions, kernelClass->size, kernelClass->alignment);
+		classes.Add(new AbstractClass(TO_NATIVE_STRING(kernelClass->name), declaration, EMPTY_STRINGS, NULL, Type(kernelClass->parent, 0), KernelToCompiling(kernelClass->inherits), kernelClass->constructors, abstractVariables, kernelClass->functions, kernelClass->size, kernelClass->alignment));
 	}
 	for (uint32 x = 0; x < info->interfaces.Count(); x++)
 	{
