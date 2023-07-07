@@ -21,6 +21,8 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, Expression* pa
 		parameter.generator->WriteCode(Instruct::BASE_SetCoroutineParameter);
 		parameter.generator->WriteCode(parameter.results[0]);
 		parameter.generator->WriteCode(parametersExpression->returns.Count());
+		CodeLocalAddressReference exceptionAddress = CodeLocalAddressReference();
+		parameter.generator->WriteCode(exceptionAddress);
 		for (uint32 i = 0; i < parametersExpression->returns.Count(); i++)
 		{
 			Type& parameterType = parametersExpression->returns[i];
@@ -98,6 +100,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, Expression* pa
 			}
 			else EXCEPTION("类型错误");
 		}
+		exceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 }
@@ -259,6 +262,8 @@ void CoroutineEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_GetCoroutineResult);
 	parameter.generator->WriteCode(sourceParameter.results[0]);
 	parameter.generator->WriteCode(indices.Count());
+	CodeLocalAddressReference exceptionAddress = CodeLocalAddressReference();
+	parameter.generator->WriteCode(exceptionAddress);
 	for (uint32 i = 0; i < indices.Count(); i++)
 	{
 		Type& type = returns[i];
@@ -350,6 +355,7 @@ void CoroutineEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 		}
 		else EXCEPTION("类型错误");
 	}
+	exceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
