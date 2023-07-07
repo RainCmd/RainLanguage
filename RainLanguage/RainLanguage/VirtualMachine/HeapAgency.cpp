@@ -252,7 +252,7 @@ void HeapAgency::FastGC()
 	}
 }
 
-HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), free(NULL), head(NULL), tail(NULL), active(NULL), top(1), size(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), generation(parameter->heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
+HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), free(NULL), head(NULL), tail(NULL), active(NULL), top(0), size(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), generation(parameter->heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
 {
 	destructorCallable.parameters.AddElement(TYPE_Handle, 0);
 	heap = Malloc<uint8>(size);

@@ -458,7 +458,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		BlurryCoroutineExpression* coroutineExpression = (BlurryCoroutineExpression*)expression;
 		if (!type.dimension && type.code == TypeCode::Coroutine)
 		{
-			if (IsEquals(manager->GetLibrary(type.library)->coroutines[type.index]->returns.GetTypes(), coroutineExpression->returns))
+			if (IsEquals(manager->GetLibrary(type.library)->coroutines[type.index]->returns.GetTypes(), coroutineExpression->invoker->returns))
 			{
 				expression = new CoroutineCreateExpression(coroutineExpression->anchor, coroutineExpression->invoker, type, coroutineExpression->start);
 				coroutineExpression->invoker = NULL;
@@ -3241,7 +3241,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								expressionStack.Add(coroutineExpression);
 								attribute = coroutineExpression->attribute;
 								index = anchor.GetEnd();
-								break;
+								goto label_next_lexical;
 							}
 							expressionStack.Add(invokerExpression);
 							MESSAGE2(manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
@@ -3263,7 +3263,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								expressionStack.Add(coroutineExpression);
 								attribute = coroutineExpression->attribute;
 								index = anchor.GetEnd();
-								break;
+								goto label_next_lexical;
 							}
 							expressionStack.Add(invokerExpression);
 							MESSAGE2(manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);

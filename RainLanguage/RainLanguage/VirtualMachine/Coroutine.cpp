@@ -285,7 +285,7 @@ label_next_instruct:
 			kernel->heapAgency->StrongRelease(result);
 			result = kernel->heapAgency->Alloc(declaration);
 			kernel->heapAgency->StrongReference(result);
-			uint64 coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
+			uint64& coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
 			switch (INSTRUCT_VALUE(FunctionType, 5 + SIZE(Declaration)))
 			{
 				case FunctionType::Global:
@@ -474,7 +474,7 @@ label_next_instruct:
 			uint32 count = INSTRUCT_VALUE(uint32, 5) + start;
 			uint8* coroutine;
 			Invoker* invoker;
-			if (!kernel->heapAgency->TryGetPoint(handle, coroutine))EXCEPTION_EXIT(BASE_SetCoroutineParameter, EXCEPTION_NULL_REFERENCE);
+			if (!kernel->heapAgency->TryGetPoint(handle, coroutine)) EXCEPTION_EXIT(BASE_SetCoroutineParameter, EXCEPTION_NULL_REFERENCE);//todo 指令会被修改，不能直接跳转到结束为止
 			invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
 			ASSERT_DEBUG(invoker, "协程的引用计数逻辑可能有bug");
 			instruct += 9;
@@ -536,10 +536,10 @@ label_next_instruct:
 			uint64 coroutine;
 			Invoker* invoker;
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
-			if (kernel->heapAgency->TryGetValue(handle, coroutine))EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_NULL_REFERENCE);
+			if (!kernel->heapAgency->TryGetValue(handle, coroutine)) EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_NULL_REFERENCE);//todo 指令会被修改，不能直接跳转到结束为止
 			invoker = kernel->coroutineAgency->GetInvoker(coroutine);
 			ASSERT_DEBUG(invoker, "调用为空，编译器可能算法有问题");
-			if (invoker->state != InvokerState::Completed)EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_COROUTINE_NOT_COMPLETED);
+			if (invoker->state != InvokerState::Completed) EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_COROUTINE_NOT_COMPLETED);//todo 指令会被修改，不能直接跳转到结束为止
 			instruct += 9;
 			for (uint32 i = 0; i < count; i++, instruct += 9)
 				switch (INSTRUCT_VALUE(BaseType, 0))

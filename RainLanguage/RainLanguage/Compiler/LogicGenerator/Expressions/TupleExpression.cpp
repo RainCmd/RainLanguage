@@ -26,6 +26,7 @@ void TupleExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 		for (uint32 i = 0; i < subExpression->returns.Count(); i++)
 			subParameter.results[i] = parameter.results[index + i];
 		subExpression->GeneratorAssignment(subParameter);
+		index += subExpression->returns.Count();
 	}
 }
 

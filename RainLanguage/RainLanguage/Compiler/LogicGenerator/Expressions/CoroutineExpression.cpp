@@ -128,7 +128,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
 			parameter.generator->WriteCode(result);
 		}
-		if(invokerExpression->question) endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		if (invokerExpression->question) endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
 	else if (ContainAny(invoker->type, ExpressionType::InvokerFunctionExpression))
 	{
@@ -140,7 +140,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		else if (invokerExpression->declaration.category == DeclarationCategory::Native) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_CREATION_NATIVE_COROUTINE)
 		else EXCEPTION("这个申明类型不应该会走到这里");
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
-		parameter.generator->WriteCode(Function());
+		parameter.generator->WriteCode(invokerExpression->declaration.DefineFunction());
 		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
@@ -165,7 +165,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 			parameter.generator->WriteCode((uint8)FunctionType::Reality);
 			parameter.generator->WriteCode(targetParameter.results[0]);
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
-			parameter.generator->WriteCode(MemberFunction());
+			parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->target->returns[0]);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
@@ -205,7 +205,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 			parameter.generator->WriteCode((uint8)FunctionType::Virtual);
 			parameter.generator->WriteCode(targetParameter.results[0]);
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
-			parameter.generator->WriteCode(MemberFunction());
+			parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->target->returns[0]);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::InterfaceFunction)
@@ -213,7 +213,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 			parameter.generator->WriteCode((uint8)FunctionType::Abstract);
 			parameter.generator->WriteCode(targetParameter.results[0]);
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
-			parameter.generator->WriteCode(MemberFunction());
+			parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->target->returns[0]);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
@@ -240,7 +240,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		parameter.generator->WriteCode((uint8)FunctionType::Reality);
 		parameter.generator->WriteCode(thisVariable);
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
-		parameter.generator->WriteCode(MemberFunction());
+		parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
 		parameter.generator->WriteCodeGlobalReference(thisVariable.type);
 		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
 		if (start)

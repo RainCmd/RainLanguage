@@ -66,7 +66,19 @@ struct CompilingDeclaration
 	inline Type DefineType() const
 	{
 		Declaration declaration;
-		if (TryGetDeclaration(declaration))return Type(declaration, 0);
+		if (TryGetDeclaration(declaration)) return Type(declaration, 0);
+		EXCEPTION("无效的类型");
+	}
+	inline Function DefineFunction() const
+	{
+		if (category == DeclarationCategory::Function || category == DeclarationCategory::Native) return Function(library, index);
+		EXCEPTION("无效的类型");
+	}
+	inline MemberFunction DefineMemberFunction() const
+	{
+		if (category == DeclarationCategory::StructFunction) return MemberFunction(library, TypeCode::Struct, definition, index);
+		else if (category == DeclarationCategory::ClassFunction) return MemberFunction(library, TypeCode::Handle, definition, index);
+		else if (category == DeclarationCategory::InterfaceFunction) return MemberFunction(library, TypeCode::Interface, definition, index);
 		EXCEPTION("无效的类型");
 	}
 	inline bool operator==(const CompilingDeclaration& other)const

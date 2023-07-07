@@ -181,7 +181,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			{
 				Context context = Context(enumerate->space, enumerate->relies);
 				LocalContext localContext = LocalContext();
-				ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, NULL, NULL, false);
+				ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, &localContext, NULL, false);
 				Expression* expression = NULL;
 				if (parser.TryParse(element->expression, expression))
 				{

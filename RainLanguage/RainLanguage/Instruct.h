@@ -253,7 +253,7 @@ enum class Instruct                         //可能会抛异常的指令
     NoOperation,
 };
 
-enum class BaseType
+enum class BaseType : uint8
 {
     Struct,
     Bool,

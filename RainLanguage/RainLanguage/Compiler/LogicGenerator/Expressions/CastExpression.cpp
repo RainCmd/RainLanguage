@@ -166,6 +166,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 		{
 			if (source->returns[i] == TYPE_Byte) parameter.generator->WriteCode(Instruct::CASTING_B2I);
 			else if (source->returns[i] == TYPE_Char) parameter.generator->WriteCode(Instruct::CASTING_C2I);
+			else if (!source->returns[i].dimension && source->returns[i].code == TypeCode::Enum) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
 			else EXCEPTION("未知的转换类型");
 			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
 			parameter.generator->WriteCode(sourceParameter.results[i]);
