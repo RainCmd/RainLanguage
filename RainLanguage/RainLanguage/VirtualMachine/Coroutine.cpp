@@ -39,7 +39,7 @@ inline uint8* GetReturnPoint(Kernel* kernel, uint8* stack, uint8* functionStack,
 {
 	uint32 pointer = *(uint32*)(functionStack + offset);
 	if (IS_LOCAL(pointer)) return stack + LOCAL_ADDRESS(pointer);
-	else return kernel->libraryAgency->code.GetPointer() + pointer;
+	else return kernel->libraryAgency->data.GetPointer() + pointer;
 }
 
 Coroutine::Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(INVALID), wait(0), stack(NULL)
@@ -61,11 +61,12 @@ void Coroutine::Initialize(Invoker* invoker, bool ignoreWait)
 	this->ignoreWait = ignoreWait;
 	this->pointer = invoker->entry;
 	bottom = top = invoker->info->returns.size;
-	if (EnsureStackSize(top + SIZE(Frame) + invoker->info->returns.Count() * 4 + invoker->info->parameters.size))EXCEPTION("Õ»Òç³ö");
+	if (EnsureStackSize(top + SIZE(Frame) + invoker->info->returns.Count() * 4 + invoker->info->parameters.size)) EXCEPTION("Õ»Òç³ö");
 	Mzero(stack, bottom);
 	*(Frame*)(stack + bottom) = Frame();
 	uint32* returnAddress = (uint32*)(stack + bottom + SIZE(Frame));
-	Mcopy<uint32>(invoker->info->returns.GetOffsets().GetPointer(), returnAddress, invoker->info->returns.Count());
+	for (uint32 i = 0; i < invoker->info->returns.Count(); i++)
+		returnAddress[i] = LOCAL(invoker->info->returns.GetOffsets()[i]);
 	invoker->GetParameters(stack + bottom + SIZE(Frame) + invoker->info->returns.Count() * 4);
 }
 void Coroutine::Exit(const String& message, uint32 pointer)

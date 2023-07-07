@@ -130,6 +130,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		{
 			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
 			parameter.generator->WriteCode(result);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		if (invokerExpression->question) endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
@@ -149,6 +150,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		{
 			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
 			parameter.generator->WriteCode(result);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 	}
 	else if (ContainAny(invoker->type, ExpressionType::InvokerMemberExpression))
@@ -178,6 +180,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		{
 			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
 			parameter.generator->WriteCode(result);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 	}
 	else if (ContainAny(invoker->type, ExpressionType::InvokerVirtualMemberExpression))
@@ -226,6 +229,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		{
 			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
 			parameter.generator->WriteCode(result);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		if (invokerExpression->question)endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
@@ -250,6 +254,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		{
 			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
 			parameter.generator->WriteCode(result);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 	}
 }
