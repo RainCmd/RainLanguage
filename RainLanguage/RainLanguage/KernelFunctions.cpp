@@ -2168,7 +2168,7 @@ String coroutine_Start(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//co
 {
 	GET_THIS_VALUE(0, uint64);
 	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Unstart)return kernel->stringAgency->Add(EXCEPTION_COROUTINE_NOT_UNSTART);
+	if (invoker->state != InvokerState::Unstart) return kernel->stringAgency->Add(EXCEPTION_COROUTINE_NOT_UNSTART);
 	invoker->Start(PARAMETER_VALUE(0, bool, SIZE(Handle)), PARAMETER_VALUE(0, bool, SIZE(Handle) + SIZE(bool)));
 	return String();
 }

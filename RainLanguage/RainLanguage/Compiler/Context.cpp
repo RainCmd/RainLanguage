@@ -263,7 +263,9 @@ void FindMember(DeclarationManager* manager, const String& name, AbstractInterfa
 
 bool Context::TryFindMember(DeclarationManager* manager, const String& name, Type type, List<CompilingDeclaration, true>& results)
 {
-	if (type.code == TypeCode::Enum) type = TYPE_Enum;
+	if (type.dimension) type = TYPE_Array;
+	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
+	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
 	AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
 	if (type.code == TypeCode::Struct)
 	{

@@ -214,9 +214,9 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 {
 	AbstractLibrary* abstractLibrary = parameter.manager->GetLibrary(declaration.library);
 	AbstractFunction* abstractFunction;
-	if (declaration.category == DeclarationCategory::InterfaceFunction)abstractFunction = abstractLibrary->interfaces[declaration.definition]->functions[declaration.index];
-	else if (declaration.category == DeclarationCategory::Constructor)abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->constructors[declaration.index]];
-	else if (declaration.category == DeclarationCategory::ClassFunction)abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->functions[declaration.index]];
+	if (declaration.category == DeclarationCategory::InterfaceFunction) abstractFunction = abstractLibrary->interfaces[declaration.definition]->functions[declaration.index];
+	else if (declaration.category == DeclarationCategory::Constructor) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->constructors[declaration.index]];
+	else if (declaration.category == DeclarationCategory::ClassFunction) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->functions[declaration.index]];
 	else EXCEPTION("语义解析可能有bug");
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);

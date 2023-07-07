@@ -45,7 +45,7 @@ public:
 	RuntimeLibrary* Load(const Library* library);
 	inline uint32 GetFunctionCharacteristic(const MemberFunction& function)
 	{
-		if (function.declaration.code == TypeCode::Interface)return GetLibrary(function.declaration.library)->interfaces[function.declaration.index].functions[function.function].characteristic;
+		if (function.declaration.code == TypeCode::Interface) return GetLibrary(function.declaration.library)->interfaces[function.declaration.index].functions[function.function].characteristic;
 		else if (function.declaration.code == TypeCode::Handle) return GetLibrary(function.declaration.library)->classes[function.declaration.index].functions[function.function].characteristic;
 		EXCEPTION("ÀàĞÍ´íÎó");
 	}

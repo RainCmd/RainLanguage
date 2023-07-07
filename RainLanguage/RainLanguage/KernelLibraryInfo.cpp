@@ -114,7 +114,7 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 
 inline void GetStackSize(KernelLibraryInfo& library, Type& type, uint32& size, uint8& alignment)
 {
-	if (type.dimension)type = TYPE_Handle;
+	if (type.dimension) type = TYPE_Handle;
 	switch (type.code)
 	{
 		case TypeCode::Invalid:
@@ -131,8 +131,8 @@ inline void GetStackSize(KernelLibraryInfo& library, Type& type, uint32& size, u
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
 		case TypeCode::Coroutine:
-			size = library.classes[TYPE_Handle.index].size;
-			alignment = library.classes[TYPE_Handle.index].alignment;
+			size = SIZE(Handle);
+			alignment = MEMORY_ALIGNMENT_4;
 			return;
 		default:
 			break;
@@ -438,8 +438,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	REGISTER_CLASS(root, "delegate", KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
 	//class coroutine
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(6);
-		REGISTER_MEMBER_FUNCTIONS("Start", CreateTypeList(TYPE_Bool, TYPE_Bool), CreateTypeList(TYPE_Coroutine), coroutine_Start);
+		List<uint32, true> memberFunctions = List<uint32, true>(7);
+		REGISTER_MEMBER_FUNCTIONS("Start", TupleInfo_EMPTY, CreateTypeList(TYPE_Coroutine, TYPE_Bool, TYPE_Bool), coroutine_Start);
 		REGISTER_MEMBER_FUNCTIONS("Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Coroutine), coroutine_Abort);
 		REGISTER_MEMBER_FUNCTIONS("GetState", CreateTypeList(TYPE_CoroutineState), CreateTypeList(TYPE_Coroutine), coroutine_GetState);
 		REGISTER_MEMBER_FUNCTIONS("GetExitCode", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Coroutine), coroutine_GetExitCode);
