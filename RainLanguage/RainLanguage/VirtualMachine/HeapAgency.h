@@ -23,8 +23,8 @@ class HeapAgency
 	};
 	Kernel* kernel;
 	List<Head, true> heads;
-	uint8* heap;
-	uint32 free, head, tail, active, top, size, generation;
+	List<uint8, true> heap;
+	uint32 free, head, tail, active, generation;
 	bool flag, gc;
 	CallableInfo destructorCallable;
 	Handle Alloc(uint32 size, uint8 alignment);
@@ -32,14 +32,14 @@ class HeapAgency
 	void Free(Handle handle, RuntimeClass* runtimeClass, uint8* address);
 	void Free(Handle handle);
 	void Mark(Handle handle);
-	void Tidy(Handle handle);
+	uint32 Tidy(Handle handle, uint32 top);
 	Handle Recycle(Handle handle);
 	void FullGC();
 	void FastGC();
 	inline uint32 GetElementSize(Head* head)
 	{
 		ASSERT_DEBUG(head->type.dimension, "不是个数组");
-		uint32 length = *(uint32*)(heap + head->pointer);
+		uint32 length = *(uint32*)(heap.GetPointer() + head->pointer);
 		return length ? (head->size - 4) / length : 0;
 	}
 public:
@@ -75,19 +75,19 @@ public:
 	inline void GC(bool full)
 	{
 		gc = true;
-		if (full)FullGC();
+		if (full) FullGC();
 		else FastGC();
 		gc = false;
 	}
 
 	inline uint32 GetArrayLength(Handle handle)
 	{
-		return *(uint32*)(heap + heads[handle].pointer);
+		return *(uint32*)(heap.GetPointer() + heads[handle].pointer);
 	}
 	uint8* GetArrayPoint(Handle handle, integer index);
 	inline uint8* GetPoint(Handle handle)
 	{
-		return heap + heads[handle].pointer;
+		return heap.GetPointer() + heads[handle].pointer;
 	}
 	inline Type GetType(Handle handle)
 	{
@@ -126,14 +126,10 @@ public:
 		else return false;
 	}
 
-	inline uint32 GetHeapTop() { return top; }
+	inline uint32 GetHeapTop() { return heap.Count(); }
 	uint32 CountHandle();
 
-	inline ~HeapAgency()
-	{
-		::Free(heap);
-		heap = NULL;
-	}
+	~HeapAgency();
 };
 
 void StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);

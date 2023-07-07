@@ -39,7 +39,7 @@ public:
 	inline Invoker* GetInvoker(uint64 instanceID)
 	{
 		Invoker* invoker;
-		if (!invokerMap.TryGet(instanceID, invoker))invoker = NULL;
+		if (!invokerMap.TryGet(instanceID, invoker)) invoker = NULL;
 		return invoker;
 	}
 	inline void Reference(Invoker* invoker)
@@ -64,7 +64,7 @@ public:
 			if (!invoker->hold)
 			{
 				invokerMap.Remove(invoker->instanceID);
-				if (invoker->state != InvokerState::Running)invoker->Recycle();
+				if (invoker->state != InvokerState::Running) invoker->Recycle();
 			}
 		}
 		else EXCEPTION("й╣юЩidспнС");

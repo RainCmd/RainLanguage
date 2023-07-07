@@ -1,10 +1,9 @@
 #include "EntityAgency.h"
 #include "Kernel.h"
 
-EntityAgency::EntityAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), top(1), free(NULL), map(parameter->entityCapacity), reference(parameter->onReferenceEntity), release(parameter->onReleaseEntity)
+EntityAgency::EntityAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), slots(parameter->entityCapacity), frees(0), map(parameter->entityCapacity), reference(parameter->onReferenceEntity), release(parameter->onReleaseEntity)
 {
-	size = GetPrime(parameter->entityCapacity);
-	slots = Malloc<Slot>(size);
+	slots.Add();
 }
 
 Entity EntityAgency::Add(uint64 value)
@@ -12,26 +11,20 @@ Entity EntityAgency::Add(uint64 value)
 	if (!value) return NULL;
 	Entity entity;
 	if (map.TryGet(value, entity))return entity;
-	if (free)
+	if (frees.Count())
 	{
-		entity = free;
-		free = slots[free].next;
+		entity = frees.Pop();
 	}
 	else
 	{
-		if (top == size)
-		{
-			size = GetPrime(size);
-			slots = Realloc<Slot>(slots, size);
-		}
-		entity = top++;
+		entity = slots.Count();
+		slots.Add();
 	}
-	Slot* slot = slots + entity;
-	slot->value = value;
-	slot->reference = 0;
-	slot->next = NULL;
+	Slot& slot = slots[entity];
+	slot.value = value;
+	slot.reference = 0;
 	map.Set(value, entity);
-	if (reference)reference(kernel, value);
+	if (reference) reference(kernel, value);
 	return entity;
 }
 
@@ -45,21 +38,23 @@ void EntityAgency::Release(Entity entity)
 {
 	if (IsValid(entity))
 	{
-		Slot* slot = slots + entity;
-		slot->reference--;
-		if (!slot->reference)
+		Slot& slot = slots[entity];
+		slot.reference--;
+		if (!slot.reference)
 		{
-			uint64 value = slot->value;
+			uint64 value = slot.value;
+			slot.value = 0;
 			map.Remove(value);
-			slot->next = free;
-			free = entity;
-			if (release)release(kernel, value);
+			frees.Add(entity);
+			if (release) release(kernel, value);
 		}
 	}
 }
 
 EntityAgency::~EntityAgency()
 {
-	Free(slots);
-	slots = NULL;
+	if (release)
+		for (uint32 i = 1; i < slots.Count(); i++)
+			if (slots[i].value)
+				release(kernel, slots[i].value);
 }

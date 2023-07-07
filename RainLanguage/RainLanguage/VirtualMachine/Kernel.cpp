@@ -53,8 +53,8 @@ Kernel::Kernel(const StartupParameter& parameter) : random(parameter.seed)
 	stringAgency = new StringAgency(parameter.stringCapacity);
 	entityAgency = new EntityAgency(this, &parameter);
 	libraryAgency = new LibraryAgency(this, &parameter);
-	heapAgency = new HeapAgency(this, &parameter);
 	coroutineAgency = new CoroutineAgency(this, &parameter);
+	heapAgency = new HeapAgency(this, &parameter);
 	libraryAgency->Init((Library*)parameter.libraries, parameter.libraryCount);
 }
 
@@ -247,8 +247,8 @@ void Kernel::Update()
 
 Kernel::~Kernel()
 {
-	delete coroutineAgency; coroutineAgency = NULL;
 	delete heapAgency; heapAgency = NULL;
+	delete coroutineAgency; coroutineAgency = NULL;
 	delete libraryAgency; libraryAgency = NULL;
 	delete entityAgency; entityAgency = NULL;
 	delete stringAgency; stringAgency = NULL;

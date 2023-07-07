@@ -14,8 +14,8 @@ public:
 	StringAgency* stringAgency;
 	EntityAgency* entityAgency;
 	LibraryAgency* libraryAgency;
-	HeapAgency* heapAgency;
 	CoroutineAgency* coroutineAgency;
+	HeapAgency* heapAgency;
 	Random random;
 	Kernel(const StartupParameter& parameter);
 	InvokerWrapper CreateInvoker(const RainFunction& function);
@@ -35,17 +35,17 @@ public:
 
 inline RainType GetRainType(const Type& type)
 {
-	if (type == TYPE_Bool)return RainType::Bool;
-	else if (type == TYPE_Byte)return RainType::Byte;
-	else if (type == TYPE_Char)return RainType::Character;
-	else if (type == TYPE_Integer)return RainType::Integer;
-	else if (type == TYPE_Real)return RainType::Real;
-	else if (type == TYPE_Real2)return RainType::Real2;
-	else if (type == TYPE_Real3)return RainType::Real3;
-	else if (type == TYPE_Real4)return RainType::Real4;
-	else if (type.code == TypeCode::Enum)return RainType::Enum;
-	else if (type == TYPE_String)return RainType::String;
-	else if (type == TYPE_Entity)return RainType::Entity;
+	if (type == TYPE_Bool) return RainType::Bool;
+	else if (type == TYPE_Byte) return RainType::Byte;
+	else if (type == TYPE_Char) return RainType::Character;
+	else if (type == TYPE_Integer) return RainType::Integer;
+	else if (type == TYPE_Real) return RainType::Real;
+	else if (type == TYPE_Real2) return RainType::Real2;
+	else if (type == TYPE_Real3) return RainType::Real3;
+	else if (type == TYPE_Real4) return RainType::Real4;
+	else if (type.code == TypeCode::Enum) return RainType::Enum;
+	else if (type == TYPE_String) return RainType::String;
+	else if (type == TYPE_Entity) return RainType::Entity;
 	return RainType::Internal;
 }
 

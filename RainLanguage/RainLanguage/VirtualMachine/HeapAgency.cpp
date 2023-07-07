@@ -8,6 +8,13 @@
 #include "EntityAgency.h"
 #include "Exceptions.h"
 
+bool IsCoroutine(const Type& type)
+{
+	if (type == TYPE_Coroutine) return true;
+	else if (!type.dimension && type.code == TypeCode::Coroutine) return true;
+	else return false;
+}
+
 Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 {
 	ASSERT(!gc, "不能在GC时创建新对象");
@@ -24,24 +31,19 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 		handle = heads.Count();
 		heads.SetCount(handle + 1);
 	}
-	top = MemoryAlignment(top, alignment);
-	if (this->size < top + size)
+	heap.SetCount(MemoryAlignment(heap.Count(), alignment));
+	if (heap.Slack() < size)
 	{
 		GC(false);
-		if (this->size < top + size)
+		if (heap.Slack() < size)
 		{
 			GC(true);
-			if (this->size < top + size)
-			{
-				while (this->size < top + size)this->size += this->size >> 2;
-				if (this->size >= MAX_HEAP_SIZE)EXCEPTION("堆内存超过可用上限！");
-				heap = Realloc<uint8>(heap, this->size);
-			}
+			if (heap.Count() + size >= MAX_HEAP_SIZE) EXCEPTION("堆内存超过可用上限！");
 		}
 	}
-	heads[handle] = HeapAgency::Head(top, size, flag, alignment);
-	Mzero(heap + top, size);
-	top += size;
+	heads[handle] = HeapAgency::Head(heap.Count(), size, flag, alignment);
+	heap.SetCount(heap.Count() + size);
+	Mzero(heap.GetPointer() + heap.Count() - size, size);
 	if (tail)heads[tail].next = handle;
 	else this->head = active = handle;
 	tail = handle;
@@ -50,9 +52,9 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 
 bool HeapAgency::IsUnrecoverableCoroutine(Handle handle)
 {
-	if (!heads[handle].type.dimension && heads[handle].type.code == TypeCode::Coroutine)
+	if (IsCoroutine(heads[handle].type))
 	{
-		Invoker* invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)(heap + heads[handle].pointer));
+		Invoker* invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + heads[handle].pointer));
 		return invoker->state == InvokerState::Running;
 	}
 	return false;
@@ -77,7 +79,7 @@ void HeapAgency::Free(Handle handle, RuntimeClass* runtimeClass, uint8* address)
 void HeapAgency::Free(Handle handle)
 {
 	HeapAgency::Head* head = &heads[handle];
-	uint8* pointer = heap + head->pointer;
+	uint8* pointer = heap.GetPointer() + head->pointer;
 	if (head->type.dimension > 1)
 	{
 		uint32 length = *(uint32*)pointer;
@@ -117,8 +119,8 @@ void HeapAgency::Free(Handle handle)
 	}
 	else
 	{
-		if (head->type == TYPE_String)kernel->stringAgency->Release(*(string*)pointer);
-		else if (head->type == TYPE_Entity)kernel->entityAgency->Release(*(Entity*)pointer);
+		if (head->type == TYPE_String) kernel->stringAgency->Release(*(string*)pointer);
+		else if (head->type == TYPE_Entity) kernel->entityAgency->Release(*(Entity*)pointer);
 		else switch (head->type.code)
 		{
 			case TypeCode::Struct:
@@ -146,7 +148,7 @@ void HeapAgency::Mark(Handle handle)
 		head->flag = flag;
 		if (head->type.dimension)
 		{
-			uint8* pointer = heap + head->pointer;
+			uint8* pointer = heap.GetPointer() + head->pointer;
 			uint32 length = *(uint32*)pointer;
 			pointer += 4;
 			uint32 elementSize = GetElementSize(head);
@@ -169,31 +171,31 @@ void HeapAgency::Mark(Handle handle)
 		else if (head->type.code == TypeCode::Struct)
 		{
 			const List<uint32, true>* handleFields = &kernel->libraryAgency->GetStruct(head->type)->handleFields;
-			uint8* pointer = heap + head->pointer;
+			uint8* pointer = heap.GetPointer() + head->pointer;
 			for (uint32 i = 0; i < handleFields->Count(); i++)
 				Mark(*(Handle*)(pointer + (*handleFields)[i]));
 		}
 		else if (head->type.code == TypeCode::Handle)
 		{
 			const List<uint32, true>* handleFields = &kernel->libraryAgency->GetClass(head->type)->handleFields;
-			uint8* pointer = heap + head->pointer;
+			uint8* pointer = heap.GetPointer() + head->pointer;
 			for (uint32 i = 0; i < handleFields->Count(); i++)
 				Mark(*(Handle*)(pointer + (*handleFields)[i]));
 		}
-		else if (head->type.code == TypeCode::Delegate)Mark(((Delegate*)(heap + head->pointer))->target);
+		else if (head->type.code == TypeCode::Delegate)Mark(((Delegate*)(heap.GetPointer() + head->pointer))->target);
 	}
 }
 
-void HeapAgency::Tidy(Handle handle)
+uint32 HeapAgency::Tidy(Handle handle, uint32 top)
 {
 	HeapAgency::Head* head = &heads[handle];
 	if (head->pointer != top)
 	{
 		top = MemoryAlignment(top, head->alignment);
-		Mmove<uint8>(heap + head->pointer, heap + top, head->size);
+		Mmove<uint8>(heap.GetPointer() + head->pointer, heap.GetPointer() + top, head->size);
 		head->pointer = top;
 	}
-	top += head->size;
+	return head->size;
 }
 
 Handle HeapAgency::Recycle(Handle handle)
@@ -217,25 +219,26 @@ void HeapAgency::FullGC()
 		index = heads[index].next;
 	}
 	index = head;
-	top = 0;
+	uint32 top = 0;
 	head = tail = active = NULL;
 	while (index)
 		if (heads[index].flag == flag)
 		{
 			tail = index;
 			if (!head)head = index;
-			Tidy(index);
+			top += Tidy(index, top);
 			index = heads[index].next;
 		}
 		else index = Recycle(index);
 	active = tail;
+	heap.SetCount(top);
 }
 
 void HeapAgency::FastGC()
 {
 	if (active)
 	{
-		top = heads[active].pointer + heads[active].size;
+		uint32 top = heads[active].pointer + heads[active].size;
 		tail = active;
 		Handle index = heads[active].next;
 		while (index)
@@ -244,18 +247,18 @@ void HeapAgency::FastGC()
 			{
 				if (heads[index].generation++ > generation)active = tail;
 				tail = index;
-				Tidy(index);
+				top += Tidy(index, top);
 				index = heads[index].next;
 			}
 			else index = Recycle(index);
 		}
+		heap.SetCount(top);
 	}
 }
 
-HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), free(NULL), head(NULL), tail(NULL), active(NULL), top(0), size(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), generation(parameter->heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
+HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), heap(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), free(NULL), head(NULL), tail(NULL), active(NULL), generation(parameter->heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
 {
 	destructorCallable.parameters.AddElement(TYPE_Handle, 0);
-	heap = Malloc<uint8>(size);
 	heads.Add();
 }
 
@@ -263,7 +266,7 @@ Handle HeapAgency::Alloc(const Type& elementType, integer length)
 {
 	Handle result = Alloc(MemoryAlignment(kernel->libraryAgency->GetTypeStackSize(elementType), kernel->libraryAgency->GetTypeAlignment(elementType)) * (uint32)length + 4, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)));
 	heads[result].type = Type((Declaration)elementType, elementType.dimension + 1);
-	*(uint32*)(heap + heads[result].pointer) = (uint32)length;
+	*(uint32*)(heap.GetPointer() + heads[result].pointer) = (uint32)length;
 	return result;
 }
 
@@ -278,7 +281,7 @@ uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 {
 	Type type = heads[handle].type;
 	ASSERT_DEBUG(type.dimension, "不是个数组，可能编译器算法有问题");
-	uint8* pointer = heap + heads[handle].pointer;
+	uint8* pointer = heap.GetPointer() + heads[handle].pointer;
 	uint32 length = *(uint32*)pointer;
 	if (index < 0)index += length;
 	if (index < 0 || index >= length) EXCEPTION("数组越界");
@@ -289,7 +292,7 @@ uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 String HeapAgency::TryGetArrayLength(Handle handle, integer& length)
 {
 	if (!IsValid(handle))return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	length = *(uint32*)(heap + heads[handle].pointer);
+	length = *(uint32*)(heap.GetPointer() + heads[handle].pointer);
 	return String();
 }
 
@@ -299,7 +302,7 @@ String HeapAgency::TryGetArrayPoint(Handle handle, integer index, uint8*& pointe
 	{
 		Type type = heads[handle].type;
 		ASSERT_DEBUG(type.dimension, "不是个数组，可能编译器算法有问题");
-		pointer = heap + heads[handle].pointer;
+		pointer = heap.GetPointer() + heads[handle].pointer;
 		uint32 length = *(uint32*)pointer;
 		if (index < 0)index += length;
 		if (index < 0 || index >= length)return kernel->stringAgency->Add(EXCEPTION_OUT_OF_RANGE);
@@ -314,6 +317,13 @@ uint32 HeapAgency::CountHandle()
 	uint32 count = 0;
 	for (Handle index = head; index; count++, index = heads[index].next);
 	return count;
+}
+
+HeapAgency::~HeapAgency()
+{
+	for (uint32 i = 1; i < heads.Count(); i++)
+		if (IsCoroutine(heads[i].type))
+			kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + heads[i].pointer)));
 }
 
 inline void Box(Kernel* kernel, const Type& type, uint8* address, Handle& result)

@@ -552,7 +552,7 @@ label_next_instruct:
 				instruct += INSTRUCT_VALUE(uint32, 9);
 				EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_COROUTINE_NOT_COMPLETED);
 			}
-			instruct += 3;
+			instruct += 13;
 			for (uint32 i = 0; i < count; i++, instruct += 9)
 				switch (INSTRUCT_VALUE(BaseType, 0))
 				{
