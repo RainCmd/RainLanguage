@@ -432,10 +432,10 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				{
 					ASSERT(LocalToGlobal(self->index, maps, importVariable->type) == runtimeClass->variables[z].type, "字段类型不匹配");
 					uint32 offset = runtimeClass->variables[z].address;
-					for (uint32 i = 0; i < importVariable->addressReferences.Count(); i++)
-						*(uint32*)(agency->code.GetPointer() + self->codeOffset + importVariable->addressReferences[i].reference) = offset + importVariable->addressReferences[i].offset;
 					for (uint32 i = 0; i < importVariable->references.Count(); i++)
 						*(MemberVariable*)(agency->code.GetPointer() + self->codeOffset + importVariable->references[i]) = MemberVariable(declaration, z);
+					for (uint32 i = 0; i < importVariable->addressReferences.Count(); i++)
+						*(uint32*)(agency->code.GetPointer() + self->codeOffset + importVariable->addressReferences[i].reference) = offset + importVariable->addressReferences[i].offset;
 					goto next_class_field;
 				}
 			EXCEPTION("成员字段查找失败");

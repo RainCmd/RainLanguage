@@ -459,7 +459,7 @@ public:
 	};
 	struct Interface
 	{
-		struct Function :CallableInfo
+		struct Function : CallableInfo
 		{
 			String name;
 		};
@@ -467,7 +467,7 @@ public:
 		String name;
 		List<Function, true> functions;
 	};
-	struct Delegate :CallableInfo
+	struct Delegate : CallableInfo
 	{
 		String name;
 	};
@@ -476,7 +476,7 @@ public:
 		String name;
 		TupleInfo returns;
 	};
-	struct Function :CallableInfo
+	struct Function : CallableInfo
 	{
 		String name;
 		KernelInvoker invoker;

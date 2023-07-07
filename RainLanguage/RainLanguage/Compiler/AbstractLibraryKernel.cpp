@@ -179,6 +179,7 @@ variables(info->variables.Count()), functions(info->functions.Count()), enums(in
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Coroutine, x, NULL);
 		coroutines.Add(new AbstractCoroutine(TO_NATIVE_STRING(kernelCoroutine->name), declaration, EMPTY_STRINGS, NULL, kernelCoroutine->returns));
 	}
+
 	CreateKernelAbstractSpace(this, info->root, this, parameter);
 }
 

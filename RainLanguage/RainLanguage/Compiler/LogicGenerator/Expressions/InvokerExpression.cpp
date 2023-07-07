@@ -198,8 +198,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_Declaration);
 		parameter.generator->WriteCode(parameterPoint + abstractFunction->parameters.size);
-		parameter.generator->WriteCodeGlobalReference(declaration);
-		parameter.generator->WriteCode((Declaration)declaration.DefineType());
+		parameter.generator->WriteCodeGlobalReference((Declaration)target->returns[0]);
 	}
 	parameter.generator->WriteCode(Instruct::FUNCTION_MemberCall);
 	parameter.generator->WriteCodeGlobalAddressReference(declaration);

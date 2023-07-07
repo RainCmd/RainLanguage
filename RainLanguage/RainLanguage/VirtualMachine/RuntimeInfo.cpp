@@ -93,14 +93,18 @@ Handle RuntimeVariable::GetReflection(Kernel* kernel, uint32 libraryIndex, uint3
 
 String RuntimeEnum::ToString(integer value, StringAgency* agency)
 {
+	for (uint32 i = 0; i < values.Count(); i++)
+		if (value == values[i].value)
+			return agency->Get(values[i].name);
+
 	String combine[3];
-	combine[2] = agency->Add(TEXT(" | "));
+	combine[1] = agency->Add(TEXT(" | "));
 	integer contain = 0;
 	String result;
 	for (uint32 i = 0; i < values.Count(); i++)
 		if ((values[i].value & value) == values[i].value)
 		{
-			if (result.IsEmpty())result = agency->Get(values[i].name);
+			if (result.IsEmpty()) result = agency->Get(values[i].name);
 			else
 			{
 				combine[0] = result;
@@ -110,13 +114,14 @@ String RuntimeEnum::ToString(integer value, StringAgency* agency)
 			contain |= values[i].value;
 		}
 	value &= ~contain;
-	if (value && !result.IsEmpty())
+	if (result.IsEmpty()) return ::ToString(agency, value);
+	else if(value)
 	{
 		combine[0] = result;
 		combine[2] = ::ToString(agency, value);
-		return agency->Combine(combine, 3);
+		result = agency->Combine(combine, 3);
 	}
-	else return ::ToString(agency, value);
+	return result;
 }
 
 Handle RuntimeFunction::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex)
