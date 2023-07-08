@@ -66,10 +66,11 @@ void CoroutineAgency::Update()
 			if (prev)prev->next = index->next;
 			else head = index->next;
 			Coroutine* coroutine = index;
+			Invoker* invoker = coroutine->invoker;
 			index = index->next;
-			if (!coroutine->exitMessage.IsEmpty())coroutine->Abort();
+			if (!coroutine->exitMessage.IsEmpty()) coroutine->Abort();
 			Recycle(coroutine);
-			if (!coroutine->invoker->hold)coroutine->invoker->Recycle();
+			if (!invoker->hold) invoker->Recycle();
 		}
 }
 

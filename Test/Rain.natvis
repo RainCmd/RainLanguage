@@ -31,16 +31,16 @@
 		</Expand>
 	</Type>
 	<Type Name="String">
-		<DisplayString Condition="pool!=0">{pool->characters.values+(pool->slots+index)->position,su}</DisplayString>
-		<DisplayString Condition="pool==0">""</DisplayString>
-		<StringView Condition="pool!=0">pool->characters.values + (pool->slots + index)->position,su</StringView>
+		<DisplayString Condition="share!=0">{share->pool->characters.values+(share->pool->slots+index)->position,su}</DisplayString>
+		<DisplayString Condition="share==0">""</DisplayString>
+		<StringView Condition="share!=0">share->pool->characters.values + (share->pool->slots + index)->position,su</StringView>
 		<Expand>
 			<Item Name="index">index</Item>
-			<Item Name="pool">pool</Item>
-			<Item Name="slot">pool->slots + index</Item>
-			<ArrayItems Condition="pool!=0">
-				<Size>(pool->slots+index)->length</Size>
-				<ValuePointer>pool->characters.values+(pool->slots+index)->position</ValuePointer>
+			<Item Name="share">share</Item>
+			<Item Name="slot">share->pool->slots + index</Item>
+			<ArrayItems Condition="share!=0">
+				<Size>(share->pool->slots+index)->length</Size>
+				<ValuePointer>share->pool->characters.values+(share->pool->slots+index)->position</ValuePointer>
 			</ArrayItems>
 		</Expand>
 	</Type>
@@ -51,6 +51,7 @@
 			<Item Name="free">free</Item>
 			<Item Name="head">head</Item>
 			<Item Name="tail">tail</Item>
+			<Item Name="share">share</Item>
 			<Item Name="characterHold">characterHold</Item>
 			<Item Name="slotHold">slotHold</Item>
 			<Item Name="characterGCHold">characterGCHold</Item>

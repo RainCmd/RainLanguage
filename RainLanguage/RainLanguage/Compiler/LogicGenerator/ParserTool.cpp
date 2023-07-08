@@ -150,9 +150,9 @@ bool TryConvert(DeclarationManager* manager, const Span<Type, true>& source, con
 
 bool CheckEquals(DeclarationManager* manager, const Type& left, const Type& right)
 {
-	if (left == right)return true;
-	else if (left == TYPE_Byte || left == TYPE_Char || left == TYPE_Integer || left == TYPE_Real)return right == TYPE_Byte || right == TYPE_Char || right == TYPE_Integer || right == TYPE_Real;
-	else if (left == TYPE_Real2 || left == TYPE_Real3 || left == TYPE_Real4)return right == TYPE_Real2 || right == TYPE_Real3 || right == TYPE_Real4;
+	if (left == right) return true;
+	else if (left == TYPE_Byte || left == TYPE_Char || left == TYPE_Integer || left == TYPE_Real) return right == TYPE_Byte || right == TYPE_Char || right == TYPE_Integer || right == TYPE_Real;
+	else if (left == TYPE_Real2 || left == TYPE_Real3 || left == TYPE_Real4) return right == TYPE_Real2 || right == TYPE_Real3 || right == TYPE_Real4;
 	else if (IsHandleType(left) && IsHandleType(right))
 	{
 		uint32 measure; bool convert;

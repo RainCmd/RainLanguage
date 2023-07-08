@@ -8,6 +8,8 @@
 #include <io.h>
 #include <Builder.h>
 #include <VirtualMachine.h>
+#include <MemoryAllocator.h>
+#include <map>
 
 class TestCodeLoader :public CodeLoader
 {
@@ -88,11 +90,6 @@ public:
 	}
 };
 
-const RainLibrary* LibLoader(const RainString& name)
-{
-	return nullptr;
-}
-
 void Print(RainKernel*, const CallerWrapper* caller)
 {
 	const RainString value = caller->GetStringParameter(0);
@@ -101,17 +98,54 @@ void Print(RainKernel*, const CallerWrapper* caller)
 	std::wcout << str << L"\n";
 }
 
-OnCaller NativeLoader(RainKernel*, const character* fullName, uint32 length, const RainType* parameters, uint32 parametersCount)
+OnCaller NativeLoader(RainKernel*, const RainString fullName, const RainType* parameters, uint32 parametersCount)
 {
+	std::wstring str; str.assign(fullName.value, fullName.length);
+	std::wcout << "Native Load:" << str << "\n";
 	return Print;
 }
 
-int main()
+std::map<long long, uint32> mmap;
+uint32 midx = 0;
+void* ALLOC(uint32 size)
 {
-	std::wcout.imbue(std::locale(""));
+	void* result = malloc((size_t)size);
+	midx++;
+	mmap[(long long)result] = midx;
+	return result;
+}
+void* REALLOC(void* pointer, uint32 size)
+{
+	mmap[(long long)pointer] = -1;
+	void* result = realloc(pointer, (size_t)size);
+	midx++;
+	mmap[(long long)result] = midx;
+	return result;
+}
+void FREE(void* pointer)
+{
+	mmap[(long long)pointer] = -1;
+	free(pointer);
+}
+
+void OnExce(RainKernel*, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message)
+{
+	std::wstring str;
+	str.assign(message.value, message.length);
+	std::wcout << L"异常信息:" << str << "\n";
+	std::wcout << L"堆栈:\n";
+	for (uint32 i = 0; i < stackFrameCount; i++)
+	{
+		str.assign(stackFrames[i].libraryName.value, stackFrames[i].libraryName.length);
+		std::wcout << str << " [" << stackFrames[i].address << "]\n";
+	}
+}
+
+void TestFunc()
+{
 
 	TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\RainScripts\\");
-	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, LibLoader, ErrorLevel::LoggerLevel4);
+	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, nullptr, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);
 	for (uint32 i = 0; i <= 8; i++)
 	{
@@ -132,12 +166,28 @@ int main()
 	std::wcout << L"输出宽字节测试\n";
 	if (!product->GetLevelMessageCount(ErrorLevel::Error))
 	{
-		StartupParameter parameter(product->GetLibrary(), 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, nullptr);
+		StartupParameter parameter(product->GetLibrary(), 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction rf = kernel->FindFunction(L"Main");
 		InvokerWrapper iw = kernel->CreateInvoker(rf);
 		iw.Start(true, false);
+		kernel->Update();
 		delete kernel;
 	}
 	delete product;
+
+}
+
+int main()
+{
+	SetMemoryAllocator(ALLOC, FREE, REALLOC);
+	std::wcout.imbue(std::locale(""));
+
+	TestFunc();
+
+	ClearStaticCache();
+
+	for (auto it = mmap.begin(); it != mmap.end(); it++)
+		if (it->second < 0)
+			std::cout << it->second << "\n";
 }

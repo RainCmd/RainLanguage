@@ -1,7 +1,7 @@
 #include "Lexical.h"
 #include "Character.h"
 #define LEXICAL(length,type) lexical = Lexical(segment.source, segment.content.Sub(index, length), segment.line, index, type)
-#define CHECK_NEXT(distance,symbol) (index < segment.content.GetLength() + distance && segment.content[index + distance] == symbol)
+#define CHECK_NEXT(distance,symbol) (index + distance < segment.content.GetLength() && segment.content[index + distance] == symbol)
 #define NEXT(distance) (index + distance < segment.content.GetLength() ? segment.content[index + distance] : '\0')
 #define MESSAGE(type) MESSAGE2(messages, lexical.anchor, type);
 #define MATCH(symbol)\
@@ -127,60 +127,60 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				LEXICAL(1, LexicalType::Semicolon);
 				return true;
 			case '=':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::Equals);
-				else if (CHECK_NEXT(1, '>'))LEXICAL(2, LexicalType::Lambda);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::Equals);
+				else if (CHECK_NEXT(1, '>')) LEXICAL(2, LexicalType::Lambda);
 				else LEXICAL(1, LexicalType::Assignment);
 				return true;
 			case '&':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::BitAndAssignment);
-				else if (CHECK_NEXT(1, '&'))LEXICAL(2, LexicalType::LogicAnd);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::BitAndAssignment);
+				else if (CHECK_NEXT(1, '&')) LEXICAL(2, LexicalType::LogicAnd);
 				else LEXICAL(1, LexicalType::BitAnd);
 				return true;
 			case '|':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::BitOrAssignment);
-				else if (CHECK_NEXT(1, '|'))LEXICAL(2, LexicalType::LogicOr);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::BitOrAssignment);
+				else if (CHECK_NEXT(1, '|')) LEXICAL(2, LexicalType::LogicOr);
 				else LEXICAL(1, LexicalType::BitOr);
 				return true;
 			case '^':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::BitXorAssignment);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::BitXorAssignment);
 				else LEXICAL(1, LexicalType::BitXor);
 				return true;
 			case '<':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::LessEquals);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::LessEquals);
 				else if (CHECK_NEXT(1, '<'))
 				{
-					if (CHECK_NEXT(2, '='))LEXICAL(3, LexicalType::ShiftLeftAssignment);
+					if (CHECK_NEXT(2, '=')) LEXICAL(3, LexicalType::ShiftLeftAssignment);
 					else LEXICAL(2, LexicalType::ShiftLeft);
 				}
 				else LEXICAL(1, LexicalType::Less);
 				return true;
 			case '>':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::GreaterEquals);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::GreaterEquals);
 				else if (CHECK_NEXT(1, '>'))
 				{
-					if (CHECK_NEXT(2, '='))LEXICAL(3, LexicalType::ShiftRightAssignment);
+					if (CHECK_NEXT(2, '=')) LEXICAL(3, LexicalType::ShiftRightAssignment);
 					else LEXICAL(2, LexicalType::ShiftRight);
 				}
 				else LEXICAL(1, LexicalType::Greater);
 				return true;
 			case '+':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::PlusAssignment);
-				else if (CHECK_NEXT(1, '+'))LEXICAL(2, LexicalType::Increment);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::PlusAssignment);
+				else if (CHECK_NEXT(1, '+')) LEXICAL(2, LexicalType::Increment);
 				else LEXICAL(1, LexicalType::Plus);
 				return true;
 			case '-':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::MinusAssignment);
-				else if (CHECK_NEXT(1, '-'))LEXICAL(2, LexicalType::Decrement);
-				else if (CHECK_NEXT(1, '>'))LEXICAL(2, LexicalType::RealInvoker);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::MinusAssignment);
+				else if (CHECK_NEXT(1, '-')) LEXICAL(2, LexicalType::Decrement);
+				else if (CHECK_NEXT(1, '>')) LEXICAL(2, LexicalType::RealInvoker);
 				else LEXICAL(1, LexicalType::Minus);
 				return true;
 			case '*':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::MulAssignment);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::MulAssignment);
 				else LEXICAL(1, LexicalType::Mul);
 				return true;
 			case '/':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::DivAssignment);
-				if (CHECK_NEXT(1, '/'))
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::DivAssignment);
+				else if (CHECK_NEXT(1, '/'))
 				{
 					LEXICAL(segment.content.GetLength() - index, LexicalType::Annotation);
 					return false;
@@ -188,11 +188,11 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				else LEXICAL(1, LexicalType::Div);
 				return true;
 			case '%':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::ModAssignment);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::ModAssignment);
 				else LEXICAL(1, LexicalType::Mod);
 				return true;
 			case '!':
-				if (CHECK_NEXT(1, '='))LEXICAL(2, LexicalType::NotEquals);
+				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::NotEquals);
 				else LEXICAL(1, LexicalType::Not);
 				return true;
 			case '~':
@@ -208,11 +208,11 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				else LEXICAL(1, LexicalType::Dot);
 				return true;
 			case '?':
-				if (CHECK_NEXT(1, '.'))LEXICAL(2, LexicalType::QuestionDot);
-				else if (CHECK_NEXT(1, '-') && CHECK_NEXT(2, '>'))LEXICAL(3, LexicalType::QuestionRealInvoke);
-				else if (CHECK_NEXT(1, '('))LEXICAL(2, LexicalType::QuestionInvoke);
-				else if (CHECK_NEXT(1, '['))LEXICAL(2, LexicalType::QuestionIndex);
-				else if (CHECK_NEXT(1, '?'))LEXICAL(2, LexicalType::QuestionNull);
+				if (CHECK_NEXT(1, '.')) LEXICAL(2, LexicalType::QuestionDot);
+				else if (CHECK_NEXT(1, '-') && CHECK_NEXT(2, '>')) LEXICAL(3, LexicalType::QuestionRealInvoke);
+				else if (CHECK_NEXT(1, '(')) LEXICAL(2, LexicalType::QuestionInvoke);
+				else if (CHECK_NEXT(1, '[')) LEXICAL(2, LexicalType::QuestionIndex);
+				else if (CHECK_NEXT(1, '?')) LEXICAL(2, LexicalType::QuestionNull);
 				else LEXICAL(1, LexicalType::Question);
 				return true;
 			case ':':

@@ -319,7 +319,7 @@ const struct ReflectionSpace
 
 inline bool IsHandleType(const Type& type)
 {
-	if (type.dimension)return true;
+	if (type.dimension) return true;
 	switch (type.code)
 	{
 		case TypeCode::Handle:

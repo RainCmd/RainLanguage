@@ -943,13 +943,13 @@ label_next_instruct:
 #pragma region ¸³Öµ
 		case Instruct::ASSIGNMENT_Box:
 		{
-			StrongBox(kernel, INSTRUCT_VARIABLE(Type, 9), &INSTRUCT_VARIABLE(uint8, 5), INSTRUCT_VARIABLE(Handle, 1));
+			StrongBox(kernel, INSTRUCT_VALUE(Type, 9), &INSTRUCT_VARIABLE(uint8, 5), INSTRUCT_VARIABLE(Handle, 1));
 			instruct += SIZE(Type) + 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Unbox:
 		{
-			String error = StrongUnbox(kernel, INSTRUCT_VARIABLE(Type, 9), INSTRUCT_VARIABLE(Handle, 5), &INSTRUCT_VARIABLE(uint8, 1));
+			String error = StrongUnbox(kernel, INSTRUCT_VALUE(Type, 9), INSTRUCT_VARIABLE(Handle, 5), &INSTRUCT_VARIABLE(uint8, 1));
 			if (error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Unbox, error);
 			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Unbox);
 		}
@@ -2050,7 +2050,7 @@ label_next_instruct:
 		{
 			bool& result = INSTRUCT_VARIABLE(bool, 1);
 			Handle& target = INSTRUCT_VARIABLE(Handle, 5);
-			if (kernel->heapAgency->IsValid(target)) result = kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target));
+			if (kernel->heapAgency->IsValid(target)) result = flag = kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target));
 			else EXCEPTION_EXIT(CASTING_IS, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(8 + SIZE(Type), CASTING_IS);
 		}

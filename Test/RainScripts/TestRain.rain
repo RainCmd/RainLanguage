@@ -1,15 +1,17 @@
 space native Print(string)
+Print(bool b)
+	Print(b.ToString())
 
-class SS
-    public integer x
-    public integer y
-    public SS(integer x, integer y)
-        this.x = x
-        this.y = y
-    public string Func()
-        return (x+y).ToString()
+class A
+class B A
+class C A
+
 
 public Main()
-    SS ss = SS(123, 456)
-    ss.x++
-    Print("hellow world " + ss.Func())
+	A a = B()
+	B b = a as B
+	C c = a as C
+	C d = c ?? C()
+	Print(b==null)
+	Print(c==null)
+	Print(d==null)

@@ -5,9 +5,10 @@ void QuestionNullExpression::Generator(LogicGenerateParameter& parameter)
 {
 	CodeLocalAddressReference rightAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
-	left->Generator(parameter);
+	LogicGenerateParameter leftParameter = LogicGenerateParameter(parameter, 1);
+	left->Generator(leftParameter);
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(leftParameter.results[0]);
 	parameter.generator->WriteCode(&rightAddress);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);

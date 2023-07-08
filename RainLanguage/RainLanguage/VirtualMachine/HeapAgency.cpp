@@ -19,6 +19,7 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 {
 	ASSERT(!gc, "不能在GC时创建新对象");
 	Handle handle;
+	uint8 gc = 0;
 	if (free)
 	{
 		handle = free;
@@ -26,25 +27,33 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 	}
 	else
 	{
-		if (!heads.Slack())GC(false);
-		if (!heads.Slack())GC(true);
+		if (!heads.Slack())
+		{
+			GC(false);
+			gc++;
+		}
+		if (!heads.Slack())
+		{
+			GC(true);
+			gc++;
+		}
 		handle = heads.Count();
 		heads.SetCount(handle + 1);
 	}
 	heap.SetCount(MemoryAlignment(heap.Count(), alignment));
 	if (heap.Slack() < size)
 	{
-		GC(false);
+		if (!gc) GC(false);
 		if (heap.Slack() < size)
 		{
-			GC(true);
+			if (gc < 2) GC(true);
 			if (heap.Count() + size >= MAX_HEAP_SIZE) EXCEPTION("堆内存超过可用上限！");
 		}
 	}
 	heads[handle] = HeapAgency::Head(heap.Count(), size, flag, alignment);
 	heap.SetCount(heap.Count() + size);
 	Mzero(heap.GetPointer() + heap.Count() - size, size);
-	if (tail)heads[tail].next = handle;
+	if (tail) heads[tail].next = handle;
 	else this->head = active = handle;
 	tail = handle;
 	return handle;

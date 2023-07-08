@@ -203,7 +203,7 @@ Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser,
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_string_string) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Equals, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_handle_handle)
 				{
-					if (CheckEquals(parser->manager, parameters[0]->returns.Peek(), parameters[1]->returns.Peek())) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_Equals, parameter);
+					if (CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_Equals, parameter);
 					MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
 					goto lable_equals_error;
 				}
@@ -242,7 +242,7 @@ Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* pars
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_string_string) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_NotEquals, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_handle_handle)
 				{
-					if (CheckEquals(parser->manager, parameters[0]->returns.Peek(), parameters[1]->returns.Peek())) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_NotEquals, parameter);
+					if (CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_NotEquals, parameter);
 					MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
 					goto lable_not_equals_error;
 				}
@@ -654,7 +654,7 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Li
 					integer leftValue, rightValue;
 					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
 					{
-						if (!rightValue)MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+						if (!rightValue) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 						if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter))
 						{
 							delete parameter;
@@ -668,7 +668,7 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Li
 					real leftValue, rightValue;
 					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
 					{
-						if (rightValue == 0)MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+						if (rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 						if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter))
 						{
 							delete parameter;
@@ -680,19 +680,19 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Li
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real2_real)
 				{
 					real rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0)MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_vr, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real3_real)
 				{
 					real rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0)MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_vr, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real4_real)
 				{
 					real rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0)MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_vr, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_rv, parameter);
@@ -729,7 +729,7 @@ Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, Li
 					integer leftValue, rightValue;
 					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
 					{
-						if (!rightValue)MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+						if (!rightValue) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 						if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter))
 						{
 							delete parameter;

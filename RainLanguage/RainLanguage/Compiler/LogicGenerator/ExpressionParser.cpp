@@ -1800,7 +1800,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 		return true;
 	}
 	Anchor trim;
-	if (TryRemoveBracket(anchor, trim, manager->messages))return TryParse(trim, result);
+	if (TryRemoveBracket(anchor, trim, manager->messages)) return TryParse(trim, result);
 	Anchor splitLeft, splitRight;
 	if (Split(anchor, 0, SplitFlag::Semicolon, splitLeft, splitRight, manager->messages) == LexicalType::Semicolon) return TryParse(splitLeft, splitRight, result);
 	LexicalType splitType = Split(anchor, 0, (SplitFlag)((uint32)SplitFlag::Lambda | (uint32)SplitFlag::Assignment | (uint32)SplitFlag::Question), splitLeft, splitRight, manager->messages);
@@ -1872,7 +1872,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							MethodVirtualExpression* methodExpression = (MethodVirtualExpression*)expressionStack.Pop();
 							AbstractCallable* callable;
-							if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))//接口函数没有逻辑，所以这里的declarations不会包含接口函数
+							if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
 							{
 								if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
 								{
@@ -3205,7 +3205,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								{
 									uint32 dimension = ExtractDimension(anchor, index);
 									Type targetType = Type(declaration, dimension);
-									if (IsHandleType(targetType))
+									if (!IsHandleType(targetType))
 									{
 										MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
 										expressionStack.Add(expression);

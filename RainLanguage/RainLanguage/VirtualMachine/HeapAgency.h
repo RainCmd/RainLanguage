@@ -56,8 +56,9 @@ public:
 	{
 		if (IsValid(handle))
 		{
-			ASSERT_DEBUG(heads[handle].strong, "当前引用计数为0!");
-			heads[handle].strong--;
+			Head& head = heads[handle];
+			ASSERT_DEBUG(head.strong, "当前引用计数为0!");
+			head.strong--;
 		}
 	}
 	inline void WeakReference(Handle handle)
@@ -68,8 +69,9 @@ public:
 	{
 		if (IsValid(handle))
 		{
-			ASSERT_DEBUG(heads[handle].weak, "当前引用计数为0!");
-			heads[handle].weak--;
+			Head& head = heads[handle];
+			ASSERT_DEBUG(head.weak, "当前引用计数为0!");
+			head.weak--;
 		}
 	}
 	inline void GC(bool full)

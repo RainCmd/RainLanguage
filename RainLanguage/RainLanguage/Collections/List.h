@@ -180,11 +180,7 @@ public:
 	{
 		ASSERT_DEBUG(IsBitwise, "该操作会导致构造和析构调用次数不成对，不是纯数据类型可能会破坏内存");
 		this->count = count;
-		if (count > size)
-		{
-			size = count;
-			values = Realloc<T>(values, size);
-		}
+		if (count > size) TryGrow(count - size);
 	}
 	inline uint32 Count() const { return count; }
 	inline uint32 Slack() const { return size - count; }
@@ -198,7 +194,7 @@ public:
 	}
 	inline const T& operator[](uint32 index) const
 	{
-		if (index > count)index += count;
+		if (index > count) index += count;
 		if (index < count) return values[index];
 		else EXCEPTION("数组越界");
 	}
