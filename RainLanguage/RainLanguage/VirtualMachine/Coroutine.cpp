@@ -1335,9 +1335,9 @@ label_next_instruct:
 				const Declaration& declaration = INSTRUCT_VALUE(Declaration, 13);
 				const RuntimeStruct* runtimeStruct = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
 				uint8* targetAddress = &INSTRUCT_VARIABLE(uint8, 1);
-				runtimeStruct->WeakRelease(kernel, targetAddress);
+				runtimeStruct->StrongRelease(kernel, targetAddress);
 				Mcopy(address, targetAddress, runtimeStruct->size);
-				runtimeStruct->WeakReference(kernel, address);
+				runtimeStruct->StrongReference(kernel, address);
 			}
 
 			EXCEPTION_JUMP(12 + SIZE(Declaration), ASSIGNMENT_Handle2Variable_Struct);
@@ -1422,10 +1422,7 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Array2Variable_Bitwise:
 		{
 			ARRAY_VARIABLE(5);
-			if (error.IsEmpty())
-			{
-				Mcopy(address, &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 17));
-			}
+			if (error.IsEmpty()) Mcopy(address, &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 17));
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Array2Variable_Bitwise);
 		}
@@ -1438,9 +1435,9 @@ label_next_instruct:
 				const Declaration& declaration = INSTRUCT_VALUE(Declaration, 17);
 				const RuntimeStruct* info = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
 				uint8* targetAddress = &INSTRUCT_VARIABLE(uint8, 1);
-				info->WeakRelease(kernel, targetAddress);
+				info->StrongRelease(kernel, targetAddress);
 				Mcopy(address, targetAddress, info->size);
-				info->WeakReference(kernel, address);
+				info->StrongReference(kernel, address);
 			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Struct, error);
 			EXCEPTION_JUMP(16 + SIZE(Declaration), ASSIGNMENT_Array2Variable_Struct);
@@ -1466,9 +1463,9 @@ label_next_instruct:
 			if (error.IsEmpty())
 			{
 				Handle& target = INSTRUCT_VARIABLE(Handle, 1);
-				kernel->heapAgency->WeakRelease(target);
+				kernel->heapAgency->StrongRelease(target);
 				target = *(Handle*)address;
-				kernel->heapAgency->WeakReference(*(Handle*)address);
+				kernel->heapAgency->StrongReference(*(Handle*)address);
 			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Handle, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_Handle);

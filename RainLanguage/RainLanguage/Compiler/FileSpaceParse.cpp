@@ -485,7 +485,7 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 		if (TryParseAttributes(current, attributes, parameter->messages)) continue;
 		Anchor name, expression; FileType type;
 		visibility = ParseVisibility(current, index, parameter->messages);
-		if (TryParseVariable(current, 0, name, type, expression, parameter->messages))
+		if (TryParseVariable(current, index, name, type, expression, parameter->messages))
 		{
 			if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 			if (!expression.content.IsEmpty()) MESSAGE2(parameter->messages, expression, MessageType::ERROR_INVALID_INITIALIZER);

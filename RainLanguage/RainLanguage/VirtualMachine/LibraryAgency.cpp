@@ -19,13 +19,13 @@ void LibraryAgency::Init(const Library* libraries, uint32 count)
 
 uint32 LibraryAgency::GetTypeStackSize(const Type& type)
 {
-	if (IsHandleType(type))return GetKernelLibrary()->classes[TYPE_Handle.index].size;
+	if (IsHandleType(type)) return SIZE(Handle);
 	else if (type.code == TypeCode::Struct)
 	{
-		if (type.library == LIBRARY_KERNEL)return GetKernelLibrary()->structs[type.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+		if (type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 		else return GetStruct(type)->size;
 	}
-	else if (type.code == TypeCode::Enum)return GetKernelLibrary()->structs[TYPE_Enum.index].size;
+	else if (type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].size;
 	EXCEPTION("无效的TypeCode");
 }
 
@@ -34,12 +34,12 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 	switch (declaration.code)
 	{
 		case TypeCode::Struct:
-			if (declaration.library == LIBRARY_KERNEL)return GetKernelLibrary()->structs[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+			if (declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 			else return GetLibrary(declaration.library)->structs[declaration.index].size;
 		case TypeCode::Enum: return SIZE(integer);
 		case TypeCode::Handle:
 		{
-			if (declaration.library == LIBRARY_KERNEL)return GetKernelLibrary()->classes[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+			if (declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->classes[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 			const RuntimeClass* runtimeClass = &GetLibrary(declaration.library)->classes[declaration.index];
 			return runtimeClass->offset + runtimeClass->size;
 		}
@@ -52,19 +52,19 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 
 uint8 LibraryAgency::GetTypeAlignment(const Type& type)
 {
-	if (IsHandleType(type))return GetKernelLibrary()->classes[TYPE_Handle.index].alignment;
+	if (IsHandleType(type)) return GetKernelLibrary()->classes[TYPE_Handle.index].alignment;
 	else if (type.code == TypeCode::Struct)
 	{
-		if (type.library == LIBRARY_KERNEL)return GetKernelLibrary()->structs[type.index].alignment;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+		if (type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].alignment;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 		else return GetStruct(type)->alignment;
 	}
-	else if (type.code == TypeCode::Enum)return GetKernelLibrary()->structs[TYPE_Enum.index].alignment;
+	else if (type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].alignment;
 	EXCEPTION("无效的TypeCode");
 }
 
 RuntimeLibrary* LibraryAgency::GetLibrary(uint32 library)
 {
-	if (library == LIBRARY_KERNEL)return kernelLibrary;
+	if (library == LIBRARY_KERNEL) return kernelLibrary;
 	ASSERT_DEBUG(library != INVALID && library < libraries.Count(), "无效的程序集ID");
 	return libraries[library];
 }
@@ -187,7 +187,7 @@ bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 
 RuntimeLibrary* LibraryAgency::Load(string name)
 {
-	if (name == kernelLibrary->spaces[0].name)return kernelLibrary;
+	if (name == kernelLibrary->spaces[0].name) return kernelLibrary;
 	for (uint32 i = 0; i < libraries.Count(); i++)
 		if (libraries[i]->spaces[0].name == name)
 			return libraries[i];
