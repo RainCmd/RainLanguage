@@ -62,7 +62,7 @@
 		List<Expression*, true> parameters(2);\
 		parameters.Add(expressionStack.Pop());\
 		parameters.Insert(0, expressionStack.Pop());\
-		Expression* result = Create##name##Operator(token.anchor, this, parameters);\
+		Expression* result = Create##name##Operator(token.anchor, this, Combine(parameters));\
 		if (result)\
 		{\
 			expressionStack.Add(result);\
@@ -277,7 +277,7 @@ bool ExpressionParser::TryAssignmentConvert(Expression*& source, const Span<Type
 					MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_MISMATCH);
 					return false;
 				}
-			source = new TupleCastExpression(source->anchor, types.ToList(), source, casts);
+			if(casts.Count()) source = new TupleCastExpression(source->anchor, types.ToList(), source, casts);
 			return true;
 		}
 		else return false;
@@ -559,6 +559,36 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		}
 		else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_TYPE_MISMATCH);
 		return false;
+	}
+	else if (type == TYPE_Real)
+	{
+		real value;
+		if (!ContainAny(expression->type, ExpressionType::ConstantRealExpression) && expression->TryEvaluation(value, evaluationParameter))
+		{
+			Anchor anchor = expression->anchor;
+			delete expression;
+			expression = new ConstantRealExpression(anchor, value);
+		}
+	}
+	else if (type == TYPE_Integer)
+	{
+		integer value;
+		if (ContainAny(expression->type, ExpressionType::ConstantIntegerExpression) && expression->TryEvaluation(value, evaluationParameter))
+		{
+			Anchor anchor = expression->anchor;
+			delete expression;
+			expression = new ConstantIntegerExpression(anchor, value);
+		}
+	}
+	else if (type == TYPE_Char)
+	{
+		character value;
+		if (ContainAny(expression->type, ExpressionType::ConstantCharExpression) && expression->TryEvaluation(value, evaluationParameter))
+		{
+			Anchor anchor = expression->anchor;
+			delete expression;
+			expression = new ConstantCharExpression(anchor, value);
+		}
 	}
 	return true;
 }
@@ -1560,7 +1590,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateBitAndOperator(left, this, parameters);
+						rightExpression = CreateBitAndOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1572,7 +1602,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateBitOrOperator(left, this, parameters);
+						rightExpression = CreateBitOrOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1583,7 +1613,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateBitXorOperator(left, this, parameters);
+						rightExpression = CreateBitXorOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1596,7 +1626,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateShiftLeftOperator(left, this, parameters);
+						rightExpression = CreateShiftLeftOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1609,7 +1639,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateShiftRightOperator(left, this, parameters);
+						rightExpression = CreateShiftRightOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1621,7 +1651,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreatePlusOperator(left, this, parameters);
+						rightExpression = CreatePlusOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1634,7 +1664,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateMinusOperator(left, this, parameters);
+						rightExpression = CreateMinusOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1645,7 +1675,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateMulOperator(left, this, parameters);
+						rightExpression = CreateMulOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1656,7 +1686,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateDivOperator(left, this, parameters);
+						rightExpression = CreateDivOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1668,7 +1698,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateModOperator(left, this, parameters);
+						rightExpression = CreateModOperator(left, this, Combine(parameters));
 						if (!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -2060,7 +2090,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						}
 						else if (tuple->returns.Count() == 2)
 						{
-							if (destructor)MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+							if (destructor) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
 							Expression* expression = new ArraySubExpression(arrayExpression->anchor, arrayExpression, tuple);
 							expressionStack.Add(expression);
 							attribute = expression->attribute;
@@ -2072,11 +2102,11 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					else if (ContainAny(attribute, Attribute::Tuple))
 					{
 						Expression* source = expressionStack.Pop();
-						if (CheckBlurry(source->returns))MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
+						if (CheckBlurry(source->returns)) MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
 						else if (tuple->returns.Count())
 						{
 							List<integer, true> indices(tuple->returns.Count());
-							if (source->TryEvaluationIndices(indices, evaluationParameter))
+							if (tuple->TryEvaluationIndices(indices, evaluationParameter))
 							{
 								for (uint32 i = 0; i < indices.Count(); i++)
 								{

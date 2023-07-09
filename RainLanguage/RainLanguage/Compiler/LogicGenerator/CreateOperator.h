@@ -4,22 +4,22 @@
 struct ExpressionParser;
 class Expression;
 
-Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
-Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters);
+Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
+Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
 
 Expression* CreateNotOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);
 Expression* CreateInverseOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter);

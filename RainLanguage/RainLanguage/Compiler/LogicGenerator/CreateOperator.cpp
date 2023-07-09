@@ -9,9 +9,79 @@
 #include "../CompilingDeclaration.h"
 #include "../Message.h"
 
-Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+bool TryEvaluation(Expression* parameter, bool& leftValue, bool& rightValue, LogicGenerateParameter& evaluationParameter)
 {
-	Expression* parameter = Combine(parameters);
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
+	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	{
+		TupleExpression* tuple = (TupleExpression*)parameter;
+		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
+	}
+	return false;
+}
+
+bool TryEvaluation(Expression* parameter, integer& leftValue, integer& rightValue, LogicGenerateParameter& evaluationParameter)
+{
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
+	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	{
+		TupleExpression* tuple = (TupleExpression*)parameter;
+		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
+	}
+	return false;
+}
+
+bool TryEvaluation(Expression* parameter, real& leftValue, real& rightValue, LogicGenerateParameter& evaluationParameter)
+{
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
+	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	{
+		TupleExpression* tuple = (TupleExpression*)parameter;
+		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
+	}
+	return false;
+}
+
+bool TryEvaluation(Expression* parameter, String& leftValue, String& rightValue, LogicGenerateParameter& evaluationParameter)
+{
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
+	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	{
+		TupleExpression* tuple = (TupleExpression*)parameter;
+		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
+	}
+	return false;
+}
+
+void CheckSecondZero(Expression* parameter, ExpressionParser* parser)
+{
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
+	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	{
+		TupleExpression* tuple = (TupleExpression*)parameter;
+		for (uint32 i = 0, returnIndex = 0; i < tuple->expressions.Count() && returnIndex < 2; i++)
+		{
+			if (returnIndex == 1)
+			{
+				if (tuple->returns[1] == TYPE_Integer)
+				{
+					integer value;
+					if (tuple->expressions[1]->TryEvaluation(value, parser->evaluationParameter) && value == 0) MESSAGE2(parser->manager->messages, tuple->expressions[i]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+				}
+				else if (tuple->returns[1] == TYPE_Real)
+				{
+					real value;
+					if (tuple->expressions[1]->TryEvaluation(value, parser->evaluationParameter) && value == 0) MESSAGE2(parser->manager->messages, tuple->expressions[i]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+				}
+				break;
+			}
+			returnIndex += tuple->expressions.Count();
+		}
+	}
+}
+
+Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
+{
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("<"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -25,7 +95,7 @@ Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, L
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue < rightValue);
@@ -35,7 +105,7 @@ Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, L
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue < rightValue);
@@ -52,9 +122,8 @@ Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, L
 	return NULL;
 }
 
-Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT(">"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -68,7 +137,7 @@ Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue > rightValue);
@@ -78,7 +147,7 @@ Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue > rightValue);
@@ -95,9 +164,8 @@ Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser
 	return NULL;
 }
 
-Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("<="));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -111,7 +179,7 @@ Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* par
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_Equals_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue <= rightValue);
@@ -121,7 +189,7 @@ Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* par
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_Equals_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue <= rightValue);
@@ -138,9 +206,8 @@ Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* par
 	return NULL;
 }
 
-Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT(">="));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -154,7 +221,7 @@ Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* 
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_Equals_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue >= rightValue);
@@ -164,7 +231,7 @@ Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* 
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_Equals_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue >= rightValue);
@@ -181,9 +248,8 @@ Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* 
 	return NULL;
 }
 
-Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("=="));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -194,13 +260,49 @@ Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser,
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_bool_bool) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_integer_integer) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Equals, parameter);
+				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_bool_bool)
+				{
+					bool leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_Equals, parameter);
+				}
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_integer_integer)
+				{
+					integer leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Equals, parameter);
+				}
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real_real)
+				{
+					real leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Equals, parameter);
+				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Equals, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Equals, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_string_string) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Equals, parameter);
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_string_string)
+				{
+					String leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Equals, parameter);
+				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_handle_handle)
 				{
 					if (CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_Equals, parameter);
@@ -220,9 +322,8 @@ lable_equals_error:
 	return NULL;
 }
 
-Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("!="));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -233,13 +334,49 @@ Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* pars
 		{
 			if (callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_bool_bool) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_integer_integer) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_NotEquals, parameter);
+				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_bool_bool)
+				{
+					bool leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_NotEquals, parameter);
+				}
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_integer_integer)
+				{
+					integer leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_NotEquals, parameter);
+				}
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real_real)
+				{
+					real leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_NotEquals, parameter);
+				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_NotEquals, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_NotEquals, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_string_string) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_NotEquals, parameter);
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_string_string)
+				{
+					String leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_NotEquals, parameter);
+				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_handle_handle)
 				{
 					if (CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_NotEquals, parameter);
@@ -259,9 +396,8 @@ lable_not_equals_error:
 	return NULL;
 }
 
-Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("&"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -275,7 +411,7 @@ Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser,
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_And_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue & rightValue);
@@ -285,7 +421,7 @@ Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser,
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_And_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue & rightValue);
@@ -302,9 +438,8 @@ Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser,
 	return NULL;
 }
 
-Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("|"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -318,7 +453,7 @@ Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, 
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Or_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue | rightValue);
@@ -328,7 +463,7 @@ Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, 
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Or_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue | rightValue);
@@ -345,9 +480,8 @@ Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, 
 	return NULL;
 }
 
-Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("^"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -361,7 +495,7 @@ Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser,
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Xor_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue ^ rightValue);
@@ -371,7 +505,7 @@ Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser,
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Xor_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue ^ rightValue);
@@ -388,9 +522,8 @@ Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser,
 	return NULL;
 }
 
-Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("<<"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -404,7 +537,7 @@ Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* pars
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Left_Shift_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue << rightValue);
@@ -421,9 +554,8 @@ Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* pars
 	return NULL;
 }
 
-Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT(">>"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -437,7 +569,7 @@ Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* par
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Right_Shift_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue >> rightValue);
@@ -454,9 +586,8 @@ Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* par
 	return NULL;
 }
 
-Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("+"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -470,7 +601,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue + rightValue);
@@ -480,7 +611,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue + rightValue);
@@ -490,7 +621,16 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Plus, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Plus, parameter);
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Plus, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_string_string) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);
+				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_string_string)
+				{
+					String leftValue, rightValue;
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					{
+						delete parameter;
+						return new ConstantStringExpression(anchor, leftValue + rightValue);
+					}
+					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);
+				}
 				//字符串衍生操作（衍生类操作没有相应的指令优化，直接走常规函数调用）
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
@@ -538,9 +678,8 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, L
 	return NULL;
 }
 
-Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("-"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -554,7 +693,7 @@ Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, 
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue - rightValue);
@@ -564,7 +703,7 @@ Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, 
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue - rightValue);
@@ -584,9 +723,8 @@ Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, 
 	return NULL;
 }
 
-Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("*"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -600,7 +738,7 @@ Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Li
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue * rightValue);
@@ -610,7 +748,7 @@ Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Li
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real)
 				{
 					real leftValue, rightValue;
-					if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter) && parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue * rightValue);
@@ -636,9 +774,8 @@ Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Li
 	return NULL;
 }
 
-Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("/"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -651,48 +788,39 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Li
 			{
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_integer_integer)
 				{
+					CheckSecondZero(parameter, parser);
 					integer leftValue, rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
-						if (!rightValue) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
-						if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter))
-						{
-							delete parameter;
-							return new ConstantIntegerExpression(anchor, leftValue / rightValue);
-						}
+						delete parameter;
+						return new ConstantIntegerExpression(anchor, leftValue / rightValue);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Divide, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real)
 				{
+					CheckSecondZero(parameter, parser);
 					real leftValue, rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
-						if (rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
-						if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter))
-						{
-							delete parameter;
-							return new ConstantRealExpression(anchor, leftValue / rightValue);
-						}
+						delete parameter;
+						return new ConstantRealExpression(anchor, leftValue / rightValue);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Divide, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real2_real)
 				{
-					real rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					CheckSecondZero(parameter, parser);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_vr, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real3_real)
 				{
-					real rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					CheckSecondZero(parameter, parser);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_vr, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real4_real)
 				{
-					real rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter) && rightValue == 0) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					CheckSecondZero(parameter, parser);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_vr, parameter);
 				}
 				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_rv, parameter);
@@ -711,9 +839,8 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Li
 	return NULL;
 }
 
-Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, List<Expression*, true>& parameters)
+Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	Expression* parameter = Combine(parameters);
 	List<CompilingDeclaration, true> declarations(0);
 	String name = parser->manager->stringAgency->Add(TEXT("%"));
 	parser->context.FindOperators(parser->manager, name, declarations);
@@ -726,15 +853,12 @@ Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, Li
 			{
 				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mod_integer_integer)
 				{
+					CheckSecondZero(parameter, parser);
 					integer leftValue, rightValue;
-					if (parameters[1]->TryEvaluation(rightValue, parser->evaluationParameter))
+					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
-						if (!rightValue) MESSAGE2(parser->manager->messages, parameters[1]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
-						if (parameters[0]->TryEvaluation(leftValue, parser->evaluationParameter))
-						{
-							delete parameter;
-							return new ConstantIntegerExpression(anchor, leftValue % rightValue);
-						}
+						delete parameter;
+						return new ConstantIntegerExpression(anchor, leftValue % rightValue);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Mod, parameter);
 				}

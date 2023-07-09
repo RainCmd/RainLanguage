@@ -213,6 +213,7 @@ label_parse_type:
 			{
 				new (types.Add())FileType(names, 0);
 				segmented = true;
+				index = lexical.anchor.GetEnd();
 				goto label_parse_type;
 			}
 			else if (names.Count() == 1 && !segmented)
