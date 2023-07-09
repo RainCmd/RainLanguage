@@ -8,18 +8,6 @@ struct List
 private:
 	T* values;
 	uint32 count, size;
-	inline bool TryGrow(uint32 count)
-	{
-		count += this->count;
-		if (count > size)
-		{
-			if (size < 4) size = 4;
-			while (size < count) size += size >> 1;
-			values = Realloc<T>(values, size);
-			return true;
-		}
-		return false;
-	}
 public:
 	typedef bool (*Predicate)(T&);
 	explicit List(uint32 capacity) :count(0), size(capacity)
@@ -63,16 +51,26 @@ public:
 		other.size = 0;
 		return *this;
 	}
+	inline void Grow(uint32 count)
+	{
+		count += this->count;
+		if (count > size)
+		{
+			if (size < 4) size = 4;
+			while (size < count) size += size >> 1;
+			values = Realloc<T>(values, size);
+		}
+	}
 	inline void Add(const T& value)
 	{
-		TryGrow(1);
+		Grow(1);
 		if (IsBitwise)values[count] = value;
 		else new (values + count)T(value);
 		count++;
 	}
 	inline void Add(const T* values, uint32 count)
 	{
-		TryGrow(count);
+		Grow(count);
 		T* pointer = this->values + this->count;
 		this->count += count;
 		if (IsBitwise) Mcopy(values, pointer, count);
@@ -89,14 +87,14 @@ public:
 	}
 	inline T* Add()//自定义初始化逻辑
 	{
-		TryGrow(1);
+		Grow(1);
 		T* result = values + count;
 		count++;
 		return result;
 	}
 	void Insert(uint32 index, const T* values, uint32 count)
 	{
-		TryGrow(count);
+		Grow(count);
 		Mmove(this->values + index, this->values + index + count, this->count - index);
 		if (IsBitwise)Mcopy(values, this->values + index, count);
 		else for (uint32 i = 0; i < count; i++) new (this->values + index + i)T(values[i]);
@@ -180,7 +178,7 @@ public:
 	{
 		ASSERT_DEBUG(IsBitwise, "该操作会导致构造和析构调用次数不成对，不是纯数据类型可能会破坏内存");
 		this->count = count;
-		if (count > size) TryGrow(count - size);
+		if (count > size) Grow(count - size);
 	}
 	inline uint32 Count() const { return count; }
 	inline uint32 Slack() const { return size - count; }

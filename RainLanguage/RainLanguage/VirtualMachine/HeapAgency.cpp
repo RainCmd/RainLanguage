@@ -35,6 +35,7 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 		if (!heads.Slack())
 		{
 			GC(true);
+			if (heads.Slack() < (heads.Count() >> 3)) heads.Grow(heads.Count() >> 3);
 			gc++;
 		}
 		handle = heads.Count();
@@ -46,7 +47,11 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 		if (!gc) GC(false);
 		if (heap.Slack() < size)
 		{
-			if (gc < 2) GC(true);
+			if (gc < 2)
+			{
+				GC(true);
+				if (heap.Slack() < (heap.Count() >> 3)) heap.Grow(heap.Count() >> 3);
+			}
 			if (heap.Count() + size >= MAX_HEAP_SIZE) EXCEPTION("堆内存超过可用上限！");
 		}
 	}
