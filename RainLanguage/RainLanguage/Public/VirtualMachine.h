@@ -532,6 +532,35 @@ struct RAINLANGUAGE StartupParameter
 };
 
 /// <summary>
+/// 虚拟机状态
+/// </summary>
+struct RAINLANGUAGE RainKernelState
+{
+	/// <summary>
+	/// 当前协程数量
+	/// </summary>
+	uint32 coroutineCount;
+	/// <summary>
+	/// 当前字符串数量
+	/// </summary>
+	uint32 stringCount;
+	/// <summary>
+	/// 当前实体数量
+	/// </summary>
+	uint32 entityCount;
+	/// <summary>
+	/// 当前托管对象数量
+	/// </summary>
+	uint32 handleCount;
+	/// <summary>
+	/// 当前托管堆大小
+	/// </summary>
+	uint32 heapSize;
+
+	RainKernelState(const uint32& coroutineCount, const uint32& stringCount, const uint32& entityCount, const uint32& handleCount, const uint32& heapSize) : coroutineCount(coroutineCount), stringCount(stringCount), entityCount(entityCount), handleCount(handleCount), heapSize(heapSize) {}
+};
+
+/// <summary>
 /// 雨言的函数句柄
 /// </summary>
 struct RAINLANGUAGE RainFunction
@@ -660,6 +689,17 @@ public:
 	/// <returns>返回值列表</returns>
 	/// <exception>无效的函数会抛异常，非公开函数也会抛异常</exception>
 	virtual RainTypes GetFunctionReturns(const RainFunction& function) = 0;
+	/// <summary>
+	/// 获取当前状态数据
+	/// </summary>
+	/// <returns>状态数据</returns>
+	virtual const RainKernelState GetState() = 0;
+	/// <summary>
+	/// 触发托管堆垃圾回收
+	/// </summary>
+	/// <param name="full">进行完整的垃圾回收</param>
+	/// <returns>本次垃圾回收释放的托管堆大小</returns>
+	virtual uint32 GC(bool full) = 0;
 
 	/// <summary>
 	/// 更新虚拟机

@@ -240,6 +240,18 @@ RainTypes Kernel::GetFunctionReturns(const RainFunction& function)
 	EXCEPTION("º¯ÊýÎ´ÕÒµ½");
 }
 
+const RainKernelState Kernel::GetState()
+{
+	return RainKernelState(coroutineAgency->CountCoroutine(), stringAgency->Count(), entityAgency->Count(), heapAgency->CountHandle(), heapAgency->GetHeapTop());
+}
+
+uint32 Kernel::GC(bool full)
+{
+	uint32 top = heapAgency->GetHeapTop();
+	heapAgency->GC(full);
+	return top - heapAgency->GetHeapTop();
+}
+
 void Kernel::Update()
 {
 	coroutineAgency->Update();

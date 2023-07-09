@@ -3,7 +3,6 @@
 constexpr auto EXCEPTION_NULL_REFERENCE = TEXT("空引用");
 constexpr auto EXCEPTION_INVALID_COROUTINE = TEXT("无效的携程");
 constexpr auto EXCEPTION_OUT_OF_RANGE = TEXT("越界");
-constexpr auto EXCEPTION_INVALID_ENUM = TEXT("无效的枚举");
 constexpr auto EXCEPTION_INVALID_TYPE = TEXT("无效的类型");
 constexpr auto EXCEPTION_NOT_ENUM = TEXT("不是枚举");
 constexpr auto EXCEPTION_NOT_ARRAY = TEXT("不是数组");

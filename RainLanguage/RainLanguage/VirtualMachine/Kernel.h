@@ -25,6 +25,8 @@ public:
 	RainFunctions FindFunctions(const character* name);
 	RainTypes GetFunctionParameters(const RainFunction& function);
 	RainTypes GetFunctionReturns(const RainFunction& function);
+	const RainKernelState GetState();
+	uint32 GC(bool full);
 	void Update();
 	~Kernel();
 	Kernel(Kernel&) = delete;
