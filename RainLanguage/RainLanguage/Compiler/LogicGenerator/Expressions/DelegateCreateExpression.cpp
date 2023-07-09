@@ -16,7 +16,7 @@ void FunctionDelegateCreateExpression::Generator(LogicGenerateParameter& paramet
 	{
 		parameter.generator->WriteCode((uint8)FunctionType::Native);
 		parameter.generator->WriteCodeGlobalReference(declaration);
-		parameter.generator->WriteCode(Native());
+		parameter.generator->WriteCode(Native(declaration.library, declaration.index));
 	}
 	else EXCEPTION("其他定义类型不应该走到这");
 }
@@ -89,7 +89,8 @@ void VirtualFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& 
 	else if (declaration.category == DeclarationCategory::InterfaceFunction) parameter.generator->WriteCode((uint8)FunctionType::Abstract);
 	parameter.generator->WriteCode(sourceParameter.results[0]);
 	parameter.generator->WriteCodeGlobalReference(declaration);
-	parameter.generator->WriteCode(MemberFunction());
+	parameter.generator->WriteCode(declaration.DefineMemberFunction());
+	parameter.generator->WriteCode(parameter.finallyAddress);
 	if (question)endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 

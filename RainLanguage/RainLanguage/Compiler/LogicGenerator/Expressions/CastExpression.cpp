@@ -84,11 +84,20 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 		assignmentAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		LogicGenerateParameter localParameter = LogicGenerateParameter(parameter, 1);
 		local->Generator(localParameter);
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Unbox);
-		parameter.generator->WriteCode(localParameter.results[0]);
-		parameter.generator->WriteCode(targetParameter.results[0]);
-		parameter.generator->WriteCodeGlobalReference(targetType);
-		parameter.generator->WriteCode(parameter.finallyAddress);
+		if (IsHandleType(targetType))
+		{
+			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Handle);
+			parameter.generator->WriteCode(localParameter.results[0]);
+			parameter.generator->WriteCode(targetParameter.results[0]);
+		}
+		else
+		{
+			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Unbox);
+			parameter.generator->WriteCode(localParameter.results[0]);
+			parameter.generator->WriteCode(targetParameter.results[0]);
+			parameter.generator->WriteCodeGlobalReference(targetType);
+			parameter.generator->WriteCode(parameter.finallyAddress);
+		}
 		endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
 }

@@ -38,6 +38,7 @@ enum class MessageType :uint32
 	ERROR_MISSING_IDENTIFIER,				//缺少标识符
 	ERROR_MISSING_EXPRESSION,				//缺少表达式
 	ERROR_INVALID_IDENTIFIER,				//无效的标识符
+	ERROR_INVALID_VISIBILITY,				//无效的可访问性修饰符
 	ERROR_NOT_VARIABLE_DECLARATION,			//不是变量声明
 	ERROR_INVALID_INITIALIZER,				//无效的初始化
 	ERROR_LIBRARY_LOAD_FAIL,				//程序集加载失败

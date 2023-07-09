@@ -154,7 +154,7 @@ void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_NativeCall);
 		parameter.generator->WriteCodeGlobalReference(declaration);
-		parameter.generator->WriteCode(Native());
+		parameter.generator->WriteCode(Native(declaration.library, declaration.index));
 	}
 	else EXCEPTION("语言解析逻辑可能有bug");
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
@@ -245,8 +245,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	parameter.generator->WriteCode(Instruct::FUNCTION_VirtualCall);
 	parameter.generator->WriteCode(targetParameter.results[0]);
 	parameter.generator->WriteCodeGlobalReference(declaration);
-	if (declaration.category == DeclarationCategory::InterfaceFunction) parameter.generator->WriteCode(MemberFunction(INVALID, TypeCode::Interface, declaration.definition, declaration.index));
-	else parameter.generator->WriteCode(MemberFunction(INVALID, TypeCode::Handle, declaration.definition, declaration.index));
+	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }

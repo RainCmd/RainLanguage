@@ -69,7 +69,7 @@ public:
 		}
 		else EXCEPTION("ÊµÀıidÓĞÎó");
 	}
-	integer CountCoroutine();
+	uint32 CountCoroutine();
 	~CoroutineAgency();
 };
 

@@ -74,9 +74,9 @@ void CoroutineAgency::Update()
 		}
 }
 
-integer CoroutineAgency::CountCoroutine()
+uint32 CoroutineAgency::CountCoroutine()
 {
-	integer count = 0;
+	uint32 count = 0;
 	for (Coroutine* index = head; index; index = index->next) count++;
 	return count;
 }

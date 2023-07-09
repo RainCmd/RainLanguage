@@ -418,6 +418,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					return false;
 				}
 				expression = new MemberFunctionDelegateCreateExpression(methodExpression->anchor, type, methodExpression->target, callable->declaration, methodExpression->question);
+				methodExpression->target = NULL;
 				delete methodExpression;
 				return true;
 			}
@@ -446,6 +447,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					return false;
 				}
 				expression = new VirtualFunctionDelegateCreateExpression(methodExpression->anchor, type, methodExpression->target, callable->declaration, methodExpression->question);
+				methodExpression->target = NULL;
 				delete methodExpression;
 				return true;
 			}

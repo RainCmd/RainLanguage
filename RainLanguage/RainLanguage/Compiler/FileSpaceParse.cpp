@@ -97,27 +97,27 @@ Visibility ParseVisibility(const Line& line, uint32& index, MessageCollector* me
 		index = lexical.anchor.GetEnd();
 		if (lexical.anchor == KeyWord_public())
 		{
-			if (IsClash(visibility, Visibility::Public))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
+			if (IsClash(visibility, Visibility::Public)) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= Visibility::Public;
 		}
 		else if (lexical.anchor == KeyWord_internal())
 		{
-			if (IsClash(visibility, Visibility::Internal))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
+			if (IsClash(visibility, Visibility::Internal)) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= Visibility::Internal;
 		}
 		else if (lexical.anchor == KeyWord_space())
 		{
-			if (IsClash(visibility, Visibility::Space))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
+			if (IsClash(visibility, Visibility::Space)) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= Visibility::Space;
 		}
 		else if (lexical.anchor == KeyWord_protected())
 		{
-			if (IsClash(visibility, Visibility::Protected))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
+			if (IsClash(visibility, Visibility::Protected)) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= Visibility::Protected;
 		}
 		else if (lexical.anchor == KeyWord_private())
 		{
-			if (IsClash(visibility, Visibility::Private))MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
+			if (IsClash(visibility, Visibility::Private)) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
 			visibility |= Visibility::Private;
 		}
 		else
@@ -482,20 +482,22 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 		Line current = parameter->reader->CurrentLine();
 		if (!CheckIndent(current, indent, line.indent))break;
 
-		if (TryParseAttributes(current, attributes, parameter->messages))continue;
+		if (TryParseAttributes(current, attributes, parameter->messages)) continue;
 		Anchor name, expression; FileType type;
+		visibility = ParseVisibility(current, index, parameter->messages);
 		if (TryParseVariable(current, 0, name, type, expression, parameter->messages))
 		{
-			if (!expression.content.IsEmpty())MESSAGE2(parameter->messages, expression, MessageType::ERROR_INVALID_INITIALIZER);
-			(new (fileStruct->variables.Add())FileStruct::Variable(name, type))->attributes.Add(attributes);
+			if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
+			if (!expression.content.IsEmpty()) MESSAGE2(parameter->messages, expression, MessageType::ERROR_INVALID_INITIALIZER);
+			(new (fileStruct->variables.Add()) FileStruct::Variable(name, type))->attributes.Add(attributes);
 			attributes.Clear();
 		}
 		else
 		{
-			visibility = ParseVisibility(current, index, parameter->messages);
+			CHECK_VISIABLE(current, Private);
 			List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 			ParseFunctionDeclaration(current, index, name, false, parameters, returns, parameter->messages);
-			FileFunction* function = new (fileStruct->functions.Add())FileFunction(name, visibility, this, parameters, returns);
+			FileFunction* function = new (fileStruct->functions.Add()) FileFunction(name, visibility, this, parameters, returns);
 			function->attributes.Add(attributes);
 			attributes.Clear();
 			ParseBlock(indent, function->body, parameter);
@@ -549,6 +551,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 		{
 			if (lexical.type == LexicalType::Negate)//析构函数
 			{
+				if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 				if (attributes.Count())
 				{
 					MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES);
@@ -570,7 +573,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 					{
 						if (name.content == fileClass->name.content)
 						{
-							if (returns.Count())MESSAGE3(parameter->messages, name, MessageType::ERROR, TEXT("构造函数不能有返回值"));
+							if (returns.Count()) MESSAGE3(parameter->messages, name, MessageType::ERROR, TEXT("构造函数不能有返回值"));
 							expression = Anchor();
 							if (TryAnalysis(current, index, lexical, parameter->messages))
 							{
@@ -623,12 +626,14 @@ lable_parse_inherits:
 	while (parameter->reader->ReadLine())
 	{
 		Line current = parameter->reader->CurrentLine();
-		if (!CheckIndent(current, indent, line.indent))break;
+		if (!CheckIndent(current, indent, line.indent)) break;
 
-		if (TryParseAttributes(current, attributes, parameter->messages))continue;
+		if (TryParseAttributes(current, attributes, parameter->messages)) continue;
+		visibility = ParseVisibility(current, index, parameter->messages);
+		if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 		Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
-		ParseFunctionDeclaration(current, 0, name, false, parameters, returns, parameter->messages);
-		(new (fileInterface->functions.Add())FileInterface::Function(name, parameters, returns))->attributes.Add(attributes);
+		ParseFunctionDeclaration(current, index, name, false, parameters, returns, parameter->messages);
+		(new (fileInterface->functions.Add()) FileInterface::Function(name, parameters, returns))->attributes.Add(attributes);
 		attributes.Clear();
 	}
 	DISCARD_ATTRIBUTE;

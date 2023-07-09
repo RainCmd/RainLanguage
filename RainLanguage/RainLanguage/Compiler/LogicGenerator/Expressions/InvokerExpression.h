@@ -10,7 +10,7 @@ public:
 		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns[0]);
 		else attribute = Attribute::Tuple;
 	}
-	~InvokerExpression();
+	virtual ~InvokerExpression();
 };
 
 class InvokerDelegateExpression :public InvokerExpression
