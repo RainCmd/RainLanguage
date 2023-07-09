@@ -426,7 +426,7 @@ label_next_instruct:
 			Handle& array = INSTRUCT_VARIABLE(Handle, 1);
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
 			Type type;
-			if (!kernel->heapAgency->TryGetType(array, type))EXCEPTION_EXIT(BASE_ArrayInit, EXCEPTION_OUT_OF_RANGE)
+			if (!kernel->heapAgency->TryGetType(array, type)) EXCEPTION_EXIT(BASE_ArrayInit, EXCEPTION_OUT_OF_RANGE)
 			else
 			{
 				type = Type((Declaration)type, type.dimension - 1);

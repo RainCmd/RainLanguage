@@ -337,18 +337,25 @@ bool TryAnalysis(const Line& line, uint32 index, Lexical& lexical, MessageCollec
 
 bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical& lexical)
 {
-	while (index < segment.content.GetLength() && IsBlank(segment.content[index]))index++;
+	while (index < segment.content.GetLength() && IsBlank(segment.content[index])) index++;
 	switch (type)
 	{
 		case LexicalType::Unknow: break;
 		case LexicalType::BracketLeft0:
+			MATCH('(');
 		case LexicalType::BracketLeft1:
+			MATCH('[');
 		case LexicalType::BracketLeft2:
+			MATCH('{');
 		case LexicalType::BracketRight0:
+			MATCH(')');
 		case LexicalType::BracketRight1:
+			MATCH(']');
 		case LexicalType::BracketRight2:
+			MATCH('}');
 		case LexicalType::Comma:
-		case LexicalType::Semicolon:break;
+			MATCH(',');
+		case LexicalType::Semicolon: break;
 		case LexicalType::Assignment:
 			MATCH('=');
 		case LexicalType::Equals:
@@ -418,8 +425,7 @@ bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical
 		case LexicalType::ConstString:
 		case LexicalType::Word:
 		case LexicalType::Backslash:
-		default:
-			break;
+		default: break;
 	}
 	return false;
 }
@@ -453,12 +459,11 @@ bool TryExtractName(const Line& line, uint32 start, uint32& index, List<Anchor>*
 uint32 ExtractDimension(const Anchor& segment, uint32& index)
 {
 	uint32 dimension = 0;
-	uint32 next = index;
 	Lexical lexical;
-	while (TryMatchNext(segment, next, LexicalType::BracketLeft1, lexical) && TryMatchNext(segment, lexical.anchor.GetEnd(), LexicalType::BracketRight1, lexical))
+	while (TryMatchNext(segment, index, LexicalType::BracketLeft1, lexical) && TryMatchNext(segment, lexical.anchor.GetEnd(), LexicalType::BracketRight1, lexical))
 	{
 		dimension++;
-		next = lexical.anchor.GetEnd();
+		index = lexical.anchor.GetEnd();
 	}
 	return dimension;
 }

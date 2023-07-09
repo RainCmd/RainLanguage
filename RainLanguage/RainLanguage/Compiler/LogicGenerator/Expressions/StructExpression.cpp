@@ -140,30 +140,35 @@ void VectorConstructorExpression::Generator(LogicGenerateParameter& parameter)
 	LogicVariable result = parameter.GetResult(0, returns[0]);
 	for (uint32 i = 0, memberIndex = 0; i < parameters->returns.Count(); i++)
 	{
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
-		parameter.generator->WriteCode(result);
-		parameter.generator->WriteCode(parametersParameter.results[i]);
 		if (parameters->returns[i] == TYPE_Real)
 		{
-			parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0));
+			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
+			parameter.generator->WriteCode(LogicVariable(result, TYPE_Real, memberIndex * SIZE(real)));
+			parameter.generator->WriteCode(parametersParameter.results[i]);
 			memberIndex++;
 		}
-		else if (parameters->returns[i] == TYPE_Real2)
+		else
 		{
-			parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5));
-			memberIndex += 2;
+			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
+			parameter.generator->WriteCode(result);
+			parameter.generator->WriteCode(parametersParameter.results[i]);
+			if (parameters->returns[i] == TYPE_Real2)
+			{
+				parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5));
+				memberIndex += 2;
+			}
+			else if (parameters->returns[i] == TYPE_Real3)
+			{
+				parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5) | (VECTOR_FLAG(memberIndex + 2, 2) << 10));
+				memberIndex += 3;
+			}
+			else if (parameters->returns[i] == TYPE_Real4)
+			{
+				parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5) | (VECTOR_FLAG(memberIndex + 2, 2) << 10) | (VECTOR_FLAG(memberIndex + 3, 3) << 15));
+				memberIndex += 4;
+			}
+			else EXCEPTION("目前只支持real2,real3,real4");
 		}
-		else if (parameters->returns[i] == TYPE_Real3)
-		{
-			parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5) | (VECTOR_FLAG(memberIndex + 2, 2) << 10));
-			memberIndex += 3;
-		}
-		else if (parameters->returns[i] == TYPE_Real4)
-		{
-			parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5) | (VECTOR_FLAG(memberIndex + 2, 2) << 10) | (VECTOR_FLAG(memberIndex + 3, 3) << 15));
-			memberIndex += 4;
-		}
-		else EXCEPTION("目前只支持real2,real3,real4");
 	}
 }
 

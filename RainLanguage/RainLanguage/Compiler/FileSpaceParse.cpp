@@ -171,7 +171,7 @@ bool TryParseParameters(const Line& line, uint32& index, List<FileParameter>& pa
 							return false;
 						}
 					}
-					new (parameters.Add())FileParameter(name, type);
+					new (parameters.Add()) FileParameter(name, type);
 					if (lexical.type == LexicalType::Comma || lexical.type == LexicalType::Semicolon)
 					{
 						index = lexical.anchor.GetEnd();

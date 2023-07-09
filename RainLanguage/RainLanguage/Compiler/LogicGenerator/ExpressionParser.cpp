@@ -277,7 +277,7 @@ bool ExpressionParser::TryAssignmentConvert(Expression*& source, const Span<Type
 					MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_MISMATCH);
 					return false;
 				}
-			if(casts.Count()) source = new TupleCastExpression(source->anchor, types.ToList(), source, casts);
+			if (casts.Count()) source = new TupleCastExpression(source->anchor, types.ToList(), source, casts);
 			return true;
 		}
 		else return false;
@@ -847,34 +847,42 @@ bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<Compiling
 
 bool ExpressionParser::CheckConvertVectorParameter(Expression*& parameters, uint32 dimension)
 {
-	bool convert; uint32 measure, flag = 0;
+	List<Type, true> targetReturns(parameters->returns.Count());
 	for (uint32 i = 0; i < parameters->returns.Count(); i++)
+		if (parameters->returns[i] == TYPE_Real || parameters->returns[i] == TYPE_Real2 || parameters->returns[i] == TYPE_Real3 || parameters->returns[i] == TYPE_Real4) targetReturns.Add(parameters->returns[i]);
+		else targetReturns.Add(TYPE_Real);
+	if (TryAssignmentConvert(parameters, Span<Type, true>(&targetReturns)))
 	{
-		if (parameters->returns[i] == TYPE_Real2)dimension -= 2;
-		else if (parameters->returns[i] == TYPE_Real3)dimension -= 3;
-		else if (parameters->returns[i] == TYPE_Real4)dimension -= 4;
-		else if (TryConvert(manager, parameters->returns[i], TYPE_Real, convert, measure)) { if (convert) flag |= 1 << i; dimension--; }
-		else
-		{
-			MESSAGE2(manager->messages, parameters->anchor, MessageType::ERROR_TYPE_MISMATCH);
-			return false;
-		}
-	}
-	if (dimension) MESSAGE2(manager->messages, parameters->anchor, MessageType::ERROR_NUMBER_OF_PARAMETERS)
-	else if (flag)
-	{
-		List<uint32, true> casts(0);
-		List<Type, true> returns(parameters->returns.Count());
+		bool convert; uint32 measure, flag = 0;
 		for (uint32 i = 0; i < parameters->returns.Count(); i++)
-			if (flag & (1 << i))
+		{
+			if (parameters->returns[i] == TYPE_Real2) dimension -= 2;
+			else if (parameters->returns[i] == TYPE_Real3) dimension -= 3;
+			else if (parameters->returns[i] == TYPE_Real4) dimension -= 4;
+			else if (TryConvert(manager, parameters->returns[i], TYPE_Real, convert, measure)) { if (convert) flag |= 1 << i; dimension--; }
+			else
 			{
-				casts.Add(i);
-				returns.Add(TYPE_Real);
+				MESSAGE2(manager->messages, parameters->anchor, MessageType::ERROR_TYPE_MISMATCH);
+				return false;
 			}
-			else returns.Add(parameters->returns[i]);
-		parameters = new TupleCastExpression(parameters->anchor, returns, parameters, casts);
+		}
+		if (dimension) MESSAGE2(manager->messages, parameters->anchor, MessageType::ERROR_NUMBER_OF_PARAMETERS)
+		else if (flag)
+		{
+			List<uint32, true> casts(0);
+			List<Type, true> returns(parameters->returns.Count());
+			for (uint32 i = 0; i < parameters->returns.Count(); i++)
+				if (flag & (1 << i))
+				{
+					casts.Add(i);
+					returns.Add(TYPE_Real);
+				}
+				else returns.Add(parameters->returns[i]);
+			parameters = new TupleCastExpression(parameters->anchor, returns, parameters, casts);
+		}
+		return !dimension;
 	}
-	return !dimension;
+	else return false;
 }
 
 Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, const Token& token)
@@ -1935,11 +1943,9 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							attribute = expression->attribute;
 							goto label_next_lexical;
 						}
-						else
-						{
-							expressionStack.Add(callableExpression);
-							goto label_parse_fail;
-						}
+						expressionStack.Add(callableExpression);
+						expressionStack.Add(tuple);
+						goto label_parse_fail;
 					}
 					else if (ContainAny(attribute, Attribute::Type))
 					{
@@ -2002,10 +2008,6 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									}
 								}
 								else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_CONSTRUCTOR_NOT_FOUND);
-								expressionStack.Add(typeExpression);
-								expressionStack.Add(tuple);
-								delete typeExpression; typeExpression = NULL;
-								goto label_parse_fail;
 							}
 							else if (type.code == TypeCode::Struct)
 							{
@@ -2037,6 +2039,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_INVALID_OPERATOR);
 						}
 						expressionStack.Add(typeExpression);
+						expressionStack.Add(tuple);
+						goto label_parse_fail;
 					}
 					else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
@@ -2057,21 +2061,15 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					for (uint32 i = 0; i < tuple->returns.Count(); i++)
 						if (tuple->returns[i] != TYPE_Integer)
 						{
-							expressionStack.Add(tuple);
 							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_MISMATCH);
+							expressionStack.Add(tuple);
 							goto label_parse_fail;
 						}
 					if (ContainAll(attribute, Attribute::Array | Attribute::Value))
 					{
 						Expression* arrayExpression = expressionStack.Pop();
 						Type type = arrayExpression->returns.Peek();
-						if (type == TYPE_Blurry)
-						{
-							expressionStack.Add(tuple);
-							expressionStack.Add(arrayExpression);
-							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL);
-							goto label_parse_fail;
-						}
+						if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
 						else if (tuple->returns.Count() == 1)
 						{
 							if (type.dimension)
@@ -2139,53 +2137,50 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					{
 						Expression* source = expressionStack.Pop();
 						Type type = source->returns.Peek();
-						if (type == TYPE_Blurry)
-						{
-							expressionStack.Add(tuple);
-							expressionStack.Add(source);
-							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL);
-							goto label_parse_fail;
-						}
-						AbstractCoroutine* abstractCoroutine = (AbstractCoroutine*)manager->GetDeclaration(type);
-						if (tuple->returns.Count() == 0)
-						{
-							if (tuple->anchor.content.IsEmpty())
-							{
-								List<integer, true> indices(abstractCoroutine->returns.Count());
-								for (integer i = 0; i < abstractCoroutine->returns.Count(); i++) indices.Add(i);
-								Expression* expression = new CoroutineEvaluationExpression(source->anchor, abstractCoroutine->returns.GetTypes(), source, indices);
-								expressionStack.Add(expression);
-								attribute = expression->attribute;
-								delete tuple; tuple = NULL;
-								goto label_next_lexical;
-							}
-							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
-						}
+						if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
 						else
 						{
-							List<integer, true> indices(tuple->returns.Count());
-							if (tuple->TryEvaluationIndices(indices, evaluationParameter))
+							AbstractCoroutine* abstractCoroutine = (AbstractCoroutine*)manager->GetDeclaration(type);
+							if (tuple->returns.Count() == 0)
 							{
-								for (uint32 i = 0; i < indices.Count(); i++)
+								if (tuple->anchor.content.IsEmpty())
 								{
-									if (indices[i] < 0) indices[i] += abstractCoroutine->returns.Count();
-									if (indices[i] < 0 || indices[i] >= abstractCoroutine->returns.Count())
-									{
-										MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
-										expressionStack.Add(source);
-										expressionStack.Add(tuple);
-										goto label_parse_fail;
-									}
+									List<integer, true> indices(abstractCoroutine->returns.Count());
+									for (integer i = 0; i < abstractCoroutine->returns.Count(); i++) indices.Add(i);
+									Expression* expression = new CoroutineEvaluationExpression(source->anchor, abstractCoroutine->returns.GetTypes(), source, indices);
+									expressionStack.Add(expression);
+									attribute = expression->attribute;
+									delete tuple; tuple = NULL;
+									goto label_next_lexical;
 								}
-								List<Type, true> returns(indices.Count());
-								for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractCoroutine->returns.GetType((uint32)indices[i]));
-								Expression* expression = new CoroutineEvaluationExpression(source->anchor, returns, source, indices);
-								expressionStack.Add(expression);
-								attribute = expression->attribute;
-								delete tuple; tuple = NULL;
-								goto label_next_lexical;
+								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
 							}
-							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
+							else
+							{
+								List<integer, true> indices(tuple->returns.Count());
+								if (tuple->TryEvaluationIndices(indices, evaluationParameter))
+								{
+									for (uint32 i = 0; i < indices.Count(); i++)
+									{
+										if (indices[i] < 0) indices[i] += abstractCoroutine->returns.Count();
+										if (indices[i] < 0 || indices[i] >= abstractCoroutine->returns.Count())
+										{
+											MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
+											expressionStack.Add(source);
+											expressionStack.Add(tuple);
+											goto label_parse_fail;
+										}
+									}
+									List<Type, true> returns(indices.Count());
+									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractCoroutine->returns.GetType((uint32)indices[i]));
+									Expression* expression = new CoroutineEvaluationExpression(source->anchor, returns, source, indices);
+									expressionStack.Add(expression);
+									attribute = expression->attribute;
+									delete tuple; tuple = NULL;
+									goto label_next_lexical;
+								}
+								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
+							}
 						}
 						expressionStack.Add(source);
 					}
@@ -2200,13 +2195,14 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							{
 								typeExpression->customType = Type(type, type.dimension + 1);
 								expressionStack.Add(typeExpression);
+								delete tuple; tuple = NULL;
 								goto label_next_lexical;
 							}
 							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 						}
 						else if (tuple->returns.Count() == 1)
 						{
-							if (destructor)MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+							if (destructor) MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
 							type.dimension++;
 							Expression* expression = new ArrayCreateExpression(typeExpression->anchor, tuple, type);
 							expressionStack.Add(expression);
@@ -2297,12 +2293,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							delete typeExpression; typeExpression = NULL;
 							goto label_next_lexical;
 						}
-						else
-						{
-							expressionStack.Add(typeExpression);
-							expressionStack.Add(tuple);
-							goto label_parse_fail;
-						}
+						expressionStack.Add(typeExpression);
 					}
 					else if (ContainAny(attribute, Attribute::None))
 					{
