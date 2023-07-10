@@ -15,6 +15,7 @@ String KeyWord_struct();
 String KeyWord_class();
 String KeyWord_interface();
 String KeyWord_const();
+String KeyWord_expand();
 
 String KeyWord_global();
 String KeyWord_base();
