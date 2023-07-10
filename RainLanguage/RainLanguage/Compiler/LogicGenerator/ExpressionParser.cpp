@@ -1,4 +1,4 @@
-#include "ExpressionParser.h"
+ï»¿#include "ExpressionParser.h"
 #include "../../KeyWords.h"
 #include "Expression.h"
 #include "Expressions/TupleExpression.h"
@@ -178,7 +178,7 @@ Attribute ExpressionParser::GetVariableAttribute(const CompilingDeclaration& dec
 		case DeclarationCategory::LocalVariable:
 			return Attribute::Assignable | Attribute::Value;
 	}
-	EXCEPTION("ÎŞĞ§µÄ¶¨ÒåÀàĞÍ");
+	EXCEPTION("æ— æ•ˆçš„å®šä¹‰ç±»å‹");
 }
 
 Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
@@ -193,11 +193,11 @@ Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
 			return manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
 		case DeclarationCategory::LambdaClosureValue:
 			if (closure)return closure->GetVariableType(declaration);
-			else EXCEPTION("²»ÔÚ±Õ°üÖĞ");
+			else EXCEPTION("ä¸åœ¨é—­åŒ…ä¸­");
 		case DeclarationCategory::LocalVariable:
 			return localContext->GetLocal(declaration.index).type;
 	}
-	EXCEPTION("²»ÊÇ¸ö±äÁ¿");
+	EXCEPTION("ä¸æ˜¯ä¸ªå˜é‡");
 }
 
 bool ExpressionParser::TryGetThisValueDeclaration(CompilingDeclaration& declaration)
@@ -227,7 +227,7 @@ bool ExpressionParser::TryGetThisValueExpression(const Anchor& anchor, Expressio
 			expression = new VariableLocalExpression(anchor, CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, 0, NULL), Attribute::Value, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
 			expression = new VariableMemberExpression(anchor, declaration, Attribute::Value, expression, GetVariableType(declaration));
 		}
-		EXCEPTION("ÀàĞÍ´íÎó");
+		EXCEPTION("ç±»å‹é”™è¯¯");
 	}
 	MESSAGE2(manager->messages, anchor, MessageType::ERROR_NOT_MEMBER_METHOD);
 	return false;
@@ -288,7 +288,7 @@ bool ExpressionParser::TryAssignmentConvert(Expression*& source, const Span<Type
 
 bool ExpressionParser::TryInferLeftValueType(Expression*& expression, const Type& type)
 {
-	ASSERT_DEBUG(expression->returns.Count() == 1 && ContainAll(expression->attribute, Attribute::Assignable) && expression->returns.Peek() == TYPE_Blurry, "±í´ïÊ½ÀàĞÍ´íÎó");
+	ASSERT_DEBUG(expression->returns.Count() == 1 && ContainAll(expression->attribute, Attribute::Assignable) && expression->returns.Peek() == TYPE_Blurry, "è¡¨è¾¾å¼ç±»å‹é”™è¯¯");
 	if (type == TYPE_Blurry || type == TYPE_Null)
 	{
 		MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_EXPRESSION_EQUIVOCAL);
@@ -320,14 +320,14 @@ bool ExpressionParser::TryInferLeftValueType(Expression*& expression, const Span
 		}
 		return true;
 	}
-	ASSERT_DEBUG(!CheckBlurry(expression->returns), "±í´ïÊ½ÀàĞÍ´íÎó");
+	ASSERT_DEBUG(!CheckBlurry(expression->returns), "è¡¨è¾¾å¼ç±»å‹é”™è¯¯");
 	return true;
 }
 
 bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Type& type)
 {
-	ASSERT_DEBUG(type != TYPE_Null, "Ä¿±êÀàĞÍ²»¿ÉÄÜÎªNULL");
-	ASSERT_DEBUG(expression->returns.Count() == 1, "±í´ïÊ½·µ»ØÖµÊıÁ¿²»ÎªÒ»");
+	ASSERT_DEBUG(type != TYPE_Null, "ç›®æ ‡ç±»å‹ä¸å¯èƒ½ä¸ºNULL");
+	ASSERT_DEBUG(expression->returns.Count() == 1, "è¡¨è¾¾å¼è¿”å›å€¼æ•°é‡ä¸ä¸ºä¸€");
 	if (type == TYPE_Blurry)
 	{
 		MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_EXPRESSION_EQUIVOCAL);
@@ -388,7 +388,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT);
 					return false;
 				}
-				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::Function || callable->declaration.category == DeclarationCategory::Native, "ÀàĞÍ´íÎó");
+				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::Function || callable->declaration.category == DeclarationCategory::Native, "ç±»å‹é”™è¯¯");
 				expression = new FunctionDelegateCreateExpression(methodExpression->anchor, type, callable->declaration);
 				delete methodExpression;
 				return true;
@@ -406,7 +406,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))
 			{
-				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "ÀàĞÍ´íÎó");
+				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "ç±»å‹é”™è¯¯");
 				if (!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
 				{
 					MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
@@ -435,7 +435,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))
 			{
-				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "ÀàĞÍ´íÎó");
+				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "ç±»å‹é”™è¯¯");
 				if (!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
 				{
 					MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
@@ -610,7 +610,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Spa
 		return true;
 	}
 	else if (expression->returns.Count() == 1) return TryInferRightValueType(expression, types[0]);
-	ASSERT_DEBUG(!CheckBlurry(expression->returns), "±í´ïÊ½ÀàĞÍ´íÎó");
+	ASSERT_DEBUG(!CheckBlurry(expression->returns), "è¡¨è¾¾å¼ç±»å‹é”™è¯¯");
 	return true;
 }
 
@@ -656,7 +656,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractCallable* callable;
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable)) return false;
-			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "ÀàĞÍ´íÎó");
+			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "ç±»å‹é”™è¯¯");
 			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
 			{
 				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
@@ -675,7 +675,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractCallable* callable;
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))return false;
-			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "ÀàĞÍ´íÎó");
+			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "ç±»å‹é”™è¯¯");
 			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
 			{
 				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
@@ -752,7 +752,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, const Span<Type,
 		return true;
 	}
 	else if (expression->returns.Count() == 1) return TryExplicitTypes(expression, targetTypes[0], types);
-	ASSERT_DEBUG(!CheckBlurry(expression->returns), "±í´ïÊ½ÀàĞÍ´íÎó");
+	ASSERT_DEBUG(!CheckBlurry(expression->returns), "è¡¨è¾¾å¼ç±»å‹é”™è¯¯");
 	types.Add(expression->returns);
 	return true;
 }
@@ -784,7 +784,7 @@ AbstractCallable* GetCallable(DeclarationManager* manager, const Anchor& anchor,
 		AbstractInterface* abstractInterface = (AbstractInterface*)manager->GetDeclaration(declaration);
 		return abstractInterface->functions[declaration.index];
 	}
-	else EXCEPTION("ÎŞĞ§µÄ¶¨ÒåÀàĞÍ");
+	else EXCEPTION("æ— æ•ˆçš„å®šä¹‰ç±»å‹");
 }
 
 bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<CompilingDeclaration, true>& declarations, const Span<Type, true>& parameters, AbstractCallable*& callable)
@@ -826,7 +826,7 @@ bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<Compiling
 			Span<Type, true> parameterTypesSpan(&parameterTypes);
 			if (TryConvert(manager, parameterTypesSpan, targetParameters, measure))
 			{
-				if (declarations[i].library == LIBRARY_KERNEL) measure++;//ÔËËã·ûÖØÔØÊ±¸²¸ÇÄ¬ÈÏÔËËã
+				if (declarations[i].library == LIBRARY_KERNEL) measure++;//è¿ç®—ç¬¦é‡è½½æ—¶è¦†ç›–é»˜è®¤è¿ç®—
 				if (results.Count() == 0 || measure < minMeasure)
 				{
 					results.Clear();
@@ -1024,7 +1024,7 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 				MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
 				return Attribute::Invalid;
 			}
-			ASSERT_DEBUG(ContainAll(left->type, ExpressionType::TypeExpression), "×ó±ß²»ÊÇÀàĞÍ±í´ïÊ½");
+			ASSERT_DEBUG(ContainAll(left->type, ExpressionType::TypeExpression), "å·¦è¾¹ä¸æ˜¯ç±»å‹è¡¨è¾¾å¼");
 			if (ContainAll(right->attribute, Attribute::Value))
 			{
 				Type targetType = ((TypeExpression*)left)->customType;
@@ -1152,7 +1152,7 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 		default:
 			break;
 	}
-	EXCEPTION("ÎŞĞ§µÄTokenÀàĞÍ");
+	EXCEPTION("æ— æ•ˆçš„Tokenç±»å‹");
 }
 
 bool ExpressionParser::PushToken(List<Expression*, true>& expressionStack, List<Token>& tokenStack, const Token& token, Attribute attribute)
@@ -1301,7 +1301,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					return true;
 				}
 				break;
-			case DeclarationCategory::EnumElement: EXCEPTION("Ã¶¾ÙÄÚÃ»ÓĞÂß¼­´úÂë£¬²»»áÖ±½Ó²éÕÒµ½Ã¶¾Ù");
+			case DeclarationCategory::EnumElement: EXCEPTION("æšä¸¾å†…æ²¡æœ‰é€»è¾‘ä»£ç ï¼Œä¸ä¼šç›´æ¥æŸ¥æ‰¾åˆ°æšä¸¾");
 			case DeclarationCategory::Struct:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1324,7 +1324,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						index = lexical.anchor.GetEnd();
 						return true;
 					}
-					else EXCEPTION("Èç¹û²»ÔÚ³ÉÔ±º¯ÊıÖĞ²»¿ÉÄÜÖ±½ÓÕÒµ½³ÉÔ±×Ö¶Î");
+					else EXCEPTION("å¦‚æœä¸åœ¨æˆå‘˜å‡½æ•°ä¸­ä¸å¯èƒ½ç›´æ¥æ‰¾åˆ°æˆå‘˜å­—æ®µ");
 				}
 				break;
 			case DeclarationCategory::StructFunction:
@@ -1339,7 +1339,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						index = lexical.anchor.GetEnd();
 						return true;
 					}
-					else EXCEPTION("Èç¹û²»ÔÚ³ÉÔ±º¯ÊıÖĞ²»¿ÉÄÜÖ±½ÓÕÒµ½³ÉÔ±º¯Êı");
+					else EXCEPTION("å¦‚æœä¸åœ¨æˆå‘˜å‡½æ•°ä¸­ä¸å¯èƒ½ç›´æ¥æ‰¾åˆ°æˆå‘˜å‡½æ•°");
 				}
 				break;
 			case DeclarationCategory::Class:
@@ -1352,7 +1352,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					return true;
 				}
 				break;
-			case DeclarationCategory::Constructor: EXCEPTION("¹¹Ôìº¯Êı²»²ÎÓëÖØÔØ¾öÒé");
+			case DeclarationCategory::Constructor: EXCEPTION("æ„é€ å‡½æ•°ä¸å‚ä¸é‡è½½å†³è®®");
 			case DeclarationCategory::ClassVariable:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1365,7 +1365,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						index = lexical.anchor.GetEnd();
 						return true;
 					}
-					else EXCEPTION("Èç¹û²»ÔÚ³ÉÔ±º¯ÊıÖĞ²»¿ÉÄÜÖ±½ÓÕÒµ½³ÉÔ±×Ö¶Î");
+					else EXCEPTION("å¦‚æœä¸åœ¨æˆå‘˜å‡½æ•°ä¸­ä¸å¯èƒ½ç›´æ¥æ‰¾åˆ°æˆå‘˜å­—æ®µ");
 				}
 				break;
 			case DeclarationCategory::ClassFunction:
@@ -1380,7 +1380,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						index = lexical.anchor.GetEnd();
 						return true;
 					}
-					else EXCEPTION("Èç¹û²»ÔÚ³ÉÔ±º¯ÊıÖĞ²»¿ÉÄÜÖ±½ÓÕÒµ½³ÉÔ±º¯Êı");
+					else EXCEPTION("å¦‚æœä¸åœ¨æˆå‘˜å‡½æ•°ä¸­ä¸å¯èƒ½ç›´æ¥æ‰¾åˆ°æˆå‘˜å‡½æ•°");
 				}
 				break;
 			case DeclarationCategory::Interface:
@@ -1393,7 +1393,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					return true;
 				}
 				break;
-			case DeclarationCategory::InterfaceFunction: EXCEPTION("½Ó¿ÚÄÚÃ»ÓĞÂß¼­´úÂë£¬²»»áÖ±½Ó²éÕÒµ½½Ó¿Úº¯Êı");
+			case DeclarationCategory::InterfaceFunction: EXCEPTION("æ¥å£å†…æ²¡æœ‰é€»è¾‘ä»£ç ï¼Œä¸ä¼šç›´æ¥æŸ¥æ‰¾åˆ°æ¥å£å‡½æ•°");
 			case DeclarationCategory::Delegate:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1424,7 +1424,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					return true;
 				}
 				break;
-			case DeclarationCategory::Lambda: EXCEPTION("lambda²»²ÎÓëÖØÔØ¾öÒé");
+			case DeclarationCategory::Lambda: EXCEPTION("lambdaä¸å‚ä¸é‡è½½å†³è®®");
 			case DeclarationCategory::LambdaClosureValue:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1461,7 +1461,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 				expressionStack.Add(expression);
 				attribute = expression->attribute;
 			}
-			else EXCEPTION("Èç¹û²»ÔÚ³ÉÔ±º¯ÊıÖĞ²»¿ÉÄÜÖ±½ÓÕÒµ½³ÉÔ±º¯Êı");
+			else EXCEPTION("å¦‚æœä¸åœ¨æˆå‘˜å‡½æ•°ä¸­ä¸å¯èƒ½ç›´æ¥æ‰¾åˆ°æˆå‘˜å‡½æ•°");
 		}
 		else if (declarations.Peek().category == DeclarationCategory::ClassFunction)
 		{
@@ -1472,13 +1472,13 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 				expressionStack.Add(expression);
 				attribute = expression->attribute;
 			}
-			else EXCEPTION("Èç¹û²»ÔÚ³ÉÔ±º¯ÊıÖĞ²»¿ÉÄÜÖ±½ÓÕÒµ½³ÉÔ±º¯Êı");
+			else EXCEPTION("å¦‚æœä¸åœ¨æˆå‘˜å‡½æ•°ä¸­ä¸å¯èƒ½ç›´æ¥æ‰¾åˆ°æˆå‘˜å‡½æ•°");
 		}
 		else
 		{
 			for (uint32 i = 0; i < declarations.Count(); i++)
 				if (declarations[i].category != DeclarationCategory::Function && declarations[i].category != DeclarationCategory::Native)
-					EXCEPTION("Ö»ÓĞÖØÔØº¯Êı¿ÉÒÔÃû³ÆÖØ¸´");
+					EXCEPTION("åªæœ‰é‡è½½å‡½æ•°å¯ä»¥åç§°é‡å¤");
 			MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
 			expressionStack.Add(expression);
 			attribute = expression->attribute;
@@ -1735,7 +1735,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 					default:
 						break;
 				}
-				EXCEPTION("´Ê·¨ÀàĞÍ´íÎó");
+				EXCEPTION("è¯æ³•ç±»å‹é”™è¯¯");
 			}
 		}
 		else MESSAGE2(manager->messages, left, MessageType::ERROR_EXPRESSION_UNASSIGNABLE);
@@ -1867,7 +1867,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					if (ContainAny(attribute, Attribute::Method))
 					{
-						ASSERT_DEBUG(ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression | ExpressionType::MethodMemberExpression | ExpressionType::MethodVirtualExpression), "·Çº¯ÊıÀàĞÍµÄ±í´ïÊ½²»Ó¦¸Ã½øÕâ¸ö·ÖÖ§");
+						ASSERT_DEBUG(ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression | ExpressionType::MethodMemberExpression | ExpressionType::MethodVirtualExpression), "éå‡½æ•°ç±»å‹çš„è¡¨è¾¾å¼ä¸åº”è¯¥è¿›è¿™ä¸ªåˆ†æ”¯");
 						if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression))
 						{
 							MethodExpression* methodExpression = (MethodExpression*)expressionStack.Pop();
@@ -1930,12 +1930,12 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							expressionStack.Add(tuple);
 							goto label_parse_fail;
 						}
-						else EXCEPTION("Î´ÖªµÄµ÷ÓÃ");
+						else EXCEPTION("æœªçŸ¥çš„è°ƒç”¨");
 					}
 					else if (ContainAny(attribute, Attribute::Callable))
 					{
 						Expression* callableExpression = expressionStack.Pop();
-						ASSERT_DEBUG(callableExpression->returns.Count() == 1 && !callableExpression->returns.Peek().dimension && callableExpression->returns.Peek().code == TypeCode::Delegate, "Ö»ÓĞÎ¯ÍĞÀàĞÍ²Å»á×ßÕâ¸ö·ÖÖ§");
+						ASSERT_DEBUG(callableExpression->returns.Count() == 1 && !callableExpression->returns.Peek().dimension && callableExpression->returns.Peek().code == TypeCode::Delegate, "åªæœ‰å§”æ‰˜ç±»å‹æ‰ä¼šèµ°è¿™ä¸ªåˆ†æ”¯");
 						AbstractDelegate* declaration = (AbstractDelegate*)manager->GetDeclaration(callableExpression->returns.Peek());
 						if (TryAssignmentConvert(tuple, declaration->parameters.GetTypesSpan()))
 						{
@@ -1951,7 +1951,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					else if (ContainAny(attribute, Attribute::Type))
 					{
 						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "±í´ïÊ½ÀàĞÍ´íÎó");
+						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "è¡¨è¾¾å¼ç±»å‹é”™è¯¯");
 						Type type = typeExpression->customType;
 						if (type == TYPE_Real2)
 						{
@@ -2188,7 +2188,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					else if (ContainAny(attribute, Attribute::Type))
 					{
 						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "²»ÊÇÀàĞÍ±í´ïÊ½");
+						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "ä¸æ˜¯ç±»å‹è¡¨è¾¾å¼");
 						Type type = typeExpression->customType;
 						if (tuple->returns.Count() == 0)
 						{
@@ -2282,7 +2282,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					if (ContainAny(attribute, Attribute::Type))
 					{
 						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "±í´ïÊ½ÀàĞÍ´í");
+						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "è¡¨è¾¾å¼ç±»å‹é”™");
 						Type elementType = Type(typeExpression->customType, typeExpression->customType.dimension + ExtractDimension(anchor, index));
 						List<Type, true> types(tuple->returns.Count());
 						for (uint32 i = 0; i < tuple->returns.Count(); i++) types.Add(elementType);
@@ -2411,7 +2411,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
 					{
 						Expression* expression = expressionStack.Pop();
-						ASSERT_DEBUG(expression->returns.Count() == 1, "·µ»ØÖµÊıÁ¿²»Î¨Ò»µÄ±í´ïÊ½ÊôĞÔÓ¦¸ÃÊÇÔª×é");
+						ASSERT_DEBUG(expression->returns.Count() == 1, "è¿”å›å€¼æ•°é‡ä¸å”¯ä¸€çš„è¡¨è¾¾å¼å±æ€§åº”è¯¥æ˜¯å…ƒç»„");
 						Type type = expression->returns[0];
 						if (type.dimension)type = TYPE_Array;
 						if (type.code == TypeCode::Handle)
@@ -2487,7 +2487,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						if (ContainAny(attribute, Attribute::Type))
 						{
 							TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-							ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "±í´ïÊ½ÀàĞÍ²»¶Ô");
+							ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "è¡¨è¾¾å¼ç±»å‹ä¸å¯¹");
 							if (typeExpression->customType.code == TypeCode::Enum)
 							{
 								Type customType = typeExpression->customType;
@@ -2509,7 +2509,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						else if (ContainAny(attribute, Attribute::Value))
 						{
 							Expression* expression = expressionStack.Pop();
-							ASSERT_DEBUG(expression->returns.Count() == 1, "·µ»ØÖµÊıÁ¿²»Î¨Ò»µÄ±í´ïÊ½ÊôĞÔÓ¦¸ÃÊÇÔª×é");
+							ASSERT_DEBUG(expression->returns.Count() == 1, "è¿”å›å€¼æ•°é‡ä¸å”¯ä¸€çš„è¡¨è¾¾å¼å±æ€§åº”è¯¥æ˜¯å…ƒç»„");
 							Type type = expression->returns[0];
 							List<CompilingDeclaration, true> declarations(0);
 							if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
@@ -2574,7 +2574,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
 					{
 						Expression* expression = expressionStack.Pop();
-						ASSERT_DEBUG(expression->returns.Count() == 1, "·µ»ØÖµÊıÁ¿²»Î¨Ò»µÄ±í´ïÊ½ÊôĞÔÓ¦¸ÃÊÇÔª×é");
+						ASSERT_DEBUG(expression->returns.Count() == 1, "è¿”å›å€¼æ•°é‡ä¸å”¯ä¸€çš„è¡¨è¾¾å¼å±æ€§åº”è¯¥æ˜¯å…ƒç»„");
 						Type type = expression->returns[0];
 						if (type.dimension)type = TYPE_Array;
 						if (IsHandleType(type))
@@ -2619,7 +2619,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
 					{
 						Expression* expression = expressionStack.Pop();
-						ASSERT_DEBUG(expression->returns.Count() == 1, "·µ»ØÖµÊıÁ¿²»Î¨Ò»µÄ±í´ïÊ½ÊôĞÔÓ¦¸ÃÊÇÔª×é");
+						ASSERT_DEBUG(expression->returns.Count() == 1, "è¿”å›å€¼æ•°é‡ä¸å”¯ä¸€çš„è¡¨è¾¾å¼å±æ€§åº”è¯¥æ˜¯å…ƒç»„");
 						Type type = expression->returns[0];
 						if (type.dimension)type = TYPE_Array;
 						if (IsHandleType(type))
@@ -2715,7 +2715,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 			}
 			case LexicalType::QuestionNull:
 			case LexicalType::Colon: goto label_error_unexpected_lexcal;
-#pragma region ³£Á¿
+#pragma region å¸¸é‡
 			case LexicalType::ConstReal:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -3314,7 +3314,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				else if (ContainAny(attribute, Attribute::Type))
 				{
 					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "±í´ïÊ½ÀàĞÍ²»¶Ô");
+					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "è¡¨è¾¾å¼ç±»å‹ä¸å¯¹");
 					Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
 					delete typeExpression; typeExpression = NULL;
 					expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));

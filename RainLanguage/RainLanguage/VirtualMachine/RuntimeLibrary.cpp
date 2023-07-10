@@ -620,7 +620,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 	}
 }
 
-void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
+void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library, uint32 selfLibraryIndex)
 {
 	this->kernel = kernel;
 	LibraryAgency* agency = kernel->libraryAgency;
@@ -798,7 +798,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 		{
 			const InterfaceDeclarationInfo* info = &library->interfaces[indices[x]];
 			for (uint32 y = 0; y < info->inherits.Count(); y++)
-				if (info->inherits[y].library == LIBRARY_SELF && indexSet.Contains(info->inherits[y].index))
+				if (info->inherits[y].library == selfLibraryIndex && indexSet.Contains(info->inherits[y].index))
 					goto next_interface;
 			RelocationMethods(this, indices[x], info, maps);
 			indexSet.Remove(indices[x]);
@@ -808,6 +808,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 		}
 		ASSERT_DEBUG(count > indices.Count(), "接口存在循环继承");
 	}
+
 	indices.Clear();
 	for (uint32 i = 0; i < classes.Count(); i++)indices.Add(i);
 	while (indices.Count())
@@ -818,7 +819,7 @@ void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library)
 		for (uint32 x = 0; x < indices.Count(); x++)
 		{
 			const ClassDeclarationInfo* info = &library->classes[indices[x]];
-			if (info->parent.library != LIBRARY_SELF || classes[info->parent.index].offset != INVALID)
+			if (info->parent.library != selfLibraryIndex || classes[info->parent.index].offset != INVALID)
 			{
 				RuntimeClass* runtimeClass = &classes[indices[x]];
 				if (info->parent.IsValid())
