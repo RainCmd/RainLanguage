@@ -149,6 +149,22 @@ bool Context::TryFindSpace(DeclarationManager* manager, const Anchor& name, Abst
 	else return false;
 }
 
+void ColletOverrideFunction(Set<CompilingDeclaration, true>& filter, DeclarationManager* manager, AbstractClass* abstractClass, AbstractFunction* function)
+{
+	AbstractLibrary* abstractLibrary;
+	while (abstractClass->parent.library != INVALID)
+	{
+		abstractLibrary = manager->GetLibrary(abstractClass->parent.library);
+		abstractClass = abstractLibrary->classes[abstractClass->parent.index];
+		for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
+		{
+			AbstractFunction* member = abstractLibrary->functions[abstractClass->functions[i]];
+			if (member->name == function->name && IsEquals(member->parameters.GetTypes(), 1, function->parameters.GetTypes(), 1))
+				filter.Add(member->declaration);
+		}
+	}
+}
+
 bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name, List<CompilingDeclaration, true>& results)
 {
 	if (declaration.category == DeclarationCategory::Struct)
@@ -168,6 +184,7 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 	}
 	else if (declaration.category == DeclarationCategory::Class)
 	{
+		Set<CompilingDeclaration, true> filter(0);
 		for (Type index = declaration.DefineType(); index.library != INVALID; index = manager->GetParent(index))
 		{
 			AbstractLibrary* library = manager->GetLibrary(index.library);
@@ -184,8 +201,11 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 			for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 			{
 				AbstractFunction* member = library->functions[abstractClass->functions[i]];
-				if (member->name == name.content && IsVisible(manager, member->declaration))
+				if (member->name == name.content && IsVisible(manager, member->declaration) && !filter.Contains(member->declaration))
+				{
 					results.Add(member->declaration);
+					ColletOverrideFunction(filter, manager, abstractClass, member);
+				}
 			}
 		}
 		if (results.Count())return true;
@@ -229,22 +249,6 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 		}
 	}
 	return false;
-}
-
-void ColletOverrideFunction(Set<CompilingDeclaration, true>& filter, DeclarationManager* manager, AbstractClass* abstractClass, AbstractFunction* function)
-{
-	AbstractLibrary* abstractLibrary;
-	while (abstractClass->parent.library != INVALID)
-	{
-		abstractLibrary = manager->GetLibrary(abstractClass->parent.library);
-		abstractClass = abstractLibrary->classes[abstractClass->parent.index];
-		for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
-		{
-			AbstractFunction* member = abstractLibrary->functions[abstractClass->functions[i]];
-			if (member->name == function->name && IsEquals(member->parameters.GetTypes(), function->parameters.GetTypes()))
-				filter.Add(member->declaration);
-		}
-	}
 }
 
 void FindMember(DeclarationManager* manager, const String& name, AbstractInterface* abstractInterface, List<CompilingDeclaration, true>& results)
@@ -305,22 +309,22 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, Typ
 			for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 			{
 				AbstractFunction* member = abstractLibrary->functions[abstractClass->functions[i]];
-				if (member->name == name && !filter.Contains(member->declaration) && IsVisible(manager, member->declaration))
+				if (member->name == name && IsVisible(manager, member->declaration) && !filter.Contains(member->declaration))
 				{
 					results.Add(member->declaration);
 					ColletOverrideFunction(filter, manager, abstractClass, member);
 				}
 			}
-			if (abstractClass->parent.library == INVALID)break;
+			if (abstractClass->parent.library == INVALID) break;
 			abstractLibrary = manager->GetLibrary(abstractClass->parent.library);
 			abstractClass = abstractLibrary->classes[abstractClass->parent.index];
 		}
-		if (results.Count())return true;
+		if (results.Count()) return true;
 	}
 	else if (type.code == TypeCode::Interface)
 	{
 		FindMember(manager, name, abstractLibrary->interfaces[type.index], results);
-		if (results.Count())return true;
+		if (results.Count()) return true;
 	}
 	return false;
 }
@@ -429,5 +433,5 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 		if (results[i].category != DeclarationCategory::Function)
 			EXCEPTION("操作类型必须是全局函数");
 #endif // DEBUG
-}
+	}
 
