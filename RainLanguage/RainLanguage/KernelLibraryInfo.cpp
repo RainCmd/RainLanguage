@@ -112,7 +112,7 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 	return result;
 }
 
-inline void GetStackSize(KernelLibraryInfo& library, Type& type, uint32& size, uint8& alignment)
+inline void GetStackSize(KernelLibraryInfo& library, Type type, uint32& size, uint8& alignment)
 {
 	if (type.dimension) type = TYPE_Handle;
 	switch (type.code)
