@@ -2,7 +2,6 @@
 #include "RainLanguage.h"
 #include "String.h"
 
-//KernelLibraryInfo.cpp 中不少地方是直接写死的字符串，如果要改的话注意两边同步
 String KeyWord_namespace();
 String KeyWord_import();
 String KeyWord_native();
@@ -17,7 +16,6 @@ String KeyWord_class();
 String KeyWord_interface();
 String KeyWord_const();
 
-String KeyWord_kernel();
 String KeyWord_global();
 String KeyWord_base();
 String KeyWord_this();

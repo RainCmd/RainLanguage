@@ -1240,9 +1240,7 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& anchor, uint32& index, L
 	{
 		if (lexical.type == LexicalType::Word)
 		{
-			if (lexical.anchor.content == KeyWord_global()) return TryFindDeclaration(anchor, index, lexical, manager->selfLibaray, declarations);
-			else if (lexical.anchor.content == KeyWord_kernel()) return TryFindDeclaration(anchor, index, lexical, manager->kernelLibaray, declarations);
-			else if (TryFindDeclaration(lexical.anchor, declarations))
+			if (TryFindDeclaration(lexical.anchor, declarations))
 			{
 				index = lexical.anchor.GetEnd();
 				return true;
@@ -1272,25 +1270,27 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 		CompilingDeclaration declaration = declarations.Peek();
 		switch (declaration.category)
 		{
-			case DeclarationCategory::Invalid: goto label_error_unexpected_lexcal;
+			case DeclarationCategory::Invalid: break;
 			case DeclarationCategory::Variable:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					VariableGlobalExpression* expression = new VariableGlobalExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), GetVariableType(declaration));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					index = lexical.anchor.GetEnd();
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Function:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					index = lexical.anchor.GetEnd();
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Enum:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1298,9 +1298,9 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Enum, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::EnumElement: EXCEPTION("枚举内没有逻辑代码，不会直接查找到枚举");
 			case DeclarationCategory::Struct:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
@@ -1309,9 +1309,9 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Struct, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::StructVariable:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1321,11 +1321,12 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
 						expressionStack.Add(expression);
 						attribute = expression->attribute;
-						break;
+						index = lexical.anchor.GetEnd();
+						return true;
 					}
 					else EXCEPTION("如果不在成员函数中不可能直接找到成员字段");
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::StructFunction:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1335,11 +1336,12 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						MethodMemberExpression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
 						expressionStack.Add(expression);
 						attribute = expression->attribute;
-						break;
+						index = lexical.anchor.GetEnd();
+						return true;
 					}
 					else EXCEPTION("如果不在成员函数中不可能直接找到成员函数");
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Class:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1347,9 +1349,9 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Handle, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Constructor: EXCEPTION("构造函数不参与重载决议");
 			case DeclarationCategory::ClassVariable:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
@@ -1360,11 +1362,12 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
 						expressionStack.Add(expression);
 						attribute = expression->attribute;
-						break;
+						index = lexical.anchor.GetEnd();
+						return true;
 					}
 					else EXCEPTION("如果不在成员函数中不可能直接找到成员字段");
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::ClassFunction:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1374,11 +1377,12 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 						MethodVirtualExpression* expression = new MethodVirtualExpression(lexical.anchor, thisExpression, declarations, false);
 						expressionStack.Add(expression);
 						attribute = expression->attribute;
-						break;
+						index = lexical.anchor.GetEnd();
+						return true;
 					}
 					else EXCEPTION("如果不在成员函数中不可能直接找到成员函数");
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Interface:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1386,9 +1390,9 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Interface, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::InterfaceFunction: EXCEPTION("接口内没有逻辑代码，不会直接查找到接口函数");
 			case DeclarationCategory::Delegate:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
@@ -1397,9 +1401,9 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Delegate, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Coroutine:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -1407,18 +1411,19 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Coroutine, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Native:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					index = lexical.anchor.GetEnd();
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::Lambda: EXCEPTION("lambda不参与重载决议");
 			case DeclarationCategory::LambdaClosureValue:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
@@ -1428,22 +1433,22 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), closure, GetVariableType(declaration));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					index = lexical.anchor.GetEnd();
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
+				break;
 			case DeclarationCategory::LocalVariable:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					VariableLocalExpression* expression = new VariableLocalExpression(lexical.anchor, declaration, Attribute::Assignable | Attribute::Value, GetVariableType(declaration));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
-					break;
+					index = lexical.anchor.GetEnd();
+					return true;
 				}
-				goto label_error_unexpected_lexcal;
-			default: goto label_error_unexpected_lexcal;
+				break;
+			default: break;
 		}
-		index = lexical.anchor.GetEnd();
-		return true;
 	}
 	else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 	{
@@ -1481,7 +1486,6 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 		index = lexical.anchor.GetEnd();
 		return true;
 	}
-label_error_unexpected_lexcal:
 	MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 	return false;
 }
@@ -2888,18 +2892,33 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				goto label_error_unexpected_lexcal;
 #pragma endregion
 			case LexicalType::Word:
-				if (lexical.anchor.content == KeyWord_kernel())
+				if (lexical.anchor.content == KeyWord_global())
 				{
-					List<CompilingDeclaration, true> declarations(0);
-					if (TryFindDeclaration(anchor, index, lexical, manager->kernelLibaray, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-						goto label_next_lexical;
-					goto label_parse_fail;
-				}
-				else if (lexical.anchor.content == KeyWord_global())
-				{
-					List<CompilingDeclaration, true> declarations(0);
-					if (TryFindDeclaration(anchor, index, lexical, manager->selfLibaray, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-						goto label_next_lexical;
+					if (TryAnalysis(anchor, lexical.anchor.GetEnd(), lexical, manager->messages) && lexical.type == LexicalType::Word)
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						AbstractSpace* space = NULL;
+						Context globalContext = Context(context.compilingSpace, context.relies);
+						index = lexical.anchor.GetEnd();
+						if (globalContext.TryFindDeclaration(manager, lexical.anchor, declarations))
+						{
+							if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+								goto label_next_lexical;
+							goto label_parse_fail;
+						}
+						else if (globalContext.TryFindSpace(manager, lexical.anchor, space))
+						{
+							if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+								goto label_next_lexical;
+							goto label_parse_fail;
+						}
+						else
+						{
+							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+							goto label_parse_fail;
+						}
+					}
+					MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 					goto label_parse_fail;
 				}
 				else if (lexical.anchor.content == KeyWord_base())
