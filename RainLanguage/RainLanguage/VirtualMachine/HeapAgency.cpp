@@ -145,8 +145,21 @@ void HeapAgency::Free(Handle handle)
 				break;
 			case TypeCode::Interface: break;
 			case TypeCode::Delegate:
-				WeakRelease(((Delegate*)pointer)->target);
-				break;
+			{
+				Delegate* value = (Delegate*)pointer;
+				switch (value->type)
+				{
+					case FunctionType::Global:
+					case FunctionType::Native: break;
+					case FunctionType::Box:
+					case FunctionType::Reality:
+					case FunctionType::Virtual:
+					case FunctionType::Abstract:
+						WeakRelease(value->target);
+						break;
+				}
+			}
+			break;
 			case TypeCode::Coroutine:
 				kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)pointer));
 				break;
@@ -156,6 +169,7 @@ void HeapAgency::Free(Handle handle)
 
 void HeapAgency::Mark(Handle handle)
 {
+	if (!handle) return;
 	HeapAgency::Head* head = &heads[handle];
 	if (head->flag != flag)
 	{
@@ -169,7 +183,7 @@ void HeapAgency::Mark(Handle handle)
 			Type elementType = Type(head->type, head->type.dimension - 1);
 			if (IsHandleType(elementType))
 				for (uint32 i = 0; i < length; i++)
-					Mark(*(Handle*)pointer[i * elementSize]);
+					Mark(*(Handle*)(pointer + i * elementSize));
 			else if (elementType.code == TypeCode::Struct)
 			{
 				const List<uint32, true>* handleFields = &kernel->libraryAgency->GetStruct(head->type)->handleFields;
@@ -196,7 +210,21 @@ void HeapAgency::Mark(Handle handle)
 			for (uint32 i = 0; i < handleFields->Count(); i++)
 				Mark(*(Handle*)(pointer + (*handleFields)[i]));
 		}
-		else if (head->type.code == TypeCode::Delegate)Mark(((Delegate*)(heap.GetPointer() + head->pointer))->target);
+		else if (head->type.code == TypeCode::Delegate)
+		{
+			Delegate* value = (Delegate*)(heap.GetPointer() + head->pointer);
+			switch (value->type)
+			{
+				case FunctionType::Global:
+				case FunctionType::Native: break;
+				case FunctionType::Box:
+				case FunctionType::Reality:
+				case FunctionType::Virtual:
+				case FunctionType::Abstract:
+					Mark(value->target);
+					break;
+			}
+		}
 	}
 }
 
@@ -229,7 +257,7 @@ void HeapAgency::FullGC()
 	Handle index = head;
 	while (index)
 	{
-		if (heads[index].strong || IsUnrecoverableCoroutine(index))Mark(index);
+		if (heads[index].strong || IsUnrecoverableCoroutine(index)) Mark(index);
 		index = heads[index].next;
 	}
 	index = head;
