@@ -102,6 +102,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 		SpaceAddDeclaration(space, abstractCoroutine->name, abstractCoroutine->declaration);
 	}
 }
+//todo 定义可见性判断
 AbstractLibrary::AbstractLibrary(const KernelLibraryInfo* info, const AbstractParameter& parameter) :AbstractSpace(NULL, TO_NATIVE_STRING(info->root->name), EMPTY_STRINGS), library(LIBRARY_KERNEL),
 variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), coroutines(info->coroutines.Count()), natives(0)
 {

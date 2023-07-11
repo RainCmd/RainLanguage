@@ -413,16 +413,18 @@ public:
 		}
 		~Space();
 	};
+	//todo 所有定义都需要可见性
 	struct Variable
 	{
+		bool isPublic;
 		String name;
 		Type type;
 		uint32 address;
-		inline Variable(const String& name, const Type& type, uint32 address) : name(name), type(type), address(address) {}
+		inline Variable(bool isPublic, const String& name, const Type& type, uint32 address) : isPublic(isPublic), name(name), type(type), address(address) {}
 	};
 	struct GlobalVariable :Variable
 	{
-		inline GlobalVariable(const String& name, const Type& type, uint32 address) :Variable(name, type, address) {}
+		inline GlobalVariable(const String& name, const Type& type, uint32 address) :Variable(true, name, type, address) {}
 	};
 	struct Enum
 	{
@@ -432,12 +434,14 @@ public:
 			integer value;
 			inline Element(const String& name, integer value) :name(name), value(value) {}
 		};
+		bool isPublic;
 		String name;
 		List<Element> elements;
 		inline Enum(const String& name, const List<Element>& elements) : name(name), elements(elements) {}
 	};
 	struct Struct
 	{
+		bool isPublic;
 		String name;
 		uint32 size;
 		uint8 alignment;
@@ -447,6 +451,7 @@ public:
 	};
 	struct Class
 	{
+		bool isPublic;
 		Declaration parent;
 		List<Declaration, true> inherits;
 		String name;
@@ -463,21 +468,25 @@ public:
 		{
 			String name;
 		};
+		bool isPublic;
 		List<Declaration, true> inherits;
 		String name;
 		List<Function, true> functions;
 	};
 	struct Delegate : CallableInfo
 	{
+		bool isPublic;
 		String name;
 	};
 	struct Coroutine
 	{
+		bool isPublic;
 		String name;
 		TupleInfo returns;
 	};
 	struct Function : CallableInfo
 	{
+		bool isPublic;
 		String name;
 		KernelInvoker invoker;
 		inline Function(const String& name, const TupleInfo& returns, const TupleInfo& parameters, KernelInvoker invoker) :name(name), CallableInfo(returns, parameters), invoker(invoker) {}
