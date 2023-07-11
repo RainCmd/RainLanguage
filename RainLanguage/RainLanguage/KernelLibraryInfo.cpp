@@ -26,17 +26,9 @@
 		space->structs.Add(structs.Count());\
 		new (structs.Add())KernelLibraryInfo::Struct(isPublic, KERNEL_STRING(name), size, alignment, variables, functions);
 
-#define REGISTER_STRUCT_INTERNAL(isPublic,name,index,size,alignment,variables,functions)\
-		ASSERT_DEBUG(structs.Count() == index, "结构体索引错误");\
-		new (structs.Add())KernelLibraryInfo::Struct(isPublic, KERNEL_STRING(name), size, alignment, variables, functions);
-
 #define REGISTER_CLASS(isPublic,space,name,index,parent,inherits,size,alignment,constructors,variables,functions)\
 		ASSERT_DEBUG(classes.Count() == index, "托管类型索引错误");\
 		space->classes.Add(classes.Count());\
-		new (classes.Add())KernelLibraryInfo::Class(isPublic, parent, inherits, KERNEL_STRING(name), size, alignment, constructors, variables, functions);
-
-#define REGISTER_CLASS_INTERNAL(isPublic,name,index,parent,inherits,size,alignment,constructors,variables,functions)\
-		ASSERT_DEBUG(classes.Count() == index, "托管类型索引错误");\
 		new (classes.Add())KernelLibraryInfo::Class(isPublic, parent, inherits, KERNEL_STRING(name), size, alignment, constructors, variables, functions);
 
 #define REGISTER_FUNCTIONS(isPublic,space,name,returns,parameters,invoker)\
@@ -434,7 +426,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "GetType", CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Handle), handle_GetType);
 		REGISTER_CLASS(true, root, "handle", KERNEL_TYPE_CLASS_INDEX_Handle, Declaration(), EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
-	REGISTER_CLASS_INTERNAL(true, "interface", KERNEL_TYPE_CLASS_INDEX_Interface, TYPE_Handle, EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
+	REGISTER_CLASS(true, root, "interface", KERNEL_TYPE_CLASS_INDEX_Interface, TYPE_Handle, EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
 	REGISTER_CLASS(true, root, "delegate", KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
 	//class coroutine
 	{

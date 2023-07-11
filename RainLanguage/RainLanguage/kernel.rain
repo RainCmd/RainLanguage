@@ -1,0 +1,388 @@
+namespace kernel
+	public enum CoroutineState
+		Unstart
+		Running
+		Completed
+		Aborted
+		Invalid
+	public struct bool
+		public string ToString()
+	public struct byte
+		public string ToString()
+	public struct char
+		public string ToString()
+	public struct integer
+		public string ToString()
+	public struct real
+		public string ToString()
+	public struct real2
+		real x
+		real y
+		public real2 Normalized()
+		public real Magnitude()
+		public real SqrMagnitude()
+	public struct real3
+		real x
+		real y
+		real z
+		public real3 Normalized()
+		public real Magnitude()
+		public real SqrMagnitude()
+	public struct real4
+		real x
+		real y
+		real z
+		real w
+		public real4 Normalized()
+		public real Magnitude()
+		public real SqrMagnitude()
+	public struct enum
+		public string ToString() Declaration									//函数名后的Declaration是编译器添加的参数，对用户透明
+	public struct type
+		public bool IsPublic()
+		public Reflection.ReadonlyStrings GetAttributes()
+		public string GetName()
+		public type GetParent()
+		public Reflection.ReadonlyTypes GetInherits()
+		public Reflection.ReadonlyMemberConstructors GetConstructors()			//只返回当前类型中定义的构造函数
+		public Reflection.ReadonlyMemberVariables GetVariables()				//只返回当前类型中定义的字段
+		public Reflection.ReadonlyMemberFunctions GetFunctions()				//只返回当前类型中定义的函数
+		public Reflection.Space GetSpace()
+		public Reflection.TypeCode GetTypeCode()
+		public bool IsAssignable(type)											//判断当前类型的对象是否可赋值给目标类型的变量
+		public bool IsValid()
+		public integer[] GetEnumElements()
+		public Reflection.ReadonlyTypes GetParameters()							//委托的参数类型列表
+		public Reflection.ReadonlyTypes GetReturns()							//委托或携程的返回值类型列表
+		public handle CreateDelegate(Reflection.Function)														//创建全局函数的委托对象，返回当前类型的委托对象
+		public handle CreateDelegate(Reflection.Native)															//创建本地函数的委托对象，返回当前类型的委托对象
+		public handle CreateDelegate(Reflection.MemberFunction, handle target)									//创建成员函数的委托对象，返回当前类型的委托对象
+		public handle StartCoroutine(Reflection.Function function, handle[] parameters)							//创建并执行一个携程，返回当前类型的携程对象
+		public handle StartCoroutine(Reflection.MemberFunction function, handle target, handle[] parameters)	//创建并执行一个携程，返回当前类型的携程对象
+		public integer GetArrayRank()
+		public type GetArrayElementType()
+	public struct string							//GC字段加上自身
+		public integer GetLength()
+		public integer GetStringID()
+		public bool ToBool()
+		public integer ToInteger()
+		public real ToReal()
+	public struct entity							//GC字段加上自身
+		public integer GetEntityID()
+	public class handle
+		public integer GetHandleID()
+		public string ToString()
+		public type GetType()
+	public class interface handle
+	public class delegate handle
+	public class coroutine handle
+		public Start(bool immediately, bool ignoreWait)
+		public Abort()
+		public CoroutineState GetState()
+		public string GetExitCode()
+		public bool IsPause()
+		public Pause()
+		public Resume()
+	public class array handle
+		public integer GetLength()
+
+	public bool operator < (integer, integer)
+	public bool operator < (real, real)
+	public bool operator <= (integer, integer)
+	public bool operator <= (real, real)
+	public bool operator > (integer, integer)
+	public bool operator > (real, real)
+	public bool operator >= (integer, integer)
+	public bool operator >= (real, real)
+	public bool operator == (bool, bool)
+	public bool operator == (integer, integer)
+	public bool operator == (real, real)
+	public bool operator == (real2, real2)
+	public bool operator == (real3, real3)
+	public bool operator == (real4, real4)
+	public bool operator == (string, string)
+	public bool operator == (handle, handle)
+	public bool operator == (entity, entity)
+	public bool operator == (delegate, delegate)
+	public bool operator != (bool, bool)
+	public bool operator != (integer, integer)
+	public bool operator != (real, real)
+	public bool operator != (real2, real2)
+	public bool operator != (real3, real3)
+	public bool operator != (real4, real4)
+	public bool operator != (string, string)
+	public bool operator != (handle, handle)
+	public bool operator != (entity, entity)
+	public bool operator != (delegate, delegate)
+	public bool operator & (bool, bool)
+	public integer operator & (integer, integer)
+	public bool operator | (bool, bool)
+	public integer operator | (integer, integer)
+	public bool operator ^ (bool, bool)
+	public integer operator ^ (integer, integer)
+	public integer operator << (integer, integer)
+	public integer operator >> (integer, integer)
+	public integer operator + (integer, integer)
+	public real operator + (real, real)
+	public real2 operator + (real2, real2)
+	public real3 operator + (real3, real3)
+	public real4 operator + (real4, real4)
+	public string operator + (string, string)
+	public string operator + (string, bool)
+	public string operator + (string, char)
+	public string operator + (string, integer)
+	public string operator + (string, real)
+	public string operator + (string, handle)		//如果通过反射调用则会对handle的ToString做实调用，这是因为子类的ToString函数中可能有wait操作，而反射逻辑是在c++中执行的，无法保存执行栈来等待ToString返回
+	public string operator + (bool, string)
+	public string operator + (char, string)
+	public string operator + (integer, string)
+	public string operator + (real, string)
+	public string operator + (handle, string)		//如果通过反射调用则会对handle的ToString做实调用，这是因为子类的ToString函数中可能有wait操作，而反射逻辑是在c++中执行的，无法保存执行栈来等待ToString返回
+	public integer operator - (integer, integer)
+	public real operator - (real, real)
+	public real2 operator - (real2, real2)
+	public real3 operator - (real3, real3)
+	public real4 operator - (real4, real4)
+	public integer operator * (integer, integer)
+	public real operator * (real, real)
+	public real2 operator * (real2, real)
+	public real3 operator * (real3, real)
+	public real4 operator * (real4, real)
+	public real2 operator * (real, real2)
+	public real3 operator * (real, real3)
+	public real4 operator * (real, real4)
+	public real2 operator * (real2, real2)
+	public real3 operator * (real3, real3)
+	public real4 operator * (real4, real4)
+	public integer operator / (integer, integer)
+	public real operator / (real, real)
+	public real2 operator / (real2, real)
+	public real3 operator / (real3, real)
+	public real4 operator / (real4, real)
+	public real2 operator / (real, real2)
+	public real3 operator / (real, real3)
+	public real4 operator / (real, real4)
+	public real2 operator / (real2, real2)
+	public real3 operator / (real3, real3)
+	public real4 operator / (real4, real4)
+	public integer operator % (integer, integer)
+	public bool operator ! (bool)
+	public bool operator ~ (bool)
+	public integer operator ~ (integer)
+	public integer operator + (integer)
+	public real operator + (real)
+	public real2 operator + (real2)
+	public real3 operator + (real3)
+	public real4 operator + (real4)
+	public integer operator - (integer)
+	public real operator - (real)
+	public real2 operator - (real2)
+	public real3 operator - (real3)
+	public real4 operator - (real4)
+	public operator ++ (integer)			//反射调用该函数无效果，这里只是个声明
+	public operator ++ (real)				//反射调用该函数无效果，这里只是个声明
+	public operator -- (integer)			//反射调用该函数无效果，这里只是个声明
+	public operator -- (real)				//反射调用该函数无效果，这里只是个声明
+
+	namespace BitConvert
+		public integer BytesConvertInteger(byte, byte, byte, byte, byte, byte, byte, byte)
+		public real BytesConvertReal(byte, byte, byte, byte, byte, byte, byte, byte)
+		public string BytesConvertString(byte[])
+		public byte, byte, byte, byte, byte, byte, byte, byte IntegerConvertBytes(integer)
+		public byte, byte, byte, byte, byte, byte, byte, byte RealConvertBytes(real)
+		public byte[] StringConvertBytes(string)
+
+	namespace Math
+		public real PI
+		public real E
+		public real Rad2Deg
+		public real Deg2Rad
+
+		public integer Abs(integer)
+		public integer Clamp(integer, integer, integer)
+		public integer GetRandomInt()
+		public integer Max(integer, integer)
+		public integer Min(integer, integer)
+		public real Abs(real)
+		public real Acos(real)
+		public real Asin(real)
+		public real Atan(real)
+		public real Atan2(real, real)
+		public integer Ceil(real)
+		public real Clamp(real, real, real)
+		public real Clamp01(real)
+		public real Cos(real)
+		public integer Floor(real)
+		public real GetRandomReal()
+		public real Lerp(real, real, real)
+		public real Max(real, real)
+		public real Min(real, real)
+		public integer Round(real)
+		public integer Sign(real)
+		public real Sin(real)
+		public real, real SinCos(real)
+		public real Sqrt(real)
+		public real Tan(real)
+		public real Angle(real2, real2)
+		public real Cross(real2, real2)
+		public real Dot(real2, real2)
+		public real2 Lerp(real2, real2, real)
+		public real2 Max(real2, real2)
+		public real2 Min(real2, real2)
+		public real Angle(real3, real3)
+		public real3 Cross(real3, real3)
+		public real Dot(real3, real3)
+		public real3 Lerp(real3, real3, real)
+		public real3 Max(real3, real3)
+		public real3 Min(real3, real3)
+		public real Angle(real4, real4)
+		public real Dot(real4, real4)
+		public real4 Lerp(real4, real4, rea;)
+		public real4 Max(real4, real4)
+		public real4 Min(real4, real4)
+
+	namespace System
+		namespace Exceptions
+			public string NullReference
+			public string InvalidCoroutine
+			public string OutOfRange
+			public string InvalidTypeCode
+			public string CoroutineNotCompleted
+			public string DivideByZero
+			public string InvalidCast
+
+		public integer Collect(bool)
+		public integer HeapTotalMemory()
+		public integer CountHandle()
+		public integer CountCoroutine()
+		public integer EntityCount()
+		public integer StringCount()
+		public SetRandomSeed(integer)
+		public Reflection.Assembly[] GetAssembles()
+
+	namespace Reflection
+		public enum TypeCode
+			Invalid
+			Bool
+			Byte
+			Char
+			Integer
+			Real
+			Real2
+			Real3
+			Real4
+			Enum
+			Type
+			String
+			Entity
+			Handle
+			Interface
+			Delegate
+			Coroutine
+			Array
+		public class ReadonlyStrings
+			private string[] values
+			public string GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyTypes
+			private type[] values
+			public type GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyVariables
+			private Variable[] values
+			public Variable GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyMemberConstructors
+			private MemberConstructor[] values
+			public MemberConstructor GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyMemberVariables
+			private MemberVariable[] values
+			public MemberVariable GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyMemberFunctions
+			private MemberFunction[] values
+			public MemberFunction GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyFunctions
+			private Function[] values
+			public Function GetElement(integer)
+			public integer GetCount()
+		public class ReadonlyNatives
+			private Native[] values
+			public Native GetElement(integer)
+			public integer GetCount()
+		public class ReadonlySpaces
+			private Space[] values
+			public Space GetElement(integer)
+			public integer GetCount()
+		public class Variable
+			public bool IsPublic()
+			public ReadonlyStrings GetAttributes()
+			public Space GetSpace()
+			public string GetName()
+			public type GetVariableType()
+			public handle GetValue()
+			public SetValue(handle)
+		public class MemberConstructor
+			private ReadonlyTypes parameters
+			public bool IsPublic()
+			public ReadonlyStrings GetAttributes()
+			public type GetDeclaringType()
+			public ReadonlyTypes GetParameters()
+			public InvokeResult Invoke(handle[])
+		public class MemberVariable
+			public bool IsPublic()
+			public ReadonlyStrings GetAttributes()
+			public type GetDeclaringType()
+			public string GetName()
+			public type GetVariableType()
+			public handle GetValue(handle)
+			public SetValue(handle, handle)
+		public class MemberFunction
+			private ReadonlyTypes parameters
+			private ReadonlyTypes returns
+			public bool IsPublic()
+			public ReadonlyStrings GetAttributes()
+			public type GetDeclaringType()
+			public string GetName()
+			public ReadonlyTypes GetParameters()
+			public ReadonlyTypes GetReturns()
+			public InvokeResult Invoke(handle, handle[])
+		public class Function
+			private ReadonlyTypes parameters
+			private ReadonlyTypes returns
+			public bool IsPublic()
+			public ReadonlyStrings GetAttributes()
+			public Space GetSpace()
+			public string GetName()
+			public ReadonlyTypes GetParameters()
+			public ReadonlyTypes GetReturns()
+			public InvokeResult Invoke(handle[])
+		public class Native
+			private ReadonlyTypes parameters
+			private ReadonlyTypes returns
+			public bool IsPublic()
+			public ReadonlyStrings GetAttributes()
+			public Space GetSpace()
+			public string GetName()
+			public ReadonlyTypes GetParameters()
+			public ReadonlyTypes GetReturns()
+			public handle[] Invoke(handle[])
+		public class Space
+			private ReadonlyStrings attributes
+			private ReadonlySpaces children
+			private ReadonlyTypes types
+			private ReadonlyVariables variables
+			private ReadonlyFunctions functions
+			private ReadonlyNatives natives
+			public ReadonlyStrings GetAttributes()
+			public Space GetParent()
+			public ReadonlySpaces GetChildren()
+			public Assembly GetAssembly()
+			public string GetName()
+			public ReadonlyVariables GetVariables()
+			public ReadonlyFunctions GetFunctions()
+			public ReadonlyNatives GetNatives()
+			public ReadonlyTypes GetTypes()
+		public class Assembly Space
