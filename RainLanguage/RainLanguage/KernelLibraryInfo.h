@@ -413,7 +413,6 @@ public:
 		}
 		~Space();
 	};
-	//todo 所有定义都需要可见性
 	struct Variable
 	{
 		bool isPublic;
@@ -424,7 +423,7 @@ public:
 	};
 	struct GlobalVariable :Variable
 	{
-		inline GlobalVariable(const String& name, const Type& type, uint32 address) :Variable(true, name, type, address) {}
+		inline GlobalVariable(bool isPublic, const String& name, const Type& type, uint32 address) :Variable(isPublic, name, type, address) {}
 	};
 	struct Enum
 	{
@@ -437,7 +436,7 @@ public:
 		bool isPublic;
 		String name;
 		List<Element> elements;
-		inline Enum(const String& name, const List<Element>& elements) : name(name), elements(elements) {}
+		inline Enum(bool isPublic, const String& name, const List<Element>& elements) : isPublic(isPublic), name(name), elements(elements) {}
 	};
 	struct Struct
 	{
@@ -447,7 +446,7 @@ public:
 		uint8 alignment;
 		List<Variable> variables;
 		List<uint32, true> functions;
-		inline Struct(const String& name, uint32 size, uint8 alignment, const List<Variable>& variables, const List<uint32, true>& functions) : name(name), size(size), alignment(alignment), variables(variables), functions(functions) {}
+		inline Struct(bool isPublic, const String& name, uint32 size, uint8 alignment, const List<Variable>& variables, const List<uint32, true>& functions) : isPublic(isPublic), name(name), size(size), alignment(alignment), variables(variables), functions(functions) {}
 	};
 	struct Class
 	{
@@ -460,7 +459,7 @@ public:
 		List<uint32, true> constructors;
 		List<Variable> variables;
 		List<uint32, true> functions;
-		inline Class(const Declaration& parent, const List<Declaration, true>& inherits, const String& name, uint32 size, uint8 alignment, const List<uint32, true>& constructors, const List<Variable>& variables, const List<uint32, true>& functions) : parent(parent), inherits(inherits), name(name), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions) {}
+		inline Class(bool isPublic, const Declaration& parent, const List<Declaration, true>& inherits, const String& name, uint32 size, uint8 alignment, const List<uint32, true>& constructors, const List<Variable>& variables, const List<uint32, true>& functions) : isPublic(isPublic), parent(parent), inherits(inherits), name(name), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions) {}
 	};
 	struct Interface
 	{
@@ -489,7 +488,7 @@ public:
 		bool isPublic;
 		String name;
 		KernelInvoker invoker;
-		inline Function(const String& name, const TupleInfo& returns, const TupleInfo& parameters, KernelInvoker invoker) :name(name), CallableInfo(returns, parameters), invoker(invoker) {}
+		inline Function(bool isPublic, const String& name, const TupleInfo& returns, const TupleInfo& parameters, KernelInvoker invoker) : isPublic(isPublic), name(name), CallableInfo(returns, parameters), invoker(invoker) {}
 	};
 	Space* root;
 	List<uint8, true> data;

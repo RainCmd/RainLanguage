@@ -102,83 +102,110 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 		SpaceAddDeclaration(space, abstractCoroutine->name, abstractCoroutine->declaration);
 	}
 }
-//todo 定义可见性判断
+//todo 考虑kernelLibraryInfo先生成library再构造abstractLibrary，避免两套逻辑
 AbstractLibrary::AbstractLibrary(const KernelLibraryInfo* info, const AbstractParameter& parameter) :AbstractSpace(NULL, TO_NATIVE_STRING(info->root->name), EMPTY_STRINGS), library(LIBRARY_KERNEL),
 variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), coroutines(info->coroutines.Count()), natives(0)
 {
 	for (uint32 i = 0; i < info->variables.Count(); i++)
 	{
 		const KernelLibraryInfo::GlobalVariable* kernelVariable = &info->variables[i];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Variable, i, NULL);
-		variables.Add(new AbstractVariable(TO_NATIVE_STRING(kernelVariable->name), declaration, EMPTY_STRINGS, NULL, true, kernelVariable->type, kernelVariable->address));
+		if (kernelVariable->isPublic)
+		{
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Variable, variables.Count(), NULL);
+			variables.Add(new AbstractVariable(TO_NATIVE_STRING(kernelVariable->name), declaration, EMPTY_STRINGS, NULL, true, kernelVariable->type, kernelVariable->address));
+		}
 	}
 	for (uint32 i = 0; i < info->functions.Count(); i++)
 	{
 		const KernelLibraryInfo::Function* kernelFunction = &info->functions[i];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Function, i, NULL);
-		functions.Add(new AbstractFunction(TO_NATIVE_STRING(kernelFunction->name), declaration, EMPTY_STRINGS, NULL, kernelFunction->parameters, kernelFunction->returns));
+		if (kernelFunction->isPublic)
+		{
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Function, functions.Count(), NULL);
+			functions.Add(new AbstractFunction(TO_NATIVE_STRING(kernelFunction->name), declaration, EMPTY_STRINGS, NULL, kernelFunction->parameters, kernelFunction->returns));
+		}
 	}
 	for (uint32 x = 0; x < info->enums.Count(); x++)
 	{
 		const KernelLibraryInfo::Enum* kernelEnum = &info->enums[x];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Enum, x, NULL);
-		List<String> elements = List<String>(kernelEnum->elements.Count());
-		for (uint32 y = 0; y < kernelEnum->elements.Count(); y++)
-			elements.Add(TO_NATIVE_STRING(kernelEnum->elements[y].name));
-		enums.Add(new AbstractEnum(TO_NATIVE_STRING(kernelEnum->name), declaration, EMPTY_STRINGS, NULL, elements));
+		if (kernelEnum->isPublic)
+		{
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Enum, enums.Count(), NULL);
+			List<String> elements = List<String>(kernelEnum->elements.Count());
+			for (uint32 y = 0; y < kernelEnum->elements.Count(); y++)
+				elements.Add(TO_NATIVE_STRING(kernelEnum->elements[y].name));
+			enums.Add(new AbstractEnum(TO_NATIVE_STRING(kernelEnum->name), declaration, EMPTY_STRINGS, NULL, elements));
+		}
 	}
 	for (uint32 x = 0; x < info->structs.Count(); x++)
 	{
 		const KernelLibraryInfo::Struct* kernelStruct = &info->structs[x];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Struct, x, NULL);
-		List<AbstractVariable*, true> abstractVariables = List<AbstractVariable*, true>(kernelStruct->variables.Count());
-		for (uint32 y = 0; y < kernelStruct->variables.Count(); y++)
+		if (kernelStruct->isPublic)
 		{
-			const KernelLibraryInfo::Variable* memberVariable = &kernelStruct->variables[y];
-			CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::StructVariable, y, x);
-			abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Struct, structs.Count(), NULL);
+			List<AbstractVariable*, true> abstractVariables = List<AbstractVariable*, true>(kernelStruct->variables.Count());
+			for (uint32 y = 0; y < kernelStruct->variables.Count(); y++)
+			{
+				const KernelLibraryInfo::Variable* memberVariable = &kernelStruct->variables[y];
+				CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::StructVariable, y, declaration.index);
+				abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
+			}
+			structs.Add(new AbstractStruct(TO_NATIVE_STRING(kernelStruct->name), declaration, EMPTY_STRINGS, NULL, abstractVariables, kernelStruct->functions, kernelStruct->size, kernelStruct->alignment));
 		}
-		structs.Add(new AbstractStruct(TO_NATIVE_STRING(kernelStruct->name), declaration, EMPTY_STRINGS, NULL, abstractVariables, kernelStruct->functions, kernelStruct->size, kernelStruct->alignment));
 	}
 	for (uint32 x = 0; x < info->classes.Count(); x++)
 	{
 		const KernelLibraryInfo::Class* kernelClass = &info->classes[x];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Class, x, NULL);
-
-		List<AbstractVariable*, true> abstractVariables = List<AbstractVariable*, true>(kernelClass->variables.Count());
-		for (uint32 y = 0; y < kernelClass->variables.Count(); y++)
+		if (kernelClass->isPublic)
 		{
-			const KernelLibraryInfo::Variable* memberVariable = &kernelClass->variables[y];
-			CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::ClassVariable, y, x);
-			abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
-		}
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Class, classes.Count(), NULL);
 
-		classes.Add(new AbstractClass(TO_NATIVE_STRING(kernelClass->name), declaration, EMPTY_STRINGS, NULL, Type(kernelClass->parent, 0), KernelToCompiling(kernelClass->inherits), kernelClass->constructors, abstractVariables, kernelClass->functions, kernelClass->size, kernelClass->alignment));
+			List<AbstractVariable*, true> abstractVariables = List<AbstractVariable*, true>(kernelClass->variables.Count());
+			for (uint32 y = 0; y < kernelClass->variables.Count(); y++)
+			{
+				const KernelLibraryInfo::Variable* memberVariable = &kernelClass->variables[y];
+				if (memberVariable->isPublic)
+				{
+					CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::ClassVariable, abstractVariables.Count(), declaration.index);
+					abstractVariables.Add(new AbstractVariable(TO_NATIVE_STRING(memberVariable->name), memberDeclaration, EMPTY_STRINGS, NULL, true, memberVariable->type, memberVariable->address));
+				}
+			}
+
+			classes.Add(new AbstractClass(TO_NATIVE_STRING(kernelClass->name), declaration, EMPTY_STRINGS, NULL, Type(kernelClass->parent, 0), KernelToCompiling(kernelClass->inherits), kernelClass->constructors, abstractVariables, kernelClass->functions, kernelClass->size, kernelClass->alignment));
+		}
 	}
 	for (uint32 x = 0; x < info->interfaces.Count(); x++)
 	{
 		const KernelLibraryInfo::Interface* kernelInterface = &info->interfaces[x];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Interface, x, NULL);
-		List<AbstractFunction*, true> abstractFunction = List<AbstractFunction*, true>(kernelInterface->functions.Count());
-		for (uint32 y = 0; y < kernelInterface->functions.Count(); y++)
+		if (kernelInterface->isPublic)
 		{
-			const KernelLibraryInfo::Interface::Function* memberFunction = &kernelInterface->functions[y];
-			CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::InterfaceFunction, y, x);
-			abstractFunction.Add(new AbstractFunction(TO_NATIVE_STRING(memberFunction->name), memberDeclaration, EMPTY_STRINGS, NULL, memberFunction->parameters, memberFunction->returns));
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Interface, interfaces.Count(), NULL);
+			List<AbstractFunction*, true> abstractFunction = List<AbstractFunction*, true>(kernelInterface->functions.Count());
+			for (uint32 y = 0; y < kernelInterface->functions.Count(); y++)
+			{
+				const KernelLibraryInfo::Interface::Function* memberFunction = &kernelInterface->functions[y];
+				CompilingDeclaration memberDeclaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::InterfaceFunction, y, declaration.index);
+				abstractFunction.Add(new AbstractFunction(TO_NATIVE_STRING(memberFunction->name), memberDeclaration, EMPTY_STRINGS, NULL, memberFunction->parameters, memberFunction->returns));
+			}
+			interfaces.Add(new AbstractInterface(TO_NATIVE_STRING(kernelInterface->name), declaration, EMPTY_STRINGS, NULL, KernelToCompiling(kernelInterface->inherits), abstractFunction));
 		}
-		interfaces.Add(new AbstractInterface(TO_NATIVE_STRING(kernelInterface->name), declaration, EMPTY_STRINGS, NULL, KernelToCompiling(kernelInterface->inherits), abstractFunction));
 	}
 	for (uint32 x = 0; x < info->delegates.Count(); x++)
 	{
 		const KernelLibraryInfo::Delegate* kernelDelegate = &info->delegates[x];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Delegate, x, NULL);
-		delegates.Add(new AbstractDelegate(TO_NATIVE_STRING(kernelDelegate->name), declaration, EMPTY_STRINGS, NULL, kernelDelegate->parameters, kernelDelegate->returns));
+		if (kernelDelegate->isPublic)
+		{
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Delegate, delegates.Count(), NULL);
+			delegates.Add(new AbstractDelegate(TO_NATIVE_STRING(kernelDelegate->name), declaration, EMPTY_STRINGS, NULL, kernelDelegate->parameters, kernelDelegate->returns));
+		}
 	}
 	for (uint32 x = 0; x < info->coroutines.Count(); x++)
 	{
 		const KernelLibraryInfo::Coroutine* kernelCoroutine = &info->coroutines[x];
-		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Coroutine, x, NULL);
-		coroutines.Add(new AbstractCoroutine(TO_NATIVE_STRING(kernelCoroutine->name), declaration, EMPTY_STRINGS, NULL, kernelCoroutine->returns));
+		if (kernelCoroutine->isPublic)
+		{
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Coroutine, coroutines.Count(), NULL);
+			coroutines.Add(new AbstractCoroutine(TO_NATIVE_STRING(kernelCoroutine->name), declaration, EMPTY_STRINGS, NULL, kernelCoroutine->returns));
+		}
 	}
 
 	CreateKernelAbstractSpace(this, info->root, this, parameter);

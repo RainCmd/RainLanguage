@@ -144,7 +144,7 @@ Library* GetKernelLibrary()
 		for (uint32 i = 0; i < library->variables.Count(); i++)
 		{
 			const KernelLibraryInfo::GlobalVariable* source = &library->variables[i];
-			new (kernelLibrary->variables.Add())ReferenceVariableDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->type, source->address, true, List<VariableReference, true>(0));
+			new (kernelLibrary->variables.Add())ReferenceVariableDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->type, source->address, true, List<VariableReference, true>(0));
 		}
 
 		for (uint32 x = 0; x < library->enums.Count(); x++)
@@ -153,7 +153,7 @@ Library* GetKernelLibrary()
 			List<EnumDeclarationInfo::Element, true>elements = List<EnumDeclarationInfo::Element, true>(source->elements.Count());
 			for (uint32 y = 0; y < source->elements.Count(); y++)
 				new (elements.Add())EnumDeclarationInfo::Element(kernelLibrary->stringAgency->AddAndRef(source->elements[y].name), source->elements[y].value);
-			new (kernelLibrary->enums.Add())EnumDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), elements);
+			new (kernelLibrary->enums.Add())EnumDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), elements);
 		}
 
 		for (uint32 x = 0; x < library->structs.Count(); x++)
@@ -163,9 +163,9 @@ Library* GetKernelLibrary()
 			for (uint32 y = 0; y < source->variables.Count(); y++)
 			{
 				const KernelLibraryInfo::Variable* variable = &source->variables[y];
-				new (memberVariables.Add())VariableDeclarationInfo(false, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(variable->name), variable->type, variable->address, true);
+				new (memberVariables.Add())VariableDeclarationInfo(variable->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(variable->name), variable->type, variable->address, true);
 			}
-			new (kernelLibrary->structs.Add())StructDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), memberVariables, source->functions, source->size, source->alignment);
+			new (kernelLibrary->structs.Add())StructDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), memberVariables, source->functions, source->size, source->alignment);
 		}
 
 		for (uint32 x = 0; x < library->classes.Count(); x++)
@@ -175,7 +175,7 @@ Library* GetKernelLibrary()
 			for (uint32 y = 0; y < source->variables.Count(); y++)
 			{
 				const KernelLibraryInfo::Variable* variable = &source->variables[y];
-				new (memberVariables.Add())ReferenceVariableDeclarationInfo(false, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(variable->name), variable->type, variable->address, true, List<VariableReference, true>(0));
+				new (memberVariables.Add())ReferenceVariableDeclarationInfo(variable->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(variable->name), variable->type, variable->address, true, List<VariableReference, true>(0));
 			}
 			Set<Declaration, true> allInherits(0);
 			CollectInherits(library, Declaration(LIBRARY_KERNEL, TypeCode::Handle, x), allInherits);
@@ -187,7 +187,7 @@ Library* GetKernelLibrary()
 				Set<Declaration, true>::Iterator iterator = allInherits.GetIterator();
 				while (iterator.Next()) CollectRelocation(library, relocations, realize, function.name, function, iterator.Current());
 			}
-			new (kernelLibrary->classes.Add())ClassDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->parent, source->inherits, source->size, source->alignment, List<uint32, true>(0), memberVariables, source->functions, INVALID, relocations);
+			new (kernelLibrary->classes.Add())ClassDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->parent, source->inherits, source->size, source->alignment, List<uint32, true>(0), memberVariables, source->functions, INVALID, relocations);
 		}
 
 		for (uint32 x = 0; x < library->interfaces.Count(); x++)
@@ -206,25 +206,25 @@ Library* GetKernelLibrary()
 				Set<Declaration, true>::Iterator iterator = allInherits.GetIterator();
 				while (iterator.Next()) CollectRelocation(library, relocations, realize, function.name, function, iterator.Current());
 			}
-			new (kernelLibrary->interfaces.Add())InterfaceDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->inherits, functions, relocations);
+			new (kernelLibrary->interfaces.Add())InterfaceDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->inherits, functions, relocations);
 		}
 
 		for (uint32 i = 0; i < library->delegates.Count(); i++)
 		{
 			const KernelLibraryInfo::Delegate* source = &library->delegates[i];
-			new (kernelLibrary->delegates.Add())DelegateDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns, source->parameters);
+			new (kernelLibrary->delegates.Add())DelegateDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns, source->parameters);
 		}
 
 		for (uint32 i = 0; i < library->coroutines.Count(); i++)
 		{
 			const KernelLibraryInfo::Coroutine* source = &library->coroutines[i];
-			new (kernelLibrary->coroutines.Add())CoroutineDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns);
+			new (kernelLibrary->coroutines.Add())CoroutineDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns);
 		}
 
 		for (uint32 i = 0; i < library->functions.Count(); i++)
 		{
 			const KernelLibraryInfo::Function* source = &library->functions[i];
-			new (kernelLibrary->functions.Add())FunctionDeclarationInfo(true, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns, source->parameters, INVALID, List<uint32, true>(0));
+			new (kernelLibrary->functions.Add())FunctionDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns, source->parameters, INVALID, List<uint32, true>(0));
 		}
 
 		CodeGenerator generator = CodeGenerator(library, &kernelLibrary->code);
