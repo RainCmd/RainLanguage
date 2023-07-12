@@ -394,17 +394,17 @@ label_next_instruct:
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
 			uint32 delegateHandleValue = INSTRUCT_VALUE(uint32, 5 + SIZE(Declaration));
 			Handle delegateHandle = VARIABLE(Handle, delegateHandleValue);
-			Delegate* delegateInfo; uint64 coroutine;
+			Delegate delegateInfo; uint64 coroutine;
 			if (kernel->heapAgency->TryGetValue(delegateHandle, delegateInfo)) EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
 			kernel->heapAgency->StrongRelease(result);
 			result = kernel->heapAgency->Alloc(declaration);
 			kernel->heapAgency->StrongReference(result);
 			coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
-			switch (delegateInfo->type)
+			switch (delegateInfo.type)
 			{
 				case FunctionType::Global:
 				{
-					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo->library, delegateInfo->function));
+					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 					invoker->Reference();
 					coroutine = invoker->instanceID;
 					flag = false;
@@ -414,11 +414,11 @@ label_next_instruct:
 				case FunctionType::Box:
 				{
 					Type targetType;
-					if (kernel->heapAgency->TryGetType(delegateInfo->target, targetType))
+					if (kernel->heapAgency->TryGetType(delegateInfo.target, targetType))
 					{
-						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo->library, delegateInfo->function));
+						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 						invoker->Reference();
-						invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo->target), targetType);
+						invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
 						coroutine = invoker->instanceID;
 						flag = true;
 					}
@@ -427,11 +427,11 @@ label_next_instruct:
 				break;
 				case FunctionType::Reality:
 				case FunctionType::Virtual:
-					if (kernel->heapAgency->IsValid(delegateInfo->target))
+					if (kernel->heapAgency->IsValid(delegateInfo.target))
 					{
-						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo->library, delegateInfo->function));
+						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 						invoker->Reference();
-						invoker->SetHandleParameter(0, delegateInfo->target);
+						invoker->SetHandleParameter(0, delegateInfo.target);
 						coroutine = invoker->instanceID;
 						flag = true;
 					}
@@ -630,7 +630,7 @@ label_next_instruct:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& handle = VARIABLE(Handle, handleValue);
-			uint64* coroutine;
+			uint64 coroutine;
 			Invoker* invoker;
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
 			if (!kernel->heapAgency->TryGetValue(handle, coroutine))
@@ -638,7 +638,7 @@ label_next_instruct:
 				instruct += INSTRUCT_VALUE(uint32, 9);
 				EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_NULL_REFERENCE);
 			}
-			invoker = kernel->coroutineAgency->GetInvoker(*coroutine);
+			invoker = kernel->coroutineAgency->GetInvoker(coroutine);
 			ASSERT_DEBUG(invoker, "调用为空，编译器可能算法有问题");
 			if (invoker->state != InvokerState::Completed)
 			{
@@ -753,10 +753,10 @@ label_next_instruct:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& handle = VARIABLE(Handle, handleValue);
-			uint64* coroutine;
+			uint64 coroutine;
 			if (kernel->heapAgency->TryGetValue(handle, coroutine))
 			{
-				Invoker* invoker = kernel->coroutineAgency->GetInvoker(*coroutine);
+				Invoker* invoker = kernel->coroutineAgency->GetInvoker(coroutine);
 				ASSERT_DEBUG(invoker, "调用为空，编译器可能算法有问题");
 				invoker->Start(true, ignoreWait);
 			}
@@ -787,10 +787,10 @@ label_next_instruct:
 			//uint32		参数空间大小
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle handle = VARIABLE(Handle, handleValue);
-			Delegate* delegateInfo;
+			Delegate delegateInfo;
 			if (kernel->heapAgency->TryGetValue(handle, delegateInfo))
 			{
-				switch (delegateInfo->type)
+				switch (delegateInfo.type)
 				{
 					case FunctionType::Global:
 					case FunctionType::Native:
@@ -799,11 +799,11 @@ label_next_instruct:
 					{
 						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
 						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
-						ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo->target), "无效的装箱对象");
-						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(kernel->heapAgency->GetType(delegateInfo->target));
+						ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo.target), "无效的装箱对象");
+						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(kernel->heapAgency->GetType(delegateInfo.target));
 						uint8* address = stack + top + parameterStart;
 						if (EnsureStackSize(top + parameterStart + info->size + parameterSize)) EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
-						Mcopy<uint8>(kernel->heapAgency->GetPoint(delegateInfo->target), address, info->size);
+						Mcopy<uint8>(kernel->heapAgency->GetPoint(delegateInfo.target), address, info->size);
 						info->StrongReference(kernel, address);
 						top += MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
 					}
@@ -815,8 +815,8 @@ label_next_instruct:
 						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
 						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
 						if (EnsureStackSize(top + parameterStart + SIZE(Handle) + parameterSize))EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
-						kernel->heapAgency->StrongReference(delegateInfo->target);
-						*(Handle*)(stack + top + parameterStart) = delegateInfo->target;
+						kernel->heapAgency->StrongReference(delegateInfo.target);
+						*(Handle*)(stack + top + parameterStart) = delegateInfo.target;
 						top += MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
 					}
 					break;
@@ -1038,20 +1038,20 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::FUNCTION_CustomCall:
 		{
-			Delegate* delegateInfo;
+			Delegate delegateInfo;
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			if (kernel->heapAgency->TryGetValue(VARIABLE(Handle, handleValue), delegateInfo))
 			{
-				switch (delegateInfo->type)
+				switch (delegateInfo.type)
 				{
 					case FunctionType::Global:
 						bottom = top;
 						cacheData[1] = stack + bottom;
-						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo->entry;
+						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						goto label_next_instruct;
 					case FunctionType::Native:
 					{
-						String error = kernel->libraryAgency->InvokeNative(Native(delegateInfo->library, delegateInfo->function), stack, top);
+						String error = kernel->libraryAgency->InvokeNative(Native(delegateInfo.library, delegateInfo.function), stack, top);
 						if (!error.IsEmpty()) EXCEPTION_EXIT(FUNCTION_CustomCall, error);
 						instruct += 5 + SIZE(Handle);
 					}
@@ -1059,13 +1059,13 @@ label_next_instruct:
 					case FunctionType::Box:
 					{
 						Type type;
-						if (kernel->heapAgency->TryGetType(delegateInfo->target, type))
+						if (kernel->heapAgency->TryGetType(delegateInfo.target, type))
 						{
 							const RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
 							top -= MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
 							bottom = top;
 							cacheData[1] = stack + bottom;
-							instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo->entry;
+							instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						}
 						else EXCEPTION("无效的装箱对象");
 						goto label_next_instruct;
@@ -1076,7 +1076,7 @@ label_next_instruct:
 						top -= MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
 						bottom = top;
 						cacheData[1] = stack + bottom;
-						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo->entry;
+						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						goto label_next_instruct;
 					default: EXCEPTION("无效的函数类型");
 				}

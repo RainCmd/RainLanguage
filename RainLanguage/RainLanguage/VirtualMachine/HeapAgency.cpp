@@ -167,6 +167,15 @@ void HeapAgency::Free(Handle handle)
 	}
 }
 
+void HeapAgency::Mark(uint8* address, const Declaration& declaration)
+{
+	const RuntimeClass& runtimeClass = kernel->libraryAgency->GetLibrary(declaration.library)->classes[declaration.index];
+	if (runtimeClass.parents.Count() > 1) Mark(address, runtimeClass.parents.Peek());
+	address += runtimeClass.offset;
+	for (uint32 i = 0; i < runtimeClass.handleFields.Count(); i++)
+		Mark(*(Handle*)(address + runtimeClass.handleFields[i]));
+}
+
 void HeapAgency::Mark(Handle handle)
 {
 	if (!handle) return;
@@ -203,13 +212,7 @@ void HeapAgency::Mark(Handle handle)
 			for (uint32 i = 0; i < handleFields->Count(); i++)
 				Mark(*(Handle*)(pointer + (*handleFields)[i]));
 		}
-		else if (head->type.code == TypeCode::Handle)
-		{
-			const List<uint32, true>* handleFields = &kernel->libraryAgency->GetClass(head->type)->handleFields;
-			uint8* pointer = heap.GetPointer() + head->pointer;
-			for (uint32 i = 0; i < handleFields->Count(); i++)
-				Mark(*(Handle*)(pointer + (*handleFields)[i]));
-		}
+		else if (head->type.code == TypeCode::Handle) Mark(heap.GetPointer() + head->pointer, head->type);
 		else if (head->type.code == TypeCode::Delegate)
 		{
 			Delegate* value = (Delegate*)(heap.GetPointer() + head->pointer);
@@ -321,11 +324,10 @@ Handle HeapAgency::Alloc(const Declaration& declaration)
 
 uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 {
-	Type type = heads[handle].type;
-	ASSERT_DEBUG(type.dimension, "不是个数组，可能编译器算法有问题");
+	ASSERT_DEBUG(heads[handle].type.dimension, "不是个数组，可能编译器算法有问题");
 	uint8* pointer = heap.GetPointer() + heads[handle].pointer;
 	uint32 length = *(uint32*)pointer;
-	if (index < 0)index += length;
+	if (index < 0) index += length;
 	if (index < 0 || index >= length) EXCEPTION("数组越界");
 	pointer += 4 + GetElementSize(&heads[handle]) * index;
 	return pointer;

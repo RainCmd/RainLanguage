@@ -31,6 +31,7 @@ class HeapAgency
 	bool IsUnrecoverableCoroutine(Handle handle);
 	void Free(Handle handle, RuntimeClass* runtimeClass, uint8* address);
 	void Free(Handle handle);
+	void Mark(uint8* address, const Declaration& declaration);
 	void Mark(Handle handle);
 	uint32 Tidy(Handle handle, uint32 top);
 	Handle Recycle(Handle handle);
@@ -108,12 +109,12 @@ public:
 		else return false;
 	}
 	template<typename T>
-	inline bool TryGetValue(Handle handle, T*& value)
+	inline bool TryGetValue(Handle handle, T& value)
 	{
 		uint8* address;
 		if (TryGetPoint(handle, address))
 		{
-			value = (T*)address;
+			value = *(T*)address;
 			return true;
 		}
 		return false;

@@ -18,17 +18,20 @@
 #define PARAMETER_VALUE(returnCount,type,offset) (*(type*)(stack + top + SIZE(Frame) + (returnCount << 2) + offset))
 
 #define GET_THIS_VALUE(returnCount,type)\
-		uint8* thisPointer;\
-		if (!kernel->heapAgency->TryGetPoint(PARAMETER_VALUE(returnCount, Handle, 0), thisPointer))\
+		type thisValue;\
+		if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(returnCount, Handle, 0), thisValue))\
 			return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);\
-		type& thisValue = *(type*)thisPointer;
 
 #define CREATE_READONLY_VALUES(field,readonlyValuesType,elementType,count,referenceType)\
 		field = kernel->heapAgency->Alloc((Declaration)readonlyValuesType);\
+		kernel->heapAgency->StrongReference(field);\
 		kernel->heapAgency->referenceType##Reference(field);\
 		Handle values = kernel->heapAgency->Alloc(elementType, (integer)(count));\
 		((ReflectionReadonlyValues*)kernel->heapAgency->GetPoint(field))->values = values;\
-		kernel->heapAgency->WeakReference(values);
+		kernel->heapAgency->WeakReference(values);\
+		kernel->heapAgency->StrongRelease(field);
+
+#define THIS(returnCount,type) (*(type*)kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
 
 #pragma region ÔËËã·û
 String Operation_Less_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (integer, integer)
@@ -1889,10 +1892,10 @@ String type_CreateDelegate(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
-	Function* function;
+	Function function;
 	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(*function);
+	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
 	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
 	if (runtimeFunction->parameters != runtimeDelegate->parameters)
 		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
@@ -1910,10 +1913,10 @@ String type_CreateDelegate2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
-	Native* native;
+	Native native;
 	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), native))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(*native);
+	RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(native);
 	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
 	if (runtimeNative->parameters != runtimeDelegate->parameters)
 		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
@@ -1923,7 +1926,7 @@ String type_CreateDelegate2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	kernel->heapAgency->StrongRelease(handle);
 	handle = kernel->heapAgency->Alloc((Declaration)type);
 	kernel->heapAgency->StrongReference(handle);
-	new ((Delegate*)kernel->heapAgency->GetPoint(handle))Delegate(*native);
+	new ((Delegate*)kernel->heapAgency->GetPoint(handle))Delegate(native);
 	return String();
 }
 
@@ -1932,7 +1935,7 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 
-	MemberFunction* function;
+	MemberFunction function;
 	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 
@@ -1940,9 +1943,9 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	Type thisParameterType;
 	if (!kernel->heapAgency->TryGetType(thisParameter, thisParameterType))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!kernel->libraryAgency->IsAssignable(Type(function->declaration, 0), thisParameterType))
+	if (!kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), thisParameterType))
 		return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-	Function globalFunction = kernel->libraryAgency->GetFunction(*function, thisParameterType);
+	Function globalFunction = kernel->libraryAgency->GetFunction(function, thisParameterType);
 	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(globalFunction);
 	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
 	if (runtimeFunction->parameters.Count() != runtimeDelegate->parameters.Count() + 1)
@@ -1958,17 +1961,17 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	handle = kernel->heapAgency->Alloc((Declaration)type);
 	kernel->heapAgency->StrongReference(handle);
 	Delegate* pointer = (Delegate*)kernel->heapAgency->GetPoint(handle);
-	if (function->declaration.code == TypeCode::Struct)
+	if (function.declaration.code == TypeCode::Struct)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Box);
 		kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else if (function->declaration.code == TypeCode::Handle)
+	else if (function.declaration.code == TypeCode::Handle)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Virtual);
 		kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else if (function->declaration.code == TypeCode::Interface)
+	else if (function.declaration.code == TypeCode::Interface)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Abstract);
 		kernel->heapAgency->WeakReference(thisParameter);
@@ -1983,10 +1986,10 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + 4);
-	Function* function;
+	Function function;
 	if (kernel->heapAgency->TryGetValue(functionHandle, function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(*function);
+	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
 	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
 	if (runtimeFunction->returns != runtimeCoroutine->returns)
 		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
@@ -2002,7 +2005,7 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(*function);
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
 		kernel->coroutineAgency->Reference(invoker);
 		for (uint32 i = 0; i < count; i++)
 			invoker->SetBoxParameter(i, *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i));
@@ -2015,7 +2018,7 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(*function);
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->Start(true, false);
 		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
@@ -2029,17 +2032,17 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
-	MemberFunction* function;
+	MemberFunction function;
 	if (kernel->heapAgency->TryGetValue(functionHandle, function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	Handle targetHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type targetType;
 	if (!kernel->heapAgency->TryGetType(targetHandle, targetType))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!kernel->libraryAgency->IsAssignable(Type(function->declaration, 0), targetHandle))
+	if (!kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), targetHandle))
 		return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetMemberFunction(*function);
+	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetMemberFunction(function);
 	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
 	if (runtimeFunction->returns != runtimeCoroutine->returns)
 		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
@@ -2057,7 +2060,7 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(*function, targetType));
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
 		for (uint32 i = 0; i < count; i++)
@@ -2071,7 +2074,7 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(*function, targetType));
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
 		invoker->Start(true, false);
@@ -2249,7 +2252,7 @@ String Reflection_ReadonlyValues_GetStringElement(Kernel* kernel, Coroutine*, ui
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
 	String exitMessage = kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
-	if (!exitMessage.IsEmpty())return exitMessage;
+	if (!exitMessage.IsEmpty()) return exitMessage;
 	string& result = RETURN_VALUE(string, 0);
 	kernel->stringAgency->Release(result);
 	result = *(string*)pointer;
@@ -2263,7 +2266,7 @@ String Reflection_ReadonlyValues_GetTypeElement(Kernel* kernel, Coroutine*, uint
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
 	String exitMessage = kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
-	if (!exitMessage.IsEmpty())return exitMessage;
+	if (!exitMessage.IsEmpty()) return exitMessage;
 	RETURN_VALUE(Type, 0) = *(Type*)pointer;
 	return String();
 }
@@ -2274,7 +2277,7 @@ String Reflection_ReadonlyValues_GetHandleElement(Kernel* kernel, Coroutine*, ui
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
 	String exitMessage = kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
-	if (!exitMessage.IsEmpty())return exitMessage;
+	if (!exitMessage.IsEmpty()) return exitMessage;
 	Handle& result = RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(result);
 	result = *(Handle*)pointer;
@@ -2380,6 +2383,7 @@ String Reflection_MemberConstructor_GetParameters(Kernel* kernel, Coroutine*, ui
 	{
 		RuntimeFunction* info = kernel->libraryAgency->GetConstructorFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
+		THIS(1, ReflectionMemberConstructor).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = info->parameters.GetType(i);
 	}
@@ -2601,6 +2605,7 @@ String Reflection_MemberFunction_GetParameters(Kernel* kernel, Coroutine*, uint8
 	{
 		RuntimeFunction* info = kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
+		THIS(1, ReflectionMemberFunction).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = info->parameters.GetType(i);
 	}
@@ -2618,6 +2623,7 @@ String Reflection_MemberFunction_GetReturns(Kernel* kernel, Coroutine*, uint8* s
 	{
 		RuntimeFunction* info = kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->returns.Count(), Weak);
+		THIS(1, ReflectionMemberFunction).returns = thisValue.returns;
 		for (uint32 i = 0; i < info->returns.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = info->returns.GetType(i);
 	}
@@ -2780,6 +2786,7 @@ String Reflection_Function_GetParameters(Kernel* kernel, Coroutine*, uint8* stac
 	{
 		RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->parameters.Count(), Weak);
+		THIS(1, ReflectionFunction).parameters = thisValue.parameters;
 		for (uint32 i = 0; i < runtimeFunction->parameters.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->parameters.GetType(i);
 	}
@@ -2797,6 +2804,7 @@ String Reflection_Function_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, 
 	{
 		RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->returns.Count(), Weak);
+		THIS(1, ReflectionFunction).returns = thisValue.returns;
 		for (uint32 i = 0; i < runtimeFunction->returns.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->returns.GetType(i);
 	}
@@ -2952,6 +2960,7 @@ String Reflection_Native_GetParameters(Kernel* kernel, Coroutine*, uint8* stack,
 	{
 		RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->parameters.Count(), Weak);
+		THIS(1, ReflectionNative).parameters = thisValue.parameters;
 		for (uint32 i = 0; i < runtimeNative->parameters.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->parameters.GetType(i);
 	}
@@ -2969,6 +2978,7 @@ String Reflection_Native_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, ui
 	{
 		RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->returns.Count(), Weak);
+		THIS(1, ReflectionNative).returns = thisValue.returns;
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->returns.GetType(i);
 	}
@@ -3081,6 +3091,7 @@ String Reflection_Space_GetChildren(Kernel* kernel, Coroutine*, uint8* stack, ui
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.children, TYPE_Reflection_ReadonlySpaces, TYPE_Reflection_Space, space.children.Count(), Weak);
+		THIS(1, ReflectionSpace).children = thisValue.children;
 		for (uint32 i = 0; i < space.children.Count(); i++)
 		{
 			Handle handle = library->spaces[space.children[i]].GetReflection(kernel, thisValue.library, space.children[i]);
@@ -3124,6 +3135,7 @@ String Reflection_Space_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, u
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.variables, TYPE_Reflection_ReadonlyVariables, TYPE_Reflection_Variable, space.variables.Count(), Weak);
+		THIS(1, ReflectionSpace).variables = thisValue.variables;
 		for (uint32 i = 0; i < space.variables.Count(); i++)
 		{
 			Handle handle = library->variables[space.variables[i]].GetReflection(kernel, thisValue.library, space.variables[i]);
@@ -3147,6 +3159,7 @@ String Reflection_Space_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, u
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.functions, TYPE_Reflection_ReadonlyFunctions, TYPE_Reflection_Function, space.functions.Count(), Weak);
+		THIS(1, ReflectionSpace).functions = thisValue.functions;
 		for (uint32 i = 0; i < space.functions.Count(); i++)
 		{
 			Handle handle = library->functions[space.functions[i]].GetReflection(kernel, thisValue.library, space.functions[i]);
@@ -3170,6 +3183,7 @@ String Reflection_Space_GetNatives(Kernel* kernel, Coroutine*, uint8* stack, uin
 		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.natives, TYPE_Reflection_ReadonlyNatives, TYPE_Reflection_Native, space.natives.Count(), Weak);
+		THIS(1, ReflectionSpace).natives = thisValue.natives;
 		for (uint32 i = 0; i < space.natives.Count(); i++)
 		{
 			Handle handle = library->natives[space.natives[i]].GetReflection(kernel, thisValue.library, space.natives[i]);
@@ -3192,6 +3206,7 @@ String Reflection_Space_GetTypes(Kernel* kernel, Coroutine*, uint8* stack, uint3
 	{
 		RuntimeSpace& space = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.coroutines.Count(), Weak);
+		THIS(1, ReflectionSpace).types = thisValue.types;
 		uint32 index = 0;
 		for (uint32 i = 1; i < space.enums.Count(); i++)
 			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, i, 0);
