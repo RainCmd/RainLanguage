@@ -195,7 +195,7 @@ void HeapAgency::Mark(Handle handle)
 					Mark(*(Handle*)(pointer + i * elementSize));
 			else if (elementType.code == TypeCode::Struct)
 			{
-				const List<uint32, true>* handleFields = &kernel->libraryAgency->GetStruct(head->type)->handleFields;
+				const List<uint32, true>* handleFields = &kernel->libraryAgency->GetStruct(elementType)->handleFields;
 				if (handleFields->Count())
 					for (uint32 i = 0; i < length; i++)
 					{
