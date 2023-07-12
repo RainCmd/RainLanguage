@@ -108,12 +108,12 @@ public:
 		else return false;
 	}
 	template<typename T>
-	inline bool TryGetValue(Handle handle, T& value)
+	inline bool TryGetValue(Handle handle, T*& value)
 	{
 		uint8* address;
 		if (TryGetPoint(handle, address))
 		{
-			value = *(T*)address;
+			value = (T*)address;
 			return true;
 		}
 		return false;

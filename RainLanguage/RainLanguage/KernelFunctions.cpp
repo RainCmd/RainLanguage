@@ -18,9 +18,10 @@
 #define PARAMETER_VALUE(returnCount,type,offset) (*(type*)(stack + top + SIZE(Frame) + (returnCount << 2) + offset))
 
 #define GET_THIS_VALUE(returnCount,type)\
-		type thisValue;\
-		if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(returnCount, Handle, 0), thisValue))\
-			return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+		uint8* thisPointer;\
+		if (!kernel->heapAgency->TryGetPoint(PARAMETER_VALUE(returnCount, Handle, 0), thisPointer))\
+			return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);\
+		type& thisValue = *(type*)thisPointer;
 
 #define CREATE_READONLY_VALUES(field,readonlyValuesType,elementType,count,referenceType)\
 		field = kernel->heapAgency->Alloc((Declaration)readonlyValuesType);\
@@ -1888,10 +1889,10 @@ String type_CreateDelegate(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
-	Function function;
+	Function* function;
 	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
+	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(*function);
 	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
 	if (runtimeFunction->parameters != runtimeDelegate->parameters)
 		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
@@ -1909,10 +1910,10 @@ String type_CreateDelegate2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
-	Native native;
+	Native* native;
 	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), native))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(native);
+	RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(*native);
 	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
 	if (runtimeNative->parameters != runtimeDelegate->parameters)
 		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
@@ -1922,7 +1923,7 @@ String type_CreateDelegate2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	kernel->heapAgency->StrongRelease(handle);
 	handle = kernel->heapAgency->Alloc((Declaration)type);
 	kernel->heapAgency->StrongReference(handle);
-	new ((Delegate*)kernel->heapAgency->GetPoint(handle))Delegate(native);
+	new ((Delegate*)kernel->heapAgency->GetPoint(handle))Delegate(*native);
 	return String();
 }
 
@@ -1931,7 +1932,7 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 
-	MemberFunction function;
+	MemberFunction* function;
 	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 
@@ -1939,9 +1940,9 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	Type thisParameterType;
 	if (!kernel->heapAgency->TryGetType(thisParameter, thisParameterType))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), thisParameterType))
+	if (!kernel->libraryAgency->IsAssignable(Type(function->declaration, 0), thisParameterType))
 		return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-	Function globalFunction = kernel->libraryAgency->GetFunction(function, thisParameterType);
+	Function globalFunction = kernel->libraryAgency->GetFunction(*function, thisParameterType);
 	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(globalFunction);
 	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
 	if (runtimeFunction->parameters.Count() != runtimeDelegate->parameters.Count() + 1)
@@ -1957,17 +1958,17 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	handle = kernel->heapAgency->Alloc((Declaration)type);
 	kernel->heapAgency->StrongReference(handle);
 	Delegate* pointer = (Delegate*)kernel->heapAgency->GetPoint(handle);
-	if (function.declaration.code == TypeCode::Struct)
+	if (function->declaration.code == TypeCode::Struct)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Box);
 		kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else if (function.declaration.code == TypeCode::Handle)
+	else if (function->declaration.code == TypeCode::Handle)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Virtual);
 		kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else if (function.declaration.code == TypeCode::Interface)
+	else if (function->declaration.code == TypeCode::Interface)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Abstract);
 		kernel->heapAgency->WeakReference(thisParameter);
@@ -1982,10 +1983,10 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + 4);
-	Function function;
+	Function* function;
 	if (kernel->heapAgency->TryGetValue(functionHandle, function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
+	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(*function);
 	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
 	if (runtimeFunction->returns != runtimeCoroutine->returns)
 		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
@@ -2001,7 +2002,7 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(*function);
 		kernel->coroutineAgency->Reference(invoker);
 		for (uint32 i = 0; i < count; i++)
 			invoker->SetBoxParameter(i, *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i));
@@ -2014,7 +2015,7 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(*function);
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->Start(true, false);
 		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
@@ -2028,17 +2029,17 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
-	MemberFunction function;
+	MemberFunction* function;
 	if (kernel->heapAgency->TryGetValue(functionHandle, function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	Handle targetHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type targetType;
 	if (!kernel->heapAgency->TryGetType(targetHandle, targetType))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), targetHandle))
+	if (!kernel->libraryAgency->IsAssignable(Type(function->declaration, 0), targetHandle))
 		return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetMemberFunction(function);
+	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetMemberFunction(*function);
 	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
 	if (runtimeFunction->returns != runtimeCoroutine->returns)
 		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
@@ -2056,7 +2057,7 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(*function, targetType));
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
 		for (uint32 i = 0; i < count; i++)
@@ -2070,7 +2071,7 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		kernel->heapAgency->StrongRelease(result);
 		result = kernel->heapAgency->Alloc((Declaration)type);
 		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
+		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(*function, targetType));
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
 		invoker->Start(true, false);

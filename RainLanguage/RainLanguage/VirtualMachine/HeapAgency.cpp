@@ -109,17 +109,17 @@ void HeapAgency::Free(Handle handle)
 		if (elementType == TYPE_String)
 		{
 			for (uint32 i = 0; i < length; i++)
-				kernel->stringAgency->Release(*(string*)pointer[i * elementSize]);
+				kernel->stringAgency->Release(*(string*)(pointer + i * elementSize));
 		}
 		else if (elementType == TYPE_Entity)
 		{
 			for (uint32 i = 0; i < length; i++)
-				kernel->entityAgency->Release(*(Entity*)pointer[i * elementSize]);
+				kernel->entityAgency->Release(*(Entity*)(pointer + i * elementSize));
 		}
 		else if (IsHandleType(elementType))
 		{
 			for (uint32 i = 0; i < length; i++)
-				WeakRelease(*(Handle*)pointer[i * elementSize]);
+				WeakRelease(*(Handle*)(pointer + i * elementSize));
 		}
 		else if (elementType.code == TypeCode::Struct)
 		{
@@ -267,7 +267,7 @@ void HeapAgency::FullGC()
 		if (heads[index].flag == flag)
 		{
 			tail = index;
-			if (!head)head = index;
+			if (!head) head = index;
 			top += Tidy(index, top);
 			index = heads[index].next;
 		}
@@ -287,7 +287,7 @@ void HeapAgency::FastGC()
 		{
 			if (heads[index].strong || heads[index].weak || IsUnrecoverableCoroutine(index))
 			{
-				if (heads[index].generation++ > generation)active = tail;
+				if (heads[index].generation++ > generation) active = tail;
 				tail = index;
 				top += Tidy(index, top);
 				index = heads[index].next;
@@ -333,7 +333,7 @@ uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 
 String HeapAgency::TryGetArrayLength(Handle handle, integer& length)
 {
-	if (!IsValid(handle))return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if (!IsValid(handle)) return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	length = *(uint32*)(heap.GetPointer() + heads[handle].pointer);
 	return String();
 }
@@ -346,8 +346,8 @@ String HeapAgency::TryGetArrayPoint(Handle handle, integer index, uint8*& pointe
 		ASSERT_DEBUG(type.dimension, "不是个数组，可能编译器算法有问题");
 		pointer = heap.GetPointer() + heads[handle].pointer;
 		uint32 length = *(uint32*)pointer;
-		if (index < 0)index += length;
-		if (index < 0 || index >= length)return kernel->stringAgency->Add(EXCEPTION_OUT_OF_RANGE);
+		if (index < 0) index += length;
+		if (index < 0 || index >= length) return kernel->stringAgency->Add(EXCEPTION_OUT_OF_RANGE);
 		pointer += 4 + GetElementSize(&heads[handle]) * index;
 		return String();
 	}
@@ -416,7 +416,7 @@ String StrongUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* resul
 		Type handleType;
 		if (kernel->heapAgency->TryGetType(handle, handleType))
 		{
-			if (type != handleType)return  kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (type != handleType) return  kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			if (type.code == TypeCode::Struct)
 			{
 				RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
@@ -452,7 +452,7 @@ String WeakUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* result)
 		Type handleType;
 		if (kernel->heapAgency->TryGetType(handle, handleType))
 		{
-			if (type != handleType)return  kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (type != handleType) return  kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			if (type.code == TypeCode::Struct)
 			{
 				RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
