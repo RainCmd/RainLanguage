@@ -11,9 +11,9 @@
 #include "EntityAgency.h"
 #include "Exceptions.h"
 
-#define VARIABLE(offset) (cacheData[offset >> 31] + LOCAL_ADDRESS(offset))
+#define VARIABLE(type,address) (*(type*)(cacheData[address >> 31] + LOCAL_ADDRESS(address)))
 #define INSTRUCT_VALUE(type,offset) (*(type*)(instruct + (offset)))
-#define INSTRUCT_VARIABLE(type,offset) (*(type*)VARIABLE(INSTRUCT_VALUE(uint32, offset)))
+#define INSTRUCT_VARIABLE(type,offset) VARIABLE(type,INSTRUCT_VALUE(uint32, offset))
 #define RETURN_POINT(offset) GetReturnPoint(kernel, stack, cacheData[1], INSTRUCT_VALUE(uint32, offset))
 
 #define POINTER (uint32)(instruct - kernel->libraryAgency->code.GetPointer())
@@ -24,16 +24,27 @@
 			else instruct += INSTRUCT_VALUE(uint32,(instructSize) + 1);
 
 #define CLASS_VARIABLE(instructOffset, instructName)\
-			Handle handle = INSTRUCT_VARIABLE(Handle, instructOffset);\
+			uint32 handleValue = INSTRUCT_VALUE(uint32, instructOffset);\
+			Handle handle = VARIABLE(Handle, handleValue);\
 			uint8* address;\
 			if (!kernel->heapAgency->IsValid(handle)) EXCEPTION_EXIT(instructName, EXCEPTION_NULL_REFERENCE);\
 			address = kernel->heapAgency->GetPoint(handle) + INSTRUCT_VALUE(uint32, (instructOffset) + 4);
 
 #define ARRAY_VARIABLE(instructOffset)\
-			Handle handle = INSTRUCT_VARIABLE(Handle, instructOffset);\
+			uint32 arrayValue = INSTRUCT_VALUE(uint32, instructOffset);\
+			Handle handle = VARIABLE(Handle, arrayValue);\
 			uint8* address;\
-			String error = kernel->heapAgency->TryGetArrayPoint(handle, INSTRUCT_VARIABLE(integer, (instructOffset) + 4), address);\
+			uint32 lengthValue = INSTRUCT_VALUE(uint32, instructOffset + 4);\
+			String error = kernel->heapAgency->TryGetArrayPoint(handle, VARIABLE(integer, lengthValue), address);\
 			address += INSTRUCT_VALUE(uint32, (instructOffset) + 8);
+
+#define OPERATOR(resultType,leftType,operation,rightType) \
+			{\
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);\
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);\
+				uint32 rightValue = INSTRUCT_VALUE(uint32, 9);\
+				VARIABLE(resultType, resultValue) = VARIABLE(leftType, leftValue) operation VARIABLE(rightType, rightValue);\
+			}
 
 inline uint8* GetReturnPoint(Kernel* kernel, uint8* stack, uint8* functionStack, uint32 offset)
 {
@@ -111,7 +122,8 @@ label_next_instruct:
 			if (ignoreWait)instruct += 5;
 			else
 			{
-				wait = INSTRUCT_VARIABLE(integer, 1);
+				uint32 waitValue = INSTRUCT_VALUE(uint32, 1);
+				wait = VARIABLE(integer, waitValue);
 				instruct += 5;
 				if (wait > 0)
 				{
@@ -122,7 +134,8 @@ label_next_instruct:
 			goto label_next_instruct;
 		case Instruct::BASE_WaitCoroutine:
 		{
-			Handle handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle handle = VARIABLE(Handle, handleValue);
 			uint8* coroutine;
 			Invoker* invoker;
 			if (!kernel->heapAgency->TryGetPoint(handle, coroutine))EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_NULL_REFERENCE);
@@ -141,30 +154,43 @@ label_next_instruct:
 			instruct += 9;
 			goto label_next_instruct;
 		case Instruct::BASE_Datazero:
-			Mzero(&INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 5));
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 1);
+			Mzero(&VARIABLE(uint8, address), INSTRUCT_VALUE(uint32, 5));
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::BASE_Jump:
 			instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
 			goto label_next_instruct;
 		case Instruct::BASE_JumpVariableAddress:
-			instruct += INSTRUCT_VARIABLE(uint32, 1);
-			goto label_next_instruct;
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 1);
+			instruct += VARIABLE(uint32, address);
+		}
+		goto label_next_instruct;
 		case Instruct::BASE_ConditionJump:
 			if (flag) instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
 			else instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_NullJump:
-			if (INSTRUCT_VARIABLE(Handle, 1)) instruct += 9;
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 1);
+			if (VARIABLE(Handle, address)) instruct += 9;
 			else instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 5));
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::BASE_Flag:
-			flag = INSTRUCT_VARIABLE(bool, 1);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 1);
+			flag = VARIABLE(bool, address);
 			instruct += 5;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::BASE_CreateObject:
 		{
-			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& handle = VARIABLE(Handle, handleValue);
 			kernel->heapAgency->StrongRelease(handle);
 			handle = kernel->heapAgency->Alloc(INSTRUCT_VALUE(Declaration, 5));
 			kernel->heapAgency->StrongReference(handle);
@@ -192,7 +218,8 @@ label_next_instruct:
 			//		Abstract:
 			//			Handle&			调用目标对象
 			//			MemberFunction  接口成员函数索引
-			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& result = VARIABLE(Handle, reaultValue);
 			kernel->heapAgency->StrongRelease(result);
 			result = kernel->heapAgency->Alloc(INSTRUCT_VALUE(Declaration, 5));
 			kernel->heapAgency->StrongReference(result);
@@ -209,7 +236,8 @@ label_next_instruct:
 					goto label_next_instruct;
 				case FunctionType::Box:
 				{
-					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					Handle target = VARIABLE(Handle, targetValue);
 					if (kernel->heapAgency->IsValid(target))
 					{
 						new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Box);
@@ -221,7 +249,8 @@ label_next_instruct:
 				goto label_next_instruct;
 				case FunctionType::Reality:
 				{
-					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					Handle target = VARIABLE(Handle, targetValue);
 					if (kernel->heapAgency->IsValid(target))
 					{
 						new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 10 + SIZE(Declaration)), target, FunctionType::Reality);
@@ -233,7 +262,8 @@ label_next_instruct:
 				goto label_next_instruct;
 				case FunctionType::Virtual:
 				{
-					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					Handle target = VARIABLE(Handle, targetValue);
 					Type type;
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
@@ -246,7 +276,8 @@ label_next_instruct:
 				goto label_next_instruct;
 				case FunctionType::Abstract:
 				{
-					Handle target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					Handle target = VARIABLE(Handle, targetValue);
 					Type type;
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
@@ -281,7 +312,8 @@ label_next_instruct:
 			//		Abstract:
 			//			Handle&			被调用对象
 			//			MemberFunction	成员函数索引
-			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& result = VARIABLE(Handle, reaultValue);
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
 			kernel->heapAgency->StrongRelease(result);
 			result = kernel->heapAgency->Alloc(declaration);
@@ -302,7 +334,8 @@ label_next_instruct:
 				case FunctionType::Native: EXCEPTION("无效的函数类型");
 				case FunctionType::Box:
 				{
-					Handle& target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					Handle target = VARIABLE(Handle, targetValue);
 					Type targetType;
 					if (kernel->heapAgency->TryGetType(target, targetType))
 					{
@@ -320,7 +353,8 @@ label_next_instruct:
 				goto label_next_instruct;
 				case FunctionType::Reality:
 				{
-					uint8* address = &INSTRUCT_VARIABLE(uint8, 6 + SIZE(Declaration));
+					uint32 addressValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					uint8* address = &VARIABLE(uint8, addressValue);
 					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
 					Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
 					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
@@ -333,7 +367,8 @@ label_next_instruct:
 				case FunctionType::Virtual:
 				case FunctionType::Abstract:
 				{
-					Handle& target = INSTRUCT_VARIABLE(Handle, 6 + SIZE(Declaration));
+					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+					Handle target = VARIABLE(Handle, targetValue);
 					Type type;
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
@@ -354,9 +389,11 @@ label_next_instruct:
 			//Handle&		result
 			//Declaration	协程定义
 			//Handle&		委托对象
-			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& result = VARIABLE(Handle, reaultValue);
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
-			Handle delegateHandle = INSTRUCT_VARIABLE(Handle, 5 + SIZE(Declaration));
+			uint32 delegateHandleValue = INSTRUCT_VALUE(uint32, 5 + SIZE(Declaration));
+			Handle delegateHandle = VARIABLE(Handle, delegateHandleValue);
 			Delegate delegateInfo; uint64 coroutine;
 			if (kernel->heapAgency->TryGetValue(delegateHandle, delegateInfo)) EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
 			kernel->heapAgency->StrongRelease(result);
@@ -408,9 +445,11 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::BASE_CreateArray:
 		{
-			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& result = VARIABLE(Handle, reaultValue);
 			Type& elementType = INSTRUCT_VALUE(Type, 5);
-			integer length = INSTRUCT_VARIABLE(integer, 5 + SIZE(Type));
+			uint32 lengthValue = INSTRUCT_VALUE(uint32, 5 + SIZE(Type));
+			integer length = VARIABLE(integer, lengthValue);
 			if (length < 0) EXCEPTION_EXIT(BASE_CreateArray, EXCEPTION_OUT_OF_RANGE)
 			else
 			{
@@ -423,7 +462,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::BASE_ArrayInit:
 		{
-			Handle& array = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 arrayValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& array = VARIABLE(Handle, arrayValue);
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
 			Type type;
 			if (!kernel->heapAgency->TryGetType(array, type)) EXCEPTION_EXIT(BASE_ArrayInit, EXCEPTION_OUT_OF_RANGE)
@@ -434,7 +474,8 @@ label_next_instruct:
 					for (uint32 i = 0; i < count; i++)
 					{
 						Handle* element = (Handle*)kernel->heapAgency->GetArrayPoint(array, (integer)i);
-						*element = INSTRUCT_VARIABLE(Handle, 9 + i * 4);
+						uint32 elementValue = INSTRUCT_VALUE(uint32, 9 + i * 4);
+						*element = VARIABLE(Handle, elementValue);
 						kernel->heapAgency->WeakReference(*element);
 					}
 				else switch (type.code)
@@ -446,17 +487,24 @@ label_next_instruct:
 						if (runtimeStruct->stringFields.Count() || runtimeStruct->handleFields.Count() || runtimeStruct->entityFields.Count())
 							for (uint32 i = 0; i < count; i++)
 							{
-								uint8* source = &INSTRUCT_VARIABLE(uint8, 9 + i * 4);
+								uint32 sourceValue = INSTRUCT_VALUE(uint32, 9 + i * 4);
+								uint8* source = &VARIABLE(uint8, sourceValue);
 								Mcopy(source, kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
 								runtimeStruct->WeakReference(kernel, source);
 							}
 						else for (uint32 i = 0; i < count; i++)
-							Mcopy(&INSTRUCT_VARIABLE(uint8, 9 + i * 4), kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
+						{
+							uint32 sourceValue = INSTRUCT_VALUE(uint32, 9 + i * 4);
+							Mcopy(&VARIABLE(uint8, sourceValue), kernel->heapAgency->GetArrayPoint(array, (integer)i), runtimeStruct->size);
+						}
 					}
 					break;
 					case TypeCode::Enum:
 						for (uint32 i = 0; i < count; i++)
-							*(integer*)kernel->heapAgency->GetArrayPoint(array, (integer)i) = INSTRUCT_VARIABLE(integer, 9 + i * 4);
+						{
+							uint32 sourceValue = INSTRUCT_VALUE(uint32, 9 + i * 4);
+							*(integer*)kernel->heapAgency->GetArrayPoint(array, (integer)i) = VARIABLE(integer, sourceValue);
+						}
 						break;
 					case TypeCode::Handle:
 					case TypeCode::Interface:
@@ -470,7 +518,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::BASE_SetCoroutineParameter:
 		{
-			Handle handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle handle = VARIABLE(Handle, handleValue);
 			uint32 start = flag ? 1u : 0u;
 			uint32 count = INSTRUCT_VALUE(uint32, 5) + start;
 			uint8* coroutine;
@@ -487,49 +536,91 @@ label_next_instruct:
 				switch (INSTRUCT_VALUE(BaseType, 0))
 				{
 					case BaseType::Struct:
-						invoker->SetStructParameter(i, &INSTRUCT_VARIABLE(uint8, 1), Type(INSTRUCT_VALUE(Declaration, 5), 0));
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetStructParameter(i, &VARIABLE(uint8, address), Type(INSTRUCT_VALUE(Declaration, 5), 0));
 						instruct += SIZE(Declaration);
-						break;
+					}
+					break;
 					case BaseType::Bool:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(bool, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(bool, address));
+					}
+					break;
 					case BaseType::Byte:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(uint8, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(uint8, address));
+					}
+					break;
 					case BaseType::Char:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(character, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(character, address));
+					}
+					break;
 					case BaseType::Integer:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(integer, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(integer, address));
+					}
+					break;
 					case BaseType::Real:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(real, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(real, address));
+					}
+					break;
 					case BaseType::Real2:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(Real2, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(Real2, address));
+					}
+					break;
 					case BaseType::Real3:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(Real3, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(Real3, address));
+					}
+					break;
 					case BaseType::Real4:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(Real4, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(Real4, address));
+					}
+					break;
 					case BaseType::Enum:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(integer, 1), Type(INSTRUCT_VALUE(Declaration, 5), 0));
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(integer, address), Type(INSTRUCT_VALUE(Declaration, 5), 0));
 						instruct += SIZE(Declaration);
-						break;
+					}
+					break;
 					case BaseType::Type:
-						invoker->SetParameter(i, INSTRUCT_VARIABLE(Type, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetParameter(i, VARIABLE(Type, address));
+					}
+					break;
 					case BaseType::Handle:
-						invoker->SetHandleParameter(i, INSTRUCT_VARIABLE(Handle, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetHandleParameter(i, VARIABLE(Handle, address));
+					}
+					break;
 					case BaseType::String:
-						invoker->SetStringParameter(i, INSTRUCT_VARIABLE(string, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetStringParameter(i, VARIABLE(string, address));
+					}
+					break;
 					case BaseType::Entity:
-						invoker->SetEntityParameter(i, INSTRUCT_VARIABLE(Entity, 1));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->SetEntityParameter(i, VARIABLE(Entity, address));
+					}
+					break;
 					default: EXCEPTION("无效的类型");
 				}
 			EXCEPTION_JUMP(-1, BASE_SetCoroutineParameter);
@@ -537,7 +628,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::BASE_GetCoroutineResult:
 		{
-			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& handle = VARIABLE(Handle, handleValue);
 			uint64 coroutine;
 			Invoker* invoker;
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
@@ -558,43 +650,77 @@ label_next_instruct:
 				switch (INSTRUCT_VALUE(BaseType, 0))
 				{
 					case BaseType::Struct:
-						invoker->GetStructReturnValue(INSTRUCT_VALUE(uint32, 5), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(Type, 9));
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						invoker->GetStructReturnValue(INSTRUCT_VALUE(uint32, 5), &VARIABLE(uint8, address), INSTRUCT_VALUE(Type, 9));
 						instruct += SIZE(Type);
-						break;
+					}
+					break;
 					case BaseType::Bool:
-						INSTRUCT_VARIABLE(bool, 1) = invoker->GetBoolReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(bool, address) = invoker->GetBoolReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Byte:
-						INSTRUCT_VARIABLE(uint8, 1) = invoker->GetByteReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(uint8, address) = invoker->GetByteReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Char:
-						INSTRUCT_VARIABLE(character, 1) = invoker->GetCharReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(character, address) = invoker->GetCharReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Integer:
-						INSTRUCT_VARIABLE(integer, 1) = invoker->GetIntegerReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(integer, address) = invoker->GetIntegerReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Real:
-						INSTRUCT_VARIABLE(real, 1) = invoker->GetRealReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(real, address) = invoker->GetRealReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Real2:
-						INSTRUCT_VARIABLE(Real2, 1) = invoker->GetReal2ReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(Real2, address) = invoker->GetReal2ReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Real3:
-						INSTRUCT_VARIABLE(Real3, 1) = invoker->GetReal3ReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(Real3, address) = invoker->GetReal3ReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Real4:
-						INSTRUCT_VARIABLE(Real4, 1) = invoker->GetReal4ReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(Real4, address) = invoker->GetReal4ReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Enum:
-						INSTRUCT_VARIABLE(integer, 1) = invoker->GetEnumReturnValue(INSTRUCT_VALUE(uint32, 5), Type(INSTRUCT_VALUE(Declaration, 9), 1));
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(integer, address) = invoker->GetEnumReturnValue(INSTRUCT_VALUE(uint32, 5), Type(INSTRUCT_VALUE(Declaration, 9), 1));
 						instruct += SIZE(Declaration);
-						break;
+					}
+					break;
 					case BaseType::Type:
-						INSTRUCT_VARIABLE(Type, 1) = invoker->GetTypeReturnValue(INSTRUCT_VALUE(uint32, 5));
-						break;
+					{
+						uint32 address = INSTRUCT_VALUE(uint32, 1);
+						VARIABLE(Type, address) = invoker->GetTypeReturnValue(INSTRUCT_VALUE(uint32, 5));
+					}
+					break;
 					case BaseType::Handle:
 					{
-						Handle& address = INSTRUCT_VARIABLE(Handle, 1);
+						uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+						Handle& address = VARIABLE(Handle, addressValue);
 						kernel->heapAgency->StrongRelease(address);
 						address = invoker->GetHandleReturnValue(INSTRUCT_VALUE(uint32, 5));
 						kernel->heapAgency->StrongReference(address);
@@ -602,7 +728,8 @@ label_next_instruct:
 					break;
 					case BaseType::String:
 					{
-						string& address = INSTRUCT_VARIABLE(string, 1);
+						uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+						string& address = VARIABLE(string, addressValue);
 						kernel->stringAgency->Release(address);
 						address = invoker->GetStringReturnValue(INSTRUCT_VALUE(uint32, 5));
 						kernel->stringAgency->Reference(address);
@@ -610,7 +737,8 @@ label_next_instruct:
 					break;
 					case BaseType::Entity:
 					{
-						Entity& address = INSTRUCT_VARIABLE(Entity, 1);
+						uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+						Entity& address = VARIABLE(Entity, addressValue);
 						kernel->entityAgency->Release(address);
 						address = invoker->GetEntityReturnValue(INSTRUCT_VALUE(uint32, 5));
 						kernel->entityAgency->Reference(address);
@@ -623,7 +751,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::BASE_CoroutineStart:
 		{
-			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& handle = VARIABLE(Handle, handleValue);
 			uint64 coroutine;
 			if (kernel->heapAgency->TryGetValue(handle, coroutine))
 			{
@@ -656,7 +785,8 @@ label_next_instruct:
 			//Handle&		委托对象
 			//uint32		参数起始地址
 			//uint32		参数空间大小
-			Handle& handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle handle = VARIABLE(Handle, handleValue);
 			Delegate delegateInfo;
 			if (kernel->heapAgency->TryGetValue(handle, delegateInfo))
 			{
@@ -684,7 +814,7 @@ label_next_instruct:
 					{
 						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
 						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
-						if (EnsureStackSize(top + parameterStart + SIZE(handle) + parameterSize))EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
+						if (EnsureStackSize(top + parameterStart + SIZE(Handle) + parameterSize))EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
 						kernel->heapAgency->StrongReference(delegateInfo.target);
 						*(Handle*)(stack + top + parameterStart) = delegateInfo.target;
 						top += MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
@@ -706,29 +836,45 @@ label_next_instruct:
 		goto label_next_instruct;
 #pragma region 参数入栈
 		case Instruct::FUNCTION_PushParameter_1:
-			*(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(uint8, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(stack + top + INSTRUCT_VALUE(uint32, 1)) = VARIABLE(uint8, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_2:
-			*(character*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(character, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(character*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = VARIABLE(character, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_4:
-			*(uint32*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(uint32, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(uint32*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = VARIABLE(uint32, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_8:
-			*(uint64*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = INSTRUCT_VARIABLE(uint64, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(uint64*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = VARIABLE(uint64, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Bitwise:
-			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), stack + top + INSTRUCT_VALUE(uint32, 1), INSTRUCT_VALUE(uint32, 9));
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			Mcopy(&VARIABLE(uint8, address), stack + top + INSTRUCT_VALUE(uint32, 1), INSTRUCT_VALUE(uint32, 9));
 			instruct += 13;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Struct:
 		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 5);
 			const RuntimeStruct* info = kernel->libraryAgency->GetStruct(Type(INSTRUCT_VALUE(Declaration, 9), 0));
-			uint8* address = &INSTRUCT_VARIABLE(uint8, 5);
+			uint8* address = &VARIABLE(uint8, addressValue);
 			info->StrongReference(kernel, address);
 			Mcopy(address, stack + top + INSTRUCT_VALUE(uint32, 1), info->size);
 			instruct += 9 + SIZE(Declaration);
@@ -736,7 +882,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_String:
 		{
-			string parameter = INSTRUCT_VARIABLE(string, 5);
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			string parameter = VARIABLE(string, address);
 			kernel->stringAgency->Reference(parameter);
 			*(string*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = parameter;
 			instruct += 9;
@@ -744,7 +891,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Handle:
 		{
-			Handle parameter = INSTRUCT_VARIABLE(Handle, 5);
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			Handle parameter = VARIABLE(Handle, address);
 			kernel->heapAgency->StrongReference(parameter);
 			*(Handle*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = parameter;
 			instruct += 9;
@@ -752,7 +900,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::FUNCTION_PushParameter_Entity:
 		{
-			Entity parameter = INSTRUCT_VARIABLE(Entity, 5);
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			Entity parameter = VARIABLE(Entity, address);
 			kernel->entityAgency->Reference(parameter);
 			*(Entity*)(stack + top + INSTRUCT_VALUE(uint32, 1)) = parameter;
 			instruct += 9;
@@ -767,31 +916,47 @@ label_next_instruct:
 #pragma endregion 参数入栈
 #pragma region 返回值
 		case Instruct::FUNCTION_ReturnPoint_1:
-			*RETURN_POINT(1) = INSTRUCT_VARIABLE(uint8, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*RETURN_POINT(1) = VARIABLE(uint8, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_2:
-			*(uint16*)RETURN_POINT(1) = INSTRUCT_VARIABLE(uint16, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(uint16*)RETURN_POINT(1) = VARIABLE(uint16, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_4:
-			*(uint32*)RETURN_POINT(1) = INSTRUCT_VARIABLE(uint32, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(uint32*)RETURN_POINT(1) = VARIABLE(uint32, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_8:
-			*(uint64*)RETURN_POINT(1) = INSTRUCT_VARIABLE(uint64, 5);
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			*(uint64*)RETURN_POINT(1) = VARIABLE(uint64, address);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_Bitwise:
-			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), RETURN_POINT(1), INSTRUCT_VALUE(uint32, 9));
+		{
+			uint32 address = INSTRUCT_VALUE(uint32, 5);
+			Mcopy(&VARIABLE(uint8, address), RETURN_POINT(1), INSTRUCT_VALUE(uint32, 9));
 			instruct += 13;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::FUNCTION_ReturnPoint_Struct:
 		{
 			const RuntimeStruct* info = kernel->libraryAgency->GetStruct(Type(INSTRUCT_VALUE(Declaration, 9), 0));
 			uint8* address = RETURN_POINT(1);
 			info->StrongRelease(kernel, address);
-			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), address, info->size);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 5);
+			Mcopy(&VARIABLE(uint8, addressValue), address, info->size);
 			info->StrongReference(kernel, address);
 			instruct += 9 + SIZE(Declaration);
 		}
@@ -800,7 +965,8 @@ label_next_instruct:
 		{
 			string* address = (string*)RETURN_POINT(1);
 			kernel->stringAgency->Release(*address);
-			*address = INSTRUCT_VARIABLE(string, 5);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 5);
+			*address = VARIABLE(string, addressValue);
 			kernel->stringAgency->Reference(*address);
 			instruct += 9;
 		}
@@ -809,7 +975,8 @@ label_next_instruct:
 		{
 			Handle* address = (Handle*)RETURN_POINT(1);
 			kernel->heapAgency->StrongRelease(*address);
-			*address = INSTRUCT_VARIABLE(Handle, 5);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 5);
+			*address = VARIABLE(Handle, addressValue);
 			kernel->heapAgency->StrongReference(*address);
 			instruct += 9;
 		}
@@ -818,7 +985,8 @@ label_next_instruct:
 		{
 			Entity* address = (Entity*)RETURN_POINT(1);
 			kernel->entityAgency->Release(*address);
-			*address = INSTRUCT_VARIABLE(Entity, 5);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 5);
+			*address = VARIABLE(Entity, addressValue);
 			kernel->entityAgency->Reference(*address);
 			instruct += 9;
 		}
@@ -853,7 +1021,8 @@ label_next_instruct:
 			goto label_next_instruct;
 		case Instruct::FUNCTION_VirtualCall:
 		{
-			Handle handle = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			Handle handle = VARIABLE(Handle, handleValue);
 			Type type;
 			if (kernel->heapAgency->TryGetType(handle, type))
 			{
@@ -870,7 +1039,8 @@ label_next_instruct:
 		case Instruct::FUNCTION_CustomCall:
 		{
 			Delegate delegateInfo;
-			if (kernel->heapAgency->TryGetValue(INSTRUCT_VARIABLE(Handle, 1), delegateInfo))
+			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
+			if (kernel->heapAgency->TryGetValue(VARIABLE(Handle, handleValue), delegateInfo))
 			{
 				switch (delegateInfo.type)
 				{
@@ -943,41 +1113,61 @@ label_next_instruct:
 #pragma region 赋值
 		case Instruct::ASSIGNMENT_Box:
 		{
-			StrongBox(kernel, INSTRUCT_VALUE(Type, 9), &INSTRUCT_VARIABLE(uint8, 5), INSTRUCT_VARIABLE(Handle, 1));
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			StrongBox(kernel, INSTRUCT_VALUE(Type, 9), &VARIABLE(uint8, sourceValue), VARIABLE(Handle, resultValue));
 			instruct += SIZE(Type) + 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Unbox:
 		{
-			String error = StrongUnbox(kernel, INSTRUCT_VALUE(Type, 9), INSTRUCT_VARIABLE(Handle, 5), &INSTRUCT_VARIABLE(uint8, 1));
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			String error = StrongUnbox(kernel, INSTRUCT_VALUE(Type, 9), VARIABLE(Handle, sourceValue), &VARIABLE(uint8, resultValue));
 			if (error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Unbox, error);
 			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Unbox);
 		}
 		goto label_next_instruct;
 #pragma region C2V
 		case Instruct::ASSIGNMENT_Const2Variable_1:
-			INSTRUCT_VARIABLE(uint8, 1) = INSTRUCT_VALUE(uint8, 5);
+		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			VARIABLE(uint8, addressValue) = INSTRUCT_VALUE(uint8, 5);
 			instruct += 6;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_2:
-			INSTRUCT_VARIABLE(uint16, 1) = INSTRUCT_VALUE(uint16, 5);
+		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			VARIABLE(uint16, addressValue) = INSTRUCT_VALUE(uint16, 5);
 			instruct += 7;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_4:
-			INSTRUCT_VARIABLE(uint32, 1) = INSTRUCT_VALUE(uint32, 5);
+		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			VARIABLE(uint32, addressValue) = INSTRUCT_VALUE(uint32, 5);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_8:
-			INSTRUCT_VARIABLE(uint64, 1) = INSTRUCT_VALUE(uint64, 5);
+		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			VARIABLE(uint64, addressValue) = INSTRUCT_VALUE(uint64, 5);
 			instruct += 13;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_Bitwise:
-			Mcopy(&INSTRUCT_VALUE(uint8, 9), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 5));
+		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			Mcopy(&INSTRUCT_VALUE(uint8, 9), &VARIABLE(uint8, addressValue), INSTRUCT_VALUE(uint32, 5));
 			instruct += INSTRUCT_VALUE(uint32, 5) + 13;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_Struct:
 		{
-			uint8* address = &INSTRUCT_VARIABLE(uint8, 1);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			uint8* address = &VARIABLE(uint8, addressValue);
 
 			const Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
 			const RuntimeStruct* info = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
@@ -989,7 +1179,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_String:
 		{
-			string& address = INSTRUCT_VARIABLE(string, 1);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			string& address = VARIABLE(string, addressValue);
 			kernel->stringAgency->Release(address);
 			address = INSTRUCT_VALUE(string, 5);
 			kernel->stringAgency->Reference(address);
@@ -998,7 +1189,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_HandleNull:
 		{
-			Handle& address = INSTRUCT_VARIABLE(Handle, 1);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			Handle& address = VARIABLE(Handle, addressValue);
 			kernel->heapAgency->StrongRelease(address);
 			address = NULL;
 			instruct += 5;
@@ -1006,7 +1198,8 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_EntityNull:
 		{
-			Entity& address = INSTRUCT_VARIABLE(Entity, 1);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			Entity& address = VARIABLE(Entity, addressValue);
 			kernel->entityAgency->Release(address);
 			address = NULL;
 			instruct += 5;
@@ -1015,29 +1208,51 @@ label_next_instruct:
 #pragma endregion C2V
 #pragma region V2V(对于有引用计数的类型，先引用再释放是防止出现把变量赋值给自己时，如果引用计数为1则可能会在赋值过程中导致引用计数为0而销毁)
 		case Instruct::ASSIGNMENT_Variable2Variable_1:
-			INSTRUCT_VARIABLE(uint8, 1) = INSTRUCT_VARIABLE(uint8, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(uint8, resultValue) = VARIABLE(uint8, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_2:
-			INSTRUCT_VARIABLE(uint16, 1) = INSTRUCT_VARIABLE(uint16, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(uint16, resultValue) = VARIABLE(uint16, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_4:
-			INSTRUCT_VARIABLE(uint32, 1) = INSTRUCT_VARIABLE(uint32, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(uint32, resultValue) = VARIABLE(uint32, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_8:
-			INSTRUCT_VARIABLE(uint64, 1) = INSTRUCT_VARIABLE(uint64, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(uint64, resultValue) = VARIABLE(uint64, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Bitwise:
-			Mcopy(&INSTRUCT_VARIABLE(uint8, 5), &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 9));
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			Mcopy(&VARIABLE(uint8, sourceValue), &VARIABLE(uint8, resultValue), INSTRUCT_VALUE(uint32, 9));
 			instruct += 13;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Struct:
 		{
-			uint8* target = &INSTRUCT_VARIABLE(uint8, 1);
-			uint8* source = &INSTRUCT_VARIABLE(uint8, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			uint8* target = &VARIABLE(uint8, resultValue);
+			uint8* source = &VARIABLE(uint8, sourceValue);
 			const Declaration& declaration = INSTRUCT_VALUE(Declaration, 9);
 			const RuntimeStruct* info = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
 			info->StrongReference(kernel, source);
@@ -1048,38 +1263,46 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_String:
 		{
-			string* address = &INSTRUCT_VARIABLE(string, 1);
-			string value = INSTRUCT_VARIABLE(string, 5);
-			kernel->stringAgency->Reference(value);
-			kernel->stringAgency->Release(*address);
-			*address = value;
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			string& target = VARIABLE(string, resultValue);
+			string source = VARIABLE(string, sourceValue);
+			kernel->stringAgency->Reference(source);
+			kernel->stringAgency->Release(target);
+			target = source;
 			instruct += 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Handle:
 		{
-			Handle* address = &INSTRUCT_VARIABLE(Handle, 1);
-			Handle value = INSTRUCT_VARIABLE(Handle, 5);
-			kernel->heapAgency->StrongReference(value);
-			kernel->heapAgency->StrongRelease(*address);
-			*address = value;
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			Handle& target = VARIABLE(Handle, resultValue);
+			Handle source = VARIABLE(Handle, sourceValue);
+			kernel->heapAgency->StrongReference(source);
+			kernel->heapAgency->StrongRelease(target);
+			target = source;
 			instruct += 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Entity:
 		{
-			Entity* address = &INSTRUCT_VARIABLE(Entity, 1);
-			Entity value = INSTRUCT_VARIABLE(Entity, 5);
-			kernel->entityAgency->Reference(value);
-			kernel->entityAgency->Release(*address);
-			*address = value;
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			Entity& target = VARIABLE(Entity, resultValue);
+			Entity source = VARIABLE(Entity, sourceValue);
+			kernel->entityAgency->Reference(source);
+			kernel->entityAgency->Release(target);
+			target = source;
 			instruct += 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Variable_Vector:
 		{
-			real* target = &INSTRUCT_VARIABLE(real, 1);
-			real* source = &INSTRUCT_VARIABLE(real, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			real* target = &VARIABLE(real, resultValue);
+			real* source = &VARIABLE(real, sourceValue);
 			uint32 flag = INSTRUCT_VALUE(uint32, 9);
 			while (flag)
 			{
@@ -1094,93 +1317,100 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Variable2Handle_1:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_1);
-
-			*address = INSTRUCT_VARIABLE(uint8, 9);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				*address = VARIABLE(uint8, addressValue);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_1);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_2:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_2);
-
-			*(uint16*)address = INSTRUCT_VARIABLE(uint16, 9);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				*(uint16*)address = VARIABLE(uint16, addressValue);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_2);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_4:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_4);
-
-			*(uint32*)address = INSTRUCT_VARIABLE(uint32, 9);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				*(uint32*)address = VARIABLE(uint32, addressValue);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_4);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_8:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_8);
-
-			*(uint64*)address = INSTRUCT_VARIABLE(uint64, 9);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				*(uint64*)address = VARIABLE(uint64, addressValue);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_8);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Bitwise:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Bitwise);
-
-			Mcopy(&INSTRUCT_VARIABLE(uint8, 9), address, INSTRUCT_VALUE(uint32, 13));
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				Mcopy(&VARIABLE(uint8, addressValue), address, INSTRUCT_VALUE(uint32, 13));
+			}
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Handle_Bitwise);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Struct:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Struct);
-
 			{
 				const Declaration& declaration = INSTRUCT_VALUE(Declaration, 13);
 				const RuntimeStruct* runtimeStruct = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
 				runtimeStruct->WeakRelease(kernel, address);
-				Mcopy(&INSTRUCT_VARIABLE(uint8, 9), address, runtimeStruct->size);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				Mcopy(&VARIABLE(uint8, addressValue), address, runtimeStruct->size);
 				runtimeStruct->WeakReference(kernel, address);
 			}
-
 			EXCEPTION_JUMP(12 + SIZE(Declaration), ASSIGNMENT_Variable2Handle_Struct);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_String:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_String);
-
-			kernel->stringAgency->Release(*(string*)address);
-			*(string*)address = INSTRUCT_VARIABLE(string, 9);
-			kernel->stringAgency->Reference(*(string*)address);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				kernel->stringAgency->Release(*(string*)address);
+				*(string*)address = VARIABLE(string, addressValue);
+				kernel->stringAgency->Reference(*(string*)address);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_String);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Handle:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Handle);
-
-			kernel->heapAgency->WeakRelease(*(Handle*)address);
-			*(Handle*)address = INSTRUCT_VARIABLE(Handle, 9);
-			kernel->heapAgency->WeakReference(*(Handle*)address);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				kernel->heapAgency->WeakRelease(*(Handle*)address);
+				*(Handle*)address = VARIABLE(Handle, addressValue);
+				kernel->heapAgency->WeakReference(*(Handle*)address);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_Handle);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Entity:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Entity);
-
-			kernel->entityAgency->Release(*(Entity*)address);
-			*(Entity*)address = INSTRUCT_VARIABLE(Entity, 9);
-			kernel->entityAgency->Reference(*(Entity*)address);
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 9);
+				kernel->entityAgency->Release(*(Entity*)address);
+				*(Entity*)address = VARIABLE(Entity, addressValue);
+				kernel->entityAgency->Reference(*(Entity*)address);
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_Entity);
 		}
 		goto label_next_instruct;
@@ -1189,7 +1419,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Variable2Array_1:
 		{
 			ARRAY_VARIABLE(1);
-			if (error.IsEmpty()) *address = INSTRUCT_VARIABLE(uint8, 13);
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*address = VARIABLE(uint8, addressValue);
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_1, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_1);
 		}
@@ -1197,7 +1431,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Variable2Array_2:
 		{
 			ARRAY_VARIABLE(1);
-			if (error.IsEmpty())*(uint16*)address = INSTRUCT_VARIABLE(uint16, 13);
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*(uint16*)address = VARIABLE(uint16, addressValue);
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_2, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_2);
 		}
@@ -1205,7 +1443,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Variable2Array_4:
 		{
 			ARRAY_VARIABLE(1);
-			if (error.IsEmpty())*(uint32*)address = INSTRUCT_VARIABLE(uint32, 13);
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*(uint32*)address = VARIABLE(uint32, addressValue);
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_4, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_4);
 		}
@@ -1213,7 +1455,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Variable2Array_8:
 		{
 			ARRAY_VARIABLE(1);
-			if (error.IsEmpty())*(uint64*)address = INSTRUCT_VARIABLE(uint64, 13);
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*(uint64*)address = VARIABLE(uint64, addressValue);
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_8, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_8);
 		}
@@ -1221,7 +1467,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Variable2Array_Bitwise:
 		{
 			ARRAY_VARIABLE(1);
-			if (error.IsEmpty()) Mcopy(&INSTRUCT_VARIABLE(uint8, 13), address, INSTRUCT_VALUE(uint32, 17));
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				Mcopy(&VARIABLE(uint8, addressValue), address, INSTRUCT_VALUE(uint32, 17));
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Variable2Array_Bitwise);
 		}
@@ -1234,7 +1484,8 @@ label_next_instruct:
 				const Declaration& declaration = INSTRUCT_VALUE(Declaration, 17);
 				const RuntimeStruct* info = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
 				info->WeakRelease(kernel, address);
-				Mcopy(&INSTRUCT_VARIABLE(uint8, 13), address, info->size);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				Mcopy(&VARIABLE(uint8, addressValue), address, info->size);
 				info->WeakReference(kernel, address);
 			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Struct, error);
@@ -1247,7 +1498,8 @@ label_next_instruct:
 			if (error.IsEmpty())
 			{
 				kernel->stringAgency->Release(*(string*)address);
-				*(string*)address = INSTRUCT_VARIABLE(string, 13);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*(string*)address = VARIABLE(string, addressValue);
 				kernel->stringAgency->Reference(*(string*)address);
 			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_String, error);
@@ -1260,7 +1512,8 @@ label_next_instruct:
 			if (error.IsEmpty())
 			{
 				kernel->heapAgency->WeakRelease(*(Handle*)address);
-				*(Handle*)address = INSTRUCT_VARIABLE(Handle, 13);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*(Handle*)address = VARIABLE(Handle, addressValue);
 				kernel->heapAgency->WeakReference(*(Handle*)address);
 			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Handle, error);
@@ -1273,7 +1526,8 @@ label_next_instruct:
 			if (error.IsEmpty())
 			{
 				kernel->entityAgency->Release(*(Entity*)address);
-				*(Entity*)address = INSTRUCT_VARIABLE(Entity, 13);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 13);
+				*(Entity*)address = VARIABLE(Entity, addressValue);
 				kernel->entityAgency->Reference(*(Entity*)address);
 			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Entity, error);
@@ -1285,45 +1539,50 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Handle2Variable_1:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_1);
-
-			INSTRUCT_VARIABLE(uint8, 1) = *address;
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint8, addressValue) = *address;
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_1);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_2:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_2);
-
-			INSTRUCT_VARIABLE(uint16, 1) = *(uint16*)address;
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint16, addressValue) = *(uint16*)address;
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_2);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_4:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_4);
-
-			INSTRUCT_VARIABLE(uint32, 1) = *(uint32*)address;
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint32, addressValue) = *(uint32*)address;
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_4);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_8:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_8);
-
-			INSTRUCT_VARIABLE(uint64, 1) = *(uint64*)address;
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint64, addressValue) = *(uint64*)address;
+			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_8);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Bitwise:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Bitwise);
-
-			Mcopy(address, &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 13));
-
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				Mcopy(address, &VARIABLE(uint8, addressValue), INSTRUCT_VALUE(uint32, 13));
+			}
 			EXCEPTION_JUMP(16, ASSIGNMENT_Handle2Variable_Bitwise);
 		}
 		goto label_next_instruct;
@@ -1334,7 +1593,8 @@ label_next_instruct:
 			{
 				const Declaration& declaration = INSTRUCT_VALUE(Declaration, 13);
 				const RuntimeStruct* runtimeStruct = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
-				uint8* targetAddress = &INSTRUCT_VARIABLE(uint8, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				uint8* targetAddress = &VARIABLE(uint8, addressValue);
 				runtimeStruct->StrongRelease(kernel, targetAddress);
 				Mcopy(address, targetAddress, runtimeStruct->size);
 				runtimeStruct->StrongReference(kernel, address);
@@ -1346,42 +1606,39 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Handle2Variable_String:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_String);
-
 			{
-				string& target = INSTRUCT_VARIABLE(string, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				string& target = VARIABLE(string, addressValue);
 				kernel->stringAgency->Release(target);
 				target = *(string*)address;
 				kernel->stringAgency->Reference(*(string*)address);
 			}
-
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_String);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Handle:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Handle);
-
 			{
-				Handle& target = INSTRUCT_VARIABLE(Handle, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				Handle& target = VARIABLE(Handle, addressValue);
 				kernel->heapAgency->StrongRelease(target);
 				target = *(Handle*)address;
 				kernel->heapAgency->StrongReference(*(Handle*)address);
 			}
-
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Handle);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Entity:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Entity);
-
 			{
-				Entity& target = INSTRUCT_VARIABLE(Entity, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				Entity& target = VARIABLE(Entity, addressValue);
 				kernel->entityAgency->Release(target);
 				target = *(Entity*)address;
 				kernel->entityAgency->Reference(*(Entity*)address);
 			}
-
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Entity);
 		}
 		goto label_next_instruct;
@@ -1390,7 +1647,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Array2Variable_1:
 		{
 			ARRAY_VARIABLE(5);
-			if (error.IsEmpty()) INSTRUCT_VARIABLE(uint8, 1) = *address;
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint8, addressValue) = *address;
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_1, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_1);
 		}
@@ -1398,7 +1659,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Array2Variable_2:
 		{
 			ARRAY_VARIABLE(5);
-			if (error.IsEmpty()) INSTRUCT_VARIABLE(uint16, 1) = *(uint16*)address;
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint16, addressValue) = *(uint16*)address;
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_2, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_2);
 		}
@@ -1406,7 +1671,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Array2Variable_4:
 		{
 			ARRAY_VARIABLE(5);
-			if (error.IsEmpty()) INSTRUCT_VARIABLE(uint32, 1) = *(uint32*)address;
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint32, addressValue) = *(uint32*)address;
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_4, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_4);
 		}
@@ -1414,7 +1683,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Array2Variable_8:
 		{
 			ARRAY_VARIABLE(5);
-			if (error.IsEmpty()) INSTRUCT_VARIABLE(uint64, 1) = *(uint64*)address;
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(uint64, addressValue) = *(uint64*)address;
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_8, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_8);
 		}
@@ -1422,7 +1695,11 @@ label_next_instruct:
 		case Instruct::ASSIGNMENT_Array2Variable_Bitwise:
 		{
 			ARRAY_VARIABLE(5);
-			if (error.IsEmpty()) Mcopy(address, &INSTRUCT_VARIABLE(uint8, 1), INSTRUCT_VALUE(uint32, 17));
+			if (error.IsEmpty())
+			{
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				Mcopy(address, &VARIABLE(uint8, addressValue), INSTRUCT_VALUE(uint32, 17));
+			}
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Array2Variable_Bitwise);
 		}
@@ -1434,7 +1711,8 @@ label_next_instruct:
 			{
 				const Declaration& declaration = INSTRUCT_VALUE(Declaration, 17);
 				const RuntimeStruct* info = &kernel->libraryAgency->GetLibrary(declaration.library)->structs[declaration.index];
-				uint8* targetAddress = &INSTRUCT_VARIABLE(uint8, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				uint8* targetAddress = &VARIABLE(uint8, addressValue);
 				info->StrongRelease(kernel, targetAddress);
 				Mcopy(address, targetAddress, info->size);
 				info->StrongReference(kernel, address);
@@ -1448,7 +1726,8 @@ label_next_instruct:
 			ARRAY_VARIABLE(5);
 			if (error.IsEmpty())
 			{
-				string& target = INSTRUCT_VARIABLE(string, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				string& target = VARIABLE(string, addressValue);
 				kernel->stringAgency->Release(target);
 				target = *(string*)address;
 				kernel->stringAgency->Reference(*(string*)address);
@@ -1462,7 +1741,8 @@ label_next_instruct:
 			ARRAY_VARIABLE(5);
 			if (error.IsEmpty())
 			{
-				Handle& target = INSTRUCT_VARIABLE(Handle, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				Handle& target = VARIABLE(Handle, addressValue);
 				kernel->heapAgency->StrongRelease(target);
 				target = *(Handle*)address;
 				kernel->heapAgency->StrongReference(*(Handle*)address);
@@ -1476,7 +1756,8 @@ label_next_instruct:
 			ARRAY_VARIABLE(5);
 			if (error.IsEmpty())
 			{
-				Entity& target = INSTRUCT_VARIABLE(Entity, 1);
+				uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+				Entity& target = VARIABLE(Entity, addressValue);
 				kernel->entityAgency->Release(target);
 				target = *(Entity*)address;
 				kernel->entityAgency->Reference(*(Entity*)address);
@@ -1489,121 +1770,147 @@ label_next_instruct:
 #pragma endregion 赋值
 #pragma region Bool
 		case Instruct::BOOL_Not:
-			INSTRUCT_VARIABLE(bool, 1) = !INSTRUCT_VARIABLE(bool, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(bool, resultValue) = !VARIABLE(bool, parameterValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::BOOL_Or:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) || INSTRUCT_VARIABLE(bool, 9);
+			OPERATOR(bool, bool, | , bool);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::BOOL_Xor:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) ^ INSTRUCT_VARIABLE(bool, 9);
+			OPERATOR(bool, bool, ^, bool);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::BOOL_And:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) && INSTRUCT_VARIABLE(bool, 9);
+			OPERATOR(bool, bool, &&, bool);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::BOOL_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) == INSTRUCT_VARIABLE(bool, 9);
+			OPERATOR(bool, bool, == , bool);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::BOOL_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(bool, 5) != INSTRUCT_VARIABLE(bool, 9);
+			OPERATOR(bool, bool, != , bool);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion Bool
 #pragma region Integer
 		case Instruct::INTEGER_Negative:
-			INSTRUCT_VARIABLE(integer, 1) = -INSTRUCT_VARIABLE(integer, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(integer, resultValue) = -VARIABLE(integer, parameterValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::INTEGER_Plus:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) + INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(integer, integer, +, integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Minus:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) - INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(integer, integer, -, integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Multiply:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) * INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(integer, integer, *, integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Divide:
 		{
-			integer value = INSTRUCT_VARIABLE(integer, 9);
-			if (value) INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			integer right = VARIABLE(integer, rightValue);
+			if (right)
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(integer, resultValue) = VARIABLE(integer, leftValue) / right;
+			}
 			else EXCEPTION_EXIT(INTEGER_Divide, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, INTEGER_Divide);
 		}
 		goto label_next_instruct;
 		case Instruct::INTEGER_Mod:
 		{
-			integer value = INSTRUCT_VARIABLE(integer, 9);
-			if (value) INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) % value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			integer right = VARIABLE(integer, rightValue);
+			if (right)
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(integer, resultValue) = VARIABLE(integer, leftValue) % right;
+			}
 			else EXCEPTION_EXIT(INTEGER_Mod, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, INTEGER_Mod);
 		}
 		goto label_next_instruct;
 		case Instruct::INTEGER_And:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) & INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(integer, integer, &, integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Or:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) | INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(integer, integer, | , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Xor:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(integer, 5) ^ INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(integer, integer, ^, integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Inverse:
-			INSTRUCT_VARIABLE(integer, 1) = ~INSTRUCT_VARIABLE(integer, 5);
-			instruct += 9;
-			goto label_next_instruct;
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(integer, resultValue) = ~VARIABLE(integer, parameterValue);
+		}
+		instruct += 9;
+		goto label_next_instruct;
 		case Instruct::INTEGER_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) == INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(bool, integer, == , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) != INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(bool, integer, != , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Grater:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) > INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(bool, integer, > , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_GraterThanOrEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) >= INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(bool, integer, >= , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Less:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) < INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(bool, integer, < , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_LessThanOrEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(integer, 5) <= INSTRUCT_VARIABLE(integer, 9);
+			OPERATOR(bool, integer, <= , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_LeftShift:
-			INSTRUCT_VARIABLE(integer, 1) = (INSTRUCT_VARIABLE(integer, 5) << INSTRUCT_VARIABLE(integer, 9));
+			OPERATOR(integer, integer, << , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_RightShift:
-			INSTRUCT_VARIABLE(integer, 1) = (INSTRUCT_VARIABLE(integer, 5) >> INSTRUCT_VARIABLE(integer, 9));
+			OPERATOR(integer, integer, >> , integer);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::INTEGER_Increment:
 		{
-			integer& value = INSTRUCT_VARIABLE(integer, 1);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			integer& value = VARIABLE(integer, resultValue);
 			value++;
 			instruct += 5;
 		}
 		goto label_next_instruct;
 		case Instruct::INTEGER_Decrement:
 		{
-			integer& value = INSTRUCT_VARIABLE(integer, 1);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			integer& value = VARIABLE(integer, resultValue);
 			value--;
 			instruct += 5;
 		}
@@ -1611,63 +1918,75 @@ label_next_instruct:
 #pragma endregion Integer
 #pragma region Real
 		case Instruct::REAL_Negative:
-			INSTRUCT_VARIABLE(real, 1) = -INSTRUCT_VARIABLE(real, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(real, resultValue) = -VARIABLE(real, parameterValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::REAL_Plus:
-			INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) + INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(real, real, +, real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_Minus:
-			INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) - INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(real, real, -, real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_Multiply:
-			INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(real, real, *, real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_Divide:
 		{
-			real value = INSTRUCT_VARIABLE(real, 9);
-			if (value != 0)INSTRUCT_VARIABLE(real, 1) = INSTRUCT_VARIABLE(real, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			real right = VARIABLE(real, rightValue);
+			if (right)
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(real, resultValue) = VARIABLE(real, leftValue) / right;
+			}
 			else EXCEPTION_EXIT(REAL_Divide, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, REAL_Divide);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) == INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(bool, real, == , real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) != INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(bool, real, != , real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_Grater:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) > INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(bool, real, > , real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_GraterThanOrEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) >= INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(bool, real, >= , real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_Less:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) < INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(bool, real, < , real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_LessThanOrEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(real, 5) <= INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(bool, real, <= , real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL_Increment:
 		{
-			real& value = INSTRUCT_VARIABLE(real, 1);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			real& value = VARIABLE(real, resultValue);
 			value++;
 			instruct += 5;
 		}
 		goto label_next_instruct;
 		case Instruct::REAL_Decrement:
 		{
-			real& value = INSTRUCT_VARIABLE(real, 1);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			real& value = VARIABLE(real, resultValue);
 			value--;
 			instruct += 5;
 		}
@@ -1675,182 +1994,249 @@ label_next_instruct:
 #pragma endregion Real
 #pragma region Real2
 		case Instruct::REAL2_Negative:
-			INSTRUCT_VARIABLE(Real2, 1) = -INSTRUCT_VARIABLE(Real2, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(Real2, resultValue) = -VARIABLE(Real2, parameterValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::REAL2_Plus:
-			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) + INSTRUCT_VARIABLE(Real2, 9);
+			OPERATOR(Real2, Real2, +, Real2);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL2_Minus:
-			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) - INSTRUCT_VARIABLE(Real2, 9);
+			OPERATOR(Real2, Real2, -, Real2);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL2_Multiply_rv:
-			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(Real2, 9);
+			OPERATOR(Real2, real, *, Real2);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL2_Multiply_vr:
-			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) * INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(Real2, Real2, *, real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL2_Multiply_vv:
-			INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) * INSTRUCT_VARIABLE(Real2, 9);
+			OPERATOR(Real2, Real2, *, Real2);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL2_Divide_rv:
 		{
-			Real2 value = INSTRUCT_VARIABLE(Real2, 9);
-			if (value.x == 0 || value.y == 0)EXCEPTION_EXIT(REAL2_Divide_rv, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(real, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Real2 value = VARIABLE(Real2, rightValue);
+			if (value.x == 0 || value.y == 0) EXCEPTION_EXIT(REAL2_Divide_rv, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real2, resultValue) = VARIABLE(real, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL2_Divide_rv);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL2_Divide_vr:
 		{
-			real value = INSTRUCT_VARIABLE(real, 9);
-			if (value == 0)EXCEPTION_EXIT(REAL2_Divide_vr, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			real value = VARIABLE(real, rightValue);
+			if (value == 0) EXCEPTION_EXIT(REAL2_Divide_vr, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real2, resultValue) = VARIABLE(Real2, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL2_Divide_vr);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL2_Divide_vv:
 		{
-			Real2 value = INSTRUCT_VARIABLE(Real2, 9);
-			if (value.x == 0 || value.y == 0)EXCEPTION_EXIT(REAL2_Divide_vv, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real2, 1) = INSTRUCT_VARIABLE(Real2, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Real2 value = VARIABLE(Real2, rightValue);
+			if (value.x == 0 || value.y == 0) EXCEPTION_EXIT(REAL2_Divide_vv, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real2, resultValue) = VARIABLE(Real2, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL2_Divide_vv);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL2_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real2, 5) == INSTRUCT_VARIABLE(Real2, 9);
+			OPERATOR(bool, Real2, == , Real2);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL2_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real2, 5) != INSTRUCT_VARIABLE(Real2, 9);
+			OPERATOR(bool, Real2, != , Real2);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion Real2
 #pragma region Real3
 		case Instruct::REAL3_Negative:
-			INSTRUCT_VARIABLE(Real3, 1) = -INSTRUCT_VARIABLE(Real3, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(Real3, resultValue) = -VARIABLE(Real3, parameterValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::REAL3_Plus:
-			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) + INSTRUCT_VARIABLE(Real3, 9);
+			OPERATOR(Real3, Real3, +, Real3);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL3_Minus:
-			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) - INSTRUCT_VARIABLE(Real3, 9);
+			OPERATOR(Real3, Real3, -, Real3);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL3_Multiply_rv:
-			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(Real3, 9);
+			OPERATOR(Real3, real, *, Real3);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL3_Multiply_vr:
-			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) * INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(Real3, Real3, *, real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL3_Multiply_vv:
-			INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) * INSTRUCT_VARIABLE(Real3, 9);
+			OPERATOR(Real3, Real3, *, Real3);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL3_Divide_rv:
 		{
-			Real3 value = INSTRUCT_VARIABLE(Real3, 9);
-			if (value.x == 0 || value.y == 0 || value.z == 0)EXCEPTION_EXIT(REAL3_Divide_rv, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(real, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Real3 value = VARIABLE(Real3, rightValue);
+			if (value.x == 0 || value.y == 0 || value.z == 0) EXCEPTION_EXIT(REAL3_Divide_rv, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real3, resultValue) = VARIABLE(real, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL3_Divide_rv);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL3_Divide_vr:
 		{
-			real value = INSTRUCT_VARIABLE(real, 9);
-			if (value == 0)EXCEPTION_EXIT(REAL3_Divide_vr, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			real value = VARIABLE(real, rightValue);
+			if (value == 0) EXCEPTION_EXIT(REAL3_Divide_vr, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real3, resultValue) = VARIABLE(Real3, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL3_Divide_vr);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL3_Divide_vv:
 		{
-			Real3 value = INSTRUCT_VARIABLE(Real3, 9);
-			if (value.x == 0 || value.y == 0 || value.z == 0)EXCEPTION_EXIT(REAL3_Divide_vv, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real3, 1) = INSTRUCT_VARIABLE(Real3, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Real3 value = VARIABLE(Real3, rightValue);
+			if (value.x == 0 || value.y == 0 || value.z == 0) EXCEPTION_EXIT(REAL3_Divide_vv, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real3, resultValue) = VARIABLE(Real3, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL3_Divide_vv);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL3_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real3, 5) == INSTRUCT_VARIABLE(Real3, 9);
+			OPERATOR(bool, Real3, == , Real3);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL3_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real3, 5) != INSTRUCT_VARIABLE(Real3, 9);
+			OPERATOR(bool, Real3, != , Real3);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion Real3
 #pragma region Real4
 		case Instruct::REAL4_Negative:
-			INSTRUCT_VARIABLE(Real4, 1) = -INSTRUCT_VARIABLE(Real4, 5);
-			instruct += 9;
-			goto label_next_instruct;
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 parameterValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(Real4, resultValue) = -VARIABLE(Real4, parameterValue);
+		}
+		instruct += 9;
+		goto label_next_instruct;
 		case Instruct::REAL4_Plus:
-			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) + INSTRUCT_VARIABLE(Real4, 9);
+			OPERATOR(Real4, Real4, +, Real4);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL4_Minus:
-			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) - INSTRUCT_VARIABLE(Real4, 9);
+			OPERATOR(Real4, Real4, -, Real4);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL4_Multiply_rv:
-			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(real, 5) * INSTRUCT_VARIABLE(Real4, 9);
+			OPERATOR(Real4, real, *, Real4);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL4_Multiply_vr:
-			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) * INSTRUCT_VARIABLE(real, 9);
+			OPERATOR(Real4, Real4, *, real);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL4_Multiply_vv:
-			INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) * INSTRUCT_VARIABLE(Real4, 9);
+			OPERATOR(Real4, Real4, *, Real4);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL4_Divide_rv:
 		{
-			Real4 value = INSTRUCT_VARIABLE(Real4, 9);
-			if (value.x == 0 || value.y == 0 || value.z == 0 || value.w == 0)EXCEPTION_EXIT(REAL4_Divide_rv, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(real, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Real4 value = VARIABLE(Real4, rightValue);
+			if (value.x == 0 || value.y == 0 || value.z == 0 || value.w == 0) EXCEPTION_EXIT(REAL4_Divide_rv, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real4, resultValue) = VARIABLE(real, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL4_Divide_rv);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL4_Divide_vr:
 		{
-			real value = INSTRUCT_VARIABLE(real, 9);
-			if (value == 0)EXCEPTION_EXIT(REAL4_Divide_vr, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			real value = VARIABLE(real, rightValue);
+			if (value == 0) EXCEPTION_EXIT(REAL4_Divide_vr, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real4, resultValue) = VARIABLE(Real4, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL4_Divide_vr);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL4_Divide_vv:
 		{
-			Real4 value = INSTRUCT_VARIABLE(Real4, 9);
-			if (value.x == 0 || value.y == 0 || value.z == 0 || value.w == 0)EXCEPTION_EXIT(REAL4_Divide_vv, EXCEPTION_DIVIDE_BY_ZERO)
-			else INSTRUCT_VARIABLE(Real4, 1) = INSTRUCT_VARIABLE(Real4, 5) / value;
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Real4 value = VARIABLE(Real4, rightValue);
+			if (value.x == 0 || value.y == 0 || value.z == 0 || value.w == 0) EXCEPTION_EXIT(REAL4_Divide_vv, EXCEPTION_DIVIDE_BY_ZERO)
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+				VARIABLE(Real4, resultValue) = VARIABLE(Real4, leftValue) / value;
+			}
 			EXCEPTION_JUMP(12, REAL4_Divide_vv);
 		}
 		goto label_next_instruct;
 		case Instruct::REAL4_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real4, 5) == INSTRUCT_VARIABLE(Real4, 9);
+			OPERATOR(bool, Real4, == , Real4);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::REAL4_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Real4, 5) != INSTRUCT_VARIABLE(Real4, 9);
+			OPERATOR(bool, Real4, != , Real4);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion Real4
 #pragma region String
 		case Instruct::STRING_Release:
 		{
-			string& address = INSTRUCT_VARIABLE(string, 1);
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			string& address = VARIABLE(string, addressValue);
 			kernel->stringAgency->Release(address);
 			address = NULL;
 			instruct += 5;
@@ -1858,18 +2244,27 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::STRING_Element:
 		{
-			String value = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 5));
-			integer index = INSTRUCT_VARIABLE(integer, 9);
-			if (index < 0)index += value.GetLength();
+			uint32 stringValue = INSTRUCT_VALUE(uint32, 5);
+			String value = kernel->stringAgency->Get(VARIABLE(string, stringValue));
+			uint32 indexValue = INSTRUCT_VALUE(uint32, 9);
+			integer index = VARIABLE(integer, indexValue);
+			if (index < 0) index += value.GetLength();
 			if (index < 0 || index >= value.GetLength())EXCEPTION_EXIT(STRING_Element, EXCEPTION_OUT_OF_RANGE)
-			else INSTRUCT_VARIABLE(character, 1) = value[(uint32)index];
+			else
+			{
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				VARIABLE(character, resultValue) = value[(uint32)index];
+			}
 			EXCEPTION_JUMP(12, STRING_Element);
 		}
 		goto label_next_instruct;
 		case Instruct::STRING_Combine:
 		{
-			string& address = INSTRUCT_VARIABLE(string, 1);
-			String result = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 5)) + kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 9));
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			string& address = VARIABLE(string, resultValue);
+			uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			String result = kernel->stringAgency->Get(VARIABLE(string, leftValue)) + kernel->stringAgency->Get(VARIABLE(string, rightValue));
 			kernel->stringAgency->Reference(result.index);
 			kernel->stringAgency->Release(address);
 			address = result.index;
@@ -1878,10 +2273,14 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::STRING_Sub:
 		{
-			string& address = INSTRUCT_VARIABLE(string, 1);
-			String source = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 5));
-			integer start = INSTRUCT_VARIABLE(integer, 9);
-			integer end = INSTRUCT_VARIABLE(integer, 13);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			string& address = VARIABLE(string, resultValue);
+			uint32 stringValue = INSTRUCT_VALUE(uint32, 5);
+			uint32 startValue = INSTRUCT_VALUE(uint32, 9);
+			uint32 endValue = INSTRUCT_VALUE(uint32, 13);
+			String source = kernel->stringAgency->Get(VARIABLE(string, stringValue));
+			integer start = VARIABLE(integer, startValue);
+			integer end = VARIABLE(integer, endValue);
 			if (start < 0)start += source.GetLength();
 			if (end < 0)end += source.GetLength();
 			if (start < 0 || end < start || source.GetLength() <= end)EXCEPTION_EXIT(STRING_Sub, EXCEPTION_OUT_OF_RANGE)
@@ -1896,24 +2295,28 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 		case Instruct::STRING_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(string, 5) == INSTRUCT_VARIABLE(string, 9);
+			OPERATOR(bool, string, == , string);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::STRING_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(string, 5) != INSTRUCT_VARIABLE(string, 9);
+			OPERATOR(bool, string, != , string);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion String
 #pragma region Handle
 		case Instruct::HANDLE_ArrayCut:
 		{
-			Handle array = INSTRUCT_VARIABLE(Handle, 5);
+			uint32 arrayValue = INSTRUCT_VALUE(uint32, 5);
+			Handle array = VARIABLE(Handle, arrayValue);
 			if (kernel->heapAgency->IsValid(array))
 			{
 				uint32 length = *(uint32*)kernel->heapAgency->GetPoint(array);
-				Handle& address = INSTRUCT_VARIABLE(Handle, 1);
-				integer start = INSTRUCT_VARIABLE(integer, 9);
-				integer end = INSTRUCT_VARIABLE(integer, 13);
+				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+				uint32 startValue = INSTRUCT_VALUE(uint32, 9);
+				uint32 endValue = INSTRUCT_VALUE(uint32, 13);
+				Handle& result = VARIABLE(Handle, resultValue);
+				integer start = VARIABLE(integer, startValue);
+				integer end = VARIABLE(integer, endValue);
 				if (start < 0)start += length;
 				if (end < 0)end += length;
 				if (start < 0 || end < start || length <= end)EXCEPTION_EXIT(HANDLE_ArrayCut, EXCEPTION_OUT_OF_RANGE)
@@ -1921,16 +2324,16 @@ label_next_instruct:
 				{
 					uint32 count = (uint32)(end - start + 1);
 					Type type = kernel->heapAgency->GetType(array);
-					kernel->heapAgency->StrongRelease(address);
+					kernel->heapAgency->StrongRelease(result);
 					Type elementType = Type(type, type.dimension - 1);
-					address = kernel->heapAgency->Alloc(elementType, count);
-					kernel->heapAgency->StrongReference(address);
+					result = kernel->heapAgency->Alloc(elementType, count);
+					kernel->heapAgency->StrongReference(result);
 					if (IsHandleType(elementType))
 					{
 						for (uint32 i = 0; i < count; i++)
 						{
 							Handle element = *(Handle*)kernel->heapAgency->GetArrayPoint(array, start + i);
-							*(Handle*)kernel->heapAgency->GetArrayPoint(address, i) = element;
+							*(Handle*)kernel->heapAgency->GetArrayPoint(result, i) = element;
 							kernel->heapAgency->WeakReference(element);
 						}
 					}
@@ -1939,7 +2342,7 @@ label_next_instruct:
 						for (uint32 i = 0; i < count; i++)
 						{
 							string element = *(string*)kernel->heapAgency->GetArrayPoint(array, start + i);
-							*(string*)kernel->heapAgency->GetArrayPoint(address, i) = element;
+							*(string*)kernel->heapAgency->GetArrayPoint(result, i) = element;
 							kernel->stringAgency->Reference(element);
 						}
 					}
@@ -1948,7 +2351,7 @@ label_next_instruct:
 						for (uint32 i = 0; i < count; i++)
 						{
 							Entity element = *(Entity*)kernel->heapAgency->GetArrayPoint(array, start + i);
-							*(Entity*)kernel->heapAgency->GetArrayPoint(address, i) = element;
+							*(Entity*)kernel->heapAgency->GetArrayPoint(result, i) = element;
 							kernel->entityAgency->Reference(element);
 						}
 					}
@@ -1958,7 +2361,7 @@ label_next_instruct:
 						for (uint32 i = 0; i < count; i++)
 						{
 							uint8* source = kernel->heapAgency->GetArrayPoint(array, start + i);
-							Mcopy(source, kernel->heapAgency->GetArrayPoint(address, i), info->size);
+							Mcopy(source, kernel->heapAgency->GetArrayPoint(result, i), info->size);
 							info->WeakReference(kernel, source);
 						}
 					}
@@ -1969,56 +2372,65 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 		case Instruct::HANDLE_CheckNull:
-			if (!kernel->heapAgency->IsValid(INSTRUCT_VARIABLE(Handle, 1)))
+		{
+			uint32 value = INSTRUCT_VALUE(uint32, 1);
+			if (!kernel->heapAgency->IsValid(VARIABLE(Handle, value)))
 				EXCEPTION_EXIT(HANDLE_CheckNull, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4, HANDLE_CheckNull);
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::HANDLE_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Handle, 5) == INSTRUCT_VARIABLE(Handle, 9);
+			OPERATOR(bool, Handle, == , Handle);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::HANDLE_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Handle, 5) != INSTRUCT_VARIABLE(Handle, 9);
+			OPERATOR(bool, Handle, != , Handle);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion Handle
 #pragma region Entity
 		case Instruct::ENTITY_Equals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Entity, 5) == INSTRUCT_VARIABLE(Entity, 9);
+			OPERATOR(bool, Entity, == , Entity);
 			instruct += 13;
 			goto label_next_instruct;
 		case Instruct::ENTITY_NotEquals:
-			INSTRUCT_VARIABLE(bool, 1) = INSTRUCT_VARIABLE(Entity, 5) != INSTRUCT_VARIABLE(Entity, 9);
+			OPERATOR(bool, Entity, != , Entity);
 			instruct += 13;
 			goto label_next_instruct;
 #pragma endregion Entity
 #pragma region Delegate
 		case Instruct::DELEGATE_Equals:
 		{
-			Handle left = INSTRUCT_VARIABLE(Handle, 5);
-			Handle right = INSTRUCT_VARIABLE(Handle, 9);
-			if (left == right)INSTRUCT_VARIABLE(bool, 1) = true;
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Handle left = VARIABLE(Handle, leftValue);
+			Handle right = VARIABLE(Handle, rightValue);
+			if (left == right) VARIABLE(bool, resultValue) = true;
 			else
 			{
 				HeapAgency* agency = kernel->heapAgency;
 				if (agency->IsValid(left) && agency->IsValid(right))
-					INSTRUCT_VARIABLE(bool, 1) = *(Delegate*)kernel->heapAgency->GetPoint(left) == *(Delegate*)kernel->heapAgency->GetPoint(right);
-				else INSTRUCT_VARIABLE(bool, 1) = false;
+					VARIABLE(bool, resultValue) = *(Delegate*)kernel->heapAgency->GetPoint(left) == *(Delegate*)kernel->heapAgency->GetPoint(right);
+				else VARIABLE(bool, resultValue) = false;
 			}
 			instruct += 9;
 		}
 		goto label_next_instruct;
 		case Instruct::DELEGATE_NotEquals:
 		{
-			Handle left = INSTRUCT_VARIABLE(Handle, 5);
-			Handle right = INSTRUCT_VARIABLE(Handle, 9);
-			if (left == right)INSTRUCT_VARIABLE(bool, 1) = false;
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
+			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
+			Handle left = VARIABLE(Handle, leftValue);
+			Handle right = VARIABLE(Handle, rightValue);
+			if (left == right) VARIABLE(bool, resultValue) = false;
 			else
 			{
 				HeapAgency* agency = kernel->heapAgency;
 				if (agency->IsValid(left) && agency->IsValid(right))
-					INSTRUCT_VARIABLE(bool, 1) = *(Delegate*)kernel->heapAgency->GetPoint(left) != *(Delegate*)kernel->heapAgency->GetPoint(right);
-				else INSTRUCT_VARIABLE(bool, 1) = true;
+					VARIABLE(bool, resultValue) = *(Delegate*)kernel->heapAgency->GetPoint(left) != *(Delegate*)kernel->heapAgency->GetPoint(right);
+				else VARIABLE(bool, resultValue) = true;
 			}
 			instruct += 9;
 		}
@@ -2027,8 +2439,10 @@ label_next_instruct:
 #pragma region Casting
 		case Instruct::CASTING:
 		{
-			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
-			Handle& target = INSTRUCT_VARIABLE(Handle, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 targetValue = INSTRUCT_VALUE(uint32, 5);
+			Handle& result = VARIABLE(Handle, resultValue);
+			Handle& target = VARIABLE(Handle, targetValue);
 			if (kernel->heapAgency->IsValid(target))
 			{
 				if (kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target)))
@@ -2045,8 +2459,10 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::CASTING_IS:
 		{
-			bool& result = INSTRUCT_VARIABLE(bool, 1);
-			Handle& target = INSTRUCT_VARIABLE(Handle, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 targetValue = INSTRUCT_VALUE(uint32, 5);
+			bool& result = VARIABLE(bool, resultValue);
+			Handle& target = VARIABLE(Handle, targetValue);
 			if (kernel->heapAgency->IsValid(target)) result = flag = kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target));
 			else EXCEPTION_EXIT(CASTING_IS, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(8 + SIZE(Type), CASTING_IS);
@@ -2054,8 +2470,10 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::CASTING_AS:
 		{
-			Handle& result = INSTRUCT_VARIABLE(Handle, 1);
-			Handle& target = INSTRUCT_VARIABLE(Handle, 5);
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 targetValue = INSTRUCT_VALUE(uint32, 5);
+			Handle& result = VARIABLE(Handle, resultValue);
+			Handle& target = VARIABLE(Handle, targetValue);
 			if (kernel->heapAgency->IsValid(target))
 			{
 				if (kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target)))
@@ -2075,37 +2493,69 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 		case Instruct::CASTING_R2I:
-			INSTRUCT_VARIABLE(integer, 1) = (integer)INSTRUCT_VARIABLE(real, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(integer, resultValue) = (integer)VARIABLE(real, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_I2R:
-			INSTRUCT_VARIABLE(real, 1) = (real)INSTRUCT_VARIABLE(integer, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(real, resultValue) = (real)VARIABLE(integer, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_B2I:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(uint8, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(integer, resultValue) = VARIABLE(uint8, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_I2B:
-			INSTRUCT_VARIABLE(uint8, 1) = (uint8)INSTRUCT_VARIABLE(integer, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(uint8, resultValue) = (uint8)VARIABLE(integer, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_C2I:
-			INSTRUCT_VARIABLE(integer, 1) = INSTRUCT_VARIABLE(character, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(integer, resultValue) = VARIABLE(character, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_I2C:
-			INSTRUCT_VARIABLE(character, 1) = (character)INSTRUCT_VARIABLE(integer, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(character, resultValue) = (character)VARIABLE(integer, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_C2B:
-			INSTRUCT_VARIABLE(uint8, 1) = (uint8)INSTRUCT_VARIABLE(character, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(uint8, resultValue) = (uint8)VARIABLE(character, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::CASTING_B2C:
-			INSTRUCT_VARIABLE(character, 1) = (character)INSTRUCT_VARIABLE(uint8, 5);
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
+			VARIABLE(character, resultValue) = (character)VARIABLE(uint8, sourceValue);
 			instruct += 9;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 #pragma endregion Casting
 		case Instruct::BREAKPOINT: instruct++;
 			pointer = POINTER;
