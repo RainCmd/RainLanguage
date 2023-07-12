@@ -46,9 +46,9 @@ void Generator::WriteDataString(String& value, uint32 address)
 
 void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
+	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
 	FunctionGenerator(parameter).Generator(parameter);
 	codeStartReference = codeReferenceAddresses.Count();
-	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
 	for (uint32 i = 0; i < functionCount; i++)
 	{
 		CompilingFunction* compiling = parameter.manager->compilingLibrary.functions[i];

@@ -1177,7 +1177,7 @@ bool ExpressionParser::PushToken(List<Expression*, true>& expressionStack, List<
 bool ExpressionParser::TryFindDeclaration(const Anchor& name, List<CompilingDeclaration, true>& result)
 {
 	Local local;
-	if (localContext->TryGetLocal(name.content, local))
+	if (localContext && localContext->TryGetLocal(name.content, local))
 	{
 		result.Add(local.GetDeclaration());
 		return true;
