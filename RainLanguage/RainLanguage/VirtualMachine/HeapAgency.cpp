@@ -8,7 +8,7 @@
 #include "EntityAgency.h"
 #include "Exceptions.h"
 
-bool IsCoroutine(const Type& type)
+inline bool IsCoroutine(const Type& type)
 {
 	if (type == TYPE_Coroutine) return true;
 	else if (!type.dimension && type.code == TypeCode::Coroutine) return true;
@@ -363,9 +363,13 @@ uint32 HeapAgency::CountHandle()
 
 HeapAgency::~HeapAgency()
 {
-	for (uint32 i = 1; i < heads.Count(); i++)
-		if (IsCoroutine(heads[i].type))
-			kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + heads[i].pointer)));
+	for (uint32 index = head; index; head = heads[index].next)
+	{
+		Head& value = heads[index];
+		if (IsCoroutine(value.type)) kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + value.pointer)));
+		else if (!value.type.dimension && value.type.code == TypeCode::Handle)
+			Free(index, kernel->libraryAgency->GetClass(value.type), heap.GetPointer() + value.pointer);
+	}
 }
 
 inline void Box(Kernel* kernel, const Type& type, uint8* address, Handle& result)
