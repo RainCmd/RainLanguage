@@ -1459,7 +1459,8 @@ String type_GetParent(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//typ
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	Type& result = RETURN_VALUE(Type, 0);
-	if (type.dimension)result = TYPE_Array;
+	if (type.dimension) result = TYPE_Array;
+	else if (type == TYPE_Handle) result = Type();
 	else switch (type.code)
 	{
 		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
@@ -1537,9 +1538,9 @@ String type_GetConstructors(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
 	if (type.dimension)type = TYPE_Array;
-	else if (type.code == TypeCode::Enum)type = TYPE_Enum;
-	else if (type.code == TypeCode::Delegate)type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine)type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
+	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
+	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
 	switch (type.code)
 	{
 		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
@@ -1552,23 +1553,16 @@ String type_GetConstructors(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 			RuntimeClass* runtimeClass = &library->classes[type.index];
 			if (!runtimeClass->reflectionConstructors)
 			{
-				List<Handle, true> constructors = List<Handle, true>(0);
+				CREATE_READONLY_VALUES(runtimeClass->reflectionConstructors, TYPE_Reflection_ReadonlyMemberConstructors, TYPE_Reflection_MemberConstructor, runtimeClass->constructors.Count(), Strong);
 				for (uint32 i = 0; i < runtimeClass->constructors.Count(); i++)
 				{
 					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberConstructor);
-					kernel->heapAgency->StrongReference(function);
 					new ((ReflectionMemberConstructor*)kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
-					constructors.Add(function);
-				}
-				CREATE_READONLY_VALUES(runtimeClass->reflectionConstructors, TYPE_Reflection_ReadonlyMemberConstructors, TYPE_Reflection_MemberConstructor, constructors.Count(), Strong);
-				for (uint32 i = 0; i < constructors.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = constructors[i];
-					kernel->heapAgency->WeakReference(constructors[i]);
-					kernel->heapAgency->StrongRelease(constructors[i]);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
+					kernel->heapAgency->WeakReference(function);
 				}
 			}
-			handle = runtimeClass->reflectionFunctions;
+			handle = runtimeClass->reflectionConstructors;
 		}
 		break;
 		case TypeCode::Interface:
@@ -1587,9 +1581,9 @@ String type_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 	kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
 	if (type.dimension)type = TYPE_Array;
-	else if (type.code == TypeCode::Enum)type = TYPE_Enum;
-	else if (type.code == TypeCode::Delegate)type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine)type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
+	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
+	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
 	switch (type.code)
 	{
 		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
@@ -1599,19 +1593,12 @@ String type_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			if (!runtimeStruct->reflectionVariables)
 			{
 				CREATE_READONLY_VALUES(runtimeStruct->reflectionVariables, TYPE_Reflection_ReadonlyMemberVariables, TYPE_Reflection_MemberVariable, runtimeStruct->variables.Count(), Strong);
-				List<Handle, true> memberVariables = List<Handle, true>(runtimeStruct->variables.Count());
 				for (uint32 i = 0; i < runtimeStruct->variables.Count(); i++)
 				{
 					Handle variable = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
-					kernel->heapAgency->StrongReference(variable);
 					new ((MemberVariable*)kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
-					memberVariables.Add(variable);
-				}
-				for (uint32 i = 0; i < runtimeStruct->variables.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = memberVariables[i];
-					kernel->heapAgency->WeakReference(memberVariables[i]);
-					kernel->heapAgency->StrongRelease(memberVariables[i]);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = variable;
+					kernel->heapAgency->WeakReference(variable);
 				}
 			}
 			handle = runtimeStruct->reflectionVariables;
@@ -1625,19 +1612,12 @@ String type_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			if (!runtimeClass->reflectionVariables)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionVariables, TYPE_Reflection_ReadonlyMemberVariables, TYPE_Reflection_MemberVariable, runtimeClass->variables.Count(), Strong);
-				List<Handle, true> memberVariables = List<Handle, true>(runtimeClass->variables.Count());
 				for (uint32 i = 0; i < runtimeClass->variables.Count(); i++)
 				{
 					Handle variable = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
-					kernel->heapAgency->StrongReference(variable);
 					new ((MemberVariable*)kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
-					memberVariables.Add(variable);
-				}
-				for (uint32 i = 0; i < runtimeClass->variables.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = memberVariables[i];
-					kernel->heapAgency->WeakReference(memberVariables[i]);
-					kernel->heapAgency->StrongRelease(memberVariables[i]);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = variable;
+					kernel->heapAgency->WeakReference(variable);
 				}
 			}
 			handle = runtimeClass->reflectionVariables;
@@ -1656,8 +1636,8 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension)type = TYPE_Array;
-	else if (type.code == TypeCode::Delegate)type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine)type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
+	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
 
 	Handle* handle = &RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(*handle);
@@ -1672,19 +1652,12 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			if (!runtimeStruct->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeStruct->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeStruct->functions.Count(), Strong);
-				List<Handle, true> memberFunctions = List<Handle, true>(runtimeStruct->functions.Count());
 				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
 				{
 					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					kernel->heapAgency->StrongReference(function);
 					new ((MemberFunction*)kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
-					memberFunctions.Add(function);
-				}
-				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = memberFunctions[i];
-					kernel->heapAgency->WeakReference(memberFunctions[i]);
-					kernel->heapAgency->StrongRelease(memberFunctions[i]);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
+					kernel->heapAgency->WeakReference(function);
 				}
 			}
 			*handle = runtimeStruct->reflectionFunctions;
@@ -1697,19 +1670,12 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			if (!runtimeEnum->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeEnum->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeStruct->functions.Count(), Strong);
-				List<Handle, true> memberFunctions = List<Handle, true>(runtimeStruct->functions.Count());
 				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
 				{
 					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					kernel->heapAgency->StrongReference(function);
 					new ((MemberFunction*)kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
-					memberFunctions.Add(function);
-				}
-				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = memberFunctions[i];
-					kernel->heapAgency->WeakReference(memberFunctions[i]);
-					kernel->heapAgency->StrongRelease(memberFunctions[i]);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
+					kernel->heapAgency->WeakReference(function);
 				}
 			}
 			*handle = runtimeEnum->reflectionFunctions;
@@ -1721,20 +1687,13 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			RuntimeClass* runtimeClass = &library->classes[type.index];
 			if (!runtimeClass->reflectionFunctions)
 			{
-				List<Handle, true> memberFunctions = List<Handle, true>(0);
+				CREATE_READONLY_VALUES(runtimeClass->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeClass->functions.Count(), Strong);
 				for (uint32 i = 0; i < runtimeClass->functions.Count(); i++)
 				{
-					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberConstructor);
-					kernel->heapAgency->StrongReference(function);
+					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
+					kernel->heapAgency->WeakReference(function);
 					new ((ReflectionMemberConstructor*)kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
-					memberFunctions.Add(function);
-				}
-				CREATE_READONLY_VALUES(runtimeClass->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, memberFunctions.Count(), Strong);
-				for (uint32 i = 0; i < memberFunctions.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = memberFunctions[i];
-					kernel->heapAgency->WeakReference(memberFunctions[i]);
-					kernel->heapAgency->StrongRelease(memberFunctions[i]);
 				}
 			}
 			*handle = runtimeClass->reflectionFunctions;
@@ -1746,19 +1705,12 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			if (!runtimeInterface->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeInterface->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeInterface->functions.Count(), Strong);
-				List<Handle, true> memberFunctions = List<Handle, true>(runtimeInterface->functions.Count());
 				for (uint32 i = 0; i < runtimeInterface->functions.Count(); i++)
 				{
 					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					kernel->heapAgency->StrongReference(function);
+					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
+					kernel->heapAgency->WeakReference(function);
 					new ((MemberFunction*)kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
-					memberFunctions.Add(function);
-				}
-				for (uint32 i = 0; i < runtimeInterface->functions.Count(); i++)
-				{
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = memberFunctions[i];
-					kernel->heapAgency->WeakReference(memberFunctions[i]);
-					kernel->heapAgency->StrongRelease(memberFunctions[i]);
 				}
 			}
 			*handle = runtimeInterface->reflectionFunctions;
@@ -1856,6 +1808,23 @@ String type_GetEnumElements(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	kernel->heapAgency->StrongReference(handle);
 	for (uint32 i = 0; i < runtimeEnum->values.Count(); i++)
 		*(integer*)kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].value;
+	return String();
+}
+
+String type_GetEnumElementNames(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string[] type.()
+{
+	Type& enumType = PARAMETER_VALUE(1, Type, 0);
+	if (enumType.dimension || enumType.code != TypeCode::Enum)return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	Handle& handle = RETURN_VALUE(Handle, 0);
+	RuntimeEnum* runtimeEnum = kernel->libraryAgency->GetEnum(enumType);
+	kernel->heapAgency->StrongRelease(handle);
+	handle = kernel->heapAgency->Alloc(TYPE_String, runtimeEnum->values.Count());
+	kernel->heapAgency->StrongReference(handle);
+	for (uint32 i = 0; i < runtimeEnum->values.Count(); i++)
+	{
+		*(string*)kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].name;
+		kernel->stringAgency->Reference(runtimeEnum->values[i].name);
+	}
 	return String();
 }
 
@@ -2427,7 +2396,7 @@ String Reflection_MemberConstructor_GetParameters(Kernel* kernel, Coroutine*, ui
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
 		THIS(1, ReflectionMemberConstructor).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = info->parameters.GetType(i);
+			*(Type*)kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(handle);
@@ -2649,7 +2618,7 @@ String Reflection_MemberFunction_GetParameters(Kernel* kernel, Coroutine*, uint8
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
 		THIS(1, ReflectionMemberFunction).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = info->parameters.GetType(i);
+			*(Type*)kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	kernel->heapAgency->StrongRelease(handle);

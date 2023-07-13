@@ -1,17 +1,131 @@
+import kernel.System
+import kernel.Reflection
 space native Print(string)
-Print(bool b)
-	Print(b.ToString())
+Print(integer indent, string value)
+	Print(global indent * indent + value)
 
-class A
-class B A
-class C A
+const string indent = "    "
+string * (string s, integer i)
+	var result = ""
+	while i-- > 0
+		result += s
+	return result
+
+string TupleToString(ReadonlyTypes tuple)
+	var result = ""
+	for var i = 0; i < tuple.GetCount(); i++
+		if i > 0
+			result += ", "
+		result += tuple.GetElement(i)
+	return result
+
+ShowVariable(Variable v, integer indent)
+	Print(indent, v.GetVariableType() + " " + v.GetName())
+
+ShowFunction(Function f, integer indent)
+	var display = ""
+	var rs = f.GetReturns()
+	if rs.GetCount() > 0
+		display += TupleToString(rs) + " "
+	display += f.GetName() + "(" + TupleToString(f.GetParameters()) + ")"
+	Print(indent, display)
+
+ShowNative(Native n, integer indent)
+	var display = ""
+	var rs = n.GetReturns()
+	if rs.GetCount() > 0
+		display += TupleToString(rs) + " "
+	display += n.GetName() + "(" + TupleToString(n.GetParameters()) + ")"
+	Print(indent, display)
+
+ShowMember(MemberVariable mv, integer indent)
+	Print(indent, mv.GetVariableType() + " " + mv.GetName())
+ShowMember(MemberConstructor mc, integer indent)
+	Print(indent, mc.GetDeclaringType() + "(" + TupleToString(mc.GetParameters()) + ")")
+ShowMember(MemberFunction mf, integer indent)
+	var display = ""
+	var rs = mf.GetReturns()
+	if rs.GetCount() > 0
+		display += TupleToString(rs) + " "
+	display += mf.GetName() + "(" + TupleToString(mf.GetParameters()) + ")"
+	Print(indent, display)
+
+ShowType(string dt, integer indent, type t)
+	var inherits = t.GetParent().IsValid() ? t.GetParent().GetName() : ""
+	for var i = 0; i < t.GetInherits().GetCount(); i++
+		if inherits != ""
+			inherits += " "
+		inherits += t.GetInherits().GetElement(i).GetName()
+	Print(indent, dt + " " + t.GetName() + " " + inherits)
+	var mv = t.GetVariables()
+	for var i = 0; i < mv.GetCount(); i++
+		ShowMember(mv.GetElement(i), indent + 1)
+	var c = t.GetConstructors()
+	for var i = 0; i < c.GetCount(); i++
+		ShowMember(c.GetElement(i), indent + 1)
+	var mf = t.GetFunctions()
+	for var i = 0; i < mf.GetCount(); i++
+		ShowMember(mf.GetElement(i), indent + 1)
+
+ShowDelegate(type t, integer indent)
+	var display = "delegate "
+	var rs = t.GetReturns()
+	if rs.GetCount() > 0
+		display += TupleToString(rs) + " "
+	display += t.GetName() + "(" + TupleToString(t.GetParameters()) + ")"
+	Print(indent, display)
+ShowCoroutine(type t, integer indent)
+	var display = "coroutine "
+	var rs = t.GetReturns()
+	if rs.GetCount() > 0
+		display += TupleToString(rs) + " "
+	Print(indent, t.GetName())
+ShowEnum(type t, integer indent)
+	Print(indent, "enum " + t.GetName())
+	var es = t.GetEnumElementNames()
+	for var i = 0; i < es.GetLength(); i++
+		Print(indent + 1, es[i])
+
+ShowType(type t, integer indent)
+	var tc = t.GetTypeCode()
+	if tc == TypeCode.Handle
+		ShowType("class", indent, t)
+	elif tc == TypeCode.Interface
+		ShowType("interface", indent, t)
+	elif tc == TypeCode.Delegate
+		ShowDelegate(t, indent)
+	elif tc == TypeCode.Coroutine
+		ShowCoroutine(t, indent)
+	elif tc == TypeCode.Enum
+		ShowEnum(t, indent)
+	else
+		ShowType("struct", indent, t)
+
+
+ShowSpace(Space s, integer indent)
+	Print(global indent * indent + "namespace " + s.GetName())
+	var c = s.GetChildren()
+	for var i = 0; i < c.GetCount(); i++
+		ShowSpace(c.GetElement(i), indent + 1)
+	
+	var v = s.GetVariables()
+	for var i = 0; i < v.GetCount(); i++
+		ShowVariable(v.GetElement(i), indent + 1)
+
+	var f = s.GetFunctions()
+	for var i = 0; i < f.GetCount(); i++
+		ShowFunction(f.GetElement(i), indent + 1)
+
+	var n = s.GetNatives()
+	for var i = 0; i < n.GetCount(); i++
+		ShowNative(n.GetElement(i), indent + 1)
+
+	var t = s.GetTypes()
+	for var i = 0; i < t.GetCount(); i++
+		ShowType(t.GetElement(i), indent + 1)
 
 
 public Main()
-	A a = B()
-	B b = a as B
-	C c = a as C
-	C d = c ?? C()
-	Print(b==null)
-	Print(c==null)
-	Print(d==null)
+	var ass = GetAssembles()
+	for var i = 0; i < ass.GetLength(); i++
+		ShowSpace(ass[i], 0)

@@ -97,6 +97,7 @@ void Coroutine::Run()
 	cacheData[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:
+	pointer = POINTER;
 	switch ((Instruct)*instruct)
 	{
 #pragma region Base
@@ -119,7 +120,7 @@ label_next_instruct:
 			if (ignoreWait) goto label_next_instruct;
 			else goto label_exit;
 		case Instruct::BASE_WaitFrame:
-			if (ignoreWait)instruct += 5;
+			if (ignoreWait) instruct += 5;
 			else
 			{
 				uint32 waitValue = INSTRUCT_VALUE(uint32, 1);

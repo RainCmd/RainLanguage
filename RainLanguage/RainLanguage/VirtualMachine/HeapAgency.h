@@ -51,7 +51,7 @@ public:
 	inline bool IsValid(Handle handle) { return handle && handle < heads.Count() && heads[handle].type.IsValid(); }
 	inline void StrongReference(Handle handle)
 	{
-		if (IsValid(handle))heads[handle].strong++;
+		if (IsValid(handle)) heads[handle].strong++;
 	}
 	inline void StrongRelease(Handle handle)
 	{

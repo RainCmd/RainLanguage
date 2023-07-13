@@ -200,6 +200,7 @@ String type_GetTypeCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);		
 String type_IsAssignable(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);										//bool type.(type)
 String type_IsValid(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);											//bool type.()
 String type_GetEnumElements(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);									//integer[] type.()
+String type_GetEnumElementNames(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);								//string[] type.()
 String type_GetParameters(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);									//ReadonlyTypes type.()
 String type_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);										//ReadonlyTypes type.()
 String type_CreateUninitialized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top);								//handle type.()

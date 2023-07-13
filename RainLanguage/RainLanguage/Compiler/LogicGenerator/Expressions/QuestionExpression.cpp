@@ -8,8 +8,9 @@ void QuestionExpression::Generator(LogicGenerateParameter& parameter)
 	condition->Generator(conditionParameter);
 	CodeLocalAddressReference leftAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
-	parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
+	parameter.generator->WriteCode(Instruct::BASE_Flag);
 	parameter.generator->WriteCode(conditionParameter.results[0]);
+	parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 	parameter.generator->WriteCode(&leftAddress);
 	if (right)right->Generator(parameter);
 	else for (uint32 i = 0; i < returns.Count(); i++) parameter.GetResult(i, returns[i]).ClearVariable(parameter.manager, parameter.generator);

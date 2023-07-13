@@ -96,7 +96,7 @@ public:
 	{
 		Grow(count);
 		Mmove(this->values + index, this->values + index + count, this->count - index);
-		if (IsBitwise)Mcopy(values, this->values + index, count);
+		if (IsBitwise) Mcopy(values, this->values + index, count);
 		else for (uint32 i = 0; i < count; i++) new (this->values + index + i)T(values[i]);
 		this->count += count;
 	}
@@ -144,7 +144,7 @@ public:
 	{
 		if (!IsBitwise) Destruct(values + index, 1);
 		count--;
-		if (index < count)Mcopy<T>(values + count, values + index, 1);
+		if (index < count) Mcopy<T>(values + count, values + index, 1);
 	}
 	uint32 RemoveAll(const Predicate& predicate)
 	{
@@ -198,13 +198,13 @@ public:
 	}
 	inline T& operator[](uint32 index)
 	{
-		if (index > count)index += count;
+		if (index > count) index += count;
 		if (index < count) return values[index];
 		else EXCEPTION("数组越界");
 	}
 	inline bool operator==(const List<T, IsBitwise>& other) const
 	{
-		if (count != other.count)return false;
+		if (count != other.count) return false;
 		for (uint32 i = 0; i < count; i++)
 			if (values[i] != other.values[i])
 				return false;

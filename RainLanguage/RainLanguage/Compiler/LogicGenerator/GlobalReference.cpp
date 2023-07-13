@@ -91,7 +91,7 @@ void GlobalReference::AddEnumElementReference(const CompilingDeclaration& declar
 	ASSERT_DEBUG(declaration.category == DeclarationCategory::EnumElement, "无效的声明类型");
 	uint32 reference = generator->AddCodeReference(generator->WriteCode((integer)NULL));
 	CompilingDeclaration relyDeclaration = AddReference(declaration);
-	(new (libraries[relyDeclaration.library].enums[relyDeclaration.definition].elements.Add())GlobalReferenceEnum::Element(relyDeclaration.index))->addressReferences.Add(reference);
+	libraries[relyDeclaration.library].enums[relyDeclaration.definition].elements[relyDeclaration.index].addressReferences.Add(reference);
 }
 
 void GlobalReference::AddAddressReference(const CompilingDeclaration& declaration)
@@ -169,7 +169,12 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->enums);
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Enum, index, NULL);
 		}
-		case DeclarationCategory::EnumElement: EXCEPTION("无效的声明类型");
+		case DeclarationCategory::EnumElement:
+		{
+			CompilingDeclaration definition = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Enum, declaration.definition, NULL));
+			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, definition.library, definition.index, libraries[definition.library].enums[definition.index].elements);
+			return CompilingDeclaration(definition.library, Visibility::None, DeclarationCategory::EnumElement, index, definition.index);
+		}
 		case DeclarationCategory::Struct:
 		{
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
