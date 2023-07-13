@@ -71,7 +71,7 @@ RuntimeLibrary* LibraryAgency::GetLibrary(uint32 library)
 
 RuntimeInfo* LibraryAgency::GetRuntimeInfo(const Type& type)
 {
-	if (type.dimension)return GetClass(type);
+	if (type.dimension) return GetClass(type);
 	switch (type.code)
 	{
 		case TypeCode::Invalid: EXCEPTION("无效的类型");

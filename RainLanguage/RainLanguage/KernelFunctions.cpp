@@ -33,6 +33,30 @@
 
 #define THIS(returnCount,type) (*(type*)kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
 
+inline string GetTypeName(Kernel* kernel, const Type& type)
+{
+	if (type.dimension)
+	{
+		String result = kernel->stringAgency->Get(kernel->libraryAgency->GetRuntimeInfo(Type(type, 0))->name);
+		String dimension = kernel->stringAgency->Add(TEXT("[]"));
+		for (uint32 i = 0; i < type.dimension; i++)
+			result = result + dimension;
+		return result.index;
+	}
+	else switch (type.code)
+	{
+		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE).index;
+		case TypeCode::Struct:
+		case TypeCode::Enum:
+		case TypeCode::Handle:
+		case TypeCode::Interface:
+		case TypeCode::Delegate:
+		case TypeCode::Coroutine:
+			return kernel->libraryAgency->GetRuntimeInfo(type)->name;
+	}
+	return NULL;
+}
+
 #pragma region 运算符
 String Operation_Less_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (integer, integer)
 {
@@ -140,8 +164,14 @@ String Operation_Equals_delegate_delegate(Kernel* kernel, Coroutine*, uint8* sta
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
-	if (left == right)RETURN_VALUE(bool, 0) = true;
+	if (left == right) RETURN_VALUE(bool, 0) = true;
 	else RETURN_VALUE(bool, 0) = *(Delegate*)kernel->heapAgency->GetPoint(left) == *(Delegate*)kernel->heapAgency->GetPoint(right);
+	return String();
+}
+
+String Operation_Equals_type_type(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (type, type)
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0) == PARAMETER_VALUE(1, Type, SIZE(Type));
 	return String();
 }
 
@@ -205,6 +235,12 @@ String Operation_Not_Equals_delegate_delegate(Kernel* kernel, Coroutine*, uint8*
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	if (left == right)RETURN_VALUE(bool, 0) = false;
 	else RETURN_VALUE(bool, 0) = *(Delegate*)kernel->heapAgency->GetPoint(left) != *(Delegate*)kernel->heapAgency->GetPoint(right);
+	return String();
+}
+
+String Operation_Not_Equals_type_type(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (type, type)
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0) != PARAMETER_VALUE(1, Type, SIZE(Type));
 	return String();
 }
 
@@ -398,6 +434,15 @@ String Operation_Plus_string_handle(Kernel* kernel, Coroutine* coroutine, uint8*
 	}
 }
 
+String Operation_Plus_string_type(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, type)
+{
+	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + kernel->stringAgency->Get(GetTypeName(kernel, PARAMETER_VALUE(1, Type, SIZE(string)))));
+	string& returnValue = RETURN_VALUE(string, 0);
+	kernel->stringAgency->Release(returnValue);
+	returnValue = result;
+	return String();
+}
+
 String Operation_Plus_bool_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (bool, string)
 {
 	string result = kernel->stringAgency->AddAndRef(ToString(kernel->stringAgency, PARAMETER_VALUE(1, bool, 0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(bool))));
@@ -499,6 +544,15 @@ String Operation_Plus_handle_string(Kernel* kernel, Coroutine* coroutine, uint8*
 			default:  EXCEPTION("不应该进入的分支");
 		}
 	}
+}
+
+String Operation_Plus_type_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (type, string)
+{
+	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(GetTypeName(kernel, PARAMETER_VALUE(1, Type, 0))) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Type))));
+	string& returnValue = RETURN_VALUE(string, 0);
+	kernel->stringAgency->Release(returnValue);
+	returnValue = result;
+	return String();
 }
 
 String Operation_Minus_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer - (integer, integer)
@@ -1396,20 +1450,8 @@ String type_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//strin
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	string& name = RETURN_VALUE(string, 0);
 	kernel->stringAgency->Release(name);
-	name = NULL;
-	switch (type.code)
-	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
-		case TypeCode::Struct:
-		case TypeCode::Enum:
-		case TypeCode::Handle:
-		case TypeCode::Interface:
-		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
-			name = kernel->libraryAgency->GetRuntimeInfo(type)->name;
-			kernel->stringAgency->Reference(name);
-			break;
-	}
+	name = GetTypeName(kernel, type);
+	kernel->stringAgency->Reference(name);
 	return String();
 }
 

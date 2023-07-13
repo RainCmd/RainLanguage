@@ -123,6 +123,7 @@ enum KERNEL_OPERATOR
 	KERNEL_SPECIAL_FUNCTION_Equals_handle_handle,
 	KERNEL_SPECIAL_FUNCTION_Equals_entity_entity,
 	KERNEL_SPECIAL_FUNCTION_Equals_delegate_delegate,
+	KERNEL_SPECIAL_FUNCTION_Equals_type_type,
 	// !=
 	KERNEL_SPECIAL_FUNCTION_Not_Equals_bool_bool,
 	KERNEL_SPECIAL_FUNCTION_Not_Equals_integer_integer,
@@ -134,6 +135,7 @@ enum KERNEL_OPERATOR
 	KERNEL_SPECIAL_FUNCTION_Not_Equals_handle_handle,
 	KERNEL_SPECIAL_FUNCTION_Not_Equals_entity_entity,
 	KERNEL_SPECIAL_FUNCTION_Not_Equals_delegate_delegate,
+	KERNEL_SPECIAL_FUNCTION_Not_Equals_type_type,
 	// &
 	KERNEL_SPECIAL_FUNCTION_And_bool_bool,
 	KERNEL_SPECIAL_FUNCTION_And_integer_integer,
@@ -159,11 +161,13 @@ enum KERNEL_OPERATOR
 	KERNEL_SPECIAL_FUNCTION_Plus_string_integer,
 	KERNEL_SPECIAL_FUNCTION_Plus_string_real,
 	KERNEL_SPECIAL_FUNCTION_Plus_string_handle,
+	KERNEL_SPECIAL_FUNCTION_Plus_string_type,
 	KERNEL_SPECIAL_FUNCTION_Plus_bool_string,
 	KERNEL_SPECIAL_FUNCTION_Plus_char_string,
 	KERNEL_SPECIAL_FUNCTION_Plus_integer_string,
 	KERNEL_SPECIAL_FUNCTION_Plus_real_string,
 	KERNEL_SPECIAL_FUNCTION_Plus_handle_string,
+	KERNEL_SPECIAL_FUNCTION_Plus_type_string,
 	// -
 	KERNEL_SPECIAL_FUNCTION_Minus_integer_integer,
 	KERNEL_SPECIAL_FUNCTION_Minus_real_real,

@@ -61,8 +61,8 @@ Type LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const Type&
 }
 MemberFunction LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const MemberFunction& function)
 {
-	if (function.declaration.library == LIBRARY_SELF) return MemberFunction(index, function.declaration.code, function.declaration.index, function.function);
-	switch (function.declaration.code)
+	if (function.declaration.library == LIBRARY_SELF || function.declaration.library == LIBRARY_KERNEL) return MemberFunction(index, function.declaration.code, function.declaration.index, function.function);
+	else switch (function.declaration.code)
 	{
 		case TypeCode::Invalid: break;
 		case TypeCode::Struct:

@@ -209,6 +209,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "==", KERNEL_SPECIAL_FUNCTION_Equals_handle_handle, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Handle, TYPE_Handle), Operation_Equals_handle_handle);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "==", KERNEL_SPECIAL_FUNCTION_Equals_entity_entity, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Entity, TYPE_Entity), Operation_Equals_entity_entity);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "==", KERNEL_SPECIAL_FUNCTION_Equals_delegate_delegate, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Delegate, TYPE_Delegate), Operation_Equals_delegate_delegate);
+		REGISTER_SPECIAL_FUNCTIONS(true, root, "==", KERNEL_SPECIAL_FUNCTION_Equals_type_type, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Type, TYPE_Type), Operation_Equals_type_type);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_bool_bool, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Bool, TYPE_Bool), Operation_Not_Equals_bool_bool);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_integer_integer, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Integer, TYPE_Integer), Operation_Not_Equals_integer_integer);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_real_real, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Real, TYPE_Real), Operation_Not_Equals_real_real);
@@ -219,6 +220,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_handle_handle, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Handle, TYPE_Handle), Operation_Not_Equals_handle_handle);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_entity_entity, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Entity, TYPE_Entity), Operation_Not_Equals_entity_entity);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_delegate_delegate, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Delegate, TYPE_Delegate), Operation_Not_Equals_delegate_delegate);
+		REGISTER_SPECIAL_FUNCTIONS(true, root, "!=", KERNEL_SPECIAL_FUNCTION_Not_Equals_type_type, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Type, TYPE_Type), Operation_Not_Equals_type_type);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "&", KERNEL_SPECIAL_FUNCTION_And_bool_bool, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Bool, TYPE_Bool), Operation_And_bool_bool);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "&", KERNEL_SPECIAL_FUNCTION_And_integer_integer, CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Integer, TYPE_Integer), Operation_And_integer_integer);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "|", KERNEL_SPECIAL_FUNCTION_Or_bool_bool, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Bool, TYPE_Bool), Operation_Or_bool_bool);
@@ -238,11 +240,13 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_string_integer, CreateTypeList(TYPE_String), CreateTypeList(TYPE_String, TYPE_Integer), Operation_Plus_string_integer);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_string_real, CreateTypeList(TYPE_String), CreateTypeList(TYPE_String, TYPE_Real), Operation_Plus_string_real);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_string_handle, CreateTypeList(TYPE_String), CreateTypeList(TYPE_String, TYPE_Handle), Operation_Plus_string_handle);
+		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_string_type, CreateTypeList(TYPE_String), CreateTypeList(TYPE_String, TYPE_Type), Operation_Plus_string_type);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_bool_string, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Bool, TYPE_String), Operation_Plus_bool_string);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_char_string, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Char, TYPE_String), Operation_Plus_char_string);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_integer_string, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Integer, TYPE_String), Operation_Plus_integer_string);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_real_string, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Real, TYPE_String), Operation_Plus_real_string);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_handle_string, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Handle, TYPE_String), Operation_Plus_handle_string);
+		REGISTER_SPECIAL_FUNCTIONS(true, root, "+", KERNEL_SPECIAL_FUNCTION_Plus_type_string, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Type, TYPE_String), Operation_Plus_type_string);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "-", KERNEL_SPECIAL_FUNCTION_Minus_integer_integer, CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Integer, TYPE_Integer), Operation_Minus_integer_integer);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "-", KERNEL_SPECIAL_FUNCTION_Minus_real_real, CreateTypeList(TYPE_Real), CreateTypeList(TYPE_Real, TYPE_Real), Operation_Minus_real_real);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "-", KERNEL_SPECIAL_FUNCTION_Minus_real2_real2, CreateTypeList(TYPE_Real2), CreateTypeList(TYPE_Real2, TYPE_Real2), Operation_Minus_real2_real2);
@@ -659,6 +663,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, "GetVariableType", CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetVariableType);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetValue", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetValue);
 			REGISTER_MEMBER_FUNCTIONS(true, "SetValue", TupleInfo_EMPTY, CreateTypeList(TYPE_Reflection_Variable, TYPE_Handle), Reflection_Variable_SetValue);
+			REGISTER_MEMBER_FUNCTIONS(true, "ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetName);
 			REGISTER_CLASS(true, space, "Variable", KERNEL_TYPE_CLASS_INDEX_Reflection_Variable, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Variable), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class MemberConstructor
@@ -683,6 +688,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, "GetVariableType", CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetVariableType);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetValue", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Reflection_MemberVariable, TYPE_Handle), Reflection_MemberVariable_GetValue);
 			REGISTER_MEMBER_FUNCTIONS(true, "SetValue", TupleInfo_EMPTY, CreateTypeList(TYPE_Reflection_MemberVariable, TYPE_Handle, TYPE_Handle), Reflection_MemberVariable_SetValue);
+			REGISTER_MEMBER_FUNCTIONS(true, "ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetName);
 			REGISTER_CLASS(true, space, "MemberVariable", KERNEL_TYPE_CLASS_INDEX_Reflection_MemberVariable, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(MemberVariable), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class MemberFunction
@@ -698,6 +704,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, "GetParameters", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetParameters);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetReturns", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetReturns);
 			REGISTER_MEMBER_FUNCTIONS(true, "Invoke", CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), Reflection_MemberFunction_Invoke);
+			REGISTER_MEMBER_FUNCTIONS(true, "ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetName);
 			REGISTER_CLASS(true, space, "MemberFunction", KERNEL_TYPE_CLASS_INDEX_Reflection_MemberFunction, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionMemberFunction), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class Function
@@ -713,6 +720,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, "GetParameters", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetParameters);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetReturns", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetReturns);
 			REGISTER_MEMBER_FUNCTIONS(true, "Invoke", CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Reflection_Function, Type(TYPE_Handle, 1)), Reflection_Function_Invoke);
+			REGISTER_MEMBER_FUNCTIONS(true, "ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetName);
 			REGISTER_CLASS(true, space, "Function", KERNEL_TYPE_CLASS_INDEX_Reflection_Function, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionFunction), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class Native
@@ -728,6 +736,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, "GetParameters", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetParameters);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetReturns", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetReturns);
 			REGISTER_MEMBER_FUNCTIONS(true, "Invoke", CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Reflection_Native, Type(TYPE_Handle, 1)), Reflection_Native_Invoke);
+			REGISTER_MEMBER_FUNCTIONS(true, "ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetName);
 			REGISTER_CLASS(true, space, "Native", KERNEL_TYPE_CLASS_INDEX_Reflection_Native, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionNative), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class Space
@@ -749,6 +758,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, "GetFunctions", CreateTypeList(TYPE_Reflection_ReadonlyFunctions), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetFunctions);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetNatives", CreateTypeList(TYPE_Reflection_ReadonlyNatives), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetNatives);
 			REGISTER_MEMBER_FUNCTIONS(true, "GetTypes", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetTypes);
+			REGISTER_MEMBER_FUNCTIONS(true, "ToString", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetName);
 			REGISTER_CLASS(true, space, "Space", KERNEL_TYPE_CLASS_INDEX_Reflection_Space, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionSpace), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class Assembly
