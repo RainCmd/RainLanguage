@@ -3208,7 +3208,7 @@ String Reflection_Space_GetTypes(Kernel* kernel, Coroutine*, uint8* stack, uint3
 		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.coroutines.Count(), Weak);
 		THIS(1, ReflectionSpace).types = thisValue.types;
 		uint32 index = 0;
-		for (uint32 i = 1; i < space.enums.Count(); i++)
+		for (uint32 i = 0; i < space.enums.Count(); i++)
 			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, i, 0);
 		for (uint32 i = 0; i < space.structs.Count(); i++)
 			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, i, 0);

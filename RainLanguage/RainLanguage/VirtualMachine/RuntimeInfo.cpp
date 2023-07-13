@@ -71,7 +71,7 @@ Handle RuntimeInfo::GetReflectionAttributes(Kernel* kernel)
 		kernel->heapAgency->WeakReference(attributes);
 		for (uint32 i = 0; i < this->attributes.Count(); i++)
 		{
-			*(string*)kernel->heapAgency->GetArrayPoint(reflectionAttributes, i) = this->attributes[i];
+			*(string*)kernel->heapAgency->GetArrayPoint(attributes, i) = this->attributes[i];
 			kernel->stringAgency->Reference(this->attributes[i]);
 		}
 	}

@@ -42,9 +42,9 @@ bool CheckIndent(const Line& line, uint32& indent, uint32 parentIndent)
 	if (indent == INVALID)
 	{
 		indent = line.indent;
-		if (indent <= parentIndent)return false;
+		if (indent <= parentIndent) return false;
 	}
-	else if (line.indent < indent)return false;
+	else if (line.indent < indent) return false;
 	return true;
 }
 
@@ -53,14 +53,9 @@ bool TryParseAttributes(const Line& line, List<Anchor>& attributes, MessageColle
 	Lexical lexical;
 	if (TryAnalysis(line, 0, lexical, messages) && lexical.type == LexicalType::BracketLeft1)
 	{
-		while (TryAnalysis(line, lexical.anchor.GetEnd(), lexical, messages))
+		while (TryAnalysis(line, lexical.anchor.GetEnd(), lexical, messages) && lexical.type == LexicalType::ConstString)
 		{
-			if (lexical.type == LexicalType::ConstString)attributes.Add(lexical.anchor);
-			else
-			{
-				MESSAGE2(messages, lexical.anchor, MessageType::ERROR_INPUT_STRINGL);
-				return false;
-			}
+			attributes.Add(lexical.anchor);
 			if (TryAnalysis(line, lexical.anchor.GetEnd(), lexical, messages))
 			{
 				if (lexical.type == LexicalType::BracketRight1)
@@ -68,11 +63,11 @@ bool TryParseAttributes(const Line& line, List<Anchor>& attributes, MessageColle
 					if (TryAnalysis(line, lexical.anchor.GetEnd(), lexical, messages))
 						MESSAGE2(messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 				}
-				else if (lexical.type == LexicalType::Comma || lexical.type == LexicalType::Semicolon)continue;
+				else if (lexical.type == LexicalType::Comma || lexical.type == LexicalType::Semicolon) continue;
 				else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 			}
 			else MESSAGE2(messages, line, MessageType::ERROR_INPUT_COMMA_OR_SEMICOLON);
-			return false;
+			return true;
 		}
 		MESSAGE2(messages, line, MessageType::ERROR_INPUT_STRINGL);
 		return true;
@@ -131,11 +126,13 @@ Visibility ParseVisibility(const Line& line, uint32& index, MessageCollector* me
 void ParseBlock(uint32 parentIndent, List<Line>& lines, ParseParameter* parameter)
 {
 	uint32 indent = INVALID;
+	Lexical lexical;
 	while (parameter->reader->ReadLine())
 	{
 		Line line = parameter->reader->CurrentLine();
-		if (CheckIndent(line, indent, parentIndent))lines.Add(line);
-		else break;
+		if (TryAnalysis(line, 0, lexical, parameter->messages) && lexical.type != LexicalType::Annotation)
+			if (CheckIndent(line, indent, parentIndent)) lines.Add(line);
+			else break;
 	}
 }
 bool TryParseParameters(const Line& line, uint32& index, List<FileParameter>& parameters, MessageCollector* messages)
@@ -293,7 +290,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 	{
 	label_parse:
 		Line line = parameter->reader->CurrentLine();
-		if (line.content.IsEmpty())return;
+		if (line.content.IsEmpty()) return;
 		if (TryParseAttributes(line, attributes, parameter->messages)) continue;
 
 		Lexical lexical;
@@ -304,10 +301,10 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 				indent = line.indent;
 				if (parentIndent != INVALID && indent <= parentIndent)return;
 			}
-			else if (line.indent > indent)MESSAGE2(parameter->messages, line, MessageType::ERROR_INDENT)
+			else if (line.indent > indent) MESSAGE2(parameter->messages, line, MessageType::ERROR_INDENT)
 			else if (line.indent < indent)
 			{
-				if (parentIndent == INVALID)MESSAGE2(parameter->messages, line, MessageType::ERROR_INDENT)
+				if (parentIndent == INVALID) MESSAGE2(parameter->messages, line, MessageType::ERROR_INDENT)
 				else
 				{
 					this->attributes.Add(attributes.GetPointer(), attributes.Count());

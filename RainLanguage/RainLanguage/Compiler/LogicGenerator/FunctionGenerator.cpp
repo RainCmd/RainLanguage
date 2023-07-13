@@ -512,7 +512,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					{
 						TryStatement* tryStatement = (TryStatement*)statement;
 						ASSERT_DEBUG(!tryStatement->finallyBlock, "缩进判断逻辑可能有bug");
-						if (tryStatement->catchBlocks.Count())newBlock = tryStatement->catchBlocks.Peek().catchBlock;
+						if (tryStatement->catchBlocks.Count()) newBlock = tryStatement->catchBlocks.Peek().catchBlock;
 						else
 						{
 							if (!tryStatement->tryBlock)tryStatement->tryBlock = new BlockStatement(tryStatement->anchor);
@@ -520,7 +520,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 						}
 					}
 				}
-				if (!newBlock)newBlock = new BlockStatement(lineAnchor);
+				if (!newBlock) blockStack.Peek()->statements.Add(newBlock = new BlockStatement(lineAnchor));
 				newBlock->indent = line.indent;
 				blockStack.Add(newBlock);
 			}
