@@ -539,7 +539,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 				}
 				else
 				{
-					if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages) && lexical.anchor != KeyWord_elif() && lexical.anchor != KeyWord_else())
+					if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages) && lexical.anchor != KeyWord_elseif() && lexical.anchor != KeyWord_else())
 					{
 						statement = blockStack.Pop();
 						while (blockStack.Count() && blockStack.Peek()->indent == line.indent)
@@ -555,7 +555,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 			if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages))
 			{
 				if (lexical.anchor == KeyWord_if()) ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
-				else if (lexical.anchor == KeyWord_elif())
+				else if (lexical.anchor == KeyWord_elseif())
 				{
 					if (blockStack.Peek()->statements.Count())
 					{

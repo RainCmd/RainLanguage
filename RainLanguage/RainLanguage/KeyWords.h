@@ -41,7 +41,7 @@ String KeyWord_coroutine();
 String KeyWord_array();
 
 String KeyWord_if();
-String KeyWord_elif();
+String KeyWord_elseif();
 String KeyWord_else();
 String KeyWord_while();
 String KeyWord_for();

@@ -44,7 +44,7 @@ KEY_WORLD(coroutine, "coroutine")
 KEY_WORLD(array, "array")
 
 KEY_WORLD(if, "if")
-KEY_WORLD(elif, "elif")
+KEY_WORLD(elseif, "elseif")
 KEY_WORLD(else, "else")
 KEY_WORLD(while, "while")
 KEY_WORLD(for, "for")
@@ -102,7 +102,7 @@ bool IsKeyWord(const String & value)
 	if (value == KeyWord_array()) return true;
 
 	if (value == KeyWord_if()) return true;
-	if (value == KeyWord_elif()) return true;
+	if (value == KeyWord_elseif()) return true;
 	if (value == KeyWord_else()) return true;
 	if (value == KeyWord_while()) return true;
 	if (value == KeyWord_for()) return true;
