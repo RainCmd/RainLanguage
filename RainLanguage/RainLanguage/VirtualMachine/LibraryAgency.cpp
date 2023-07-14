@@ -146,7 +146,7 @@ RuntimeMemberVariable* LibraryAgency::GetMemberVariable(const MemberVariable& va
 	if (variable.declaration.code == TypeCode::Struct)
 		return &runtimeLibrary->structs[variable.declaration.index].variables[variable.variable];
 	else if (variable.declaration.code == TypeCode::Handle)
-		return &runtimeLibrary->structs[variable.declaration.index].variables[variable.variable];
+		return &runtimeLibrary->classes[variable.declaration.index].variables[variable.variable];
 	EXCEPTION("ÀàĞÍ´íÎó");
 }
 

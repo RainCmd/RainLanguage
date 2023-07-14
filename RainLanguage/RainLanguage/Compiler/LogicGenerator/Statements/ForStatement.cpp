@@ -14,7 +14,7 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 	CodeLocalAddressReference loopAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference elseAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference breakAddress = CodeLocalAddressReference();
-	loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
+	if (loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
 	if (back)
 	{
 		CodeLocalAddressReference conditionAddress = CodeLocalAddressReference();
@@ -43,11 +43,11 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(&elseAddress);
 		blockAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
-	if (loopBlock)loopBlock->Generator(parameter);
+	if (loopBlock) loopBlock->Generator(parameter);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&loopAddress);
 	elseAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	if (elseBlock)elseBlock->Generator(parameter);
+	if (elseBlock) elseBlock->Generator(parameter);
 	breakAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 

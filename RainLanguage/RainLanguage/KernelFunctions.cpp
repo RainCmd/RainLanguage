@@ -1647,7 +1647,6 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		{
-			if (type == TYPE_Enum)break;
 			RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(type);
 			if (!runtimeStruct->reflectionFunctions)
 			{
@@ -1748,18 +1747,18 @@ String type_GetTypeCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//R
 			result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Invalid;
 			break;
 		case TypeCode::Struct:
-			if (type == TYPE_Bool)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Bool;
-			else if (type == TYPE_Byte)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Byte;
-			else if (type == TYPE_Char)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Char;
-			else if (type == TYPE_Integer)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Integer;
-			else if (type == TYPE_Real)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real;
-			else if (type == TYPE_Real2)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real2;
-			else if (type == TYPE_Real3)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real3;
-			else if (type == TYPE_Real4)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real4;
-			else if (type == TYPE_Enum)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Enum;
-			else if (type == TYPE_Type)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Type;
-			else if (type == TYPE_String)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_String;
-			else if (type == TYPE_Entity)result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Entity;
+			if (type == TYPE_Bool) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Bool;
+			else if (type == TYPE_Byte) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Byte;
+			else if (type == TYPE_Char) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Char;
+			else if (type == TYPE_Integer) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Integer;
+			else if (type == TYPE_Real) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real;
+			else if (type == TYPE_Real2) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real2;
+			else if (type == TYPE_Real3) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real3;
+			else if (type == TYPE_Real4) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real4;
+			else if (type == TYPE_Enum) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Struct;
+			else if (type == TYPE_Type) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Type;
+			else if (type == TYPE_String) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_String;
+			else if (type == TYPE_Entity) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Entity;
 			else result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Struct;
 			break;
 		case TypeCode::Enum:
@@ -1800,7 +1799,7 @@ String type_IsValid(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool 
 String type_GetEnumElements(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer[] type.()
 {
 	Type& enumType = PARAMETER_VALUE(1, Type, 0);
-	if (enumType.dimension || enumType.code != TypeCode::Enum)return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	if (enumType.dimension || enumType.code != TypeCode::Enum) return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	RuntimeEnum* runtimeEnum = kernel->libraryAgency->GetEnum(enumType);
 	kernel->heapAgency->StrongRelease(handle);
@@ -1814,7 +1813,7 @@ String type_GetEnumElements(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 String type_GetEnumElementNames(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string[] type.()
 {
 	Type& enumType = PARAMETER_VALUE(1, Type, 0);
-	if (enumType.dimension || enumType.code != TypeCode::Enum)return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	if (enumType.dimension || enumType.code != TypeCode::Enum) return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	RuntimeEnum* runtimeEnum = kernel->libraryAgency->GetEnum(enumType);
 	kernel->heapAgency->StrongRelease(handle);
@@ -3220,17 +3219,17 @@ String Reflection_Space_GetTypes(Kernel* kernel, Coroutine*, uint8* stack, uint3
 		THIS(1, ReflectionSpace).types = thisValue.types;
 		uint32 index = 0;
 		for (uint32 i = 0; i < space.enums.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, space.enums[i], 0);
 		for (uint32 i = 0; i < space.structs.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, space.structs[i], 0);
 		for (uint32 i = 0; i < space.classes.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, space.classes[i], 0);
 		for (uint32 i = 0; i < space.interfaces.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, space.interfaces[i], 0);
 		for (uint32 i = 0; i < space.delegates.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, space.delegates[i], 0);
 		for (uint32 i = 0; i < space.coroutines.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Coroutine, i, 0);
+			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Coroutine, space.coroutines[i], 0);
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);

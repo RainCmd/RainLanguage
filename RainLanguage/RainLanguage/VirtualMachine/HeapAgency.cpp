@@ -257,24 +257,23 @@ Handle HeapAgency::Recycle(Handle handle)
 void HeapAgency::FullGC()
 {
 	flag = !flag;
-	Handle index = head;
-	while (index)
+	Handle markIndex = head;
+	while (markIndex)
 	{
-		if (heads[index].strong || IsUnrecoverableCoroutine(index)) Mark(index);
-		index = heads[index].next;
+		if (heads[markIndex].strong || IsUnrecoverableCoroutine(markIndex)) Mark(markIndex);
+		markIndex = heads[markIndex].next;
 	}
-	index = head;
+	Handle* clearIndex = &head;
 	uint32 top = 0;
-	head = tail = active = NULL;
-	while (index)
-		if (heads[index].flag == flag)
+	tail = active = NULL;
+	while (*clearIndex)
+		if (heads[*clearIndex].flag == flag)
 		{
-			tail = index;
-			if (!head) head = index;
-			top += Tidy(index, top);
-			index = heads[index].next;
+			tail = *clearIndex;
+			top += Tidy(*clearIndex, top);
+			clearIndex = &heads[*clearIndex].next;
 		}
-		else index = Recycle(index);
+		else *clearIndex = Recycle(*clearIndex);
 	active = tail;
 	heap.SetCount(top);
 }
@@ -285,17 +284,17 @@ void HeapAgency::FastGC()
 	{
 		uint32 top = heads[active].pointer + heads[active].size;
 		tail = active;
-		Handle index = heads[active].next;
-		while (index)
+		Handle* index = &heads[active].next;
+		while (*index)
 		{
-			if (heads[index].strong || heads[index].weak || IsUnrecoverableCoroutine(index))
+			if (heads[*index].strong || heads[*index].weak || IsUnrecoverableCoroutine(*index))
 			{
-				if (heads[index].generation++ > generation) active = tail;
-				tail = index;
-				top += Tidy(index, top);
-				index = heads[index].next;
+				if (heads[*index].generation++ > generation) active = tail;
+				tail = *index;
+				top += Tidy(*index, top);
+				index = &heads[*index].next;
 			}
-			else index = Recycle(index);
+			else *index = Recycle(*index);
 		}
 		heap.SetCount(top);
 	}

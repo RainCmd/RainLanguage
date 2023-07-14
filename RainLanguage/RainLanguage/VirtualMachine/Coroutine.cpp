@@ -770,13 +770,13 @@ label_next_instruct:
 		case Instruct::FUNCTION_Entrance://函数的第一条指令，用于确保函数执行所需的栈空间大小
 		{
 			top += INSTRUCT_VALUE(uint32, 1);//函数执行空间大小
-			if (EnsureStackSize(top))EXCEPTION_EXIT(FUNCTION_Entrance, EXCEPTION_STACK_OVERFLOW);
+			if (EnsureStackSize(top)) EXCEPTION_EXIT(FUNCTION_Entrance, EXCEPTION_STACK_OVERFLOW);
 			EXCEPTION_JUMP(4, FUNCTION_Entrance);
 		}
 		goto label_next_instruct;
 		case Instruct::FUNCTION_Ensure:
 		{
-			if (EnsureStackSize(top + INSTRUCT_VALUE(uint32, 1)))EXCEPTION_EXIT(FUNCTION_Ensure, EXCEPTION_STACK_OVERFLOW);//SIZE(Frame)+返回值空间大小+参数空间大小
+			if (EnsureStackSize(top + INSTRUCT_VALUE(uint32, 1))) EXCEPTION_EXIT(FUNCTION_Ensure, EXCEPTION_STACK_OVERFLOW);//SIZE(Frame)+返回值空间大小+参数空间大小
 			*(Frame*)(stack + top) = Frame(bottom, POINTER + INSTRUCT_VALUE(uint32, 5));
 			EXCEPTION_JUMP(8, FUNCTION_Ensure);
 		}
