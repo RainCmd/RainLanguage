@@ -281,13 +281,13 @@ void ParseFunctionDeclaration(const Line& line, uint32 index, Anchor& name, bool
 	}
 }
 
-void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visibility visibility, ParseParameter* parameter)
+void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter)
 {
 	Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 	ParseFunctionDeclaration(line, index, name, true, parameters, returns, parameter->messages);
 	FileFunction* function = new (space->functions.Add())FileFunction(name, visibility, space, parameters, returns);
-	function->attributes.Add(space->attributes);
-	space->attributes.Clear();
+	function->attributes.Add(attributes);
+	attributes.Clear();
 	ParseBlock(line.indent, function->body, parameter);
 }
 
@@ -339,7 +339,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 			}
 			else if (IsReloadable(lexical.type))
 			{
-				ParseGlobalFunction(this, line, 0, Visibility::Space, parameter);
+				ParseGlobalFunction(this, line, 0, Visibility::Space, attributes, parameter);
 				goto label_parse;
 			}
 			else MESSAGE2(parameter->messages, line, MessageType::ERROR_UNEXPECTED_LEXCAL);
@@ -437,7 +437,7 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 	}
 	else
 	{
-		ParseGlobalFunction(this, line, index, visibility, parameter);
+		ParseGlobalFunction(this, line, index, visibility, attributes, parameter);
 		return true;
 	}
 	return false;

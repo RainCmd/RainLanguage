@@ -2296,7 +2296,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						}
 						expressionStack.Add(typeExpression);
 					}
-					else if (ContainAny(attribute, Attribute::None))
+					else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 					{
 						BlurrySetExpression* expression = new BlurrySetExpression(lexical.anchor, tuple);
 						expressionStack.Add(expression);
