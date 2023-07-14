@@ -364,7 +364,7 @@ uint32 HeapAgency::CountHandle()
 
 HeapAgency::~HeapAgency()
 {
-	for (uint32 index = head; index; head = heads[index].next)
+	for (uint32 index = head; index; index = heads[index].next)
 	{
 		Head& value = heads[index];
 		if (IsCoroutine(value.type)) kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + value.pointer)));

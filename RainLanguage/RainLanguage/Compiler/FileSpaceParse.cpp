@@ -281,6 +281,16 @@ void ParseFunctionDeclaration(const Line& line, uint32 index, Anchor& name, bool
 	}
 }
 
+void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visibility visibility, ParseParameter* parameter)
+{
+	Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
+	ParseFunctionDeclaration(line, index, name, true, parameters, returns, parameter->messages);
+	FileFunction* function = new (space->functions.Add())FileFunction(name, visibility, space, parameters, returns);
+	function->attributes.Add(space->attributes);
+	space->attributes.Clear();
+	ParseBlock(line.indent, function->body, parameter);
+}
+
 FileSpace::FileSpace(CompilingSpace* compiling, uint32 parentIndent, ParseParameter* parameter) :compiling(compiling), attributes(0), children(0), imports(0),
 variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), natives(0), relyCompilingSpaces(0), relySpaces(0)
 {
@@ -294,7 +304,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 		if (TryParseAttributes(line, attributes, parameter->messages)) continue;
 
 		Lexical lexical;
-		if (TryGetNextLexical(line, 0, LexicalType::Word, MessageType::INVALID, lexical, parameter->messages))
+		if (TryAnalysis(line, 0, lexical, parameter->messages))
 		{
 			if (indent == INVALID)
 			{
@@ -311,19 +321,28 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 					return;
 				}
 			}
-			if (lexical.anchor == KeyWord_import())
+			if (lexical.type == LexicalType::Word)
 			{
-				if (attributes.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_ATTRIBUTE_INVALID);
-				ParseImport(line, lexical, new (imports.Add())List<Anchor>(0), parameter->messages);
-				attributes.Clear();
+				if (lexical.anchor == KeyWord_import())
+				{
+					if (attributes.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_ATTRIBUTE_INVALID);
+					ParseImport(line, lexical, new (imports.Add())List<Anchor>(0), parameter->messages);
+					attributes.Clear();
+				}
+				else if (lexical.anchor == KeyWord_namespace())
+				{
+					ParseChild(line, attributes, lexical.anchor.GetEnd(), parameter);
+					attributes.Clear();
+					goto label_parse;
+				}
+				else if (ParseDeclaration(line, attributes, parameter)) goto label_parse;
 			}
-			else if (lexical.anchor == KeyWord_namespace())
+			else if (IsReloadable(lexical.type))
 			{
-				ParseChild(line, attributes, lexical.anchor.GetEnd(), parameter);
-				attributes.Clear();
+				ParseGlobalFunction(this, line, 0, Visibility::Space, parameter);
 				goto label_parse;
 			}
-			else if (ParseDeclaration(line, attributes, parameter)) goto label_parse;
+			else MESSAGE2(parameter->messages, line, MessageType::ERROR_UNEXPECTED_LEXCAL);
 		}
 	}
 	this->attributes.Add(attributes.GetPointer(), attributes.Count());
@@ -418,12 +437,7 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 	}
 	else
 	{
-		List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
-		ParseFunctionDeclaration(line, index, name, true, parameters, returns, parameter->messages);
-		FileFunction* function = new (functions.Add())FileFunction(name, visibility, this, parameters, returns);
-		function->attributes.Add(attributes);
-		attributes.Clear();
-		ParseBlock(line.indent, function->body, parameter);
+		ParseGlobalFunction(this, line, index, visibility, parameter);
 		return true;
 	}
 	return false;

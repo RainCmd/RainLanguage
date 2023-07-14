@@ -8,7 +8,7 @@ void WhileStatement::Generator(StatementGeneratorParameter& parameter)
 	CodeLocalAddressReference loopAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference elseAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference breakAddress = CodeLocalAddressReference();
-	loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
+	if(loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
 	loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	if (condition)
 	{

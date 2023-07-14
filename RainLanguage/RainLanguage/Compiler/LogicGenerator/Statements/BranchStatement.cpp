@@ -22,7 +22,7 @@ void BranchStatement::Generator(StatementGeneratorParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);
 	trueAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	trueBranch->Generator(parameter);
+	if(trueBranch) trueBranch->Generator(parameter);
 	endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
