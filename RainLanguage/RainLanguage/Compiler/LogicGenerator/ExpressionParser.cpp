@@ -2745,7 +2745,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						if (element != '_')
 						{
 							value <<= 1;
-							if (element == '1')value++;
+							if (element == '1') value++;
 						}
 					}
 					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));

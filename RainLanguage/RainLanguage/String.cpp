@@ -368,7 +368,7 @@ String StringAgency::Sub(const String& source, uint32 start, uint32 length)
 String StringAgency::Replace(const String& source, const String& oldValue, const String& newValue)
 {
 	ASSERT_DEBUG(!source.IsEmpty() && !oldValue.IsEmpty(), "不能对空字符串进行该操作");
-	if (source.GetLength() < oldValue.GetLength())return source;
+	if (source.GetLength() < oldValue.GetLength()) return source;
 	InitHelper();
 	uint32 index = source.Find(oldValue, 0), last = 0;
 	while (index != INVALID)
@@ -378,7 +378,7 @@ String StringAgency::Replace(const String& source, const String& oldValue, const
 		last = index + oldValue.GetLength();
 		index = source.Find(oldValue, last);
 	}
-	helper->Add(source.GetPointer(), source.GetLength() - last);
+	helper->Add(source.GetPointer() + last, source.GetLength() - last);
 	return Add(helper->GetPointer(), helper->Count());
 }
 
@@ -435,26 +435,23 @@ StringAgency::~StringAgency()
 	}
 }
 
+bool IsStringSpanEquals(const character* left, const character* right, uint32 length)
+{
+	while (length--) if (left[length] != right[length]) return false;
+	return true;
+}
+
 uint32 String::Find(const String& value, uint32 start) const
 {
-	if (IsEmpty() || value.IsEmpty())return INVALID;
-	for (uint32 x = start, y = 0; x < GetLength(); x++)
-		if ((*this)[x] == value[y])
-		{
-			y++;
-			if (y == value.GetLength())
-			{
-				y = 0;
-				for (uint32 i = x - value.GetLength(); y < value.GetLength(); y++)
-					if ((*this)[i] != value[y])
-					{
-						y = 0;
-						goto label_next;
-					}
-				return x - value.GetLength();
-			}
-		label_next:;
-		}
+	uint32 length = GetLength();
+	uint32 patternLength = value.GetLength();
+	if (IsEmpty() || value.IsEmpty() || length - start < patternLength) return INVALID;
+	const character* source = GetPointer();
+	const character* pattern = value.GetPointer();
+	length -= patternLength;
+	for (uint32 x = start; x <= length; x++)
+		if (IsStringSpanEquals(source + x, pattern, patternLength))
+			return x;
 	return INVALID;
 }
 
