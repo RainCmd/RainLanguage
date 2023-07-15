@@ -1162,7 +1162,7 @@ label_next_instruct:
 		{
 			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
 			Mcopy(&INSTRUCT_VALUE(uint8, 9), &VARIABLE(uint8, addressValue), INSTRUCT_VALUE(uint32, 5));
-			instruct += INSTRUCT_VALUE(uint32, 5) + 13;
+			instruct += INSTRUCT_VALUE(uint32, 5) + 9;
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_Struct:

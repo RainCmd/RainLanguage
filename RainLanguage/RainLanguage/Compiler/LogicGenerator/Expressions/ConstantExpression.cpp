@@ -173,3 +173,12 @@ void ConstantEntityNullExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_EntityNull);
 	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Entity));
 }
+
+void ConstantTypeExpression::Generator(LogicGenerateParameter& parameter)
+{
+	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_Bitwise);
+	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Type));
+	uint8 alignment;
+	parameter.generator->WriteCode(parameter.manager->GetStackSize(TYPE_Type, alignment));
+	parameter.generator->WriteCodeGlobalReference(customType);
+}

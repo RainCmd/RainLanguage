@@ -123,3 +123,15 @@ public:
 	bool TryEvaluationNull();
 	void Generator(LogicGenerateParameter& parameter);
 };
+
+class ConstantTypeExpression :public Expression
+{
+public:
+	const Type customType;
+	inline ConstantTypeExpression(const Anchor& anchor, const Type& customType) :Expression(ExpressionType::ConstantTypeExpression, anchor, List<Type, true>(1)), customType(customType)
+	{
+		returns.Add(TYPE_Type);
+		attribute = Attribute::Constant;
+	}
+	void Generator(LogicGenerateParameter& parameter);
+};

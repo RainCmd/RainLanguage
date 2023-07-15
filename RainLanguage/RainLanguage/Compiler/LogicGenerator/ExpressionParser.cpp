@@ -2342,7 +2342,57 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				break;
 			case LexicalType::BitXorAssignment:goto label_error_unexpected_lexcal;
 			case LexicalType::Less:
-				PUSH_TOKEN(TokenType::Less, Attribute::Operator);
+				if (ContainAny(attribute, Attribute::Value))
+				{
+					PUSH_TOKEN(TokenType::Less, Attribute::Operator);
+				}
+				else
+				{
+					index = lexical.anchor.GetEnd();
+					if (TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						if (!TryFindDeclaration(lexical.anchor, declarations))
+						{
+							AbstractSpace* space = NULL;
+							if (!context.TryFindSpace(manager, lexical.anchor, space))
+							{
+								MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+								goto label_parse_fail;
+							}
+							if (!TryFindDeclaration(anchor, index, lexical, space, declarations))
+								goto label_parse_fail;
+						}
+						if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+						{
+							if (TryAnalysis(anchor, index, lexical, manager->messages))
+							{
+								if (lexical.type == LexicalType::Greater)
+								{
+									Expression* expression = expressionStack.Pop();
+									if (ContainAny(expression->type, ExpressionType::TypeExpression))
+									{
+										TypeExpression* typeExpression = (TypeExpression*)expression;
+										expression = new ConstantTypeExpression(typeExpression->anchor, typeExpression->customType);
+										attribute = expression->attribute;
+										expressionStack.Add(expression);
+										delete typeExpression;
+										break;
+									}
+									else
+									{
+										expressionStack.Add(expression);
+										MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_TYPE_DECLARATION);
+									}
+								}
+								else goto label_error_unexpected_lexcal;
+							}
+							else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+						}
+						goto label_parse_fail;
+					}
+					else goto label_error_unexpected_lexcal;
+				}
 				break;
 			case LexicalType::LessEquals:
 				PUSH_TOKEN(TokenType::LessEquals, Attribute::Operator);

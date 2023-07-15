@@ -70,6 +70,7 @@ enum class ExpressionType :uint64
 	ArrayQuestionSubExpression = 1ull << 57,
 	QuestionNullExpression = 1ull << 58,
 	QuestionExpression = 1ull << 59,
+	ConstantTypeExpression = 1ull << 60,
 };
 ENUM_FLAG_OPERATOR(ExpressionType)
 

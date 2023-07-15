@@ -7,7 +7,7 @@ public:
 	Expression* parameters;
 	inline InvokerExpression(ExpressionType type, const Anchor& anchor, const List<Type, true>& returns, Expression* parameters) :Expression(type | ExpressionType::InvokerExpression, anchor, returns), parameters(parameters)
 	{
-		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns[0]);
+		if (returns.Count() == 1) attribute = CombineType(Attribute::Value, returns[0]);
 		else attribute = Attribute::Tuple;
 	}
 	virtual ~InvokerExpression();
@@ -60,6 +60,7 @@ public:
 	inline InvokerConstructorExpression(const Anchor& anchor, const Type& type, Expression* parameters, const CompilingDeclaration& declaration) :InvokerExpression(ExpressionType::InvokerConstructorExpression, anchor, List<Type, true>(1), parameters), declaration(declaration)
 	{
 		returns.Add(type);
+		attribute = CombineType(Attribute::Value, returns[0]);
 	}
 	void Generator(LogicGenerateParameter& parameter);
 };

@@ -87,7 +87,7 @@ struct Token :Lexical
 			case TokenType::Positive:
 			case TokenType::Negative:
 			case TokenType::IncrementLeft:
-			case TokenType::DecrementLeft: return Attribute::None| Attribute::Operator;
+			case TokenType::DecrementLeft: return Attribute::None | Attribute::Operator;
 			default: break;
 		}
 		return Attribute::Invalid;
