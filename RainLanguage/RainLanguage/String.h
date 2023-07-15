@@ -12,10 +12,7 @@ struct StringShare
 	uint64 count;
 	StringShare(StringAgency* pool) : pool(pool), count(1) {}
 	inline void Reference() { count++; }
-	inline void Release()
-	{
-		if (!(--count)) delete this;
-	}
+	inline void Release() { if (!(--count)) delete this; }
 };
 class StringAgency
 {

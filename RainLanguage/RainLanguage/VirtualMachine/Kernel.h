@@ -8,9 +8,19 @@ class EntityAgency;
 class LibraryAgency;
 class HeapAgency;
 class CoroutineAgency;
+class Kernel;
+struct KernelShare
+{
+	Kernel* kernel;
+	uint32 count;
+	inline KernelShare(Kernel* kernel) :kernel(kernel), count(1) {}
+	inline void Reference() { count++; }
+	inline void Release() { if (!(--count)) delete this; }
+};
 class Kernel :public RainKernel
 {
 public:
+	KernelShare* share;
 	StringAgency* stringAgency;
 	EntityAgency* entityAgency;
 	LibraryAgency* libraryAgency;
@@ -18,13 +28,10 @@ public:
 	HeapAgency* heapAgency;
 	Random random;
 	Kernel(const StartupParameter& parameter);
-	InvokerWrapper CreateInvoker(const RainFunction& function);
-	const RainFunction FindFunction(const RainString& name);
-	const RainFunction FindFunction(const character* name);
-	RainFunctions FindFunctions(const RainString& name);
-	RainFunctions FindFunctions(const character* name);
-	RainTypes GetFunctionParameters(const RainFunction& function);
-	RainTypes GetFunctionReturns(const RainFunction& function);
+	const RainFunction FindFunction(const RainString& name, bool allowNoPublic);
+	const RainFunction FindFunction(const character* name, bool allowNoPublic);
+	RainFunctions FindFunctions(const RainString& name, bool allowNoPublic);
+	RainFunctions FindFunctions(const character* name, bool allowNoPublic);
 	const RainKernelState GetState();
 	uint32 GC(bool full);
 	void Update();

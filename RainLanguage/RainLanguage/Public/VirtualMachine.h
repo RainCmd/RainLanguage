@@ -561,20 +561,6 @@ struct RAINLANGUAGE RainKernelState
 };
 
 /// <summary>
-/// 雨言的函数句柄
-/// </summary>
-class RAINLANGUAGE RainFunction
-{
-public:
-	/// <summary>
-	/// 判断是否是个有效的句柄
-	/// </summary>
-	/// <returns>是个有效的句柄</returns>
-	virtual bool IsValid() = 0;
-	virtual InvokerWrapper* CreateInvoker() = 0;
-};
-
-/// <summary>
 /// 类型列表
 /// </summary>
 struct RAINLANGUAGE RainTypes
@@ -602,6 +588,44 @@ public:
 };
 
 /// <summary>
+/// 雨言的函数句柄
+/// </summary>
+class RAINLANGUAGE RainFunction
+{
+	uint32 library;
+	uint32 index;
+	void* share;
+public:
+	RainFunction();
+	RainFunction(uint32 library, uint32 index, void* share);
+	~RainFunction();
+
+	RainFunction& operator=(const RainFunction& other);
+
+	/// <summary>
+	/// 判断是否是个有效的句柄
+	/// </summary>
+	/// <returns>是个有效的句柄</returns>
+	bool IsValid() const;
+	/// <summary>
+	/// 创建一个函数的调用
+	/// </summary>
+	/// <returns>函数的调用</returns>
+	InvokerWrapper CreateInvoker() const;
+	/// <summary>
+	/// 获取该函数的参数列表
+	/// </summary>
+	/// <returns>类型列表</returns>
+	RainTypes GetParameters() const;
+	/// <summary>
+	/// 获取函数的返回值列表
+	/// </summary>
+	/// <returns>类型列表</returns>
+	RainTypes GetReturns() const;
+
+};
+
+/// <summary>
 /// 函数句柄列表
 /// </summary>
 struct RAINLANGUAGE RainFunctions
@@ -626,6 +650,7 @@ public:
 	/// <param name="index">下标</param>
 	/// <returns>函数句柄</returns>
 	inline const RainFunction operator[](uint32 index) const { return functions[index]; }
+	~RainFunctions();
 };
 
 /// <summary>
@@ -638,54 +663,37 @@ public:
 	virtual ~RainKernel() {};
 
 	/// <summary>
-	/// 创建一个调用
+	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
+	/// 查找失败会返回一个无效的句柄
 	/// </summary>
-	/// <param name="function">函数句柄</param>
-	/// <returns>调用</returns>
-	/// <exception>无效的函数会抛异常</exception>
-	virtual InvokerWrapper CreateInvoker(const RainFunction& function) = 0;
+	/// <param name="name">函数名</param>
+	/// <param name="allowNoPublic">允许查找私有函数</param>
+	/// <returns>函数句柄</returns>
+	virtual const RainFunction FindFunction(const RainString& name, bool allowNoPublic) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
 	/// <param name="name">函数名</param>
+	/// <param name="allowNoPublic">允许查找私有函数</param>
 	/// <returns>函数句柄</returns>
-	virtual const RainFunction FindFunction(const RainString& name) = 0;
-	/// <summary>
-	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
-	/// 查找失败会返回一个无效的句柄
-	/// </summary>
-	/// <param name="name">函数名</param>
-	/// <returns>函数句柄</returns>
-	virtual const RainFunction FindFunction(const character* name) = 0;
+	virtual const RainFunction FindFunction(const character* name, bool allowNoPublic) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配所有名称相等的函数
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
 	/// <param name="name">函数名</param>
+	/// <param name="allowNoPublic">允许查找私有函数</param>
 	/// <returns>函数句柄</returns>
-	virtual RainFunctions FindFunctions(const RainString& name) = 0;
+	virtual RainFunctions FindFunctions(const RainString& name, bool allowNoPublic) = 0;
 	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配所有名称相等的函数
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
 	/// <param name="name">函数名</param>
+	/// <param name="allowNoPublic">允许查找私有函数</param>
 	/// <returns>函数句柄</returns>
-	virtual RainFunctions FindFunctions(const character* name) = 0;
-	/// <summary>
-	/// 获取函数参数列表
-	/// </summary>
-	/// <param name="function">函数索引</param>
-	/// <returns>参数列表</returns>
-	/// <exception>无效的函数会抛异常，非公开函数也会抛异常</exception>
-	virtual RainTypes GetFunctionParameters(const RainFunction& function) = 0;
-	/// <summary>
-	/// 获取函数返回值列表
-	/// </summary>
-	/// <param name="function">函数索引</param>
-	/// <returns>返回值列表</returns>
-	/// <exception>无效的函数会抛异常，非公开函数也会抛异常</exception>
-	virtual RainTypes GetFunctionReturns(const RainFunction& function) = 0;
+	virtual RainFunctions FindFunctions(const character* name, bool allowNoPublic) = 0;
 	/// <summary>
 	/// 获取当前状态数据
 	/// </summary>
