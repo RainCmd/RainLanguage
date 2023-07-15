@@ -364,6 +364,7 @@ uint32 HeapAgency::CountHandle()
 
 HeapAgency::~HeapAgency()
 {
+	gc = true;
 	for (uint32 index = head; index; index = heads[index].next)
 	{
 		Head& value = heads[index];

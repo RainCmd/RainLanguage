@@ -9,22 +9,22 @@
 
 inline bool TryMatch(const Type& source, const Type& target)
 {
-	if (source == target)return true;
-	else if (source == TYPE_Array)return (bool)target.dimension;
-	else if (source == TYPE_Handle)return IsHandleType(target);
+	if (source == target) return true;
+	else if (source == TYPE_Array) return (bool)target.dimension;
+	else if (source == TYPE_Handle) return IsHandleType(target);
 	return source.code == TypeCode::Enum && target == TYPE_Integer;
 }
 
 void Invoker::ReturnTypeAssert(uint32 index, Type type) const
 {
 	StateAssert(InvokerState::Completed);
-	ASSERT(TryMatch(info->returns.GetType(index), type), "返回值类型错误");
+	ASSERT(TryMatch(type, info->returns.GetType(index)), "返回值类型错误");
 }
 
 void Invoker::ParameterTypeAssert(uint32 index, Type type) const
 {
 	StateAssert(InvokerState::Unstart);
-	ASSERT(TryMatch(info->parameters.GetType(index), type), "参数类型错误");
+	ASSERT(TryMatch(type, info->parameters.GetType(index)), "参数类型错误");
 }
 
 bool Invoker::IsPause() const
@@ -139,7 +139,7 @@ uint64 Invoker::GetEntityValueReturnValue(uint32 index) const
 
 String Invoker::SetBoxParameter(uint32 index, Handle value)
 {
-	return StrongUnbox(kernel, info->parameters.GetType(index), value, data.GetPointer() + info->returns.GetOffset(index));
+	return StrongUnbox(kernel, info->parameters.GetType(index), value, data.GetPointer() + info->parameters.GetOffset(index));
 }
 
 void Invoker::SetStructParameter(uint32 index, const uint8* address, const Type& type)

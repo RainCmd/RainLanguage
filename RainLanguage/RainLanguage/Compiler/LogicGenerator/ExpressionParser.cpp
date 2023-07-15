@@ -1833,6 +1833,25 @@ bool ExpressionParser::TryParse(const Anchor& left, const Anchor& right, Express
 	return false;
 }
 
+Type MatchBaseType(const Anchor& anchor)
+{
+	if (anchor == KeyWord_bool()) return TYPE_Bool;
+	else if (anchor == KeyWord_byte()) return TYPE_Byte;
+	else if (anchor == KeyWord_char()) return TYPE_Char;
+	else if (anchor == KeyWord_integer()) return TYPE_Integer;
+	else if (anchor == KeyWord_real()) return TYPE_Real;
+	else if (anchor == KeyWord_real2()) return TYPE_Real2;
+	else if (anchor == KeyWord_real3()) return TYPE_Real3;
+	else if (anchor == KeyWord_real4()) return TYPE_Real4;
+	else if (anchor == KeyWord_type()) return TYPE_Type;
+	else if (anchor == KeyWord_string()) return TYPE_String;
+	else if (anchor == KeyWord_handle()) return TYPE_Handle;
+	else if (anchor == KeyWord_entity()) return TYPE_Entity;
+	else if (anchor == KeyWord_array()) return TYPE_Array;
+	else if (anchor == KeyWord_interface()) return TYPE_Interface;
+	return Type();
+}
+
 bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 {
 	if (anchor.content.IsEmpty())
@@ -2345,55 +2364,61 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				if (ContainAny(attribute, Attribute::Value))
 				{
 					PUSH_TOKEN(TokenType::Less, Attribute::Operator);
+					break;
 				}
 				else
 				{
 					index = lexical.anchor.GetEnd();
 					if (TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
 					{
-						List<CompilingDeclaration, true> declarations(0);
-						if (!TryFindDeclaration(lexical.anchor, declarations))
+						Type type = MatchBaseType(lexical.anchor);
+						if (type.IsValid())
 						{
-							AbstractSpace* space = NULL;
-							if (!context.TryFindSpace(manager, lexical.anchor, space))
-							{
-								MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-								goto label_parse_fail;
-							}
-							if (!TryFindDeclaration(anchor, index, lexical, space, declarations))
-								goto label_parse_fail;
+							index = lexical.anchor.GetEnd();
+							type.dimension = ExtractDimension(anchor, index);
+							expressionStack.Add(new TypeExpression(lexical.anchor, type));
+							attribute = Attribute::Type;
 						}
-						if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+						else
 						{
-							if (TryAnalysis(anchor, index, lexical, manager->messages))
+							List<CompilingDeclaration, true> declarations(0);
+							if (!TryFindDeclaration(lexical.anchor, declarations))
 							{
-								if (lexical.type == LexicalType::Greater)
+								AbstractSpace* space = NULL;
+								if (!context.TryFindSpace(manager, lexical.anchor, space))
 								{
-									Expression* expression = expressionStack.Pop();
-									if (ContainAny(expression->type, ExpressionType::TypeExpression))
-									{
-										TypeExpression* typeExpression = (TypeExpression*)expression;
-										expression = new ConstantTypeExpression(typeExpression->anchor, typeExpression->customType);
-										attribute = expression->attribute;
-										expressionStack.Add(expression);
-										delete typeExpression;
-										break;
-									}
-									else
-									{
-										expressionStack.Add(expression);
-										MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_TYPE_DECLARATION);
-									}
+									MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+									goto label_parse_fail;
 								}
-								else goto label_error_unexpected_lexcal;
+								if (!TryFindDeclaration(anchor, index, lexical, space, declarations))
+									goto label_parse_fail;
 							}
-							else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+							if (!TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+								goto label_parse_fail;
 						}
+						if (TryMatchNext(anchor, index, LexicalType::Greater, lexical))
+						{
+							Expression* expression = expressionStack.Pop();
+							if (ContainAny(expression->type, ExpressionType::TypeExpression))
+							{
+								TypeExpression* typeExpression = (TypeExpression*)expression;
+								expression = new ConstantTypeExpression(typeExpression->anchor, typeExpression->customType);
+								attribute = expression->attribute;
+								expressionStack.Add(expression);
+								delete typeExpression;
+								break;
+							}
+							else
+							{
+								expressionStack.Add(expression);
+								MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_TYPE_DECLARATION);
+							}
+						}
+						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 						goto label_parse_fail;
 					}
 					else goto label_error_unexpected_lexcal;
 				}
-				break;
 			case LexicalType::LessEquals:
 				PUSH_TOKEN(TokenType::LessEquals, Attribute::Operator);
 				break;
@@ -3091,146 +3116,6 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					goto label_error_unexpected_lexcal;
 				}
-				else if (lexical.anchor.content == KeyWord_bool())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Bool));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_byte())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Byte));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_char())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Char));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_integer())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Integer));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_real())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Real));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_real2())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Real2));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_real3())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Real3));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_real4())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Real4));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_type())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Type));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_string())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_String));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_handle())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Handle));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_entity())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Entity));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_array())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Array));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_interface())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new TypeExpression(lexical.anchor, TYPE_Interface));
-						attribute = Attribute::Type;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
 				else if (lexical.anchor.content == KeyWord_is())
 				{
 					if (ContainAny(attribute, Attribute::Value))
@@ -3360,38 +3245,55 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
-				else if (IsKeyWord(lexical.anchor.content)) goto label_error_unexpected_lexcal;
-				else if (ContainAny(attribute, Attribute::Type))
-				{
-					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
-					Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
-					delete typeExpression; typeExpression = NULL;
-					expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
-					attribute = expressionStack.Peek()->attribute;
-					break;
-				}
 				else
 				{
-					List<CompilingDeclaration, true> declarations(0);
-					AbstractSpace* space = NULL;
-					if (TryFindDeclaration(lexical.anchor, declarations))
+					Type type = MatchBaseType(lexical.anchor);
+					if (type.IsValid())
 					{
-						if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+						if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+						{
+							index = lexical.anchor.GetEnd();
+							type.dimension = ExtractDimension(anchor, index);
+							expressionStack.Add(new TypeExpression(lexical.anchor, type));
+							attribute = Attribute::Type;
 							goto label_next_lexical;
-						goto label_parse_fail;
+						}
+						goto label_error_unexpected_lexcal;
 					}
-					else if (context.TryFindSpace(manager, lexical.anchor, space))
+					else if (IsKeyWord(lexical.anchor.content)) goto label_error_unexpected_lexcal;
+					else if (ContainAny(attribute, Attribute::Type))
 					{
-						if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-							goto label_next_lexical;
-						goto label_parse_fail;
+						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
+						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
+						Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
+						delete typeExpression; typeExpression = NULL;
+						expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
+						attribute = expressionStack.Peek()->attribute;
+						break;
 					}
 					else
 					{
-						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-						goto label_parse_fail;
+						List<CompilingDeclaration, true> declarations(0);
+						AbstractSpace* space = NULL;
+						if (TryFindDeclaration(lexical.anchor, declarations))
+						{
+							if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+								goto label_next_lexical;
+							goto label_parse_fail;
+						}
+						else if (context.TryFindSpace(manager, lexical.anchor, space))
+						{
+							if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+								goto label_next_lexical;
+							goto label_parse_fail;
+						}
+						else
+						{
+							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+							goto label_parse_fail;
+						}
 					}
+
 				}
 				break;
 			case LexicalType::Backslash:

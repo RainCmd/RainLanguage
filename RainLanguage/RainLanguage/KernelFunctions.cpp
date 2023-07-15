@@ -1990,14 +1990,14 @@ String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	return String();
 }
 
-String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.Function, handle[])
+String type_CreateCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.Function, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + 4);
 	Function function;
-	if (kernel->heapAgency->TryGetValue(functionHandle, function))
+	if (!kernel->heapAgency->TryGetValue(functionHandle, function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
 	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
@@ -2019,7 +2019,6 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 		kernel->coroutineAgency->Reference(invoker);
 		for (uint32 i = 0; i < count; i++)
 			invoker->SetBoxParameter(i, *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i));
-		invoker->Start(true, false);
 		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else if (!runtimeFunction->parameters.Count())
@@ -2030,20 +2029,19 @@ String type_StartCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
 		kernel->heapAgency->StrongReference(result);
 		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
 		kernel->coroutineAgency->Reference(invoker);
-		invoker->Start(true, false);
 		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	return String();
 }
 
-String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.MemberFunction, handle, handle[])
+String type_CreateCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.MemberFunction, handle, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	MemberFunction function;
-	if (kernel->heapAgency->TryGetValue(functionHandle, function))
+	if (!kernel->heapAgency->TryGetValue(functionHandle, function))
 		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	Handle targetHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type targetType;
@@ -2061,7 +2059,7 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 	if (parametersHandle)
 	{
 		uint32 count = kernel->heapAgency->GetArrayLength(parametersHandle);
-		if (count != runtimeFunction->parameters.Count())
+		if (count != runtimeFunction->parameters.Count() - 1)
 			return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		for (uint32 i = 0; i < count; i++)
 			if (!kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
@@ -2075,10 +2073,9 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		invoker->SetHandleParameter(0, targetHandle);
 		for (uint32 i = 0; i < count; i++)
 			invoker->SetBoxParameter(i + 1, *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i));
-		invoker->Start(true, false);
 		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
-	else if (!runtimeFunction->parameters.Count())
+	else if (runtimeFunction->parameters.Count() == 1)
 	{
 		Handle& result = RETURN_VALUE(Handle, 0);
 		kernel->heapAgency->StrongRelease(result);
@@ -2087,7 +2084,6 @@ String type_StartCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
 		kernel->coroutineAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
-		invoker->Start(true, false);
 		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
@@ -2437,7 +2433,7 @@ String Reflection_MemberConstructor_Invoke(Kernel* kernel, Coroutine* coroutine,
 		if (kernel->heapAgency->IsValid(parameters))
 		{
 			uint32 length = kernel->heapAgency->GetArrayLength(parameters);
-			if (length != constructor->parameters.Count()) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (length != constructor->parameters.Count() - 1) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			for (uint32 i = 0; i < length; i++)
 				if (!kernel->libraryAgency->IsAssignable(constructor->parameters.GetType(i + 1), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i)))
 					return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
@@ -2471,13 +2467,14 @@ String Reflection_MemberConstructor_Invoke(Kernel* kernel, Coroutine* coroutine,
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else if (!constructor->parameters.Count())
+		else if (constructor->parameters.Count() == 1)
 		{
 			Handle& result = RETURN_VALUE(Handle, 0);
 			kernel->heapAgency->StrongRelease(result);
 			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(constructor->entry, constructor);
 			kernel->coroutineAgency->Reference(invoker);
 			result = kernel->heapAgency->Alloc(thisValue.declaration);
+			kernel->heapAgency->StrongReference(result);
 			invoker->SetHandleParameter(0, result);
 			invoker->Start(true, coroutine->ignoreWait);
 			switch (invoker->state)
@@ -2680,7 +2677,7 @@ String Reflection_MemberFunction_Invoke(Kernel* kernel, Coroutine* coroutine, ui
 		if (kernel->heapAgency->IsValid(parameters))
 		{
 			uint32 length = kernel->heapAgency->GetArrayLength(parameters);
-			if (length != runtimeFunction->parameters.Count()) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (length != runtimeFunction->parameters.Count() - 1) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			for (uint32 i = 0; i < length; i++)
 				if (!kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i)))
 					return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
@@ -2716,7 +2713,7 @@ String Reflection_MemberFunction_Invoke(Kernel* kernel, Coroutine* coroutine, ui
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else if (!runtimeFunction->parameters.Count())
+		else if (runtimeFunction->parameters.Count() == 1)
 		{
 			Handle result = RETURN_VALUE(Handle, 0);
 			kernel->heapAgency->StrongRelease(result);
@@ -3014,7 +3011,7 @@ String Reflection_Native_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* sta
 				return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		uint32 nativeTop = nativeLocal + runtimeNative->returns.size;
 		uint32 stackSize = nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4 + runtimeNative->parameters.size;
-		if (coroutine->EnsureStackSize(stackSize))return kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+		if (coroutine->EnsureStackSize(stackSize)) return kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
 		Mzero(stack + nativeLocal, stackSize - nativeLocal);
 		uint32* returnAddresses = (uint32*)(stack + nativeTop + SIZE(Frame));
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
@@ -3031,8 +3028,10 @@ String Reflection_Native_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* sta
 		}
 		String error = kernel->libraryAgency->InvokeNative(thisValue, stack, nativeTop);
 		ReleaseTuple(kernel, parameterAddress, runtimeNative->parameters);
-		Handle result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
-		RETURN_VALUE(Handle, 0) = result;
+		Handle& result = RETURN_VALUE(Handle, 0);
+		kernel->heapAgency->StrongRelease(result);
+		result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
+		kernel->heapAgency->StrongReference(result);
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			WeakBox(kernel, runtimeNative->returns.GetType(i), stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)kernel->heapAgency->GetArrayPoint(result, i));
 		ReleaseTuple(kernel, stack + nativeLocal, runtimeNative->returns);
@@ -3042,15 +3041,17 @@ String Reflection_Native_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* sta
 	{
 		uint32 nativeTop = nativeLocal + runtimeNative->returns.size;
 		uint32 stackSize = nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4 + runtimeNative->parameters.size;
-		if (coroutine->EnsureStackSize(stackSize))return kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+		if (coroutine->EnsureStackSize(stackSize)) return kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
 		Mzero(stack + nativeLocal, stackSize - nativeLocal);
 		uint32* returnAddresses = (uint32*)(stack + nativeTop + SIZE(Frame));
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			returnAddresses[i] = nativeLocal + runtimeNative->returns.GetOffset(i);
 		String error = kernel->libraryAgency->InvokeNative(thisValue, stack, nativeTop);
 		ReleaseTuple(kernel, stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4, runtimeNative->parameters);
-		Handle result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
-		RETURN_VALUE(Handle, 0) = result;
+		Handle& result = RETURN_VALUE(Handle, 0);
+		kernel->heapAgency->StrongRelease(result);
+		result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
+		kernel->heapAgency->StrongReference(result);
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			WeakBox(kernel, runtimeNative->returns.GetType(i), stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)kernel->heapAgency->GetArrayPoint(result, i));
 		ReleaseTuple(kernel, stack + nativeLocal, runtimeNative->returns);

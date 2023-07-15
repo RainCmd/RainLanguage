@@ -398,8 +398,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function), type_CreateDelegate);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Native), type_CreateDelegate2);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle), type_CreateDelegate3);
-		REGISTER_MEMBER_FUNCTIONS(true, "StartCoroutine", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function, Type(TYPE_Handle, 1)), type_StartCoroutine);
-		REGISTER_MEMBER_FUNCTIONS(true, "StartCoroutine", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), type_StartCoroutine2);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateCoroutine", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function, Type(TYPE_Handle, 1)), type_CreateCoroutine);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateCoroutine", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), type_CreateCoroutine2);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateType", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Integer), type_CreateArray);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetArrayRank", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Type), type_GetArrayRank);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetArrayElementType", CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Type), type_GetArrayElementType);
