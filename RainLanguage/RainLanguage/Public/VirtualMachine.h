@@ -563,18 +563,15 @@ struct RAINLANGUAGE RainKernelState
 /// <summary>
 /// 雨言的函数句柄
 /// </summary>
-struct RAINLANGUAGE RainFunction
+class RAINLANGUAGE RainFunction
 {
-private:
-	uint32 library;
-	uint32 function;
 public:
-	inline RainFunction() :library(0xFFFFFFFF), function(0xFFFFFFFF) {}
 	/// <summary>
 	/// 判断是否是个有效的句柄
 	/// </summary>
 	/// <returns>是个有效的句柄</returns>
-	inline bool IsValid() const { return library != 0xFFFFFFFF; }
+	virtual bool IsValid() = 0;
+	virtual InvokerWrapper* CreateInvoker() = 0;
 };
 
 /// <summary>
