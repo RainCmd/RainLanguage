@@ -60,12 +60,8 @@ public:
 			ASSERT(version == set->version, "迭代源已被修改");
 			while (index < set->top)
 			{
-				Slot* slot = set->slots + index++;
-				if (slot->hash)
-				{
-					this->slot = slot;
-					return true;
-				}
+				slot = set->slots + index++;
+				if (slot->hash) return true;
 			}
 			this->slot = NULL;
 			return false;

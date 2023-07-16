@@ -480,23 +480,23 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (lambdaExpression->parameters.Count() == abstractDelegate->parameters.Count())
 			{
-				LocalContext localContext = LocalContext();
+				LocalContext lambdaLocalContext = LocalContext();
 				List<Local> lambdaParameters = List<Local>(0);
 				for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
-					lambdaParameters.Add(localContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
-				LambdaClosure closure = LambdaClosure(this);
-				ExpressionParser parser = ExpressionParser(evaluationParameter, context, &localContext, &closure, false);
+					lambdaParameters.Add(lambdaLocalContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
+				LambdaClosure lambdaClosure = LambdaClosure(this);
+				ExpressionParser parser = ExpressionParser(evaluationParameter, context, &lambdaLocalContext, &lambdaClosure, false);
 				Expression* lambdaBody;
 				if (parser.TryParse(lambdaExpression->body, lambdaBody))
 				{
-					if (closure.closure)
+					if (lambdaClosure.closure)
 					{
-						localContext.Reset();
-						localContext.PushBlock();
+						lambdaLocalContext.Reset();
+						lambdaLocalContext.PushBlock();
 						lambdaParameters.Clear();
-						lambdaParameters.Add(localContext.AddLocal(String(), lambdaExpression->anchor, closure.closure->declaration.DefineType()));
+						lambdaParameters.Add(lambdaLocalContext.AddLocal(String(), lambdaExpression->anchor, lambdaClosure.closure->declaration.DefineType()));
 						for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
-							lambdaParameters.Add(localContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
+							lambdaParameters.Add(lambdaLocalContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
 						delete lambdaBody; lambdaBody = NULL;
 						if (!parser.TryParse(lambdaExpression->body, lambdaBody))
 							return false;
@@ -519,14 +519,14 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					CompilingFunction* lambdaFunction = new CompilingFunction(lambdaExpression->anchor, lambdaDeclaration, List<Anchor>(0), context.compilingSpace, abstractDelegate->parameters.Count(), abstractDelegate->returns.Count(), List<Line>(0));
 					manager->compilingLibrary.functions.Add(lambdaFunction);
 
-					if (closure.closure)
+					if (lambdaClosure.closure)
 					{
-						closure.closure->functions.Add(lambdaDeclaration.index);
-						manager->selfLibaray->classes[closure.closure->declaration.index]->functions.Add(lambdaDeclaration.index);
-						expression = new LambdaClosureDelegateCreateExpression(lambdaExpression->anchor, type, closure.closure->declaration, closure.GetClosureVariables(lambdaDeclaration.index));
+						lambdaClosure.closure->functions.Add(lambdaDeclaration.index);
+						manager->selfLibaray->classes[lambdaClosure.closure->declaration.index]->functions.Add(lambdaDeclaration.index);
+						expression = new LambdaClosureDelegateCreateExpression(lambdaExpression->anchor, type, lambdaClosure.closure->declaration, lambdaClosure.GetClosureVariables(lambdaDeclaration.index));
 						TupleInfo lambdaFuncioinParameters = TupleInfo(lambdaFunction->parameters.Count());
-						new (lambdaFunction->parameters.Add())CompilingFunctionDeclaration::Parameter(lambdaExpression->anchor, closure.closure->declaration.DefineType());
-						lambdaFuncioinParameters.AddElement(closure.closure->declaration.DefineType(), 0);
+						new (lambdaFunction->parameters.Add())CompilingFunctionDeclaration::Parameter(lambdaExpression->anchor, lambdaClosure.closure->declaration.DefineType());
+						lambdaFuncioinParameters.AddElement(lambdaClosure.closure->declaration.DefineType(), 0);
 						lambdaFuncioinParameters.size += MemoryAlignment(SIZE(Handle), MEMORY_ALIGNMENT_MAX);
 						for (uint32 i = 0; i < abstractDelegate->parameters.Count(); i++)
 						{
@@ -551,7 +551,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					List<Statement*, true> statements(0);
 					if (abstractDelegate->returns.Count()) statements.Add(new ReturnStatement(lambdaBody->anchor, lambdaBody));
 					else statements.Add(new ExpressionStatement(lambdaBody->anchor, lambdaBody));
-					LambdaGenerator* lambdaGenerator = new LambdaGenerator(lambdaExpression->anchor, closure.closure, abstractDelegate->returns.Count(), lambdaParameters, statements);
+					LambdaGenerator* lambdaGenerator = new LambdaGenerator(lambdaExpression->anchor, lambdaClosure.closure, abstractDelegate->returns.Count(), lambdaParameters, statements);
 					manager->lambdaGenerators.Add(lambdaGenerator);
 					delete lambdaExpression;
 					return true;
@@ -698,20 +698,20 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			if (type.dimension || type.code != TypeCode::Delegate) return false;
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (lambdaExpression->parameters.Count() != abstractDelegate->parameters.Count()) return false;
-			LocalContext localContext = LocalContext();
+			LocalContext lambdaLocalContext = LocalContext();
 			for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
-				localContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
-			LambdaClosure closure = LambdaClosure(this);
-			ExpressionParser parser = ExpressionParser(evaluationParameter, context, &localContext, &closure, false);
+				lambdaLocalContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
+			LambdaClosure lambdaClosure = LambdaClosure(this);
+			ExpressionParser parser = ExpressionParser(evaluationParameter, context, &lambdaLocalContext, &lambdaClosure, false);
 			Expression* lambdaBody;
 			if (!parser.TryParse(lambdaExpression->body, lambdaBody)) return false;
-			if (closure.closure)
+			if (lambdaClosure.closure)
 			{
-				localContext.Reset();
-				localContext.PushBlock();
-				localContext.AddLocal(String(), lambdaExpression->anchor, closure.closure->declaration.DefineType());
+				lambdaLocalContext.Reset();
+				lambdaLocalContext.PushBlock();
+				lambdaLocalContext.AddLocal(String(), lambdaExpression->anchor, lambdaClosure.closure->declaration.DefineType());
 				for (uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
-					localContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
+					lambdaLocalContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
 				delete lambdaBody; lambdaBody = NULL;
 				if (!parser.TryParse(lambdaExpression->body, lambdaBody))
 					return false;
@@ -1428,9 +1428,9 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 			case DeclarationCategory::LambdaClosureValue:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
-					CompilingDeclaration closureDeclaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, 0, NULL);
-					VariableLocalExpression* closure = new VariableLocalExpression(lexical.anchor, closureDeclaration, Attribute::Value, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
-					VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), closure, GetVariableType(declaration));
+					CompilingDeclaration lambdaDeclaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, 0, NULL);
+					VariableLocalExpression* lambdaClosure = new VariableLocalExpression(lexical.anchor, lambdaDeclaration, Attribute::Value, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
+					VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), lambdaClosure, GetVariableType(declaration));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
 					index = lexical.anchor.GetEnd();

@@ -271,92 +271,92 @@ void CoroutineEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(&exceptionAddress);
 	for (uint32 i = 0; i < indices.Count(); i++)
 	{
-		Type& type = returns[i];
-		if (IsHandleType(type))
+		Type& returnType = returns[i];
+		if (IsHandleType(returnType))
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Handle);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Bool)
+		else if (returnType == TYPE_Bool)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Bool);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Byte)
+		else if (returnType == TYPE_Byte)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Byte);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Char)
+		else if (returnType == TYPE_Char)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Char);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Integer)
+		else if (returnType == TYPE_Integer)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Integer);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Real)
+		else if (returnType == TYPE_Real)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Real);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Real2)
+		else if (returnType == TYPE_Real2)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Real2);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Real3)
+		else if (returnType == TYPE_Real3)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Real3);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Real4)
+		else if (returnType == TYPE_Real4)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Real4);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Type)
+		else if (returnType == TYPE_Type)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Type);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_String)
+		else if (returnType == TYPE_String)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::String);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Entity)
+		else if (returnType == TYPE_Entity)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Entity);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
 		}
-		else if (type == TYPE_Enum)
+		else if (returnType == TYPE_Enum)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Enum);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
-			parameter.generator->WriteCodeGlobalReference((Declaration)type);
+			parameter.generator->WriteCodeGlobalReference((Declaration)returnType);
 		}
-		else if (type.code == TypeCode::Struct)
+		else if (returnType.code == TypeCode::Struct)
 		{
 			parameter.generator->WriteCode((uint8)BaseType::Struct);
 			parameter.generator->WriteCode(parameter.results[i]);
 			parameter.generator->WriteCode((uint32)indices[i]);
-			parameter.generator->WriteCodeGlobalReference((Declaration)type);
+			parameter.generator->WriteCodeGlobalReference((Declaration)returnType);
 		}
 		else EXCEPTION("¿‡–Õ¥ÌŒÛ");
 	}

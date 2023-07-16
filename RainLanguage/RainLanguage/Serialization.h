@@ -8,7 +8,7 @@ struct Serializer
 	uint8* data;
 	uint32 point, size;
 	inline Serializer(uint32 capacity) :data((uint8*)InternalMalloc(capacity)), point(0), size(capacity) {}
-	void Ensure(uint32 size);
+	void Ensure(uint32 num);
 	void SerializeStringAgency(StringAgency* agency);
 	template<typename T>
 	void Serialize(const T& value)

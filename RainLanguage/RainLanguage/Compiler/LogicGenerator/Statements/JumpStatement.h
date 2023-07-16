@@ -8,7 +8,7 @@ public:
 	Expression* condition;
 	CodeLocalAddressReference* targetAddress;
 	JumpStatement(StatementType type, const Anchor& anchor, Expression* condition) :Statement(type | StatementType::Jump, anchor), condition(condition), targetAddress(NULL) {}
-	inline void SetJumpTarget(CodeLocalAddressReference* targetAddress) { this->targetAddress = targetAddress; }
+	inline void SetJumpTarget(CodeLocalAddressReference* address) { targetAddress = address; }
 	void Generator(StatementGeneratorParameter& parameter);
 	~JumpStatement();
 };

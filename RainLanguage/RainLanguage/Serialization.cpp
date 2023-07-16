@@ -1,16 +1,16 @@
 #include "Serialization.h"
 #include "String.h"
 
-void Serializer::Ensure(uint32 size)
+void Serializer::Ensure(uint32 num)
 {
-	if (point + size > this->size)
+	if (point + num > size)
 	{
-		while (point + size > this->size)
+		while (point + num > size)
 		{
-			if (this->size < 32)this->size = 32;
-			else this->size += this->size >> 2;
+			if (size < 32) size = 32;
+			else size += size >> 2;
 		}
-		data = Realloc(data, this->size);
+		data = Realloc(data, size);
 	}
 }
 

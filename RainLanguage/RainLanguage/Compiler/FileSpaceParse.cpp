@@ -4,9 +4,9 @@
 #include "../KeyWords.h"
 
 #define DISCARD_ATTRIBUTE \
-	for (uint32 i = 0; i < attributes.Count(); i++)\
-		MESSAGE2(parameter->messages, attributes[i], MessageType::LOGGER_LEVEL1_DISCARD_ATTRIBUTE);\
-	attributes.Clear();
+	for (uint32 i = 0; i < attributeCollector.Count(); i++)\
+		MESSAGE2(parameter->messages, attributeCollector[i], MessageType::LOGGER_LEVEL1_DISCARD_ATTRIBUTE);\
+	attributeCollector.Clear();
 
 #define CHECK_VISIABLE(line,defaultVisiable)\
 	if (visibility == Visibility::None)\
@@ -48,14 +48,14 @@ bool CheckIndent(const Line& line, uint32& indent, uint32 parentIndent)
 	return true;
 }
 
-bool TryParseAttributes(const Line& line, List<Anchor>& attributes, MessageCollector* messages)
+bool TryParseAttributes(const Line& line, List<Anchor>& attributeCollector, MessageCollector* messages)
 {
 	Lexical lexical;
 	if (TryAnalysis(line, 0, lexical, messages) && lexical.type == LexicalType::BracketLeft1)
 	{
 		while (TryAnalysis(line, lexical.anchor.GetEnd(), lexical, messages) && lexical.type == LexicalType::ConstString)
 		{
-			attributes.Add(lexical.anchor);
+			attributeCollector.Add(lexical.anchor);
 			if (TryAnalysis(line, lexical.anchor.GetEnd(), lexical, messages))
 			{
 				if (lexical.type == LexicalType::BracketRight1)
@@ -281,13 +281,13 @@ void ParseFunctionDeclaration(const Line& line, uint32 index, Anchor& name, bool
 	}
 }
 
-void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter)
+void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 	ParseFunctionDeclaration(line, index, name, true, parameters, returns, parameter->messages);
 	FileFunction* function = new (space->functions.Add())FileFunction(name, visibility, space, parameters, returns);
-	function->attributes.Add(attributes);
-	attributes.Clear();
+	function->attributes.Add(attributeCollector);
+	attributeCollector.Clear();
 	ParseBlock(line.indent, function->body, parameter);
 }
 
@@ -295,13 +295,13 @@ FileSpace::FileSpace(CompilingSpace* compiling, uint32 parentIndent, ParseParame
 variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), natives(0), relyCompilingSpaces(0), relySpaces(0)
 {
 	uint32 indent = INVALID;
-	List<Anchor> attributes = List<Anchor>(0);
+	List<Anchor> attributeCollector = List<Anchor>(0);
 	while (parameter->reader->ReadLine())
 	{
 	label_parse:
 		Line line = parameter->reader->CurrentLine();
 		if (line.content.IsEmpty()) return;
-		if (TryParseAttributes(line, attributes, parameter->messages)) continue;
+		if (TryParseAttributes(line, attributeCollector, parameter->messages)) continue;
 
 		Lexical lexical;
 		if (TryAnalysis(line, 0, lexical, parameter->messages))
@@ -317,7 +317,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 				if (parentIndent == INVALID) MESSAGE2(parameter->messages, line, MessageType::ERROR_INDENT)
 				else
 				{
-					this->attributes.Add(attributes.GetPointer(), attributes.Count());
+					this->attributes.Add(attributeCollector.GetPointer(), attributeCollector.Count());
 					return;
 				}
 			}
@@ -325,30 +325,30 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 			{
 				if (lexical.anchor == KeyWord_import())
 				{
-					if (attributes.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_ATTRIBUTE_INVALID);
+					if (attributeCollector.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_ATTRIBUTE_INVALID);
 					ParseImport(line, lexical, new (imports.Add())List<Anchor>(0), parameter->messages);
-					attributes.Clear();
+					attributeCollector.Clear();
 				}
 				else if (lexical.anchor == KeyWord_namespace())
 				{
-					ParseChild(line, attributes, lexical.anchor.GetEnd(), parameter);
-					attributes.Clear();
+					ParseChild(line, attributeCollector, lexical.anchor.GetEnd(), parameter);
+					attributeCollector.Clear();
 					goto label_parse;
 				}
-				else if (ParseDeclaration(line, attributes, parameter)) goto label_parse;
+				else if (ParseDeclaration(line, attributeCollector, parameter)) goto label_parse;
 			}
 			else if (IsReloadable(lexical.type))
 			{
-				ParseGlobalFunction(this, line, 0, Visibility::Space, attributes, parameter);
+				ParseGlobalFunction(this, line, 0, Visibility::Space, attributeCollector, parameter);
 				goto label_parse;
 			}
 			else MESSAGE2(parameter->messages, line, MessageType::ERROR_UNEXPECTED_LEXCAL);
 		}
 	}
-	this->attributes.Add(attributes.GetPointer(), attributes.Count());
+	this->attributes.Add(attributeCollector.GetPointer(), attributeCollector.Count());
 }
 
-void FileSpace::ParseChild(const Line& line, List<Anchor>& attributes, uint32 index, ParseParameter* parameter)
+void FileSpace::ParseChild(const Line& line, List<Anchor>& attributeCollector, uint32 index, ParseParameter* parameter)
 {
 	List<Anchor> name = List<Anchor>(0);
 	if (TryExtractName(line, index, index, &name, parameter->messages))
@@ -357,13 +357,13 @@ void FileSpace::ParseChild(const Line& line, List<Anchor>& attributes, uint32 in
 		CompilingSpace* space = compiling;
 		for (uint32 i = 0; i < name.Count(); i++)
 			space = space->GetChild(name[i].content);
-		(new (children.Add())FileSpace(space, line.indent, parameter))->attributes.Add(attributes.GetPointer(), attributes.Count());
+		(new (children.Add())FileSpace(space, line.indent, parameter))->attributes.Add(attributeCollector.GetPointer(), attributeCollector.Count());
 	}
 	else MESSAGE2(parameter->messages, line, MessageType::ERROR_MISSING_NAME);
 }
 
 //如果预读了下一行代码则返回true
-bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, ParseParameter* parameter)
+bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	uint32 index;
 	Visibility visibility = ParseVisibility(line, index, parameter->messages);
@@ -377,41 +377,41 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 		if (TryParseVariable(line, lexical.anchor.GetEnd(), name, type, expression, parameter->messages))
 		{
 			if (expression.content.IsEmpty())MESSAGE2(parameter->messages, name, MessageType::ERROR_CONSTANT_NOT_ASSIGNMENT)
-			else (new (variables.Add())FileVariable(name, visibility, this, true, type, expression))->attributes.Add(attributes);
+			else (new (variables.Add())FileVariable(name, visibility, this, true, type, expression))->attributes.Add(attributeCollector);
 		}
 		else MESSAGE2(parameter->messages, line, MessageType::ERROR_NOT_VARIABLE_DECLARATION);
-		attributes.Clear();
+		attributeCollector.Clear();
 	}
 	else if (lexical.anchor == KeyWord_enum())
 	{
-		ParseEnum(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
-		attributes.Clear();
+		ParseEnum(line, lexical.anchor.GetEnd(), visibility, attributeCollector, parameter);
+		attributeCollector.Clear();
 		return true;
 	}
 	else if (lexical.anchor == KeyWord_struct())
 	{
-		ParseStruct(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
-		attributes.Clear();
+		ParseStruct(line, lexical.anchor.GetEnd(), visibility, attributeCollector, parameter);
+		attributeCollector.Clear();
 		return true;
 	}
 	else if (lexical.anchor == KeyWord_class())
 	{
-		ParseClass(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
-		attributes.Clear();
+		ParseClass(line, lexical.anchor.GetEnd(), visibility, attributeCollector, parameter);
+		attributeCollector.Clear();
 		return true;
 	}
 	else if (lexical.anchor == KeyWord_interface())
 	{
-		ParseInterface(line, lexical.anchor.GetEnd(), visibility, attributes, parameter);
-		attributes.Clear();
+		ParseInterface(line, lexical.anchor.GetEnd(), visibility, attributeCollector, parameter);
+		attributeCollector.Clear();
 		return true;
 	}
 	else if (lexical.anchor == KeyWord_delegate())
 	{
 		List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 		ParseFunctionDeclaration(line, lexical.anchor.GetEnd(), name, false, parameters, returns, parameter->messages);
-		(new (delegates.Add())FileDelegate(name, visibility, this, parameters, returns))->attributes.Add(attributes);
-		attributes.Clear();
+		(new (delegates.Add())FileDelegate(name, visibility, this, parameters, returns))->attributes.Add(attributeCollector);
+		attributeCollector.Clear();
 	}
 	else if (lexical.anchor == KeyWord_coroutine())
 	{
@@ -419,39 +419,39 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributes, Par
 		if (TryParseTuple(line, lexical.anchor.GetEnd(), name, false, returns, parameter->messages))
 		{
 			CheckLineEnd(line, name.GetEnd(), parameter->messages);
-			(new (coroutines.Add())FileCoroutine(name, visibility, this, returns))->attributes.Add(attributes);
+			(new (coroutines.Add())FileCoroutine(name, visibility, this, returns))->attributes.Add(attributeCollector);
 		}
-		attributes.Clear();
+		attributeCollector.Clear();
 	}
 	else if (lexical.anchor == KeyWord_native())
 	{
 		List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 		ParseFunctionDeclaration(line, lexical.anchor.GetEnd(), name, false, parameters, returns, parameter->messages);
-		(new (natives.Add())FileNative(name, visibility, this, parameters, returns))->attributes.Add(attributes);
-		attributes.Clear();
+		(new (natives.Add())FileNative(name, visibility, this, parameters, returns))->attributes.Add(attributeCollector);
+		attributeCollector.Clear();
 	}
 	else if (TryParseVariable(line, index, name, type, expression, parameter->messages))
 	{
-		(new (variables.Add())FileVariable(name, visibility, this, false, type, expression))->attributes.Add(attributes);
-		attributes.Clear();
+		(new (variables.Add())FileVariable(name, visibility, this, false, type, expression))->attributes.Add(attributeCollector);
+		attributeCollector.Clear();
 	}
 	else
 	{
-		ParseGlobalFunction(this, line, index, visibility, attributes, parameter);
+		ParseGlobalFunction(this, line, index, visibility, attributeCollector, parameter);
 		return true;
 	}
 	return false;
 }
 
-void FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter)
+void FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	Lexical lexical;
 	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))return;
 	CheckLineEnd(line, lexical.anchor.GetEnd(), parameter->messages);
 
 	FileEnum* fileEnum = new (enums.Add())FileEnum(lexical.anchor, visibility, this);
-	fileEnum->attributes.Add(attributes);
-	attributes.Clear();
+	fileEnum->attributes.Add(attributeCollector);
+	attributeCollector.Clear();
 	uint32 indent = INVALID;
 	while (parameter->reader->ReadLine())
 	{
@@ -477,15 +477,15 @@ void FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility,
 	DISCARD_ATTRIBUTE;
 }
 
-void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter)
+void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	Lexical lexical;
 	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))return;
 	CheckLineEnd(line, lexical.anchor.GetEnd(), parameter->messages);
 
 	FileStruct* fileStruct = new (structs.Add())FileStruct(lexical.anchor, visibility, this);
-	fileStruct->attributes.Add(attributes);
-	attributes.Clear();
+	fileStruct->attributes.Add(attributeCollector);
+	attributeCollector.Clear();
 	uint32 indent = INVALID;
 	while (parameter->reader->ReadLine())
 	{
@@ -493,15 +493,15 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 		Line current = parameter->reader->CurrentLine();
 		if (!CheckIndent(current, indent, line.indent))break;
 
-		if (TryParseAttributes(current, attributes, parameter->messages)) continue;
+		if (TryParseAttributes(current, attributeCollector, parameter->messages)) continue;
 		Anchor name, expression; FileType type;
 		visibility = ParseVisibility(current, index, parameter->messages);
 		if (TryParseVariable(current, index, name, type, expression, parameter->messages))
 		{
 			if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 			if (!expression.content.IsEmpty()) MESSAGE2(parameter->messages, expression, MessageType::ERROR_INVALID_INITIALIZER);
-			(new (fileStruct->variables.Add()) FileStruct::Variable(name, type))->attributes.Add(attributes);
-			attributes.Clear();
+			(new (fileStruct->variables.Add()) FileStruct::Variable(name, type))->attributes.Add(attributeCollector);
+			attributeCollector.Clear();
 		}
 		else
 		{
@@ -509,8 +509,8 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 			List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 			ParseFunctionDeclaration(current, index, name, false, parameters, returns, parameter->messages);
 			FileFunction* function = new (fileStruct->functions.Add()) FileFunction(name, visibility, this, parameters, returns);
-			function->attributes.Add(attributes);
-			attributes.Clear();
+			function->attributes.Add(attributeCollector);
+			attributeCollector.Clear();
 			ParseBlock(indent, function->body, parameter);
 			goto label_parse;
 		}
@@ -518,13 +518,13 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 	DISCARD_ATTRIBUTE;
 }
 
-void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter)
+void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	Lexical lexical;
 	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))return;
 	FileClass* fileClass = new (classes.Add())FileClass(lexical.anchor, visibility, this);
-	fileClass->attributes.Add(attributes);
-	attributes.Clear();
+	fileClass->attributes.Add(attributeCollector);
+	attributeCollector.Clear();
 
 	index = lexical.anchor.GetEnd();
 	if (TryExtractName(line, index, index, &fileClass->parent, parameter->messages))
@@ -549,21 +549,21 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 		Line current = parameter->reader->CurrentLine();
 		if (!CheckIndent(current, indent, line.indent))break;
 
-		if (TryParseAttributes(current, attributes, parameter->messages))continue;
+		if (TryParseAttributes(current, attributeCollector, parameter->messages))continue;
 		visibility = ParseVisibility(current, index, parameter->messages);
 		Anchor name, expression; FileType type;
 		if (TryParseVariable(current, index, name, type, expression, parameter->messages))
 		{
 			CHECK_VISIABLE(current, Private);
-			(new (fileClass->variables.Add())FileClass::Variable(name, visibility, type, expression))->attributes.Add(attributes);
-			attributes.Clear();
+			(new (fileClass->variables.Add())FileClass::Variable(name, visibility, type, expression))->attributes.Add(attributeCollector);
+			attributeCollector.Clear();
 		}
 		else if (TryAnalysis(current, index, lexical, parameter->messages))
 		{
 			if (lexical.type == LexicalType::Negate)//析构函数
 			{
 				if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
-				if (attributes.Count())
+				if (attributeCollector.Count())
 				{
 					MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES);
 					DISCARD_ATTRIBUTE;
@@ -593,16 +593,16 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 								else MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 							}
 							FileClass::Constructor* constuctor = new (fileClass->constructors.Add())FileClass::Constructor(name, visibility, parameters, expression);
-							constuctor->attributes.Add(attributes);
-							attributes.Clear();
+							constuctor->attributes.Add(attributeCollector);
+							attributeCollector.Clear();
 							ParseBlock(current.indent, constuctor->body, parameter);
 						}
 						else
 						{
 							CheckLineEnd(current, index, parameter->messages);
 							FileFunction* function = new (fileClass->functions.Add())FileFunction(name, visibility, this, parameters, returns);
-							function->attributes.Add(attributes);
-							attributes.Clear();
+							function->attributes.Add(attributeCollector);
+							attributeCollector.Clear();
 							ParseBlock(indent, function->body, parameter);
 						}
 						goto label_parse;
@@ -614,13 +614,13 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 	DISCARD_ATTRIBUTE;
 }
 
-void FileSpace::ParseInterface(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter)
+void FileSpace::ParseInterface(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	Lexical lexical;
 	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))return;
 	FileInterface* fileInterface = new (interfaces.Add())FileInterface(lexical.anchor, visibility, this);
-	fileInterface->attributes.Add(attributes);
-	attributes.Clear();
+	fileInterface->attributes.Add(attributeCollector);
+	attributeCollector.Clear();
 
 	List<Anchor> names = List<Anchor>(0);
 	index = lexical.anchor.GetEnd();
@@ -639,13 +639,13 @@ lable_parse_inherits:
 		Line current = parameter->reader->CurrentLine();
 		if (!CheckIndent(current, indent, line.indent)) break;
 
-		if (TryParseAttributes(current, attributes, parameter->messages)) continue;
+		if (TryParseAttributes(current, attributeCollector, parameter->messages)) continue;
 		visibility = ParseVisibility(current, index, parameter->messages);
 		if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 		Anchor name; List<FileParameter> parameters = List<FileParameter>(0); List<FileType> returns = List<FileType>(0);
 		ParseFunctionDeclaration(current, index, name, false, parameters, returns, parameter->messages);
-		(new (fileInterface->functions.Add()) FileInterface::Function(name, parameters, returns))->attributes.Add(attributes);
-		attributes.Clear();
+		(new (fileInterface->functions.Add()) FileInterface::Function(name, parameters, returns))->attributes.Add(attributeCollector);
+		attributeCollector.Clear();
 	}
 	DISCARD_ATTRIBUTE;
 }

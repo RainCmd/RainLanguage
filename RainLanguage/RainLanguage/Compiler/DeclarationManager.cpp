@@ -205,16 +205,16 @@ bool DeclarationManager::IsBitwise(const Type& type)
 	EXCEPTION("无效的类型");
 }
 
-AbstractLibrary* DeclarationManager::GetLibrary(const String& name)
+AbstractLibrary* DeclarationManager::GetLibrary(const String& libraryName)
 {
-	if (name == kernelLibaray->name)return kernelLibaray;
-	else if (name == name)return selfLibaray;
+	if (libraryName == kernelLibaray->name) return kernelLibaray;
+	else if (libraryName == name) return selfLibaray;
 	for (uint32 i = 0; i < relies.Count(); i++)
-		if (relies[i]->name == name)
+		if (relies[i]->name == libraryName)
 			return relies[i];
 	if (loader)
 	{
-		Library* library = (Library*)loader(RainString(name.GetPointer(), name.GetLength()));
+		Library* library = (Library*)loader(RainString(libraryName.GetPointer(), libraryName.GetLength()));
 		if (library)
 		{
 			uint32 index = relies.Count();
@@ -223,7 +223,7 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& name)
 			return result;
 		}
 	}
-	MESSAGE6(messages, name, MessageType::ERROR_LIBRARY_LOAD_FAIL, 0, 0, 0, TEXT("引用程序集加载失败"));
+	MESSAGE6(messages, libraryName, MessageType::ERROR_LIBRARY_LOAD_FAIL, 0, 0, 0, TEXT("引用程序集加载失败"));
 	return NULL;
 }
 

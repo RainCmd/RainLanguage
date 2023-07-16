@@ -99,12 +99,12 @@ struct AbstractSpace
 	Dictionary<String, AbstractSpace*> children;
 	Dictionary<String, List<CompilingDeclaration, true>*> declarations;
 	AbstractSpace(AbstractSpace* parent, const String& name, const List<String>& attributes);
-	inline bool TryFind(String name, AbstractSpace*& space)
+	inline bool TryFind(String spaceName, AbstractSpace*& space)
 	{
-		for (AbstractSpace* index = this; index; index = index->parent)
+		for (AbstractSpace* spaceIndex = this; spaceIndex; spaceIndex = spaceIndex->parent)
 		{
-			space = index;
-			if (space->name == name || children.TryGet(name, space))
+			space = spaceIndex;
+			if (space->name == spaceName || children.TryGet(spaceName, space))
 				return true;
 		}
 		return false;

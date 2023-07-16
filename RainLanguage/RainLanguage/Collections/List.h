@@ -51,13 +51,13 @@ public:
 		other.size = 0;
 		return *this;
 	}
-	inline void Grow(uint32 count)
+	inline void Grow(uint32 num)
 	{
-		count += this->count;
-		if (count > size)
+		num += count;
+		if (num > size)
 		{
 			if (size < 4) size = 4;
-			while (size < count) size += size >> 1;
+			while (size < num) size += size >> 1;
 			values = Realloc<T>(values, size);
 		}
 	}
@@ -68,17 +68,17 @@ public:
 		else new (values + count)T(value);
 		count++;
 	}
-	inline void Add(const T* values, uint32 count)
+	inline void Add(const T* elements, uint32 elementCount)
 	{
-		Grow(count);
-		T* pointer = this->values + this->count;
-		this->count += count;
-		if (IsBitwise) Mcopy(values, pointer, count);
-		else while (count--)
+		Grow(elementCount);
+		T* pointer = values + count;
+		count += elementCount;
+		if (IsBitwise) Mcopy(elements, pointer, elementCount);
+		else while (elementCount--)
 		{
-			new (pointer)T(*values);
+			new (pointer)T(*elements);
 			pointer++;
-			values++;
+			elements++;
 		}
 	}
 	inline void Add(const List<T, IsBitwise>& list)
@@ -92,20 +92,20 @@ public:
 		count++;
 		return result;
 	}
-	void Insert(uint32 index, const T* values, uint32 count)
+	void Insert(uint32 index, const T* elements, uint32 elementCount)
 	{
-		Grow(count);
-		Mmove(this->values + index, this->values + index + count, this->count - index);
-		if (IsBitwise) Mcopy(values, this->values + index, count);
-		else for (uint32 i = 0; i < count; i++) new (this->values + index + i)T(values[i]);
-		this->count += count;
+		Grow(elementCount);
+		Mmove(values + index, values + index + elementCount, count - index);
+		if (IsBitwise) Mcopy(elements, values + index, elementCount);
+		else for (uint32 i = 0; i < elementCount; i++) new (values + index + i)T(elements[i]);
+		count += elementCount;
 	}
 	void Insert(uint32 index, const T& value) { Insert(index, &value, 1); }
-	void RemoveAt(uint32 index, uint32 count)
+	void RemoveAt(uint32 index, uint32 elementCount)
 	{
-		if (!IsBitwise) Destruct(values + index, count);
-		Mmove(values + index + count, values + index, this->count - count - index);
-		this->count -= count;
+		if (!IsBitwise) Destruct(values + index, elementCount);
+		Mmove(values + index + elementCount, values + index, count - elementCount - index);
+		count -= elementCount;
 	}
 	bool Remove(const T& value)
 	{
@@ -174,10 +174,10 @@ public:
 				return i;
 		return INVALID;
 	}
-	inline void SetCount(uint32 count)
+	inline void SetCount(uint32 newCount)
 	{
 		ASSERT_DEBUG(IsBitwise, "该操作会导致构造和析构调用次数不成对，不是纯数据类型可能会破坏内存");
-		this->count = count;
+		count = newCount;
 		if (count > size) Grow(count - size);
 	}
 	inline uint32 Count() const { return count; }
@@ -231,8 +231,8 @@ public:
 	inline uint32 Count() const { return count; }
 	inline const T* GetPointer() const { return source->GetPointer() + start; }
 	inline const T& operator[](uint32 index)const { return (*source)[start + index]; }
-	inline const Span Slice(uint32 start, uint32 count) const { return Span(source, start + this->start, count); }
-	inline const Span Slice(uint32 start) const { return Span(source, start + this->start, count - start); }
+	inline const Span Slice(uint32 subStart, uint32 subCount) const { return Span(source, subStart + this->start, subCount); }
+	inline const Span Slice(uint32 subStart) const { return Span(source, subStart + this->start, count - subStart); }
 	inline List<T, IsBitwise> ToList() const
 	{
 		List<T, IsBitwise> result(count);

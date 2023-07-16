@@ -19,7 +19,7 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 {
 	ASSERT(!gc, "不能在GC时创建新对象");
 	Handle handle;
-	uint8 gc = 0;
+	uint8 gcLevel = 0;
 	if (free)
 	{
 		handle = free;
@@ -30,13 +30,13 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 		if (!heads.Slack())
 		{
 			GC(false);
-			gc++;
+			gcLevel++;
 		}
 		if (!heads.Slack())
 		{
 			GC(true);
 			if (heads.Slack() < (heads.Count() >> 3)) heads.Grow(heads.Count() >> 3);
-			gc++;
+			gcLevel++;
 		}
 		handle = heads.Count();
 		heads.SetCount(handle + 1);
@@ -44,10 +44,10 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 	heap.SetCount(MemoryAlignment(heap.Count(), alignment));
 	if (heap.Slack() < size)
 	{
-		if (!gc) GC(false);
+		if (!gcLevel) GC(false);
 		if (heap.Slack() < size)
 		{
-			if (gc < 2)
+			if (gcLevel < 2)
 			{
 				GC(true);
 				if (heap.Slack() < (heap.Count() >> 3)) heap.Grow(heap.Count() >> 3);
@@ -92,19 +92,19 @@ void HeapAgency::Free(Handle handle, RuntimeClass* runtimeClass, uint8* address)
 
 void HeapAgency::Free(Handle handle)
 {
-	HeapAgency::Head* head = &heads[handle];
-	uint8* pointer = heap.GetPointer() + head->pointer;
-	if (head->type.dimension > 1)
+	HeapAgency::Head* value = &heads[handle];
+	uint8* pointer = heap.GetPointer() + value->pointer;
+	if (value->type.dimension > 1)
 	{
 		uint32 length = *(uint32*)pointer;
 		Handle* index = (Handle*)(pointer + 4);
 		while (length--) WeakRelease(index[length]);
 	}
-	else if (head->type.dimension)
+	else if (value->type.dimension)
 	{
 		uint32 length = *(uint32*)pointer;
-		uint32 elementSize = GetElementSize(head);
-		Type elementType = Type(head->type, head->type.dimension - 1);
+		uint32 elementSize = GetElementSize(value);
+		Type elementType = Type(value->type, value->type.dimension - 1);
 		pointer += 4;
 		if (elementType == TYPE_String)
 		{
@@ -133,21 +133,21 @@ void HeapAgency::Free(Handle handle)
 	}
 	else
 	{
-		if (head->type == TYPE_String) kernel->stringAgency->Release(*(string*)pointer);
-		else if (head->type == TYPE_Entity) kernel->entityAgency->Release(*(Entity*)pointer);
-		else switch (head->type.code)
+		if (value->type == TYPE_String) kernel->stringAgency->Release(*(string*)pointer);
+		else if (value->type == TYPE_Entity) kernel->entityAgency->Release(*(Entity*)pointer);
+		else switch (value->type.code)
 		{
 			case TypeCode::Struct:
-				kernel->libraryAgency->GetStruct(head->type)->WeakRelease(kernel, pointer);
+				kernel->libraryAgency->GetStruct(value->type)->WeakRelease(kernel, pointer);
 				break;
 			case TypeCode::Handle:
-				Free(handle, kernel->libraryAgency->GetClass(head->type), pointer);
+				Free(handle, kernel->libraryAgency->GetClass(value->type), pointer);
 				break;
 			case TypeCode::Interface: break;
 			case TypeCode::Delegate:
 			{
-				Delegate* value = (Delegate*)pointer;
-				switch (value->type)
+				Delegate* delegateValue = (Delegate*)pointer;
+				switch (delegateValue->type)
 				{
 					case FunctionType::Global:
 					case FunctionType::Native: break;
@@ -155,7 +155,7 @@ void HeapAgency::Free(Handle handle)
 					case FunctionType::Reality:
 					case FunctionType::Virtual:
 					case FunctionType::Abstract:
-						WeakRelease(value->target);
+						WeakRelease(delegateValue->target);
 						break;
 				}
 			}
@@ -179,17 +179,17 @@ void HeapAgency::Mark(uint8* address, const Declaration& declaration)
 void HeapAgency::Mark(Handle handle)
 {
 	if (!handle) return;
-	HeapAgency::Head* head = &heads[handle];
-	if (head->flag != flag)
+	HeapAgency::Head* value = &heads[handle];
+	if (value->flag != flag)
 	{
-		head->flag = flag;
-		if (head->type.dimension)
+		value->flag = flag;
+		if (value->type.dimension)
 		{
-			uint8* pointer = heap.GetPointer() + head->pointer;
+			uint8* pointer = heap.GetPointer() + value->pointer;
 			uint32 length = *(uint32*)pointer;
 			pointer += 4;
-			uint32 elementSize = GetElementSize(head);
-			Type elementType = Type(head->type, head->type.dimension - 1);
+			uint32 elementSize = GetElementSize(value);
+			Type elementType = Type(value->type, value->type.dimension - 1);
 			if (IsHandleType(elementType))
 				for (uint32 i = 0; i < length; i++)
 					Mark(*(Handle*)(pointer + i * elementSize));
@@ -205,18 +205,18 @@ void HeapAgency::Mark(Handle handle)
 					}
 			}
 		}
-		else if (head->type.code == TypeCode::Struct)
+		else if (value->type.code == TypeCode::Struct)
 		{
-			const List<uint32, true>* handleFields = &kernel->libraryAgency->GetStruct(head->type)->handleFields;
-			uint8* pointer = heap.GetPointer() + head->pointer;
+			const List<uint32, true>* handleFields = &kernel->libraryAgency->GetStruct(value->type)->handleFields;
+			uint8* pointer = heap.GetPointer() + value->pointer;
 			for (uint32 i = 0; i < handleFields->Count(); i++)
 				Mark(*(Handle*)(pointer + (*handleFields)[i]));
 		}
-		else if (head->type.code == TypeCode::Handle) Mark(heap.GetPointer() + head->pointer, head->type);
-		else if (head->type.code == TypeCode::Delegate)
+		else if (value->type.code == TypeCode::Handle) Mark(heap.GetPointer() + value->pointer, value->type);
+		else if (value->type.code == TypeCode::Delegate)
 		{
-			Delegate* value = (Delegate*)(heap.GetPointer() + head->pointer);
-			switch (value->type)
+			Delegate* delegateValue = (Delegate*)(heap.GetPointer() + value->pointer);
+			switch (delegateValue->type)
 			{
 				case FunctionType::Global:
 				case FunctionType::Native: break;
@@ -224,7 +224,7 @@ void HeapAgency::Mark(Handle handle)
 				case FunctionType::Reality:
 				case FunctionType::Virtual:
 				case FunctionType::Abstract:
-					Mark(value->target);
+					Mark(delegateValue->target);
 					break;
 			}
 		}
@@ -233,23 +233,23 @@ void HeapAgency::Mark(Handle handle)
 
 uint32 HeapAgency::Tidy(Handle handle, uint32 top)
 {
-	HeapAgency::Head* head = &heads[handle];
-	if (head->pointer != top)
+	HeapAgency::Head* value = &heads[handle];
+	if (value->pointer != top)
 	{
-		top = MemoryAlignment(top, head->alignment);
-		Mmove<uint8>(heap.GetPointer() + head->pointer, heap.GetPointer() + top, head->size);
-		head->pointer = top;
+		top = MemoryAlignment(top, value->alignment);
+		Mmove<uint8>(heap.GetPointer() + value->pointer, heap.GetPointer() + top, value->size);
+		value->pointer = top;
 	}
-	return head->size;
+	return value->size;
 }
 
 Handle HeapAgency::Recycle(Handle handle)
 {
-	HeapAgency::Head* head = &heads[handle];
-	Handle next = head->next;
+	HeapAgency::Head* value = &heads[handle];
+	Handle next = value->next;
 	Free(handle);
-	head->next = free;
-	head->type = Type();
+	value->next = free;
+	value->type = Type();
 	free = handle;
 	return next;
 }

@@ -66,13 +66,13 @@ Handle RuntimeInfo::GetReflectionAttributes(Kernel* kernel)
 	{
 		reflectionAttributes = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_ReadonlyStrings);
 		kernel->heapAgency->StrongReference(reflectionAttributes);
-		Handle attributes = kernel->heapAgency->Alloc(TYPE_String, this->attributes.Count());
-		*(Handle*)kernel->heapAgency->GetPoint(reflectionAttributes) = attributes;
-		kernel->heapAgency->WeakReference(attributes);
-		for (uint32 i = 0; i < this->attributes.Count(); i++)
+		Handle result = kernel->heapAgency->Alloc(TYPE_String, attributes.Count());
+		*(Handle*)kernel->heapAgency->GetPoint(reflectionAttributes) = result;
+		kernel->heapAgency->WeakReference(result);
+		for (uint32 i = 0; i < attributes.Count(); i++)
 		{
-			*(string*)kernel->heapAgency->GetArrayPoint(attributes, i) = this->attributes[i];
-			kernel->stringAgency->Reference(this->attributes[i]);
+			*(string*)kernel->heapAgency->GetArrayPoint(result, i) = attributes[i];
+			kernel->stringAgency->Reference(attributes[i]);
 		}
 	}
 	return reflectionAttributes;

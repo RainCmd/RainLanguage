@@ -131,15 +131,15 @@ public:
 		}
 		return *this;
 	}
-	inline character operator[](uint32 index) const { return share->pool->characters[share->pool->slots[this->index].position + index]; }
+	inline character operator[](uint32 characterIndex) const { return share->pool->characters[share->pool->slots[index].position + characterIndex]; }
 	inline bool operator==(const character* other) const
 	{
-		uint32 index = 0, length = GetLength();
+		uint32 characterIndex = 0, length = GetLength();
 		const character* pointer = GetPointer();
-		while (other[index])
-			if (index < length && other[index] == pointer[index]) index++;
+		while (other[characterIndex])
+			if (characterIndex < length && other[characterIndex] == pointer[characterIndex]) characterIndex++;
 			else return false;
-		return index == length;
+		return characterIndex == length;
 	}
 	inline bool operator!=(const character* other) const { return !(*this == other); }
 	inline bool operator==(const String& other) const

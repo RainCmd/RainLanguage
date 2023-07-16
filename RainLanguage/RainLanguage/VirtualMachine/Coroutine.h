@@ -19,20 +19,20 @@ public:
 	uint8* stack;
 	uint8* cacheData[2];
 	Coroutine(Kernel* kernel, uint32 capacity);
-	inline bool EnsureStackSize(uint32 size)
+	inline bool EnsureStackSize(uint32 stackSize)
 	{
-		if (size > this->size)
+		if (stackSize > size)
 		{
-			while (size > this->size) this->size += this->size >> 2;
-			if (this->size >= MAX_STACK_SIZE)return true;
-			uint32 pointer = (uint32)(cacheData[1] - stack);
-			stack = Realloc<uint8>(stack, this->size);
-			cacheData[1] = stack + pointer;
+			while (stackSize > size) size += size >> 2;
+			if (size >= MAX_STACK_SIZE) return true;
+			uint32 offset = (uint32)(cacheData[1] - stack);
+			stack = Realloc<uint8>(stack, size);
+			cacheData[1] = stack + offset;
 		}
 		return false;
 	}
-	void Initialize(Invoker* invoker, bool ignoreWait);
-	void Exit(const String& message, uint32 pointer);
+	void Initialize(Invoker* sourceInvoker, bool isIgnoreWait);
+	void Exit(const String& message, uint32 exitPointer);
 	void Run();
 	inline void Update()
 	{

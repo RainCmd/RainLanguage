@@ -62,12 +62,8 @@ public:
 			ASSERT(version == dictionary->version, "迭代源已被修改");
 			while (index < dictionary->top)
 			{
-				Slot* slot = dictionary->slots + index++;
-				if (slot->hash)
-				{
-					this->slot = slot;
-					return true;
-				}
+				slot = dictionary->slots + index++;
+				if (slot->hash) return true;
 			}
 			this->slot = NULL;
 			return false;

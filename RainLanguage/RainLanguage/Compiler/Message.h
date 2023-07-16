@@ -26,8 +26,8 @@ private:
 public:
 	inline ErrorLevel GetLevel() const { return level; }
 	inline MessageCollector(ErrorLevel level) :stringAgency(512), messages{ List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0), List<Message>(0) }, level(level) {}
-	inline List<Message>* GetMessages(ErrorLevel level) { return messages + (uint32)level; }
-	inline const List<Message>* GetMessages(ErrorLevel level) const { return messages + (uint32)level; }
+	inline List<Message>* GetMessages(ErrorLevel errorLevel) { return messages + (uint32)errorLevel; }
+	inline const List<Message>* GetMessages(ErrorLevel errorLevel) const { return messages + (uint32)errorLevel; }
 	inline void Add(const String& source, MessageType type, uint32 line, uint32 start, uint32 length, const character* message)
 	{
 		if (type != MessageType::INVALID) new (GetMessages(::GetLevel(type))->Add())Message(stringAgency.Add(source), type, line, start, length, stringAgency.Add(message));

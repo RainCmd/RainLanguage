@@ -620,9 +620,9 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 	}
 }
 
-void RuntimeLibrary::InitRuntimeData(Kernel* kernel, const Library* library, uint32 selfLibraryIndex)
+void RuntimeLibrary::InitRuntimeData(Kernel* _kernel, const Library* library, uint32 selfLibraryIndex)
 {
-	this->kernel = kernel;
+	kernel = _kernel;
 	LibraryAgency* agency = kernel->libraryAgency;
 
 	List<LocalToGlobalMap> maps(library->imports.Count());

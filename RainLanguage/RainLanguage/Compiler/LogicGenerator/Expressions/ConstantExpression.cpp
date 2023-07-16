@@ -1,8 +1,8 @@
 #include "ConstantExpression.h"
 
-bool ConstantBooleanExpression::TryEvaluation(bool& value, LogicGenerateParameter&)
+bool ConstantBooleanExpression::TryEvaluation(bool& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
@@ -13,33 +13,33 @@ void ConstantBooleanExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(value);
 }
 
-bool ConstantByteExpression::TryEvaluation(uint8& value, LogicGenerateParameter&)
+bool ConstantByteExpression::TryEvaluation(uint8& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantByteExpression::TryEvaluation(character& value, LogicGenerateParameter&)
+bool ConstantByteExpression::TryEvaluation(character& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantByteExpression::TryEvaluation(integer& value, LogicGenerateParameter&)
+bool ConstantByteExpression::TryEvaluation(integer& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantByteExpression::TryEvaluation(real& value, LogicGenerateParameter&)
+bool ConstantByteExpression::TryEvaluation(real& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantByteExpression::TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter&)
+bool ConstantByteExpression::TryEvaluationIndices(List<integer, true>& result, LogicGenerateParameter&)
 {
-	value.Add(this->value);
+	result.Add(value);
 	return true;
 }
 
@@ -50,27 +50,27 @@ void ConstantByteExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(value);
 }
 
-bool ConstantCharExpression::TryEvaluation(character& value, LogicGenerateParameter&)
+bool ConstantCharExpression::TryEvaluation(character& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantCharExpression::TryEvaluation(integer& value, LogicGenerateParameter&)
+bool ConstantCharExpression::TryEvaluation(integer& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantCharExpression::TryEvaluation(real& value, LogicGenerateParameter&)
+bool ConstantCharExpression::TryEvaluation(real& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantCharExpression::TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter&)
+bool ConstantCharExpression::TryEvaluationIndices(List<integer, true>& result, LogicGenerateParameter&)
 {
-	value.Add(this->value);
+	result.Add(value);
 	return true;
 }
 
@@ -81,21 +81,21 @@ void ConstantCharExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(value);
 }
 
-bool ConstantIntegerExpression::TryEvaluation(integer& value, LogicGenerateParameter&)
+bool ConstantIntegerExpression::TryEvaluation(integer& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
-bool ConstantIntegerExpression::TryEvaluation(real& value, LogicGenerateParameter&)
+bool ConstantIntegerExpression::TryEvaluation(real& result, LogicGenerateParameter&)
 {
-	value = (real)this->value;
+	result = (real)value;
 	return true;
 }
 
-bool ConstantIntegerExpression::TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter&)
+bool ConstantIntegerExpression::TryEvaluationIndices(List<integer, true>& result, LogicGenerateParameter&)
 {
-	value.Add(this->value);
+	result.Add(value);
 	return true;
 }
 
@@ -106,9 +106,9 @@ void ConstantIntegerExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(value);
 }
 
-bool ConstantRealExpression::TryEvaluation(real& value, LogicGenerateParameter&)
+bool ConstantRealExpression::TryEvaluation(real& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 
@@ -119,9 +119,9 @@ void ConstantRealExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(value);
 }
 
-bool ConstantStringExpression::TryEvaluation(String& value, LogicGenerateParameter&)
+bool ConstantStringExpression::TryEvaluation(String& result, LogicGenerateParameter&)
 {
-	value = this->value;
+	result = value;
 	return true;
 }
 

@@ -31,9 +31,9 @@ String AbstractSpace::GetFullName(StringAgency* stringAgency)
 	String result = name;
 	String array[3];
 	array[1] = stringAgency->Add(TEXT("."));
-	for (AbstractSpace* index = parent; index; index = index->parent)
+	for (AbstractSpace* space = parent; space; space = space->parent)
 	{
-		array[0] = index->name;
+		array[0] = space->name;
 		array[2] = result;
 		result = stringAgency->Combine(array, 3);
 	}

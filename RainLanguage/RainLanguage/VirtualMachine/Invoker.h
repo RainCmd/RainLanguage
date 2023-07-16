@@ -23,7 +23,7 @@ public:
 	uint32 hold;
 	Coroutine* coroutine;
 	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), frames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), exitMessage(), hold(0), coroutine(NULL) {}
-	inline void StateAssert(InvokerState state) const { ASSERT(this->state == state, "无效的操作"); }
+	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "无效的操作"); }
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, Type type) const;
 	bool IsPause() const;
@@ -70,7 +70,7 @@ public:
 	void Recycle();
 
 	void Initialize(const Function& function);
-	void Initialize(uint32 entry, const CallableInfo* info);
+	void Initialize(uint32 codeEntry, const CallableInfo* callableInfo);
 	void SetReturns(const uint8* pointer);
 	void GetParameters(uint8* pointer);
 	void GetReturns(const Handle results);

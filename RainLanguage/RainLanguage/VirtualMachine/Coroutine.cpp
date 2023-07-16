@@ -60,16 +60,16 @@ Coroutine::Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceI
 	cacheData[1] = stack;
 }
 
-void Coroutine::Initialize(Invoker* invoker, bool ignoreWait)
+void Coroutine::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 {
 	pause = false;
 	exitMessage = String();
 	wait = 0;
+	this->invoker = sourceInvoker;
 	instanceID = invoker->instanceID;
 	invoker->coroutine = this;
-	this->invoker = invoker;
 	kernelInvoker = NULL;
-	this->ignoreWait = ignoreWait;
+	ignoreWait = isIgnoreWait;
 	this->pointer = invoker->entry;
 	bottom = top = invoker->info->returns.size;
 	if (EnsureStackSize(top + SIZE(Frame) + invoker->info->returns.Count() * 4 + invoker->info->parameters.size)) EXCEPTION("栈溢出");
@@ -80,10 +80,10 @@ void Coroutine::Initialize(Invoker* invoker, bool ignoreWait)
 		returnAddress[i] = LOCAL(invoker->info->returns.GetOffsets()[i]);
 	invoker->GetParameters(stack + bottom + SIZE(Frame) + invoker->info->returns.Count() * 4);
 }
-void Coroutine::Exit(const String& message, uint32 pointer)
+void Coroutine::Exit(const String& message, uint32 exitPointer)
 {
 	exitMessage = message;
-	invoker->PushStackFrame(pointer);
+	invoker->PushStackFrame(exitPointer);
 	Frame* index = (Frame*)(stack + bottom);
 	while (index->pointer != INVALID)
 	{
@@ -137,11 +137,11 @@ label_next_instruct:
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle handle = VARIABLE(Handle, handleValue);
 			uint8* coroutine;
-			Invoker* invoker;
-			if (!kernel->heapAgency->TryGetPoint(handle, coroutine))EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_NULL_REFERENCE);
-			invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
-			ASSERT_DEBUG(invoker, "协程的引用计数逻辑可能有bug");
-			if (invoker->state < InvokerState::Running) goto label_next_instruct;
+			Invoker* waitingInvoker;
+			if (!kernel->heapAgency->TryGetPoint(handle, coroutine)) EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_NULL_REFERENCE);
+			waitingInvoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
+			ASSERT_DEBUG(waitingInvoker, "协程的引用计数逻辑可能有bug");
+			if (waitingInvoker->state < InvokerState::Running) goto label_next_instruct;
 			else if (ignoreWait) EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_IGNORE_WAIT_BUT_COROUTINE_NOT_COMPLETED);
 			EXCEPTION_JUMP(4, BASE_WaitCoroutine);
 		}
@@ -324,9 +324,9 @@ label_next_instruct:
 				case FunctionType::Global:
 				{
 					Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
-					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-					invoker->Reference();
-					coroutine = invoker->instanceID;
+					Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(function);
+					newInvoker->Reference();
+					coroutine = newInvoker->instanceID;
 					flag = false;
 					instruct += 6 + SIZE(Declaration) + SIZE(Function);
 				}
@@ -341,10 +341,10 @@ label_next_instruct:
 					{
 						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
 						ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
-						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
-						invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
-						invoker->Reference();
-						coroutine = invoker->instanceID;
+						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+						newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
+						newInvoker->Reference();
+						coroutine = newInvoker->instanceID;
 						flag = true;
 					}
 					else EXCEPTION_EXIT(BASE_CreateCoroutine_Box, EXCEPTION_NULL_REFERENCE);
@@ -357,9 +357,9 @@ label_next_instruct:
 					uint8* address = &VARIABLE(uint8, addressValue);
 					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
 					Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
-					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
-					if (IsHandleType(targetType)) invoker->SetHandleParameter(0, *(Handle*)address);
-					else invoker->SetStructParameter(0, address, targetType);
+					Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+					if (IsHandleType(targetType)) newInvoker->SetHandleParameter(0, *(Handle*)address);
+					else newInvoker->SetStructParameter(0, address, targetType);
 					flag = true;
 					instruct += 6 + SIZE(Declaration) + SIZE(MemberFunction) + SIZE(Type);
 				}
@@ -373,9 +373,9 @@ label_next_instruct:
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
 						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
-						invoker->Reference();
-						coroutine = invoker->instanceID;
+						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
+						newInvoker->Reference();
+						coroutine = newInvoker->instanceID;
 					}
 					else EXCEPTION_EXIT(BASE_CreateCoroutine, EXCEPTION_NULL_REFERENCE);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine);
@@ -404,9 +404,9 @@ label_next_instruct:
 			{
 				case FunctionType::Global:
 				{
-					Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-					invoker->Reference();
-					coroutine = invoker->instanceID;
+					Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+					newInvoker->Reference();
+					coroutine = newInvoker->instanceID;
 					flag = false;
 				}
 				break;
@@ -416,10 +416,10 @@ label_next_instruct:
 					Type targetType;
 					if (kernel->heapAgency->TryGetType(delegateInfo.target, targetType))
 					{
-						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-						invoker->Reference();
-						invoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
-						coroutine = invoker->instanceID;
+						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+						newInvoker->Reference();
+						newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
+						coroutine = newInvoker->instanceID;
 						flag = true;
 					}
 					else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
@@ -429,10 +429,10 @@ label_next_instruct:
 				case FunctionType::Virtual:
 					if (kernel->heapAgency->IsValid(delegateInfo.target))
 					{
-						Invoker* invoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
-						invoker->Reference();
-						invoker->SetHandleParameter(0, delegateInfo.target);
-						coroutine = invoker->instanceID;
+						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+						newInvoker->Reference();
+						newInvoker->SetHandleParameter(0, delegateInfo.target);
+						coroutine = newInvoker->instanceID;
 						flag = true;
 					}
 					else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
@@ -523,14 +523,14 @@ label_next_instruct:
 			uint32 start = flag ? 1u : 0u;
 			uint32 count = INSTRUCT_VALUE(uint32, 5) + start;
 			uint8* coroutine;
-			Invoker* invoker;
+			Invoker* targetInvoker;
 			if (!kernel->heapAgency->TryGetPoint(handle, coroutine))
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
 				EXCEPTION_EXIT(BASE_SetCoroutineParameter, EXCEPTION_NULL_REFERENCE);
 			}
-			invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
-			ASSERT_DEBUG(invoker, "协程的引用计数逻辑可能有bug");
+			targetInvoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
+			ASSERT_DEBUG(targetInvoker, "协程的引用计数逻辑可能有bug");
 			instruct += 13;
 			for (uint32 i = start; i < count; i++, instruct += 5)
 				switch (INSTRUCT_VALUE(BaseType, 0))
@@ -538,87 +538,87 @@ label_next_instruct:
 					case BaseType::Struct:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetStructParameter(i, &VARIABLE(uint8, address), Type(INSTRUCT_VALUE(Declaration, 5), 0));
+						targetInvoker->SetStructParameter(i, &VARIABLE(uint8, address), Type(INSTRUCT_VALUE(Declaration, 5), 0));
 						instruct += SIZE(Declaration);
 					}
 					break;
 					case BaseType::Bool:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(bool, address));
+						targetInvoker->SetParameter(i, VARIABLE(bool, address));
 					}
 					break;
 					case BaseType::Byte:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(uint8, address));
+						targetInvoker->SetParameter(i, VARIABLE(uint8, address));
 					}
 					break;
 					case BaseType::Char:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(character, address));
+						targetInvoker->SetParameter(i, VARIABLE(character, address));
 					}
 					break;
 					case BaseType::Integer:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(integer, address));
+						targetInvoker->SetParameter(i, VARIABLE(integer, address));
 					}
 					break;
 					case BaseType::Real:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(real, address));
+						targetInvoker->SetParameter(i, VARIABLE(real, address));
 					}
 					break;
 					case BaseType::Real2:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(Real2, address));
+						targetInvoker->SetParameter(i, VARIABLE(Real2, address));
 					}
 					break;
 					case BaseType::Real3:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(Real3, address));
+						targetInvoker->SetParameter(i, VARIABLE(Real3, address));
 					}
 					break;
 					case BaseType::Real4:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(Real4, address));
+						targetInvoker->SetParameter(i, VARIABLE(Real4, address));
 					}
 					break;
 					case BaseType::Enum:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(integer, address), Type(INSTRUCT_VALUE(Declaration, 5), 0));
+						targetInvoker->SetParameter(i, VARIABLE(integer, address), Type(INSTRUCT_VALUE(Declaration, 5), 0));
 						instruct += SIZE(Declaration);
 					}
 					break;
 					case BaseType::Type:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetParameter(i, VARIABLE(Type, address));
+						targetInvoker->SetParameter(i, VARIABLE(Type, address));
 					}
 					break;
 					case BaseType::Handle:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetHandleParameter(i, VARIABLE(Handle, address));
+						targetInvoker->SetHandleParameter(i, VARIABLE(Handle, address));
 					}
 					break;
 					case BaseType::String:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetStringParameter(i, VARIABLE(string, address));
+						targetInvoker->SetStringParameter(i, VARIABLE(string, address));
 					}
 					break;
 					case BaseType::Entity:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->SetEntityParameter(i, VARIABLE(Entity, address));
+						targetInvoker->SetEntityParameter(i, VARIABLE(Entity, address));
 					}
 					break;
 					default: EXCEPTION("无效的类型");
@@ -631,16 +631,16 @@ label_next_instruct:
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& handle = VARIABLE(Handle, handleValue);
 			uint64 coroutine;
-			Invoker* invoker;
+			Invoker* targetInvoker;
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
 			if (!kernel->heapAgency->TryGetValue(handle, coroutine))
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
 				EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_NULL_REFERENCE);
 			}
-			invoker = kernel->coroutineAgency->GetInvoker(coroutine);
-			ASSERT_DEBUG(invoker, "调用为空，编译器可能算法有问题");
-			if (invoker->state != InvokerState::Completed)
+			targetInvoker = kernel->coroutineAgency->GetInvoker(coroutine);
+			ASSERT_DEBUG(targetInvoker, "调用为空，编译器可能算法有问题");
+			if (targetInvoker->state != InvokerState::Completed)
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
 				EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_COROUTINE_NOT_COMPLETED);
@@ -652,69 +652,69 @@ label_next_instruct:
 					case BaseType::Struct:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						invoker->GetStructReturnValue(INSTRUCT_VALUE(uint32, 5), &VARIABLE(uint8, address), INSTRUCT_VALUE(Type, 9));
+						targetInvoker->GetStructReturnValue(INSTRUCT_VALUE(uint32, 5), &VARIABLE(uint8, address), INSTRUCT_VALUE(Type, 9));
 						instruct += SIZE(Type);
 					}
 					break;
 					case BaseType::Bool:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(bool, address) = invoker->GetBoolReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(bool, address) = targetInvoker->GetBoolReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Byte:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(uint8, address) = invoker->GetByteReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(uint8, address) = targetInvoker->GetByteReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Char:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(character, address) = invoker->GetCharReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(character, address) = targetInvoker->GetCharReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Integer:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(integer, address) = invoker->GetIntegerReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(integer, address) = targetInvoker->GetIntegerReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Real:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(real, address) = invoker->GetRealReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(real, address) = targetInvoker->GetRealReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Real2:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(Real2, address) = invoker->GetReal2ReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(Real2, address) = targetInvoker->GetReal2ReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Real3:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(Real3, address) = invoker->GetReal3ReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(Real3, address) = targetInvoker->GetReal3ReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Real4:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(Real4, address) = invoker->GetReal4ReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(Real4, address) = targetInvoker->GetReal4ReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Enum:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(integer, address) = invoker->GetEnumReturnValue(INSTRUCT_VALUE(uint32, 5), Type(INSTRUCT_VALUE(Declaration, 9), 1));
+						VARIABLE(integer, address) = targetInvoker->GetEnumReturnValue(INSTRUCT_VALUE(uint32, 5), Type(INSTRUCT_VALUE(Declaration, 9), 1));
 						instruct += SIZE(Declaration);
 					}
 					break;
 					case BaseType::Type:
 					{
 						uint32 address = INSTRUCT_VALUE(uint32, 1);
-						VARIABLE(Type, address) = invoker->GetTypeReturnValue(INSTRUCT_VALUE(uint32, 5));
+						VARIABLE(Type, address) = targetInvoker->GetTypeReturnValue(INSTRUCT_VALUE(uint32, 5));
 					}
 					break;
 					case BaseType::Handle:
@@ -722,7 +722,7 @@ label_next_instruct:
 						uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
 						Handle& address = VARIABLE(Handle, addressValue);
 						kernel->heapAgency->StrongRelease(address);
-						address = invoker->GetHandleReturnValue(INSTRUCT_VALUE(uint32, 5));
+						address = targetInvoker->GetHandleReturnValue(INSTRUCT_VALUE(uint32, 5));
 						kernel->heapAgency->StrongReference(address);
 					}
 					break;
@@ -731,7 +731,7 @@ label_next_instruct:
 						uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
 						string& address = VARIABLE(string, addressValue);
 						kernel->stringAgency->Release(address);
-						address = invoker->GetStringReturnValue(INSTRUCT_VALUE(uint32, 5));
+						address = targetInvoker->GetStringReturnValue(INSTRUCT_VALUE(uint32, 5));
 						kernel->stringAgency->Reference(address);
 					}
 					break;
@@ -740,7 +740,7 @@ label_next_instruct:
 						uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
 						Entity& address = VARIABLE(Entity, addressValue);
 						kernel->entityAgency->Release(address);
-						address = invoker->GetEntityReturnValue(INSTRUCT_VALUE(uint32, 5));
+						address = targetInvoker->GetEntityReturnValue(INSTRUCT_VALUE(uint32, 5));
 						kernel->entityAgency->Reference(address);
 					}
 					break;
@@ -756,9 +756,9 @@ label_next_instruct:
 			uint64 coroutine;
 			if (kernel->heapAgency->TryGetValue(handle, coroutine))
 			{
-				Invoker* invoker = kernel->coroutineAgency->GetInvoker(coroutine);
-				ASSERT_DEBUG(invoker, "调用为空，编译器可能算法有问题");
-				invoker->Start(true, ignoreWait);
+				Invoker* targetInvoker = kernel->coroutineAgency->GetInvoker(coroutine);
+				ASSERT_DEBUG(targetInvoker, "调用为空，编译器可能算法有问题");
+				targetInvoker->Start(true, ignoreWait);
 			}
 			else EXCEPTION_EXIT(BASE_CoroutineStart, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4, BASE_CoroutineStart);
@@ -1303,11 +1303,11 @@ label_next_instruct:
 			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
 			real* target = &VARIABLE(real, resultValue);
 			real* source = &VARIABLE(real, sourceValue);
-			uint32 flag = INSTRUCT_VALUE(uint32, 9);
-			while (flag)
+			uint32 assignmentFlag = INSTRUCT_VALUE(uint32, 9);
+			while (assignmentFlag)
 			{
-				target[flag & 0x3] = source[(flag >> 2) & 3];
-				flag >>= 5;
+				target[assignmentFlag & 0x3] = source[(assignmentFlag >> 2) & 3];
+				assignmentFlag >>= 5;
 			}
 			instruct += 13;
 		}

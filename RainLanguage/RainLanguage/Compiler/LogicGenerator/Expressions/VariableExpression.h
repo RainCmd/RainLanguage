@@ -47,9 +47,9 @@ public:
 class VariableMemberExpression :public VariableExpression
 {
 	LogicVariable logicVariable;
-	void Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type);
+	void Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& targetType);
 	void GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset);
-	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& type);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& targetType);
 public:
 	Expression* target;
 	CompilingDeclaration declaration;

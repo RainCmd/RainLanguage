@@ -118,14 +118,14 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
-void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
+void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& elementType)
 {
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
 	parameter.generator->WriteCode(arrayParameter.results[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, type), arrayParameter.results[0], indexExpression, offset);
+	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, elementType), arrayParameter.results[0], indexExpression, offset);
 }
 
 void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter)
@@ -145,18 +145,18 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
 	indexExpression->Generator(indexParameter);
-	Type type = result.type;
-	if (type.dimension) type = TYPE_Array;
-	switch (type.code)
+	Type resultType = result.type;
+	if (resultType.dimension) resultType = TYPE_Array;
+	switch (resultType.code)
 	{
 		case TypeCode::Invalid: EXCEPTION("ÎÞÐ§µÄTypeCode");
 		case TypeCode::Struct:
-			if (type == TYPE_Bool || type == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_1);
-			else if (type == TYPE_Char)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_2);
-			else if (type == TYPE_Integer || type == TYPE_Real)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_8);
-			else if (type == TYPE_String)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_String);
-			else if (type == TYPE_Entity)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Entity);
-			else if (parameter.manager->IsBitwise(type))
+			if (resultType == TYPE_Bool || resultType == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_1);
+			else if (resultType == TYPE_Char)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_2);
+			else if (resultType == TYPE_Integer || resultType == TYPE_Real)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_8);
+			else if (resultType == TYPE_String)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_String);
+			else if (resultType == TYPE_Entity)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Entity);
+			else if (parameter.manager->IsBitwise(resultType))
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Bitwise);
 				parameter.generator->WriteCode(arrayVariable);
@@ -214,9 +214,9 @@ ArrayEvaluationExpression::~ArrayEvaluationExpression()
 	delete indexExpression; indexExpression = NULL;
 }
 
-void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
+void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& elementType)
 {
-	LogicVariable result = parameter.GetResult(0, type);
+	LogicVariable result = parameter.GetResult(0, elementType);
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	CodeLocalAddressReference clearAddress = CodeLocalAddressReference();
@@ -231,7 +231,7 @@ void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parame
 	parameter.generator->WriteCode(Instruct::BASE_Datazero);
 	parameter.generator->WriteCode(result);
 	uint8 alignment;
-	parameter.generator->WriteCode(parameter.manager->GetStackSize(type, alignment));
+	parameter.generator->WriteCode(parameter.manager->GetStackSize(elementType, alignment));
 	endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 

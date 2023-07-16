@@ -4,9 +4,9 @@
 #include "../DeclarationManager.h"
 #include "Generator.h"
 
-void VariableGenerator::Variable::SetAddress(Generator* generator, uint32 address)
+void VariableGenerator::Variable::SetAddress(Generator* generator, uint32 targetAddress)
 {
-	reference->SetAddress(generator, this->address + address);
+	reference->SetAddress(generator, address + targetAddress);
 }
 
 VariableGenerator::Variable::~Variable()

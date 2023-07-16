@@ -18,16 +18,16 @@ CompilingDeclaration LambdaClosure::Convert(const Anchor& name, const CompilingD
 {
 	CompilingDeclaration result;
 	if (map.TryGet(declaration, result)) return result;
-	CompilingClass* closure = GetClosure();
-	AbstractClass* abstractClosure = environment->manager->selfLibaray->classes[closure->declaration.index];
-	result = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, closure->variables.Count(), closure->declaration.index);
+	CompilingClass* compilingClosure = GetClosure();
+	AbstractClass* abstractClosure = environment->manager->selfLibaray->classes[compilingClosure->declaration.index];
+	result = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, compilingClosure->variables.Count(), compilingClosure->declaration.index);
 	CompilingClass::Variable* variable = new CompilingClass::Variable(name, result, List<Anchor>(0), Anchor());
-	closure->variables.Add(variable);
+	compilingClosure->variables.Add(variable);
 	variable->type = environment->GetVariableType(declaration);
 	uint8 alignment;
 	uint32 size = environment->manager->GetStackSize(variable->type, alignment);
 	abstractClosure->size = MemoryAlignment(abstractClosure->size, alignment);
-	abstractClosure->variables.Add(new AbstractVariable(name.content, result, List<String>(0), closure->space->abstract, false, variable->type, abstractClosure->size));
+	abstractClosure->variables.Add(new AbstractVariable(name.content, result, List<String>(0), compilingClosure->space->abstract, false, variable->type, abstractClosure->size));
 	abstractClosure->size += size;
 	if (alignment > abstractClosure->alignment)abstractClosure->alignment = alignment;
 	map.Set(declaration, result);
@@ -36,9 +36,9 @@ CompilingDeclaration LambdaClosure::Convert(const Anchor& name, const CompilingD
 
 List<CompilingDeclaration, true> LambdaClosure::GetClosureVariables(uint32 functionIndex)
 {
-	this->closure->functions.Add(functionIndex);
-	List<CompilingDeclaration, true> sourceVariables(this->closure->variables.Count());
-	sourceVariables.SetCount(this->closure->variables.Count());
+	closure->functions.Add(functionIndex);
+	List<CompilingDeclaration, true> sourceVariables(closure->variables.Count());
+	sourceVariables.SetCount(closure->variables.Count());
 	Dictionary<CompilingDeclaration, CompilingDeclaration, true>::Iterator iterator = map.GetIterator();
 	while (iterator.Next()) sourceVariables[iterator.CurrentValue().index] = iterator.CurrentKey();
 	return sourceVariables;

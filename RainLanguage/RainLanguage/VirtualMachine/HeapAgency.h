@@ -37,11 +37,11 @@ class HeapAgency
 	Handle Recycle(Handle handle);
 	void FullGC();
 	void FastGC();
-	inline uint32 GetElementSize(Head* head)
+	inline uint32 GetElementSize(Head* value)
 	{
-		ASSERT_DEBUG(head->type.dimension, "不是个数组");
-		uint32 length = *(uint32*)(heap.GetPointer() + head->pointer);
-		return length ? (head->size - 4) / length : 0;
+		ASSERT_DEBUG(value->type.dimension, "不是个数组");
+		uint32 length = *(uint32*)(heap.GetPointer() + value->pointer);
+		return length ? (value->size - 4) / length : 0;
 	}
 public:
 	HeapAgency(Kernel* kernel, const StartupParameter* parameter);
@@ -57,9 +57,9 @@ public:
 	{
 		if (IsValid(handle))
 		{
-			Head& head = heads[handle];
-			ASSERT_DEBUG(head.strong, "当前引用计数为0!");
-			head.strong--;
+			Head& value = heads[handle];
+			ASSERT_DEBUG(value.strong, "当前引用计数为0!");
+			value.strong--;
 		}
 	}
 	inline void WeakReference(Handle handle)
@@ -70,9 +70,9 @@ public:
 	{
 		if (IsValid(handle))
 		{
-			Head& head = heads[handle];
-			ASSERT_DEBUG(head.weak, "当前引用计数为0!");
-			head.weak--;
+			Head& value = heads[handle];
+			ASSERT_DEBUG(value.weak, "当前引用计数为0!");
+			value.weak--;
 		}
 	}
 	inline void GC(bool full)

@@ -29,12 +29,12 @@ private:
 	uint32 address;
 	bool assigned;
 	CodeLocalAddressReference* target;
-	void AddReferences(Generator* generator, List<LocalAddressReference, true>& references);
+	void AddReferences(Generator* generator, List<LocalAddressReference, true>& otherReferences);
 public:
 	inline CodeLocalAddressReference() : references(0), address(0), assigned(false), target(NULL) {}
 	inline bool IsAssigned() { return assigned; }
-	void SetAddress(Generator* generator, uint32 address);
-	void SetTarget(Generator* generator, CodeLocalAddressReference* target);
+	void SetAddress(Generator* generator, uint32 targetAddress);
+	void SetTarget(Generator* generator, CodeLocalAddressReference* targetReference);
 	void AddReference(Generator* generator, uint32 instructAddress);
 };
 

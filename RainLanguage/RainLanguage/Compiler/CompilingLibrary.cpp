@@ -28,13 +28,13 @@ CompilingInterface::~CompilingInterface()
 	functions.Clear();
 }
 
-CompilingSpace* CompilingSpace::GetChild(const String& name)
+CompilingSpace* CompilingSpace::GetChild(const String& childName)
 {
 	CompilingSpace* child;
-	if (!children.TryGet(name, child))
+	if (!children.TryGet(childName, child))
 	{
-		child = new CompilingSpace(this, name);
-		children.Set(name, child);
+		child = new CompilingSpace(this, childName);
+		children.Set(childName, child);
 	}
 	return child;
 }

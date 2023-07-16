@@ -9,12 +9,12 @@
 
 LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
-void LibraryAgency::Init(const Library* libraries, uint32 count)
+void LibraryAgency::Init(const Library* initialLibraries, uint32 count)
 {
 	kernelLibrary = new RuntimeLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary());
 	kernelLibrary->InitRuntimeData(kernel, GetKernelLibrary(), LIBRARY_KERNEL);
 	kernel->coroutineAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
-	for (uint32 i = 0; i < count; i++) Load(libraries + i);
+	for (uint32 i = 0; i < count; i++) Load(initialLibraries + i);
 }
 
 uint32 LibraryAgency::GetTypeStackSize(const Type& type)

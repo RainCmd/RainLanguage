@@ -197,10 +197,10 @@ void Caller::SetEntityReturnValue(uint32 index, uint64 value)
 	kernel->entityAgency->Reference(*address);
 }
 
-void Caller::SetException(const RainString& error)
+void Caller::SetException(const RainString& errorInfo)
 {
-	kernel->stringAgency->Release(this->error);
-	this->error = kernel->stringAgency->AddAndRef(error.value, error.length);
+	kernel->stringAgency->Release(error);
+	error = kernel->stringAgency->AddAndRef(errorInfo.value, errorInfo.length);
 }
 
 string Caller::GetException() const

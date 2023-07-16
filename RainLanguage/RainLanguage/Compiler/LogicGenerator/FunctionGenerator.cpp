@@ -440,27 +440,27 @@ FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, Generator
 CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParameter& parameter, Context* context, const Anchor& anchor, const Anchor& expression, LocalContext* localContext, List<CompilingDeclaration, true>& declarations, Local* thisValue)
 {
 	ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), *context, localContext, NULL, false);
-	Expression* parameters = NULL;
-	if (parser.TryParse(expression, parameters))
+	Expression* constructorParameters = NULL;
+	if (parser.TryParse(expression, constructorParameters))
 	{
 		AbstractCallable* callable = NULL;
-		if (parser.TryGetFunction(anchor, declarations, parameters, callable))
+		if (parser.TryGetFunction(anchor, declarations, constructorParameters, callable))
 		{
-			if (parser.TryAssignmentConvert(parameters, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
+			if (parser.TryAssignmentConvert(constructorParameters, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
 			{
 				VariableLocalExpression* thisValueExpression = new VariableLocalExpression(thisValue->anchor, thisValue->GetDeclaration(), Attribute::Value, thisValue->type);
-				statements->statements.Add(new ExpressionStatement(anchor, new InvokerMemberExpression(anchor, callable->returns.GetTypes(), parameters, thisValueExpression, callable->declaration, false)));
+				statements->statements.Add(new ExpressionStatement(anchor, new InvokerMemberExpression(anchor, callable->returns.GetTypes(), constructorParameters, thisValueExpression, callable->declaration, false)));
 			}
-			else { delete parameters; parameters = NULL; }
+			else { delete constructorParameters; constructorParameters = NULL; }
 			return callable->declaration;
 		}
 		else MESSAGE2(parameter.manager->messages, anchor, MessageType::ERROR_CONSTRUCTOR_NOT_FOUND);
-		delete parameters; parameters = NULL;
+		delete constructorParameters; constructorParameters = NULL;
 	}
 	return CompilingDeclaration();
 }
 
-void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statement*, true>& statements, const Anchor& anchor, Context context, LocalContext* localContext, bool destructor)
+void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statement*, true>& block, const Anchor& anchor, Context context, LocalContext* localContext, bool destructor)
 {
 	ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
 	Expression* condition = NULL;
@@ -468,7 +468,7 @@ void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statemen
 	{
 		if (condition->returns.Count() != 1 || condition->returns[0] != TYPE_Bool)
 			MESSAGE2(parameter.manager->messages, anchor, MessageType::ERROR_TYPE_MISMATCH);
-		statements.Add(new BranchStatement(anchor, condition));
+		block.Add(new BranchStatement(anchor, condition));
 	}
 }
 

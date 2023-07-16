@@ -157,7 +157,7 @@ bool VariableGlobalExpression::TryEvaluationIndices(List<integer, true>& value, 
 	return false;
 }
 
-void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& type)
+void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& targetType)
 {
 	if (declaration.category == DeclarationCategory::StructVariable)
 	{
@@ -165,25 +165,25 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint
 		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
 		{
 			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
-			targetVariable->Generator(parameter, offset, type);
+			targetVariable->Generator(parameter, offset, targetType);
 		}
 		else if (ContainAny(target->type, ExpressionType::ArrayEvaluationExpression))
 		{
 			ArrayEvaluationExpression* targetVariable = (ArrayEvaluationExpression*)target;
-			targetVariable->Generator(parameter, offset, type);
+			targetVariable->Generator(parameter, offset, targetType);
 		}
 		else
 		{
 			LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 			target->Generator(targetParameter);
-			parameter.results[0] = LogicVariable(targetParameter.results[0], type, offset);
+			parameter.results[0] = LogicVariable(targetParameter.results[0], targetType, offset);
 		}
 	}
 	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue)
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, type), targetParameter.results[0], declaration, offset, parameter.finallyAddress);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, targetType), targetParameter.results[0], declaration, offset, parameter.finallyAddress);
 	}
 	else EXCEPTION("无效的声明类型");
 }
@@ -220,7 +220,7 @@ void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& param
 	else EXCEPTION("无效的声明类型");
 }
 
-void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& type)
+void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& targetType)
 {
 	if (declaration.category == DeclarationCategory::StructVariable)
 	{
@@ -228,13 +228,13 @@ void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parame
 		if (ContainAny(target->type, ExpressionType::VariableMemberExpression))
 		{
 			VariableMemberExpression* targetVariable = (VariableMemberExpression*)target;
-			targetVariable->FillResultVariable(parameter, index, offset, type);
+			targetVariable->FillResultVariable(parameter, index, offset, targetType);
 		}
 		else if (ContainAny(target->type, ExpressionType::VariableLocalExpression | ExpressionType::VariableGlobalExpression))
 		{
 			LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 			target->Generator(targetParameter);
-			parameter.results[index] = logicVariable = LogicVariable(targetParameter.results[0], type, offset);
+			parameter.results[index] = logicVariable = LogicVariable(targetParameter.results[0], targetType, offset);
 		}
 	}
 }

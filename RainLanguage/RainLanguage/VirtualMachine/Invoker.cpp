@@ -311,10 +311,10 @@ void Invoker::Initialize(const Function& function)
 	Initialize(runtimeFunction->entry, runtimeFunction);
 }
 
-void Invoker::Initialize(uint32 entry, const CallableInfo* info)
+void Invoker::Initialize(uint32 codeEntry, const CallableInfo* callableInfo)
 {
-	this->info = info;
-	this->entry = entry;
+	info = callableInfo;
+	entry = codeEntry;
 	state = InvokerState::Unstart;
 	exitMessage = String();
 	hold = 0;

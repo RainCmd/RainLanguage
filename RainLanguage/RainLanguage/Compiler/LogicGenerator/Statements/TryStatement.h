@@ -24,7 +24,7 @@ public:
 	uint32 localExitCode, localFinallyTarget;
 	CodeLocalAddressReference* breakAddress, * loopAddress;
 	TryStatement(const Anchor& anchor, LocalContext* localContext);
-	inline void SetJumpTarget(CodeLocalAddressReference* breakAddress, CodeLocalAddressReference* loopAddress) { this->breakAddress = breakAddress; this->loopAddress = loopAddress; }
+	inline void SetJumpTarget(CodeLocalAddressReference* targetBreakAddress, CodeLocalAddressReference* targetLoopAddress) { breakAddress = targetBreakAddress; loopAddress = targetLoopAddress; }
 	void Generator(StatementGeneratorParameter& parameter);
 	~TryStatement();
 };

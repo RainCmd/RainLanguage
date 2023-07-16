@@ -10,7 +10,7 @@ public:
 		returns.Add(TYPE_Bool);
 		attribute = Attribute::Constant;
 	}
-	bool TryEvaluation(bool& value, LogicGenerateParameter&);
+	bool TryEvaluation(bool& result, LogicGenerateParameter&);
 	void Generator(LogicGenerateParameter& parameter);
 };
 
@@ -23,11 +23,11 @@ public:
 		returns.Add(TYPE_Byte);
 		attribute = Attribute::Constant;
 	}
-	bool TryEvaluation(uint8& value, LogicGenerateParameter&);
-	bool TryEvaluation(character& value, LogicGenerateParameter&);
-	bool TryEvaluation(integer& value, LogicGenerateParameter&);
-	bool TryEvaluation(real& value, LogicGenerateParameter&);
-	bool TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter&);
+	bool TryEvaluation(uint8& result, LogicGenerateParameter&);
+	bool TryEvaluation(character& result, LogicGenerateParameter&);
+	bool TryEvaluation(integer& result, LogicGenerateParameter&);
+	bool TryEvaluation(real& result, LogicGenerateParameter&);
+	bool TryEvaluationIndices(List<integer, true>& result, LogicGenerateParameter&);
 	void Generator(LogicGenerateParameter& parameter);
 };
 
@@ -40,10 +40,10 @@ public:
 		returns.Add(TYPE_Char);
 		attribute = Attribute::Constant;
 	}
-	bool TryEvaluation(character& value, LogicGenerateParameter&);
-	bool TryEvaluation(integer& value, LogicGenerateParameter&);
-	bool TryEvaluation(real& value, LogicGenerateParameter&);
-	bool TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter&);
+	bool TryEvaluation(character& result, LogicGenerateParameter&);
+	bool TryEvaluation(integer& result, LogicGenerateParameter&);
+	bool TryEvaluation(real& result, LogicGenerateParameter&);
+	bool TryEvaluationIndices(List<integer, true>& result, LogicGenerateParameter&);
 	void Generator(LogicGenerateParameter& parameter);
 };
 
@@ -56,9 +56,9 @@ public:
 		returns.Add(TYPE_Integer);
 		attribute = Attribute::Constant;
 	}
-	bool TryEvaluation(integer& value, LogicGenerateParameter&);
-	bool TryEvaluation(real& value, LogicGenerateParameter&);
-	bool TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter&);
+	bool TryEvaluation(integer& result, LogicGenerateParameter&);
+	bool TryEvaluation(real& result, LogicGenerateParameter&);
+	bool TryEvaluationIndices(List<integer, true>& result, LogicGenerateParameter&);
 	void Generator(LogicGenerateParameter& parameter);
 };
 
@@ -71,7 +71,7 @@ public:
 		returns.Add(TYPE_Real);
 		attribute = Attribute::Constant;
 	}
-	bool TryEvaluation(real& value, LogicGenerateParameter& parameter);
+	bool TryEvaluation(real& result, LogicGenerateParameter& parameter);
 	void Generator(LogicGenerateParameter& parameter);
 };
 
@@ -84,7 +84,7 @@ public:
 		returns.Add(TYPE_String);
 		attribute = Attribute::Constant;
 	}
-	bool TryEvaluation(String& value, LogicGenerateParameter& parameter);
+	bool TryEvaluation(String& result, LogicGenerateParameter& parameter);
 	void Generator(LogicGenerateParameter& parameter);
 };
 
