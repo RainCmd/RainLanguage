@@ -12,7 +12,8 @@ LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) 
 void LibraryAgency::Init(const Library* initialLibraries, uint32 count)
 {
 	kernelLibrary = new RuntimeLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary());
-	kernelLibrary->InitRuntimeData(kernel, GetKernelLibrary(), LIBRARY_KERNEL);
+	kernelLibrary->kernel = kernel;
+	kernelLibrary->InitRuntimeData(GetKernelLibrary(), LIBRARY_KERNEL);
 	kernel->coroutineAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	for (uint32 i = 0; i < count; i++) Load(initialLibraries + i);
 }
@@ -206,7 +207,8 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 		RuntimeLibrary* rely = Load(kernel->stringAgency->Add(library->stringAgency->Get(library->imports[i].spaces[0].name)).index);
 		ASSERT(rely->kernel, "Library可能存在循环依赖");
 	}
-	result->InitRuntimeData(kernel, library, LIBRARY_SELF);
+	result->kernel = kernel;
+	result->InitRuntimeData(library, LIBRARY_SELF);
 	kernel->coroutineAgency->CreateInvoker(result->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	return result;
 }

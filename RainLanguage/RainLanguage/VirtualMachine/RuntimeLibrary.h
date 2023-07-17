@@ -23,5 +23,5 @@ public:
 	RuntimeLibrary(Kernel* kernel, uint32 index, const Library* library);
 	RuntimeLibrary(const RuntimeLibrary&) = delete;
 	RuntimeLibrary(const RuntimeLibrary&&) = delete;
-	void InitRuntimeData(Kernel* _kernel, const Library* library, uint32 selfLibraryIndex);
+	void InitRuntimeData(const Library* library, uint32 selfLibraryIndex);
 };
