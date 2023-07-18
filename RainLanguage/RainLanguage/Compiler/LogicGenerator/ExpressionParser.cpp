@@ -17,6 +17,7 @@
 #include "Expressions/DelegateCreateExpression.h"
 #include "Expressions/LogicExpression.h"
 #include "Expressions/EnumExpression.h"
+#include "Expressions/ExpressionReferenceExpression.h"
 #include "LocalContext.h"
 #include "LambdaClosure.h"
 #include "LambdaGenerator.h"
@@ -1577,7 +1578,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 					case LexicalType::Assignment:
 						goto label_assignment;
 					label_reparse_left_and_assignment:
-						TryParse(left, leftExpression);
+						leftExpression = new ExpressionReferenceExpression(leftExpression);
 					label_assignment:
 						if (leftExpression->returns.Count() == rightExpression->returns.Count())
 						{
@@ -2759,8 +2760,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						if (ContainAny(attribute, Attribute::Array))
 						{
 							Expression* arrayExpression = expressionStack.Pop();
-							if (arrayExpression->returns[0] == TYPE_Blurry)MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
-							else if (arrayExpression->returns[0] == TYPE_String)MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR)
+							if (arrayExpression->returns[0] == TYPE_Blurry) MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
+							else if (arrayExpression->returns[0] == TYPE_String) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR)
 							{
 								if (tuple->returns.Count() == 1)
 								{
@@ -2772,7 +2773,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								}
 								else if (tuple->returns.Count() == 2)
 								{
-									if (destructor)MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+									if (destructor) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
 									Expression* expression = new ArrayQuestionSubExpression(lexical.anchor, arrayExpression, tuple);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;

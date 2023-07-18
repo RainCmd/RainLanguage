@@ -19,9 +19,9 @@ public:
 class OperationPostIncrementExpression :public Expression//x++ x--
 {
 public:
-	Expression* variable;
+	Expression* variableExpression;
 	Instruct instruct;
-	OperationPostIncrementExpression(const Anchor& anchor, const Type& returnType, Expression* variable, Instruct instruct) :Expression(ExpressionType::OperationPostIncrementExpression, anchor, List<Type, true>(1)), variable(variable), instruct(instruct)
+	OperationPostIncrementExpression(const Anchor& anchor, const Type& returnType, Expression* variableExpression, Instruct instruct) :Expression(ExpressionType::OperationPostIncrementExpression, anchor, List<Type, true>(1)), variableExpression(variableExpression), instruct(instruct)
 	{
 		attribute = CombineType(Attribute::Value, returnType);
 		returns.Add(returnType);
@@ -33,9 +33,9 @@ public:
 class OperationPrevIncrementExpression :public Expression//++x --x
 {
 public:
-	Expression* variable;
+	Expression* variableExpression;
 	Instruct instruct;
-	OperationPrevIncrementExpression(const Anchor& anchor, const Type& returnType, Expression* variable, Instruct instruct) :Expression(ExpressionType::OperationPrevIncrementExpression, anchor, List<Type, true>(1)), variable(variable), instruct(instruct)
+	OperationPrevIncrementExpression(const Anchor& anchor, const Type& returnType, Expression* variableExpression, Instruct instruct) :Expression(ExpressionType::OperationPrevIncrementExpression, anchor, List<Type, true>(1)), variableExpression(variableExpression), instruct(instruct)
 	{
 		attribute = CombineType(Attribute::Value, returnType);
 		returns.Add(returnType);

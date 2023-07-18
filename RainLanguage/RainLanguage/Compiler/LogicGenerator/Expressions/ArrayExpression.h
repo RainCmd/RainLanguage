@@ -29,9 +29,12 @@ public:
 
 class ArrayEvaluationExpression :public Expression
 {
+	LogicVariable arrayVariable, indexVariable;
+	LogicVariable& GetArrayVariable(LogicGenerateParameter& parameter);
+	LogicVariable& GetIndexVariable(LogicGenerateParameter& parameter);
 public:
 	Expression* arrayExpression, * indexExpression;
-	inline ArrayEvaluationExpression(const Anchor& anchor, Expression* arrayExpression, Expression* indexExpression, const Type& elementType) :Expression(ExpressionType::ArrayEvaluationExpression, anchor, List<Type, true>(1)), arrayExpression(arrayExpression), indexExpression(indexExpression)
+	inline ArrayEvaluationExpression(const Anchor& anchor, Expression* arrayExpression, Expression* indexExpression, const Type& elementType) :Expression(ExpressionType::ArrayEvaluationExpression, anchor, List<Type, true>(1)), arrayVariable(), indexVariable(), arrayExpression(arrayExpression), indexExpression(indexExpression)
 	{
 		returns.Add(elementType);
 		attribute = CombineType(Attribute::Assignable | Attribute::Value, elementType);

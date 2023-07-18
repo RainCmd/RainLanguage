@@ -47,13 +47,15 @@ public:
 class VariableMemberExpression :public VariableExpression
 {
 	LogicVariable logicVariable;
+	LogicVariable targetVariable;
+	LogicVariable& GetTargetVariable(LogicGenerateParameter& parameter);
 	void Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& targetType);
 	void GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& targetType);
 public:
 	Expression* target;
 	CompilingDeclaration declaration;
-	inline VariableMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, Expression* target, const Type& type) :VariableExpression(ExpressionType::VariableMemberExpression, anchor, type), declaration(declaration), target(target)
+	inline VariableMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, Expression* target, const Type& type) :VariableExpression(ExpressionType::VariableMemberExpression, anchor, type), logicVariable(), targetVariable(), target(target), declaration(declaration)
 	{
 		this->attribute = CombineType(attribute, type);
 		if (declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))

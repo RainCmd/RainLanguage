@@ -46,16 +46,14 @@ ArrayInitExpression::~ArrayInitExpression()
 	delete elements; elements = NULL;
 }
 
-void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVariable& result, LogicVariable& arrayVariable, Expression* indexExpression, uint32 offset)
+void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVariable& result, LogicVariable& arrayVariable, LogicVariable& indexVariable, uint32 offset)
 {
-	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
-	indexExpression->Generator(indexParameter);
 	if (arrayVariable.type == TYPE_String)
 	{
 		parameter.generator->WriteCode(Instruct::STRING_Element);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCode(arrayVariable);
-		parameter.generator->WriteCode(indexParameter.results[0]);
+		parameter.generator->WriteCode(indexVariable);
 	}
 	else
 	{
@@ -75,7 +73,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 					parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
 					parameter.generator->WriteCode(result);
 					parameter.generator->WriteCode(arrayVariable);
-					parameter.generator->WriteCode(indexParameter.results[0]);
+					parameter.generator->WriteCode(indexVariable);
 					parameter.generator->WriteCode(offset);
 					parameter.generator->WriteCode(parameter.manager->GetLibrary(type.library)->structs[type.index]->size);
 					break;
@@ -85,21 +83,21 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 					parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
 					parameter.generator->WriteCode(result);
 					parameter.generator->WriteCode(arrayVariable);
-					parameter.generator->WriteCode(indexParameter.results[0]);
+					parameter.generator->WriteCode(indexVariable);
 					parameter.generator->WriteCode(offset);
 					parameter.generator->WriteCodeGlobalReference((Declaration)type);
 					break;
 				}
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(arrayVariable);
-				parameter.generator->WriteCode(indexParameter.results[0]);
+				parameter.generator->WriteCode(indexVariable);
 				parameter.generator->WriteCode(offset);
 				break;
 			case TypeCode::Enum:
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_8);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(arrayVariable);
-				parameter.generator->WriteCode(indexParameter.results[0]);
+				parameter.generator->WriteCode(indexVariable);
 				parameter.generator->WriteCode(offset);
 				break;
 			case TypeCode::Handle:
@@ -109,7 +107,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Handle);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(arrayVariable);
-				parameter.generator->WriteCode(indexParameter.results[0]);
+				parameter.generator->WriteCode(indexVariable);
 				parameter.generator->WriteCode(offset);
 				break;
 			default: EXCEPTION("无效的TypeCode");
@@ -118,14 +116,31 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
+LogicVariable& ArrayEvaluationExpression::GetArrayVariable(LogicGenerateParameter& parameter)
+{
+	if (arrayVariable.IsInvalid())
+	{
+		LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
+		arrayExpression->Generator(arrayParameter);
+		arrayVariable = arrayParameter.results[0];
+	}
+	return arrayVariable;
+}
+
+LogicVariable& ArrayEvaluationExpression::GetIndexVariable(LogicGenerateParameter& parameter)
+{
+	if (indexVariable.IsInvalid())
+	{
+		LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
+		indexExpression->Generator(indexParameter);
+		indexVariable = indexParameter.results[0];
+	}
+	return indexVariable;
+}
+
 void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& elementType)
 {
-	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
-	arrayExpression->Generator(arrayParameter);
-	parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-	parameter.generator->WriteCode(arrayParameter.results[0]);
-	parameter.generator->WriteCode(parameter.finallyAddress);
-	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, elementType), arrayParameter.results[0], indexExpression, offset);
+	GeneratorArrayEvaluation(parameter, parameter.GetResult(0, elementType), GetArrayVariable(parameter), GetIndexVariable(parameter), offset);
 }
 
 void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter)
@@ -137,14 +152,8 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 {
 	ASSERT_DEBUG(arrayExpression->returns[0] != TYPE_String, "字符串不可赋值");
 	LogicVariable result = parameter.results[0];
-	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
-	arrayExpression->Generator(arrayParameter);
-	LogicVariable& arrayVariable = arrayParameter.results[0];
-	parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-	parameter.generator->WriteCode(arrayVariable);
-	parameter.generator->WriteCode(parameter.finallyAddress);
-	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
-	indexExpression->Generator(indexParameter);
+	GetArrayVariable(parameter);
+	GetIndexVariable(parameter);
 	Type resultType = result.type;
 	if (resultType.dimension) resultType = TYPE_Array;
 	switch (resultType.code)
@@ -160,7 +169,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Bitwise);
 				parameter.generator->WriteCode(arrayVariable);
-				parameter.generator->WriteCode(indexParameter.results[0]);
+				parameter.generator->WriteCode(indexVariable);
 				parameter.generator->WriteCode(offset);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(parameter.manager->GetLibrary(result.type.library)->structs[result.type.index]->size);
@@ -170,21 +179,21 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Bitwise);
 				parameter.generator->WriteCode(arrayVariable);
-				parameter.generator->WriteCode(indexParameter.results[0]);
+				parameter.generator->WriteCode(indexVariable);
 				parameter.generator->WriteCode(offset);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCodeGlobalReference((Declaration)result.type);
 				break;
 			}
 			parameter.generator->WriteCode(arrayVariable);
-			parameter.generator->WriteCode(indexParameter.results[0]);
+			parameter.generator->WriteCode(indexVariable);
 			parameter.generator->WriteCode(offset);
 			parameter.generator->WriteCode(result);
 			break;
 		case TypeCode::Enum:
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_8);
 			parameter.generator->WriteCode(arrayVariable);
-			parameter.generator->WriteCode(indexParameter.results[0]);
+			parameter.generator->WriteCode(indexVariable);
 			parameter.generator->WriteCode(offset);
 			parameter.generator->WriteCode(result);
 			break;
@@ -194,7 +203,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 		case TypeCode::Coroutine:
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Handle);
 			parameter.generator->WriteCode(arrayVariable);
-			parameter.generator->WriteCode(indexParameter.results[0]);
+			parameter.generator->WriteCode(indexVariable);
 			parameter.generator->WriteCode(offset);
 			parameter.generator->WriteCode(result);
 			break;
@@ -223,7 +232,9 @@ void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parame
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
 	parameter.generator->WriteCode(arrayParameter.results[0]);
 	parameter.generator->WriteCode(&clearAddress);
-	GeneratorArrayEvaluation(parameter, result, arrayParameter.results[0], indexExpression, offset);
+	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
+	indexExpression->Generator(indexParameter);
+	GeneratorArrayEvaluation(parameter, result, arrayParameter.results[0], indexParameter.results[0], offset);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);
