@@ -389,7 +389,6 @@ void StringAgency::Serialize(Serializer* serializer)
 	serializer->Serialize(top);
 	serializer->Serialize(size);
 	serializer->SerializeList(characters);
-	serializer->Serialize(Count());
 	serializer->Serialize(head);
 	for (uint32 index = head; index; index = slots[index].gcNext) serializer->Serialize(slots[index]);
 }
@@ -399,13 +398,12 @@ StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NU
 	top = deserializer->Deserialize<uint32>();
 	size = deserializer->Deserialize<uint32>();
 	deserializer->Deserialize(characters);
-	uint32 count = deserializer->Deserialize<uint32>();
 	tail = head = deserializer->Deserialize<uint32>();
 	buckets = Malloc<uint32>(size);
 	for (uint32 i = 0; i < size; i++) buckets[i] = NULL;
 	slots = Malloc<Slot>(size);
 	for (uint32 i = 0; i < top; i++) slots[i].length = 0;
-	while (count--)
+	for (;;)
 	{
 		Slot& slot = slots[tail];
 		slot = deserializer->Deserialize<Slot>();
@@ -413,14 +411,16 @@ StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NU
 		uint32 bidx = slot.hash % size;
 		slot.next = buckets[bidx];
 		buckets[bidx] = tail;
-		tail = slot.gcNext;
+		if (slot.gcNext) tail = slot.gcNext;
+		else break;
 	}
 	for (uint32 i = 1; i < top; i++)
-		if (slots[i].length)
+		if (!slots[i].length)
 		{
 			slots[i].gcNext = free;
 			free = i;
 		}
+	share = new StringShare(this);
 }
 
 StringAgency::~StringAgency()

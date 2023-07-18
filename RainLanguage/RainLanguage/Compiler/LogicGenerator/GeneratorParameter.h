@@ -1,12 +1,12 @@
 #pragma once
 #include "../DeclarationManager.h"
+#include "../../ProgramDatabase.h"
 
 struct Generator;
-class ProgramDebugDatabase;
 struct GeneratorParameter
 {
 	DeclarationManager* manager;
 	Generator* generator;
-	ProgramDebugDatabase* debugDatabase;
-	GeneratorParameter(DeclarationManager* manager, Generator* generator, ProgramDebugDatabase* debugDatabase) :manager(manager), generator(generator), debugDatabase(debugDatabase) {}
+	ProgramDatabase* database;
+	GeneratorParameter(DeclarationManager* manager, Generator* generator, ProgramDatabase* database) :manager(manager), generator(generator), database(database) {}
 };

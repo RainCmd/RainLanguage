@@ -150,9 +150,9 @@ const class Product :public RainProduct
 public:
 	const MessageCollector* messageCollector;
 	const Library* library;
-	const ProgramDebugDatabase* programDebugDatabase;
-	inline Product(MessageCollector* messageCollector) :messageCollector(messageCollector), library(NULL), programDebugDatabase(NULL) {}
-	inline Product(MessageCollector* messageCollector, Library* library, ProgramDebugDatabase* programDebugDatabase) : messageCollector(messageCollector), library(library), programDebugDatabase(programDebugDatabase) {}
+	const ProgramDatabase* programDatabase;
+	inline Product(MessageCollector* messageCollector) :messageCollector(messageCollector), library(NULL), programDatabase(NULL) {}
+	inline Product(MessageCollector* messageCollector, Library* library, ProgramDatabase* programDatabase) : messageCollector(messageCollector), library(library), programDatabase(programDatabase) {}
 	inline ErrorLevel GetLevel() { return messageCollector->GetLevel(); }
 	inline uint32 GetLevelMessageCount(ErrorLevel level) { return messageCollector->GetMessages(level)->Count(); }
 	inline const RainErrorMessage GetErrorMessage(ErrorLevel level, uint32 index)
@@ -161,16 +161,16 @@ public:
 		return RainErrorMessage(RainString(message.source.GetPointer(), message.source.GetLength()), message.type, message.line, message.start, message.length, RainString(message.message.GetPointer(), message.message.GetLength()));
 	}
 	inline const RainLibrary* GetLibrary() { return library; }
-	inline const ProgramDebugDatabase* GetProgramDebugDatabase() { return programDebugDatabase; }
+	inline const RainProgramDatabase* GetRainProgramDatabase() { return programDatabase; }
 	inline ~Product()
 	{
 		delete messageCollector; messageCollector = NULL;
 		delete library; library = NULL;
-		delete programDebugDatabase; programDebugDatabase = NULL;
+		delete programDatabase; programDatabase = NULL;
 	}
 };
 
-#define COMPILE_TERMINATION_CHECK if (messages->GetMessages(ErrorLevel::Error)->Count())return new Product(messages);
+#define COMPILE_TERMINATION_CHECK if (messages->GetMessages(ErrorLevel::Error)->Count()) return new Product(messages);
 RainProduct* Build(const BuildParameter& parameter)
 {
 	StringAgency stringAgency = StringAgency(0x100);
@@ -210,16 +210,16 @@ RainProduct* Build(const BuildParameter& parameter)
 	COMPILE_TERMINATION_CHECK;
 
 	Generator generator = Generator(&manager);
-	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, parameter.debug ? new ProgramDebugDatabase() : NULL);
+	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, parameter.debug ? new ProgramDatabase() : NULL);
 	generator.GeneratorFunction(generatorParameter);
 	for (uint32 i = 0; i < relySpaceCollector.Count(); i++) delete relySpaceCollector[i];
 	relySpaceCollector.Clear();
 	if (messages->GetMessages(ErrorLevel::Error)->Count())
 	{
-		if (generatorParameter.debugDatabase) delete generatorParameter.debugDatabase;
-		generatorParameter.debugDatabase = NULL;
+		if (generatorParameter.database) delete generatorParameter.database;
+		generatorParameter.database = NULL;
 		return new Product(messages);
 	}
 
-	return new Product(messages, generator.GeneratorLibrary(manager), generatorParameter.debugDatabase);
+	return new Product(messages, generator.GeneratorLibrary(manager), generatorParameter.database);
 }

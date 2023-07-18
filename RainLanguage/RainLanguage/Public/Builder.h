@@ -58,9 +58,11 @@ const struct RAINLANGUAGE BuildParameter
 /// <summary>
 /// 调试数据
 /// </summary>
-class ProgramDebugDatabase
+class RainProgramDatabase
 {
+public:
 	//todo 调试数据
+	virtual ~RainProgramDatabase() {}
 };
 
 /// <summary>
@@ -124,7 +126,7 @@ public:
 	/// 获取调试信息
 	/// </summary>
 	/// <returns>调试信息</returns>
-	virtual const ProgramDebugDatabase* GetProgramDebugDatabase() = 0;
+	virtual const RainProgramDatabase* GetRainProgramDatabase() = 0;
 };
 
 /// <summary>

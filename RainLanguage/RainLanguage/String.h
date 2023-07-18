@@ -3,7 +3,7 @@
 #include "Collections/List.h"
 
 struct String;
-struct Serializer;
+class Serializer;
 struct Deserializer;
 class StringAgency;
 struct StringShare
@@ -82,8 +82,8 @@ public:
 	String Replace(const String& source, const String& oldValue, const String& newValue);
 	inline uint32 Count()
 	{
-		uint32 result = top;
-		for (uint32 index = free; index; index = slots[index].gcNext) result--;
+		uint32 result = 0;
+		for (uint32 index = head; index; index = slots[index].gcNext) result++;
 		return result;
 	}
 	void Serialize(Serializer* serializer);

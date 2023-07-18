@@ -1,337 +1,336 @@
 #include "Library.h"
 #include "Serialization.h"
 
-void Serialize(Serializer& serializer, const  TupleInfo& info)
+void Serialize(Serializer* serializer, const  TupleInfo& info)
 {
-	serializer.Serialize(info.size);
-	serializer.SerializeList(info.GetTypes());
-	serializer.SerializeList(info.GetOffsets());
+	serializer->Serialize(info.size);
+	serializer->SerializeList(info.GetTypes());
+	serializer->SerializeList(info.GetOffsets());
 }
 
-uint8* Serialize(const Library* library, uint32& size)
+Serializer* Serialize(const Library* library)
 {
 	ASSERT(library, "libraryÎª¿Õ");
-	Serializer serializer = Serializer(0x100);
-	serializer.SerializeStringAgency(library->stringAgency);
-	serializer.Serialize(library->spaces.Count());
+	Serializer* serializer = new Serializer(0x100);
+	serializer->SerializeStringAgency(library->stringAgency);
+	serializer->Serialize(library->spaces.Count());
 	for (uint32 i = 0; i < library->spaces.Count(); i++)
 	{
 		const Space* space = &library->spaces[i];
-		serializer.Serialize(space->name);
-		serializer.SerializeList(space->attributes);
-		serializer.SerializeList(space->children);
-		serializer.SerializeList(space->variables);
-		serializer.SerializeList(space->enums);
-		serializer.SerializeList(space->structs);
-		serializer.SerializeList(space->classes);
-		serializer.SerializeList(space->interfaces);
-		serializer.SerializeList(space->delegates);
-		serializer.SerializeList(space->coroutines);
-		serializer.SerializeList(space->functions);
-		serializer.SerializeList(space->natives);
+		serializer->Serialize(space->name);
+		serializer->SerializeList(space->attributes);
+		serializer->SerializeList(space->children);
+		serializer->SerializeList(space->variables);
+		serializer->SerializeList(space->enums);
+		serializer->SerializeList(space->structs);
+		serializer->SerializeList(space->classes);
+		serializer->SerializeList(space->interfaces);
+		serializer->SerializeList(space->delegates);
+		serializer->SerializeList(space->coroutines);
+		serializer->SerializeList(space->functions);
+		serializer->SerializeList(space->natives);
 	}
-	serializer.SerializeList(library->code);
-	serializer.SerializeList(library->constData);
-	serializer.Serialize(library->dataSize);
-	serializer.Serialize(library->variables.Count());
+	serializer->SerializeList(library->code);
+	serializer->SerializeList(library->constData);
+	serializer->Serialize(library->dataSize);
+	serializer->Serialize(library->variables.Count());
 	for (uint32 i = 0; i < library->variables.Count(); i++)
 	{
 		const ReferenceVariableDeclarationInfo& info = library->variables[i];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
-		serializer.Serialize(info.type);
-		serializer.Serialize(info.address);
-		serializer.Serialize(info.readonly);
-		serializer.SerializeList(info.references);
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
+		serializer->Serialize(info.type);
+		serializer->Serialize(info.address);
+		serializer->Serialize(info.readonly);
+		serializer->SerializeList(info.references);
 	}
-	serializer.Serialize(library->enums.Count());
+	serializer->Serialize(library->enums.Count());
 	for (uint32 i = 0; i < library->enums.Count(); i++)
 	{
 		const EnumDeclarationInfo& info = library->enums[i];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
-		serializer.SerializeList(info.elements);
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
+		serializer->SerializeList(info.elements);
 	}
-	serializer.Serialize(library->structs.Count());
+	serializer->Serialize(library->structs.Count());
 	for (uint32 x = 0; x < library->structs.Count(); x++)
 	{
 		const StructDeclarationInfo& info = library->structs[x];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
-		serializer.Serialize(info.variables.Count());
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
+		serializer->Serialize(info.variables.Count());
 		for (uint32 y = 0; y < info.variables.Count(); y++)
 		{
 			const VariableDeclarationInfo& member = info.variables[y];
-			serializer.Serialize(member.isPublic);
-			serializer.SerializeList(member.attributes);
-			serializer.Serialize(member.name);
-			serializer.Serialize(member.type);
-			serializer.Serialize(member.address);
-			serializer.Serialize(member.readonly);
+			serializer->Serialize(member.isPublic);
+			serializer->SerializeList(member.attributes);
+			serializer->Serialize(member.name);
+			serializer->Serialize(member.type);
+			serializer->Serialize(member.address);
+			serializer->Serialize(member.readonly);
 		}
-		serializer.SerializeList(info.functions);
-		serializer.Serialize(info.size);
-		serializer.Serialize(info.alignment);
+		serializer->SerializeList(info.functions);
+		serializer->Serialize(info.size);
+		serializer->Serialize(info.alignment);
 	}
-	serializer.Serialize(library->classes.Count());
+	serializer->Serialize(library->classes.Count());
 	for (uint32 x = 0; x < library->classes.Count(); x++)
 	{
 		const ClassDeclarationInfo& info = library->classes[x];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
-		serializer.Serialize(info.parent);
-		serializer.SerializeList(info.inherits);
-		serializer.Serialize(info.size);
-		serializer.Serialize(info.alignment);
-		serializer.SerializeList(info.constructors);
-		serializer.Serialize(info.variables.Count());
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
+		serializer->Serialize(info.parent);
+		serializer->SerializeList(info.inherits);
+		serializer->Serialize(info.size);
+		serializer->Serialize(info.alignment);
+		serializer->SerializeList(info.constructors);
+		serializer->Serialize(info.variables.Count());
 		for (uint32 y = 0; y < info.variables.Count(); y++)
 		{
 			const ReferenceVariableDeclarationInfo& member = info.variables[y];
-			serializer.Serialize(member.isPublic);
-			serializer.SerializeList(member.attributes);
-			serializer.Serialize(member.name);
-			serializer.Serialize(member.type);
-			serializer.Serialize(member.address);
-			serializer.Serialize(member.readonly);
-			serializer.SerializeList(member.references);
+			serializer->Serialize(member.isPublic);
+			serializer->SerializeList(member.attributes);
+			serializer->Serialize(member.name);
+			serializer->Serialize(member.type);
+			serializer->Serialize(member.address);
+			serializer->Serialize(member.readonly);
+			serializer->SerializeList(member.references);
 		}
-		serializer.SerializeList(info.functions);
-		serializer.Serialize(info.destructor);
-		serializer.SerializeList(info.relocations);
+		serializer->SerializeList(info.functions);
+		serializer->Serialize(info.destructor);
+		serializer->SerializeList(info.relocations);
 	}
-	serializer.Serialize(library->interfaces.Count());
+	serializer->Serialize(library->interfaces.Count());
 	for (uint32 x = 0; x < library->interfaces.Count(); x++)
 	{
 		const InterfaceDeclarationInfo& info = library->interfaces[x];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
-		serializer.SerializeList(info.inherits);
-		serializer.Serialize(info.functions.Count());
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
+		serializer->SerializeList(info.inherits);
+		serializer->Serialize(info.functions.Count());
 		for (uint32 y = 0; y < info.functions.Count(); y++)
 		{
 			const InterfaceDeclarationInfo::FunctionInfo& member = info.functions[y];
-			serializer.SerializeList(member.attributes);
-			serializer.Serialize(member.name);
+			serializer->SerializeList(member.attributes);
+			serializer->Serialize(member.name);
 			Serialize(serializer, member.returns);
 			Serialize(serializer, member.parameters);
 		}
-		serializer.SerializeList(info.relocations);
+		serializer->SerializeList(info.relocations);
 	}
-	serializer.Serialize(library->delegates.Count());
+	serializer->Serialize(library->delegates.Count());
 	for (uint32 i = 0; i < library->delegates.Count(); i++)
 	{
 		const DelegateDeclarationInfo& info = library->delegates[i];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
 		Serialize(serializer, info.returns);
 		Serialize(serializer, info.parameters);
 	}
-	serializer.Serialize(library->coroutines.Count());
+	serializer->Serialize(library->coroutines.Count());
 	for (uint32 i = 0; i < library->coroutines.Count(); i++)
 	{
 		const CoroutineDeclarationInfo& info = library->coroutines[i];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
 		Serialize(serializer, info.returns);
 	}
-	serializer.Serialize(library->functions.Count());
+	serializer->Serialize(library->functions.Count());
 	for (uint32 i = 0; i < library->functions.Count(); i++)
 	{
 		const FunctionDeclarationInfo& info = library->functions[i];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
 		Serialize(serializer, info.returns);
 		Serialize(serializer, info.parameters);
-		serializer.Serialize(info.entry);
-		serializer.SerializeList(info.references);
+		serializer->Serialize(info.entry);
+		serializer->SerializeList(info.references);
 	}
-	serializer.Serialize(library->natives.Count());
+	serializer->Serialize(library->natives.Count());
 	for (uint32 i = 0; i < library->natives.Count(); i++)
 	{
 		const NativeDeclarationInfo& info = library->natives[i];
-		serializer.Serialize(info.isPublic);
-		serializer.SerializeList(info.attributes);
-		serializer.Serialize(info.name);
+		serializer->Serialize(info.isPublic);
+		serializer->SerializeList(info.attributes);
+		serializer->Serialize(info.name);
 		Serialize(serializer, info.returns);
 		Serialize(serializer, info.parameters);
 	}
-	serializer.Serialize(library->codeStrings.Count());
+	serializer->Serialize(library->codeStrings.Count());
 	for (uint32 i = 0; i < library->codeStrings.Count(); i++)
 	{
 		const StringAddresses& addresses = library->codeStrings[i];
-		serializer.Serialize(addresses.value);
-		serializer.SerializeList(addresses.addresses);
+		serializer->Serialize(addresses.value);
+		serializer->SerializeList(addresses.addresses);
 	}
-	serializer.Serialize(library->dataStrings.Count());
+	serializer->Serialize(library->dataStrings.Count());
 	for (uint32 i = 0; i < library->dataStrings.Count(); i++)
 	{
 		const StringAddresses& addresses = library->dataStrings[i];
-		serializer.Serialize(addresses.value);
-		serializer.SerializeList(addresses.addresses);
+		serializer->Serialize(addresses.value);
+		serializer->SerializeList(addresses.addresses);
 	}
-	serializer.SerializeList(library->libraryReferences);
-	serializer.Serialize(library->imports.Count());
+	serializer->SerializeList(library->libraryReferences);
+	serializer->Serialize(library->imports.Count());
 	for (uint32 x = 0; x < library->imports.Count(); x++)
 	{
 		const ImportLibrary& importLibrary = library->imports[x];
-		serializer.SerializeList(importLibrary.spaces);
-		serializer.Serialize(importLibrary.variables.Count());
+		serializer->SerializeList(importLibrary.spaces);
+		serializer->Serialize(importLibrary.variables.Count());
 		for (uint32 y = 0; y < importLibrary.variables.Count(); y++)
 		{
 			const ImportVariable& info = importLibrary.variables[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.Serialize(info.type);
-			serializer.SerializeList(info.addressReferences);
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->Serialize(info.type);
+			serializer->SerializeList(info.addressReferences);
 		}
-		serializer.Serialize(importLibrary.enums.Count());
+		serializer->Serialize(importLibrary.enums.Count());
 		for (uint32 y = 0; y < importLibrary.enums.Count(); y++)
 		{
 			const ImportEnum& info = importLibrary.enums[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.Serialize(info.elements.Count());
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->Serialize(info.elements.Count());
 			for (uint32 z = 0; z < info.elements.Count(); z++)
 			{
 				const ImportEnum::Element& element = info.elements[z];
-				serializer.Serialize(element.name);
-				serializer.SerializeList(element.addressReferences);
+				serializer->Serialize(element.name);
+				serializer->SerializeList(element.addressReferences);
 			}
 		}
-		serializer.Serialize(importLibrary.structs.Count());
+		serializer->Serialize(importLibrary.structs.Count());
 		for (uint32 y = 0; y < importLibrary.structs.Count(); y++)
 		{
 			const ImportStruct& info = importLibrary.structs[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.Serialize(info.variables.Count());
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->Serialize(info.variables.Count());
 			for (uint32 z = 0; z < info.variables.Count(); z++)
 			{
 				const ImportStruct::Variable& member = info.variables[z];
-				serializer.Serialize(member.type);
-				serializer.SerializeList(member.references);
+				serializer->Serialize(member.type);
+				serializer->SerializeList(member.references);
 			}
-			serializer.Serialize(info.functions.Count());
+			serializer->Serialize(info.functions.Count());
 			for (uint32 z = 0; z < info.functions.Count(); z++)
 			{
 				const ImportStruct::Function& member = info.functions[z];
-				serializer.Serialize(member.name);
-				serializer.SerializeList(member.parameters);
-				serializer.SerializeList(member.returns);
-				serializer.SerializeList(member.references);
-				serializer.SerializeList(member.addressReferences);
+				serializer->Serialize(member.name);
+				serializer->SerializeList(member.parameters);
+				serializer->SerializeList(member.returns);
+				serializer->SerializeList(member.references);
+				serializer->SerializeList(member.addressReferences);
 			}
 		}
-		serializer.Serialize(importLibrary.classes.Count());
+		serializer->Serialize(importLibrary.classes.Count());
 		for (uint32 y = 0; y < importLibrary.classes.Count(); y++)
 		{
 			const ImportClass& info = importLibrary.classes[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.Serialize(info.parent);
-			serializer.SerializeList(info.inherits);
-			serializer.Serialize(info.variables.Count());
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->Serialize(info.parent);
+			serializer->SerializeList(info.inherits);
+			serializer->Serialize(info.variables.Count());
 			for (uint32 z = 0; z < info.variables.Count(); z++)
 			{
 				const ImportClass::Variable& member = info.variables[z];
-				serializer.Serialize(member.name);
-				serializer.Serialize(member.type);
-				serializer.SerializeList(member.references);
-				serializer.SerializeList(member.addressReferences);
+				serializer->Serialize(member.name);
+				serializer->Serialize(member.type);
+				serializer->SerializeList(member.references);
+				serializer->SerializeList(member.addressReferences);
 			}
-			serializer.Serialize(info.constructors.Count());
+			serializer->Serialize(info.constructors.Count());
 			for (uint32 z = 0; z < info.constructors.Count(); z++)
 			{
 				const ImportClass::Constructor& member = info.constructors[z];
-				serializer.SerializeList(member.parameters);
-				serializer.SerializeList(member.references);
-				serializer.SerializeList(member.addressReferences);
+				serializer->SerializeList(member.parameters);
+				serializer->SerializeList(member.references);
+				serializer->SerializeList(member.addressReferences);
 			}
-			serializer.Serialize(info.functions.Count());
+			serializer->Serialize(info.functions.Count());
 			for (uint32 z = 0; z < info.functions.Count(); z++)
 			{
 				const ImportClass::Function& member = info.functions[z];
-				serializer.Serialize(member.name);
-				serializer.SerializeList(member.parameters);
-				serializer.SerializeList(member.returns);
-				serializer.SerializeList(member.references);
-				serializer.SerializeList(member.addressReferences);
+				serializer->Serialize(member.name);
+				serializer->SerializeList(member.parameters);
+				serializer->SerializeList(member.returns);
+				serializer->SerializeList(member.references);
+				serializer->SerializeList(member.addressReferences);
 			}
 		}
-		serializer.Serialize(importLibrary.interfaces.Count());
+		serializer->Serialize(importLibrary.interfaces.Count());
 		for (uint32 y = 0; y < importLibrary.interfaces.Count(); y++)
 		{
 			const ImportInterface& info = importLibrary.interfaces[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.Serialize(info.functions.Count());
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->Serialize(info.functions.Count());
 			for (uint32 z = 0; z < info.functions.Count(); z++)
 			{
 				const ImportInterface::Function& member = info.functions[z];
-				serializer.Serialize(member.name);
-				serializer.SerializeList(member.parameters);
-				serializer.SerializeList(member.returns);
-				serializer.SerializeList(member.references);
+				serializer->Serialize(member.name);
+				serializer->SerializeList(member.parameters);
+				serializer->SerializeList(member.returns);
+				serializer->SerializeList(member.references);
 			}
 		}
-		serializer.Serialize(importLibrary.delegates.Count());
+		serializer->Serialize(importLibrary.delegates.Count());
 		for (uint32 y = 0; y < importLibrary.delegates.Count(); y++)
 		{
 			const ImportDelegate& info = importLibrary.delegates[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.SerializeList(info.parameters);
-			serializer.SerializeList(info.returns);
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->SerializeList(info.parameters);
+			serializer->SerializeList(info.returns);
 		}
-		serializer.Serialize(importLibrary.coroutines.Count());
+		serializer->Serialize(importLibrary.coroutines.Count());
 		for (uint32 y = 0; y < importLibrary.coroutines.Count(); y++)
 		{
 			const ImportCoroutine& info = importLibrary.coroutines[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.SerializeList(info.returns);
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->SerializeList(info.returns);
 		}
-		serializer.Serialize(importLibrary.functions.Count());
+		serializer->Serialize(importLibrary.functions.Count());
 		for (uint32 y = 0; y < importLibrary.functions.Count(); y++)
 		{
 			const ImportFunction& info = importLibrary.functions[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.SerializeList(info.parameters);
-			serializer.SerializeList(info.returns);
-			serializer.SerializeList(info.addressReferences);
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->SerializeList(info.parameters);
+			serializer->SerializeList(info.returns);
+			serializer->SerializeList(info.addressReferences);
 		}
-		serializer.Serialize(importLibrary.natives.Count());
+		serializer->Serialize(importLibrary.natives.Count());
 		for (uint32 y = 0; y < importLibrary.natives.Count(); y++)
 		{
 			const ImportNative& info = importLibrary.natives[y];
-			serializer.Serialize(info.space);
-			serializer.Serialize(info.name);
-			serializer.SerializeList(info.references);
-			serializer.SerializeList(info.parameters);
-			serializer.SerializeList(info.returns);
+			serializer->Serialize(info.space);
+			serializer->Serialize(info.name);
+			serializer->SerializeList(info.references);
+			serializer->SerializeList(info.parameters);
+			serializer->SerializeList(info.returns);
 		}
 	}
 
-	size = serializer.size;
-	return serializer.data;
+	return serializer;
 }
 
 void Deserialize(Deserializer* deserializer, TupleInfo& info)
@@ -341,9 +340,9 @@ void Deserialize(Deserializer* deserializer, TupleInfo& info)
 	deserializer->Deserialize(info.GetOffsets());
 }
 
-const uint8* Serialize(const RainLibrary* library, uint32& size)
+const RainBuffer* Serialize(const RainLibrary* library)
 {
-	return Serialize((Library*)library, size);
+	return Serialize((Library*)library);
 }
 
 const RainLibrary* Deserialize(const uint8* data, uint32 size)

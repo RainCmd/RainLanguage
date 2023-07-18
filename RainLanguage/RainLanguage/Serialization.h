@@ -1,35 +1,33 @@
 #pragma once
 #include "RainLanguage.h"
 #include "Collections/List.h"
+#include "Public/RainLibrary.h"
 
 class StringAgency;
-struct Serializer
+class Serializer : public RainBuffer
 {
-	uint8* data;
-	uint32 point, size;
-	inline Serializer(uint32 capacity) :data((uint8*)InternalMalloc(capacity)), point(0), size(capacity) {}
-	void Ensure(uint32 num);
+	List<uint8, true> data;
+public:
+	inline Serializer(uint32 capacity) :data(capacity) {}
 	void SerializeStringAgency(StringAgency* agency);
 	template<typename T>
 	void Serialize(const T& value)
 	{
-		Ensure(SIZE(T));
-		*(T*)data = value;
-		point += SIZE(T);
+		data.Add((uint8*)&value, SIZE(T));
 	}
 	template<typename T>
 	void Serialize(const T* pointer, uint32 count)
 	{
 		Serialize(count);
-		Ensure(SIZE(T) * count);
-		Mcopy<T>(pointer, (T*)(data + point), count);
-		point += SIZE(T) * count;
+		data.Add((uint8*)pointer, SIZE(T) * count);
 	}
 	template<typename T>
 	void SerializeList(const List<T, true>& list)
 	{
 		Serialize(list.GetPointer(), list.Count());
 	}
+	const uint8* Data() const { return data.GetPointer(); }
+	uint32 Count() const { return data.Count(); }
 };
 
 struct Deserializer
