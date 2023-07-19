@@ -113,7 +113,7 @@ struct AbstractSpace
 	{
 		while (space)
 		{
-			if (space == this)return true;
+			if (space == this) return true;
 			else space = space->parent;
 		}
 		return false;

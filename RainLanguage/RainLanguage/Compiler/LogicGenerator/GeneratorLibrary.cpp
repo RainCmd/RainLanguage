@@ -25,46 +25,46 @@ void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agenc
 			CompilingDeclaration& declaration = (*declarationsIterator.CurrentValue())[i];
 			switch (declaration.category)
 			{
-			case DeclarationCategory::Invalid: EXCEPTION("无效的定义类型");
-			case DeclarationCategory::Variable:
-				space->variables.Add(declaration.index);
-				break;
-			case DeclarationCategory::Function:
-				space->functions.Add(declaration.index);
-				break;
-			case DeclarationCategory::Enum:
-				space->enums.Add(declaration.index);
-				break;
-			case DeclarationCategory::EnumElement: EXCEPTION("无效的定义类型");
-			case DeclarationCategory::Struct:
-				space->structs.Add(declaration.index);
-				break;
-			case DeclarationCategory::StructVariable:
-			case DeclarationCategory::StructFunction: EXCEPTION("无效的定义类型");
-			case DeclarationCategory::Class:
-				space->classes.Add(declaration.index);
-				break;
-			case DeclarationCategory::Constructor:
-			case DeclarationCategory::ClassVariable:
-			case DeclarationCategory::ClassFunction: EXCEPTION("无效的定义类型");
-			case DeclarationCategory::Interface:
-				space->interfaces.Add(declaration.index);
-				break;
-			case DeclarationCategory::InterfaceFunction:  EXCEPTION("无效的定义类型");
-			case DeclarationCategory::Delegate:
-				space->delegates.Add(declaration.index);
-				break;
-			case DeclarationCategory::Coroutine:
-				space->coroutines.Add(declaration.index);
-				break;
-			case DeclarationCategory::Native:
-				space->natives.Add(declaration.index);
-				break;
-			case DeclarationCategory::Lambda:
-			case DeclarationCategory::LambdaClosureValue:
-			case DeclarationCategory::LocalVariable:  EXCEPTION("无效的定义类型");
-			default:
-				break;
+				case DeclarationCategory::Invalid: EXCEPTION("无效的定义类型");
+				case DeclarationCategory::Variable:
+					space->variables.Add(declaration.index);
+					break;
+				case DeclarationCategory::Function:
+					space->functions.Add(declaration.index);
+					break;
+				case DeclarationCategory::Enum:
+					space->enums.Add(declaration.index);
+					break;
+				case DeclarationCategory::EnumElement: EXCEPTION("无效的定义类型");
+				case DeclarationCategory::Struct:
+					space->structs.Add(declaration.index);
+					break;
+				case DeclarationCategory::StructVariable:
+				case DeclarationCategory::StructFunction: EXCEPTION("无效的定义类型");
+				case DeclarationCategory::Class:
+					space->classes.Add(declaration.index);
+					break;
+				case DeclarationCategory::Constructor:
+				case DeclarationCategory::ClassVariable:
+				case DeclarationCategory::ClassFunction: EXCEPTION("无效的定义类型");
+				case DeclarationCategory::Interface:
+					space->interfaces.Add(declaration.index);
+					break;
+				case DeclarationCategory::InterfaceFunction:  EXCEPTION("无效的定义类型");
+				case DeclarationCategory::Delegate:
+					space->delegates.Add(declaration.index);
+					break;
+				case DeclarationCategory::Coroutine:
+					space->coroutines.Add(declaration.index);
+					break;
+				case DeclarationCategory::Native:
+					space->natives.Add(declaration.index);
+					break;
+				case DeclarationCategory::Lambda:
+				case DeclarationCategory::LambdaClosureValue:
+				case DeclarationCategory::LocalVariable:  EXCEPTION("无效的定义类型");
+				default:
+					break;
 			}
 		}
 	Dictionary<String, AbstractSpace*>::Iterator spaceIterator = index->children.GetIterator();
@@ -108,6 +108,14 @@ void CollectInherits(DeclarationManager& manager, const Declaration& declaration
 	else EXCEPTION("不该出现的类型");
 }
 
+bool CheckVisible(AbstractFunction* sourceFunction, AbstractFunction* parentFunction)
+{
+	if (ContainAny(parentFunction->declaration.visibility, Visibility::Protected | Visibility::Public)) return true;
+	if (ContainAny(parentFunction->declaration.visibility, Visibility::Internal)) return parentFunction->declaration.library == LIBRARY_SELF;
+	if (ContainAny(parentFunction->declaration.visibility, Visibility::Space) && parentFunction->declaration.library == LIBRARY_SELF) return parentFunction->space->Contain(sourceFunction->space);
+	return false;
+}
+
 void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relocations, const MemberFunction& realize, AbstractFunction* sourceFunction, const Declaration& declaration, GlobalReference* globalReference)
 {
 	if (declaration.code == TypeCode::Handle)
@@ -117,7 +125,7 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 		for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
 		{
 			AbstractFunction* function = library->functions[abstractClass->functions[i]];
-			if (function->name == sourceFunction->name && IsEquals(function->parameters.GetTypes(), 1, sourceFunction->parameters.GetTypes(), 1))
+			if (function->name == sourceFunction->name && CheckVisible(sourceFunction, function) && IsEquals(function->parameters.GetTypes(), 1, sourceFunction->parameters.GetTypes(), 1))
 			{
 				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "前面继承检查逻辑可能有Bug");
 				CompilingDeclaration functionDeclaration = globalReference->AddReference(function->declaration);
