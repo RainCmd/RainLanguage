@@ -1,5 +1,5 @@
 #pragma once
-#include "../RainLanguage.h"
+#include "../Language.h"
 
 #ifdef FIXED_REAL
 constexpr integer ONE = 1LL << DECIMAL;

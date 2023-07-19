@@ -1,5 +1,5 @@
 #pragma once
-#include "../RainLanguage.h"
+#include "../Language.h"
 
 struct Random
 {

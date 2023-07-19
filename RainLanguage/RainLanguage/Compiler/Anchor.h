@@ -1,5 +1,5 @@
 #pragma once
-#include "../RainLanguage.h"
+#include "../Language.h"
 #include "../String.h"
 #include "Character.h"
 

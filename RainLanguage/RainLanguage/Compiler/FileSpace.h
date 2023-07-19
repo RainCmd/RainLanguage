@@ -1,6 +1,6 @@
 #pragma once
 #include "../Collections/List.h"
-#include "../RainLanguage.h"
+#include "../Language.h"
 #include "../String.h"
 #include "Message.h"
 #include "CompilingLibrary.h"

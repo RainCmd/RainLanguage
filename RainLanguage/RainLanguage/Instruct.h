@@ -1,5 +1,5 @@
 #pragma once
-#include "RainLanguage.h"
+#include "Language.h"
 enum class Instruct                         //可能会抛异常的指令
 {
     #pragma region base

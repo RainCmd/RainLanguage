@@ -1,5 +1,5 @@
 #pragma once
-#include "../RainLanguage.h"
+#include "../Language.h"
 #include "Hash.h"
 template<typename T, bool IsBitwise = false>
 class Set

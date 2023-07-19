@@ -1,5 +1,5 @@
 #pragma once
-#include "RainLanguage.h"
+#include "Language.h"
 #include "Type.h"
 
 enum KERNEL_TYPE_INDEX

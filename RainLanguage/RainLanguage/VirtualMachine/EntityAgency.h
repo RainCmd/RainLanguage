@@ -1,5 +1,5 @@
 #pragma once
-#include "../RainLanguage.h"
+#include "../Language.h"
 #include "../Collections/List.h"
 #include "../Collections/Dictionary.h"
 #include "../Public/VirtualMachineDefinitions.h"

@@ -1,5 +1,5 @@
 #pragma once
-#include "../RainLanguage.h"
+#include "../Language.h"
 #include "../Type.h"
 #include "../Public/Vector.h"
 #include "../Public/VirtualMachine.h"
