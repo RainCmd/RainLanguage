@@ -1110,7 +1110,11 @@ label_next_instruct:
 				}
 				Exit(error, POINTER);
 			}
-			if (kernelInvoker) goto label_next_instruct;
+			if (kernelInvoker)
+			{
+				pointer = POINTER;
+				goto label_exit;
+			}
 			instruct += 5;
 		}
 		goto label_next_instruct;
@@ -2578,7 +2582,7 @@ label_exit:
 
 void Coroutine::Abort()
 {
-	switch (kernel->libraryAgency->code[pointer])
+	if (pointer != INVALID) switch (kernel->libraryAgency->code[pointer])
 	{
 		case (uint8)Instruct::BASE_WaitBack:
 			pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 1);

@@ -63,7 +63,7 @@ void CoroutineAgency::Update()
 		}
 		else
 		{
-			if (prev)prev->next = index->next;
+			if (prev) prev->next = index->next;
 			else head = index->next;
 			Coroutine* coroutine = index;
 			Invoker* invoker = coroutine->invoker;
