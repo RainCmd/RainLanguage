@@ -13,7 +13,7 @@
 											for (uint32 typeIndex = 0; typeIndex < tuple.Count(); typeIndex++)\
 												nativeTuple.AddElement(LocalToGlobal(index, maps, tuple.GetType(typeIndex)), tuple.GetOffset(typeIndex));
 
-#define SET_DECLARATION_SPACE(declaration) for (uint32 i = 0; i < space->declaration.Count(); i++)library->declaration[space->declaration[i]].space = index;
+#define SET_DECLARATION_SPACE(declaration) for (uint32 i = 0; i < space->declaration.Count(); i++) library->declaration[space->declaration[i]].space = index;
 
 #define CHECK_DECLARATION_SPACE(declarations) for (uint32 i = 0; i < declarations.Count(); i++) ASSERT(declarations[i].space,"定义所属命名空间初始化失败");
 

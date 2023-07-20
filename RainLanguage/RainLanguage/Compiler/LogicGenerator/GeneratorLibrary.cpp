@@ -68,7 +68,11 @@ void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agenc
 			}
 		}
 	Dictionary<String, AbstractSpace*>::Iterator spaceIterator = index->children.GetIterator();
-	while (spaceIterator.Next()) CollectSpace(spaceIterator.CurrentValue(), spaces, agency);
+	while (spaceIterator.Next())
+	{
+		space->children.Add(spaces.Count());
+		CollectSpace(spaceIterator.CurrentValue(), spaces, agency);
+	}
 }
 
 void AddSpace(AbstractSpace* index, List<ImportSpace, true>& importSpaces, StringAgency* agency)
