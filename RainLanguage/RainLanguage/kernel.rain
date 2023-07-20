@@ -330,7 +330,7 @@ namespace kernel
 			public ReadonlyStrings GetAttributes()
 			public type GetDeclaringType()
 			public ReadonlyTypes GetParameters()
-			public InvokeResult Invoke(handle[])
+			public handle Invoke(handle[])
 		public class MemberVariable
 			public bool IsPublic()
 			public ReadonlyStrings GetAttributes()
@@ -348,7 +348,7 @@ namespace kernel
 			public string GetName()
 			public ReadonlyTypes GetParameters()
 			public ReadonlyTypes GetReturns()
-			public InvokeResult Invoke(handle, handle[])
+			public handle[] Invoke(handle, handle[])
 		public class Function
 			private ReadonlyTypes parameters
 			private ReadonlyTypes returns
@@ -358,7 +358,7 @@ namespace kernel
 			public string GetName()
 			public ReadonlyTypes GetParameters()
 			public ReadonlyTypes GetReturns()
-			public InvokeResult Invoke(handle[])
+			public handle[] Invoke(handle[])
 		public class Native
 			private ReadonlyTypes parameters
 			private ReadonlyTypes returns
