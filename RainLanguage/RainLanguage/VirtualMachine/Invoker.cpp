@@ -301,7 +301,7 @@ void Invoker::Recycle()
 			default: return;
 		}
 		kernel->coroutineAgency->Recycle(this);
-		frames.Clear();
+		exceptionStackFrames.Clear();
 	}
 }
 
@@ -341,17 +341,6 @@ void Invoker::GetReturns(const Handle results)
 		kernel->heapAgency->TryGetArrayPoint(results, i, address);
 		WeakBox(kernel, info->returns.GetType(i), data.GetPointer() + info->returns.GetOffset(i), *(Handle*)address);
 	}
-}
-
-void Invoker::PushStackFrame(uint32 pointer)
-{
-	RuntimeLibrary* library = NULL;
-	for (uint32 i = 0; i < kernel->libraryAgency->libraries.Count(); i++)
-		if (kernel->libraryAgency->libraries[i]->codeOffset <= pointer)
-			library = kernel->libraryAgency->libraries[i];
-		else break;
-	if (!library) library = kernel->libraryAgency->kernelLibrary;
-	frames.Add(StackFrame(kernel->stringAgency->Get(library->spaces[0].name), pointer - library->codeOffset));
 }
 
 void Invoker::Start(bool immediately, bool ignoreWait)

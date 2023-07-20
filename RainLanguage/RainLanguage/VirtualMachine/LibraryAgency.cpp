@@ -323,6 +323,25 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 	else return String();
 }
 
+void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library, uint32& function)
+{
+	library = kernelLibrary;
+	for (uint32 i = 0; i < libraries.Count(); i++)
+		if (pointer < libraries[i]->codeOffset) break;
+		else library = libraries[i];
+	uint32 functionEntry = library->codeOffset;
+	function = INVALID;
+	for (uint32 i = 0; i < library->functions.Count(); i++)
+	{
+		uint32 entry = library->functions[i].entry;
+		if (entry < pointer && entry >= functionEntry)
+		{
+			function = i;
+			functionEntry = entry;
+		}
+	}
+}
+
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo)
 {
 	for (uint32 i = 0; i < tupleInfo.Count(); i++)

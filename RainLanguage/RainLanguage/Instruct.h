@@ -3,6 +3,7 @@
 enum class Instruct                         //可能会抛异常的指令
 {
     #pragma region base
+    BASE_Exit,
     BASE_PushExitMessage,
     BASE_PopExitMessage,
     BASE_ExitJump,                          //exception
@@ -60,10 +61,10 @@ enum class Instruct                         //可能会抛异常的指令
 
     FUNCTION_Call,
     FUNCTION_MemberCall,
-    FUNCTION_VirtualCall,             //exception
+    FUNCTION_VirtualCall,                   //exception
     FUNCTION_CustomCall,                    //exception
     FUNCTION_NativeCall,                    //exception
-    FUNCTION_KernelCall,                    //exception
+    FUNCTION_KernelCall,
     #pragma endregion function
 
     #pragma region assignment

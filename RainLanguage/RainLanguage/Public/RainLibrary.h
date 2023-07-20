@@ -2,17 +2,9 @@
 #include "Rain.h"
 
 /// <summary>
-/// 库
-/// </summary>
-class RAINLANGUAGE RainLibrary
-{
-public:
-	RainLibrary() = default;
-	virtual ~RainLibrary() {};
-};
-/// <summary>
 /// 数据缓存
 /// </summary>
+template<typename T>
 class RAINLANGUAGE RainBuffer
 {
 public:
@@ -20,13 +12,22 @@ public:
 	/// 数据
 	/// </summary>
 	/// <returns>数据字节码</returns>
-	virtual const uint8* Data() const = 0;
+	virtual const T* Data() const = 0;
 	/// <summary>
 	/// 数据长度
 	/// </summary>
 	/// <returns></returns>
 	virtual uint32 Count() const = 0;
 	virtual ~RainBuffer() {}
+};
+/// <summary>
+/// 库
+/// </summary>
+class RAINLANGUAGE RainLibrary
+{
+public:
+	RainLibrary() = default;
+	virtual ~RainLibrary() {};
 };
 /// <summary>
 /// 库加载器
@@ -38,7 +39,7 @@ typedef const RainLibrary* (*LibraryLoader)(const RainString& name);
 /// </summary>
 /// <param name="library">库</param>
 /// <returns>序列化后的数据</returns>
-RAINLANGUAGE const RainBuffer* Serialize(const RainLibrary* library);
+RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary* library);
 /// <summary>
 /// 反序列化库
 /// </summary>

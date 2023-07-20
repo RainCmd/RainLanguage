@@ -75,6 +75,7 @@ public:
 	const RuntimeFunction* GetRuntimeFunction(const Function& function);
 	const RuntimeFunction* GetRuntimeFunction(const MemberFunction& function);
 	String InvokeNative(const Native& native, uint8* stack, uint32 top);
+	void GetInstructPosition(uint32 pointer, RuntimeLibrary*& library, uint32& function);
 	inline ~LibraryAgency()
 	{
 		delete kernelLibrary;

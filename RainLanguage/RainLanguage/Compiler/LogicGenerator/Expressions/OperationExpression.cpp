@@ -11,6 +11,23 @@ void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	for (uint32 i = 0; i < expressionParameter.results.Count(); i++) parameter.generator->WriteCode(expressionParameter.results[i]);
+	switch (instruct)
+	{
+		case Instruct::INTEGER_Divide:
+		case Instruct::INTEGER_Mod:
+		case Instruct::REAL_Divide:
+		case Instruct::REAL2_Divide_rv:
+		case Instruct::REAL2_Divide_vr:
+		case Instruct::REAL2_Divide_vv:
+		case Instruct::REAL3_Divide_rv:
+		case Instruct::REAL3_Divide_vr:
+		case Instruct::REAL3_Divide_vv:
+		case Instruct::REAL4_Divide_rv:
+		case Instruct::REAL4_Divide_vr:
+		case Instruct::REAL4_Divide_vv:
+			parameter.generator->WriteCode(parameter.finallyAddress);
+			break;
+	}
 }
 
 InstructOperationExpression::~InstructOperationExpression()

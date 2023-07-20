@@ -4,7 +4,7 @@
 #include "Public/RainLibrary.h"
 
 class StringAgency;
-class Serializer : public RainBuffer
+class Serializer : public RainBuffer<uint8>
 {
 	List<uint8, true> data;
 public:

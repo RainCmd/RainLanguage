@@ -17,7 +17,7 @@
 #define RETURN_POINT(offset) GetReturnPoint(kernel, stack, cacheData[1], INSTRUCT_VALUE(uint32, offset))
 
 #define POINTER (uint32)(instruct - kernel->libraryAgency->code.GetPointer())
-#define EXCEPTION_EXIT(instructName,message)	{ Exit(kernel->stringAgency->Add(message), POINTER); goto label_exit_jump_##instructName; }
+#define EXCEPTION_EXIT(instructName,message) { Exit(kernel->stringAgency->Add(message), POINTER); goto label_exit_jump_##instructName; }
 #define EXCEPTION_JUMP(instructSize,instructName)\
 			label_exit_jump_##instructName:\
 			if (exitMessage.IsEmpty())instruct += 5 + (instructSize);\
@@ -83,11 +83,11 @@ void Coroutine::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 void Coroutine::Exit(const String& message, uint32 exitPointer)
 {
 	exitMessage = message;
-	invoker->PushStackFrame(exitPointer);
+	invoker->exceptionStackFrames.Add(exitPointer);
 	Frame* index = (Frame*)(stack + bottom);
 	while (index->pointer != INVALID)
 	{
-		invoker->PushStackFrame(index->pointer);
+		invoker->exceptionStackFrames.Add(index->pointer);
 		index = (Frame*)(stack + index->bottom);
 	}
 }
@@ -100,6 +100,11 @@ label_next_instruct:
 	switch ((Instruct)*instruct)
 	{
 #pragma region Base
+		case Instruct::BASE_Exit:
+			exitMessage = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
+			if (!exitMessage.IsEmpty()) Exit(exitMessage, POINTER);
+			instruct += 5;
+			goto label_next_instruct;
 		case Instruct::BASE_PushExitMessage:
 			INSTRUCT_VARIABLE(string, 1) = exitMessage.index;
 			kernel->stringAgency->Reference(exitMessage.index);
@@ -111,7 +116,7 @@ label_next_instruct:
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_ExitJump:
-			if (exitMessage.IsEmpty())instruct += 5;
+			if (exitMessage.IsEmpty()) instruct += 5;
 			else instruct += INSTRUCT_VALUE(uint32, 1);
 			goto label_next_instruct;
 		case Instruct::BASE_Wait:
@@ -1103,10 +1108,10 @@ label_next_instruct:
 					kernelInvoker->Release();
 					kernelInvoker = NULL;
 				}
-				EXCEPTION_EXIT(FUNCTION_KernelCall, error);
+				Exit(error, POINTER);
 			}
-			if (kernelInvoker)goto label_next_instruct;
-			EXCEPTION_JUMP(4, FUNCTION_KernelCall);
+			if (kernelInvoker) goto label_next_instruct;
+			instruct += 5;
 		}
 		goto label_next_instruct;
 #pragma endregion º¯Êý
@@ -2596,11 +2601,25 @@ void Coroutine::Recycle()
 		invoker->state = InvokerState::Completed;
 		if (!exitMessage.IsEmpty() && kernel->coroutineAgency->onExceptionExit)
 		{
-			List<RainStackFrame> frames(invoker->frames.Count());
-			for (uint32 i = 0; i < invoker->frames.Count(); i++)
+			List<RainStackFrame> frames(invoker->exceptionStackFrames.Count());
+			for (uint32 i = 0; i < invoker->exceptionStackFrames.Count(); i++)
 			{
-				const StackFrame& frame = invoker->frames[i];
-				new (frames.Add())RainStackFrame(RainString(frame.library.GetPointer(), frame.library.GetLength()), frame.address);
+				RuntimeLibrary* library; uint32 function;
+				uint32 address = invoker->exceptionStackFrames[i];
+				kernel->libraryAgency->GetInstructPosition(address, library, function);
+				if (function != INVALID)
+				{
+					String libraryName = kernel->stringAgency->Get(library->spaces[0].name);
+					String combine[3];
+					combine[1] = kernel->stringAgency->Add(TEXT("."));
+					combine[2] = kernel->stringAgency->Get(library->functions[function].name);
+					for (uint32 space = library->functions[function].space; space; space = library->spaces[space].parent)
+					{
+						combine[0] = kernel->stringAgency->Get(library->spaces[space].name);
+						combine[2] = kernel->stringAgency->Combine(combine, 3);
+					}
+					new (frames.Add())RainStackFrame(RainString(libraryName.GetPointer(), libraryName.GetLength()), RainString(combine[2].GetPointer(), combine[2].GetLength()), address - library->codeOffset);
+				}
 			}
 			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
 		}

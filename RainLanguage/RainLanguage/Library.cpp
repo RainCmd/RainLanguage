@@ -340,7 +340,7 @@ void Deserialize(Deserializer* deserializer, TupleInfo& info)
 	deserializer->Deserialize(info.GetOffsets());
 }
 
-const RainBuffer* Serialize(const RainLibrary* library)
+const RainBuffer<uint8>* Serialize(const RainLibrary* library)
 {
 	return Serialize((Library*)library);
 }

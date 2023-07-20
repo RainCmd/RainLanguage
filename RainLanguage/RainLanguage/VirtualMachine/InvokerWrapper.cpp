@@ -4,6 +4,7 @@
 #include "CoroutineAgency.h"
 #include "LibraryAgency.h"
 
+#define INVOKER ((Invoker*)invoker)
 void InvokerWrapper::ValidAssert() const
 {
 	ASSERT(IsValid(), "无效的调用");
@@ -11,14 +12,14 @@ void InvokerWrapper::ValidAssert() const
 
 InvokerWrapper::InvokerWrapper() :instanceID(0), invoker(NULL) {}
 
-InvokerWrapper::InvokerWrapper(Invoker* invoker) : instanceID(invoker ? invoker->instanceID : NULL), invoker(invoker)
+InvokerWrapper::InvokerWrapper(void* invoker) : instanceID(invoker ? INVOKER->instanceID : NULL), invoker(invoker)
 {
-	if (IsValid()) invoker->Reference();
+	if (IsValid()) INVOKER->Reference();
 }
 
 InvokerWrapper::InvokerWrapper(const InvokerWrapper& other) : instanceID(other.instanceID), invoker(other.invoker)
 {
-	if (IsValid()) invoker->Reference();
+	if (IsValid()) INVOKER->Reference();
 }
 
 InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(other.instanceID), invoker(other.invoker)
@@ -28,21 +29,26 @@ InvokerWrapper::InvokerWrapper(InvokerWrapper&& other) noexcept : instanceID(oth
 
 InvokerWrapper::~InvokerWrapper()
 {
-	if (IsValid()) invoker->Release();
-	else if (invoker && invoker->instanceID == instanceID)
+	if (IsValid()) INVOKER->Release();
+	else if (invoker && INVOKER->instanceID == instanceID)
 	{
-		invoker->hold--;
-		if (!invoker->hold) delete invoker;
+		INVOKER->hold--;
+		if (!INVOKER->hold) delete invoker;
 	}
 }
 
 InvokerWrapper& InvokerWrapper::operator=(const InvokerWrapper& other)
 {
-	if (IsValid()) invoker->Release();
+	if (IsValid()) INVOKER->Release();
 	instanceID = other.instanceID;
 	invoker = other.invoker;
-	if (IsValid()) invoker->Reference();
+	if (IsValid()) INVOKER->Reference();
 	return *this;
+}
+
+RainKernel* InvokerWrapper::GetKernel()
+{
+	return INVOKER->kernel;
 }
 
 uint64 InvokerWrapper::GetInstanceID() const
@@ -52,187 +58,187 @@ uint64 InvokerWrapper::GetInstanceID() const
 
 bool InvokerWrapper::IsValid() const
 {
-	return invoker && invoker->kernel && invoker->instanceID == instanceID;
+	return invoker && INVOKER->kernel && INVOKER->instanceID == instanceID;
 }
 
 InvokerState InvokerWrapper::GetState() const
 {
-	if (IsValid()) return invoker->state;
+	if (IsValid()) return INVOKER->state;
 	else return InvokerState::Invalid;
 }
 
 const RainString InvokerWrapper::GetExitMessage() const
 {
 	ValidAssert();
-	return RainString(invoker->exitMessage.GetPointer(), invoker->exitMessage.GetLength());
+	return RainString(INVOKER->exitMessage.GetPointer(), INVOKER->exitMessage.GetLength());
 }
 
 void InvokerWrapper::Start(bool immediately, bool ignoreWait) const
 {
-	invoker->Start(immediately, ignoreWait);
+	INVOKER->Start(immediately, ignoreWait);
 }
 
 bool InvokerWrapper::IsPause() const
 {
 	ValidAssert();
-	return invoker->IsPause();
+	return INVOKER->IsPause();
 }
 
 void InvokerWrapper::Pause() const
 {
 	ValidAssert();
-	invoker->Pause();
+	INVOKER->Pause();
 }
 
 void InvokerWrapper::Resume() const
 {
 	ValidAssert();
-	invoker->Resume();
+	INVOKER->Resume();
 }
 
 void InvokerWrapper::Abort(const RainString& error) const
 {
-	invoker->Abort(error.value, error.length);
+	INVOKER->Abort(error.value, error.length);
 }
 
 bool InvokerWrapper::GetBoolReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetBoolReturnValue(index);
+	return INVOKER->GetBoolReturnValue(index);
 }
 
 uint8 InvokerWrapper::GetByteReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetByteReturnValue(index);
+	return INVOKER->GetByteReturnValue(index);
 }
 
 character InvokerWrapper::GetCharReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetCharReturnValue(index);
+	return INVOKER->GetCharReturnValue(index);
 }
 
 integer InvokerWrapper::GetIntegerReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetIntegerReturnValue(index);
+	return INVOKER->GetIntegerReturnValue(index);
 }
 
 real InvokerWrapper::GetRealReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetRealReturnValue(index);
+	return INVOKER->GetRealReturnValue(index);
 }
 
 Real2 InvokerWrapper::GetReal2ReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetReal2ReturnValue(index);
+	return INVOKER->GetReal2ReturnValue(index);
 }
 
 Real3 InvokerWrapper::GetReal3ReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetReal3ReturnValue(index);
+	return INVOKER->GetReal3ReturnValue(index);
 }
 
 Real4 InvokerWrapper::GetReal4ReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetReal4ReturnValue(index);
+	return INVOKER->GetReal4ReturnValue(index);
 }
 
 integer InvokerWrapper::GetEnumValueReturnValue(uint32 index) const
 {
 	ValidAssert();
-	const Type& type = invoker->info->returns.GetType(index);
+	const Type& type = INVOKER->info->returns.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "返回值类型错误");
-	return invoker->GetEnumReturnValue(index, type);
+	return INVOKER->GetEnumReturnValue(index, type);
 }
 
 const RainString InvokerWrapper::GetEnumNameReturnValue(uint32 index) const
 {
 	ValidAssert();
-	const Type& type = invoker->info->returns.GetType(index);
+	const Type& type = INVOKER->info->returns.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "返回值类型错误");
-	String result = invoker->kernel->libraryAgency->GetEnum(type)->ToString(invoker->GetEnumReturnValue(index, type), invoker->kernel->stringAgency);
+	String result = INVOKER->kernel->libraryAgency->GetEnum(type)->ToString(INVOKER->GetEnumReturnValue(index, type), INVOKER->kernel->stringAgency);
 	return RainString(result.GetPointer(), result.GetLength());
 }
 
 const RainString InvokerWrapper::GetStringReturnValue(uint32 index) const
 {
 	ValidAssert();
-	String result = invoker->kernel->stringAgency->Get(invoker->GetStringReturnValue(index));
+	String result = INVOKER->kernel->stringAgency->Get(INVOKER->GetStringReturnValue(index));
 	return RainString(result.GetPointer(), result.GetLength());
 }
 
 uint64 InvokerWrapper::GetEntityReturnValue(uint32 index) const
 {
 	ValidAssert();
-	return invoker->GetEntityValueReturnValue(index);
+	return INVOKER->GetEntityValueReturnValue(index);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, bool value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, uint8 value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, character value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, integer value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, real value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, Real2 value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, Real3 value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, Real4 value) const
 {
 	ValidAssert();
-	invoker->SetParameter(index, value);
+	INVOKER->SetParameter(index, value);
 }
 
 void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString& elementName) const
 {
 	ValidAssert();
-	invoker->StateAssert(InvokerState::Unstart);
-	const Type& type = invoker->info->parameters.GetType(index);
+	INVOKER->StateAssert(InvokerState::Unstart);
+	const Type& type = INVOKER->info->parameters.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "参数类型错误");
-	string name = invoker->kernel->stringAgency->Add(elementName.value, elementName.length).index;
-	const RuntimeEnum* info = invoker->kernel->libraryAgency->GetEnum(type);
+	string name = INVOKER->kernel->stringAgency->Add(elementName.value, elementName.length).index;
+	const RuntimeEnum* info = INVOKER->kernel->libraryAgency->GetEnum(type);
 	for (uint32 i = 0; i < info->values.Count(); i++)
 		if (info->values[i].name == name)
 		{
-			invoker->SetParameter(index, info->values[i].value, type);
+			INVOKER->SetParameter(index, info->values[i].value, type);
 			return;
 		}
 	EXCEPTION("不存在的枚举");
@@ -248,17 +254,17 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const character* element
 void InvokerWrapper::SetEnumValueParameter(uint32 index, integer value) const
 {
 	ValidAssert();
-	invoker->StateAssert(InvokerState::Unstart);
-	const Type& type = invoker->info->parameters.GetType(index);
+	INVOKER->StateAssert(InvokerState::Unstart);
+	const Type& type = INVOKER->info->parameters.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "参数类型错误");
-	invoker->SetParameter(index, value, type);
+	INVOKER->SetParameter(index, value, type);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, const RainString& value) const
 {
 	ValidAssert();
-	String parameter = invoker->kernel->stringAgency->Add(value.value, value.length);
-	invoker->SetStringParameter(index, parameter.index);
+	String parameter = INVOKER->kernel->stringAgency->Add(value.value, value.length);
+	INVOKER->SetStringParameter(index, parameter.index);
 }
 
 void InvokerWrapper::SetParameter(uint32 index, const character* value) const
@@ -271,5 +277,5 @@ void InvokerWrapper::SetParameter(uint32 index, const character* value) const
 void InvokerWrapper::SetEntityParameter(uint32 index, uint64 value) const
 {
 	ValidAssert();
-	invoker->SetEntityValueParameter(index, value);
+	INVOKER->SetEntityValueParameter(index, value);
 }

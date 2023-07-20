@@ -13,14 +13,17 @@ struct RAINLANGUAGE RainStackFrame
 	/// </summary>
 	const RainString libraryName;
 	/// <summary>
+	/// 函数名
+	/// </summary>
+	const RainString functionName;
+	/// <summary>
 	/// 库本地代码段地址
 	/// </summary>
 	uint32 address;
 
-	RainStackFrame(const RainString& libraryName, const uint32& address) : libraryName(libraryName), address(address) {}
+	RainStackFrame(const RainString& libraryName, const RainString& functionName, const uint32& address) : libraryName(libraryName), functionName(functionName), address(address) {}
 };
 
-class Invoker;
 /// <summary>
 /// c++调用雨言
 /// </summary>
@@ -28,17 +31,22 @@ class RAINLANGUAGE InvokerWrapper
 {
 private:
 	uint64 instanceID;
-	Invoker* invoker;
+	void* invoker;
 	void ValidAssert() const;
 public:
 	InvokerWrapper();
-	InvokerWrapper(Invoker* invoker);
+	InvokerWrapper(void* invoker);
 	InvokerWrapper(const InvokerWrapper& other);
 	InvokerWrapper(InvokerWrapper&& other) noexcept;
 	~InvokerWrapper();
 
 	InvokerWrapper& operator=(const InvokerWrapper& other);
 
+	/// <summary>
+	/// 获取所属虚拟机
+	/// </summary>
+	/// <returns></returns>
+	RainKernel* GetKernel();
 	/// <summary>
 	/// 获取调用实例ID
 	/// </summary>

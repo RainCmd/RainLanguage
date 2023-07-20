@@ -246,7 +246,6 @@ Library* GetKernelLibrary()
 			generator.Write<uint32>(0);
 			generator.WriteInstruct(Instruct::FUNCTION_KernelCall);
 			generator.Write(i);
-			generator.Write<uint32>(9);
 			uint32 parameterPointer = SIZE(Frame) + function->returns.Count() * 4;
 			for (uint32 y = 0; y < function->parameters.Count(); y++)
 				ClearVariable(generator, function->parameters.GetType(y), parameterPointer + function->parameters.GetOffset(y));
