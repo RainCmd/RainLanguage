@@ -82,14 +82,9 @@ void Coroutine::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 }
 void Coroutine::Exit(const String& message, uint32 exitPointer)
 {
+	pointer = exitPointer;
 	exitMessage = message;
-	invoker->exceptionStackFrames.Add(exitPointer);
-	Frame* index = (Frame*)(stack + bottom);
-	while (index->pointer != INVALID)
-	{
-		invoker->exceptionStackFrames.Add(index->pointer);
-		index = (Frame*)(stack + index->bottom);
-	}
+	GetTrace(invoker->exceptionStackFrames);
 }
 void Coroutine::Run()
 {
@@ -2567,13 +2562,17 @@ label_next_instruct:
 		goto label_next_instruct;
 #pragma endregion Casting
 		case Instruct::BREAKPOINT: instruct++;
+		label_breakpoint:
 			if (kernel->debugger)
 			{
 				pointer = POINTER;
-
+				uint32 deep = 1;
+				for (Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) deep++;
+				kernel->debugger->OnBreak(invoker->instanceID, pointer, deep);
 			}
 			goto label_next_instruct;
 		case Instruct::BREAK: instruct++;
+			if (kernel->debugger && kernel->debugger->type != StepType::None) goto label_breakpoint;
 			goto label_next_instruct;
 		case Instruct::NoOperation: instruct++;
 			goto label_next_instruct;
@@ -2581,6 +2580,17 @@ label_next_instruct:
 	}
 label_exit:
 	pointer = POINTER;
+}
+
+void Coroutine::GetTrace(List<uint32, true>& trace)
+{
+	trace.Add(pointer);
+	Frame* index = (Frame*)(stack + bottom);
+	while (index->pointer != INVALID)
+	{
+		trace.Add(index->pointer);
+		index = (Frame*)(stack + index->bottom);
+	}
 }
 
 void Coroutine::Abort()

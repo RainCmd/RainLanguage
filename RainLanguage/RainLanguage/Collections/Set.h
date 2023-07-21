@@ -34,7 +34,7 @@ private:
 	bool TryGetIdx(const T& value, uint32& hash, uint32& bidx, uint32& sidx) const
 	{
 		hash = GetHash(value);
-		if (!hash)hash = 1;
+		if (!hash) hash = 1;
 		bidx = hash % size;
 		sidx = buckets[bidx];
 		while (sidx != INVALID)

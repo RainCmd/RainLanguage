@@ -1,5 +1,6 @@
 #pragma once
 #include "../Public/VirtualMachine.h"
+#include "../Collections/Set.h"
 #include "../Real/Random.h"
 #include "../KernelDeclarations.h"
 
@@ -28,7 +29,7 @@ public:
 	HeapAgency* heapAgency;
 	Random random;
 	RainDebugger* debugger;
-	List<uint32, true> breakpoints;
+	Set<uint32, true> breakpoints;
 	Kernel(const StartupParameter& parameter);
 	const RainFunction FindFunction(const RainString& name, bool allowNoPublic);
 	const RainFunction FindFunction(const character* name, bool allowNoPublic);

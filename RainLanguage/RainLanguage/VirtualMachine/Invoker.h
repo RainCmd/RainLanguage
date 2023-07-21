@@ -13,7 +13,7 @@ class Invoker
 public:
 	Kernel* kernel;
 	List<uint8, true> data;
-	List<uint32> exceptionStackFrames;
+	List<uint32,true > exceptionStackFrames;
 	uint64 instanceID;
 	InvokerState state;
 	const CallableInfo* info;

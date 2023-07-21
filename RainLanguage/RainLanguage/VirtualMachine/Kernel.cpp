@@ -105,29 +105,29 @@ RainFunctions::~RainFunctions()
 	count = 0;
 }
 
+struct Trace
+{
+	uint32 library;
+	uint32 instruct;
+	uint32* data;
+};
+
 #define KERNEL ((Kernel*)kernel)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
+#define LIBRARY ((RuntimeLibrary*)library)
+#define TRACES (*(List<Trace, true>*)trace)
 void RainDebugger::ResetState()
 {
 	currentCoroutine = 0;
-	currentAddress = INVALID;
-	if (targetAddress != INVALID && Active()) SHARE->kernel->RemoveBreakpoint(targetAddress);
-	targetCoroutine = 0;
-	targetAddress = INVALID;
+	currentTraceDeep = INVALID;
 }
 
-RainDebugger::RainDebugger(const RainProgramDatabase* database) : share(NULL), currentCoroutine(), currentAddress(INVALID), targetCoroutine(), targetAddress(INVALID), pause(false), database(database) {}
+RainDebugger::RainDebugger(const RainProgramDatabase* database) : trace(new List<Trace, true>(0)), share(NULL), library(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), database(database) {}
 
-RainDebugger::RainDebugger(RainKernel* kernel, const RainProgramDatabase* database) : share(NULL), currentCoroutine(), currentAddress(INVALID), targetCoroutine(), targetAddress(INVALID), pause(false), database(database)
+RainDebugger::RainDebugger(RainKernel* kernel, const RainProgramDatabase* database) : trace(new List<Trace, true>(0)), share(NULL), library(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), database(database)
 {
-	if (kernel)
-	{
-		if (KERNEL->debugger) KERNEL->debugger->SetKernel(NULL);
-		share = KERNEL->share;
-		KERNEL->debugger = this;
-		KERNEL->share->Reference();
-	}
+	SetKernel(kernel);
 }
 
 void RainDebugger::SetKernel(RainKernel* kernel)
@@ -142,6 +142,7 @@ void RainDebugger::SetKernel(RainKernel* kernel)
 		}
 		SHARE->Release();
 		share = NULL;
+		library = NULL;
 	}
 	if (kernel)
 	{
@@ -149,12 +150,23 @@ void RainDebugger::SetKernel(RainKernel* kernel)
 		share = KERNEL->share;
 		KERNEL->debugger = this;
 		SHARE->Reference();
+		if (database)
+		{
+			String name = KERNEL->stringAgency->Add(database->LibraryName().value, database->LibraryName().length);
+			List<RuntimeLibrary*, true>& libraries = KERNEL->libraryAgency->libraries;
+			for (uint32 i = 0; i < libraries.Count(); i++)
+				if (libraries[i]->spaces[0].name == name.index)
+				{
+					library = &libraries[i];
+					break;
+				}
+		}
 	}
 }
 
 bool RainDebugger::Active()
 {
-	return share && SHARE->kernel && database;
+	return share && SHARE->kernel && library;
 }
 
 bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
@@ -164,7 +176,7 @@ bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
 		uint32 count;
 		const uint32* addresses = database->GetInstructAddresses(file, line, count);
 		bool success = false;
-		while (count--) if (SHARE->kernel->AddBreakpoint(addresses[count])) success = true;
+		while (count--) if (SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + addresses[count])) success = true;
 		return success;
 	}
 	return false;
@@ -176,23 +188,13 @@ void RainDebugger::RemoveBreakPoint(const RainString& file, uint32 line)
 	{
 		uint32 count;
 		const uint32* addresses = database->GetInstructAddresses(file, line, count);
-		while (count--) SHARE->kernel->RemoveBreakpoint(addresses[count]);
+		while (count--) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + addresses[count]);
 	}
 }
 
 void RainDebugger::ClearBreakpoints()
 {
-	if (Active())
-	{
-		SHARE->kernel->ClearBreakpoints();
-		if (targetAddress != INVALID) SHARE->kernel->AddBreakpoint(targetAddress);
-	}
-}
-
-void RainDebugger::OnBreak(uint64 coroutine, uint32 address)
-{
-	pause = false;
-	if (address != targetAddress || coroutine == targetCoroutine) OnHitBreakpoint();
+	if (Active()) SHARE->kernel->ClearBreakpoints();
 }
 
 void RainDebugger::Continue()
@@ -201,25 +203,38 @@ void RainDebugger::Continue()
 	OnContinue();
 }
 
-void RainDebugger::StepOver()
+void RainDebugger::Step(StepType stepType)
 {
-	pause = false;
-	if (Active() && currentAddress != INVALID)
+	if (Active() && currentCoroutine)
 	{
-		//todo 逐过程
+		type = stepType;
+		OnContinue();
 	}
 }
 
-void RainDebugger::StepInto()
+void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
 {
-	pause = true;
-	OnContinue();
-}
-
-void RainDebugger::StepOut()
-{
-	pause = false;
-	//todo 单步跳出
+	switch (type)
+	{
+		case StepType::None:
+		case StepType::Pause:
+			break;
+		case StepType::Over:
+			if (coroutine != currentCoroutine) return;
+			if (currentTraceDeep == INVALID || deep > currentTraceDeep) return;
+			break;
+		case StepType::Into:
+			if (coroutine != currentCoroutine) return;
+			break;
+		case StepType::Out:
+			if (coroutine != currentCoroutine) return;
+			if (currentTraceDeep == INVALID || deep >= currentTraceDeep) return;
+			break;
+	}
+	type = StepType::None;
+	currentCoroutine = coroutine;
+	currentTraceDeep = deep;
+	OnHitBreakpoint(coroutine, address);
 }
 
 RainDebugger::~RainDebugger()
@@ -234,6 +249,7 @@ RainDebugger::~RainDebugger()
 		SHARE->Release();
 	}
 	share = NULL;
+	delete& TRACES;
 }
 
 RainKernel* CreateKernel(const StartupParameter& parameter)
@@ -424,8 +440,7 @@ bool Kernel::AddBreakpoint(uint32 address)
 {
 	if (address < libraryAgency->code.Count() && libraryAgency->code[address] == (uint8)Instruct::BREAK)
 	{
-		breakpoints.Add(address);
-		libraryAgency->code[address] = (uint8)Instruct::BREAKPOINT;
+		if (breakpoints.Add(address)) libraryAgency->code[address] = (uint8)Instruct::BREAKPOINT;
 		return true;
 	}
 	return false;
@@ -438,7 +453,8 @@ void Kernel::RemoveBreakpoint(uint32 address)
 
 void Kernel::ClearBreakpoints()
 {
-	for (uint32 i = 0; i < breakpoints.Count(); i++) libraryAgency->code[breakpoints[i]] = (uint8)Instruct::BREAK;
+	Set<uint32, true>::Iterator iterator = breakpoints.GetIterator();
+	while (iterator.Next()) libraryAgency->code[iterator.Current()] = (uint8)Instruct::BREAK;
 	breakpoints.Clear();
 }
 

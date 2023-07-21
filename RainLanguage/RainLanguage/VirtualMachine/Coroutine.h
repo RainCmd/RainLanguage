@@ -40,6 +40,7 @@ public:
 		else Run();
 	}
 	inline bool IsRunning() { return exitMessage.IsEmpty() && pointer != INVALID; }
+	void GetTrace(List<uint32, true>& trace);
 	void Abort();
 	void Recycle();
 	~Coroutine();
