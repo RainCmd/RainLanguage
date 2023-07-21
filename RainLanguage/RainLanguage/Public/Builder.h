@@ -56,18 +56,6 @@ const struct RAINLANGUAGE BuildParameter
 };
 
 /// <summary>
-/// 调试数据
-/// </summary>
-class RainProgramDatabase
-{
-public:
-	virtual const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) = 0;
-	virtual bool TryGetPosition(uint32 instructAddress, RainString& file, uint32& line) = 0;
-	//todo 调试数据
-	virtual ~RainProgramDatabase() {}
-};
-
-/// <summary>
 /// 错误信息
 /// </summary>
 const struct RAINLANGUAGE RainErrorMessage

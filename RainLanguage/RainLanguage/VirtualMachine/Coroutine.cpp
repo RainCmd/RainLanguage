@@ -2567,8 +2567,11 @@ label_next_instruct:
 		goto label_next_instruct;
 #pragma endregion Casting
 		case Instruct::BREAKPOINT: instruct++;
-			pointer = POINTER;
-			//todo 触发断点事件
+			if (kernel->debugger)
+			{
+				pointer = POINTER;
+
+			}
 			goto label_next_instruct;
 		case Instruct::BREAK: instruct++;
 			goto label_next_instruct;

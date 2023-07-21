@@ -47,3 +47,16 @@ RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary* library);
 /// <param name="size">字节数</param>
 /// <returns>库</returns>
 RAINLANGUAGE const RainLibrary* Deserialize(const uint8* data, uint32 size);
+
+/// <summary>
+/// 调试数据
+/// </summary>
+class RainProgramDatabase
+{
+public:
+	virtual const RainString LibraryName() const = 0;
+	virtual const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const = 0;
+	virtual bool TryGetPosition(uint32 instructAddress, RainString& file, uint32& line) const = 0;
+	//todo 调试数据
+	virtual ~RainProgramDatabase() {}
+};

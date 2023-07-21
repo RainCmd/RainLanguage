@@ -84,8 +84,9 @@ private:
 	Dictionary<String, DebugFile> files;
 public:
 	ProgramDatabase() :agency(NULL), enums(0), types(0), functions(0), statements(0), files(0) {}
-	const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count);
-	bool TryGetPosition(uint32 instructAddress, RainString& file, uint32& line);
+	const RainString LibraryName() const;
+	const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const;
+	bool TryGetPosition(uint32 instructAddress, RainString& file, uint32& line) const;
 	//todo µ÷ÊÔÊý¾Ý
 };
 

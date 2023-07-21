@@ -482,6 +482,56 @@ public:
 };
 
 /// <summary>
+/// 调试器
+/// </summary>
+class RAINLANGUAGE RainDebugger
+{
+private:
+	void* share;
+	uint64 currentCoroutine;
+	uint32 currentAddress;
+
+	uint64 targetCoroutine;
+	uint32 targetAddress;
+	void ResetState();
+protected:
+	virtual void OnHitBreakpoint() = 0;
+	virtual void OnContinue() = 0;
+public:
+	bool pause;
+	const RainProgramDatabase* database;
+	RainDebugger(const RainProgramDatabase* database);
+	RainDebugger(RainKernel* kernel, const RainProgramDatabase* database);
+	void SetKernel(RainKernel* kernel);
+	bool Active();
+	bool AddBreakPoint(const RainString& file, uint32 line);
+	void RemoveBreakPoint(const RainString& file, uint32 line);
+	void ClearBreakpoints();
+	void OnBreak(uint64 coroutine, uint32 address);
+	/// <summary>
+	/// 暂停
+	/// </summary>
+	inline void Pause() { pause = true; }
+	/// <summary>
+	/// 继续执行
+	/// </summary>
+	void Continue();
+	/// <summary>
+	/// 逐过程
+	/// </summary>
+	void StepOver();
+	/// <summary>
+	/// 单步
+	/// </summary>
+	void StepInto();
+	/// <summary>
+	/// 单步跳出
+	/// </summary>
+	void StepOut();
+	virtual ~RainDebugger();
+};
+
+/// <summary>
 /// 虚拟机启动参数
 /// </summary>
 struct RAINLANGUAGE StartupParameter
@@ -534,9 +584,13 @@ struct RAINLANGUAGE StartupParameter
 	/// 协程异常的回调函数
 	/// </summary>
 	OnExceptionExit onExceptionExit;
+	/// <summary>
+	/// 调试器
+	/// </summary>
+	RainDebugger* debugger;
 
-	StartupParameter(const RainLibrary* libraries, const uint32& libraryCount, const integer& seed, const uint32& stringCapacity, const uint32& entityCapacity, const EntityAction& onReferenceEntity, const EntityAction& onReleaseEntity, const LibraryLoader& libraryLoader, const NativeCallerLoader& nativeCallerLoader, const uint32& heapCapacity, const uint32& heapGeneration, const uint32& coroutineCapacity, const uint32& executeStackCapacity, const OnExceptionExit& onExceptionExit)
-		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), coroutineCapacity(coroutineCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit) {}
+	StartupParameter(const RainLibrary* libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, LibraryLoader libraryLoader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapGeneration, uint32 coroutineCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit, RainDebugger* debugger)
+		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), coroutineCapacity(coroutineCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit), debugger(debugger) {}
 };
 
 /// <summary>

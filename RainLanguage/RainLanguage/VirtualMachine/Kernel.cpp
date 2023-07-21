@@ -1,9 +1,12 @@
 #include "Kernel.h"
 #include "../String.h"
+#include "../Instruct.h"
+#include "../ProgramDatabase.h"
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
+
 RainTypes::RainTypes(RainTypes& other) :types(other.types), count(other.count)
 {
 	other.types = NULL;
@@ -24,7 +27,7 @@ RainTypes& RainTypes::operator=(RainTypes& other)
 	return *this;
 }
 RainFunction::RainFunction() :library(INVALID), index(INVALID), share(NULL) {}
-RainFunction::RainFunction(uint32 library, uint32 index, void* share) :library(library), index(index), share(share)
+RainFunction::RainFunction(uint32 library, uint32 index, void* share) : library(library), index(index), share(share)
 {
 	if (share) ((KernelShare*)share)->Reference();
 }
@@ -102,12 +105,143 @@ RainFunctions::~RainFunctions()
 	count = 0;
 }
 
+#define KERNEL ((Kernel*)kernel)
+#define SHARE ((KernelShare*)share)
+#define DATABASE ((ProgramDatabase*)database)
+void RainDebugger::ResetState()
+{
+	currentCoroutine = 0;
+	currentAddress = INVALID;
+	if (targetAddress != INVALID && Active()) SHARE->kernel->RemoveBreakpoint(targetAddress);
+	targetCoroutine = 0;
+	targetAddress = INVALID;
+}
+
+RainDebugger::RainDebugger(const RainProgramDatabase* database) : share(NULL), currentCoroutine(), currentAddress(INVALID), targetCoroutine(), targetAddress(INVALID), pause(false), database(database) {}
+
+RainDebugger::RainDebugger(RainKernel* kernel, const RainProgramDatabase* database) : share(NULL), currentCoroutine(), currentAddress(INVALID), targetCoroutine(), targetAddress(INVALID), pause(false), database(database)
+{
+	if (kernel)
+	{
+		if (KERNEL->debugger) KERNEL->debugger->SetKernel(NULL);
+		share = KERNEL->share;
+		KERNEL->debugger = this;
+		KERNEL->share->Reference();
+	}
+}
+
+void RainDebugger::SetKernel(RainKernel* kernel)
+{
+	if (share)
+	{
+		ResetState();
+		if (SHARE->kernel)
+		{
+			SHARE->kernel->ClearBreakpoints();
+			SHARE->kernel->debugger = NULL;
+		}
+		SHARE->Release();
+		share = NULL;
+	}
+	if (kernel)
+	{
+		if (KERNEL->debugger) KERNEL->debugger->SetKernel(NULL);
+		share = KERNEL->share;
+		KERNEL->debugger = this;
+		SHARE->Reference();
+	}
+}
+
+bool RainDebugger::Active()
+{
+	return share && SHARE->kernel && database;
+}
+
+bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
+{
+	if (Active())
+	{
+		uint32 count;
+		const uint32* addresses = database->GetInstructAddresses(file, line, count);
+		bool success = false;
+		while (count--) if (SHARE->kernel->AddBreakpoint(addresses[count])) success = true;
+		return success;
+	}
+	return false;
+}
+
+void RainDebugger::RemoveBreakPoint(const RainString& file, uint32 line)
+{
+	if (Active())
+	{
+		uint32 count;
+		const uint32* addresses = database->GetInstructAddresses(file, line, count);
+		while (count--) SHARE->kernel->RemoveBreakpoint(addresses[count]);
+	}
+}
+
+void RainDebugger::ClearBreakpoints()
+{
+	if (Active())
+	{
+		SHARE->kernel->ClearBreakpoints();
+		if (targetAddress != INVALID) SHARE->kernel->AddBreakpoint(targetAddress);
+	}
+}
+
+void RainDebugger::OnBreak(uint64 coroutine, uint32 address)
+{
+	pause = false;
+	if (address != targetAddress || coroutine == targetCoroutine) OnHitBreakpoint();
+}
+
+void RainDebugger::Continue()
+{
+	ResetState();
+	OnContinue();
+}
+
+void RainDebugger::StepOver()
+{
+	pause = false;
+	if (Active() && currentAddress != INVALID)
+	{
+		//todo 逐过程
+	}
+}
+
+void RainDebugger::StepInto()
+{
+	pause = true;
+	OnContinue();
+}
+
+void RainDebugger::StepOut()
+{
+	pause = false;
+	//todo 单步跳出
+}
+
+RainDebugger::~RainDebugger()
+{
+	if (share)
+	{
+		if (SHARE->kernel)
+		{
+			SHARE->kernel->debugger = NULL;
+			SHARE->kernel->ClearBreakpoints();
+		}
+		SHARE->Release();
+	}
+	share = NULL;
+}
+
 RainKernel* CreateKernel(const StartupParameter& parameter)
 {
 	return new Kernel(parameter);
 }
 
-Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed)
+Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed), debugger(parameter.debugger), breakpoints(0)
 {
 	share = new KernelShare(this);
 	stringAgency = new StringAgency(parameter.stringCapacity);
@@ -286,10 +420,33 @@ void Kernel::Update()
 	coroutineAgency->Update();
 }
 
+bool Kernel::AddBreakpoint(uint32 address)
+{
+	if (address < libraryAgency->code.Count() && libraryAgency->code[address] == (uint8)Instruct::BREAK)
+	{
+		breakpoints.Add(address);
+		libraryAgency->code[address] = (uint8)Instruct::BREAKPOINT;
+		return true;
+	}
+	return false;
+}
+
+void Kernel::RemoveBreakpoint(uint32 address)
+{
+	if (breakpoints.Remove(address)) libraryAgency->code[address] = (uint8)Instruct::BREAK;
+}
+
+void Kernel::ClearBreakpoints()
+{
+	for (uint32 i = 0; i < breakpoints.Count(); i++) libraryAgency->code[breakpoints[i]] = (uint8)Instruct::BREAK;
+	breakpoints.Clear();
+}
+
 Kernel::~Kernel()
 {
 	share->kernel = NULL;
 	share->Release();
+	share = NULL;
 	delete heapAgency; heapAgency = NULL;
 	delete coroutineAgency; coroutineAgency = NULL;
 	delete libraryAgency; libraryAgency = NULL;

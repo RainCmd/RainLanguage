@@ -85,8 +85,15 @@ struct RAINLANGUAGE RainString
 	/// <summary>
 	/// 字符串长度
 	/// </summary>
-	const uint32 length;
-	inline RainString(const character* value, const uint32& length) : value(value), length(length) {}
+	uint32 length;
+	inline RainString(const character* value, uint32 length) : value(value), length(length) {}
+	inline RainString(const RainString& other) : value(other.value), length(other.length) {}
+	inline RainString& operator=(const RainString& other)
+	{
+		value = other.value;
+		length = other.length;
+		return *this;
+	}
 	/// <summary>
 	/// 创建字符串
 	/// </summary>

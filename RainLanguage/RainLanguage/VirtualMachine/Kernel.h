@@ -27,6 +27,8 @@ public:
 	CoroutineAgency* coroutineAgency;
 	HeapAgency* heapAgency;
 	Random random;
+	RainDebugger* debugger;
+	List<uint32, true> breakpoints;
 	Kernel(const StartupParameter& parameter);
 	const RainFunction FindFunction(const RainString& name, bool allowNoPublic);
 	const RainFunction FindFunction(const character* name, bool allowNoPublic);
@@ -35,6 +37,11 @@ public:
 	const RainKernelState GetState();
 	uint32 GC(bool full);
 	void Update();
+
+	bool AddBreakpoint(uint32 address);
+	void RemoveBreakpoint(uint32 address);
+	void ClearBreakpoints();
+
 	~Kernel();
 	Kernel(Kernel&) = delete;
 	Kernel(const Kernel&) = delete;
