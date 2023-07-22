@@ -69,6 +69,7 @@ public:
 		}
 		else EXCEPTION("ÊµÀıidÓĞÎó");
 	}
+	inline Coroutine* GetHeadCoroutine() { return head; }
 	uint32 CountCoroutine();
 	~CoroutineAgency();
 };

@@ -4,6 +4,7 @@
 #include "../Public/Debugger.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
+#include "CoroutineAgency.h"
 
 struct DebugFrame
 {
@@ -15,13 +16,6 @@ public:
 	DebugFrame(RainDebugger* debugger, RuntimeLibrary* library) :count(1), debugger(debugger), library(library) {}
 	inline void Reference() { count++; }
 	inline void Release() { if (!--count) delete this; }
-};
-
-struct Trace
-{
-	uint32 library;
-	uint32 instruct;
-	uint32* data;
 };
 
 #define FRAME ((DebugFrame*)debugFrame)
@@ -165,17 +159,17 @@ RainDebuggerVariable::~RainDebuggerVariable()
 	name = NULL;
 }
 
-RainDebuggerSpaceIterator::RainDebuggerSpaceIterator(void* debugFrame, uint32 space) :debugFrame(debugFrame), space(space)
+RainDebuggerSpace::RainDebuggerSpace(void* debugFrame, uint32 space) :debugFrame(debugFrame), space(space)
 {
 	if (debugFrame) FRAME->Reference();
 }
 
-bool RainDebuggerSpaceIterator::IsValid()
+bool RainDebuggerSpace::IsValid()
 {
 	return debugFrame && FRAME->library;
 }
 
-RainString RainDebuggerSpaceIterator::GetName()
+RainString RainDebuggerSpace::GetName()
 {
 	if (IsValid())
 	{
@@ -185,25 +179,25 @@ RainString RainDebuggerSpaceIterator::GetName()
 	return RainString(NULL, 0);
 }
 
-uint32 RainDebuggerSpaceIterator::ChildCount()
+uint32 RainDebuggerSpace::ChildCount()
 {
 	if (IsValid()) return FRAME->library->spaces[space].children.Count();
 	else return 0;
 }
 
-RainDebuggerSpaceIterator RainDebuggerSpaceIterator::GetChild(uint32 index)
+RainDebuggerSpace RainDebuggerSpace::GetChild(uint32 index)
 {
-	if (IsValid()) return RainDebuggerSpaceIterator(debugFrame, FRAME->library->spaces[space].children[index]);
-	else return RainDebuggerSpaceIterator(NULL, 0);
+	if (IsValid()) return RainDebuggerSpace(debugFrame, FRAME->library->spaces[space].children[index]);
+	else return RainDebuggerSpace(NULL, 0);
 }
 
-uint32 RainDebuggerSpaceIterator::VariableCount()
+uint32 RainDebuggerSpace::VariableCount()
 {
 	if (IsValid()) return FRAME->library->spaces[space].variables.Count();
 	else return 0;
 }
 
-RainDebuggerVariable RainDebuggerSpaceIterator::GetVariable(uint32 index)
+RainDebuggerVariable RainDebuggerSpace::GetVariable(uint32 index)
 {
 	if (IsValid())
 	{
@@ -213,7 +207,90 @@ RainDebuggerVariable RainDebuggerSpaceIterator::GetVariable(uint32 index)
 	return RainDebuggerVariable();
 }
 
-RainDebuggerSpaceIterator::~RainDebuggerSpaceIterator()
+RainDebuggerSpace::~RainDebuggerSpace()
+{
+	if (debugFrame) FRAME->Release();
+}
+
+#define COROUTINE ((Coroutine*)coroutine)
+RainTraceIterator::RainTraceIterator(void* debugFrame, void* coroutine) : debugFrame(debugFrame), coroutine(coroutine), stack(NULL), pointer(INVALID)
+{
+	if (debugFrame) FRAME->Reference();
+}
+
+bool RainTraceIterator::IsValid()
+{
+	return debugFrame && FRAME->library && coroutine;
+}
+
+integer RainTraceIterator::CoroutineID()
+{
+	if (IsValid()) return COROUTINE->instanceID;
+	else return 0;
+}
+
+bool RainTraceIterator::Next()
+{
+	if (IsValid())
+	{
+		if (stack)
+		{
+			pointer = ((Frame*)stack)->pointer;
+			if (pointer == INVALID) stack = NULL;
+			else stack = COROUTINE->stack + ((Frame*)stack)->bottom;
+		}
+		else
+		{
+			stack = COROUTINE->stack + COROUTINE->bottom;
+			pointer = COROUTINE->pointer;
+		}
+		return stack;
+	}
+	return false;
+}
+
+RainTrace RainTraceIterator::Current()
+{
+	if (IsValid() && stack)
+	{
+		//todo RainTrace
+	}
+	return RainTrace();
+}
+
+RainTraceIterator::~RainTraceIterator()
+{
+	if (debugFrame) FRAME->Release();
+}
+
+RainCoroutineIterator::RainCoroutineIterator(void* debugFrame) : debugFrame(debugFrame), index(NULL)
+{
+	if (debugFrame) FRAME->Reference();
+}
+
+bool RainCoroutineIterator::IsValid()
+{
+	return debugFrame && FRAME->library;
+}
+
+bool RainCoroutineIterator::Next()
+{
+	if (IsValid())
+	{
+		if (index) index = ((Invoker*)index)->coroutine->next;
+		else index = FRAME->library->kernel->coroutineAgency->GetHeadCoroutine();
+		if (index) return true;
+	}
+	return false;
+}
+
+RainTraceIterator RainCoroutineIterator::Current()
+{
+	if (IsValid() && index) return RainTraceIterator(debugFrame, index);
+	return RainTraceIterator(NULL, NULL);
+}
+
+RainCoroutineIterator::~RainCoroutineIterator()
 {
 	if (debugFrame) FRAME->Release();
 }
@@ -223,7 +300,7 @@ RainDebuggerSpaceIterator::~RainDebuggerSpaceIterator()
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
 #define TRACES (*(List<Trace, true>*)trace)
-RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase* database) : trace(new List<Trace, true>(0)), share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
+RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
 {
 	if (source && database && ((Library*)source)->stringAgency->Get(((Library*)source)->spaces[0].name) != DATABASE->name)
 	{
@@ -232,7 +309,7 @@ RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase*
 	}
 }
 
-RainDebugger::RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database) : trace(new List<Trace, true>(0)), share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
+RainDebugger::RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
 {
 	if (source && database)
 	{
@@ -245,10 +322,16 @@ RainDebugger::RainDebugger(RainKernel* kernel, const RainLibrary* source, const 
 	}
 }
 
-RainDebuggerSpaceIterator RainDebugger::GetSpaceIterator()
+RainDebuggerSpace RainDebugger::GetSpace()
 {
-	if (IsActive() && debugFrame) return RainDebuggerSpaceIterator(debugFrame, 0);
-	return RainDebuggerSpaceIterator(NULL, 0);
+	if (IsActive() && debugFrame) return RainDebuggerSpace(debugFrame, 0);
+	return RainDebuggerSpace(NULL, 0);
+}
+
+RainCoroutineIterator RainDebugger::GetCoroutineIterator()
+{
+	if (IsBreaking()) return RainCoroutineIterator(debugFrame);
+	else return RainCoroutineIterator(NULL);
 }
 
 void RainDebugger::SetKernel(RainKernel* kernel)
@@ -394,7 +477,6 @@ RainDebugger::~RainDebugger()
 		SHARE->Release();
 	}
 	share = NULL;
-	delete& TRACES;
 	if (debugFrame)
 	{
 		DebugFrame* frame = FRAME;

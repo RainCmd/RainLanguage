@@ -79,13 +79,13 @@ public:
 	~RainDebuggerVariable();
 };
 
-struct RAINLANGUAGE RainDebuggerSpaceIterator
+struct RAINLANGUAGE RainDebuggerSpace
 {
 private:
 	void* debugFrame;
 	uint32 space;
 public:
-	RainDebuggerSpaceIterator(void* debugFrame, uint32 space);
+	RainDebuggerSpace(void* debugFrame, uint32 space);
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>
@@ -101,7 +101,7 @@ public:
 	/// <summary>
 	/// 获取子空间迭代器
 	/// </summary>
-	RainDebuggerSpaceIterator GetChild(uint32 index);
+	RainDebuggerSpace GetChild(uint32 index);
 	/// <summary>
 	/// 变量数量
 	/// </summary>
@@ -111,7 +111,56 @@ public:
 	/// 获取变量
 	/// </summary>
 	RainDebuggerVariable GetVariable(uint32 index);
-	~RainDebuggerSpaceIterator();
+	~RainDebuggerSpace();
+};
+
+struct RAINLANGUAGE RainTrace
+{
+private:
+	void* debugFrame;
+public:
+	/// <summary>
+	/// 是否是有效的
+	/// </summary>
+	bool IsValid();
+	RainString FunctionName();
+	uint32 LocalCount();
+	RainDebuggerVariable GetLocal(uint32 index);
+};
+
+struct RAINLANGUAGE RainTraceIterator
+{
+private:
+	void* debugFrame;
+	void* coroutine;
+	uint8* stack;
+	uint32 pointer;
+public:
+	RainTraceIterator(void* debugFrame, void* coroutine);
+	/// <summary>
+	/// 是否是有效的
+	/// </summary>
+	bool IsValid();
+	integer CoroutineID();
+	bool Next();
+	RainTrace Current();
+	~RainTraceIterator();
+};
+
+struct RAINLANGUAGE RainCoroutineIterator
+{
+private:
+	void* debugFrame;
+	void* index;
+public:
+	RainCoroutineIterator(void* debugFrame);
+	/// <summary>
+	/// 是否是有效的
+	/// </summary>
+	bool IsValid();
+	bool Next();
+	RainTraceIterator Current();
+	~RainCoroutineIterator();
 };
 
 /// <summary>
@@ -120,7 +169,6 @@ public:
 class RAINLANGUAGE RainDebugger
 {
 private:
-	void* trace;
 	void* share;
 	void* library;
 	void* debugFrame;
@@ -143,7 +191,11 @@ public:
 	/// <summary>
 	/// 获取空间迭代器
 	/// </summary>
-	RainDebuggerSpaceIterator GetSpaceIterator();
+	RainDebuggerSpace GetSpace();
+	/// <summary>
+	/// 获取携程迭代器
+	/// </summary>
+	RainCoroutineIterator GetCoroutineIterator();
 	/// <summary>
 	/// 设置目标虚拟机
 	/// </summary>
