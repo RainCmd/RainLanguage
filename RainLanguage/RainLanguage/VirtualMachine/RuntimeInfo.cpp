@@ -78,6 +78,21 @@ Handle RuntimeInfo::GetReflectionAttributes(Kernel* kernel)
 	return reflectionAttributes;
 }
 
+String RuntimeInfo::GetFullName(Kernel* kernel, uint32 library)
+{
+	RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->GetLibrary(library);
+	String combine[3];
+	combine[1] = kernel->stringAgency->Add(TEXT("."));
+	combine[2] = kernel->stringAgency->Get(name);
+	for (uint32 index = space; index; index = runtimeLibrary->spaces[index].parent)
+	{
+		combine[0] = kernel->stringAgency->Get(runtimeLibrary->spaces[index].name);
+		combine[2] = kernel->stringAgency->Combine(combine, 3);
+	}
+	combine[0] = kernel->stringAgency->Get(runtimeLibrary->spaces[0].name);
+	return kernel->stringAgency->Combine(combine, 3);
+}
+
 RuntimeSpace::RuntimeSpace(StringAgency* agency, const Library* library, const Space* space, const List<string, true>& attributes)
 	:reflection(NULL), name(agency->AddAndRef(library->stringAgency->Get(space->name))), parent(INVALID), attributes(attributes),
 	children(space->children), variables(space->variables), enums(space->enums), structs(space->structs), classes(space->classes), interfaces(space->interfaces),
@@ -115,7 +130,7 @@ String RuntimeEnum::ToString(integer value, StringAgency* agency)
 		}
 	value &= ~contain;
 	if (result.IsEmpty()) return ::ToString(agency, value);
-	else if(value)
+	else if (value)
 	{
 		combine[0] = result;
 		combine[2] = ::ToString(agency, value);

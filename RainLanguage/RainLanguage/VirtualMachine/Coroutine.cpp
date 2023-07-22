@@ -2617,15 +2617,8 @@ void Coroutine::Recycle()
 				if (function != INVALID)
 				{
 					String libraryName = kernel->stringAgency->Get(library->spaces[0].name);
-					String combine[3];
-					combine[1] = kernel->stringAgency->Add(TEXT("."));
-					combine[2] = kernel->stringAgency->Get(library->functions[function].name);
-					for (uint32 space = library->functions[function].space; space; space = library->spaces[space].parent)
-					{
-						combine[0] = kernel->stringAgency->Get(library->spaces[space].name);
-						combine[2] = kernel->stringAgency->Combine(combine, 3);
-					}
-					new (frames.Add())RainStackFrame(RainString(libraryName.GetPointer(), libraryName.GetLength()), RainString(combine[2].GetPointer(), combine[2].GetLength()), address - library->codeOffset);
+					String fullName = library->functions[function].GetFullName(kernel, library->index);
+					new (frames.Add())RainStackFrame(RainString(libraryName.GetPointer(), libraryName.GetLength()), RainString(fullName.GetPointer(), fullName.GetLength()), address - library->codeOffset);
 				}
 			}
 			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));

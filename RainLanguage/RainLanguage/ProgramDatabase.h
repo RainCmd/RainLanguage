@@ -30,7 +30,6 @@ struct DebugLocal
 struct DebugFunction
 {
 	String file;
-	String name;
 	uint32 entry;
 	List<DebugLocal> locals;
 	Dictionary<DebugAnchor, uint32, true> localAnchors;
@@ -46,7 +45,7 @@ struct DebugStatement
 struct DebugFile
 {
 	List<uint32, true> functions;
-	Dictionary<DebugAnchor, uint32, true> variableAnchors;
+	Dictionary<DebugAnchor, DebugGlobal, true> globalAnchors;
 };
 
 class ProgramDatabase : public RainProgramDatabase
@@ -56,11 +55,11 @@ public:
 	String name;
 	List<DebugFunction> functions;
 	List<DebugStatement, true> statements;
-	Dictionary<DebugAnchor, DebugGlobal, true> variables;
-	Dictionary<String, DebugFile> files;
-	ProgramDatabase() :agency(new StringAgency(0xFF)), functions(0), statements(0), variables(0), files(0) {}
+	Dictionary<String, DebugFile*> files;
+	ProgramDatabase() :agency(new StringAgency(0xFF)), functions(0), statements(0), files(0) {}
 	const RainString GetName() const;
 	const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const;
+	uint32 GetStatement(uint32 instructAddress);
 	bool TryGetPosition(uint32 instructAddress, RainString& file, RainString& function, uint32& line) const;
 	//todo µ÷ÊÔÊý¾Ý
 	~ProgramDatabase();

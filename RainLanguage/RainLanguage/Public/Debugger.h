@@ -118,7 +118,11 @@ struct RAINLANGUAGE RainTrace
 {
 private:
 	void* debugFrame;
+	uint8* stack;
+	void* name;
+	uint32 function;
 public:
+	RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
@@ -126,6 +130,7 @@ public:
 	RainString FunctionName();
 	uint32 LocalCount();
 	RainDebuggerVariable GetLocal(uint32 index);
+	~RainTrace();
 };
 
 struct RAINLANGUAGE RainTraceIterator

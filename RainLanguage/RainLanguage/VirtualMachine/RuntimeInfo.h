@@ -24,6 +24,7 @@ struct RuntimeInfo :DeclarationInfo
 	uint32 space;
 	inline RuntimeInfo(bool isPublic, const List<string, true>& attributes, string name, uint32 space) :DeclarationInfo(isPublic, attributes, name), reflectionAttributes(NULL), space(space) {}
 	Handle GetReflectionAttributes(Kernel* kernel);
+	String GetFullName(Kernel* kernel, uint32 library);
 };
 
 struct RuntimeVariable :RuntimeInfo
@@ -157,6 +158,6 @@ struct RuntimeSpace
 	List<uint32, true> coroutines;
 	List<uint32, true> functions;
 	List<uint32, true> natives;
-	RuntimeSpace(StringAgency* agency,const Library* library, const Space* space, const List<string, true>& attributes);
+	RuntimeSpace(StringAgency* agency, const Library* library, const Space* space, const List<string, true>& attributes);
 	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex);
 };

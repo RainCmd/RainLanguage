@@ -43,12 +43,12 @@ RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* 
 
 bool RainDebuggerVariable::IsValid()
 {
-	return debugFrame && FRAME->debugger;
+	return debugFrame && FRAME->library;
 }
 
 RainString RainDebuggerVariable::GetName()
 {
-	if (name) return RainString(((String*)name)->GetPointer(), ((String*)name)->GetLength());
+	if (IsValid() && name) return RainString(((String*)name)->GetPointer(), ((String*)name)->GetLength());
 	else return RainString(NULL, 0);
 }
 
@@ -155,7 +155,7 @@ RainDebuggerVariable::~RainDebuggerVariable()
 {
 	if (debugFrame) FRAME->Release();
 	debugFrame = NULL;
-	delete name;
+	if (name) delete (String*)name;
 	name = NULL;
 }
 
@@ -213,6 +213,44 @@ RainDebuggerSpace::~RainDebuggerSpace()
 }
 
 #define COROUTINE ((Coroutine*)coroutine)
+RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function) : debugFrame(debugFrame), stack(stack), name(name), function(function)
+{
+	FRAME->Reference();
+}
+
+bool RainTrace::IsValid()
+{
+	return debugFrame && FRAME->library;
+}
+
+RainString RainTrace::FunctionName()
+{
+	if (IsValid() && name) return RainString(((String*)name)->GetPointer(), ((String*)name)->GetLength());
+	else return RainString(NULL, 0);
+}
+
+uint32 RainTrace::LocalCount()
+{
+	if (IsValid() && function != INVALID) return ((ProgramDatabase*)FRAME->debugger->database)->functions[function].locals.Count();
+	return 0;
+}
+
+RainDebuggerVariable RainTrace::GetLocal(uint32 index)
+{
+	if (IsValid() && function != INVALID)
+	{
+		//todo 局部变量，变量类型需要通过源library映射为全局类型
+	}
+	return RainDebuggerVariable();
+}
+
+RainTrace::~RainTrace()
+{
+	if (debugFrame) FRAME->Release();
+	if (name) delete (String*)name;
+	name = NULL;
+}
+
 RainTraceIterator::RainTraceIterator(void* debugFrame, void* coroutine) : debugFrame(debugFrame), coroutine(coroutine), stack(NULL), pointer(INVALID)
 {
 	if (debugFrame) FRAME->Reference();
@@ -253,9 +291,18 @@ RainTrace RainTraceIterator::Current()
 {
 	if (IsValid() && stack)
 	{
-		//todo RainTrace
+		Kernel* kernel = FRAME->library->kernel;
+		RuntimeLibrary* library; uint32 function;
+		kernel->libraryAgency->GetInstructPosition(pointer, library, function);
+		if (library == FRAME->library)
+		{
+			ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
+			uint32 statement = database->GetStatement(pointer - library->codeOffset);
+			if (statement != INVALID) return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), database->statements[statement].function);
+		}
+		return RainTrace(debugFrame, NULL, new String(library->functions[function].GetFullName(library->kernel, library->index)), INVALID);
 	}
-	return RainTrace();
+	return RainTrace(NULL, NULL, NULL, INVALID);
 }
 
 RainTraceIterator::~RainTraceIterator()
@@ -299,7 +346,6 @@ RainCoroutineIterator::~RainCoroutineIterator()
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-#define TRACES (*(List<Trace, true>*)trace)
 RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
 {
 	if (source && database && ((Library*)source)->stringAgency->Get(((Library*)source)->spaces[0].name) != DATABASE->name)
