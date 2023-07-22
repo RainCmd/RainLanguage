@@ -10,6 +10,7 @@ class LibraryAgency;
 class HeapAgency;
 class CoroutineAgency;
 class Kernel;
+class RainDebugger;
 struct KernelShare
 {
 	Kernel* kernel;

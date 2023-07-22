@@ -1,8 +1,8 @@
 #include "Coroutine.h"
 #include "../Instruct.h"
-#include "../Frame.h"
 #include "../KernelLibraryInfo.h"
 #include "../KernelDeclarations.h"
+#include "../Public/Debugger.h"
 #include "Kernel.h"
 #include "LibraryAgency.h"
 #include "RuntimeLibrary.h"
@@ -84,7 +84,8 @@ void Coroutine::Exit(const String& message, uint32 exitPointer)
 {
 	pointer = exitPointer;
 	exitMessage = message;
-	GetTrace(invoker->exceptionStackFrames);
+	invoker->exceptionStackFrames.Add(pointer);
+	for (Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) invoker->exceptionStackFrames.Add(index->pointer);
 }
 void Coroutine::Run()
 {
@@ -2580,17 +2581,6 @@ label_next_instruct:
 	}
 label_exit:
 	pointer = POINTER;
-}
-
-void Coroutine::GetTrace(List<uint32, true>& trace)
-{
-	trace.Add(pointer);
-	Frame* index = (Frame*)(stack + bottom);
-	while (index->pointer != INVALID)
-	{
-		trace.Add(index->pointer);
-		index = (Frame*)(stack + index->bottom);
-	}
 }
 
 void Coroutine::Abort()

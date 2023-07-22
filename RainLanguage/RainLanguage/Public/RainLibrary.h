@@ -55,8 +55,6 @@ class RainProgramDatabase
 {
 public:
 	virtual const RainString LibraryName() const = 0;
-	virtual const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const = 0;
-	virtual bool TryGetPosition(uint32 instructAddress, RainString& file, uint32& line) const = 0;
-	//todo µ÷ÊÔÊý¾Ý
+	virtual bool TryGetPosition(uint32 instructAddress, RainString& file, RainString& function, uint32& line) const = 0;
 	virtual ~RainProgramDatabase() {}
 };

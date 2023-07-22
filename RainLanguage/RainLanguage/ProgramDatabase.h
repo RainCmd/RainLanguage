@@ -2,25 +2,9 @@
 #include "Public/Builder.h"
 #include "Language.h"
 #include "String.h"
+#include "Type.h"
 #include "Collections/List.h"
 #include "Collections/Dictionary.h"
-
-enum class DebugBaseType : uint32
-{
-	Enum = 0x40000000,
-	Bool = 0x80000000,
-	Byte,
-	Char,
-	Integer,
-	Real,
-	Real2,
-	Real3,
-	Real4,
-	Type,
-	String,
-	Entity,
-	Handle,
-};
 
 struct DebugAnchor
 {
@@ -30,23 +14,17 @@ struct DebugAnchor
 
 inline uint32 GetHash(const DebugAnchor& anchor) { return anchor.line ^ anchor.index; }
 
-struct DebugVariable
+struct DebugGlobal
+{
+	uint32 library;
+	uint32 index;
+};
+
+struct DebugLocal
 {
 	String name;
 	uint32 address;
-	uint32 type;
-};
-
-struct DebugEnum
-{
-	String name;
-	Dictionary<String, integer> element;
-};
-
-struct DebugType
-{
-	String name;
-	List<DebugVariable> members;
+	Type type;
 };
 
 struct DebugFunction
@@ -54,9 +32,8 @@ struct DebugFunction
 	String file;
 	String name;
 	uint32 entry;
-	List<DebugVariable> locals;
+	List<DebugLocal> locals;
 	Dictionary<DebugAnchor, uint32, true> localAnchors;
-	Dictionary<uint32, List<uint32, true>> statements; // line => statements
 };
 
 struct DebugStatement
@@ -72,21 +49,20 @@ struct DebugFile
 	Dictionary<DebugAnchor, uint32, true> variableAnchors;
 };
 
-class ProgramDatabase :public RainProgramDatabase
+class ProgramDatabase : public RainProgramDatabase
 {
-private:
+public:
 	StringAgency* agency;
 	String name;
-	List<DebugEnum> enums;
-	List<DebugType> types;
 	List<DebugFunction> functions;
 	List<DebugStatement, true> statements;
+	Dictionary<DebugAnchor, DebugGlobal, true> variables;
 	Dictionary<String, DebugFile> files;
-public:
-	ProgramDatabase() :agency(NULL), enums(0), types(0), functions(0), statements(0), files(0) {}
-	const RainString LibraryName() const;
+	ProgramDatabase() :agency(new StringAgency(0xFF)), functions(0), statements(0), variables(0), files(0) {}
+	const RainString GetName() const;
 	const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const;
-	bool TryGetPosition(uint32 instructAddress, RainString& file, uint32& line) const;
+	bool TryGetPosition(uint32 instructAddress, RainString& file, RainString& function, uint32& line) const;
 	//todo µ÷ÊÔÊý¾Ý
+	~ProgramDatabase();
 };
 

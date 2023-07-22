@@ -1,7 +1,6 @@
 #include "Kernel.h"
 #include "../String.h"
 #include "../Instruct.h"
-#include "../ProgramDatabase.h"
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
@@ -105,159 +104,12 @@ RainFunctions::~RainFunctions()
 	count = 0;
 }
 
-struct Trace
-{
-	uint32 library;
-	uint32 instruct;
-	uint32* data;
-};
-
-#define KERNEL ((Kernel*)kernel)
-#define SHARE ((KernelShare*)share)
-#define DATABASE ((ProgramDatabase*)database)
-#define LIBRARY ((RuntimeLibrary*)library)
-#define TRACES (*(List<Trace, true>*)trace)
-void RainDebugger::ResetState()
-{
-	currentCoroutine = 0;
-	currentTraceDeep = INVALID;
-}
-
-RainDebugger::RainDebugger(const RainProgramDatabase* database) : trace(new List<Trace, true>(0)), share(NULL), library(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), database(database) {}
-
-RainDebugger::RainDebugger(RainKernel* kernel, const RainProgramDatabase* database) : trace(new List<Trace, true>(0)), share(NULL), library(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), database(database)
-{
-	SetKernel(kernel);
-}
-
-void RainDebugger::SetKernel(RainKernel* kernel)
-{
-	if (share)
-	{
-		ResetState();
-		if (SHARE->kernel)
-		{
-			SHARE->kernel->ClearBreakpoints();
-			SHARE->kernel->debugger = NULL;
-		}
-		SHARE->Release();
-		share = NULL;
-		library = NULL;
-	}
-	if (kernel)
-	{
-		if (KERNEL->debugger) KERNEL->debugger->SetKernel(NULL);
-		share = KERNEL->share;
-		KERNEL->debugger = this;
-		SHARE->Reference();
-		if (database)
-		{
-			String name = KERNEL->stringAgency->Add(database->LibraryName().value, database->LibraryName().length);
-			List<RuntimeLibrary*, true>& libraries = KERNEL->libraryAgency->libraries;
-			for (uint32 i = 0; i < libraries.Count(); i++)
-				if (libraries[i]->spaces[0].name == name.index)
-				{
-					library = &libraries[i];
-					break;
-				}
-		}
-	}
-}
-
-bool RainDebugger::Active()
-{
-	return share && SHARE->kernel && library;
-}
-
-bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
-{
-	if (Active())
-	{
-		uint32 count;
-		const uint32* addresses = database->GetInstructAddresses(file, line, count);
-		bool success = false;
-		while (count--) if (SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + addresses[count])) success = true;
-		return success;
-	}
-	return false;
-}
-
-void RainDebugger::RemoveBreakPoint(const RainString& file, uint32 line)
-{
-	if (Active())
-	{
-		uint32 count;
-		const uint32* addresses = database->GetInstructAddresses(file, line, count);
-		while (count--) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + addresses[count]);
-	}
-}
-
-void RainDebugger::ClearBreakpoints()
-{
-	if (Active()) SHARE->kernel->ClearBreakpoints();
-}
-
-void RainDebugger::Continue()
-{
-	ResetState();
-	OnContinue();
-}
-
-void RainDebugger::Step(StepType stepType)
-{
-	if (Active() && currentCoroutine)
-	{
-		type = stepType;
-		OnContinue();
-	}
-}
-
-void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
-{
-	switch (type)
-	{
-		case StepType::None:
-		case StepType::Pause:
-			break;
-		case StepType::Over:
-			if (coroutine != currentCoroutine) return;
-			if (currentTraceDeep == INVALID || deep > currentTraceDeep) return;
-			break;
-		case StepType::Into:
-			if (coroutine != currentCoroutine) return;
-			break;
-		case StepType::Out:
-			if (coroutine != currentCoroutine) return;
-			if (currentTraceDeep == INVALID || deep >= currentTraceDeep) return;
-			break;
-	}
-	type = StepType::None;
-	currentCoroutine = coroutine;
-	currentTraceDeep = deep;
-	OnHitBreakpoint(coroutine, address);
-}
-
-RainDebugger::~RainDebugger()
-{
-	if (share)
-	{
-		if (SHARE->kernel)
-		{
-			SHARE->kernel->debugger = NULL;
-			SHARE->kernel->ClearBreakpoints();
-		}
-		SHARE->Release();
-	}
-	share = NULL;
-	delete& TRACES;
-}
-
 RainKernel* CreateKernel(const StartupParameter& parameter)
 {
 	return new Kernel(parameter);
 }
 
-Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed), debugger(parameter.debugger), breakpoints(0)
+Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed), debugger(NULL), breakpoints(0)
 {
 	share = new KernelShare(this);
 	stringAgency = new StringAgency(parameter.stringCapacity);

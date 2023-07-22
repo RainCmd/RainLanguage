@@ -1,6 +1,7 @@
 #pragma once
 #include "../Language.h"
 #include "../String.h"
+#include "../Frame.h"
 #include "RuntimeLibrary.h"
 
 class Kernel;
@@ -40,7 +41,6 @@ public:
 		else Run();
 	}
 	inline bool IsRunning() { return exitMessage.IsEmpty() && pointer != INVALID; }
-	void GetTrace(List<uint32, true>& trace);
 	void Abort();
 	void Recycle();
 	~Coroutine();
