@@ -54,7 +54,6 @@ RAINLANGUAGE const RainLibrary* Deserialize(const uint8* data, uint32 size);
 class RainProgramDatabase
 {
 public:
-	virtual const RainString LibraryName() const = 0;
-	virtual bool TryGetPosition(uint32 instructAddress, RainString& file, RainString& function, uint32& line) const = 0;
+	RainProgramDatabase() = default;
 	virtual ~RainProgramDatabase() {}
 };

@@ -139,15 +139,15 @@ struct ImportNative :ImportInfo
 struct ImportLibrary
 {
 	List<ImportSpace, true> spaces;//第一个为根节点
-	List<ImportVariable>variables;
-	List<ImportEnum>enums;
-	List<ImportStruct>structs;
-	List<ImportClass>classes;
-	List<ImportInterface>interfaces;
-	List<ImportDelegate>delegates;
-	List<ImportCoroutine>coroutines;
-	List<ImportFunction>functions;
-	List<ImportNative>natives;
+	List<ImportVariable> variables;
+	List<ImportEnum> enums;
+	List<ImportStruct> structs;
+	List<ImportClass> classes;
+	List<ImportInterface> interfaces;
+	List<ImportDelegate> delegates;
+	List<ImportCoroutine> coroutines;
+	List<ImportFunction> functions;
+	List<ImportNative> natives;
 
 	ImportLibrary(uint32 variableCount, uint32 enumCount, uint32 structCount, uint32 classCount, uint32 interfaceCount, uint32 delegateCount, uint32 coroutineCount, uint32 functionCount, uint32 nativeCount)
 		: spaces(1), variables(variableCount), enums(enumCount), structs(structCount), classes(classCount), interfaces(interfaceCount), delegates(delegateCount), coroutines(coroutineCount), functions(functionCount), natives(nativeCount)

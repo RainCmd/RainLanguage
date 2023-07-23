@@ -1,22 +1,25 @@
 #include "ProgramDatabase.h"
 
-const RainString ProgramDatabase::GetName() const
+DebugFile::~DebugFile()
 {
-	return RainString(name.GetPointer(), name.GetLength());
+	Dictionary<uint32, List<uint32, true>*, true>::Iterator iterator = statements.GetIterator();
+	while (iterator.Next()) delete iterator.CurrentValue();
+	statements.Clear();
 }
 
-const uint32* ProgramDatabase::GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const
+const uint32* ProgramDatabase::GetStatements(const RainString& file, uint32 line, uint32& count) const
 {
 	String fileName = agency->Add(file.value, file.length);
-	DebugFile* debugFile;
-	if (files.TryGet(fileName, debugFile))
+	DebugFile* debugFile; List<uint32, true>* statements;
+	if (files.TryGet(fileName, debugFile) && debugFile->statements.TryGet(line, statements))
 	{
-		//todo file,line => statement
+		count = statements->Count();
+		return statements->GetPointer();
 	}
 	return nullptr;
 }
 
-uint32 ProgramDatabase::GetStatement(uint32 instructAddress)
+uint32 ProgramDatabase::GetStatement(uint32 instructAddress) const
 {
 	uint32 start = 0, end = statements.Count(), result = INVALID;
 	while (start < end)
@@ -26,11 +29,6 @@ uint32 ProgramDatabase::GetStatement(uint32 instructAddress)
 		else result = start = middle;
 	}
 	return result;
-}
-
-bool ProgramDatabase::TryGetPosition(uint32 instructAddress, RainString& file, RainString& function, uint32& line) const
-{
-	return false;
 }
 
 ProgramDatabase::~ProgramDatabase()

@@ -46,6 +46,8 @@ struct DebugFile
 {
 	List<uint32, true> functions;
 	Dictionary<DebugAnchor, DebugGlobal, true> globalAnchors;
+	Dictionary<uint32, List<uint32, true>*, true> statements; //line => statements
+	~DebugFile();
 };
 
 class ProgramDatabase : public RainProgramDatabase
@@ -57,10 +59,8 @@ public:
 	List<DebugStatement, true> statements;
 	Dictionary<String, DebugFile*> files;
 	ProgramDatabase() :agency(new StringAgency(0xFF)), functions(0), statements(0), files(0) {}
-	const RainString GetName() const;
-	const uint32* GetInstructAddresses(const RainString& file, uint32 line, uint32& count) const;
-	uint32 GetStatement(uint32 instructAddress);
-	bool TryGetPosition(uint32 instructAddress, RainString& file, RainString& function, uint32& line) const;
+	const uint32* GetStatements(const RainString& file, uint32 line, uint32& count) const;
+	uint32 GetStatement(uint32 instructAddress) const;
 	//todo µ÷ÊÔÊý¾Ý
 	~ProgramDatabase();
 };

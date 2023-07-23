@@ -33,8 +33,7 @@ struct LocalToGlobalMap
 		:library(library), enums(List<uint32, true>(enumCount)), structs(List<uint32, true>(structCount)), classes(List<uint32, true>(classCount)),
 		interfaces(List<uint32, true>(interfaceCount)), delegates(List<uint32, true>(delegateCount)), coroutines(List<uint32, true>(coroutineCount)),
 		structMemberFunctions(structCount), classMemberFunctions(classCount), interfaceMemberFunctions(interfaceCount)
-	{
-	}
+	{ }
 };
 
 Declaration LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const Declaration& declaration)

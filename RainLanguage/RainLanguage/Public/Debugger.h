@@ -121,13 +121,17 @@ private:
 	uint8* stack;
 	void* name;
 	uint32 function;
+	void* file;
+	uint32 line;
 public:
-	RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function);
+	RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
 	bool IsValid();
 	RainString FunctionName();
+	RainString FileName();
+	inline uint32 GetLine() { return line; }
 	uint32 LocalCount();
 	RainDebuggerVariable GetLocal(uint32 index);
 	~RainTrace();
@@ -177,6 +181,7 @@ private:
 	void* share;
 	void* library;
 	void* debugFrame;
+	void* map;
 	uint64 currentCoroutine;
 	uint32 currentTraceDeep;
 protected:
@@ -205,7 +210,7 @@ public:
 	/// 设置目标虚拟机
 	/// </summary>
 	/// <param name="kernel">虚拟机</param>
-	void SetKernel(RainKernel* kernel);
+	bool SetKernel(RainKernel* kernel);
 	/// <summary>
 	/// 是否是断点状态
 	/// </summary>

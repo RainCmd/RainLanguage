@@ -6,6 +6,7 @@
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
 
+typedef Dictionary<Declaration, Declaration, true> MAP;
 struct DebugFrame
 {
 private:
@@ -13,7 +14,8 @@ private:
 public:
 	RainDebugger* debugger;
 	RuntimeLibrary* library;
-	DebugFrame(RainDebugger* debugger, RuntimeLibrary* library) :count(1), debugger(debugger), library(library) {}
+	MAP* map;
+	DebugFrame(RainDebugger* debugger, RuntimeLibrary* library, MAP* map) :count(1), debugger(debugger), library(library), map(map) {}
 	inline void Reference() { count++; }
 	inline void Release() { if (!--count) delete this; }
 };
@@ -213,7 +215,7 @@ RainDebuggerSpace::~RainDebuggerSpace()
 }
 
 #define COROUTINE ((Coroutine*)coroutine)
-RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function) : debugFrame(debugFrame), stack(stack), name(name), function(function)
+RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line) : debugFrame(debugFrame), stack(stack), name(name), function(function), file(file), line(line)
 {
 	FRAME->Reference();
 }
@@ -229,17 +231,34 @@ RainString RainTrace::FunctionName()
 	else return RainString(NULL, 0);
 }
 
+RainString RainTrace::FileName()
+{
+	if (IsValid() && file) return RainString(((String*)file)->GetPointer(), ((String*)file)->GetLength());
+	else return RainString(NULL, 0);
+}
+
 uint32 RainTrace::LocalCount()
 {
 	if (IsValid() && function != INVALID) return ((ProgramDatabase*)FRAME->debugger->database)->functions[function].locals.Count();
 	return 0;
 }
 
+Declaration DebugToKernel(uint32 index, MAP* map, const Declaration& declaration)
+{
+	if (declaration.library == LIBRARY_KERNEL) return declaration;
+	else if (declaration.library == LIBRARY_SELF) return Declaration(index, declaration.code, declaration.index);
+	Declaration result;
+	if (map->TryGet(declaration, result)) return result;
+	EXCEPTION("映射逻辑可能有BUG");
+}
+
 RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 {
 	if (IsValid() && function != INVALID)
 	{
-		//todo 局部变量，变量类型需要通过源library映射为全局类型
+		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
+		DebugLocal& local = database->functions[function].locals[index];
+		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type), local.type.dimension));
 	}
 	return RainDebuggerVariable();
 }
@@ -249,6 +268,8 @@ RainTrace::~RainTrace()
 	if (debugFrame) FRAME->Release();
 	if (name) delete (String*)name;
 	name = NULL;
+	if (file) delete (String*)file;
+	file = NULL;
 }
 
 RainTraceIterator::RainTraceIterator(void* debugFrame, void* coroutine) : debugFrame(debugFrame), coroutine(coroutine), stack(NULL), pointer(INVALID)
@@ -298,11 +319,15 @@ RainTrace RainTraceIterator::Current()
 		{
 			ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
 			uint32 statement = database->GetStatement(pointer - library->codeOffset);
-			if (statement != INVALID) return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), database->statements[statement].function);
+			if (statement != INVALID)
+			{
+				DebugStatement& debugStatement = database->statements[statement];
+				return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), debugStatement.function, new String(database->functions[debugStatement.function].file), debugStatement.line);
+			}
 		}
-		return RainTrace(debugFrame, NULL, new String(library->functions[function].GetFullName(library->kernel, library->index)), INVALID);
+		return RainTrace(debugFrame, NULL, new String(library->functions[function].GetFullName(library->kernel, library->index)), INVALID, NULL, 0);
 	}
-	return RainTrace(NULL, NULL, NULL, INVALID);
+	return RainTrace(NULL, NULL, NULL, INVALID, NULL, 0);
 }
 
 RainTraceIterator::~RainTraceIterator()
@@ -346,7 +371,7 @@ RainCoroutineIterator::~RainCoroutineIterator()
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
+RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
 {
 	if (source && database && ((Library*)source)->stringAgency->Get(((Library*)source)->spaces[0].name) != DATABASE->name)
 	{
@@ -355,7 +380,7 @@ RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase*
 	}
 }
 
-RainDebugger::RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
+RainDebugger::RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
 {
 	if (source && database)
 	{
@@ -380,7 +405,90 @@ RainCoroutineIterator RainDebugger::GetCoroutineIterator()
 	else return RainCoroutineIterator(NULL);
 }
 
-void RainDebugger::SetKernel(RainKernel* kernel)
+#define TO_KERNEL_STRING(value) kernel->stringAgency->Add(library->stringAgency->Get(value))
+bool InitMap(Kernel* kernel, Library* library, MAP* map)
+{
+	for (uint32 importIndex = 0; importIndex < library->imports.Count(); importIndex++)
+	{
+		ImportLibrary& importLibrary = library->imports[importIndex];
+		RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(TO_KERNEL_STRING(importLibrary.spaces[0].name).index);
+		for (uint32 x = 0; x < importLibrary.enums.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.enums[x].name);
+			for (uint32 y = 0; y < runtimeLibrary->enums.Count(); y++)
+				if (name.index == runtimeLibrary->enums[y].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Enum, x), Declaration(runtimeLibrary->index, TypeCode::Enum, y));
+					goto label_next_enum;
+				}
+			return false;
+		label_next_enum:
+		}
+		for (uint32 x = 0; x < importLibrary.structs.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.structs[x].name);
+			for (uint32 y = 0; y < runtimeLibrary->structs.Count(); y++)
+				if (name.index == runtimeLibrary->structs[y].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Struct, x), Declaration(runtimeLibrary->index, TypeCode::Struct, y));
+					goto label_next_struct;
+				}
+			return false;
+		label_next_struct:
+		}
+		for (uint32 x = 0; x < importLibrary.classes.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.classes[x].name);
+			for (uint32 y = 0; y < runtimeLibrary->classes.Count(); y++)
+				if (name.index == runtimeLibrary->classes[y].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Handle, x), Declaration(runtimeLibrary->index, TypeCode::Handle, y));
+					goto label_next_class;
+				}
+			return false;
+		label_next_class:
+		}
+		for (uint32 x = 0; x < importLibrary.interfaces.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.interfaces[x].name);
+			for (uint32 y = 0; y < runtimeLibrary->interfaces.Count(); y++)
+				if (name.index == runtimeLibrary->interfaces[y].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Interface, x), Declaration(runtimeLibrary->index, TypeCode::Interface, y));
+					goto label_next_interface;
+				}
+			return false;
+		label_next_interface:
+		}
+		for (uint32 x = 0; x < importLibrary.delegates.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.delegates[x].name);
+			for (uint32 y = 0; y < runtimeLibrary->delegates.Count(); y++)
+				if (name.index == runtimeLibrary->delegates[y].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Delegate, x), Declaration(runtimeLibrary->index, TypeCode::Delegate, y));
+					goto label_next_delegate;
+				}
+			return false;
+		label_next_delegate:
+		}
+		for (uint32 x = 0; x < importLibrary.coroutines.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.coroutines[x].name);
+			for (uint32 y = 0; y < runtimeLibrary->coroutines.Count(); y++)
+				if (name.index == runtimeLibrary->coroutines[y].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Coroutine, x), Declaration(runtimeLibrary->index, TypeCode::Coroutine, y));
+					goto label_next_coroutine;
+				}
+			return false;
+		label_next_coroutine:
+		}
+	}
+	return true;
+}
+
+bool RainDebugger::SetKernel(RainKernel* kernel)
 {
 	if (share)
 	{
@@ -390,6 +498,7 @@ void RainDebugger::SetKernel(RainKernel* kernel)
 		{
 			SHARE->kernel->ClearBreakpoints();
 			SHARE->kernel->debugger = NULL;
+			((MAP*)map)->Clear();
 		}
 		SHARE->Release();
 		share = NULL;
@@ -401,18 +510,20 @@ void RainDebugger::SetKernel(RainKernel* kernel)
 		share = KERNEL->share;
 		KERNEL->debugger = this;
 		SHARE->Reference();
-		if (database)
-		{
-			String name = KERNEL->stringAgency->Add(database->LibraryName().value, database->LibraryName().length);
-			List<RuntimeLibrary*, true>& libraries = KERNEL->libraryAgency->libraries;
-			for (uint32 i = 0; i < libraries.Count(); i++)
-				if (libraries[i]->spaces[0].name == name.index)
-				{
-					library = &libraries[i];
-					break;
-				}
-		}
+
+		String name = KERNEL->stringAgency->Add(DATABASE->name.GetPointer(), DATABASE->name.GetLength());
+		List<RuntimeLibrary*, true>& libraries = KERNEL->libraryAgency->libraries;
+		for (uint32 i = 0; i < libraries.Count(); i++)
+			if (libraries[i]->spaces[0].name == name.index)
+			{
+				library = &libraries[i];
+				if (InitMap(KERNEL, (Library*)source, (MAP*)map)) return true;
+				else break;
+			}
+		SetKernel(NULL);
+		return false;
 	}
+	return source && database;
 }
 
 bool RainDebugger::IsBreaking()
@@ -430,9 +541,9 @@ bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
 	if (IsActive())
 	{
 		uint32 count;
-		const uint32* addresses = DATABASE->GetInstructAddresses(file, line, count);
+		const uint32* statements = DATABASE->GetStatements(file, line, count);
 		bool success = false;
-		while (count--) if (SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + addresses[count])) success = true;
+		while (count--) if (SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statements[count]].pointer)) success = true;
 		return success;
 	}
 	return false;
@@ -443,8 +554,8 @@ void RainDebugger::RemoveBreakPoint(const RainString& file, uint32 line)
 	if (IsActive())
 	{
 		uint32 count;
-		const uint32* addresses = DATABASE->GetInstructAddresses(file, line, count);
-		while (count--) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + addresses[count]);
+		const uint32* statements = DATABASE->GetStatements(file, line, count);
+		while (count--) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statements[count]].pointer);
 	}
 }
 
@@ -501,7 +612,7 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
 		type = StepType::None;
 		currentCoroutine = coroutine;
 		currentTraceDeep = deep;
-		debugFrame = new DebugFrame(this, LIBRARY);
+		debugFrame = new DebugFrame(this, LIBRARY, (MAP*)map);
 		OnHitBreakpoint(coroutine, address);
 		DebugFrame* frame = FRAME;
 		frame->debugger = NULL;
@@ -531,4 +642,6 @@ RainDebugger::~RainDebugger()
 		frame->Release();
 		debugFrame = NULL;
 	}
+	delete (MAP*)map;
+	map = NULL;
 }
