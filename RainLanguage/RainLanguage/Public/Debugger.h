@@ -34,15 +34,14 @@ private:
 	void* debugFrame;
 	void* name;
 	uint8* address;
-	Type internalType;
-	Type GetTargetType();
+	void* internalType;
 public:
 	/// <summary>
 	/// 类型
 	/// </summary>
 	RainType type;
 	RainDebuggerVariable();
-	RainDebuggerVariable(void* debugFrame, void* name, uint8* address, const Type& internalType);
+	RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType);
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>

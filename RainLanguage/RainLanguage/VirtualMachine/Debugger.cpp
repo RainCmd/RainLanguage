@@ -21,31 +21,35 @@ public:
 };
 
 #define FRAME ((DebugFrame*)debugFrame)
-Type RainDebuggerVariable::GetTargetType()
+const Type& GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
 {
-	if (IsHandleType(internalType) && address) return FRAME->library->kernel->heapAgency->GetType(*(Handle*)address);
-	else return internalType;
+	if (IsHandleType(type) && address) return frame->library->kernel->heapAgency->GetType(*(Handle*)address);
+	else return type;
 }
-RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), address(NULL), internalType(), type(RainType::Internal) {}
-RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, const Type& internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), type(RainType::Internal)
+RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), address(NULL), internalType(NULL), type(RainType::Internal) {}
+RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), type(RainType::Internal)
 {
 	if (debugFrame) FRAME->Reference();
-	if (internalType == TYPE_Bool) type = RainType::Bool;
-	else if (internalType == TYPE_Byte) type = RainType::Byte;
-	else if (internalType == TYPE_Char) type = RainType::Character;
-	else if (internalType == TYPE_Integer) type = RainType::Integer;
-	else if (internalType == TYPE_Real) type = RainType::Real;
-	else if (internalType == TYPE_Real2) type = RainType::Real2;
-	else if (internalType == TYPE_Real3) type = RainType::Real3;
-	else if (internalType == TYPE_Real4) type = RainType::Real4;
-	else if (internalType == TYPE_String) type = RainType::String;
-	else if (internalType == TYPE_Entity) type = RainType::Entity;
-	else if (!internalType.dimension && internalType.code == TypeCode::Enum) type = RainType::Enum;
+	if (internalType)
+	{
+		Type& variableType = *(Type*)internalType;
+		if (variableType == TYPE_Bool) type = RainType::Bool;
+		else if (variableType == TYPE_Byte) type = RainType::Byte;
+		else if (variableType == TYPE_Char) type = RainType::Character;
+		else if (variableType == TYPE_Integer) type = RainType::Integer;
+		else if (variableType == TYPE_Real) type = RainType::Real;
+		else if (variableType == TYPE_Real2) type = RainType::Real2;
+		else if (variableType == TYPE_Real3) type = RainType::Real3;
+		else if (variableType == TYPE_Real4) type = RainType::Real4;
+		else if (variableType == TYPE_String) type = RainType::String;
+		else if (variableType == TYPE_Entity) type = RainType::Entity;
+		else if (!variableType.dimension && variableType.code == TypeCode::Enum) type = RainType::Enum;
+	}
 }
 
 bool RainDebuggerVariable::IsValid()
 {
-	return debugFrame && FRAME->library;
+	return debugFrame && FRAME->library && internalType;
 }
 
 RainString RainDebuggerVariable::GetName()
@@ -58,7 +62,7 @@ uint8* RainDebuggerVariable::GetAddress()
 {
 	if (IsValid())
 	{
-		if (IsHandleType(internalType) && address)
+		if (IsHandleType(*(Type*)internalType) && address)
 		{
 			HeapAgency* agency = FRAME->library->kernel->heapAgency;
 			Handle handle = *(Handle*)address;
@@ -73,7 +77,7 @@ uint32 RainDebuggerVariable::MemberCount()
 {
 	if (type == RainType::Internal && IsValid())
 	{
-		Type targetType = GetTargetType();
+		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if (!targetType.dimension)
 		{
 			RuntimeLibrary* library = FRAME->library->kernel->libraryAgency->GetLibrary(targetType.library);
@@ -89,19 +93,19 @@ RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index)
 	uint8* variableAddress = GetAddress();
 	if (variableAddress && type == RainType::Internal && IsValid())
 	{
-		Type targetType = GetTargetType();
+		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if (!targetType.dimension)
 		{
 			RuntimeLibrary* library = FRAME->library->kernel->libraryAgency->GetLibrary(targetType.library);
 			if (targetType.code == TypeCode::Struct)
 			{
 				const RuntimeMemberVariable& variable = library->structs[targetType.index].variables[index];
-				return RainDebuggerVariable(debugFrame, new String(FRAME->library->kernel->stringAgency->Get(variable.name)), variableAddress + variable.address, variable.type);
+				return RainDebuggerVariable(debugFrame, new String(FRAME->library->kernel->stringAgency->Get(variable.name)), variableAddress + variable.address, new Type(variable.type));
 			}
 			else if (targetType.code == TypeCode::Handle)
 			{
 				const RuntimeMemberVariable& variable = library->classes[targetType.index].variables[index];
-				return RainDebuggerVariable(debugFrame, new String(FRAME->library->kernel->stringAgency->Get(variable.name)), variableAddress + library->classes[targetType.index].offset + variable.address, variable.type);
+				return RainDebuggerVariable(debugFrame, new String(FRAME->library->kernel->stringAgency->Get(variable.name)), variableAddress + library->classes[targetType.index].offset + variable.address, new Type(variable.type));
 			}
 		}
 	}
@@ -112,7 +116,7 @@ uint32 RainDebuggerVariable::ArrayLength()
 {
 	if (IsValid() && address)
 	{
-		Type targetType = GetTargetType();
+		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if (targetType.dimension)
 		{
 			HeapAgency* agency = FRAME->library->kernel->heapAgency;
@@ -127,12 +131,12 @@ RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index)
 {
 	if (IsValid() && address)
 	{
-		Type targetType = GetTargetType();
+		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if (targetType.dimension)
 		{
 			HeapAgency* agency = FRAME->library->kernel->heapAgency;
 			Handle handle = *(Handle*)address;
-			if (handle) return RainDebuggerVariable(debugFrame, NULL, agency->GetArrayPoint(handle, index), Type(targetType, targetType.dimension - 1));
+			if (handle) return RainDebuggerVariable(debugFrame, NULL, agency->GetArrayPoint(handle, index), new Type(targetType, targetType.dimension - 1));
 		}
 	}
 	return RainDebuggerVariable();
@@ -142,11 +146,11 @@ RainString RainDebuggerVariable::GetEnumName()
 {
 	if (IsValid())
 	{
-		Type targetType = GetTargetType();
+		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if (!targetType.dimension && targetType.code == TypeCode::Enum)
 		{
 			RuntimeLibrary* library = FRAME->library;
-			String result = library->enums[internalType.index].ToString(*(integer*)GetAddress(), library->kernel->stringAgency);
+			String result = library->enums[((Type*)internalType)->index].ToString(*(integer*)GetAddress(), library->kernel->stringAgency);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
 	}
@@ -159,6 +163,8 @@ RainDebuggerVariable::~RainDebuggerVariable()
 	debugFrame = NULL;
 	if (name) delete (String*)name;
 	name = NULL;
+	if (internalType) delete internalType;
+	internalType = NULL;
 }
 
 RainDebuggerSpace::RainDebuggerSpace(void* debugFrame, uint32 space) :debugFrame(debugFrame), space(space)
@@ -204,7 +210,7 @@ RainDebuggerVariable RainDebuggerSpace::GetVariable(uint32 index)
 	if (IsValid())
 	{
 		RuntimeLibrary* library = FRAME->library;
-		return RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(library->variables[index].name)), library->kernel->libraryAgency->data.GetPointer() + library->variables[index].address, library->variables[index].type);
+		return RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(library->variables[index].name)), library->kernel->libraryAgency->data.GetPointer() + library->variables[index].address, new Type(library->variables[index].type));
 	}
 	return RainDebuggerVariable();
 }
@@ -258,7 +264,7 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
 		DebugLocal& local = database->functions[function].locals[index];
-		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type), local.type.dimension));
+		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type), local.type.dimension));
 	}
 	return RainDebuggerVariable();
 }
@@ -422,7 +428,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 					goto label_next_enum;
 				}
 			return false;
-		label_next_enum:
+		label_next_enum:;
 		}
 		for (uint32 x = 0; x < importLibrary.structs.Count(); x++)
 		{
@@ -434,7 +440,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 					goto label_next_struct;
 				}
 			return false;
-		label_next_struct:
+		label_next_struct:;
 		}
 		for (uint32 x = 0; x < importLibrary.classes.Count(); x++)
 		{
@@ -446,7 +452,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 					goto label_next_class;
 				}
 			return false;
-		label_next_class:
+		label_next_class:;
 		}
 		for (uint32 x = 0; x < importLibrary.interfaces.Count(); x++)
 		{
@@ -458,7 +464,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 					goto label_next_interface;
 				}
 			return false;
-		label_next_interface:
+		label_next_interface:;
 		}
 		for (uint32 x = 0; x < importLibrary.delegates.Count(); x++)
 		{
@@ -470,7 +476,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 					goto label_next_delegate;
 				}
 			return false;
-		label_next_delegate:
+		label_next_delegate:;
 		}
 		for (uint32 x = 0; x < importLibrary.coroutines.Count(); x++)
 		{
@@ -482,7 +488,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 					goto label_next_coroutine;
 				}
 			return false;
-		label_next_coroutine:
+		label_next_coroutine:;
 		}
 	}
 	return true;

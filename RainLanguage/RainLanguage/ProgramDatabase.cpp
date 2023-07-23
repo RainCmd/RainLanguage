@@ -10,11 +10,11 @@ DebugFile::~DebugFile()
 const uint32* ProgramDatabase::GetStatements(const RainString& file, uint32 line, uint32& count) const
 {
 	String fileName = agency->Add(file.value, file.length);
-	DebugFile* debugFile; List<uint32, true>* statements;
-	if (files.TryGet(fileName, debugFile) && debugFile->statements.TryGet(line, statements))
+	DebugFile* debugFile; List<uint32, true>* fileStatements;
+	if (files.TryGet(fileName, debugFile) && debugFile->statements.TryGet(line, fileStatements))
 	{
-		count = statements->Count();
-		return statements->GetPointer();
+		count = fileStatements->Count();
+		return fileStatements->GetPointer();
 	}
 	return nullptr;
 }
