@@ -179,7 +179,7 @@ uint32 GetSpace(Kernel* kernel, const List<RuntimeSpace>& spaces, uint32 index, 
 			if (spaces[space->children[i]].name == name)
 				return space->children[i];
 	}
-	else if (spaces[0].name == name)return 0;
+	else if (spaces[0].name == name) return 0;
 	EXCEPTION("ÃüÃû¿Õ¼ä²éÕÒÊ§°Ü");
 }
 

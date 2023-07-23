@@ -10,6 +10,9 @@ struct DebugAnchor
 {
 	uint32 line;
 	uint32 index;
+	inline DebugAnchor(const uint32& line, const uint32& index) : line(line), index(index) {}
+	inline bool operator==(const DebugAnchor& other) const { return line == other.line && index == other.index; }
+	inline bool operator!=(const DebugAnchor& other) const { return !(*this == other); }
 };
 
 inline uint32 GetHash(const DebugAnchor& anchor) { return anchor.line ^ anchor.index; }
@@ -18,6 +21,8 @@ struct DebugGlobal
 {
 	uint32 library;
 	uint32 index;
+	DebugGlobal() = default;
+	DebugGlobal(const uint32& library, const uint32& index) : library(library), index(index) {}
 };
 
 struct DebugLocal

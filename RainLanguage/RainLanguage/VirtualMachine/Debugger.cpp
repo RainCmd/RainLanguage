@@ -21,7 +21,7 @@ public:
 };
 
 #define FRAME ((DebugFrame*)debugFrame)
-const Type& GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
+Type GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
 {
 	if (IsHandleType(type) && address) return frame->library->kernel->heapAgency->GetType(*(Handle*)address);
 	else return type;
@@ -269,6 +269,40 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 	return RainDebuggerVariable();
 }
 
+bool RainTrace::TryGetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex, RainDebuggerVariable& variable)
+{
+	if (IsValid())
+	{
+		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
+		DebugAnchor anchor(lineNumber, characterIndex);
+		uint32 localIndex;
+		if (function != INVALID && database->functions[function].localAnchors.TryGet(anchor, localIndex))
+		{
+			DebugLocal& local = database->functions[function].locals[localIndex];
+			Type localType;
+			if (FRAME->map->TryGet(local.type, localType)) variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(localType));
+			else EXCEPTION("映射逻辑可能有BUG");
+		}
+		else
+		{
+			DebugFile* debugFile;
+			DebugGlobal globalVariable = DebugGlobal();
+			if (database->files.TryGet(database->agency->Add(fileName.value, fileName.length), debugFile) && debugFile->globalAnchors.TryGet(anchor, globalVariable))
+			{
+				Declaration declaration;
+				if (FRAME->map->TryGet(Declaration(globalVariable.library, TypeCode::Invalid, globalVariable.index), declaration))
+				{
+					Kernel* kernel = FRAME->library->kernel;
+					RuntimeVariable& runtimeVariable = kernel->libraryAgency->GetLibrary(declaration.library)->variables[declaration.index];
+					variable = RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(runtimeVariable.name)), kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
+				}
+				else EXCEPTION("映射逻辑可能有BUG");
+			}
+		}
+	}
+	return false;
+}
+
 RainTrace::~RainTrace()
 {
 	if (debugFrame) FRAME->Release();
@@ -412,19 +446,48 @@ RainCoroutineIterator RainDebugger::GetCoroutineIterator()
 }
 
 #define TO_KERNEL_STRING(value) kernel->stringAgency->Add(library->stringAgency->Get(value))
+RuntimeSpace* GetSpace(Kernel* kernel, Library* library, const ImportLibrary& importLibrary, uint32 importSpaceIndex, RuntimeLibrary* runtimeLibrary)
+{
+	String spaceName = TO_KERNEL_STRING(importLibrary.spaces[importSpaceIndex].name);
+	if (importSpaceIndex)
+	{
+		RuntimeSpace* parent = GetSpace(kernel, library, importLibrary, importLibrary.spaces[importSpaceIndex].parent, runtimeLibrary);
+		if (parent)
+			for (uint32 i = 0; i < parent->children.Count(); i++)
+				if (spaceName.index == runtimeLibrary->spaces[parent->children[i]].name)
+					return &runtimeLibrary->spaces[parent->children[i]];
+	}
+	else if (spaceName.index == runtimeLibrary->spaces[0].name) return &runtimeLibrary->spaces[0];
+	return NULL;
+}
+
 bool InitMap(Kernel* kernel, Library* library, MAP* map)
 {
 	for (uint32 importIndex = 0; importIndex < library->imports.Count(); importIndex++)
 	{
 		ImportLibrary& importLibrary = library->imports[importIndex];
 		RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(TO_KERNEL_STRING(importLibrary.spaces[0].name).index);
+		for (uint32 x = 0; x < importLibrary.variables.Count(); x++)
+		{
+			String name = TO_KERNEL_STRING(importLibrary.variables[x].name);
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.variables[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->variables.Count(); y++)
+				if (name.index == runtimeLibrary->variables[space->variables[y]].name)
+				{
+					map->Set(Declaration(importIndex, TypeCode::Invalid, x), Declaration(runtimeLibrary->index, TypeCode::Invalid, space->variables[y]));
+					goto label_next_variable;
+				}
+			return false;
+		label_next_variable:;
+		}
 		for (uint32 x = 0; x < importLibrary.enums.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.enums[x].name);
-			for (uint32 y = 0; y < runtimeLibrary->enums.Count(); y++)
-				if (name.index == runtimeLibrary->enums[y].name)
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.enums[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->enums.Count(); y++)
+				if (name.index == runtimeLibrary->enums[space->enums[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Enum, x), Declaration(runtimeLibrary->index, TypeCode::Enum, y));
+					map->Set(Declaration(importIndex, TypeCode::Enum, x), Declaration(runtimeLibrary->index, TypeCode::Enum, space->enums[y]));
 					goto label_next_enum;
 				}
 			return false;
@@ -433,10 +496,11 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 		for (uint32 x = 0; x < importLibrary.structs.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.structs[x].name);
-			for (uint32 y = 0; y < runtimeLibrary->structs.Count(); y++)
-				if (name.index == runtimeLibrary->structs[y].name)
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.structs[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->structs.Count(); y++)
+				if (name.index == runtimeLibrary->structs[space->structs[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Struct, x), Declaration(runtimeLibrary->index, TypeCode::Struct, y));
+					map->Set(Declaration(importIndex, TypeCode::Struct, x), Declaration(runtimeLibrary->index, TypeCode::Struct, space->structs[y]));
 					goto label_next_struct;
 				}
 			return false;
@@ -445,10 +509,11 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 		for (uint32 x = 0; x < importLibrary.classes.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.classes[x].name);
-			for (uint32 y = 0; y < runtimeLibrary->classes.Count(); y++)
-				if (name.index == runtimeLibrary->classes[y].name)
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.classes[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->classes.Count(); y++)
+				if (name.index == runtimeLibrary->classes[space->classes[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Handle, x), Declaration(runtimeLibrary->index, TypeCode::Handle, y));
+					map->Set(Declaration(importIndex, TypeCode::Handle, x), Declaration(runtimeLibrary->index, TypeCode::Handle, space->classes[y]));
 					goto label_next_class;
 				}
 			return false;
@@ -457,10 +522,11 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 		for (uint32 x = 0; x < importLibrary.interfaces.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.interfaces[x].name);
-			for (uint32 y = 0; y < runtimeLibrary->interfaces.Count(); y++)
-				if (name.index == runtimeLibrary->interfaces[y].name)
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.interfaces[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->interfaces.Count(); y++)
+				if (name.index == runtimeLibrary->interfaces[space->interfaces[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Interface, x), Declaration(runtimeLibrary->index, TypeCode::Interface, y));
+					map->Set(Declaration(importIndex, TypeCode::Interface, x), Declaration(runtimeLibrary->index, TypeCode::Interface, space->interfaces[y]));
 					goto label_next_interface;
 				}
 			return false;
@@ -469,10 +535,11 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 		for (uint32 x = 0; x < importLibrary.delegates.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.delegates[x].name);
-			for (uint32 y = 0; y < runtimeLibrary->delegates.Count(); y++)
-				if (name.index == runtimeLibrary->delegates[y].name)
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.delegates[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->delegates.Count(); y++)
+				if (name.index == runtimeLibrary->delegates[space->delegates[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Delegate, x), Declaration(runtimeLibrary->index, TypeCode::Delegate, y));
+					map->Set(Declaration(importIndex, TypeCode::Delegate, x), Declaration(runtimeLibrary->index, TypeCode::Delegate, space->delegates[y]));
 					goto label_next_delegate;
 				}
 			return false;
@@ -481,10 +548,11 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 		for (uint32 x = 0; x < importLibrary.coroutines.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.coroutines[x].name);
-			for (uint32 y = 0; y < runtimeLibrary->coroutines.Count(); y++)
-				if (name.index == runtimeLibrary->coroutines[y].name)
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.coroutines[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->coroutines.Count(); y++)
+				if (name.index == runtimeLibrary->coroutines[space->coroutines[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Coroutine, x), Declaration(runtimeLibrary->index, TypeCode::Coroutine, y));
+					map->Set(Declaration(importIndex, TypeCode::Coroutine, x), Declaration(runtimeLibrary->index, TypeCode::Coroutine, space->coroutines[y]));
 					goto label_next_coroutine;
 				}
 			return false;
@@ -618,9 +686,9 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
 		type = StepType::None;
 		currentCoroutine = coroutine;
 		currentTraceDeep = deep;
-		debugFrame = new DebugFrame(this, LIBRARY, (MAP*)map);
+		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
+		debugFrame = frame;
 		OnHitBreakpoint(coroutine, address);
-		DebugFrame* frame = FRAME;
 		frame->debugger = NULL;
 		frame->library = NULL;
 		frame->Release();

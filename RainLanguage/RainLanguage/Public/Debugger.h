@@ -78,6 +78,9 @@ public:
 	~RainDebuggerVariable();
 };
 
+/// <summary>
+/// 命名空间
+/// </summary>
 struct RAINLANGUAGE RainDebuggerSpace
 {
 private:
@@ -98,7 +101,7 @@ public:
 	/// </summary>
 	uint32 ChildCount();
 	/// <summary>
-	/// 获取子空间迭代器
+	/// 获取子空间
 	/// </summary>
 	RainDebuggerSpace GetChild(uint32 index);
 	/// <summary>
@@ -113,6 +116,9 @@ public:
 	~RainDebuggerSpace();
 };
 
+/// <summary>
+/// 调用栈追踪
+/// </summary>
 struct RAINLANGUAGE RainTrace
 {
 private:
@@ -128,14 +134,41 @@ public:
 	/// 是否是有效的
 	/// </summary>
 	bool IsValid();
+	/// <summary>
+	/// 函数名
+	/// </summary>
 	RainString FunctionName();
+	/// <summary>
+	/// 文件名
+	/// </summary>
 	RainString FileName();
+	/// <summary>
+	/// 当前执行的行号
+	/// </summary>
 	inline uint32 GetLine() { return line; }
+	/// <summary>
+	/// 局部变量数量
+	/// </summary>
 	uint32 LocalCount();
+	/// <summary>
+	/// 获取局部变量
+	/// </summary>
 	RainDebuggerVariable GetLocal(uint32 index);
+	/// <summary>
+	/// 当前栈上下文中文本对应的变量数据
+	/// </summary>
+	/// <param name="fileName">文件名</param>
+	/// <param name="lineNumber">行号</param>
+	/// <param name="characterIndex">单词首字符索引</param>
+	/// <param name="variable">变量数据</param>
+	/// <returns>成功获取到变量数据则返回true,否则返回false</returns>
+	bool TryGetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex, RainDebuggerVariable& variable);
 	~RainTrace();
 };
 
+/// <summary>
+/// 调用栈追踪迭代器
+/// </summary>
 struct RAINLANGUAGE RainTraceIterator
 {
 private:
@@ -149,12 +182,24 @@ public:
 	/// 是否是有效的
 	/// </summary>
 	bool IsValid();
+	/// <summary>
+	/// 当前调用的实例ID
+	/// </summary>
 	integer CoroutineID();
+	/// <summary>
+	/// 迭代下一个调用栈追踪
+	/// </summary>
 	bool Next();
+	/// <summary>
+	/// 当前调用栈追踪
+	/// </summary>
 	RainTrace Current();
 	~RainTraceIterator();
 };
 
+/// <summary>
+/// 协程迭代器
+/// </summary>
 struct RAINLANGUAGE RainCoroutineIterator
 {
 private:
@@ -166,7 +211,13 @@ public:
 	/// 是否是有效的
 	/// </summary>
 	bool IsValid();
+	/// <summary>
+	/// 下一个协程调用栈追踪迭代器
+	/// </summary>
 	bool Next();
+	/// <summary>
+	/// 当前协程调用栈追踪迭代器
+	/// </summary>
 	RainTraceIterator Current();
 	~RainCoroutineIterator();
 };
@@ -206,7 +257,7 @@ public:
 	/// </summary>
 	RainCoroutineIterator GetCoroutineIterator();
 	/// <summary>
-	/// 设置目标虚拟机
+	/// 设置目标虚拟机，设置成功返回true，否则返回false
 	/// </summary>
 	/// <param name="kernel">虚拟机</param>
 	bool SetKernel(RainKernel* kernel);
