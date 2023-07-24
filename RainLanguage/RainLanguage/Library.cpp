@@ -345,7 +345,7 @@ const RainBuffer<uint8>* Serialize(const RainLibrary* library)
 	return Serialize((Library*)library);
 }
 
-const RainLibrary* Deserialize(const uint8* data, uint32 size)
+const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 {
 	Deserializer deserializer(data, size);
 	StringAgency* stringAgency = deserializer.DeserializeStringAgency();

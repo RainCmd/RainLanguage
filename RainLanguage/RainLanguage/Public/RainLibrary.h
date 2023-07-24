@@ -46,14 +46,22 @@ RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary* library);
 /// <param name="data">字节数据</param>
 /// <param name="size">字节数</param>
 /// <returns>库</returns>
-RAINLANGUAGE const RainLibrary* Deserialize(const uint8* data, uint32 size);
+RAINLANGUAGE const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size);
 
 /// <summary>
 /// 调试数据
 /// </summary>
-class RainProgramDatabase
+class RAINLANGUAGE RainProgramDatabase
 {
 public:
 	RainProgramDatabase() = default;
 	virtual ~RainProgramDatabase() {}
 };
+/// <summary>
+/// 序列化调试数据
+/// </summary>
+RAINLANGUAGE const  RainBuffer<uint8>* Serialize(const RainProgramDatabase* database);
+/// <summary>
+/// 反序列化调试数据
+/// </summary>
+RAINLANGUAGE const RainProgramDatabase* DeserializeDataBase(const uint8* data, uint32 size);

@@ -30,6 +30,7 @@ struct DebugLocal
 	String name;
 	uint32 address;
 	Type type;
+	inline DebugLocal() : name(), address(INVALID), type() {}
 };
 
 struct DebugFunction
@@ -37,7 +38,8 @@ struct DebugFunction
 	String file;
 	uint32 entry;
 	List<DebugLocal> locals;
-	Dictionary<DebugAnchor, uint32, true> localAnchors;
+	Dictionary<DebugAnchor, uint32, true> localAnchors; //anchor => localIndex
+	inline DebugFunction() : file(), entry(INVALID), locals(0), localAnchors(0) {}
 };
 
 struct DebugStatement
@@ -51,7 +53,8 @@ struct DebugFile
 {
 	List<uint32, true> functions;
 	Dictionary<DebugAnchor, DebugGlobal, true> globalAnchors;
-	Dictionary<uint32, List<uint32, true>*, true> statements; //line => statements
+	Dictionary<uint32, List<uint32, true>*, true> statements; //line => statementIndices
+	inline DebugFile() : functions(0), globalAnchors(0), statements(0) {}
 	~DebugFile();
 };
 
@@ -63,7 +66,8 @@ public:
 	List<DebugFunction> functions;
 	List<DebugStatement, true> statements;
 	Dictionary<String, DebugFile*> files;
-	ProgramDatabase() :agency(new StringAgency(0xFF)), functions(0), statements(0), files(0) {}
+	ProgramDatabase() : agency(new StringAgency(0xFF)), functions(0), statements(0), files(0) {}
+	ProgramDatabase(StringAgency* agency) : agency(agency), functions(0), statements(0), files(0) {}
 	const uint32* GetStatements(const RainString& file, uint32 line, uint32& count) const;
 	uint32 GetStatement(uint32 instructAddress) const;
 	//todo µ÷ÊÔÊý¾Ý
