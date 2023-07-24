@@ -42,6 +42,7 @@ public:
 	RainType type;
 	RainDebuggerVariable();
 	RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType);
+	RainDebuggerVariable(const RainDebuggerVariable& other);
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>
@@ -88,6 +89,7 @@ private:
 	uint32 space;
 public:
 	RainDebuggerSpace(void* debugFrame, uint32 space);
+	RainDebuggerSpace(const RainDebuggerSpace& other);
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>
@@ -130,6 +132,7 @@ private:
 	uint32 line;
 public:
 	RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line);
+	RainTrace(const RainTrace& other);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
@@ -178,6 +181,7 @@ private:
 	uint32 pointer;
 public:
 	RainTraceIterator(void* debugFrame, void* coroutine);
+	RainTraceIterator(const RainTraceIterator& other);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
@@ -207,6 +211,7 @@ private:
 	void* index;
 public:
 	RainCoroutineIterator(void* debugFrame);
+	RainCoroutineIterator(const RainCoroutineIterator& other);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
@@ -248,6 +253,8 @@ public:
 	/// <param name="database"></param>
 	RainDebugger(const RainLibrary* source, const RainProgramDatabase* database);
 	RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database);
+	RainDebugger(const RainDebugger&) = delete;
+	RainDebugger(RainDebugger&&) = delete;
 	/// <summary>
 	/// 获取空间迭代器
 	/// </summary>

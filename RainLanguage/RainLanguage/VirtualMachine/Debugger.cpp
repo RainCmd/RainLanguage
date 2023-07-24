@@ -47,6 +47,13 @@ RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* 
 	}
 }
 
+RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(other.name), address(other.address), internalType(other.internalType), type(other.type)
+{
+	if (debugFrame) FRAME->Reference();
+	if (name) name = new String(*(String*)name);
+	if (internalType) internalType = new Type(*(Type*)internalType);
+}
+
 bool RainDebuggerVariable::IsValid()
 {
 	return debugFrame && FRAME->library && internalType;
@@ -163,11 +170,16 @@ RainDebuggerVariable::~RainDebuggerVariable()
 	debugFrame = NULL;
 	if (name) delete (String*)name;
 	name = NULL;
-	if (internalType) delete internalType;
+	if (internalType) delete (Type*)internalType;
 	internalType = NULL;
 }
 
 RainDebuggerSpace::RainDebuggerSpace(void* debugFrame, uint32 space) :debugFrame(debugFrame), space(space)
+{
+	if (debugFrame) FRAME->Reference();
+}
+
+RainDebuggerSpace::RainDebuggerSpace(const RainDebuggerSpace& other) : debugFrame(other.debugFrame), space(space)
 {
 	if (debugFrame) FRAME->Reference();
 }
@@ -218,12 +230,20 @@ RainDebuggerVariable RainDebuggerSpace::GetVariable(uint32 index)
 RainDebuggerSpace::~RainDebuggerSpace()
 {
 	if (debugFrame) FRAME->Release();
+	debugFrame = NULL;
 }
 
 #define COROUTINE ((Coroutine*)coroutine)
 RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line) : debugFrame(debugFrame), stack(stack), name(name), function(function), file(file), line(line)
 {
 	FRAME->Reference();
+}
+
+RainTrace::RainTrace(const RainTrace& other) : debugFrame(debugFrame), stack(other.stack), name(other.name), function(other.function), file(other.file), line(other.line)
+{
+	if (debugFrame) FRAME->Reference();
+	if (name) name = new String(*(String*)name);
+	if (file) file = new String(*(String*)file);
 }
 
 bool RainTrace::IsValid()
@@ -306,6 +326,7 @@ bool RainTrace::TryGetVariable(const RainString& fileName, uint32 lineNumber, ui
 RainTrace::~RainTrace()
 {
 	if (debugFrame) FRAME->Release();
+	debugFrame = NULL;
 	if (name) delete (String*)name;
 	name = NULL;
 	if (file) delete (String*)file;
@@ -313,6 +334,11 @@ RainTrace::~RainTrace()
 }
 
 RainTraceIterator::RainTraceIterator(void* debugFrame, void* coroutine) : debugFrame(debugFrame), coroutine(coroutine), stack(NULL), pointer(INVALID)
+{
+	if (debugFrame) FRAME->Reference();
+}
+
+RainTraceIterator::RainTraceIterator(const RainTraceIterator& other) : debugFrame(other.debugFrame), coroutine(other.coroutine), stack(other.stack), pointer(other.pointer)
 {
 	if (debugFrame) FRAME->Reference();
 }
@@ -373,9 +399,15 @@ RainTrace RainTraceIterator::Current()
 RainTraceIterator::~RainTraceIterator()
 {
 	if (debugFrame) FRAME->Release();
+	debugFrame = NULL;
 }
 
 RainCoroutineIterator::RainCoroutineIterator(void* debugFrame) : debugFrame(debugFrame), index(NULL)
+{
+	if (debugFrame) FRAME->Reference();
+}
+
+RainCoroutineIterator::RainCoroutineIterator(const RainCoroutineIterator& other) : debugFrame(other.debugFrame), index(other.index)
 {
 	if (debugFrame) FRAME->Reference();
 }
@@ -405,6 +437,7 @@ RainTraceIterator RainCoroutineIterator::Current()
 RainCoroutineIterator::~RainCoroutineIterator()
 {
 	if (debugFrame) FRAME->Release();
+	debugFrame = NULL;
 }
 
 #define KERNEL ((Kernel*)kernel)
