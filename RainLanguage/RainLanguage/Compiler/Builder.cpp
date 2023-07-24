@@ -1,6 +1,7 @@
 #include "../Language.h"
 #include "../KernelDeclarations.h"
 #include "../Library.h"
+#include "../ProgramDatabase.h"
 #include "../Public/Builder.h"
 #include "LineReader.h"
 #include "Message.h"
@@ -210,16 +211,12 @@ RainProduct* Build(const BuildParameter& parameter)
 	COMPILE_TERMINATION_CHECK;
 
 	Generator generator = Generator(&manager);
-	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, parameter.debug ? new ProgramDatabase() : NULL);
+	ProgramDatabaseGenerator databaseGenerator(parameter.debug);
+	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, &databaseGenerator);
 	generator.GeneratorFunction(generatorParameter);
 	for (uint32 i = 0; i < relySpaceCollector.Count(); i++) delete relySpaceCollector[i];
 	relySpaceCollector.Clear();
-	if (messages->GetMessages(ErrorLevel::Error)->Count())
-	{
-		if (generatorParameter.database) delete generatorParameter.database;
-		generatorParameter.database = NULL;
-		return new Product(messages);
-	}
+	COMPILE_TERMINATION_CHECK;
 
-	return new Product(messages, generator.GeneratorLibrary(manager), generatorParameter.database);
+	return new Product(messages, generator.GeneratorLibrary(manager), databaseGenerator.Generator());
 }

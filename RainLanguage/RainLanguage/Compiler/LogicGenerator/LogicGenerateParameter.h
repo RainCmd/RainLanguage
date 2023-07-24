@@ -8,7 +8,7 @@ struct LogicGenerateParameter :GeneratorParameter
 	VariableGenerator* variableGenerator;
 	List<LogicVariable, true> results;
 	CodeLocalAddressReference* finallyAddress;
-	inline LogicGenerateParameter(const GeneratorParameter& generatorParameter) :GeneratorParameter(generatorParameter), variableGenerator(NULL), results(0), finallyAddress(NULL) {}
+	inline LogicGenerateParameter(const GeneratorParameter& generatorParameter) : GeneratorParameter(generatorParameter), variableGenerator(NULL), results(0), finallyAddress(NULL) {}
 	inline LogicGenerateParameter(const StatementGeneratorParameter& statementGeneratorParameter, uint32 resultCount) : GeneratorParameter(statementGeneratorParameter), variableGenerator(statementGeneratorParameter.variableGenerator), results(resultCount), finallyAddress(statementGeneratorParameter.finallyAddress)
 	{
 		while (resultCount--) results.Add(LogicVariable());
