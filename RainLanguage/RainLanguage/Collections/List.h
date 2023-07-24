@@ -56,8 +56,8 @@ public:
 		num += count;
 		if (num > size)
 		{
-			if (size < 4) size = 4;
-			while (size < num) size += size >> 1;
+			if (size < 2) size = num;
+			else while (size < num) size += size >> 1;
 			values = Realloc<T>(values, size);
 		}
 	}
