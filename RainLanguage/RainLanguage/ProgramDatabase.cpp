@@ -1,23 +1,17 @@
 #include "ProgramDatabase.h"
 #include "Serialization.h"
 
-DebugFile::~DebugFile()
+ProgramDatabase::ProgramDatabase(const String& name) : agency(new StringAgency(0xFF)), functions(0), statements(0), files(0)
 {
-	Dictionary<uint32, List<uint32, true>*, true>::Iterator iterator = statements.GetIterator();
-	while (iterator.Next()) delete iterator.CurrentValue();
-	statements.Clear();
+	this->name = agency->Add(name);
 }
 
-const uint32* ProgramDatabase::GetStatements(const RainString& file, uint32 line, uint32& count) const
+const uint32 ProgramDatabase::GetStatement(const RainString& file, uint32 line) const
 {
 	String fileName = agency->Add(file.value, file.length);
-	DebugFile* debugFile; List<uint32, true>* fileStatements;
-	if (files.TryGet(fileName, debugFile) && debugFile->statements.TryGet(line, fileStatements))
-	{
-		count = fileStatements->Count();
-		return fileStatements->GetPointer();
-	}
-	return nullptr;
+	DebugFile* debugFile; uint32 result = 0;
+	if (files.TryGet(fileName, debugFile) && debugFile->statements.TryGet(line, result)) return result;
+	return INVALID;
 }
 
 uint32 ProgramDatabase::GetStatement(uint32 instructAddress) const
@@ -85,11 +79,11 @@ RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase* datab
 			serializer->Serialize(globalIterator.CurrentKey());
 			serializer->Serialize(globalIterator.CurrentValue());
 		}
-		Dictionary<uint32, List<uint32, true>*, true>::Iterator statementIterator = file->statements.GetIterator();
+		Dictionary<uint32, uint32, true>::Iterator statementIterator = file->statements.GetIterator();
 		while (statementIterator.Next())
 		{
 			serializer->Serialize(statementIterator.CurrentKey());
-			serializer->SerializeList(*statementIterator.CurrentValue());
+			serializer->Serialize(statementIterator.CurrentValue());
 		}
 	}
 	return serializer;
@@ -140,9 +134,8 @@ RAINLANGUAGE const RainProgramDatabase* DeserializeDataBase(const uint8* data, u
 		while (statementCount--)
 		{
 			uint32 line = deserializer.Deserialize<uint32>();
-			List<uint32, true>* statements = new List<uint32, true>(0);
-			deserializer.Deserialize(*statements);
-			file->statements.Set(line, statements);
+			uint32 statement = deserializer.Deserialize<uint32>();
+			file->statements.Set(line, statement);
 		}
 	}
 	return result;

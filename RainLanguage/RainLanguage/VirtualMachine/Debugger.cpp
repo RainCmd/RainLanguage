@@ -647,11 +647,8 @@ bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
 {
 	if (IsActive())
 	{
-		uint32 count;
-		const uint32* statements = DATABASE->GetStatements(file, line, count);
-		bool success = false;
-		while (count--) if (SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statements[count]].pointer)) success = true;
-		return success;
+		const uint32 statement = DATABASE->GetStatement(file, line);
+		return statement != INVALID && SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statement].pointer);
 	}
 	return false;
 }
@@ -660,9 +657,8 @@ void RainDebugger::RemoveBreakPoint(const RainString& file, uint32 line)
 {
 	if (IsActive())
 	{
-		uint32 count;
-		const uint32* statements = DATABASE->GetStatements(file, line, count);
-		while (count--) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statements[count]].pointer);
+		const uint32 statement = DATABASE->GetStatement(file, line);
+		if (statement != INVALID) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statement].pointer);
 	}
 }
 

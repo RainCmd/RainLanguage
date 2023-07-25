@@ -31,6 +31,7 @@ struct DebugLocal
 	uint32 address;
 	Type type;
 	inline DebugLocal() : name(), address(INVALID), type() {}
+	inline DebugLocal(const String& name, uint32 address, const Type& type) : name(name), address(address), type(type) {}
 };
 
 struct DebugFunction
@@ -47,15 +48,15 @@ struct DebugStatement
 	uint32 function;
 	uint32 line;
 	uint32 pointer;
+	inline DebugStatement(uint32 function, uint32 line, uint32 pointer) :function(function), line(line), pointer(pointer) {}
 };
 
 struct DebugFile
 {
 	List<uint32, true> functions;
 	Dictionary<DebugAnchor, DebugGlobal, true> globalAnchors;
-	Dictionary<uint32, List<uint32, true>*, true> statements; //line => statementIndices
+	Dictionary<uint32, uint32, true> statements; //line => statement
 	inline DebugFile() : functions(0), globalAnchors(0), statements(0) {}
-	~DebugFile();
 };
 
 class ProgramDatabase : public RainProgramDatabase
@@ -66,11 +67,10 @@ public:
 	List<DebugFunction> functions;
 	List<DebugStatement, true> statements;
 	Dictionary<String, DebugFile*> files;
-	ProgramDatabase() : agency(new StringAgency(0xFF)), functions(0), statements(0), files(0) {}
+	ProgramDatabase(const String& name);
 	ProgramDatabase(StringAgency* agency) : agency(agency), functions(0), statements(0), files(0) {}
-	const uint32* GetStatements(const RainString& file, uint32 line, uint32& count) const;
+	const uint32 GetStatement(const RainString& file, uint32 line) const;
 	uint32 GetStatement(uint32 instructAddress) const;
-	//todo µ÷ÊÔÊý¾Ý
 	~ProgramDatabase();
 };
 

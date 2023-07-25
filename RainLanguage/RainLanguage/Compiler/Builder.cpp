@@ -211,7 +211,7 @@ RainProduct* Build(const BuildParameter& parameter)
 	COMPILE_TERMINATION_CHECK;
 
 	Generator generator = Generator(&manager);
-	ProgramDatabaseGenerator databaseGenerator(parameter.debug);
+	ProgramDatabaseGenerator databaseGenerator(manager.name, parameter.debug);
 	GeneratorParameter generatorParameter = GeneratorParameter(&manager, &generator, &databaseGenerator);
 	generator.GeneratorFunction(generatorParameter);
 	for (uint32 i = 0; i < relySpaceCollector.Count(); i++) delete relySpaceCollector[i];
