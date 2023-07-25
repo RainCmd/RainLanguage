@@ -55,7 +55,7 @@ public:
 	inline bool IsValid(uint32 index) { return index < top && (!index || slots[index].length); }
 	inline void Reference(string index)
 	{
-		if (!index)return;
+		if (!index) return;
 		ASSERT_DEBUG(IsValid(index), "引用无效字符串");
 		Slot* slot = slots + index;
 		if (!slot->reference)
@@ -67,7 +67,7 @@ public:
 	}
 	inline void Release(string index)
 	{
-		if (!index)return;
+		if (!index) return;
 		ASSERT_DEBUG(IsValid(index) && (slots + index)->reference, "释放无引用字符串，逻辑可能有问题");
 		Slot* slot = slots + index;
 		if (!(--slot->reference))

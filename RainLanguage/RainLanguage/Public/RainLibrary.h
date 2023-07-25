@@ -64,4 +64,4 @@ RAINLANGUAGE const  RainBuffer<uint8>* Serialize(const RainProgramDatabase* data
 /// <summary>
 /// 反序列化调试数据
 /// </summary>
-RAINLANGUAGE const RainProgramDatabase* DeserializeDataBase(const uint8* data, uint32 size);
+RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size);

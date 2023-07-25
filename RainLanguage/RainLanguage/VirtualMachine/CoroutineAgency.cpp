@@ -20,7 +20,7 @@ Invoker* CoroutineAgency::CreateInvoker(const Function& function)
 	return invoker;
 }
 
-Invoker* CoroutineAgency::CreateInvoker(uint32 entry,const CallableInfo* info)
+Invoker* CoroutineAgency::CreateInvoker(uint32 entry, const CallableInfo* info)
 {
 	Invoker* invoker = GetInvoker();
 	invoker->Initialize(entry, info);
@@ -43,7 +43,7 @@ void CoroutineAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 		coroutine->next = head;
 		head = coroutine;
 	}
-	else 
+	else
 	{
 		Recycle(coroutine);
 		if (!invoker->hold) invoker->Recycle();
@@ -52,9 +52,13 @@ void CoroutineAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 
 void CoroutineAgency::Update()
 {
-	for (Coroutine* index = head; index; index = index->next)
-		if (!index->pause && index->exitMessage.IsEmpty())
-			index->Update();
+	for (Coroutine* index = head; index; index = index->next) coroutines.Add(index);
+	for (uint32 i = 0; i < coroutines.Count(); i++)
+	{
+		Coroutine* index = coroutines[i];
+		if (!index->pause && index->exitMessage.IsEmpty()) index->Update();
+	}
+	coroutines.Clear();
 	for (Coroutine* index = head, *prev = NULL; index; )
 		if (index->IsRunning())
 		{
@@ -72,6 +76,12 @@ void CoroutineAgency::Update()
 			Recycle(coroutine);
 			if (!invoker->hold) invoker->Recycle();
 		}
+}
+
+void CoroutineAgency::UpdateGlobalDataCache(uint8* data)
+{
+	for (Coroutine* index = head; index; index = index->next) index->cacheData[0] = data;
+	for (Coroutine* index = free; index; index = index->next) index->cacheData[0] = data;
 }
 
 uint32 CoroutineAgency::CountCoroutine()

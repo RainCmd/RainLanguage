@@ -200,7 +200,9 @@ RuntimeLibrary* LibraryAgency::Load(string name)
 
 RuntimeLibrary* LibraryAgency::Load(const Library* library)
 {
+	uint8* address = data.GetPointer();
 	RuntimeLibrary* result = new RuntimeLibrary(kernel, libraries.Count(), library);
+	if (address != data.GetPointer()) kernel->coroutineAgency->UpdateGlobalDataCache(data.GetPointer());
 	libraries.Add(result);
 	for (uint32 i = 0; i < library->imports.Count(); i++)
 	{

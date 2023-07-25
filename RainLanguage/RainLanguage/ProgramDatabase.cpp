@@ -88,7 +88,7 @@ RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase* datab
 	return serializer;
 }
 
-RAINLANGUAGE const RainProgramDatabase* DeserializeDataBase(const uint8* data, uint32 size)
+RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size)
 {
 	Deserializer deserializer(data, size);
 	StringAgency* agency = deserializer.DeserializeStringAgency();
