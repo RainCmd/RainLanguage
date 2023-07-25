@@ -218,5 +218,5 @@ RainProduct* Build(const BuildParameter& parameter)
 	relySpaceCollector.Clear();
 	COMPILE_TERMINATION_CHECK;
 
-	return new Product(messages, generator.GeneratorLibrary(manager), databaseGenerator.Generator());
+	return new Product(messages, generator.GeneratorLibrary(manager), databaseGenerator.GetResult());
 }

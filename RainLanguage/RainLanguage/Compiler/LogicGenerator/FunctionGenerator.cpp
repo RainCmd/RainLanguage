@@ -780,11 +780,20 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	VariableGenerator variableGenerator = VariableGenerator(parameterPoint);
 	if (declaration.category == DeclarationCategory::StructFunction || declaration.category == DeclarationCategory::Class || declaration.category == DeclarationCategory::Constructor || declaration.category == DeclarationCategory::ClassFunction)
 	{
-		variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type);
+		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type);
+		parameter.databaseGenerator->AddLocal(&parameters[0], parameterVariable.address, parameter.generator->globalReference);
 		variableGenerator.MemberParameterAlignment();
-		for (uint32 i = 1; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+		for (uint32 i = 1; i < parameters.Count(); i++)
+		{
+			parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+			parameter.databaseGenerator->AddLocal(&parameters[i], parameterVariable.address, parameter.generator->globalReference);
+		}
 	}
-	else for (uint32 i = 0; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+	else for (uint32 i = 0; i < parameters.Count(); i++)
+	{
+		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+		parameter.databaseGenerator->AddLocal(&parameters[i], parameterVariable.address, parameter.generator->globalReference);
+	}
 	CodeValueReference<uint32> stackSize = CodeValueReference<uint32>();
 	CodeLocalAddressReference finallyAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::FUNCTION_Entrance);

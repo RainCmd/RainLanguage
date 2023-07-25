@@ -4,21 +4,14 @@
 class VariableExpression :public Expression
 {
 public:
-	inline VariableExpression(ExpressionType type, const Anchor& anchor, const Type variableType) :Expression(type | ExpressionType::VariableExpression, anchor, List<Type, true>(1))
-	{
-		returns.Add(variableType);
-	}
+	inline VariableExpression(ExpressionType type, const Anchor& anchor, const Type variableType) :Expression(type | ExpressionType::VariableExpression, anchor, List<Type, true>(1)) { returns.Add(variableType); }
 };
 
 class VariableLocalExpression :public VariableExpression
 {
 public:
 	CompilingDeclaration declaration;
-	inline VariableLocalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableLocalExpression, anchor, type), declaration(declaration)
-	{
-		this->attribute = CombineType(attribute, type);
-	}
-
+	inline VariableLocalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableLocalExpression, anchor, type), declaration(declaration) { this->attribute = CombineType(attribute, type); }
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
@@ -28,10 +21,7 @@ class VariableGlobalExpression :public VariableExpression
 {
 public:
 	CompilingDeclaration declaration;
-	inline VariableGlobalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableGlobalExpression, anchor, type), declaration(declaration)
-	{
-		this->attribute = CombineType(attribute, type);
-	}
+	inline VariableGlobalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableGlobalExpression, anchor, type), declaration(declaration) { this->attribute = CombineType(attribute, type); }
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);

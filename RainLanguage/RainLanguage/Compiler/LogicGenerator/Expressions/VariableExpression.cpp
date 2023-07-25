@@ -5,33 +5,44 @@
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+	parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[0].address, parameter.generator->globalReference);
 }
 
 void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
 	if (parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
-		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]), parameter.results[0]);
+	{
+		LogicVariable local = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, local, parameter.results[0]);
+		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], local.address, parameter.generator->globalReference);
+	}
 }
 
 void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
 	parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+	parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[index].address, parameter.generator->globalReference);
 }
 
 void VariableGlobalExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.results[0] = LogicVariable(declaration, returns[0], 0);
+	parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
 }
 
 void VariableGlobalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
 	if (parameter.results[0] != LogicVariable(declaration, returns[0], 0))
+	{
 		LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(declaration, returns[0], 0), parameter.results[0]);
+		parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
+	}
 }
 
 void VariableGlobalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
 	parameter.results[index] = LogicVariable(declaration, returns[0], 0);
+	parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
 }
 
 bool VariableGlobalExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)

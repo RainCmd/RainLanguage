@@ -47,7 +47,6 @@ RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase* datab
 	{
 		DebugFunction& function = source->functions[x];
 		serializer->Serialize(function.file.index);
-		serializer->Serialize(function.entry);
 		serializer->Serialize(function.locals.Count());
 		for (uint32 y = 0; y < function.locals.Count(); y++)
 		{
@@ -100,7 +99,6 @@ RAINLANGUAGE const RainProgramDatabase* DeserializeDataBase(const uint8* data, u
 	{
 		DebugFunction* function = new (result->functions.Add())DebugFunction();
 		function->file = agency->Get(deserializer.Deserialize<string>());
-		function->entry = deserializer.Deserialize<uint32>();
 		uint32 localCount = deserializer.Deserialize<uint32>();
 		while (localCount--)
 		{

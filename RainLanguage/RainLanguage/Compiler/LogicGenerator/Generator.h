@@ -27,8 +27,8 @@ private:
 	List<uint32, true> codeReferenceAddresses;
 	Set<uint32, true> insertCodeReferenceAddresses;
 	Dictionary<String, GeneratorStringAddresses*> codeStrings, dataStrings;
-	GlobalReference* globalReference;
 public:
+	GlobalReference* globalReference;
 	inline Generator(DeclarationManager* manager) :code(0), data(manager->compilingLibrary.constantSize), insert(0), insertAddress(INVALID), instructAddress(INVALID), codeStartReference(0), codeReferenceAddresses(0), insertCodeReferenceAddresses(0), codeStrings(0), dataStrings(0), globalReference(NULL)
 	{
 		data.SetCount(manager->compilingLibrary.constantSize);

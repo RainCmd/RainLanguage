@@ -5,6 +5,7 @@
 
 void ReturnStatement::Generator(StatementGeneratorParameter& parameter)
 {
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	if (expression)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);

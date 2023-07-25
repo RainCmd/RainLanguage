@@ -179,7 +179,7 @@ RainDebuggerSpace::RainDebuggerSpace(void* debugFrame, uint32 space) :debugFrame
 	if (debugFrame) FRAME->Reference();
 }
 
-RainDebuggerSpace::RainDebuggerSpace(const RainDebuggerSpace& other) : debugFrame(other.debugFrame), space(space)
+RainDebuggerSpace::RainDebuggerSpace(const RainDebuggerSpace& other) : debugFrame(other.debugFrame), space(other.space)
 {
 	if (debugFrame) FRAME->Reference();
 }

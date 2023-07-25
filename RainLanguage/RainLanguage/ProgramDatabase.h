@@ -37,10 +37,9 @@ struct DebugLocal
 struct DebugFunction
 {
 	String file;
-	uint32 entry;
 	List<DebugLocal> locals;
 	Dictionary<DebugAnchor, uint32, true> localAnchors; //anchor => localIndex
-	inline DebugFunction() : file(), entry(INVALID), locals(0), localAnchors(0) {}
+	inline DebugFunction() : file(), locals(0), localAnchors(0) {}
 };
 
 struct DebugStatement

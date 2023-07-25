@@ -4,6 +4,7 @@
 
 void ExitStatement::Generator(StatementGeneratorParameter& parameter)
 {
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 	LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 	expression->Generator(logicParameter);

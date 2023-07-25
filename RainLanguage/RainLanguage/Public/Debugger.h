@@ -1,5 +1,5 @@
 #pragma once
-#include "VirtualMachine.h"
+#include "RainLibrary.h"
 
 /// <summary>
 /// 单步类型

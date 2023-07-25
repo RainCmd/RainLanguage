@@ -10,6 +10,7 @@ void WhileStatement::Generator(StatementGeneratorParameter& parameter)
 	CodeLocalAddressReference breakAddress = CodeLocalAddressReference();
 	if(loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
 	loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	if (condition)
 	{
 		CodeLocalAddressReference loopBlockAddress = CodeLocalAddressReference();
@@ -29,6 +30,6 @@ void WhileStatement::Generator(StatementGeneratorParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&loopAddress);
 	elseAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	if (elseBlock)elseBlock->Generator(parameter);
+	if (elseBlock) elseBlock->Generator(parameter);
 	breakAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
