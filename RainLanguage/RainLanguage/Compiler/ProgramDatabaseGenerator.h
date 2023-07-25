@@ -22,7 +22,7 @@ public:
 	void AddLocal(Local* local, uint32 address, GlobalReference* globalReference);
 	void AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference);
 	void AddGlobal(const Anchor& name, uint32 library, uint32 index, GlobalReference* globalReference);
-	ProgramDatabase* GetResult();
+	ProgramDatabase* GetResult(Generator* generator);
 	~ProgramDatabaseGenerator();
 };
 

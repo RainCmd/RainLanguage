@@ -648,7 +648,9 @@ bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
 	if (IsActive())
 	{
 		const uint32 statement = DATABASE->GetStatement(file, line);
-		return statement != INVALID && SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statement].pointer);
+		uint32 result = statement != INVALID && SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statement].pointer);
+		ASSERT_DEBUG(result, "断点逻辑可能有BUG");
+		return result;
 	}
 	return false;
 }

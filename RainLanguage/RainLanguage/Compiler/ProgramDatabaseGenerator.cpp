@@ -29,7 +29,7 @@ void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line)
 	if (database && database->functions.Count())
 	{
 		currentFile->statements.Set(line, database->statements.Count());
-		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->WriteCode(Instruct::BREAK));
+		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->AddCodeReference(generator->WriteCode(Instruct::BREAK)));
 	}
 }
 
@@ -69,10 +69,12 @@ void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uin
 	}
 }
 
-ProgramDatabase* ProgramDatabaseGenerator::GetResult()
+ProgramDatabase* ProgramDatabaseGenerator::GetResult(Generator* generator)
 {
 	ProgramDatabase* result = database;
 	database = NULL;
+	if (result) for (uint32 i = 0; i < result->statements.Count(); i++)
+		result->statements[i].pointer = generator->GetReferenceAddress(result->statements[i].pointer); 
 	return result;
 }
 
