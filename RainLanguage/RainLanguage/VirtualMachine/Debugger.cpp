@@ -727,6 +727,20 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
 	}
 }
 
+void RainDebugger::OnException(uint64 coroutine, uint32 address, const character* message, uint32 length)
+{
+	if (IsActive() && !debugFrame)
+	{
+		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
+		debugFrame = frame;
+		OnCoroutineExit(coroutine, address, RainString(message, length));
+		frame->debugger = NULL;
+		frame->library = NULL;
+		frame->Release();
+		debugFrame = NULL;
+	}
+}
+
 RainDebugger::~RainDebugger()
 {
 	if (share)

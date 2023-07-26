@@ -113,7 +113,11 @@ label_next_instruct:
 			goto label_next_instruct;
 		case Instruct::BASE_ExitJump:
 			if (exitMessage.IsEmpty()) instruct += 5;
-			else instruct += INSTRUCT_VALUE(uint32, 1);
+			else
+			{
+				if (kernel->debugger) kernel->debugger->OnException(instanceID, POINTER, exitMessage.GetPointer(), exitMessage.GetLength());
+				instruct += INSTRUCT_VALUE(uint32, 1);
+			}
 			goto label_next_instruct;
 		case Instruct::BASE_Wait:
 			instruct++;
@@ -2569,7 +2573,7 @@ label_next_instruct:
 				pointer = POINTER;
 				uint32 deep = 1;
 				for (Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) deep++;
-				kernel->debugger->OnBreak(invoker->instanceID, pointer, deep);
+				kernel->debugger->OnBreak(instanceID, pointer, deep);
 			}
 			goto label_next_instruct;
 		case Instruct::BREAK: instruct++;

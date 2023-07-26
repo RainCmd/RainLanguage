@@ -241,6 +241,7 @@ private:
 	uint32 currentTraceDeep;
 protected:
 	virtual void OnHitBreakpoint(uint64 coroutine, uint32 address) = 0;
+	virtual void OnCoroutineExit(uint64 coroutine, uint32 address, const RainString& message) = 0;
 	virtual void OnContinue() = 0;
 public:
 	StepType type;
@@ -311,5 +312,6 @@ public:
 	/// 虚拟机内部用于触发断点的接口
 	/// </summary>
 	void OnBreak(uint64, uint32, uint32);
+	void OnException(uint64, uint32, const character*, uint32);
 	virtual ~RainDebugger();
 };
