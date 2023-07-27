@@ -3,7 +3,9 @@
 #include <WS2tcpip.h>
 #include <iostream>
 #include <thread>
-#include <Debugger.h>
+#include "DataPackage.h"
+#include "DebuggerAdaptor.h"
+#include "Encoding.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 bool wsaStartuped = false;
@@ -15,9 +17,12 @@ enum class Proto
 {
 	None,
 
+	//string libraryPath
+	//string programPath
+	RECV_Init,
+
 	//uint8 fileCount
-	//	uint16 fileNameLength
-	//	uint8* fileName
+	//	string fileName
 	//	uint8 breakCount
 	//		uint16 id
 	//		uint16 line
@@ -27,8 +32,7 @@ enum class Proto
 	SEND_AddBreaks,
 
 	//uint8 fileCount
-	//	uint16 fileNameLength
-	//	uint8* fileName
+	//	string fileName
 	//	uint8 breakCount
 	//		uint16 line
 	RECV_RemoveBreaks,
@@ -38,48 +42,36 @@ enum class Proto
 	RECV_Step,
 
 	SEND_OnBreak,
-	//uint16 fileNameLength
-	//uint8* fileName
+	//string fileName
 	//uint16 line
-	//uint16 messageLength
-	//uint8* message
+	//string message
 	SEND_OnException,
 
-	//uint16 fullNameLength
-	//uint8* fullName 不包括library名
+	//string fullName 不包括library名
 	RECV_Space,
 	//uint16 spaceCount
-	//	uint16 spaceNameLength
-	//	uint8* spaceName
+	//	string spaceName
 	//uint16 variableCount
-	//	uint16 variableNameLength
-	//	uint8* variableName
+	//	string variableName
 	//	uint8 RainType
-	//	uint16 variableValueLength
-	//	uint8* variableValue
+	//	string variableValue
 	SEND_Space,
-	//uint16 fullNameLength
-	//uint8* fullName 不包括library名
+	//string fullName 不包括library名
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
 	RECV_Global,
-	//uint16 fullNameLength
-	//uint8* fullName 不包括library名
+	//string fullName 不包括library名
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
 	//uint16 memberCount
-	//	uint16 variableNameLength
-	//	uint8* variableName
+	//	string variableName
 	//	uint8 RainType
-	//	uint16 variableValueLength
-	//	uint8* variableValue
+	//	string variableValue
 	SEND_Global,
-	//uint16 fullNameLength
-	//uint8* fullName 不包括library名
+	//string fullName 不包括library名
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
-	//uint16 valueLength
-	//uint8* value
+	//string value
 	RECV_SetGlobal,
 
 	RECV_Coroutine,
@@ -87,44 +79,172 @@ enum class Proto
 	//	uint64 coroutineId
 	//	bool isActive
 	//	uint16 traceCount
-	//		uint16 functionNameLength
-	//		uint8* functionName
+	//		string functionName
 	//		uint16 line
 	SEND_Coroutine,
 	//uint64 coroutineId
 	//uint16 traceDeep
-	//uint16 localNameLength
-	//uint8* localName
+	//string localName
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
 	RECV_Local,
 	//uint64 coroutineId
 	//uint16 traceDeep
-	//uint16 localNameLength
-	//uint8* localName
+	//string localName
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
 	//uint16 localCount
-	//	uint16 localNameLength
-	//	uint8* localName
+	//	string localName
 	//	uint8 RainType
-	//	uint16 variableValueLength
-	//	uint8* variableValue
+	//	string variableValue
 	SEND_Local,
 	//uint64 coroutineId
 	//uint16 traceDeep
-	//uint16 localNameLength
-	//uint8* localName
+	//string localName
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
-	//uint16 valueLength
-	//uint8* value
+	//string value
 	RECV_SetLocal,
 };
 
-void Send(Proto proto, uint8* data, uint32 size)
+bool Resize(char*& data, int& size, int targetSize)
+{
+	if (size >= targetSize) return true;
+	int resultSize = size;
+	while (resultSize < targetSize) resultSize <<= 1;
+	void* result = realloc(data, resultSize);
+	if (result == nullptr) return false;
+	data = (char*)result;
+	size = resultSize;
+	return true;
+}
+
+void Copy(char* src, char* trg, int size)
+{
+	while (size--) trg[size] = src[size];
+}
+
+int sendBufferSize = 1024;
+char* sendBuffer = nullptr;
+
+void Send(Proto proto, const DataPackage& pkg)
 {
 	if (cSock == INVALID_SOCKET) return;
+	int sendSize = pkg.pos + 5;
+	Resize(sendBuffer, sendBufferSize, sendSize);
+
+	*(int*)sendBuffer = sendSize;
+	sendBuffer[4] = (char)proto;
+	Copy(pkg.data, sendBuffer + 5, pkg.pos);
+
+	send(cSock, sendBuffer, sendSize, 0);
+}
+
+int recvBufferSize = 1024;
+char* recvBuffer = nullptr;
+int recvResultSize = 1024;
+char* recvResult = nullptr;
+DebuggerAdaptor* adaptor = nullptr;
+
+bool OnRecv(Proto proto, DataPackage pkg)
+{
+	switch (proto)
+	{
+		case Proto::None:
+			break;
+		case Proto::RECV_Init:
+		{
+			std::string libPath = pkg.ReadString();
+			std::string pdbPath = pkg.ReadString();
+			adaptor = InitDebuggerAdaptor(libPath, pdbPath);
+			//todo 如果是无效的适配器就主动断开链接
+		}
+		break;
+		case Proto::RECV_AddBreaks:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+				DataPackage sendPkg = DataPackage(0x10);
+				uint8* cnt = sendPkg.Write((uint8)0);
+
+				uint8 fileCount = pkg.ReadUint8();
+				while (fileCount--)
+				{
+					std::wstring fileName = UTF8To16(pkg.ReadString());
+					uint8 breakCount = pkg.ReadUint8();
+					while (breakCount--)
+					{
+						uint16 breakId = pkg.ReadUint16();
+						uint16 line = pkg.ReadUint16();
+						if (!adaptor->AddBreakPoint(RainString(fileName.data(), (uint32)fileName.length()), line))
+						{
+							(*cnt)++;
+							sendPkg.Write(breakId);
+						}
+					}
+				}
+
+				Send(Proto::SEND_AddBreaks, sendPkg);
+				sendPkg.FreeData();
+				return true;
+			}
+			break;
+		case Proto::SEND_AddBreaks:
+			break;
+		case Proto::RECV_RemoveBreaks:
+			break;
+		case Proto::RECV_ClearBreaks:
+			break;
+		case Proto::RECV_Step:
+			break;
+		case Proto::SEND_OnBreak:
+			break;
+		case Proto::SEND_OnException:
+			break;
+		case Proto::RECV_Space:
+			break;
+		case Proto::SEND_Space:
+			break;
+		case Proto::RECV_Global:
+			break;
+		case Proto::SEND_Global:
+			break;
+		case Proto::RECV_SetGlobal:
+			break;
+		case Proto::RECV_Coroutine:
+			break;
+		case Proto::SEND_Coroutine:
+			break;
+		case Proto::RECV_Local:
+			break;
+		case Proto::SEND_Local:
+			break;
+		case Proto::RECV_SetLocal:
+			break;
+		default:
+			break;
+	}
+	return false;
+}
+
+bool Recv(int& resultSize)
+{
+	int recvLen = recv(cSock, recvBuffer, recvBufferSize, 0);
+	if (!recvLen || recvLen == SOCKET_ERROR) return false;
+
+	Resize(recvResult, recvResultSize, resultSize + recvLen);
+	Copy(recvBuffer, recvResult + resultSize, recvLen);
+	resultSize += recvLen;
+
+	if (resultSize < 4) return true;
+
+	int msgLen = *(int*)recvResult;
+	if (resultSize < msgLen) return true;
+
+	if (!OnRecv((Proto)recvResult[4], DataPackage(recvResult + 5, msgLen - 5))) return false;
+
+	Copy(recvResult + msgLen, recvResult, resultSize - msgLen);
+	resultSize -= msgLen;
+	return true;
 }
 
 void AcceptClient()
@@ -136,6 +256,15 @@ void AcceptClient()
 		cSock = accept(sSock, (sockaddr*)&cAddr, &addrLen);
 		if (cSock == INVALID_SOCKET) break;
 
+		int resultSize = 0;
+		while (Recv(resultSize));
+
+		if (adaptor != nullptr)
+		{
+			delete adaptor;
+			adaptor = nullptr;
+		}
+
 		closesocket(cSock);
 		cSock = INVALID_SOCKET;
 	}
@@ -143,6 +272,10 @@ void AcceptClient()
 
 void InitServer()
 {
+	recvBuffer = (char*)malloc(recvBufferSize);
+	recvResult = (char*)malloc(recvResultSize);
+	sendBuffer = (char*)malloc(sendBufferSize);
+
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData)) return;
 	wsaStartuped = true;
@@ -156,7 +289,7 @@ void InitServer()
 	sockaddr_in sAddr = {};
 	sAddr.sin_family = AF_INET;
 	sAddr.sin_port = htons(38465);
-	sAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+	inet_pton(AF_INET, "127.0.0.1", &sAddr.sin_addr.S_un.S_addr);
 	if (bind(sSock, (sockaddr*)&sAddr, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		DisposeServer();
@@ -178,4 +311,8 @@ void DisposeServer()
 	sSock = INVALID_SOCKET;
 	if (wsaStartuped) WSACleanup();
 	wsaStartuped = false;
+
+	free(sendBuffer); sendBuffer = nullptr;
+	free(recvResult); recvResult = nullptr;
+	free(recvBuffer); recvBuffer = nullptr;
 }

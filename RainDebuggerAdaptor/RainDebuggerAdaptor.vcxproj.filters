@@ -21,12 +21,30 @@
     <ClInclude Include="AdaptorServer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DebuggerAdaptor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DataPackage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Encoding.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AdaptorServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DebuggerAdaptor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DataPackage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Encoding.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
