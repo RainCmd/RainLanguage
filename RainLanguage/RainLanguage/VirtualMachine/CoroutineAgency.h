@@ -11,7 +11,7 @@ class CoroutineAgency
 {
 private:
 	Kernel* kernel;
-	Coroutine* head, * free;
+	Coroutine* head, * free, * current;
 	List<Coroutine*, true> coroutines;
 	uint32 invokerCount, invokerInstance;
 	List<Invoker*, true> invokerPool;
@@ -71,6 +71,7 @@ public:
 	}
 	void UpdateGlobalDataCache(uint8* data);
 	inline Coroutine* GetHeadCoroutine() { return head; }
+	inline Coroutine* GetCurrentCoroutine() { return current; }
 	uint32 CountCoroutine();
 	~CoroutineAgency();
 };

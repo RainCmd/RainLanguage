@@ -251,6 +251,12 @@ bool RainTrace::IsValid()
 	return debugFrame && FRAME->library;
 }
 
+bool RainTraceIterator::IsActive()
+{
+	if (IsValid()) return FRAME->library->kernel->coroutineAgency->GetCurrentCoroutine() == coroutine;
+	return false;
+}
+
 RainString RainTrace::FunctionName()
 {
 	if (IsValid() && name) return RainString(((String*)name)->GetPointer(), ((String*)name)->GetLength());

@@ -187,6 +187,10 @@ public:
 	/// </summary>
 	bool IsValid();
 	/// <summary>
+	/// 当前活跃的协程
+	/// </summary>
+	bool IsActive();
+	/// <summary>
 	/// 当前调用的实例ID
 	/// </summary>
 	integer CoroutineID();

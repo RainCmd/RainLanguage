@@ -9,7 +9,7 @@ Invoker* CoroutineAgency::GetInvoker()
 	return invoker;
 }
 
-CoroutineAgency::CoroutineAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), head(NULL), free(NULL), coroutines(parameter->coroutineCapacity),
+CoroutineAgency::CoroutineAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), head(NULL), free(NULL), current(NULL), coroutines(parameter->coroutineCapacity),
 invokerCount(0), invokerInstance(1), invokerPool(parameter->coroutineCapacity), invokerMap(parameter->coroutineCapacity),
 executeStackCapacity(parameter->executeStackCapacity), onExceptionExit(parameter->onExceptionExit) { }
 
@@ -37,7 +37,13 @@ void CoroutineAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 	}
 	else coroutine = new Coroutine(kernel, executeStackCapacity);
 	coroutine->Initialize(invoker, ignoreWait);
-	if (immediately)coroutine->Update();
+	if (immediately)
+	{
+		Coroutine* prev = current;
+		current = coroutine;
+		coroutine->Update();
+		current = prev;
+	}
 	if (coroutine->IsRunning())
 	{
 		coroutine->next = head;
@@ -55,9 +61,10 @@ void CoroutineAgency::Update()
 	for (Coroutine* index = head; index; index = index->next) coroutines.Add(index);
 	for (uint32 i = 0; i < coroutines.Count(); i++)
 	{
-		Coroutine* index = coroutines[i];
-		if (!index->pause && index->exitMessage.IsEmpty()) index->Update();
+		current = coroutines[i];
+		if (!current->pause && current->exitMessage.IsEmpty()) current->Update();
 	}
+	current = NULL;
 	coroutines.Clear();
 	for (Coroutine* index = head, *prev = NULL; index; )
 		if (index->IsRunning())
