@@ -21,33 +21,33 @@ enum class Proto
 	//	uint8 breakCount
 	//		uint16 id
 	//		uint16 line
-	P2R_AddBreaks,
+	RECV_AddBreaks,
 	//uint8 count
 	//	uint16 id 无效的断点列表
-	R2P_AddBreaks,
+	SEND_AddBreaks,
 
 	//uint8 fileCount
 	//	uint16 fileNameLength
 	//	uint8* fileName
 	//	uint8 breakCount
 	//		uint16 line
-	P2R_RemoveBreaks,
-	P2R_ClearBreaks,
+	RECV_RemoveBreaks,
+	RECV_ClearBreaks,
 
 	//uint8 StepType Debugger.h中的StepType枚举
-	P2R_Step,
+	RECV_Step,
 
-	R2P_OnBreak,
+	SEND_OnBreak,
 	//uint16 fileNameLength
 	//uint8* fileName
 	//uint16 line
 	//uint16 messageLength
 	//uint8* message
-	R2P_OnException,
+	SEND_OnException,
 
 	//uint16 fullNameLength
 	//uint8* fullName 不包括library名
-	P2R_Space,
+	RECV_Space,
 	//uint16 spaceCount
 	//	uint16 spaceNameLength
 	//	uint8* spaceName
@@ -57,12 +57,12 @@ enum class Proto
 	//	uint8 RainType
 	//	uint16 variableValueLength
 	//	uint8* variableValue
-	R2P_Space,
+	SEND_Space,
 	//uint16 fullNameLength
 	//uint8* fullName 不包括library名
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
-	P2R_Global,
+	RECV_Global,
 	//uint16 fullNameLength
 	//uint8* fullName 不包括library名
 	//uint8 memberIndexCount
@@ -73,16 +73,16 @@ enum class Proto
 	//	uint8 RainType
 	//	uint16 variableValueLength
 	//	uint8* variableValue
-	R2P_Global,
+	SEND_Global,
 	//uint16 fullNameLength
 	//uint8* fullName 不包括library名
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
 	//uint16 valueLength
 	//uint8* value
-	P2R_SetGlobal,
+	RECV_SetGlobal,
 
-	P2R_Coroutine,
+	RECV_Coroutine,
 	//uint16 coroutineCount
 	//	uint64 coroutineId
 	//	bool isActive
@@ -90,14 +90,14 @@ enum class Proto
 	//		uint16 functionNameLength
 	//		uint8* functionName
 	//		uint16 line
-	R2P_Coroutine,
+	SEND_Coroutine,
 	//uint64 coroutineId
 	//uint16 traceDeep
 	//uint16 localNameLength
 	//uint8* localName
 	//uint8 memberIndexCount
 	//	uint16 memberIndex
-	P2R_Local,
+	RECV_Local,
 	//uint64 coroutineId
 	//uint16 traceDeep
 	//uint16 localNameLength
@@ -110,7 +110,7 @@ enum class Proto
 	//	uint8 RainType
 	//	uint16 variableValueLength
 	//	uint8* variableValue
-	R2P_Local,
+	SEND_Local,
 	//uint64 coroutineId
 	//uint16 traceDeep
 	//uint16 localNameLength
@@ -119,7 +119,7 @@ enum class Proto
 	//	uint16 memberIndex
 	//uint16 valueLength
 	//uint8* value
-	P2R_SetLocal,
+	RECV_SetLocal,
 };
 
 void Send(Proto proto, uint8* data, uint32 size)
