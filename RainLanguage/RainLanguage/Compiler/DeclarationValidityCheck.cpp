@@ -77,9 +77,15 @@ List<CompilingFunctionDeclaration::Parameter>& GetParameters(DeclarationManager*
 
 void DuplicationNameCheck(DeclarationManager* manager, CompilingSpace* space, Set<CompilingDeclaration>& declarationSet)
 {
+	List<CompilingDeclaration, true>* declarationList;
 	Dictionary<String, CompilingSpace*>::Iterator spaceIterator = space->children.GetIterator();
 	while (spaceIterator.Next())
+	{
 		DuplicationNameCheck(manager, spaceIterator.CurrentValue(), declarationSet);
+		if (space->declarations.TryGet(spaceIterator.CurrentKey(), declarationList))
+			for (uint32 i = 0; i < declarationList->Count(); i++) 
+				MESSAGE2(manager->messages, GetName(manager, (*declarationList)[i]), MessageType::ERROR_NAME_SAME_AS_NAMESPACE);
+	}
 
 	Dictionary<String, List<CompilingDeclaration, true>*>::Iterator declarationsIterator = space->declarations.GetIterator();
 	while (declarationsIterator.Next())

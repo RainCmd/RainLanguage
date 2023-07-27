@@ -57,6 +57,7 @@ enum class MessageType :uint32
 	ERROR_NOT_TYPE_DECLARATION,				//不是类型申明
 	ERROR_NAME_IS_KEY_WORD,					//名字是关键字
 	ERROR_DUPLICATION_NAME,					//重名
+	ERROR_NAME_SAME_AS_NAMESPACE,			//与命名空间同名
 	ERROR_INVALID_OVERLOAD,					//无效的重载
 	ERROR_INVALID_OVERRIDE,					//无效的重写
 	ERROR_STRUCT_NO_CONSTRUCTOR,			//结构体不允许有构造函数

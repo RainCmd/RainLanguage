@@ -699,7 +699,7 @@ void RainDebugger::Step(StepType stepType)
 	}
 }
 
-void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
+void RainDebugger::OnBreak(uint64 coroutine, uint32 deep)
 {
 	switch (type)
 	{
@@ -725,7 +725,7 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
 		currentTraceDeep = deep;
 		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
 		debugFrame = frame;
-		OnHitBreakpoint(coroutine, address);
+		OnHitBreakpoint(coroutine);
 		frame->debugger = NULL;
 		frame->library = NULL;
 		frame->Release();
@@ -733,13 +733,13 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 address, uint32 deep)
 	}
 }
 
-void RainDebugger::OnException(uint64 coroutine, uint32 address, const character* message, uint32 length)
+void RainDebugger::OnException(uint64 coroutine, const character* message, uint32 length)
 {
 	if (IsActive() && !debugFrame)
 	{
 		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
 		debugFrame = frame;
-		OnCoroutineExit(coroutine, address, RainString(message, length));
+		OnCoroutineExit(coroutine, RainString(message, length));
 		frame->debugger = NULL;
 		frame->library = NULL;
 		frame->Release();

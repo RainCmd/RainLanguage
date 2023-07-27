@@ -145,7 +145,7 @@ struct CompilingSpace
 	CompilingSpace* parent;
 	AbstractSpace* abstract;
 	String name;
-	Dictionary<String, CompilingSpace*>children;
+	Dictionary<String, CompilingSpace*> children;
 	Dictionary<String, List<CompilingDeclaration, true>*> declarations;
 	List<Anchor> attributes;
 	inline CompilingSpace(CompilingSpace* parent, const String& name) :parent(parent), abstract(NULL), name(name), children(0), declarations(0), attributes(0) {}
