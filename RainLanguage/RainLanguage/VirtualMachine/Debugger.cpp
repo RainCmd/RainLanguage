@@ -446,44 +446,6 @@ RainCoroutineIterator::~RainCoroutineIterator()
 	debugFrame = NULL;
 }
 
-#define KERNEL ((Kernel*)kernel)
-#define SHARE ((KernelShare*)share)
-#define DATABASE ((ProgramDatabase*)database)
-#define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
-{
-	if (source && database && ((Library*)source)->stringAgency->Get(((Library*)source)->spaces[0].name) != DATABASE->name)
-	{
-		this->source = NULL;
-		this->database = NULL;
-	}
-}
-
-RainDebugger::RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(source), database(database)
-{
-	if (source && database)
-	{
-		if (((Library*)source)->stringAgency->Get(((Library*)source)->spaces[0].name) == DATABASE->name) SetKernel(kernel);
-		else
-		{
-			this->source = NULL;
-			this->database = NULL;
-		}
-	}
-}
-
-RainDebuggerSpace RainDebugger::GetSpace()
-{
-	if (IsActive() && debugFrame) return RainDebuggerSpace(debugFrame, 0);
-	return RainDebuggerSpace(NULL, 0);
-}
-
-RainCoroutineIterator RainDebugger::GetCoroutineIterator()
-{
-	if (IsBreaking()) return RainCoroutineIterator(debugFrame);
-	else return RainCoroutineIterator(NULL);
-}
-
 #define TO_KERNEL_STRING(value) kernel->stringAgency->Add(library->stringAgency->Get(value))
 RuntimeSpace* GetSpace(Kernel* kernel, Library* library, const ImportLibrary& importLibrary, uint32 importSpaceIndex, RuntimeLibrary* runtimeLibrary)
 {
@@ -601,8 +563,44 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 	return true;
 }
 
-bool RainDebugger::SetKernel(RainKernel* kernel)
+#define KERNEL ((Kernel*)kernel)
+#define SHARE ((KernelShare*)share)
+#define DATABASE ((ProgramDatabase*)database)
+#define LIBRARY ((RuntimeLibrary*)library)
+RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(NULL), database(NULL)
 {
+	if (kernel)
+	{
+		String targetName = KERNEL->stringAgency->Add(name.value, name.length);
+		LibraryAgency* agency = KERNEL->libraryAgency;
+		for (uint32 i = 0; i < agency->libraries.Count(); i++)
+			if (agency->libraries[i]->spaces[0].name == targetName.index)
+			{
+				library = agency->libraries[i];
+				source = agency->libraryLoader(name);
+				database = agency->programDatabaseLoader(name);
+				if (!source || !database) break;
+				if (KERNEL->debugger) KERNEL->debugger->Broken();
+				KERNEL->debugger = this;
+				share = KERNEL->share;
+				SHARE->Reference();
+				if (InitMap(KERNEL, (Library*)source, (MAP*)map)) return;
+				else break;
+			}
+		delete source; delete database;
+	}
+}
+
+void RainDebugger::Broken()
+{
+	if (debugFrame)
+	{
+		DebugFrame* frame = FRAME;
+		frame->debugger = NULL;
+		frame->library = NULL;
+		frame->Release();
+		debugFrame = NULL;
+	}
 	if (share)
 	{
 		currentCoroutine = 0;
@@ -616,27 +614,21 @@ bool RainDebugger::SetKernel(RainKernel* kernel)
 		SHARE->Release();
 		share = NULL;
 		library = NULL;
+		delete source; source = NULL;
+		delete database; database = NULL;
 	}
-	if (kernel && source && database)
-	{
-		if (KERNEL->debugger) KERNEL->debugger->SetKernel(NULL);
-		share = KERNEL->share;
-		KERNEL->debugger = this;
-		SHARE->Reference();
+}
 
-		String name = KERNEL->stringAgency->Add(DATABASE->name.GetPointer(), DATABASE->name.GetLength());
-		List<RuntimeLibrary*, true>& libraries = KERNEL->libraryAgency->libraries;
-		for (uint32 i = 0; i < libraries.Count(); i++)
-			if (libraries[i]->spaces[0].name == name.index)
-			{
-				library = &libraries[i];
-				if (InitMap(KERNEL, (Library*)source, (MAP*)map)) return true;
-				else break;
-			}
-		SetKernel(NULL);
-		return false;
-	}
-	return source && database;
+RainDebuggerSpace RainDebugger::GetSpace()
+{
+	if (IsActive() && debugFrame) return RainDebuggerSpace(debugFrame, 0);
+	return RainDebuggerSpace(NULL, 0);
+}
+
+RainCoroutineIterator RainDebugger::GetCoroutineIterator()
+{
+	if (IsBreaking()) return RainCoroutineIterator(debugFrame);
+	else return RainCoroutineIterator(NULL);
 }
 
 bool RainDebugger::IsBreaking()
@@ -749,24 +741,7 @@ void RainDebugger::OnException(uint64 coroutine, const character* message, uint3
 
 RainDebugger::~RainDebugger()
 {
-	if (share)
-	{
-		if (SHARE->kernel)
-		{
-			SHARE->kernel->debugger = NULL;
-			SHARE->kernel->ClearBreakpoints();
-		}
-		SHARE->Release();
-	}
-	share = NULL;
-	if (debugFrame)
-	{
-		DebugFrame* frame = FRAME;
-		frame->debugger = NULL;
-		frame->library = NULL;
-		frame->Release();
-		debugFrame = NULL;
-	}
 	delete (MAP*)map;
 	map = NULL;
+	Broken();
 }

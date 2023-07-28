@@ -12,7 +12,7 @@ void DebuggerAdaptor::OnContinue()
 {
 }
 
-DebuggerAdaptor* InitDebuggerAdaptor(const std::string& libraryPath, const std::string& databasePath)
+DebuggerAdaptor* InitDebuggerAdaptor(const std::wstring& libraryName)
 {
 	return nullptr;
 }

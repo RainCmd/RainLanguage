@@ -9,6 +9,7 @@ struct DataPackage
 	DataPackage(int size);
 	DataPackage(char* data, int size);
 	std::string ReadString();
+	std::wstring ReadWString();
 	uint8 ReadUint8();
 	uint16 ReadUint16();
 

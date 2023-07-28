@@ -263,12 +263,15 @@ public:
 	/// <summary>
 	/// 创建调试器
 	/// </summary>
-	/// <param name="source"></param>
-	/// <param name="database"></param>
-	RainDebugger(const RainLibrary* source, const RainProgramDatabase* database);
-	RainDebugger(RainKernel* kernel, const RainLibrary* source, const RainProgramDatabase* database);
+	/// <param name="name">调试目标库名</param>
+	/// <param name="kernel">调试目标虚拟机</param>
+	RainDebugger(const RainString& name, RainKernel* kernel);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
+	/// <summary>
+	/// 断开与虚拟机的链接
+	/// </summary>
+	void Broken();
 	/// <summary>
 	/// 获取空间迭代器
 	/// </summary>
@@ -277,11 +280,6 @@ public:
 	/// 获取携程迭代器
 	/// </summary>
 	RainCoroutineIterator GetCoroutineIterator();
-	/// <summary>
-	/// 设置目标虚拟机，设置成功返回true，否则返回false
-	/// </summary>
-	/// <param name="kernel">虚拟机</param>
-	bool SetKernel(RainKernel* kernel);
 	/// <summary>
 	/// 是否是断点状态
 	/// </summary>

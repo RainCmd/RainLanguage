@@ -17,9 +17,9 @@ enum class Proto
 {
 	None,
 
-	//string libraryPath
-	//string programPath
+	//string libraryName
 	RECV_Init,
+	SEND_Init,
 
 	//uint8 fileCount
 	//	string fileName
@@ -47,7 +47,7 @@ enum class Proto
 	//string message
 	SEND_OnException,
 
-	//string fullName 不包括library名
+	//string fullName 不包括library名,用'.'分割
 	RECV_Space,
 	//uint16 spaceCount
 	//	string spaceName
@@ -56,25 +56,24 @@ enum class Proto
 	//	uint8 RainType
 	//	string variableValue
 	SEND_Space,
-	//string fullName 不包括library名
-	//uint8 memberIndexCount
-	//	uint16 memberIndex
+	//string fullName 不包括library名,用'.'分割
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
 	RECV_Global,
-	//string fullName 不包括library名
-	//uint8 memberIndexCount
-	//	uint16 memberIndex
-	//uint16 memberCount
+	//string fullName 不包括library名,用'.'分割
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
+	//uint16 elementCount
 	//	string variableName
 	//	uint8 RainType
 	//	string variableValue
 	SEND_Global,
-	//string fullName 不包括library名
-	//uint8 memberIndexCount
-	//	uint16 memberIndex
+	//string fullName 不包括library名,用'.'分割
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//string value
 	RECV_SetGlobal,
 
-	RECV_Coroutine,
 	//uint16 coroutineCount
 	//	uint64 coroutineId
 	//	bool isActive
@@ -85,14 +84,14 @@ enum class Proto
 	//uint64 coroutineId
 	//uint16 traceDeep
 	//string localName
-	//uint8 memberIndexCount
-	//	uint16 memberIndex
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
 	RECV_Local,
 	//uint64 coroutineId
 	//uint16 traceDeep
 	//string localName
-	//uint8 memberIndexCount
-	//	uint16 memberIndex
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//uint16 localCount
 	//	string localName
 	//	uint8 RainType
@@ -101,8 +100,8 @@ enum class Proto
 	//uint64 coroutineId
 	//uint16 traceDeep
 	//string localName
-	//uint8 memberIndexCount
-	//	uint16 memberIndex
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//string value
 	RECV_SetLocal,
 };
@@ -153,13 +152,13 @@ bool OnRecv(Proto proto, DataPackage pkg)
 		case Proto::None:
 			break;
 		case Proto::RECV_Init:
-		{
-			std::string libPath = pkg.ReadString();
-			std::string pdbPath = pkg.ReadString();
-			adaptor = InitDebuggerAdaptor(libPath, pdbPath);
-			//todo 如果是无效的适配器就主动断开链接
-		}
-		break;
+			adaptor = InitDebuggerAdaptor(pkg.ReadWString());
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+				Send(Proto::SEND_Init, DataPackage(nullptr, 0));
+				return true;
+			}
+			break;
 		case Proto::RECV_AddBreaks:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
@@ -169,7 +168,7 @@ bool OnRecv(Proto proto, DataPackage pkg)
 				uint8 fileCount = pkg.ReadUint8();
 				while (fileCount--)
 				{
-					std::wstring fileName = UTF8To16(pkg.ReadString());
+					std::wstring fileName = pkg.ReadWString();
 					uint8 breakCount = pkg.ReadUint8();
 					while (breakCount--)
 					{
@@ -191,10 +190,27 @@ bool OnRecv(Proto proto, DataPackage pkg)
 		case Proto::SEND_AddBreaks:
 			break;
 		case Proto::RECV_RemoveBreaks:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+				uint8 fileCount = pkg.ReadUint8();
+				while (fileCount--)
+				{
+					std::wstring fileName = pkg.ReadWString();
+					uint8 breakCount = pkg.ReadUint8();
+					while (breakCount--)
+					{
+						uint16 line = pkg.ReadUint16();
+						adaptor->RemoveBreakPoint(RainString(fileName.data(), (uint32)fileName.length()), line);
+					}
+				}
+				return true;
+			}
 			break;
 		case Proto::RECV_ClearBreaks:
+			if (adaptor != nullptr && adaptor->IsActive()) adaptor->ClearBreakpoints();
 			break;
 		case Proto::RECV_Step:
+			if (adaptor != nullptr && adaptor->IsActive()) adaptor->Step((StepType)pkg.ReadUint8());
 			break;
 		case Proto::SEND_OnBreak:
 			break;
@@ -209,8 +225,6 @@ bool OnRecv(Proto proto, DataPackage pkg)
 		case Proto::SEND_Global:
 			break;
 		case Proto::RECV_SetGlobal:
-			break;
-		case Proto::RECV_Coroutine:
 			break;
 		case Proto::SEND_Coroutine:
 			break;
@@ -259,11 +273,8 @@ void AcceptClient()
 		int resultSize = 0;
 		while (Recv(resultSize));
 
-		if (adaptor != nullptr)
-		{
-			delete adaptor;
-			adaptor = nullptr;
-		}
+		delete adaptor;
+		adaptor = nullptr;
 
 		closesocket(cSock);
 		cSock = INVALID_SOCKET;

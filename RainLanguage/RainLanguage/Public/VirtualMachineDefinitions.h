@@ -81,7 +81,23 @@ enum class RainType
 	/// 实体类型
 	/// </summary>
 	Entity,
+
+	/// <summary>
+	/// 数组标识
+	/// </summary>
+	ArrayFlag = 0x100,
 };
+
+inline bool IsArray(RainType type)
+{
+	return (uint32)type & (uint32)RainType::ArrayFlag;
+}
+inline RainType GetElementType(RainType type)
+{
+	if (IsArray(type)) return (RainType)((uint32)type & ~(uint32)RainType::ArrayFlag);
+	else return RainType::Internal;
+}
+
 class RainKernel;
 struct RainStackFrame;
 class CallerWrapper;

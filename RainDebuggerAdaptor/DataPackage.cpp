@@ -1,21 +1,27 @@
 #include "DataPackage.h"
+#include "Encoding.h"
 
 DataPackage::DataPackage(int size) : size(size), pos(0)
 {
 	data = (char*)malloc(size);
 }
 
-DataPackage::DataPackage(char* data, int size) :data(data), size(size), pos(0)
+DataPackage::DataPackage(char* data, int size) : data(data), size(size), pos(0)
 {
 }
 
 std::string DataPackage::ReadString()
 {
 	std::string ret;
-	int len = *(int*)(data + pos);
-	ret.assign(data + pos + 4, static_cast<size_t>(len));
-	pos += len + 4;
+	uint16 len = ReadUint16();
+	ret.assign(data + pos, (size_t)len);
+	pos += len;
 	return ret;
+}
+
+std::wstring DataPackage::ReadWString()
+{
+	return UTF8To16(ReadString());
 }
 
 uint8 DataPackage::ReadUint8()

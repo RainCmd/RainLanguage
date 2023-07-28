@@ -58,6 +58,11 @@ public:
 	virtual ~RainProgramDatabase() {}
 };
 /// <summary>
+/// 调试数据加载器
+/// </summary>
+/// <param name="name">库名</param>
+typedef const RainProgramDatabase* (*ProgramDatabaseLoader)(const RainString& name);
+/// <summary>
 /// 序列化调试数据
 /// </summary>
 RAINLANGUAGE const  RainBuffer<uint8>* Serialize(const RainProgramDatabase* database);

@@ -53,7 +53,8 @@ public:
 
 inline RainType GetRainType(const Type& type)
 {
-	if (type == TYPE_Bool) return RainType::Bool;
+	if (type.dimension == 1) return (RainType)((uint32)GetRainType(Type(type, 0)) | (uint32)RainType::ArrayFlag);
+	else if (type == TYPE_Bool) return RainType::Bool;
 	else if (type == TYPE_Byte) return RainType::Byte;
 	else if (type == TYPE_Char) return RainType::Character;
 	else if (type == TYPE_Integer) return RainType::Integer;

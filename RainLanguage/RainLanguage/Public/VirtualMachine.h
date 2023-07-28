@@ -32,7 +32,6 @@ class RAINLANGUAGE InvokerWrapper
 private:
 	uint64 instanceID;
 	void* invoker;
-	void ValidAssert() const;
 public:
 	InvokerWrapper();
 	InvokerWrapper(void* invoker);
@@ -180,6 +179,98 @@ public:
 	/// <returns>返回值</returns>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
 	uint64 GetEntityReturnValue(uint32 index) const;
+
+	/// <summary>
+	/// 获取数组返回值长度
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <returns>返回值长度</returns>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	uint32 GetArrayReturnValueLength(uint32 index) const;
+	/// <summary>
+	/// 获取布尔类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetBoolArrayReturnValue(uint32 index, bool*& result) const;
+	/// <summary>
+	/// 获取字节类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetByteArrayReturnValue(uint32 index, uint8*& result) const;
+	/// <summary>
+	/// 获取字符类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetCharArrayReturnValue(uint32 index, character*& result) const;
+	/// <summary>
+	/// 获取整数类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetIntegerArrayReturnValue(uint32 index, integer*& result) const;
+	/// <summary>
+	/// 获取实数类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetRealArrayReturnValue(uint32 index, real*& result) const;
+	/// <summary>
+	/// 获取二维向量类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetReal2ArrayReturnValue(uint32 index, Real2*& result) const;
+	/// <summary>
+	/// 获取三维向量类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetReal3ArrayReturnValue(uint32 index, Real3*& result) const;
+	/// <summary>
+	/// 获取四维向量类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetReal4ArrayReturnValue(uint32 index, Real4*& result) const;
+	/// <summary>
+	/// 获取枚举类型值数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetEnumValueArrayReturnValue(uint32 index, integer*& result) const;
+	/// <summary>
+	/// 获取枚举类型名称数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetEnumNameArrayReturnValue(uint32 index, RainString*& result) const;
+	/// <summary>
+	/// 获取字符串类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetStringArrayReturnValue(uint32 index, RainString*& result) const;
+	/// <summary>
+	/// 获取实体类型数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
+	void GetEntityArrayReturnValue(uint32 index, uint64*& result) const;
 
 	/// <summary>
 	/// 设置布尔类型参数
@@ -534,9 +625,13 @@ struct RAINLANGUAGE StartupParameter
 	/// 协程异常的回调函数
 	/// </summary>
 	OnExceptionExit onExceptionExit;
+	/// <summary>
+	/// 调试数据加载器
+	/// </summary>
+	ProgramDatabaseLoader programDatabaseLoader;
 
-	StartupParameter(const RainLibrary* libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, LibraryLoader libraryLoader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapGeneration, uint32 coroutineCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit)
-		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), coroutineCapacity(coroutineCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit) {}
+	StartupParameter(const RainLibrary* libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, LibraryLoader libraryLoader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapGeneration, uint32 coroutineCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit, ProgramDatabaseLoader programDatabaseLoader)
+		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), coroutineCapacity(coroutineCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit), programDatabaseLoader(programDatabaseLoader) {}
 };
 
 /// <summary>
