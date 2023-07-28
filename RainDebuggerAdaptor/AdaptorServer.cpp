@@ -49,11 +49,12 @@ enum class Proto
 
 	//string fullName 不包括library名,用'.'分割
 	RECV_Space,
+	//string fullName 不包括library名,用'.'分割
 	//uint16 spaceCount
 	//	string spaceName
 	//uint16 variableCount
 	//	string variableName
-	//	uint8 RainType
+	//	uint16 RainType
 	//	string variableValue
 	SEND_Space,
 	//string fullName 不包括library名,用'.'分割
@@ -65,7 +66,7 @@ enum class Proto
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//uint16 elementCount
 	//	string variableName
-	//	uint8 RainType
+	//	uint16 RainType
 	//	string variableValue
 	SEND_Global,
 	//string fullName 不包括library名,用'.'分割
@@ -94,7 +95,7 @@ enum class Proto
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//uint16 localCount
 	//	string localName
-	//	uint8 RainType
+	//	uint16 RainType
 	//	string variableValue
 	SEND_Local,
 	//uint64 coroutineId
@@ -145,12 +146,16 @@ int recvResultSize = 1024;
 char* recvResult = nullptr;
 DebuggerAdaptor* adaptor = nullptr;
 
+std::wstring GetDebuggerVariableValue(const RainDebuggerVariable& varibale)
+{
+	return std::wstring();//todo 变量值转字符串
+}
+
 bool OnRecv(Proto proto, DataPackage pkg)
 {
 	switch (proto)
 	{
-		case Proto::None:
-			break;
+		case Proto::None: break;
 		case Proto::RECV_Init:
 			adaptor = InitDebuggerAdaptor(pkg.ReadWString());
 			if (adaptor != nullptr && adaptor->IsActive())
@@ -187,8 +192,7 @@ bool OnRecv(Proto proto, DataPackage pkg)
 				return true;
 			}
 			break;
-		case Proto::SEND_AddBreaks:
-			break;
+		case Proto::SEND_AddBreaks: break;
 		case Proto::RECV_RemoveBreaks:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
@@ -212,29 +216,87 @@ bool OnRecv(Proto proto, DataPackage pkg)
 		case Proto::RECV_Step:
 			if (adaptor != nullptr && adaptor->IsActive()) adaptor->Step((StepType)pkg.ReadUint8());
 			break;
-		case Proto::SEND_OnBreak:
-			break;
-		case Proto::SEND_OnException:
-			break;
+		case Proto::SEND_OnBreak: break;
+		case Proto::SEND_OnException: break;
 		case Proto::RECV_Space:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+				if (!adaptor->IsBreaking()) return true;
+				auto full = pkg.ReadWString();
+				auto src = full;
+				auto si = adaptor->GetSpace();
+			label_recv_space_next_space:
+				if (full.length())
+				{
+					std::wstring name = full;
+					size_t pos = full.find(L".");
+					if (pos != std::wstring::npos)
+					{
+						name = full.substr(0, pos);
+						full = full.erase(0, pos + 1);
+					}
+					else full = std::wstring();
+					for (uint32 i = 0; i < si.ChildCount(); i++)
+					{
+						auto ci = si.GetChild(i);
+						if (name.compare(ci.GetName().value))
+						{
+							si = ci;
+							goto label_recv_space_next_space;
+						}
+					}
+					return false;
+				}
+				auto sendPkg = DataPackage(0xff);
+				sendPkg.Write(src);
+				sendPkg.Write((uint16)si.ChildCount());
+				for (uint32 i = 0; i < si.ChildCount(); i++)
+				{
+					auto ci = si.GetChild(i);
+					src.assign(ci.GetName().value);
+					sendPkg.Write(src);
+				}
+				sendPkg.Write((uint16)si.VariableCount());
+				for (uint32 i = 0; i < si.VariableCount(); i++)
+				{
+					auto dv = si.GetVariable(i);
+					src.assign(dv.GetName().value);
+					sendPkg.Write(src);
+					sendPkg.Write((uint16)dv.type);
+					sendPkg.Write(GetDebuggerVariableValue(dv));
+				}
+				Send(Proto::SEND_Space, sendPkg);
+				sendPkg.FreeData();
+				return true;
+			}
 			break;
-		case Proto::SEND_Space:
-			break;
+		case Proto::SEND_Space: break;
 		case Proto::RECV_Global:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+
+			}
 			break;
-		case Proto::SEND_Global:
-			break;
+		case Proto::SEND_Global: break;
 		case Proto::RECV_SetGlobal:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+
+			}
 			break;
-		case Proto::SEND_Coroutine:
-			break;
+		case Proto::SEND_Coroutine: break;
 		case Proto::RECV_Local:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+
+			}
 			break;
-		case Proto::SEND_Local:
-			break;
+		case Proto::SEND_Local: break;
 		case Proto::RECV_SetLocal:
-			break;
-		default:
+			if (adaptor != nullptr && adaptor->IsActive())
+			{
+
+			}
 			break;
 	}
 	return false;

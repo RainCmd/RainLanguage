@@ -6,9 +6,7 @@ DataPackage::DataPackage(int size) : size(size), pos(0)
 	data = (char*)malloc(size);
 }
 
-DataPackage::DataPackage(char* data, int size) : data(data), size(size), pos(0)
-{
-}
+DataPackage::DataPackage(char* data, int size) : data(data), size(size), pos(0) {}
 
 std::string DataPackage::ReadString()
 {
@@ -67,6 +65,23 @@ uint16* DataPackage::Write(uint16 value)
 	pos += 2;
 	*result = value;
 	return result;
+}
+
+void DataPackage::Write(const char* values, uint16 length)
+{
+	Write(length);
+	Grow(length);
+	for (uint32 i = 0; i < length; i++) data[pos++] = values[i];
+}
+
+void DataPackage::Write(std::string value)
+{
+	Write(value.c_str(), (uint16)value.length());
+}
+
+void DataPackage::Write(std::wstring value)
+{
+	Write(UTF16To8(value));
 }
 
 void DataPackage::FreeData()

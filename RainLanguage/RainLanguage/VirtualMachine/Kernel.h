@@ -62,7 +62,7 @@ inline RainType GetRainType(const Type& type)
 	else if (type == TYPE_Real2) return RainType::Real2;
 	else if (type == TYPE_Real3) return RainType::Real3;
 	else if (type == TYPE_Real4) return RainType::Real4;
-	else if (type.code == TypeCode::Enum) return RainType::Enum;
+	else if (type.dimension == 0 && type.code == TypeCode::Enum) return RainType::Enum;
 	else if (type == TYPE_String) return RainType::String;
 	else if (type == TYPE_Entity) return RainType::Entity;
 	return RainType::Internal;

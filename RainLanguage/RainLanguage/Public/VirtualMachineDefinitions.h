@@ -85,7 +85,7 @@ enum class RainType
 	/// <summary>
 	/// 数组标识
 	/// </summary>
-	ArrayFlag = 0x100,
+	ArrayFlag = 0x10,
 };
 
 inline bool IsArray(RainType type)

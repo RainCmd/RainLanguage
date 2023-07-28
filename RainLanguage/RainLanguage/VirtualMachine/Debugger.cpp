@@ -33,17 +33,7 @@ RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* 
 	if (internalType)
 	{
 		Type& variableType = *(Type*)internalType;
-		if (variableType == TYPE_Bool) type = RainType::Bool;
-		else if (variableType == TYPE_Byte) type = RainType::Byte;
-		else if (variableType == TYPE_Char) type = RainType::Character;
-		else if (variableType == TYPE_Integer) type = RainType::Integer;
-		else if (variableType == TYPE_Real) type = RainType::Real;
-		else if (variableType == TYPE_Real2) type = RainType::Real2;
-		else if (variableType == TYPE_Real3) type = RainType::Real3;
-		else if (variableType == TYPE_Real4) type = RainType::Real4;
-		else if (variableType == TYPE_String) type = RainType::String;
-		else if (variableType == TYPE_Entity) type = RainType::Entity;
-		else if (!variableType.dimension && variableType.code == TypeCode::Enum) type = RainType::Enum;
+		type = GetRainType(variableType);
 	}
 }
 
