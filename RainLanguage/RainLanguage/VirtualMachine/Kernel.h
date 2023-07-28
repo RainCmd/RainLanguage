@@ -68,3 +68,4 @@ inline RainType GetRainType(const Type& type)
 	return RainType::Internal;
 }
 
+integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementName, uint32 elementNameLength);

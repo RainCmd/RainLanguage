@@ -5,6 +5,7 @@
 #include "RuntimeLibrary.h"
 #include "LibraryAgency.h"
 #include "EntityAgency.h"
+#include "HeapAgency.h"
 
 #define PARAMETER_ADDRESS (stack + top + SIZE(Frame) + info->returns.Count() * 4 + info->parameters.GetOffset(index))
 #define PARAMETER_VALUE(type) *(type*)PARAMETER_ADDRESS
@@ -110,6 +111,157 @@ uint64 Caller::GetEntityParameter(uint32 index) const
 	return kernel->entityAgency->Get(PARAMETER_VALUE(Entity));
 }
 
+uint32 Caller::GetArrayParameterLength(uint32 index) const
+{
+	ASSERT(info->parameters.GetType(index).dimension, "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle) return kernel->heapAgency->GetArrayLength(handle);
+	return 0;
+}
+
+void Caller::GetBoolArrayParameter(uint32 index, bool*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Bool, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(bool*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetByteArrayParameter(uint32 index, uint8*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Byte, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(uint8*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetCharArrayParameter(uint32 index, character*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Char, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(character*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetIntegerArrayParameter(uint32 index, integer*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Integer, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetRealArrayParameter(uint32 index, real*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(real*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetReal2ArrayParameter(uint32 index, Real2*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real2, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(Real2*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetReal3ArrayParameter(uint32 index, Real3*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real3, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(Real3*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetReal4ArrayParameter(uint32 index, Real4*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real4, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(Real4*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetEnumArrayValueParameter(uint32 index, integer*& result) const
+{
+	Type type = info->parameters.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length));
+	}
+}
+
+void Caller::GetEnumArrayNameParameter(uint32 index, RainString*& result) const
+{
+	Type type = info->parameters.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		RuntimeEnum* runtime = kernel->libraryAgency->GetEnum(Type(type, 0));
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--)
+		{
+			String name = runtime->ToString(*(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)), kernel->stringAgency);
+			result[length] = RainString(name.GetPointer(), name.GetLength());
+		}
+	}
+}
+
+void Caller::GetStringArrayParameter(uint32 index, RainString*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_String, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--)
+		{
+			String value = kernel->stringAgency->Get(*(string*)(kernel->heapAgency->GetArrayPoint(handle, length)));
+			result[length] = RainString(value.GetPointer(), value.GetLength());
+		}
+	}
+}
+
+void Caller::GetEntityArrayParameter(uint32 index, uint64*& result) const
+{
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Entity, 1), "参数类型错误");
+	Handle handle = PARAMETER_VALUE(Handle);
+	if (handle)
+	{
+		uint32 length = kernel->heapAgency->GetArrayLength(handle);
+		while (length--) result[length] = kernel->entityAgency->Get(*(Entity*)(kernel->heapAgency->GetArrayPoint(handle, length)));
+	}
+}
+
 void Caller::SetReturnValue(uint32 index, bool value)
 {
 	ReturnTypeAssert(index, TYPE_Bool);
@@ -161,16 +313,7 @@ void Caller::SetReturnValue(uint32 index, Real4 value)
 void Caller::SetEnumNameReturnValue(uint32 index, const RainString& elementName)
 {
 	ReturnTypeAssert(index, TypeCode::Enum);
-	Type type = info->returns.GetType(index);
-	const RuntimeEnum* enumInfo = kernel->libraryAgency->GetEnum(type);
-	string name = kernel->stringAgency->Add(elementName.value, elementName.length).index;
-	for (uint32 i = 0; i < enumInfo->values.Count(); i++)
-		if (enumInfo->values[i].name == name)
-		{
-			RETURN_VALUE(integer) = enumInfo->values[i].value;
-			return;
-		}
-	EXCEPTION("枚举名称未找到");
+	RETURN_VALUE(integer) = GetEnumValue(kernel, info->returns.GetType(index), elementName.value, elementName.length);
 }
 
 void Caller::SetEnumValueReturnValue(uint32 index, integer value)
@@ -195,6 +338,139 @@ void Caller::SetEntityReturnValue(uint32 index, uint64 value)
 	kernel->entityAgency->Release(*address);
 	*address = kernel->entityAgency->Add(value);
 	kernel->entityAgency->Reference(*address);
+}
+
+Handle Caller::GetArrayReturnValue(uint32 index, Type elementType, uint32 length)
+{
+	ASSERT(info->returns.GetType(index) == Type(elementType, 1), "参数类型错误");
+	Handle& handle = RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(handle);
+	handle = kernel->heapAgency->Alloc(elementType, length);
+	kernel->heapAgency->StrongReference(handle);
+	return handle;
+}
+
+void Caller::SetReturnValue(uint32 index, bool* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Bool, length);
+	while (length--) *(bool*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, uint8* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Byte, length);
+	while (length--) *(uint8*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, character* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Char, length);
+	while (length--) *(character*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, integer* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Integer, length);
+	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, real* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Real, length);
+	while (length--) *(real*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, Real2* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Real2, length);
+	while (length--) *(Real2*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, Real3* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Real3, length);
+	while (length--) *(Real3*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, Real4* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Real4, length);
+	while (length--) *(Real4*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length)
+{
+	Type type = info->returns.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
+	Handle& handle = RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(handle);
+	handle = kernel->heapAgency->Alloc(Type(type, 0), length);
+	kernel->heapAgency->StrongReference(handle);
+	type = Type(type, 0);
+	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = GetEnumValue(kernel, type, values[length].value, values[length].length);
+}
+
+void Caller::SetEnumNameReturnValue(uint32 index, character** values, uint32 length)
+{
+	Type type = info->returns.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
+	Handle& handle = RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(handle);
+	handle = kernel->heapAgency->Alloc(Type(type, 0), length);
+	kernel->heapAgency->StrongReference(handle);
+	type = Type(type, 0);
+	while (length--)
+	{
+		uint32 nameLength = 0;
+		while (values[length][nameLength]) nameLength++;
+		*(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = GetEnumValue(kernel, type, values[length], nameLength);
+	}
+}
+
+void Caller::SetEnumValueReturnValue(uint32 index, integer* values, uint32 length)
+{
+	Type type = info->returns.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
+	Handle& handle = RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(handle);
+	handle = kernel->heapAgency->Alloc(Type(type, 0), length);
+	kernel->heapAgency->StrongReference(handle);
+	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void Caller::SetReturnValue(uint32 index, RainString* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_String, length);
+	while (length--)
+	{
+		string& value = *(string*)(kernel->heapAgency->GetArrayPoint(handle, length));
+		kernel->stringAgency->Release(value);
+		value = kernel->stringAgency->AddAndRef(values[length].value, values[length].length);
+	}
+}
+
+void Caller::SetReturnValue(uint32 index, character** values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_String, length);
+	while (length--)
+	{
+		string& value = *(string*)(kernel->heapAgency->GetArrayPoint(handle, length));
+		kernel->stringAgency->Release(value);
+		value = kernel->stringAgency->Add(values[length]).index;
+		kernel->stringAgency->Reference(value);
+	}
+}
+
+void Caller::SetEntityReturnValue(uint32 index, uint64* values, uint32 length)
+{
+	Handle handle = GetArrayReturnValue(index, TYPE_Entity, length);
+	while (length--)
+	{
+		Entity& value = *(Entity*)(kernel->heapAgency->GetArrayPoint(handle, length));
+		kernel->entityAgency->Release(value);
+		value = kernel->entityAgency->Add(values[length]);
+		kernel->entityAgency->Reference(value);
+	}
 }
 
 void Caller::SetException(const RainString& errorInfo)

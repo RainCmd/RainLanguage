@@ -321,3 +321,12 @@ Kernel::~Kernel()
 	delete entityAgency; entityAgency = NULL;
 	delete stringAgency; stringAgency = NULL;
 }
+
+integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementName, uint32 elementNameLength)
+{
+	string name = kernel->stringAgency->Add(elementName, elementNameLength).index;
+	const RuntimeEnum* info = kernel->libraryAgency->GetEnum(type);
+	for (uint32 i = 0; i < info->values.Count(); i++)
+		if (info->values[i].name == name) return info->values[i].value;
+	EXCEPTION("不存在的枚举");
+}

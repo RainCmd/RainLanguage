@@ -192,9 +192,9 @@ uint32 InvokerWrapper::GetArrayReturnValueLength(uint32 index) const
 	else return 0;
 }
 
-Handle GetArrayReturnValue(const InvokerWrapper& warpper, const Invoker* invoker, uint32 index, Declaration declaration)
+Handle GetArrayReturnValue(const InvokerWrapper& wrapper, const Invoker* invoker, uint32 index, Declaration declaration)
 {
-	ValidAssert(warpper);
+	ValidAssert(wrapper);
 	invoker->StateAssert(InvokerState::Completed);
 	Type type = invoker->info->returns.GetType(index);
 	ASSERT(type == Type(declaration, 1), "返回值类型错误");
@@ -400,15 +400,7 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString& elemen
 	INVOKER->StateAssert(InvokerState::Unstart);
 	const Type& type = INVOKER->info->parameters.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "参数类型错误");
-	string name = INVOKER->kernel->stringAgency->Add(elementName.value, elementName.length).index;
-	const RuntimeEnum* info = INVOKER->kernel->libraryAgency->GetEnum(type);
-	for (uint32 i = 0; i < info->values.Count(); i++)
-		if (info->values[i].name == name)
-		{
-			INVOKER->SetParameter(index, info->values[i].value, type);
-			return;
-		}
-	EXCEPTION("不存在的枚举");
+	INVOKER->SetParameter(index, GetEnumValue(INVOKER->kernel, type, elementName.value, elementName.length));
 }
 
 void InvokerWrapper::SetEnumNameParameter(uint32 index, const character* elementName) const
@@ -445,4 +437,161 @@ void InvokerWrapper::SetEntityParameter(uint32 index, uint64 value) const
 {
 	ValidAssert(*this);
 	INVOKER->SetEntityValueParameter(index, value);
+}
+
+Handle& GetArrayParameter(const InvokerWrapper& wrapper, const Invoker* invoker, uint32 index, Declaration declaration, uint32 length)
+{
+	ValidAssert(wrapper);
+	invoker->StateAssert(InvokerState::Unstart);
+	Type type = invoker->info->parameters.GetType(index);
+	ASSERT(type == Type(declaration, 1), "返回值类型错误");
+	Handle& handle = *(Handle*)(invoker->data.GetPointer() + invoker->info->parameters.GetOffset(index));
+	invoker->kernel->heapAgency->StrongRelease(handle);
+	handle = invoker->kernel->heapAgency->Alloc(Type(declaration, 0), length);
+	invoker->kernel->heapAgency->StrongReference(handle);
+	return handle;
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const bool* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Bool, length);
+	while (length--) *(bool*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const uint8* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Byte, length);
+	while (length--) *(uint8*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const character* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Char, length);
+	while (length--) *(character*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const integer* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Integer, length);
+	while (length--) *(integer*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const real* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Real, length);
+	while (length--) *(real*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const Real2* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Real2, length);
+	while (length--) *(Real2*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const Real3* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Real3, length);
+	while (length--) *(Real3*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const Real4* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Real4, length);
+	while (length--) *(Real4*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetEnumValueParameter(uint32 index, const integer* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	ValidAssert(*this);
+	source->StateAssert(InvokerState::Unstart);
+	Type type = source->info->parameters.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
+	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
+	source->kernel->heapAgency->StrongRelease(handle);
+	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length);
+	source->kernel->heapAgency->StrongReference(handle);
+
+	while (length--) *(integer*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+}
+
+void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	ValidAssert(*this);
+	source->StateAssert(InvokerState::Unstart);
+	Type type = source->info->parameters.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
+	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
+	source->kernel->heapAgency->StrongRelease(handle);
+	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length);
+	source->kernel->heapAgency->StrongReference(handle);
+	type = Type(type, 0);
+	while (length--) *(integer*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = GetEnumValue(source->kernel, type, values[length].value, values[length].length);
+}
+
+void InvokerWrapper::SetEnumNameParameter(uint32 index, const character** values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	ValidAssert(*this);
+	source->StateAssert(InvokerState::Unstart);
+	Type type = source->info->parameters.GetType(index);
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
+	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
+	source->kernel->heapAgency->StrongRelease(handle);
+	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length);
+	source->kernel->heapAgency->StrongReference(handle);
+	type = Type(type, 0);
+	while (length--)
+	{
+		uint32 nameLength = 0;
+		while (values[length][nameLength]) nameLength++;
+		*(integer*)(source->kernel->heapAgency->GetArrayPoint(handle, length)) = GetEnumValue(source->kernel, type, values[length], nameLength);
+	}
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const RainString* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_String, length);
+	while (length--)
+	{
+		string& value = *(string*)(source->kernel->heapAgency->GetArrayPoint(handle, length));
+		source->kernel->stringAgency->Release(value);
+		value = source->kernel->stringAgency->AddAndRef(values[length].value, values[length].length);
+	}
+}
+
+void InvokerWrapper::SetParameter(uint32 index, const character** values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_String, length);
+	while (length--)
+	{
+		string& value = *(string*)(source->kernel->heapAgency->GetArrayPoint(handle, length));
+		source->kernel->stringAgency->Release(value);
+		value = source->kernel->stringAgency->Add(values[length]).index;
+		source->kernel->stringAgency->Reference(value);
+	}
+}
+
+void InvokerWrapper::SetEntityParameter(uint32 index, const uint64* values, uint32 length) const
+{
+	Invoker* source = INVOKER;
+	Handle& handle = GetArrayParameter(*this, source, index, TYPE_Entity, length);
+	while (length--)
+	{
+		Entity& value = *(Entity*)(source->kernel->heapAgency->GetArrayPoint(handle, length));
+		source->kernel->entityAgency->Release(value);
+		value = source->kernel->entityAgency->Add(values[length]);
+		source->kernel->entityAgency->Reference(value);
+	}
 }

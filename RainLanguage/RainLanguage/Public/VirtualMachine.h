@@ -370,6 +370,119 @@ public:
 	/// <param name="value">参数值</param>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
 	void SetEntityParameter(uint32 index, uint64 value) const;
+
+	/// <summary>
+	/// 设置布尔数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const bool* values, uint32 length) const;
+	/// <summary>
+	/// 设置字节数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const uint8* values, uint32 length) const;
+	/// <summary>
+	/// 设置字符数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const character* values, uint32 length) const;
+	/// <summary>
+	/// 设置整数数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const integer* values, uint32 length) const;
+	/// <summary>
+	/// 设置实数数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const real* values, uint32 length) const;
+	/// <summary>
+	/// 设置二维向量数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const Real2* values, uint32 length) const;
+	/// <summary>
+	/// 设置三维向量数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const Real3* values, uint32 length) const;
+	/// <summary>
+	/// 设置四维向量数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const Real4* values, uint32 length) const;
+	/// <summary>
+	/// 设置枚举值数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetEnumValueParameter(uint32 index, const integer* values, uint32 length) const;
+	/// <summary>
+	/// 设置枚举名数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetEnumNameParameter(uint32 index, const RainString* values, uint32 length) const;
+	/// <summary>
+	/// 设置枚举名数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetEnumNameParameter(uint32 index, const character** values, uint32 length) const;
+	/// <summary>
+	/// 设置字符串数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const RainString* values, uint32 length) const;
+	/// <summary>
+	/// 设置字符串数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetParameter(uint32 index, const character** values, uint32 length) const;
+	/// <summary>
+	/// 设置实体数组参数
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="values">参数数组</param>
+	/// <param name="length">参数数组长度</param>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
+	void SetEntityParameter(uint32 index, const uint64* values, uint32 length) const;
 };
 
 /// <summary>
@@ -465,6 +578,98 @@ public:
 	/// <returns>参数值</returns>
 	/// <exception>如果参数类型不正确会抛异常</exception>
 	virtual uint64 GetEntityParameter(uint32 index) const = 0;
+
+	/// <summary>
+	/// 获取参数数组长度
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <returns>数组长度</returns>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual uint32 GetArrayParameterLength(uint32 index) const = 0;
+	/// <summary>
+	/// 获取布尔数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetBoolArrayParameter(uint32 index, bool*& result) const = 0;
+	/// <summary>
+	/// 获取字节数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetByteArrayParameter(uint32 index, uint8*& result) const = 0;
+	/// <summary>
+	/// 获取字符数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetCharArrayParameter(uint32 index, character*& result) const = 0;
+	/// <summary>
+	/// 获取整数数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetIntegerArrayParameter(uint32 index, integer*& result) const = 0;
+	/// <summary>
+	/// 获取实数数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetRealArrayParameter(uint32 index, real*& result) const = 0;
+	/// <summary>
+	/// 获取二维向量数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetReal2ArrayParameter(uint32 index, Real2*& result) const = 0;
+	/// <summary>
+	/// 获取三维向量数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetReal3ArrayParameter(uint32 index, Real3*& result) const = 0;
+	/// <summary>
+	/// 获取四维向量数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetReal4ArrayParameter(uint32 index, Real4*& result) const = 0;
+	/// <summary>
+	/// 获取枚举值数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetEnumArrayValueParameter(uint32 index, integer*& result) const = 0;
+	/// <summary>
+	/// 获取枚举名数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetEnumArrayNameParameter(uint32 index, RainString*& result) const = 0;
+	/// <summary>
+	/// 获取字符串数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetStringArrayParameter(uint32 index, RainString*& result) const = 0;
+	/// <summary>
+	/// 获取实体数组参数值
+	/// </summary>
+	/// <param name="index">参数索引</param>
+	/// <param name="result">用于填充返回值数组的地址</param>
+	/// <exception>如果参数类型不正确会抛异常</exception>
+	virtual void GetEntityArrayParameter(uint32 index, uint64*& result) const = 0;
 
 	/// <summary>
 	/// 设置布尔返回值
@@ -564,6 +769,119 @@ public:
 	/// <param name="value">返回值</param>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
 	virtual void SetEntityReturnValue(uint32 index, uint64 value) = 0;
+
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, bool* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, uint8* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, character* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, integer* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, real* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, Real2* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, Real3* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, Real4* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetEnumNameReturnValue(uint32 index, character** values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetEnumValueReturnValue(uint32 index, integer* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, RainString* values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetReturnValue(uint32 index, character** values, uint32 length) = 0;
+	/// <summary>
+	/// 设置数组返回值
+	/// </summary>
+	/// <param name="index">返回值索引</param>
+	/// <param name="values">返回值首地址</param>
+	/// <param name="length">返回值数量</param>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
+	virtual void SetEntityReturnValue(uint32 index, uint64* values, uint32 length) = 0;
 
 	/// <summary>
 	/// 设置异常信息
