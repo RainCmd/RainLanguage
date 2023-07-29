@@ -176,43 +176,37 @@ RainString RainDebuggerVariable::GetValue()
 		else if (targetType == TYPE_Real2)
 		{
 			Real2 value = valueAddress ? *(Real2*)valueAddress : Real2(0, 0);
-			String fragments[5];
-			fragments[0] = agency->Add(TEXT("("));
-			fragments[1] = ToString(agency, value.x);
-			fragments[2] = agency->Add(TEXT(", "));
-			fragments[3] = ToString(agency, value.y);
-			fragments[4] = agency->Add(TEXT(")"));
-			String result = agency->Combine(fragments, 5);
+			String fragments[3];
+			fragments[0] = ToString(agency, value.x);
+			fragments[1] = agency->Add(TEXT(", "));
+			fragments[2] = ToString(agency, value.y);
+			String result = agency->Combine(fragments, 3);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
 		else if (targetType == TYPE_Real3)
 		{
 			Real3 value = valueAddress ? *(Real3*)valueAddress : Real3(0, 0, 0);
-			String fragments[7];
-			fragments[0] = agency->Add(TEXT("("));
-			fragments[1] = ToString(agency, value.x);
-			fragments[2] = agency->Add(TEXT(", "));
-			fragments[3] = ToString(agency, value.y);
-			fragments[4] = agency->Add(TEXT(", "));
-			fragments[5] = ToString(agency, value.z);
-			fragments[6] = agency->Add(TEXT(")"));
-			String result = agency->Combine(fragments, 7);
+			String fragments[5];
+			fragments[0] = ToString(agency, value.x);
+			fragments[1] = agency->Add(TEXT(", "));
+			fragments[2] = ToString(agency, value.y);
+			fragments[3] = agency->Add(TEXT(", "));
+			fragments[4] = ToString(agency, value.z);
+			String result = agency->Combine(fragments, 5);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
 		else if (targetType == TYPE_Real4)
 		{
 			Real4 value = valueAddress ? *(Real4*)valueAddress : Real4(0, 0, 0, 0);
-			String fragments[9];
-			fragments[0] = agency->Add(TEXT("("));
-			fragments[1] = ToString(agency, value.x);
-			fragments[2] = agency->Add(TEXT(", "));
-			fragments[3] = ToString(agency, value.y);
-			fragments[4] = agency->Add(TEXT(", "));
-			fragments[5] = ToString(agency, value.z);
-			fragments[6] = agency->Add(TEXT(", "));
-			fragments[7] = ToString(agency, value.w);
-			fragments[8] = agency->Add(TEXT(")"));
-			String result = agency->Combine(fragments, 9);
+			String fragments[7];
+			fragments[0] = ToString(agency, value.x);
+			fragments[1] = agency->Add(TEXT(", "));
+			fragments[2] = ToString(agency, value.y);
+			fragments[3] = agency->Add(TEXT(", "));
+			fragments[4] = ToString(agency, value.z);
+			fragments[5] = agency->Add(TEXT(", "));
+			fragments[6] = ToString(agency, value.w);
+			String result = agency->Combine(fragments, 7);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
 		else if (targetType == TYPE_Type)

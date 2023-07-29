@@ -329,7 +329,7 @@ integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementN
 	const RuntimeEnum* info = kernel->libraryAgency->GetEnum(type);
 	for (uint32 i = 0; i < info->values.Count(); i++)
 		if (info->values[i].name == name) return info->values[i].value;
-	EXCEPTION("不存在的枚举");
+	return 0;
 }
 
 string GetTypeName(Kernel* kernel, const Type& type)

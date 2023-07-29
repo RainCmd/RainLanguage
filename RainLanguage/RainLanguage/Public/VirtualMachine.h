@@ -329,18 +329,18 @@ public:
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
 	void SetParameter(uint32 index, Real4 value) const;
 	/// <summary>
-	/// 设置按枚举元素名设置枚举值
+	/// 设置按枚举元素名设置枚举值，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="elementName">名称字符串</param>
-	/// <exception>如果调用不是未调用状态或参数类型不正确或名称未找到会抛异常</exception>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
 	void SetEnumNameParameter(uint32 index, const RainString& elementName) const;
 	/// <summary>
-	/// 设置按枚举元素名设置枚举值，名称需要以\0结尾
+	/// 设置按枚举元素名设置枚举值，名称需要以\0结尾，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="elementName">名称字符串</param>
-	/// <exception>如果调用不是未调用状态或参数类型不正确或名称未找到会抛异常</exception>
+	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
 	void SetEnumNameParameter(uint32 index, const character* elementName) const;
 	/// <summary>
 	/// 以枚举整数值设置参数
@@ -444,7 +444,7 @@ public:
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
 	void SetEnumValueParameter(uint32 index, const integer* values, uint32 length) const;
 	/// <summary>
-	/// 设置枚举名数组参数
+	/// 设置枚举名数组参数，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
@@ -452,7 +452,7 @@ public:
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
 	void SetEnumNameParameter(uint32 index, const RainString* values, uint32 length) const;
 	/// <summary>
-	/// 设置枚举名数组参数
+	/// 设置枚举名数组参数，名称需要以\0结尾，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
@@ -728,18 +728,18 @@ public:
 	/// <exception>如果返回值类型不正确会抛异常</exception>
 	virtual void SetReturnValue(uint32 index, Real4 value) = 0;
 	/// <summary>
-	/// 以枚举元素名设置返回值
+	/// 以枚举元素名设置返回值，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="elementName">枚举元素名字符串</param>
-	/// <exception>如果返回值类型不正确或元素名未找到会抛异常</exception>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, const RainString& elementName) = 0;
 	/// <summary>
-	/// 以枚举元素名设置返回值，名称需要以\0结尾
+	/// 以枚举元素名设置返回值，名称需要以\0结尾，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="elementName">枚举元素名字符串</param>
-	/// <exception>如果返回值类型不正确或元素名未找到会抛异常</exception>
+	/// <exception>如果返回值类型不正确会抛异常</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, const character* elementName) = 0;
 	/// <summary>
 	/// 设置枚举返回值
@@ -835,7 +835,7 @@ public:
 	/// <exception>如果返回值类型不正确会抛异常</exception>
 	virtual void SetReturnValue(uint32 index, Real4* values, uint32 length) = 0;
 	/// <summary>
-	/// 设置数组返回值
+	/// 设置数组返回值，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
@@ -843,7 +843,7 @@ public:
 	/// <exception>如果返回值类型不正确会抛异常</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length) = 0;
 	/// <summary>
-	/// 设置数组返回值
+	/// 设置数组返回值，名称需要以\0结尾，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
