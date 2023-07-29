@@ -139,6 +139,93 @@ RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index)
 	return RainDebuggerVariable();
 }
 
+RainString RainDebuggerVariable::GetValue()
+{
+	if (IsValid())
+	{
+		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
+		uint8* valueAddress = GetAddress();
+		StringAgency* agency = FRAME->library->kernel->stringAgency;
+		if (targetType == TYPE_Bool)
+		{
+			String result = ToString(agency, valueAddress ? *(bool*)valueAddress : false);
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Byte)
+		{
+			String result = ToString(agency, (uint8)(valueAddress ? *(uint8*)valueAddress : 0));
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Char)
+		{
+			String result = ToString(agency, (character)(valueAddress ? *(character*)valueAddress : 0));
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Integer)
+		{
+			String result = ToString(agency, (integer)(valueAddress ? *(integer*)valueAddress : 0));
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Real)
+		{
+			String result = ToString(agency, (real)(valueAddress ? *(real*)valueAddress : 0));
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Real2)
+		{
+			Real2 value = valueAddress ? *(Real2*)valueAddress : Real2(0, 0);
+			String fragments[5];
+			fragments[0] = agency->Add(TEXT("("));
+			fragments[1] = ToString(agency, value.x);
+			fragments[2] = agency->Add(TEXT(", "));
+			fragments[3] = ToString(agency, value.y);
+			fragments[4] = agency->Add(TEXT(")"));
+			String result = agency->Combine(fragments, 5);
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Real3)
+		{
+			Real3 value = valueAddress ? *(Real3*)valueAddress : Real3(0, 0, 0);
+			String fragments[7];
+			fragments[0] = agency->Add(TEXT("("));
+			fragments[1] = ToString(agency, value.x);
+			fragments[2] = agency->Add(TEXT(", "));
+			fragments[3] = ToString(agency, value.y);
+			fragments[4] = agency->Add(TEXT(", "));
+			fragments[5] = ToString(agency, value.z);
+			fragments[6] = agency->Add(TEXT(")"));
+			String result = agency->Combine(fragments, 7);
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Real4)
+		{
+			Real4 value = valueAddress ? *(Real4*)valueAddress : Real4(0, 0, 0, 0);
+			String fragments[9];
+			fragments[0] = agency->Add(TEXT("("));
+			fragments[1] = ToString(agency, value.x);
+			fragments[2] = agency->Add(TEXT(", "));
+			fragments[3] = ToString(agency, value.y);
+			fragments[4] = agency->Add(TEXT(", "));
+			fragments[5] = ToString(agency, value.z);
+			fragments[6] = agency->Add(TEXT(", "));
+			fragments[7] = ToString(agency, value.w);
+			fragments[8] = agency->Add(TEXT(")"));
+			String result = agency->Combine(fragments, 9);
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType.dimension == 0 && targetType.code == TypeCode::Enum)
+		{
+
+		}
+		//todo ±äÁ¿µÄ×Ö·û´®ÃèÊö
+	}
+	return RainString(nullptr, 0);
+}
+
+void RainDebuggerVariable::SetValue(const RainString& value)
+{
+}
+
 RainString RainDebuggerVariable::GetEnumName()
 {
 	if (IsValid())

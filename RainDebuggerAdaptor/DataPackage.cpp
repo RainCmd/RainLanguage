@@ -36,6 +36,13 @@ uint16 DataPackage::ReadUint16()
 	return ret;
 }
 
+uint64 DataPackage::ReadUint64()
+{
+	uint64 ret = *(uint64*)(data + pos);
+	pos += 8;
+	return ret;
+}
+
 void DataPackage::Grow(int s)
 {
 	if (pos + s < size) return;
@@ -62,6 +69,15 @@ uint16* DataPackage::Write(uint16 value)
 {
 	Grow(2);
 	uint16* result = (uint16*)(data + pos);
+	pos += 2;
+	*result = value;
+	return result;
+}
+
+uint64* DataPackage::Write(uint64 value)
+{
+	Grow(8);
+	uint64* result = (uint64*)(data + pos);
 	pos += 2;
 	*result = value;
 	return result;

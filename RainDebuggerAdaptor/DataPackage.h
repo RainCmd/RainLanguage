@@ -12,10 +12,12 @@ struct DataPackage
 	std::wstring ReadWString();
 	uint8 ReadUint8();
 	uint16 ReadUint16();
+	uint64 ReadUint64();
 
 	void Grow(int s);
 	uint8* Write(uint8 value);
 	uint16* Write(uint16 value);
+	uint64* Write(uint64 value);
 	void Write(const char* values, uint16 length);
 	void Write(std::string value);
 	void Write(std::wstring value);

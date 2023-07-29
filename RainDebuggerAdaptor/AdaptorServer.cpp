@@ -74,6 +74,11 @@ enum class Proto
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//string value
 	RECV_SetGlobal,
+	//string fullName 不包括library名,用'.'分割
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
+	//string value
+	SEND_SetGlobal,
 
 	//uint16 coroutineCount
 	//	uint64 coroutineId
@@ -83,13 +88,13 @@ enum class Proto
 	//		uint16 line
 	SEND_Coroutine,
 	//uint64 coroutineId
-	//uint16 traceDeep
+	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	RECV_Local,
 	//uint64 coroutineId
-	//uint16 traceDeep
+	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
 	//	uint16 index 如果是数组，这个索引就表示数组下表
@@ -99,12 +104,19 @@ enum class Proto
 	//	string variableValue
 	SEND_Local,
 	//uint64 coroutineId
-	//uint16 traceDeep
+	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//string value
 	RECV_SetLocal,
+	//uint64 coroutineId
+	//uint16 traceDeep 从栈顶往下数
+	//string localName
+	//uint8 indexCount
+	//	uint16 index 如果是数组，这个索引就表示数组下表
+	//string value
+	SEND_SetLocal,
 };
 
 bool Resize(char*& data, int& size, int targetSize)
@@ -149,6 +161,104 @@ DebuggerAdaptor* adaptor = nullptr;
 std::wstring GetDebuggerVariableValue(const RainDebuggerVariable& varibale)
 {
 	return std::wstring();//todo 变量值转字符串
+}
+
+std::wstring SetDebuggerVariableValue(const RainDebuggerVariable& varibale, const std::wstring value)
+{
+	//todo 给变量赋值
+	return GetDebuggerVariableValue(varibale);
+}
+
+bool TryGetChild(RainDebuggerSpace& space, const std::wstring& name)
+{
+	for (uint32 i = 0; i < space.ChildCount(); i++)
+	{
+		if (name.compare(space.GetChild(i).GetName().value))
+		{
+			space = space.GetChild(i);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool TryGetVariable(RainDebuggerSpace& space, const std::wstring& name, RainDebuggerVariable& variable)
+{
+	for (uint32 i = 0; i < space.VariableCount(); i++)
+	{
+		if (name.compare(space.GetVariable(i).GetName().value))
+		{
+			variable = space.GetVariable(i);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool TryGetElement(RainDebuggerVariable& variable, DataPackage& pkg, DataPackage& sendPkg)
+{
+	uint8 cnt = pkg.ReadUint8();
+	sendPkg.Write(cnt);
+	while (cnt--)
+	{
+		uint16 idx = pkg.ReadUint16();
+		sendPkg.Write(idx);
+		if (variable.type == RainType::Internal)
+		{
+			if (idx >= variable.MemberCount()) return false;
+			variable = variable.GetMember(idx);
+		}
+		else if (IsArray(variable.type))
+		{
+			if (idx >= variable.ArrayLength()) return false;
+			variable = variable.GetElement(idx);
+		}
+		else return false;
+	}
+	return true;
+}
+
+void WriteElements(DataPackage& sendPkg, RainDebuggerVariable& variable)
+{
+	if (variable.type == RainType::Internal)
+	{
+		std::wstring str;
+		sendPkg.Write((uint8)variable.MemberCount());
+		for (uint32 i = 0; i < variable.MemberCount(); i++)
+		{
+			auto m = variable.GetMember(i);
+			str.assign(m.GetName().value);
+			sendPkg.Write(str);
+			sendPkg.Write((uint16)m.type);
+			sendPkg.Write(GetDebuggerVariableValue(m));
+		}
+	}
+	else if (IsArray(variable.type))
+	{
+		std::wstring str;
+		sendPkg.Write((uint8)variable.ArrayLength());
+		for (uint32 i = 0; i < variable.ArrayLength(); i++)
+		{
+			auto e = variable.GetElement(i);
+			str.assign(e.GetName().value);
+			sendPkg.Write(str);
+			sendPkg.Write((uint16)e.type);
+			sendPkg.Write(GetDebuggerVariableValue(e));
+		}
+	}
+}
+
+bool TryGetLocal(RainTrace& trece, const std::wstring& name, RainDebuggerVariable& variable)
+{
+	for (uint32 i = 0; i < trece.LocalCount(); i++)
+	{
+		if (name.compare(trece.GetLocal(i).GetName().value))
+		{
+			variable = trece.GetLocal(i);
+			return true;
+		}
+	}
+	return false;
 }
 
 bool OnRecv(Proto proto, DataPackage pkg)
@@ -226,7 +336,7 @@ bool OnRecv(Proto proto, DataPackage pkg)
 				auto src = full;
 				auto si = adaptor->GetSpace();
 			label_recv_space_next_space:
-				if (full.length())
+				if (!full.empty())
 				{
 					std::wstring name = full;
 					size_t pos = full.find(L".");
@@ -236,14 +346,9 @@ bool OnRecv(Proto proto, DataPackage pkg)
 						full = full.erase(0, pos + 1);
 					}
 					else full = std::wstring();
-					for (uint32 i = 0; i < si.ChildCount(); i++)
+					if (TryGetChild(si, name))
 					{
-						auto ci = si.GetChild(i);
-						if (name.compare(ci.GetName().value))
-						{
-							si = ci;
-							goto label_recv_space_next_space;
-						}
+						goto label_recv_space_next_space;
 					}
 					return false;
 				}
@@ -274,30 +379,164 @@ bool OnRecv(Proto proto, DataPackage pkg)
 		case Proto::RECV_Global:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
+				if (!adaptor->IsBreaking()) return true;
+				auto full = pkg.ReadWString();
+				if (full.empty()) break;
+				auto src = full;
+				auto si = adaptor->GetSpace();
+				RainDebuggerVariable variable;
+			label_recv_global_next_space:
+				std::wstring name = full;
+				size_t pos = full.find(L".");
+				if (pos != std::wstring::npos)
+				{
+					name = full.substr(0, pos);
+					full = full.erase(0, pos + 1);
+					if (TryGetChild(si, name))
+					{
+						goto label_recv_global_next_space;
+					}
+				}
+				else if (!TryGetVariable(si, name, variable)) return false;
+				auto sendPkg = DataPackage(0xff);
+				sendPkg.Write(src);
+				if (!TryGetElement(variable, pkg, sendPkg))
+				{
+					sendPkg.FreeData();
+					return false;
+				}
 
+				WriteElements(sendPkg, variable);
+
+				Send(Proto::SEND_Global, sendPkg);
+				sendPkg.FreeData();
+				return true;
 			}
 			break;
 		case Proto::SEND_Global: break;
 		case Proto::RECV_SetGlobal:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
+				if (!adaptor->IsBreaking()) return true;
+				auto full = pkg.ReadWString();
+				if (full.empty()) break;
+				auto src = full;
+				auto si = adaptor->GetSpace();
+				RainDebuggerVariable variable;
+			label_recv_setglobal_next_space:
+				std::wstring name = full;
+				size_t pos = full.find(L".");
+				if (pos != std::wstring::npos)
+				{
+					name = full.substr(0, pos);
+					full = full.erase(0, pos + 1);
+					if (TryGetChild(si, name))
+					{
+						goto label_recv_setglobal_next_space;
+					}
+				}
+				else if (!TryGetVariable(si, name, variable)) return false;
+				auto sendPkg = DataPackage(0xff);
+				sendPkg.Write(src);
+				if (!TryGetElement(variable, pkg, sendPkg))
+				{
+					sendPkg.FreeData();
+					return false;
+				}
 
+				sendPkg.Write(SetDebuggerVariableValue(variable, pkg.ReadWString()));
+
+				Send(Proto::SEND_Global, sendPkg);
+				sendPkg.FreeData();
+				return true;
 			}
 			break;
+		case Proto::SEND_SetGlobal:
 		case Proto::SEND_Coroutine: break;
 		case Proto::RECV_Local:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
+				if (!adaptor->IsBreaking()) return true;
+				uint64 cId = pkg.ReadUint64();
+				auto ci = adaptor->GetCoroutineIterator();
+				while (ci.Next())
+				{
+					auto ti = ci.Current();
+					if (ti.CoroutineID() == cId)
+					{
+						uint16 deep = pkg.ReadUint16();
+						std::wstring name = pkg.ReadWString();
+						for (uint32 i = 0; i < deep; i++)
+						{
+							if (!ti.Next()) return false;
+						}
 
+						auto t = ti.Current();
+						RainDebuggerVariable variable;
+						if (!TryGetLocal(t, name, variable)) return false;
+
+						auto sendPkg = DataPackage(0xff);
+						sendPkg.Write(cId);
+						sendPkg.Write(deep);
+						sendPkg.Write(name);
+
+						if (!TryGetElement(variable, pkg, sendPkg))
+						{
+							sendPkg.FreeData();
+							return false;
+						}
+
+						WriteElements(sendPkg, variable);
+						Send(Proto::SEND_Local, sendPkg);
+						sendPkg.FreeData();
+						return true;
+					}
+				}
 			}
 			break;
 		case Proto::SEND_Local: break;
 		case Proto::RECV_SetLocal:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
+				if (!adaptor->IsBreaking()) return true;
+				uint64 cId = pkg.ReadUint64();
+				auto ci = adaptor->GetCoroutineIterator();
+				while (ci.Next())
+				{
+					auto ti = ci.Current();
+					if (ti.CoroutineID() == cId)
+					{
+						uint16 deep = pkg.ReadUint16();
+						std::wstring name = pkg.ReadWString();
+						for (uint32 i = 0; i < deep; i++)
+						{
+							if (!ti.Next()) return false;
+						}
 
+						auto t = ti.Current();
+						RainDebuggerVariable variable;
+						if (!TryGetLocal(t, name, variable)) return false;
+
+						auto sendPkg = DataPackage(0xff);
+						sendPkg.Write(cId);
+						sendPkg.Write(deep);
+						sendPkg.Write(name);
+
+						if (!TryGetElement(variable, pkg, sendPkg))
+						{
+							sendPkg.FreeData();
+							return false;
+						}
+
+						sendPkg.Write(SetDebuggerVariableValue(variable, pkg.ReadWString()));
+						Send(Proto::SEND_SetLocal, sendPkg);
+						sendPkg.FreeData();
+						return true;
+					}
+				}
 			}
 			break;
+		case Proto::SEND_SetLocal:
 	}
 	return false;
 }

@@ -76,6 +76,16 @@ public:
 	/// 获取变量枚举名字
 	/// </summary>
 	RainString GetEnumName();
+	/// <summary>
+	/// 获取变量值
+	/// </summary>
+	/// <returns></returns>
+	RainString GetValue();
+	/// <summary>
+	/// 设置变量值
+	/// </summary>
+	/// <param name="value"></param>
+	void SetValue(const RainString& value);
 	~RainDebuggerVariable();
 };
 
