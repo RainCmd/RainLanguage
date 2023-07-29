@@ -33,30 +33,6 @@
 
 #define THIS(returnCount,type) (*(type*)kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
 
-inline string GetTypeName(Kernel* kernel, const Type& type)
-{
-	if (type.dimension)
-	{
-		String result = kernel->stringAgency->Get(kernel->libraryAgency->GetRuntimeInfo(Type(type, 0))->name);
-		String dimension = kernel->stringAgency->Add(TEXT("[]"));
-		for (uint32 i = 0; i < type.dimension; i++)
-			result = result + dimension;
-		return result.index;
-	}
-	else switch (type.code)
-	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE).index;
-		case TypeCode::Struct:
-		case TypeCode::Enum:
-		case TypeCode::Handle:
-		case TypeCode::Interface:
-		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
-			return kernel->libraryAgency->GetRuntimeInfo(type)->name;
-	}
-	return NULL;
-}
-
 #pragma region ÔËËã·û
 String Operation_Less_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (integer, integer)
 {

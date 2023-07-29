@@ -73,10 +73,6 @@ public:
 	/// </summary>
 	RainDebuggerVariable GetElement(uint32 index);
 	/// <summary>
-	/// 获取变量枚举名字
-	/// </summary>
-	RainString GetEnumName();
-	/// <summary>
 	/// 获取变量值
 	/// </summary>
 	/// <returns></returns>

@@ -158,14 +158,17 @@ int recvResultSize = 1024;
 char* recvResult = nullptr;
 DebuggerAdaptor* adaptor = nullptr;
 
-std::wstring GetDebuggerVariableValue(const RainDebuggerVariable& varibale)
+std::wstring GetDebuggerVariableValue(RainDebuggerVariable& varibale)
 {
-	return std::wstring();//todo 变量值转字符串
+	RainString value = varibale.GetValue();
+	std::wstring str;
+	str.assign(value.value, value.length);
+	return str;
 }
 
-std::wstring SetDebuggerVariableValue(const RainDebuggerVariable& varibale, const std::wstring value)
+std::wstring SetDebuggerVariableValue(RainDebuggerVariable& varibale, const std::wstring value)
 {
-	//todo 给变量赋值
+	varibale.SetValue(RainString(value.c_str(), value.length()));
 	return GetDebuggerVariableValue(varibale);
 }
 

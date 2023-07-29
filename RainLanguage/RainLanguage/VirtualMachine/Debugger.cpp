@@ -1,10 +1,12 @@
 #include "Kernel.h"
 #include "../String.h"
 #include "../ProgramDatabase.h"
+#include "../KeyWords.h"
 #include "../Public/Debugger.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
+#include "EntityAgency.h"
 
 typedef Dictionary<Declaration, Declaration, true> MAP;
 struct DebugFrame
@@ -213,32 +215,98 @@ RainString RainDebuggerVariable::GetValue()
 			String result = agency->Combine(fragments, 9);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
-		else if (targetType.dimension == 0 && targetType.code == TypeCode::Enum)
+		else if (targetType == TYPE_Type)
 		{
-
+			String result = valueAddress ? agency->Get(GetTypeName(FRAME->library->kernel, *(Type*)valueAddress)) : KeyWord_null();
+			return RainString(result.GetPointer(), result.GetLength());
 		}
-		//todo 变量的字符串描述
+		else if (targetType == TYPE_String)
+		{
+			String result = agency->Get(*(string*)valueAddress);
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType == TYPE_Entity)
+		{
+			String result = ToString(agency, (integer)FRAME->library->kernel->entityAgency->Get(*(Entity*)valueAddress));
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if (targetType.dimension)
+		{
+			if (valueAddress)
+			{
+				String fragments[4];
+				fragments[0] = agency->Get(GetTypeName(FRAME->library->kernel, Type(targetType, targetType.dimension - 1)));
+				fragments[1] = agency->Add(TEXT("["));
+				fragments[2] = ToString(agency, ArrayLength());
+				fragments[3] = agency->Add(TEXT("]"));
+				String result = agency->Combine(fragments, 4);
+				return RainString(result.GetPointer(), result.GetLength());
+			}
+			else return RainString(KeyWord_null().GetPointer(), KeyWord_null().GetLength());
+		}
+		else if (targetType.code == TypeCode::Enum)
+		{
+			String result = FRAME->library->enums[targetType.index].ToString(valueAddress ? *(integer*)valueAddress : 0, agency);
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else
+		{
+			String result = valueAddress ? agency->Get(GetTypeName(FRAME->library->kernel, targetType)) : KeyWord_null();
+			return RainString(result.GetPointer(), result.GetLength());
+		}
 	}
 	return RainString(nullptr, 0);
 }
 
 void RainDebuggerVariable::SetValue(const RainString& value)
 {
-}
-
-RainString RainDebuggerVariable::GetEnumName()
-{
-	if (IsValid())
+	if (IsValid() && address)
 	{
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
-		if (!targetType.dimension && targetType.code == TypeCode::Enum)
+		uint8* valueAddress = GetAddress();
+		StringAgency* agency = FRAME->library->kernel->stringAgency;
+		if (targetType == TYPE_Bool) *(bool*)valueAddress = ParseBool(agency->Add(value.value, value.length));
+		else if (targetType == TYPE_Byte) *(uint8*)valueAddress = (uint8)ParseInteger(agency->Add(value.value, value.length));
+		else if (targetType == TYPE_Char) *(character*)valueAddress = value.length ? value.value[0] : '\0';
+		else if (targetType == TYPE_Integer) *(integer*)valueAddress = ParseInteger(agency->Add(value.value, value.length));
+		else if (targetType == TYPE_Real) *(real*)valueAddress = ParseReal(agency->Add(value.value, value.length));
+		else if (targetType == TYPE_Real2)
 		{
-			RuntimeLibrary* library = FRAME->library;
-			String result = library->enums[((Type*)internalType)->index].ToString(*(integer*)GetAddress(), library->kernel->stringAgency);
-			return RainString(result.GetPointer(), result.GetLength());
+			//todo 给变量赋值
+		}
+		else if (targetType == TYPE_Real3)
+		{
+
+		}
+		else if (targetType == TYPE_Real4)
+		{
+
+		}
+		else if (targetType == TYPE_String)
+		{
+			string& target = *(string*)valueAddress;
+			agency->Release(target);
+			target = agency->Add(value.value, value.length).index;
+			agency->Reference(target);
+		}
+		else if (targetType == TYPE_Entity)
+		{
+			Entity& target = *(Entity*)valueAddress;
+			FRAME->library->kernel->entityAgency->Release(target);
+			target = FRAME->library->kernel->entityAgency->Add((uint64)ParseInteger(agency->Add(value.value, value.length)));
+			FRAME->library->kernel->entityAgency->Reference(target);
+		}
+		else if (targetType.dimension == 0 && targetType.code == TypeCode::Enum)
+		{
+			integer& enumValue = *(integer*)valueAddress;
+			if (!value.length || value.value[0] == '0') enumValue = 0;
+			else
+			{
+				enumValue = ParseInteger(agency->Add(value.value, value.length));
+				if (enumValue == 0) enumValue = GetEnumValue(FRAME->library->kernel, targetType, value.value, value.length);
+			}
 		}
 	}
-	return RainString(NULL, 0);
 }
 
 RainDebuggerVariable::~RainDebuggerVariable()

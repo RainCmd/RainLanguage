@@ -5,6 +5,7 @@
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "CoroutineAgency.h"
+#include "Exceptions.h"
 
 RainTypes::RainTypes(RainTypes& other) :types(other.types), count(other.count)
 {
@@ -329,4 +330,28 @@ integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementN
 	for (uint32 i = 0; i < info->values.Count(); i++)
 		if (info->values[i].name == name) return info->values[i].value;
 	EXCEPTION("不存在的枚举");
+}
+
+string GetTypeName(Kernel* kernel, const Type& type)
+{
+	if (type.dimension)
+	{
+		String result = kernel->stringAgency->Get(kernel->libraryAgency->GetRuntimeInfo(Type(type, 0))->name);
+		String dimension = kernel->stringAgency->Add(TEXT("[]"));
+		for (uint32 i = 0; i < type.dimension; i++)
+			result = result + dimension;
+		return result.index;
+	}
+	else switch (type.code)
+	{
+		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE).index;
+		case TypeCode::Struct:
+		case TypeCode::Enum:
+		case TypeCode::Handle:
+		case TypeCode::Interface:
+		case TypeCode::Delegate:
+		case TypeCode::Coroutine:
+			return kernel->libraryAgency->GetRuntimeInfo(type)->name;
+	}
+	return NULL;
 }
