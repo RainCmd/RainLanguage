@@ -138,3 +138,8 @@ RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, u
 	}
 	return result;
 }
+
+void Delete(RainProgramDatabase*& database)
+{
+	delete database; database = NULL;
+}

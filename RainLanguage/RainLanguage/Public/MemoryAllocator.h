@@ -11,4 +11,3 @@ typedef void* (*__realloc)(void* pointer, uint32 size);
 /// <param name="rainFree">释放内存接口</param>
 /// <param name="_rainRealloc">重新分配内存接口</param>
 RAINLANGUAGE void SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc _rainRealloc);
-

@@ -220,3 +220,8 @@ RainProduct* Build(const BuildParameter& parameter)
 
 	return new Product(messages, generator.GeneratorLibrary(manager), databaseGenerator.GetResult(&generator));
 }
+
+void Delete(RainProduct*& product)
+{
+	delete product; product = NULL;
+}

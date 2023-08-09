@@ -65,8 +65,12 @@ typedef const RainProgramDatabase* (*ProgramDatabaseLoader)(const RainString& na
 /// <summary>
 /// 序列化调试数据
 /// </summary>
-RAINLANGUAGE const  RainBuffer<uint8>* Serialize(const RainProgramDatabase* database);
+RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase* database);
 /// <summary>
 /// 反序列化调试数据
 /// </summary>
 RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size);
+
+RAINLANGUAGE void Delete(RainBuffer<uint8>*& buffer);
+RAINLANGUAGE void Delete(RainLibrary*& library);
+RAINLANGUAGE void Delete(RainProgramDatabase*& database);

@@ -678,3 +678,8 @@ const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 
 	return result;
 }
+
+void Delete(RainLibrary*& library)
+{
+	delete library; library = NULL;
+}

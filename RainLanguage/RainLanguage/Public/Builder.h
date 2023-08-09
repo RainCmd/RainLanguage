@@ -125,3 +125,5 @@ public:
 /// <param name="parameter">编译参数</param>
 /// <returns>编译结果</returns>
 RAINLANGUAGE RainProduct* Build(const BuildParameter& parameter);
+
+RAINLANGUAGE void Delete(RainProduct*& product);

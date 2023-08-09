@@ -1135,3 +1135,5 @@ public:
 
 
 RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter);
+
+RAINLANGUAGE void Delete(RainKernel*& kernel);

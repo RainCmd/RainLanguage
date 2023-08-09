@@ -110,6 +110,11 @@ RainKernel* CreateKernel(const StartupParameter& parameter)
 	return new Kernel(parameter);
 }
 
+void Delete(RainKernel*& kernel)
+{
+	delete kernel; kernel = NULL;
+}
+
 Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed), debugger(NULL), breakpoints(0)
 {
 	share = new KernelShare(this);
