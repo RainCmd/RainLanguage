@@ -252,6 +252,19 @@ RainString RainDebuggerVariable::GetValue()
 	return RainString(nullptr, 0);
 }
 
+uint32 ParseReals(StringAgency* agency, const RainString& value, real* results, uint32 max)
+{
+	uint32 count = 0, start = 0;
+	for (uint32 i = 0; i < value.length && count < max; i++)
+		if (value.value[i] == ',')
+		{
+			results[count++] = ParseReal(agency->Add(value.value + start, i - start));
+			start = i + 1;
+		}
+	if (start < value.length && count < max) results[count++] = ParseReal(agency->Add(value.value + start, value.length - start));
+	return count;
+}
+
 void RainDebuggerVariable::SetValue(const RainString& value)
 {
 	if (IsValid() && address)
@@ -266,15 +279,27 @@ void RainDebuggerVariable::SetValue(const RainString& value)
 		else if (targetType == TYPE_Real) *(real*)valueAddress = ParseReal(agency->Add(value.value, value.length));
 		else if (targetType == TYPE_Real2)
 		{
-			//todo 给变量赋值
+			real results[2];
+			uint32 count = ParseReals(agency, value, results, 2);
+			if (count > 1) *(Real2*)valueAddress = Real2(results[0], results[1]);
+			else *(Real2*)valueAddress = Real2(results[0], results[0]);
 		}
 		else if (targetType == TYPE_Real3)
 		{
-
+			real results[3];
+			uint32 count = ParseReals(agency, value, results, 3);
+			if (count > 2) *(Real3*)valueAddress = Real3(results[0], results[1], results[2]);
+			else if (count > 1) *(Real3*)valueAddress = Real3(results[0], results[1], 0);
+			else *(Real3*)valueAddress = Real3(results[0], results[0], results[0]);
 		}
 		else if (targetType == TYPE_Real4)
 		{
-
+			real results[4];
+			uint32 count = ParseReals(agency, value, results, 4);
+			if (count > 3) *(Real4*)valueAddress = Real4(results[0], results[1], results[2], results[3]);
+			else if (count > 2) *(Real4*)valueAddress = Real4(results[0], results[1], results[2], 0);
+			else if (count > 1) *(Real4*)valueAddress = Real4(results[0], results[1], 0, 0);
+			else  *(Real4*)valueAddress = Real4(results[0], results[0], results[0], results[0]);
 		}
 		else if (targetType == TYPE_String)
 		{

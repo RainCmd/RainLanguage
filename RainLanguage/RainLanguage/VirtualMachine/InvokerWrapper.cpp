@@ -188,7 +188,7 @@ uint32 InvokerWrapper::GetArrayReturnValueLength(uint32 index) const
 	source->StateAssert(InvokerState::Completed);
 	ASSERT(source->info->returns.GetType(index).dimension, "不是数组");
 	Handle handle = *(Handle*)(source->data.GetPointer() + source->info->returns.GetOffset(index));
-	if (handle) source->kernel->heapAgency->GetArrayLength(handle);
+	if (handle) return source->kernel->heapAgency->GetArrayLength(handle);
 	else return 0;
 }
 
