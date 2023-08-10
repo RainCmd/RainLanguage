@@ -318,6 +318,8 @@ void Kernel::ClearBreakpoints()
 
 Kernel::~Kernel()
 {
+	for (Coroutine* index = coroutineAgency->GetHeadCoroutine(); index; index = index->next) index->exitMessage = stringAgency->Add(EXCEPTION_KERNEL_EXIT);
+	coroutineAgency->Update();
 	share->kernel = NULL;
 	share->Release();
 	share = NULL;

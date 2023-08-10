@@ -1,6 +1,7 @@
 #include "CoroutineAgency.h"
 #include "Coroutine.h"
 #include "../Public/VirtualMachine.h"
+#include "Exceptions.h"
 
 Invoker* CoroutineAgency::GetInvoker()
 {

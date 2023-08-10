@@ -19,3 +19,4 @@ constexpr auto EXCEPTION_ASSIGNMENT_READONLY_VARIABLE = TEXT("赋值只读变量");
 constexpr auto EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH = TEXT("参数列表不匹配");
 constexpr auto EXCEPTION_RETURN_LIST_DOES_NOT_MATCH = TEXT("返回值列表不匹配");
 constexpr auto EXCEPTION_IGNORE_WAIT_BUT_COROUTINE_NOT_COMPLETED = TEXT("忽略等待的协程中出现了等待一个未完成的协程");
+constexpr auto EXCEPTION_KERNEL_EXIT = TEXT("虚拟机被关闭");
