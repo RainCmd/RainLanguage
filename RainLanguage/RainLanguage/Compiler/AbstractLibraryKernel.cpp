@@ -95,16 +95,16 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 		abstractDelegate->space = space;
 		SpaceAddDeclaration(space, abstractDelegate->name, abstractDelegate->declaration);
 	}
-	for (uint32 x = 0; x < info->coroutines.Count(); x++)
+	for (uint32 x = 0; x < info->tasks.Count(); x++)
 	{
-		AbstractCoroutine* abstractCoroutine = library->coroutines[info->coroutines[x]];
-		abstractCoroutine->space = space;
-		SpaceAddDeclaration(space, abstractCoroutine->name, abstractCoroutine->declaration);
+		AbstractTask* abstractTask = library->tasks[info->tasks[x]];
+		abstractTask->space = space;
+		SpaceAddDeclaration(space, abstractTask->name, abstractTask->declaration);
 	}
 }
 
 AbstractLibrary::AbstractLibrary(const KernelLibraryInfo* info, const AbstractParameter& parameter) :AbstractSpace(NULL, TO_NATIVE_STRING(info->root->name), EMPTY_STRINGS), library(LIBRARY_KERNEL),
-variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), coroutines(info->coroutines.Count()), natives(0)
+variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), tasks(info->tasks.Count()), natives(0)
 {
 	for (uint32 i = 0; i < info->variables.Count(); i++)
 	{
@@ -198,13 +198,13 @@ variables(info->variables.Count()), functions(info->functions.Count()), enums(in
 			delegates.Add(new AbstractDelegate(TO_NATIVE_STRING(kernelDelegate->name), declaration, EMPTY_STRINGS, NULL, kernelDelegate->parameters, kernelDelegate->returns));
 		}
 	}
-	for (uint32 x = 0; x < info->coroutines.Count(); x++)
+	for (uint32 x = 0; x < info->tasks.Count(); x++)
 	{
-		const KernelLibraryInfo::Coroutine* kernelCoroutine = &info->coroutines[x];
-		if (kernelCoroutine->isPublic)
+		const KernelLibraryInfo::Task* kernelTask = &info->tasks[x];
+		if (kernelTask->isPublic)
 		{
-			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Coroutine, coroutines.Count(), NULL);
-			coroutines.Add(new AbstractCoroutine(TO_NATIVE_STRING(kernelCoroutine->name), declaration, EMPTY_STRINGS, NULL, kernelCoroutine->returns));
+			CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_KERNEL, Visibility::Public, DeclarationCategory::Task, tasks.Count(), NULL);
+			tasks.Add(new AbstractTask(TO_NATIVE_STRING(kernelTask->name), declaration, EMPTY_STRINGS, NULL, kernelTask->returns));
 		}
 	}
 

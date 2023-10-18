@@ -55,18 +55,18 @@ public:
 };
 
 class InvokerExpression;
-class BlurryCoroutineExpression :public Expression
+class BlurryTaskExpression :public Expression
 {
 public:
 	InvokerExpression* invoker;
 	bool start;
-	inline BlurryCoroutineExpression(const Anchor& anchor, InvokerExpression* invoker, bool start) :Expression(ExpressionType::BlurryCoroutineExpression, anchor, List<Type, true>(1)), invoker(invoker), start(start)
+	inline BlurryTaskExpression(const Anchor& anchor, InvokerExpression* invoker, bool start) :Expression(ExpressionType::BlurryTaskExpression, anchor, List<Type, true>(1)), invoker(invoker), start(start)
 	{
 		returns.Add(TYPE_Blurry);
 		attribute = Attribute::Value;
 	}
 	void Generator(LogicGenerateParameter& parameter);
-	~BlurryCoroutineExpression();
+	~BlurryTaskExpression();
 };
 
 class BlurryLambdaExpression :public Expression

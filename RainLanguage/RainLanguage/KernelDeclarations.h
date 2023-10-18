@@ -4,7 +4,7 @@
 
 enum KERNEL_TYPE_INDEX
 {
-	KERNEL_TYPE_ENUM_INDEX_CoroutineState = 0,
+	KERNEL_TYPE_ENUM_INDEX_TaskState = 0,
 	KERNEL_TYPE_ENUM_INDEX_TypeCode,
 	KERNEL_TYPE_ENUM_COUNT,
 
@@ -25,7 +25,7 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_CLASS_INDEX_Handle = 0,
 	KERNEL_TYPE_CLASS_INDEX_Interface,
 	KERNEL_TYPE_CLASS_INDEX_Delegate,
-	KERNEL_TYPE_CLASS_INDEX_Coroutine,
+	KERNEL_TYPE_CLASS_INDEX_Task,
 	KERNEL_TYPE_CLASS_INDEX_Array,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes,
@@ -46,13 +46,13 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly,
 	KERNEL_TYPE_CLASS_COUNT,
 };
-enum KERNEL_COROUTINE_STATE_INDEX
+enum KERNEL_TASK_STATE_INDEX
 {
-	KERNEL_COROUTINE_STATE_INDEX_Unstart,
-	KERNEL_COROUTINE_STATE_INDEX_Running,
-	KERNEL_COROUTINE_STATE_INDEX_Completed,
-	KERNEL_COROUTINE_STATE_INDEX_Aborted,
-	KERNEL_COROUTINE_STATE_INDEX_Invalid,
+	KERNEL_TASK_STATE_INDEX_Unstart,
+	KERNEL_TASK_STATE_INDEX_Running,
+	KERNEL_TASK_STATE_INDEX_Completed,
+	KERNEL_TASK_STATE_INDEX_Aborted,
+	KERNEL_TASK_STATE_INDEX_Invalid,
 };
 enum class KernelReflectionTypeCode
 {
@@ -73,7 +73,7 @@ enum class KernelReflectionTypeCode
 	Handle,
 	Interface,
 	Delegate,
-	Coroutine,
+	Task,
 	Array,
 };
 enum KERNEL_TYPE_CODE
@@ -95,7 +95,7 @@ enum KERNEL_TYPE_CODE
 	KERNEL_TYPE_CODE_Handle,
 	KERNEL_TYPE_CODE_Interface,
 	KERNEL_TYPE_CODE_Delegate,
-	KERNEL_TYPE_CODE_Coroutine,
+	KERNEL_TYPE_CODE_Task,
 	KERNEL_TYPE_CODE_Array,
 };
 enum KERNEL_OPERATOR
@@ -234,7 +234,7 @@ enum MEMORY_ALIGNMENT
 	MEMORY_ALIGNMENT_REAL = 2,
 	MEMORY_ALIGNMENT_MAX = 2,
 };
-const Type TYPE_CoroutineState = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNEL_TYPE_ENUM_INDEX_CoroutineState, 0);
+const Type TYPE_TaskState = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNEL_TYPE_ENUM_INDEX_TaskState, 0);
 
 const Type TYPE_Bool = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Bool, 0);
 const Type TYPE_Byte = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Byte, 0);
@@ -254,7 +254,7 @@ const Type TYPE_Reflection_TypeCode = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNE
 const Type TYPE_Handle = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Handle, 0);
 const Type TYPE_Interface = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Interface, 0);
 const Type TYPE_Delegate = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Delegate, 0);
-const Type TYPE_Coroutine = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Coroutine, 0);
+const Type TYPE_Task = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Task, 0);
 const Type TYPE_Array = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Array, 0);
 
 const Type TYPE_Reflection_ReadonlyStrings = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings, 0);
@@ -329,7 +329,7 @@ inline bool IsHandleType(const Type& type)
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine: return true;
+		case TypeCode::Task: return true;
 	}
 	return false;
 }

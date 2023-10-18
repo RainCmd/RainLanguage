@@ -96,7 +96,7 @@ String RuntimeInfo::GetFullName(Kernel* kernel, uint32 library)
 RuntimeSpace::RuntimeSpace(StringAgency* agency, const Library* library, const Space* space, const List<string, true>& attributes)
 	:reflection(NULL), name(agency->AddAndRef(library->stringAgency->Get(space->name))), parent(INVALID), attributes(attributes),
 	children(space->children), variables(space->variables), enums(space->enums), structs(space->structs), classes(space->classes), interfaces(space->interfaces),
-	delegates(space->delegates), coroutines(space->coroutines), functions(space->functions), natives(space->natives)
+	delegates(space->delegates), tasks(space->tasks), functions(space->functions), natives(space->natives)
 {
 }
 

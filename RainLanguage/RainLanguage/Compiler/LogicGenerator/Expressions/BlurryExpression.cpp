@@ -1,5 +1,5 @@
 #include "BlurryExpression.h"
-#include "CoroutineExpression.h"
+#include "TaskExpression.h"
 #include "InvokerExpression.h"
 
 void BlurryVariableDeclarationExpression::Generator(LogicGenerateParameter& parameter)
@@ -32,12 +32,12 @@ MethodVirtualExpression::~MethodVirtualExpression()
 	delete target; target = NULL;
 }
 
-void BlurryCoroutineExpression::Generator(LogicGenerateParameter& parameter)
+void BlurryTaskExpression::Generator(LogicGenerateParameter& parameter)
 {
-	GeneratCoroutineParameter(parameter, invoker, start, TYPE_Coroutine);
+	GeneratTaskParameter(parameter, invoker, start, TYPE_Task);
 }
 
-BlurryCoroutineExpression::~BlurryCoroutineExpression()
+BlurryTaskExpression::~BlurryTaskExpression()
 {
 	delete invoker; invoker = NULL;
 }

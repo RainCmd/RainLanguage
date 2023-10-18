@@ -48,7 +48,7 @@ void CreateSelfAbstractSpace(AbstractSpace* space, CompilingLibrary* info, Compi
 	}
 }
 AbstractLibrary::AbstractLibrary(CompilingLibrary* info, const AbstractParameter& parameter) :AbstractSpace(NULL, parameter.manager->name, ToNativeAttributes(&info->attributes, parameter.messages)),
-library(LIBRARY_KERNEL), variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), coroutines(info->coroutines.Count()), natives(info->natives.Count())
+library(LIBRARY_KERNEL), variables(info->variables.Count()), functions(info->functions.Count()), enums(info->enums.Count()), structs(info->structs.Count()), classes(info->classes.Count()), interfaces(info->interfaces.Count()), delegates(info->delegates.Count()), tasks(info->tasks.Count()), natives(info->natives.Count())
 {
 	CreateSelfAbstractSpace(this, info, info, parameter.messages);
 	for (uint32 i = 0; i < info->variables.Count(); i++)
@@ -106,10 +106,10 @@ library(LIBRARY_KERNEL), variables(info->variables.Count()), functions(info->fun
 		CompilingDelegate* compiling = info->delegates[i];
 		delegates.Add(new AbstractDelegate(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->parameters.Count()), TupleInfo(compiling->returns.Count())));
 	}
-	for (uint32 i = 0; i < info->coroutines.Count(); i++)
+	for (uint32 i = 0; i < info->tasks.Count(); i++)
 	{
-		CompilingCoroutine* compiling = info->coroutines[i];
-		coroutines.Add(new AbstractCoroutine(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->returns.Count())));
+		CompilingTask* compiling = info->tasks[i];
+		tasks.Add(new AbstractTask(DECLARATION_PARAMETERS(compiling), TupleInfo(compiling->returns.Count())));
 	}
 	for (uint32 i = 0; i < info->natives.Count(); i++)
 	{

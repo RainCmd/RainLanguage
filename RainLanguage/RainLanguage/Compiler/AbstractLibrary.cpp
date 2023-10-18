@@ -68,8 +68,8 @@ AbstractLibrary::~AbstractLibrary()
 	interfaces.Clear();
 	for (uint32 i = 0; i < delegates.Count(); i++) delete delegates[i];
 	delegates.Count();
-	for (uint32 i = 0; i < coroutines.Count(); i++) delete coroutines[i];
-	coroutines.Count();
+	for (uint32 i = 0; i < tasks.Count(); i++) delete tasks[i];
+	tasks.Count();
 	for (uint32 i = 0; i < natives.Count(); i++) delete natives[i];
 	natives.Count();
 }

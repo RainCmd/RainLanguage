@@ -39,7 +39,7 @@ CompilingDeclaration GetGlobalReferenceCompilingDeclaration(const Declaration& d
 		case TypeCode::Handle:return CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.index, NULL);
 		case TypeCode::Interface:return CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Interface, declaration.index, NULL);
 		case TypeCode::Delegate:return CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Delegate, declaration.index, NULL);
-		case TypeCode::Coroutine:return CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Coroutine, declaration.index, NULL);
+		case TypeCode::Task:return CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Task, declaration.index, NULL);
 		default: break;
 	}
 	EXCEPTION("无效的类型");
@@ -265,14 +265,14 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 			for (uint32 i = 0; i < abstractDelegate->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(abstractDelegate->returns.GetType(i)));
 			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Delegate, index, NULL);
 		}
-		case DeclarationCategory::Coroutine:
+		case DeclarationCategory::Task:
 		{
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
 			GlobalReferenceLibrary* library = &libraries[libraryIndex];
-			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->coroutines);
-			AbstractCoroutine* cbstractCoroutine = manager->GetLibrary(declaration.library)->coroutines[declaration.index];
-			for (uint32 i = 0; i < cbstractCoroutine->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(cbstractCoroutine->returns.GetType(i)));
-			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Coroutine, index, NULL);
+			uint32 index = GetGlobalReferenceDefinitionIndex(&declarationMap, declaration, libraryIndex, NULL, library->tasks);
+			AbstractTask* cbstractTask = manager->GetLibrary(declaration.library)->tasks[declaration.index];
+			for (uint32 i = 0; i < cbstractTask->returns.Count(); i++) AddReference(GetGlobalReferenceCompilingDeclaration(cbstractTask->returns.GetType(i)));
+			return CompilingDeclaration(libraryIndex, Visibility::None, DeclarationCategory::Task, index, NULL);
 		}
 		case DeclarationCategory::Native:
 		{
@@ -301,7 +301,7 @@ Declaration GlobalReference::AddReference(const Declaration& declaration)
 		case TypeCode::Handle: ADD_DECLARATION_REFERENCE(Class, Handle);
 		case TypeCode::Interface: ADD_DECLARATION_REFERENCE(Interface, Interface);
 		case TypeCode::Delegate: ADD_DECLARATION_REFERENCE(Delegate, Delegate);
-		case TypeCode::Coroutine: ADD_DECLARATION_REFERENCE(Coroutine, Coroutine);
+		case TypeCode::Task: ADD_DECLARATION_REFERENCE(Task, Task);
 		default: EXCEPTION("无效的TypeCode");
 	}
 }
@@ -361,8 +361,8 @@ void GlobalReference::AddReference(const CompilingDeclaration& declaration, uint
 			case DeclarationCategory::Delegate:
 				libraries[relyDeclaration.library].delegates[relyDeclaration.index].references.Add(reference);
 				break;
-			case DeclarationCategory::Coroutine:
-				libraries[relyDeclaration.library].coroutines[relyDeclaration.index].references.Add(reference);
+			case DeclarationCategory::Task:
+				libraries[relyDeclaration.library].tasks[relyDeclaration.index].references.Add(reference);
 				break;
 			case DeclarationCategory::Native:
 				libraries[relyDeclaration.library].natives[relyDeclaration.index].references.Add(reference);

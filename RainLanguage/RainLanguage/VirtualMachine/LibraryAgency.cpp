@@ -4,7 +4,7 @@
 #include "../Public/VirtualMachine.h"
 #include "Kernel.h"
 #include "HeapAgency.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 #include "Caller.h"
 
 LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), programDatabaseLoader(parameter->programDatabaseLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
@@ -14,7 +14,7 @@ void LibraryAgency::Init(const Library* initialLibraries, uint32 count)
 	kernelLibrary = new RuntimeLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary());
 	kernelLibrary->kernel = kernel;
 	kernelLibrary->InitRuntimeData(GetKernelLibrary(), LIBRARY_KERNEL);
-	kernel->coroutineAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
+	kernel->taskAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	for (uint32 i = 0; i < count; i++) Load(initialLibraries + i);
 }
 
@@ -46,7 +46,7 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 		}
 		case TypeCode::Interface: return GetKernelLibrary()->classes[TYPE_Interface.index].size;
 		case TypeCode::Delegate: return GetKernelLibrary()->classes[TYPE_Delegate.index].size;
-		case TypeCode::Coroutine: return GetKernelLibrary()->classes[TYPE_Coroutine.index].size;
+		case TypeCode::Task: return GetKernelLibrary()->classes[TYPE_Task.index].size;
 	}
 	EXCEPTION("无效的TypeCode");
 }
@@ -81,7 +81,7 @@ RuntimeInfo* LibraryAgency::GetRuntimeInfo(const Type& type)
 		case TypeCode::Handle: return GetClass(type);
 		case TypeCode::Interface: return GetInterface(type);
 		case TypeCode::Delegate: return GetDelegate(type);
-		case TypeCode::Coroutine: return GetCoroutine(type);
+		case TypeCode::Task: return GetTask(type);
 		default: EXCEPTION("类型错误");
 	}
 }
@@ -119,11 +119,11 @@ RuntimeDelegate* LibraryAgency::GetDelegate(const Type& type)
 	return &GetLibrary(type.library)->delegates[type.index];
 }
 
-RuntimeCoroutine* LibraryAgency::GetCoroutine(const Type& type)
+RuntimeTask* LibraryAgency::GetTask(const Type& type)
 {
-	if (type.dimension) return &GetLibrary(TYPE_Array.library)->coroutines[TYPE_Array.index];
-	ASSERT_DEBUG(type.code == TypeCode::Coroutine, "定义类型检查失败");
-	return &GetLibrary(type.library)->coroutines[type.index];
+	if (type.dimension) return &GetLibrary(TYPE_Array.library)->tasks[TYPE_Array.index];
+	ASSERT_DEBUG(type.code == TypeCode::Task, "定义类型检查失败");
+	return &GetLibrary(type.library)->tasks[type.index];
 }
 
 RuntimeVariable* LibraryAgency::GetVariable(const Variable& variable)
@@ -179,7 +179,7 @@ bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			space = GetRuntimeInfo(type)->space;
 			return true;
 	}
@@ -202,7 +202,7 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 {
 	uint8* address = data.GetPointer();
 	RuntimeLibrary* result = new RuntimeLibrary(kernel, libraries.Count(), library);
-	if (address != data.GetPointer()) kernel->coroutineAgency->UpdateGlobalDataCache(data.GetPointer());
+	if (address != data.GetPointer()) kernel->taskAgency->UpdateGlobalDataCache(data.GetPointer());
 	libraries.Add(result);
 	for (uint32 i = 0; i < library->imports.Count(); i++)
 	{
@@ -211,7 +211,7 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 	}
 	result->kernel = kernel;
 	result->InitRuntimeData(library, LIBRARY_SELF);
-	kernel->coroutineAgency->CreateInvoker(result->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
+	kernel->taskAgency->CreateInvoker(result->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	return result;
 }
 
@@ -240,7 +240,7 @@ bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectTyp
 				return GetLibrary(objectType.library)->interfaces[objectType.index].inherits.Contains(variableType);
 		}
 		else if (objectType.code == TypeCode::Delegate) return variableType == TYPE_Delegate || variableType == TYPE_Handle;
-		else if (objectType.code == TypeCode::Coroutine) return variableType == TYPE_Coroutine || variableType == TYPE_Handle;
+		else if (objectType.code == TypeCode::Task) return variableType == TYPE_Task || variableType == TYPE_Handle;
 		else if (objectType == TYPE_Integer) return variableType.code == TypeCode::Enum;
 		else if (objectType == TYPE_Array) return variableType == TYPE_Handle;
 	}
@@ -260,7 +260,7 @@ Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 	if (type.dimension) type = TYPE_Array;
 	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
 	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Task) type = TYPE_Task;
 
 	if (function.declaration == type) return GetFunction(function);
 	else if (function.declaration.code == TypeCode::Struct) type = TYPE_Handle;

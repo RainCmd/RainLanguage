@@ -134,10 +134,10 @@ struct FileDelegate :FileDeclaration
 	List<FileType> returns;
 	inline FileDelegate(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileParameter>& parameters, const List<FileType>& returns) :FileDeclaration(name, visibility, space), parameters(parameters), returns(returns) {}
 };
-struct FileCoroutine :FileDeclaration
+struct FileTask :FileDeclaration
 {
 	List<FileType> returns;
-	inline FileCoroutine(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileType>& returns) :FileDeclaration(name, visibility, space), returns(returns) {}
+	inline FileTask(const Anchor& name, Visibility visibility, FileSpace* space, const List<FileType>& returns) :FileDeclaration(name, visibility, space), returns(returns) {}
 };
 struct FileNative :FileDeclaration
 {
@@ -160,7 +160,7 @@ struct FileSpace
 	List<FileClass> classes;
 	List<FileInterface> interfaces;
 	List<FileDelegate> delegates;
-	List<FileCoroutine> coroutines;
+	List<FileTask> tasks;
 	List<FileNative> natives;
 
 	List<CompilingSpace*, true> relyCompilingSpaces;

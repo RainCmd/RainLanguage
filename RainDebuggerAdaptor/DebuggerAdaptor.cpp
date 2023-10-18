@@ -1,10 +1,10 @@
 #include "DebuggerAdaptor.h"
 
-void DebuggerAdaptor::OnHitBreakpoint(uint64 coroutine)
+void DebuggerAdaptor::OnHitBreakpoint(uint64 task)
 {
 }
 
-void DebuggerAdaptor::OnCoroutineExit(uint64 coroutine, const RainString& message)
+void DebuggerAdaptor::OnTaskExit(uint64 task, const RainString& message)
 {
 }
 

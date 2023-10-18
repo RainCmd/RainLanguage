@@ -174,13 +174,13 @@ void FileSpace::Tidy(DeclarationManager* manager)
 		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Delegate, library->delegates, NULL);
 		library->delegates.Add(new CompilingDelegate(file->name, *declaration, file->attributes, compiling, file->parameters.Count(), file->returns.Count()));
 	}
-	for (uint32 x = 0; x < coroutines.Count(); x++)
+	for (uint32 x = 0; x < tasks.Count(); x++)
 	{
-		FileCoroutine* file = &coroutines[x];
+		FileTask* file = &tasks[x];
 		if (TRY_GET_DECLARATIONS) { DUPLICATE_DECLARATION; }
 		else ADD_DECLARATIONS;
-		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Coroutine, library->coroutines, NULL);
-		library->coroutines.Add(new CompilingCoroutine(file->name, *declaration, file->attributes, compiling, file->returns.Count()));
+		REGISTER_DECLARATION(declaration, file->visibility, DeclarationCategory::Task, library->tasks, NULL);
+		library->tasks.Add(new CompilingTask(file->name, *declaration, file->attributes, compiling, file->returns.Count()));
 	}
 	for (uint32 x = 0; x < natives.Count(); x++)
 	{

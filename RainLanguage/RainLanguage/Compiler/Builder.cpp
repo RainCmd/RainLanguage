@@ -137,8 +137,8 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 		CalculatedTupleInfo(manager, library->delegates[x]->parameters);
 		CalculatedTupleInfo(manager, library->delegates[x]->returns);
 	}
-	for (uint32 x = 0; x < library->coroutines.Count(); x++)
-		CalculatedTupleInfo(manager, library->coroutines[x]->returns);
+	for (uint32 x = 0; x < library->tasks.Count(); x++)
+		CalculatedTupleInfo(manager, library->tasks[x]->returns);
 	for (uint32 x = 0; x < library->natives.Count(); x++)
 	{
 		CalculatedTupleInfo(manager, library->natives[x]->parameters);

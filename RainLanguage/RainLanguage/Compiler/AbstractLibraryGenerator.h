@@ -18,7 +18,7 @@ inline DeclarationCategory CodeToCategory(TypeCode code)
 		case TypeCode::Handle: return DeclarationCategory::Class;
 		case TypeCode::Interface: return DeclarationCategory::Interface;
 		case TypeCode::Delegate: return DeclarationCategory::Delegate;
-		case TypeCode::Coroutine: return DeclarationCategory::Coroutine;
+		case TypeCode::Task: return DeclarationCategory::Task;
 	}
 	return DeclarationCategory::Invalid;
 }

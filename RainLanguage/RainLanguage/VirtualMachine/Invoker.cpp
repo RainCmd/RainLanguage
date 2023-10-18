@@ -1,11 +1,11 @@
 #include "Invoker.h"
 #include "../KernelDeclarations.h"
-#include "Coroutine.h"
+#include "Task.h"
 #include "Kernel.h"
 #include "HeapAgency.h"
 #include "LibraryAgency.h"
 #include "EntityAgency.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 
 inline bool TryMatch(const Type& source, const Type& target)
 {
@@ -30,19 +30,19 @@ void Invoker::ParameterTypeAssert(uint32 index, Type type) const
 bool Invoker::IsPause() const
 {
 	StateAssert(InvokerState::Running);
-	return coroutine->pause;
+	return task->pause;
 }
 
 void Invoker::Pause() const
 {
 	StateAssert(InvokerState::Running);
-	coroutine->pause = true;
+	task->pause = true;
 }
 
 void Invoker::Resume() const
 {
 	StateAssert(InvokerState::Running);
-	coroutine->pause = false;
+	task->pause = false;
 }
 
 void Invoker::GetStructReturnValue(uint32 index, uint8* address, const Type& type) const
@@ -256,13 +256,13 @@ void Invoker::AppendParameter(Type type)
 
 void Invoker::Reference()
 {
-	if (kernel) kernel->coroutineAgency->Reference(this);
+	if (kernel) kernel->taskAgency->Reference(this);
 	else hold++;
 }
 
 void Invoker::Release()
 {
-	if (kernel) kernel->coroutineAgency->Release(this);
+	if (kernel) kernel->taskAgency->Release(this);
 	else
 	{
 		hold--;
@@ -300,7 +300,7 @@ void Invoker::Recycle()
 			case InvokerState::Invalid:
 			default: return;
 		}
-		kernel->coroutineAgency->Recycle(this);
+		kernel->taskAgency->Recycle(this);
 		exceptionStackFrames.Clear();
 	}
 }
@@ -347,7 +347,7 @@ void Invoker::Start(bool immediately, bool ignoreWait)
 {
 	StateAssert(InvokerState::Unstart);
 	state = InvokerState::Running;
-	kernel->coroutineAgency->Start(this, immediately, ignoreWait);
+	kernel->taskAgency->Start(this, immediately, ignoreWait);
 }
 
 void Invoker::Abort(const character* chars, uint32 length)
@@ -355,6 +355,6 @@ void Invoker::Abort(const character* chars, uint32 length)
 	String message = kernel->stringAgency->Add(chars, length);
 	if (message.IsEmpty())return;
 	StateAssert(InvokerState::Running);
-	coroutine->exitMessage = message;
+	task->exitMessage = message;
 	state = InvokerState::Aborted;
 }

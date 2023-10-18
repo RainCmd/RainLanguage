@@ -30,7 +30,7 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(const CompilingDeclarati
 		case DeclarationCategory::Interface: return library->interfaces[declaration.index];
 		case DeclarationCategory::InterfaceFunction: return library->interfaces[declaration.definition];
 		case DeclarationCategory::Delegate: return library->delegates[declaration.index];
-		case DeclarationCategory::Coroutine: return library->coroutines[declaration.index];
+		case DeclarationCategory::Task: return library->tasks[declaration.index];
 		case DeclarationCategory::Native: return library->natives[declaration.index];
 		case DeclarationCategory::Lambda:
 		case DeclarationCategory::LambdaClosureValue:
@@ -57,8 +57,8 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
 			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Interface, type.index, NULL));
 		case TypeCode::Delegate:
 			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Delegate, type.index, NULL));
-		case TypeCode::Coroutine:
-			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Coroutine, type.index, NULL));
+		case TypeCode::Task:
+			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Task, type.index, NULL));
 		default: EXCEPTION("无效的类型");
 	}
 }
@@ -88,8 +88,8 @@ List<Type, true>& DeclarationManager::GetReturns(const CompilingDeclaration& dec
 			return library->interfaces[declaration.definition]->functions[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Delegate:
 			return library->delegates[declaration.index]->returns.GetTypes();
-		case DeclarationCategory::Coroutine:
-			return library->coroutines[declaration.index]->returns.GetTypes();
+		case DeclarationCategory::Task:
+			return library->tasks[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Native:
 			return library->natives[declaration.index]->returns.GetTypes();
 		case DeclarationCategory::Lambda:
@@ -127,7 +127,7 @@ const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclarat
 			return Span<Type, true>(&library->interfaces[declaration.definition]->functions[declaration.index]->parameters.GetTypes(), 1);
 		case DeclarationCategory::Delegate:
 			return Span<Type, true>(&library->delegates[declaration.index]->parameters.GetTypes());
-		case DeclarationCategory::Coroutine: break;
+		case DeclarationCategory::Task: break;
 		case DeclarationCategory::Native:
 			return Span<Type, true>(&library->natives[declaration.index]->parameters.GetTypes());
 		case DeclarationCategory::Lambda:
@@ -170,7 +170,7 @@ uint32 DeclarationManager::GetStackSize(const Type& type, uint8& alignment)
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			alignment = MEMORY_ALIGNMENT_4;
 			return SIZE(Handle);
 		default: break;
@@ -199,7 +199,7 @@ bool DeclarationManager::IsBitwise(const Type& type)
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine: return false;
+		case TypeCode::Task: return false;
 		default: break;
 	}
 	EXCEPTION("无效的类型");
@@ -274,9 +274,9 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 				return true;
 			}
 		}
-		else if (subType.code == TypeCode::Coroutine)
+		else if (subType.code == TypeCode::Task)
 		{
-			if (baseType == TYPE_Coroutine)
+			if (baseType == TYPE_Task)
 			{
 				depth = 1;
 				return true;

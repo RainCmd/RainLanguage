@@ -292,7 +292,7 @@ void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visib
 }
 
 FileSpace::FileSpace(CompilingSpace* compiling, uint32 parentIndent, ParseParameter* parameter) :compiling(compiling), attributes(0), children(0), imports(0),
-variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), natives(0), relyCompilingSpaces(0), relySpaces(0)
+variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), natives(0), relyCompilingSpaces(0), relySpaces(0)
 {
 	uint32 indent = INVALID;
 	List<Anchor> attributeCollector = List<Anchor>(0);
@@ -413,13 +413,13 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributeCollec
 		(new (delegates.Add())FileDelegate(name, visibility, this, parameters, returns))->attributes.Add(attributeCollector);
 		attributeCollector.Clear();
 	}
-	else if (lexical.anchor == KeyWord_coroutine())
+	else if (lexical.anchor == KeyWord_task())
 	{
 		List<FileType> returns = List<FileType>(0);
 		if (TryParseTuple(line, lexical.anchor.GetEnd(), name, false, returns, parameter->messages))
 		{
 			CheckLineEnd(line, name.GetEnd(), parameter->messages);
-			(new (coroutines.Add())FileCoroutine(name, visibility, this, returns))->attributes.Add(attributeCollector);
+			(new (tasks.Add())FileTask(name, visibility, this, returns))->attributes.Add(attributeCollector);
 		}
 		attributeCollector.Clear();
 	}

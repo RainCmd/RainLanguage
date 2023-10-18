@@ -1,4 +1,4 @@
-#include "Coroutine.h"
+#include "Task.h"
 #include "../Instruct.h"
 #include "../KernelLibraryInfo.h"
 #include "../KernelDeclarations.h"
@@ -6,7 +6,7 @@
 #include "Kernel.h"
 #include "LibraryAgency.h"
 #include "RuntimeLibrary.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 #include "HeapAgency.h"
 #include "EntityAgency.h"
 #include "Exceptions.h"
@@ -38,7 +38,7 @@
 			String error = kernel->heapAgency->TryGetArrayPoint(handle, VARIABLE(integer, lengthValue), address);\
 			address += INSTRUCT_VALUE(uint32, (instructOffset) + 8);
 
-#define OPERATOR(resultType,leftType,operation,rightType) \
+#define OPERATOR(resultType, leftType, operation, rightType) \
 			{\
 				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);\
 				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);\
@@ -53,21 +53,21 @@ inline uint8* GetReturnPoint(Kernel* kernel, uint8* stack, uint8* functionStack,
 	else return kernel->libraryAgency->data.GetPointer() + pointer;
 }
 
-Coroutine::Coroutine(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(INVALID), wait(0), stack(NULL)
+Task::Task(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(INVALID), wait(0), stack(NULL)
 {
 	stack = Malloc<uint8>(size);
 	cacheData[0] = kernel->libraryAgency->data.GetPointer();
 	cacheData[1] = stack;
 }
 
-void Coroutine::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
+void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 {
 	pause = false;
 	exitMessage = String();
 	wait = 0;
 	this->invoker = sourceInvoker;
 	instanceID = invoker->instanceID;
-	invoker->coroutine = this;
+	invoker->task = this;
 	kernelInvoker = NULL;
 	ignoreWait = isIgnoreWait;
 	this->pointer = invoker->entry;
@@ -80,14 +80,14 @@ void Coroutine::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 		returnAddress[i] = LOCAL(invoker->info->returns.GetOffsets()[i]);
 	invoker->GetParameters(stack + bottom + SIZE(Frame) + invoker->info->returns.Count() * 4);
 }
-void Coroutine::Exit(const String& message, uint32 exitPointer)
+void Task::Exit(const String& message, uint32 exitPointer)
 {
 	pointer = exitPointer;
 	exitMessage = message;
 	invoker->exceptionStackFrames.Add(pointer);
 	for (Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) invoker->exceptionStackFrames.Add(index->pointer);
 }
-void Coroutine::Run()
+void Task::Run()
 {
 	if (pointer == INVALID)return;
 	cacheData[1] = stack + bottom;
@@ -137,18 +137,18 @@ label_next_instruct:
 				}
 			}
 			goto label_next_instruct;
-		case Instruct::BASE_WaitCoroutine:
+		case Instruct::BASE_WaitTask:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle handle = VARIABLE(Handle, handleValue);
-			uint8* coroutine;
+			uint8* task;
 			Invoker* waitingInvoker;
-			if (!kernel->heapAgency->TryGetPoint(handle, coroutine)) EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_NULL_REFERENCE);
-			waitingInvoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
-			ASSERT_DEBUG(waitingInvoker, "协程的引用计数逻辑可能有bug");
+			if (!kernel->heapAgency->TryGetPoint(handle, task)) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_NULL_REFERENCE);
+			waitingInvoker = kernel->taskAgency->GetInvoker(*(uint64*)task);
+			ASSERT_DEBUG(waitingInvoker, "任务的引用计数逻辑可能有bug");
 			if (waitingInvoker->state < InvokerState::Running) goto label_next_instruct;
-			else if (ignoreWait) EXCEPTION_EXIT(BASE_WaitCoroutine, EXCEPTION_IGNORE_WAIT_BUT_COROUTINE_NOT_COMPLETED);
-			EXCEPTION_JUMP(4, BASE_WaitCoroutine);
+			else if (ignoreWait) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED);
+			EXCEPTION_JUMP(4, BASE_WaitTask);
 		}
 		goto label_next_instruct;
 		case Instruct::BASE_WaitBack:
@@ -296,16 +296,16 @@ label_next_instruct:
 				default: EXCEPTION("无效的函数类型");
 			}
 		}
-		case Instruct::BASE_CreateCoroutine:
+		case Instruct::BASE_CreateTask:
 		{
 			//Handle&		result
-			//Declaration	协程定义
+			//Declaration	任务定义
 			//FunctionType	函数类型
 			// 函数类型:
 			//		Global:
 			//			Function		全局函数索引
 			//		Native:
-			//			本地函数不能直接创捷协程
+			//			本地函数不能直接创捷任务
 			//		Box:
 			//			Handle&			被调用的结构体装箱后的对象
 			//			MemberFunction	成员函数索引
@@ -323,15 +323,15 @@ label_next_instruct:
 			kernel->heapAgency->StrongRelease(result);
 			result = kernel->heapAgency->Alloc(declaration);
 			kernel->heapAgency->StrongReference(result);
-			uint64& coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
+			uint64& task = *(uint64*)kernel->heapAgency->GetPoint(result);
 			switch (INSTRUCT_VALUE(FunctionType, 5 + SIZE(Declaration)))
 			{
 				case FunctionType::Global:
 				{
 					Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
-					Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(function);
+					Invoker* newInvoker = kernel->taskAgency->CreateInvoker(function);
 					newInvoker->Reference();
-					coroutine = newInvoker->instanceID;
+					task = newInvoker->instanceID;
 					flag = false;
 					instruct += 6 + SIZE(Declaration) + SIZE(Function);
 				}
@@ -346,14 +346,14 @@ label_next_instruct:
 					{
 						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
 						ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
-						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
 						newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
 						newInvoker->Reference();
-						coroutine = newInvoker->instanceID;
+						task = newInvoker->instanceID;
 						flag = true;
 					}
-					else EXCEPTION_EXIT(BASE_CreateCoroutine_Box, EXCEPTION_NULL_REFERENCE);
-					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine_Box);
+					else EXCEPTION_EXIT(BASE_CreateTask_Box, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask_Box);
 				}
 				goto label_next_instruct;
 				case FunctionType::Reality:
@@ -362,7 +362,7 @@ label_next_instruct:
 					uint8* address = &VARIABLE(uint8, addressValue);
 					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
 					Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
-					Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+					Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
 					if (IsHandleType(targetType)) newInvoker->SetHandleParameter(0, *(Handle*)address);
 					else newInvoker->SetStructParameter(0, address, targetType);
 					flag = true;
@@ -378,74 +378,74 @@ label_next_instruct:
 					if (kernel->heapAgency->TryGetType(target, type))
 					{
 						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
+						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
 						newInvoker->Reference();
-						coroutine = newInvoker->instanceID;
+						task = newInvoker->instanceID;
 					}
-					else EXCEPTION_EXIT(BASE_CreateCoroutine, EXCEPTION_NULL_REFERENCE);
-					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateCoroutine);
+					else EXCEPTION_EXIT(BASE_CreateTask, EXCEPTION_NULL_REFERENCE);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask);
 				}
 				goto label_next_instruct;
 				default: EXCEPTION("无效的函数类型");
 			}
 		}
-		case Instruct::BASE_CreateDelegateCoroutine:
+		case Instruct::BASE_CreateDelegateTask:
 		{
 			//Handle&		result
-			//Declaration	协程定义
+			//Declaration	任务定义
 			//Handle&		委托对象
 			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& result = VARIABLE(Handle, reaultValue);
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
 			uint32 delegateHandleValue = INSTRUCT_VALUE(uint32, 5 + SIZE(Declaration));
 			Handle delegateHandle = VARIABLE(Handle, delegateHandleValue);
-			Delegate delegateInfo; uint64 coroutine;
-			if (kernel->heapAgency->TryGetValue(delegateHandle, delegateInfo)) EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
+			Delegate delegateInfo; uint64 task;
+			if (kernel->heapAgency->TryGetValue(delegateHandle, delegateInfo)) EXCEPTION_EXIT(BASE_CreateDelegateTask, EXCEPTION_NULL_REFERENCE);
 			kernel->heapAgency->StrongRelease(result);
 			result = kernel->heapAgency->Alloc(declaration);
 			kernel->heapAgency->StrongReference(result);
-			coroutine = *(uint64*)kernel->heapAgency->GetPoint(result);
+			task = *(uint64*)kernel->heapAgency->GetPoint(result);
 			switch (delegateInfo.type)
 			{
 				case FunctionType::Global:
 				{
-					Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+					Invoker* newInvoker = kernel->taskAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 					newInvoker->Reference();
-					coroutine = newInvoker->instanceID;
+					task = newInvoker->instanceID;
 					flag = false;
 				}
 				break;
-				case FunctionType::Native: EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_INVALID_COROUTINE);
+				case FunctionType::Native: EXCEPTION_EXIT(BASE_CreateDelegateTask, EXCEPTION_INVALID_TASK);
 				case FunctionType::Box:
 				{
 					Type targetType;
 					if (kernel->heapAgency->TryGetType(delegateInfo.target, targetType))
 					{
-						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 						newInvoker->Reference();
 						newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(delegateInfo.target), targetType);
-						coroutine = newInvoker->instanceID;
+						task = newInvoker->instanceID;
 						flag = true;
 					}
-					else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateDelegateTask, EXCEPTION_NULL_REFERENCE);
 				}
 				break;
 				case FunctionType::Reality:
 				case FunctionType::Virtual:
 					if (kernel->heapAgency->IsValid(delegateInfo.target))
 					{
-						Invoker* newInvoker = kernel->coroutineAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
+						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(Function(delegateInfo.library, delegateInfo.function));
 						newInvoker->Reference();
 						newInvoker->SetHandleParameter(0, delegateInfo.target);
-						coroutine = newInvoker->instanceID;
+						task = newInvoker->instanceID;
 						flag = true;
 					}
-					else EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateDelegateTask, EXCEPTION_NULL_REFERENCE);
 					break;
 				case FunctionType::Abstract:
-				default: EXCEPTION_EXIT(BASE_CreateDelegateCoroutine, EXCEPTION_INVALID_COROUTINE);
+				default: EXCEPTION_EXIT(BASE_CreateDelegateTask, EXCEPTION_INVALID_TASK);
 			}
-			EXCEPTION_JUMP(8 + SIZE(Declaration), BASE_CreateDelegateCoroutine);
+			EXCEPTION_JUMP(8 + SIZE(Declaration), BASE_CreateDelegateTask);
 		}
 		goto label_next_instruct;
 		case Instruct::BASE_CreateArray:
@@ -514,28 +514,28 @@ label_next_instruct:
 					case TypeCode::Handle:
 					case TypeCode::Interface:
 					case TypeCode::Delegate:
-					case TypeCode::Coroutine:
+					case TypeCode::Task:
 					default: EXCEPTION("无效的TypeCode");
 				}
 			}
 			EXCEPTION_JUMP(8 + count * 4, BASE_ArrayInit);
 		}
 		goto label_next_instruct;
-		case Instruct::BASE_SetCoroutineParameter:
+		case Instruct::BASE_SetTaskParameter:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle handle = VARIABLE(Handle, handleValue);
 			uint32 start = flag ? 1u : 0u;
 			uint32 count = INSTRUCT_VALUE(uint32, 5) + start;
-			uint8* coroutine;
+			uint8* task;
 			Invoker* targetInvoker;
-			if (!kernel->heapAgency->TryGetPoint(handle, coroutine))
+			if (!kernel->heapAgency->TryGetPoint(handle, task))
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
-				EXCEPTION_EXIT(BASE_SetCoroutineParameter, EXCEPTION_NULL_REFERENCE);
+				EXCEPTION_EXIT(BASE_SetTaskParameter, EXCEPTION_NULL_REFERENCE);
 			}
-			targetInvoker = kernel->coroutineAgency->GetInvoker(*(uint64*)coroutine);
-			ASSERT_DEBUG(targetInvoker, "协程的引用计数逻辑可能有bug");
+			targetInvoker = kernel->taskAgency->GetInvoker(*(uint64*)task);
+			ASSERT_DEBUG(targetInvoker, "任务的引用计数逻辑可能有bug");
 			instruct += 13;
 			for (uint32 i = start; i < count; i++, instruct += 5)
 				switch (INSTRUCT_VALUE(BaseType, 0))
@@ -628,27 +628,27 @@ label_next_instruct:
 					break;
 					default: EXCEPTION("无效的类型");
 				}
-			EXCEPTION_JUMP(-1, BASE_SetCoroutineParameter);
+			EXCEPTION_JUMP(-1, BASE_SetTaskParameter);
 		}
 		goto label_next_instruct;
-		case Instruct::BASE_GetCoroutineResult:
+		case Instruct::BASE_GetTaskResult:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& handle = VARIABLE(Handle, handleValue);
-			uint64 coroutine;
+			uint64 task;
 			Invoker* targetInvoker;
 			uint32 count = INSTRUCT_VALUE(uint32, 5);
-			if (!kernel->heapAgency->TryGetValue(handle, coroutine))
+			if (!kernel->heapAgency->TryGetValue(handle, task))
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
-				EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_NULL_REFERENCE);
+				EXCEPTION_EXIT(BASE_GetTaskResult, EXCEPTION_NULL_REFERENCE);
 			}
-			targetInvoker = kernel->coroutineAgency->GetInvoker(coroutine);
+			targetInvoker = kernel->taskAgency->GetInvoker(task);
 			ASSERT_DEBUG(targetInvoker, "调用为空，编译器可能算法有问题");
 			if (targetInvoker->state != InvokerState::Completed)
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
-				EXCEPTION_EXIT(BASE_GetCoroutineResult, EXCEPTION_COROUTINE_NOT_COMPLETED);
+				EXCEPTION_EXIT(BASE_GetTaskResult, EXCEPTION_TASK_NOT_COMPLETED);
 			}
 			instruct += 13;
 			for (uint32 i = 0; i < count; i++, instruct += 9)
@@ -751,22 +751,22 @@ label_next_instruct:
 					break;
 					default: EXCEPTION("无效的类型");
 				}
-			EXCEPTION_JUMP(-1, BASE_GetCoroutineResult);
+			EXCEPTION_JUMP(-1, BASE_GetTaskResult);
 		}
 		goto label_next_instruct;
-		case Instruct::BASE_CoroutineStart:
+		case Instruct::BASE_TaskStart:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& handle = VARIABLE(Handle, handleValue);
-			uint64 coroutine;
-			if (kernel->heapAgency->TryGetValue(handle, coroutine))
+			uint64 task;
+			if (kernel->heapAgency->TryGetValue(handle, task))
 			{
-				Invoker* targetInvoker = kernel->coroutineAgency->GetInvoker(coroutine);
+				Invoker* targetInvoker = kernel->taskAgency->GetInvoker(task);
 				ASSERT_DEBUG(targetInvoker, "调用为空，编译器可能算法有问题");
 				targetInvoker->Start(true, ignoreWait);
 			}
-			else EXCEPTION_EXIT(BASE_CoroutineStart, EXCEPTION_NULL_REFERENCE);
-			EXCEPTION_JUMP(4, BASE_CoroutineStart);
+			else EXCEPTION_EXIT(BASE_TaskStart, EXCEPTION_NULL_REFERENCE);
+			EXCEPTION_JUMP(4, BASE_TaskStart);
 		}
 		goto label_next_instruct;
 #pragma endregion Base
@@ -1099,7 +1099,7 @@ label_next_instruct:
 		goto label_next_instruct;
 		case Instruct::FUNCTION_KernelCall:
 		{
-			String error = KernelLibraryInfo::GetKernelLibraryInfo()->functions[INSTRUCT_VALUE(uint32, 1)].invoker(kernel, this, stack, top);
+			String error = KernelLibraryInfo::GetKernelLibraryInfo()->functions[INSTRUCT_VALUE(uint32, 1)].invoker(KernelInvokerParameter(kernel, this, stack, top));
 			if (!error.IsEmpty())
 			{
 				if (kernelInvoker)
@@ -2587,7 +2587,7 @@ label_exit:
 	pointer = POINTER;
 }
 
-void Coroutine::Abort()
+void Task::Abort()
 {
 	if (pointer != INVALID) switch (kernel->libraryAgency->code[pointer])
 	{
@@ -2603,14 +2603,14 @@ void Coroutine::Abort()
 	}
 }
 
-void Coroutine::Recycle()
+void Task::Recycle()
 {
 	if (invoker->instanceID == instanceID)
 	{
 		invoker->SetReturns(stack);
 		invoker->exitMessage = exitMessage;
 		invoker->state = InvokerState::Completed;
-		if (!exitMessage.IsEmpty() && kernel->coroutineAgency->onExceptionExit)
+		if (!exitMessage.IsEmpty() && kernel->taskAgency->onExceptionExit)
 		{
 			List<RainStackFrame> frames(invoker->exceptionStackFrames.Count());
 			for (uint32 i = 0; i < invoker->exceptionStackFrames.Count(); i++)
@@ -2625,16 +2625,16 @@ void Coroutine::Recycle()
 					new (frames.Add())RainStackFrame(RainString(libraryName.GetPointer(), libraryName.GetLength()), RainString(fullName.GetPointer(), fullName.GetLength()), address - library->codeOffset);
 				}
 			}
-			kernel->coroutineAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
+			kernel->taskAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
 		}
-		invoker->coroutine = NULL;
+		invoker->task = NULL;
 		invoker = NULL;
 		instanceID = 0;
 		pointer = INVALID;
 	}
 }
 
-Coroutine::~Coroutine()
+Task::~Task()
 {
 	Free(stack); stack = NULL;
 }

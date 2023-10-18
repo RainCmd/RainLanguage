@@ -19,10 +19,20 @@ string TupleToString(ReadonlyTypes tuple)
 		result += tuple.GetElement(i)
 	return result
 
+ShowAttributes(ReadonlyStrings s, integer indent)
+	var result = ""
+	for var i = 0; i < s.GetCount(); i++
+		if i > 0
+			result += ", "
+		result += s.GetElement(i)
+	if result != ""
+		Print(indent, "[" + result + "]")
+
 ShowVariable(Variable v, integer indent)
 	Print(indent, v.GetVariableType() + " " + v.GetName())
 
 ShowFunction(Function f, integer indent)
+	ShowAttributes(f.GetAttributes(), indent)
 	var display = ""
 	var rs = f.GetReturns()
 	if rs.GetCount() > 0
@@ -52,17 +62,19 @@ ShowMember(MemberFunction mf, integer indent)
 
 ShowType(string dt, integer indent, type t)
 	var inherits = t.GetParent().IsValid() ? t.GetParent().GetName() : ""
-	for var i = 0; i < t.GetInherits().GetCount(); i++
-		if inherits != ""
-			inherits += " "
-		inherits += t.GetInherits().GetElement(i).GetName()
+	if t.GetInherits() != null
+		for var i = 0; i < t.GetInherits().GetCount(); i++
+			if inherits != ""
+				inherits += " "
+			inherits += t.GetInherits().GetElement(i).GetName()
 	Print(indent, dt + " " + t.GetName() + " " + inherits)
 	var mv = t.GetVariables()
 	for var i = 0; i < mv.GetCount(); i++
 		ShowMember(mv.GetElement(i), indent + 1)
 	var c = t.GetConstructors()
-	for var i = 0; i < c.GetCount(); i++
-		ShowMember(c.GetElement(i), indent + 1)
+	if c != null
+		for var i = 0; i < c.GetCount(); i++
+			ShowMember(c.GetElement(i), indent + 1)
 	var mf = t.GetFunctions()
 	for var i = 0; i < mf.GetCount(); i++
 		ShowMember(mf.GetElement(i), indent + 1)
@@ -74,8 +86,8 @@ ShowDelegate(type t, integer indent)
 		display += TupleToString(rs) + " "
 	display += t.GetName() + "(" + TupleToString(t.GetParameters()) + ")"
 	Print(indent, display)
-ShowCoroutine(type t, integer indent)
-	var display = "coroutine "
+ShowTask(type t, integer indent)
+	var display = "task "
 	var rs = t.GetReturns()
 	if rs.GetCount() > 0
 		display += TupleToString(rs) + " "
@@ -90,13 +102,13 @@ ShowType(type t, integer indent)
 	var tc = t.GetTypeCode()
 	if tc == TypeCode.Handle
 		ShowType("class", indent, t)
-	elif tc == TypeCode.Interface
+	elseif tc == TypeCode.Interface
 		ShowType("interface", indent, t)
-	elif tc == TypeCode.Delegate
+	elseif tc == TypeCode.Delegate
 		ShowDelegate(t, indent)
-	elif tc == TypeCode.Coroutine
-		ShowCoroutine(t, indent)
-	elif tc == TypeCode.Enum
+	elseif tc == TypeCode.Task
+		ShowTask(t, indent)
+	elseif tc == TypeCode.Enum
 		ShowEnum(t, indent)
 	else
 		ShowType("struct", indent, t)
@@ -115,6 +127,7 @@ ShowSpace(Space s, integer indent)
 	var f = s.GetFunctions()
 	for var i = 0; i < f.GetCount(); i++
 		ShowFunction(f.GetElement(i), indent + 1)
+		wait
 
 	var n = s.GetNatives()
 	for var i = 0; i < n.GetCount(); i++
@@ -123,9 +136,13 @@ ShowSpace(Space s, integer indent)
 	var t = s.GetTypes()
 	for var i = 0; i < t.GetCount(); i++
 		ShowType(t.GetElement(i), indent + 1)
+		
 
-
+class A
+	~
+		Print("del A")
 public Main()
-	var ass = GetAssembles()
-	for var i = 0; i < ass.GetLength(); i++
-		ShowSpace(ass[i], 0)
+	A()
+	//var ass = GetAssembles()
+	//for var i = 0; i < ass.GetLength(); i++
+	//	ShowSpace(ass[i], 0)

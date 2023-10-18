@@ -9,7 +9,7 @@ enum class Instruct                         //可能会抛异常的指令
     BASE_ExitJump,                          //exception
     BASE_Wait,
     BASE_WaitFrame,
-    BASE_WaitCoroutine,                     //exception
+    BASE_WaitTask,                          //exception
     BASE_WaitBack,                          //exception
     BASE_Stackzero,
     BASE_Datazero,
@@ -21,14 +21,14 @@ enum class Instruct                         //可能会抛异常的指令
 
     BASE_CreateObject,
     BASE_CreateDelegate,                    //exception
-    BASE_CreateCoroutine,                   //exception
-    BASE_CreateDelegateCoroutine,           //exception
+    BASE_CreateTask,                        //exception
+    BASE_CreateDelegateTask,                //exception
     BASE_CreateArray,                       //exception
     BASE_ArrayInit,                         //exception
 
-    BASE_SetCoroutineParameter,             //exception
-    BASE_GetCoroutineResult,                //exception
-    BASE_CoroutineStart,                    //exception
+    BASE_SetTaskParameter,                  //exception
+    BASE_GetTaskResult,                     //exception
+    BASE_TaskStart,                         //exception
     #pragma endregion base
 
     #pragma region function

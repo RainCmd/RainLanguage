@@ -45,7 +45,7 @@
     <ClInclude Include="RainLanguage\Library.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RainLanguage\RainLanguage.h">
+    <ClInclude Include="RainLanguage\Language.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RainLanguage\Serialization.h">
@@ -57,10 +57,10 @@
     <ClInclude Include="RainLanguage\Type.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RainLanguage\VirtualMachine\Coroutine.h">
+    <ClInclude Include="RainLanguage\VirtualMachine\Task.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RainLanguage\VirtualMachine\CoroutineAgency.h">
+    <ClInclude Include="RainLanguage\VirtualMachine\TaskAgency.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RainLanguage\VirtualMachine\EntityAgency.h">
@@ -255,7 +255,7 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.h">
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\TaskExpression.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.h">
@@ -336,6 +336,18 @@
     <ClInclude Include="RainLanguage\ClearStaticCache.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ExpressionReferenceExpression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\ProgramDatabase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Public\Debugger.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\ProgramDatabaseGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -353,7 +365,7 @@
     <ClCompile Include="RainLanguage\Library.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RainLanguage\RainLanguage.cpp">
+    <ClCompile Include="RainLanguage\Language.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Serialization.cpp">
@@ -365,10 +377,10 @@
     <ClCompile Include="RainLanguage\Type.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RainLanguage\VirtualMachine\Coroutine.cpp">
+    <ClCompile Include="RainLanguage\VirtualMachine\Task.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RainLanguage\VirtualMachine\CoroutineAgency.cpp">
+    <ClCompile Include="RainLanguage\VirtualMachine\TaskAgency.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\VirtualMachine\EntityAgency.cpp">
@@ -545,7 +557,7 @@
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.cpp">
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\TaskExpression.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.cpp">
@@ -602,8 +614,21 @@
     <ClCompile Include="RainLanguage\ClearStaticCache.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ExpressionReferenceExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\ProgramDatabase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\VirtualMachine\Debugger.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\ProgramDatabaseGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="RainLanguage\kernel.rain" />
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@
 #include "Expressions/TypeExpression.h"
 #include "Expressions/CastExpression.h"
 #include "Expressions/StructExpression.h"
-#include "Expressions/CoroutineExpression.h"
+#include "Expressions/TaskExpression.h"
 #include "Expressions/QuestionNullExpression.h"
 #include "Expressions/QuestionExpression.h"
 #include "Expressions/DelegateCreateExpression.h"
@@ -154,7 +154,7 @@ bool HasBlurryResult(Expression* expression)
 				return true;
 		return false;
 	}
-	else if (ContainAll(expression->type, ExpressionType::BlurryCoroutineExpression)) return false;
+	else if (ContainAll(expression->type, ExpressionType::BlurryTaskExpression)) return false;
 	else return CheckBlurry(expression->returns);
 }
 
@@ -456,19 +456,19 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 		MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_TYPE_MISMATCH);
 		return false;
 	}
-	else if (ContainAll(expression->type, ExpressionType::BlurryCoroutineExpression))
+	else if (ContainAll(expression->type, ExpressionType::BlurryTaskExpression))
 	{
-		BlurryCoroutineExpression* coroutineExpression = (BlurryCoroutineExpression*)expression;
-		if (!type.dimension && type.code == TypeCode::Coroutine)
+		BlurryTaskExpression* taskExpression = (BlurryTaskExpression*)expression;
+		if (!type.dimension && type.code == TypeCode::Task)
 		{
-			if (IsEquals(manager->GetLibrary(type.library)->coroutines[type.index]->returns.GetTypes(), coroutineExpression->invoker->returns))
+			if (IsEquals(manager->GetLibrary(type.library)->tasks[type.index]->returns.GetTypes(), taskExpression->invoker->returns))
 			{
-				expression = new CoroutineCreateExpression(coroutineExpression->anchor, coroutineExpression->invoker, type, coroutineExpression->start);
-				coroutineExpression->invoker = NULL;
-				delete coroutineExpression;
+				expression = new TaskCreateExpression(taskExpression->anchor, taskExpression->invoker, type, taskExpression->start);
+				taskExpression->invoker = NULL;
+				delete taskExpression;
 				return true;
 			}
-			else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_COROUTINE_RETURN_TYPES_INCONSISTENT);
+			else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_TASK_RETURN_TYPES_INCONSISTENT);
 		}
 		else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_TYPE_MISMATCH);
 		return false;
@@ -688,10 +688,10 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 				return false;
 			}
 		}
-		else if (ContainAll(expression->type, ExpressionType::BlurryCoroutineExpression))
+		else if (ContainAll(expression->type, ExpressionType::BlurryTaskExpression))
 		{
-			if (type.dimension || type.code != TypeCode::Coroutine) return false;
-			if (!IsEquals(manager->GetLibrary(type.library)->coroutines[type.index]->returns.GetTypes(), expression->returns)) return false;
+			if (type.dimension || type.code != TypeCode::Task) return false;
+			if (!IsEquals(manager->GetLibrary(type.library)->tasks[type.index]->returns.GetTypes(), expression->returns)) return false;
 		}
 		else if (ContainAll(expression->type, ExpressionType::BlurryLambdaExpression))
 		{
@@ -1405,11 +1405,11 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 					return true;
 				}
 				break;
-			case DeclarationCategory::Coroutine:
+			case DeclarationCategory::Task:
 				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Coroutine, declaration.index, ExtractDimension(anchor, index)));
+					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Task, declaration.index, ExtractDimension(anchor, index)));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
 					return true;
@@ -2154,21 +2154,21 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_EXPRESSION);
 						expressionStack.Add(source);
 					}
-					else if (ContainAny(attribute, Attribute::Coroutine))
+					else if (ContainAny(attribute, Attribute::Task))
 					{
 						Expression* source = expressionStack.Pop();
 						Type type = source->returns.Peek();
 						if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
 						else
 						{
-							AbstractCoroutine* abstractCoroutine = (AbstractCoroutine*)manager->GetDeclaration(type);
+							AbstractTask* abstractTask = (AbstractTask*)manager->GetDeclaration(type);
 							if (tuple->returns.Count() == 0)
 							{
 								if (tuple->anchor.content.IsEmpty())
 								{
-									List<integer, true> indices(abstractCoroutine->returns.Count());
-									for (integer i = 0; i < abstractCoroutine->returns.Count(); i++) indices.Add(i);
-									Expression* expression = new CoroutineEvaluationExpression(source->anchor, abstractCoroutine->returns.GetTypes(), source, indices);
+									List<integer, true> indices(abstractTask->returns.Count());
+									for (integer i = 0; i < abstractTask->returns.Count(); i++) indices.Add(i);
+									Expression* expression = new TaskEvaluationExpression(source->anchor, abstractTask->returns.GetTypes(), source, indices);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
 									delete tuple; tuple = NULL;
@@ -2183,8 +2183,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								{
 									for (uint32 i = 0; i < indices.Count(); i++)
 									{
-										if (indices[i] < 0) indices[i] += abstractCoroutine->returns.Count();
-										if (indices[i] < 0 || indices[i] >= abstractCoroutine->returns.Count())
+										if (indices[i] < 0) indices[i] += abstractTask->returns.Count();
+										if (indices[i] < 0 || indices[i] >= abstractTask->returns.Count())
 										{
 											MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
 											expressionStack.Add(source);
@@ -2193,8 +2193,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 										}
 									}
 									List<Type, true> returns(indices.Count());
-									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractCoroutine->returns.GetType((uint32)indices[i]));
-									Expression* expression = new CoroutineEvaluationExpression(source->anchor, returns, source, indices);
+									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractTask->returns.GetType((uint32)indices[i]));
+									Expression* expression = new TaskEvaluationExpression(source->anchor, returns, source, indices);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;
 									delete tuple; tuple = NULL;
@@ -3211,9 +3211,9 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							if (ContainAny(invokerExpression->type, ExpressionType::InvokerExpression))
 							{
-								BlurryCoroutineExpression* coroutineExpression = new BlurryCoroutineExpression(lexical.anchor, (InvokerExpression*)invokerExpression, true);
-								expressionStack.Add(coroutineExpression);
-								attribute = coroutineExpression->attribute;
+								BlurryTaskExpression* taskExpression = new BlurryTaskExpression(lexical.anchor, (InvokerExpression*)invokerExpression, true);
+								expressionStack.Add(taskExpression);
+								attribute = taskExpression->attribute;
 								index = anchor.GetEnd();
 								goto label_next_lexical;
 							}
@@ -3233,9 +3233,9 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							if (ContainAny(invokerExpression->type, ExpressionType::InvokerExpression))
 							{
-								BlurryCoroutineExpression* coroutineExpression = new BlurryCoroutineExpression(lexical.anchor, (InvokerExpression*)invokerExpression, false);
-								expressionStack.Add(coroutineExpression);
-								attribute = coroutineExpression->attribute;
+								BlurryTaskExpression* taskExpression = new BlurryTaskExpression(lexical.anchor, (InvokerExpression*)invokerExpression, false);
+								expressionStack.Add(taskExpression);
+								attribute = taskExpression->attribute;
 								index = anchor.GetEnd();
 								goto label_next_lexical;
 							}

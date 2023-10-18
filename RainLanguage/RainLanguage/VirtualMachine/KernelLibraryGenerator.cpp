@@ -13,7 +13,7 @@ uint32 AddSpace(StringAgency* stringAgency, List<Space>& spaces, KernelLibraryIn
 	uint32 index = spaces.Count();
 	new (spaces.Add())Space(stringAgency->AddAndRef(kernelSpace->name), EMPTY_STRINGS, List<uint32, true>(0),
 		kernelSpace->variables, kernelSpace->enums, kernelSpace->structs, kernelSpace->classes, kernelSpace->interfaces,
-		kernelSpace->delegates, kernelSpace->coroutines, kernelSpace->functions, kernelSpace->natives);
+		kernelSpace->delegates, kernelSpace->tasks, kernelSpace->functions, kernelSpace->natives);
 	for (uint32 i = 0; i < kernelSpace->children.Count(); i++)
 		spaces[index].children.Add(AddSpace(stringAgency, spaces, kernelSpace->children[i]));
 	return index;
@@ -70,7 +70,7 @@ void ClearVariable(CodeGenerator& generator, Type type, uint32 pointer)
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			generator.WriteInstruct(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			generator.Write(LOCAL(pointer));
 			break;
@@ -138,7 +138,7 @@ Library* GetKernelLibrary()
 	if (!kernelLibrary)
 	{
 		const KernelLibraryInfo* library = KernelLibraryInfo::GetKernelLibraryInfo();
-		kernelLibrary = new Library(new StringAgency(1024), library->data, library->data.Count(), library->variables.Count(), library->enums.Count(), library->structs.Count(), library->classes.Count(), library->interfaces.Count(), library->delegates.Count(), library->coroutines.Count(), library->functions.Count(), 0, 0, 0, 0, 0);
+		kernelLibrary = new Library(new StringAgency(1024), library->data, library->data.Count(), library->variables.Count(), library->enums.Count(), library->structs.Count(), library->classes.Count(), library->interfaces.Count(), library->delegates.Count(), library->tasks.Count(), library->functions.Count(), 0, 0, 0, 0, 0);
 		AddSpace(kernelLibrary->stringAgency, kernelLibrary->spaces, library->root);
 
 		for (uint32 i = 0; i < library->variables.Count(); i++)
@@ -215,10 +215,10 @@ Library* GetKernelLibrary()
 			new (kernelLibrary->delegates.Add())DelegateDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns, source->parameters);
 		}
 
-		for (uint32 i = 0; i < library->coroutines.Count(); i++)
+		for (uint32 i = 0; i < library->tasks.Count(); i++)
 		{
-			const KernelLibraryInfo::Coroutine* source = &library->coroutines[i];
-			new (kernelLibrary->coroutines.Add())CoroutineDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns);
+			const KernelLibraryInfo::Task* source = &library->tasks[i];
+			new (kernelLibrary->tasks.Add())TaskDeclarationInfo(source->isPublic, EMPTY_STRINGS, kernelLibrary->stringAgency->AddAndRef(source->name), source->returns);
 		}
 
 		for (uint32 i = 0; i < library->functions.Count(); i++)

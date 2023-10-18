@@ -118,11 +118,11 @@ struct RuntimeDelegate :RuntimeInfo, CallableInfo
 	inline RuntimeDelegate(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflectionParameters(NULL), reflectionReturns(NULL) {}
 };
 
-struct RuntimeCoroutine :RuntimeInfo
+struct RuntimeTask :RuntimeInfo
 {
 	TupleInfo returns;
 	Handle reflectionReturns;
-	inline RuntimeCoroutine(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns) :RuntimeInfo(isPublic, attributes, name, space), returns(returns), reflectionReturns(NULL) {}
+	inline RuntimeTask(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns) :RuntimeInfo(isPublic, attributes, name, space), returns(returns), reflectionReturns(NULL) {}
 };
 
 struct RuntimeFunction :RuntimeInfo, CallableInfo
@@ -155,7 +155,7 @@ struct RuntimeSpace
 	List<uint32, true> classes;
 	List<uint32, true> interfaces;
 	List<uint32, true> delegates;
-	List<uint32, true> coroutines;
+	List<uint32, true> tasks;
 	List<uint32, true> functions;
 	List<uint32, true> natives;
 	RuntimeSpace(StringAgency* agency, const Library* library, const Space* space, const List<string, true>& attributes);

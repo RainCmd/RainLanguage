@@ -13,7 +13,7 @@ enum class Attribute
 	Callable = 0x0020,          //可调用
 	Array = 0x0040,             //数组
 	Tuple = 0x0080,             //元组
-	Coroutine = 0x0100,         //携程
+	Task = 0x0100,				//任务
 	Type = 0x0200,              //类型
 	Method = 0x0400,            //方法
 };
@@ -22,6 +22,6 @@ inline Attribute CombineType(Attribute attribute, const  Type& type)
 {
 	if (type.dimension || type == TYPE_String || type == TYPE_Array)return attribute | Attribute::Array;
 	else if (type.code == TypeCode::Delegate) return attribute | Attribute::Callable;
-	else if (type.code == TypeCode::Coroutine) return attribute | Attribute::Coroutine;
+	else if (type.code == TypeCode::Task) return attribute | Attribute::Task;
 	return attribute;
 }

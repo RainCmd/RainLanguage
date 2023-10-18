@@ -103,7 +103,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 			case TypeCode::Handle:
 			case TypeCode::Interface:
 			case TypeCode::Delegate:
-			case TypeCode::Coroutine:
+			case TypeCode::Task:
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Handle);
 				parameter.generator->WriteCode(result);
 				parameter.generator->WriteCode(arrayVariable);
@@ -200,7 +200,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Handle);
 			parameter.generator->WriteCode(arrayVariable);
 			parameter.generator->WriteCode(indexVariable);

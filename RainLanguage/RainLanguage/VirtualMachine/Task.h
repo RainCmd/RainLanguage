@@ -6,20 +6,20 @@
 
 class Kernel;
 class Invoker;
-class Coroutine
+class Task
 {
 public:
 	Kernel* kernel;
 	uint64 instanceID;
 	Invoker* invoker, * kernelInvoker;
-	Coroutine* next;
+	Task* next;
 	bool ignoreWait, pause, flag;
 	String exitMessage;
 	uint32 size, top, bottom, pointer;
 	integer wait;
 	uint8* stack;
 	uint8* cacheData[2];
-	Coroutine(Kernel* kernel, uint32 capacity);
+	Task(Kernel* kernel, uint32 capacity);
 	inline bool EnsureStackSize(uint32 stackSize)
 	{
 		if (stackSize > size)
@@ -43,6 +43,6 @@ public:
 	inline bool IsRunning() { return exitMessage.IsEmpty() && pointer != INVALID; }
 	void Abort();
 	void Recycle();
-	~Coroutine();
+	~Task();
 };
 

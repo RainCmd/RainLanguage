@@ -139,8 +139,8 @@ public:
 		case TypeCode::Delegate:
 			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Delegate, declaration.index, NULL), address);
 			break;
-		case TypeCode::Coroutine:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Coroutine, declaration.index, NULL), address);
+		case TypeCode::Task:
+			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Task, declaration.index, NULL), address);
 			break;
 		default: EXCEPTION("ÎÞÐ§µÄTypeCode");
 		}

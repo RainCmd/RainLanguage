@@ -6,7 +6,7 @@
 #include "../Public/VirtualMachineDefinitions.h"
 
 class Kernel;
-class Coroutine;
+class Task;
 struct CallableInfo;
 class Invoker
 {
@@ -20,8 +20,8 @@ public:
 	uint32 entry;
 	String exitMessage;
 	uint32 hold;
-	Coroutine* coroutine;
-	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), exitMessage(), hold(0), coroutine(NULL) {}
+	Task* task;
+	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), exitMessage(), hold(0), task(NULL) {}
 	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "无效的操作"); }
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, Type type) const;

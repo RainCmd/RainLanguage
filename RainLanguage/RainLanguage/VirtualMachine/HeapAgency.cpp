@@ -4,14 +4,14 @@
 #include "RuntimeInfo.h"
 #include "Kernel.h"
 #include "LibraryAgency.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 #include "EntityAgency.h"
 #include "Exceptions.h"
 
-inline bool IsCoroutine(const Type& type)
+inline bool IsTask(const Type& type)
 {
-	if (type == TYPE_Coroutine) return true;
-	else if (!type.dimension && type.code == TypeCode::Coroutine) return true;
+	if (type == TYPE_Task) return true;
+	else if (!type.dimension && type.code == TypeCode::Task) return true;
 	else return false;
 }
 
@@ -64,11 +64,11 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 	return handle;
 }
 
-bool HeapAgency::IsUnrecoverableCoroutine(Handle handle)
+bool HeapAgency::IsUnrecoverableTask(Handle handle)
 {
-	if (IsCoroutine(heads[handle].type))
+	if (IsTask(heads[handle].type))
 	{
-		Invoker* invoker = kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + heads[handle].pointer));
+		Invoker* invoker = kernel->taskAgency->GetInvoker(*(uint64*)(heap.GetPointer() + heads[handle].pointer));
 		return invoker->state == InvokerState::Running;
 	}
 	return false;
@@ -78,9 +78,9 @@ void HeapAgency::Free(Handle handle, RuntimeClass* runtimeClass, uint8* address)
 {
 	if (runtimeClass->destructor != INVALID)
 	{
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(runtimeClass->destructor, &destructorCallable);
+		Invoker* invoker = kernel->taskAgency->CreateInvoker(runtimeClass->destructor, &destructorCallable);
 		invoker->SetHandleParameter(0, handle);
-		kernel->coroutineAgency->Start(invoker, true, true);
+		kernel->taskAgency->Start(invoker, true, true);
 	}
 	if (runtimeClass->parents.Count())
 	{
@@ -160,8 +160,8 @@ void HeapAgency::Free(Handle handle)
 				}
 			}
 			break;
-			case TypeCode::Coroutine:
-				kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)pointer));
+			case TypeCode::Task:
+				kernel->taskAgency->Release(kernel->taskAgency->GetInvoker(*(uint64*)pointer));
 				break;
 		}
 	}
@@ -260,7 +260,7 @@ void HeapAgency::FullGC()
 	Handle markIndex = head;
 	while (markIndex)
 	{
-		if (heads[markIndex].strong || IsUnrecoverableCoroutine(markIndex)) Mark(markIndex);
+		if (heads[markIndex].strong || IsUnrecoverableTask(markIndex)) Mark(markIndex);
 		markIndex = heads[markIndex].next;
 	}
 	Handle* clearIndex = &head;
@@ -287,7 +287,7 @@ void HeapAgency::FastGC()
 		Handle* index = &heads[active].next;
 		while (*index)
 		{
-			if (heads[*index].strong || heads[*index].weak || IsUnrecoverableCoroutine(*index))
+			if (heads[*index].strong || heads[*index].weak || IsUnrecoverableTask(*index))
 			{
 				if (heads[*index].generation++ > generation) active = tail;
 				tail = *index;
@@ -368,7 +368,7 @@ HeapAgency::~HeapAgency()
 	for (uint32 index = head; index; index = heads[index].next)
 	{
 		Head& value = heads[index];
-		if (IsCoroutine(value.type)) kernel->coroutineAgency->Release(kernel->coroutineAgency->GetInvoker(*(uint64*)(heap.GetPointer() + value.pointer)));
+		if (IsTask(value.type)) kernel->taskAgency->Release(kernel->taskAgency->GetInvoker(*(uint64*)(heap.GetPointer() + value.pointer)));
 		else if (!value.type.dimension && value.type.code == TypeCode::Handle)
 			Free(index, kernel->libraryAgency->GetClass(value.type), heap.GetPointer() + value.pointer);
 	}

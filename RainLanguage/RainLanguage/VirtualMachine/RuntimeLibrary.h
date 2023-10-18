@@ -17,7 +17,7 @@ public:
 	List<RuntimeClass> classes;
 	List<RuntimeInterface> interfaces;
 	List<RuntimeDelegate> delegates;
-	List<RuntimeCoroutine> coroutines;
+	List<RuntimeTask> tasks;
 	List<RuntimeFunction> functions;
 	List<RuntimeNative> natives;
 	RuntimeLibrary(Kernel* kernel, uint32 index, const Library* library);

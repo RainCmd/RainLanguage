@@ -129,10 +129,10 @@ struct CompilingDelegate :CompilingFunctionDeclaration
 	inline CompilingDelegate(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 parameterCount, uint32 returnCount) :CompilingFunctionDeclaration(name, declaration, attributes, space, parameterCount, returnCount) {}
 };
 
-struct CompilingCoroutine :CompilingDeclarationInfo
+struct CompilingTask :CompilingDeclarationInfo
 {
 	List<Type, true> returns;
-	inline CompilingCoroutine(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 returnCount) :CompilingDeclarationInfo(name, declaration, attributes, space), returns(returnCount) {}
+	inline CompilingTask(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, uint32 returnCount) :CompilingDeclarationInfo(name, declaration, attributes, space), returns(returnCount) {}
 };
 
 struct CompilingNative :CompilingFunctionDeclaration
@@ -162,10 +162,10 @@ struct CompilingLibrary :CompilingSpace
 	List<CompilingClass*, true> classes;
 	List<CompilingInterface*, true> interfaces;
 	List<CompilingDelegate*, true> delegates;
-	List<CompilingCoroutine*, true> coroutines;
+	List<CompilingTask*, true> tasks;
 	List<CompilingNative*, true> natives;
 	uint32 constantSize, dataSize;
-	CompilingLibrary(const String& name) : CompilingSpace(NULL, name), variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), natives(0), constantSize(INVALID), dataSize(INVALID) {}
+	CompilingLibrary(const String& name) : CompilingSpace(NULL, name), variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), natives(0), constantSize(INVALID), dataSize(INVALID) {}
 	Anchor GetName(const CompilingDeclaration& declaration);
 	~CompilingLibrary();
 };

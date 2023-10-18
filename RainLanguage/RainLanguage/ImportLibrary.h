@@ -115,10 +115,10 @@ struct ImportDelegate :ImportInfo
 	inline ImportDelegate(const uint32& space, const string& name, const List<uint32, true>& references, const List<Type, true>& parameters, const List<Type, true>& returns) : ImportInfo(space, name, references), parameters(parameters), returns(returns) {}
 };
 
-struct ImportCoroutine :ImportInfo
+struct ImportTask :ImportInfo
 {
 	List<Type, true> returns;
-	inline ImportCoroutine(const uint32& space, const string& name, const List<uint32, true>& references, const List<Type, true>& returns) : ImportInfo(space, name, references), returns(returns) {}
+	inline ImportTask(const uint32& space, const string& name, const List<uint32, true>& references, const List<Type, true>& returns) : ImportInfo(space, name, references), returns(returns) {}
 };
 
 struct ImportFunction :ImportInfo
@@ -145,11 +145,11 @@ struct ImportLibrary
 	List<ImportClass> classes;
 	List<ImportInterface> interfaces;
 	List<ImportDelegate> delegates;
-	List<ImportCoroutine> coroutines;
+	List<ImportTask> tasks;
 	List<ImportFunction> functions;
 	List<ImportNative> natives;
 
-	ImportLibrary(uint32 variableCount, uint32 enumCount, uint32 structCount, uint32 classCount, uint32 interfaceCount, uint32 delegateCount, uint32 coroutineCount, uint32 functionCount, uint32 nativeCount)
-		: spaces(1), variables(variableCount), enums(enumCount), structs(structCount), classes(classCount), interfaces(interfaceCount), delegates(delegateCount), coroutines(coroutineCount), functions(functionCount), natives(nativeCount)
+	ImportLibrary(uint32 variableCount, uint32 enumCount, uint32 structCount, uint32 classCount, uint32 interfaceCount, uint32 delegateCount, uint32 taskCount, uint32 functionCount, uint32 nativeCount)
+		: spaces(1), variables(variableCount), enums(enumCount), structs(structCount), classes(classCount), interfaces(interfaceCount), delegates(delegateCount), tasks(taskCount), functions(functionCount), natives(nativeCount)
 	{}
 };

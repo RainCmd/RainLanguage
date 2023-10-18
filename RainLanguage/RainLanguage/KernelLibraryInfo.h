@@ -6,8 +6,17 @@
 #include "KernelDeclarations.h"
 
 class Kernel;
-class Coroutine;
-typedef String(*KernelInvoker)(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top);
+class Task;
+struct KernelInvokerParameter
+{
+	Kernel* kernel;
+	Task* task;
+	uint8* stack;
+	uint32 top;
+
+	KernelInvokerParameter(Kernel* kernel, Task* task, uint8* stack, const uint32& top) : kernel(kernel), task(task), stack(stack), top(top) {}
+};
+typedef String(*KernelInvoker)(KernelInvokerParameter parameter);
 class KernelLibraryInfo
 {
 public:
@@ -22,11 +31,11 @@ public:
 		List<uint32, true> classes;
 		List<uint32, true> interfaces;
 		List<uint32, true> delegates;
-		List<uint32, true> coroutines;
+		List<uint32, true> tasks;
 		List<uint32, true> functions;
 		List<uint32, true> natives;
-		inline Space(String name) :name(name), parent(NULL), children(0), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), functions(0), natives(0) {}
-		inline Space(String name, Space* parent) : name(name), parent(parent), children(0), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), functions(0), natives(0)
+		inline Space(String name) :name(name), parent(NULL), children(0), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), functions(0), natives(0) {}
+		inline Space(String name, Space* parent) : name(name), parent(parent), children(0), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), functions(0), natives(0)
 		{
 			parent->children.Add(this);
 		}
@@ -96,7 +105,7 @@ public:
 		bool isPublic;
 		String name;
 	};
-	struct Coroutine
+	struct Task
 	{
 		bool isPublic;
 		String name;
@@ -117,7 +126,7 @@ public:
 	List<Class> classes;
 	List<Interface> interfaces;
 	List<Delegate> delegates;
-	List<Coroutine> coroutines;
+	List<Task> tasks;
 	List<Function> functions;
 	List<StringAddresses>dataStrings;
 	KernelLibraryInfo(const KernelLibraryInfo&) = delete;

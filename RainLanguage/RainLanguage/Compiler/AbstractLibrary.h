@@ -80,10 +80,10 @@ struct AbstractDelegate :AbstractCallable
 {
 	inline AbstractDelegate(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const TupleInfo& parameters, const TupleInfo& returns) :AbstractCallable(name, declaration, attributes, space, parameters, returns) {}
 };
-struct AbstractCoroutine :AbstractDeclaration
+struct AbstractTask :AbstractDeclaration
 {
 	TupleInfo returns;
-	inline AbstractCoroutine(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const TupleInfo& returns) :AbstractDeclaration(name, declaration, attributes, space), returns(returns) {}
+	inline AbstractTask(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const TupleInfo& returns) :AbstractDeclaration(name, declaration, attributes, space), returns(returns) {}
 };
 struct AbstractNative :AbstractCallable
 {
@@ -133,7 +133,7 @@ struct AbstractLibrary :AbstractSpace
 	List<AbstractClass*, true> classes;
 	List<AbstractInterface*, true> interfaces;
 	List<AbstractDelegate*, true> delegates;
-	List<AbstractCoroutine*, true> coroutines;
+	List<AbstractTask*, true> tasks;
 	List<AbstractNative*, true> natives;
 
 	AbstractLibrary(const Library* library, uint32 index, const AbstractParameter& parameter);

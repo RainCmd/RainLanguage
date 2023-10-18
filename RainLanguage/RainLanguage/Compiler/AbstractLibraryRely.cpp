@@ -11,7 +11,7 @@ inline TypeCode CategoryToCode(DeclarationCategory category)
 		case DeclarationCategory::Class: return TypeCode::Handle;
 		case DeclarationCategory::Interface: return TypeCode::Interface;
 		case DeclarationCategory::Delegate: return TypeCode::Delegate;
-		case DeclarationCategory::Coroutine: return TypeCode::Coroutine;
+		case DeclarationCategory::Task: return TypeCode::Task;
 	}
 	return TypeCode::Invalid;
 }
@@ -159,15 +159,15 @@ void InitImports(const Library* source, uint32 importIndex, AbstractDeclarationM
 			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
 		}
 	}
-	for (uint32 i = 0; i < importSource->coroutines.Count(); i++)
+	for (uint32 i = 0; i < importSource->tasks.Count(); i++)
 	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->coroutines[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Coroutine, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->coroutines[i].space, name, parameter);
+		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->tasks[i].name);
+		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Task, i);
+		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->tasks[i].space, name, parameter);
 		if (globalDeclaration.category != DeclarationCategory::Invalid)
 		{
-			if (globalDeclaration.category == DeclarationCategory::Coroutine)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Coroutine, globalDeclaration.index, 0));
+			if (globalDeclaration.category == DeclarationCategory::Task)
+				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Task, globalDeclaration.index, 0));
 			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
 		}
 	}
@@ -338,15 +338,15 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			library->delegates.Add(new AbstractDelegate(name, declaration, attributes, space, map->LocalToGlobal(info->parameters), map->LocalToGlobal(info->returns)));
 		}
 	}
-	for (uint32 x = 0; x < sourceSpace->coroutines.Count(); x++)
+	for (uint32 x = 0; x < sourceSpace->tasks.Count(); x++)
 	{
-		const CoroutineDeclarationInfo* info = &source->coroutines[sourceSpace->coroutines[x]];
+		const TaskDeclarationInfo* info = &source->tasks[sourceSpace->tasks[x]];
 		if (info->isPublic)
 		{
 			String name = STRING_ID_TO_NATIVE_STRING(source, info->name);
-			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Coroutine, library->coroutines.Count(), NULL);
+			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Task, library->tasks.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
-			library->coroutines.Add(new AbstractCoroutine(name, declaration, attributes, space, map->LocalToGlobal(info->returns)));
+			library->tasks.Add(new AbstractTask(name, declaration, attributes, space, map->LocalToGlobal(info->returns)));
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->natives.Count(); x++)
@@ -363,7 +363,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 }
 AbstractLibrary::AbstractLibrary(const Library* library, uint32 index, const AbstractParameter& parameter)
 	:AbstractSpace(NULL, TO_NATIVE_STRING(library->stringAgency->Get(library->spaces[0].name)), ToNativeAttributes(parameter.stringAgency, library->stringAgency, library->spaces[0].attributes)), library(index),
-	variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), natives(0)
+	variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), natives(0)
 {
 	AbstractDeclarationMap map = AbstractDeclarationMap(index);
 	for (uint32 i = 0; i < library->imports.Count(); i++)

@@ -8,7 +8,7 @@ class StringAgency;
 class EntityAgency;
 class LibraryAgency;
 class HeapAgency;
-class CoroutineAgency;
+class TaskAgency;
 class Kernel;
 class RainDebugger;
 struct KernelShare
@@ -26,7 +26,7 @@ public:
 	StringAgency* stringAgency;
 	EntityAgency* entityAgency;
 	LibraryAgency* libraryAgency;
-	CoroutineAgency* coroutineAgency;
+	TaskAgency* taskAgency;
 	HeapAgency* heapAgency;
 	Random random;
 	RainDebugger* debugger;

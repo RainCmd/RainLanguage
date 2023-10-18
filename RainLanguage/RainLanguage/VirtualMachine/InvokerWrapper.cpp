@@ -1,7 +1,7 @@
 #include "../Public/VirtualMachine.h"
 #include "Invoker.h"
 #include "Kernel.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "EntityAgency.h"

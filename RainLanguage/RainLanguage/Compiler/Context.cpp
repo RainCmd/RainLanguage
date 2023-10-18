@@ -58,7 +58,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			case DeclarationCategory::InterfaceFunction:
 				return IsVisible(manager, manager->compilingLibrary.interfaces[target.definition]->declaration);
 			case DeclarationCategory::Delegate:
-			case DeclarationCategory::Coroutine:
+			case DeclarationCategory::Task:
 			case DeclarationCategory::Native:
 				if (ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
 				return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
@@ -99,7 +99,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			case DeclarationCategory::Interface:  return ContainAny(target.visibility, Visibility::Public);
 			case DeclarationCategory::InterfaceFunction: return ContainAny(manager->GetDeclaration(target)->declaration.visibility, Visibility::Public);
 			case DeclarationCategory::Delegate:
-			case DeclarationCategory::Coroutine:
+			case DeclarationCategory::Task:
 			case DeclarationCategory::Native: return ContainAny(target.visibility, Visibility::Public);
 			case DeclarationCategory::Lambda:
 			case DeclarationCategory::LambdaClosureValue:
@@ -112,7 +112,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 
 bool Context::TryFindSpace(DeclarationManager* manager, const Anchor& name, AbstractSpace*& result)
 {
-	if (compilingSpace->abstract->children.TryGet(name.content, result))return true;
+	if (compilingSpace->abstract->children.TryGet(name.content, result)) return true;
 	List<AbstractSpace*, true>spaces = List<AbstractSpace*, true>(0);
 	for (uint32 i = 0; i < relies->Count(); i++)
 		if ((*relies)[i]->children.TryGet(name.content, result))
@@ -269,7 +269,7 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, Typ
 {
 	if (type.dimension) type = TYPE_Array;
 	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
-	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Task) type = TYPE_Task;
 	AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
 	if (type.code == TypeCode::Struct)
 	{
@@ -348,7 +348,7 @@ void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& n
 		else if (name == KeyWord_handle()) new (results.Add())CompilingDeclaration(TYPE_Handle.library, Visibility::Public, DeclarationCategory::Class, TYPE_Handle.index, NULL);
 		else if (name == KeyWord_interface()) new (results.Add())CompilingDeclaration(TYPE_Interface.library, Visibility::Public, DeclarationCategory::Class, TYPE_Interface.index, NULL);
 		else if (name == KeyWord_delegate()) new (results.Add())CompilingDeclaration(TYPE_Delegate.library, Visibility::Public, DeclarationCategory::Class, TYPE_Delegate.index, NULL);
-		else if (name == KeyWord_coroutine()) new (results.Add())CompilingDeclaration(TYPE_Coroutine.library, Visibility::Public, DeclarationCategory::Class, TYPE_Coroutine.index, NULL);
+		else if (name == KeyWord_task()) new (results.Add())CompilingDeclaration(TYPE_Task.library, Visibility::Public, DeclarationCategory::Class, TYPE_Task.index, NULL);
 		else if (name == KeyWord_array()) new (results.Add())CompilingDeclaration(TYPE_Array.library, Visibility::Public, DeclarationCategory::Class, TYPE_Array.index, NULL);
 		else if (declaration.category == DeclarationCategory::Struct)
 		{

@@ -80,20 +80,20 @@ enum class Proto
 	//string value
 	SEND_SetGlobal,
 
-	//uint16 coroutineCount
-	//	uint64 coroutineId
+	//uint16 taskCount
+	//	uint64 taskId
 	//	bool isActive
 	//	uint16 traceCount
 	//		string functionName
 	//		uint16 line
-	SEND_Coroutine,
-	//uint64 coroutineId
+	SEND_Task,
+	//uint64 taskId
 	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	RECV_Local,
-	//uint64 coroutineId
+	//uint64 taskId
 	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
@@ -103,14 +103,14 @@ enum class Proto
 	//	uint16 RainType
 	//	string variableValue
 	SEND_Local,
-	//uint64 coroutineId
+	//uint64 taskId
 	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
 	//	uint16 index 如果是数组，这个索引就表示数组下表
 	//string value
 	RECV_SetLocal,
-	//uint64 coroutineId
+	//uint64 taskId
 	//uint16 traceDeep 从栈顶往下数
 	//string localName
 	//uint8 indexCount
@@ -455,17 +455,17 @@ bool OnRecv(Proto proto, DataPackage pkg)
 			}
 			break;
 		case Proto::SEND_SetGlobal:
-		case Proto::SEND_Coroutine: break;
+		case Proto::SEND_Task: break;
 		case Proto::RECV_Local:
 			if (adaptor != nullptr && adaptor->IsActive())
 			{
 				if (!adaptor->IsBreaking()) return true;
 				uint64 cId = pkg.ReadUint64();
-				auto ci = adaptor->GetCoroutineIterator();
+				auto ci = adaptor->GetTaskIterator();
 				while (ci.Next())
 				{
 					auto ti = ci.Current();
-					if (ti.CoroutineID() == cId)
+					if (ti.TaskID() == cId)
 					{
 						uint16 deep = pkg.ReadUint16();
 						std::wstring name = pkg.ReadWString();
@@ -503,11 +503,11 @@ bool OnRecv(Proto proto, DataPackage pkg)
 			{
 				if (!adaptor->IsBreaking()) return true;
 				uint64 cId = pkg.ReadUint64();
-				auto ci = adaptor->GetCoroutineIterator();
+				auto ci = adaptor->GetTaskIterator();
 				while (ci.Next())
 				{
 					auto ti = ci.Current();
-					if (ti.CoroutineID() == cId)
+					if (ti.TaskID() == cId)
 					{
 						uint16 deep = pkg.ReadUint16();
 						std::wstring name = pkg.ReadWString();

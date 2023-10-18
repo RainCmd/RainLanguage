@@ -122,7 +122,7 @@ inline void GetStackSize(KernelLibraryInfo& library, Type type, uint32& size, ui
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			size = SIZE(Handle);
 			alignment = MEMORY_ALIGNMENT_4;
 			return;
@@ -177,8 +177,8 @@ inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 		CalculateTupleInfo(kernel, kernel.delegates[x].parameters);
 		CalculateTupleInfo(kernel, kernel.delegates[x].returns);
 	}
-	for (uint32 x = 0; x < kernel.coroutines.Count(); x++)
-		CalculateTupleInfo(kernel, kernel.coroutines[x].returns);
+	for (uint32 x = 0; x < kernel.tasks.Count(); x++)
+		CalculateTupleInfo(kernel, kernel.tasks[x].returns);
 	for (uint32 x = 0; x < kernel.functions.Count(); x++)
 	{
 		if (!kernel.functions[x].parameters.size) CalculateTupleInfo(kernel, kernel.functions[x].parameters);
@@ -186,7 +186,7 @@ inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 	}
 }
 
-KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), coroutines(0), functions(0), dataStrings(0), stringAgency(1024)
+KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), tasks(0), functions(0), dataStrings(0), stringAgency(1024)
 {
 	root = new KernelLibraryInfo::Space(KERNEL_STRING("kernel"));
 	//Operation
@@ -293,15 +293,15 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "--", KERNEL_SPECIAL_FUNCTION_Decrement_real, TupleInfo_EMPTY, CreateTypeList(TYPE_Real), Operation_Decrement_real);
 	}
 
-	//enum CoroutineState
+	//enum TaskState
 	{
 		List<KernelLibraryInfo::Enum::Element> elements(5);
-		REGISIER_ENUM_ELEMENT("Unstart", KERNEL_COROUTINE_STATE_INDEX_Unstart, InvokerState::Unstart);
-		REGISIER_ENUM_ELEMENT("Running", KERNEL_COROUTINE_STATE_INDEX_Running, InvokerState::Running);
-		REGISIER_ENUM_ELEMENT("Completed", KERNEL_COROUTINE_STATE_INDEX_Completed, InvokerState::Completed);
-		REGISIER_ENUM_ELEMENT("Aborted", KERNEL_COROUTINE_STATE_INDEX_Aborted, InvokerState::Aborted);
-		REGISIER_ENUM_ELEMENT("Invalid", KERNEL_COROUTINE_STATE_INDEX_Invalid, InvokerState::Invalid);
-		REGISIER_ENUM(true, root, "CoroutineState", KERNEL_TYPE_ENUM_INDEX_CoroutineState, elements);
+		REGISIER_ENUM_ELEMENT("Unstart", KERNEL_TASK_STATE_INDEX_Unstart, InvokerState::Unstart);
+		REGISIER_ENUM_ELEMENT("Running", KERNEL_TASK_STATE_INDEX_Running, InvokerState::Running);
+		REGISIER_ENUM_ELEMENT("Completed", KERNEL_TASK_STATE_INDEX_Completed, InvokerState::Completed);
+		REGISIER_ENUM_ELEMENT("Aborted", KERNEL_TASK_STATE_INDEX_Aborted, InvokerState::Aborted);
+		REGISIER_ENUM_ELEMENT("Invalid", KERNEL_TASK_STATE_INDEX_Invalid, InvokerState::Invalid);
+		REGISIER_ENUM(true, root, "TaskState", KERNEL_TYPE_ENUM_INDEX_TaskState, elements);
 	}
 
 	//struct bool
@@ -398,8 +398,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function), type_CreateDelegate);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Native), type_CreateDelegate2);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle), type_CreateDelegate3);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateCoroutine", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function, Type(TYPE_Handle, 1)), type_CreateCoroutine);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateCoroutine", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), type_CreateCoroutine2);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateTask", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function, Type(TYPE_Handle, 1)), type_CreateTask);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateTask", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), type_CreateTask2);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateType", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Integer), type_CreateArray);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetArrayRank", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Type), type_GetArrayRank);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetArrayElementType", CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Type), type_GetArrayElementType);
@@ -433,17 +433,17 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	REGISTER_CLASS(true, root, "interface", KERNEL_TYPE_CLASS_INDEX_Interface, TYPE_Handle, EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
 	REGISTER_CLASS(true, root, "delegate", KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
-	//class coroutine
+	//class task
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(7);
-		REGISTER_MEMBER_FUNCTIONS(true, "Start", TupleInfo_EMPTY, CreateTypeList(TYPE_Coroutine, TYPE_Bool, TYPE_Bool), coroutine_Start);
-		REGISTER_MEMBER_FUNCTIONS(true, "Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Coroutine), coroutine_Abort);
-		REGISTER_MEMBER_FUNCTIONS(true, "GetState", CreateTypeList(TYPE_CoroutineState), CreateTypeList(TYPE_Coroutine), coroutine_GetState);
-		REGISTER_MEMBER_FUNCTIONS(true, "GetExitCode", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Coroutine), coroutine_GetExitCode);
-		REGISTER_MEMBER_FUNCTIONS(true, "IsPause", CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Coroutine), coroutine_IsPause);
-		REGISTER_MEMBER_FUNCTIONS(true, "Pause", TupleInfo_EMPTY, CreateTypeList(TYPE_Coroutine), coroutine_Pause);
-		REGISTER_MEMBER_FUNCTIONS(true, "Resume", TupleInfo_EMPTY, CreateTypeList(TYPE_Coroutine), coroutine_Resume);
-		REGISTER_CLASS(true, root, "coroutine", KERNEL_TYPE_CLASS_INDEX_Coroutine, TYPE_Handle, EMPTY_DECLARATIONS, 8, MEMORY_ALIGNMENT_8, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
+		REGISTER_MEMBER_FUNCTIONS(true, "Start", TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_Bool, TYPE_Bool), task_Start);
+		REGISTER_MEMBER_FUNCTIONS(true, "Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Abort);
+		REGISTER_MEMBER_FUNCTIONS(true, "GetState", CreateTypeList(TYPE_TaskState), CreateTypeList(TYPE_Task), task_GetState);
+		REGISTER_MEMBER_FUNCTIONS(true, "GetExitCode", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Task), task_GetExitCode);
+		REGISTER_MEMBER_FUNCTIONS(true, "IsPause", CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Task), task_IsPause);
+		REGISTER_MEMBER_FUNCTIONS(true, "Pause", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Pause);
+		REGISTER_MEMBER_FUNCTIONS(true, "Resume", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Resume);
+		REGISTER_CLASS(true, root, "task", KERNEL_TYPE_CLASS_INDEX_Task, TYPE_Handle, EMPTY_DECLARATIONS, 8, MEMORY_ALIGNMENT_8, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//class array
 	{
@@ -524,13 +524,13 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		{
 			Space* exceptionSpace = new KernelLibraryInfo::Space(KERNEL_STRING("Exception"), space);
 			REGISTER_VARIABLE(true, exceptionSpace, "NullReference", TYPE_String, AddData(EXCEPTION_NULL_REFERENCE));
-			REGISTER_VARIABLE(true, exceptionSpace, "InvalidCoroutine", TYPE_String, AddData(EXCEPTION_INVALID_COROUTINE));
+			REGISTER_VARIABLE(true, exceptionSpace, "InvalidTask", TYPE_String, AddData(EXCEPTION_INVALID_TASK));
 			REGISTER_VARIABLE(true, exceptionSpace, "OutOfRange", TYPE_String, AddData(EXCEPTION_OUT_OF_RANGE));
 			REGISTER_VARIABLE(true, exceptionSpace, "InvalidType", TYPE_String, AddData(EXCEPTION_INVALID_TYPE));
 			REGISTER_VARIABLE(true, exceptionSpace, "NotArray", TYPE_String, AddData(EXCEPTION_NOT_ARRAY));
 			REGISTER_VARIABLE(true, exceptionSpace, "NotDelegate", TYPE_String, AddData(EXCEPTION_NOT_DELEGATE));
-			REGISTER_VARIABLE(true, exceptionSpace, "NotDelegateOrCoroutine", TYPE_String, AddData(EXCEPTION_NOT_DELEGATE_OR_COROUTINE));
-			REGISTER_VARIABLE(true, exceptionSpace, "CoroutineNotCompleted", TYPE_String, AddData(EXCEPTION_COROUTINE_NOT_COMPLETED));
+			REGISTER_VARIABLE(true, exceptionSpace, "NotDelegateOrTask", TYPE_String, AddData(EXCEPTION_NOT_DELEGATE_OR_TASK));
+			REGISTER_VARIABLE(true, exceptionSpace, "TaskNotCompleted", TYPE_String, AddData(EXCEPTION_TASK_NOT_COMPLETED));
 			REGISTER_VARIABLE(true, exceptionSpace, "DivideByZero", TYPE_String, AddData(EXCEPTION_DIVIDE_BY_ZERO));
 			REGISTER_VARIABLE(true, exceptionSpace, "InvalidCast", TYPE_String, AddData(EXCEPTION_INVALID_CAST));
 		}
@@ -538,13 +538,13 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_FUNCTIONS(true, space, "Collect", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Bool), Collect);
 		REGISTER_FUNCTIONS(true, space, "HeapTotalMemory", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, HeapTotalMemory);
 		REGISTER_FUNCTIONS(true, space, "CountHandle", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, CountHandle);
-		REGISTER_FUNCTIONS(true, space, "CountCoroutine", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, CountCoroutine);
+		REGISTER_FUNCTIONS(true, space, "CountTask", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, CountTask);
 		REGISTER_FUNCTIONS(true, space, "EntityCount", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, EntityCount);
 		REGISTER_FUNCTIONS(true, space, "StringCount", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, StringCount);
 		REGISTER_FUNCTIONS(true, space, "SetRandomSeed", TupleInfo_EMPTY, CreateTypeList(TYPE_Integer), SetRandomSeed);
 		REGISTER_FUNCTIONS(true, space, "LoadAssembly", CreateTypeList(TYPE_Reflection_Assembly), CreateTypeList(TYPE_String), LoadAssembly);
 		REGISTER_FUNCTIONS(true, space, "GetAssembles", CreateTypeList(Type(TYPE_Reflection_Assembly, 1)), TupleInfo_EMPTY, GetAssembles);
-		REGISTER_FUNCTIONS(true, space, "GetCurrentCoroutineInstantID", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, GetCurrentCoroutineInstantID);
+		REGISTER_FUNCTIONS(true, space, "GetCurrentTaskInstantID", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, GetCurrentTaskInstantID);
 	}
 	//space Reflection
 	{
@@ -569,7 +569,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISIER_ENUM_ELEMENT("Handle", KERNEL_TYPE_CODE_Handle, KernelReflectionTypeCode::Handle);
 			REGISIER_ENUM_ELEMENT("Interface", KERNEL_TYPE_CODE_Interface, KernelReflectionTypeCode::Interface);
 			REGISIER_ENUM_ELEMENT("Delegate", KERNEL_TYPE_CODE_Delegate, KernelReflectionTypeCode::Delegate);
-			REGISIER_ENUM_ELEMENT("Coroutine", KERNEL_TYPE_CODE_Coroutine, KernelReflectionTypeCode::Coroutine);
+			REGISIER_ENUM_ELEMENT("Task", KERNEL_TYPE_CODE_Task, KernelReflectionTypeCode::Task);
 			REGISIER_ENUM_ELEMENT("Array", KERNEL_TYPE_CODE_Array, KernelReflectionTypeCode::Array);
 			REGISIER_ENUM(true, space, "TypeCode", KERNEL_TYPE_ENUM_INDEX_TypeCode, elements);
 		}

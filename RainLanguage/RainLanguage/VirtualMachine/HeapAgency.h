@@ -28,7 +28,7 @@ class HeapAgency
 	bool flag, gc;
 	CallableInfo destructorCallable;
 	Handle Alloc(uint32 size, uint8 alignment);
-	bool IsUnrecoverableCoroutine(Handle handle);
+	bool IsUnrecoverableTask(Handle handle);
 	void Free(Handle handle, RuntimeClass* runtimeClass, uint8* address);
 	void Free(Handle handle);
 	void Mark(uint8* address, const Declaration& declaration);

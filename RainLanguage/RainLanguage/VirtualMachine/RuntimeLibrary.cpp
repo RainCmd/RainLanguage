@@ -25,13 +25,13 @@ struct LocalToGlobalMap
 	List<uint32, true> classes;
 	List<uint32, true> interfaces;
 	List<uint32, true> delegates;
-	List<uint32, true> coroutines;
+	List<uint32, true> tasks;
 	List<List<uint32, true>> structMemberFunctions;
 	List<List<uint32, true>> classMemberFunctions;
 	List<List<uint32, true>> interfaceMemberFunctions;
-	inline LocalToGlobalMap(RuntimeLibrary* library, uint32 enumCount, uint32 structCount, uint32 classCount, uint32 interfaceCount, uint32 delegateCount, uint32 coroutineCount)
+	inline LocalToGlobalMap(RuntimeLibrary* library, uint32 enumCount, uint32 structCount, uint32 classCount, uint32 interfaceCount, uint32 delegateCount, uint32 taskCount)
 		:library(library), enums(List<uint32, true>(enumCount)), structs(List<uint32, true>(structCount)), classes(List<uint32, true>(classCount)),
-		interfaces(List<uint32, true>(interfaceCount)), delegates(List<uint32, true>(delegateCount)), coroutines(List<uint32, true>(coroutineCount)),
+		interfaces(List<uint32, true>(interfaceCount)), delegates(List<uint32, true>(delegateCount)), tasks(List<uint32, true>(taskCount)),
 		structMemberFunctions(structCount), classMemberFunctions(classCount), interfaceMemberFunctions(interfaceCount)
 	{ }
 };
@@ -50,7 +50,7 @@ Declaration LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, cons
 		case TypeCode::Handle: return Declaration(map.library->index, TypeCode::Handle, map.classes[declaration.index]);
 		case TypeCode::Interface: return Declaration(map.library->index, TypeCode::Interface, map.interfaces[declaration.index]);
 		case TypeCode::Delegate: return Declaration(map.library->index, TypeCode::Delegate, map.delegates[declaration.index]);
-		case TypeCode::Coroutine: return Declaration(map.library->index, TypeCode::Coroutine, map.coroutines[declaration.index]);
+		case TypeCode::Task: return Declaration(map.library->index, TypeCode::Task, map.tasks[declaration.index]);
 		default:EXCEPTION("无效的类型");
 	}
 }
@@ -72,7 +72,7 @@ MemberFunction LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, c
 		case TypeCode::Interface:
 			return MemberFunction(LocalToGlobal(index, maps, function.declaration), maps[function.declaration.library].interfaceMemberFunctions[function.declaration.index][function.function]);
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 		default:
 			break;
 	}
@@ -106,7 +106,7 @@ void SetDeclaratioinSpace(uint32 parent, uint32 index, RuntimeLibrary* library)
 	SET_DECLARATION_SPACE(classes);
 	SET_DECLARATION_SPACE(interfaces);
 	SET_DECLARATION_SPACE(delegates);
-	SET_DECLARATION_SPACE(coroutines);
+	SET_DECLARATION_SPACE(tasks);
 	SET_DECLARATION_SPACE(functions);
 	SET_DECLARATION_SPACE(natives);
 	for (uint32 i = 0; i < space->children.Count(); i++)
@@ -116,7 +116,7 @@ void SetDeclaratioinSpace(uint32 parent, uint32 index, RuntimeLibrary* library)
 RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, const Library* library)
 	:kernel(NULL), index(index), codeOffset(MemoryAlignment(kernel->libraryAgency->code.Count(), MEMORY_ALIGNMENT_MAX)), dataOffset(MemoryAlignment(kernel->libraryAgency->data.Count(), MEMORY_ALIGNMENT_MAX)), spaces(library->spaces.Count()),
 	variables(library->variables.Count()), enums(library->enums.Count()), structs(library->structs.Count()), classes(library->classes.Count()),
-	interfaces(library->interfaces.Count()), delegates(library->delegates.Count()), coroutines(library->coroutines.Count()),
+	interfaces(library->interfaces.Count()), delegates(library->delegates.Count()), tasks(library->tasks.Count()),
 	functions(library->functions.Count()), natives(library->natives.Count())
 {
 	LibraryAgency* agency = kernel->libraryAgency;
@@ -188,7 +188,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	const ImportLibrary* importLibrary = &library->imports[index];
 	RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(GET_LIBRARY_STRING(importLibrary->spaces[0].name));
 	new (map)LocalToGlobalMap(runtimeLibrary, importLibrary->enums.Count(), importLibrary->structs.Count(), importLibrary->classes.Count(),
-		importLibrary->interfaces.Count(), importLibrary->delegates.Count(), importLibrary->coroutines.Count());
+		importLibrary->interfaces.Count(), importLibrary->delegates.Count(), importLibrary->tasks.Count());
 	for (uint32 x = 0; x < importLibrary->enums.Count(); x++)
 	{
 		const ImportEnum* importEnum = &importLibrary->enums[x];
@@ -279,22 +279,22 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	next_delegate:
 		kernel->stringAgency->Release(name);
 	}
-	for (uint32 x = 0; x < importLibrary->coroutines.Count(); x++)
+	for (uint32 x = 0; x < importLibrary->tasks.Count(); x++)
 	{
-		const ImportCoroutine* importCoroutine = &importLibrary->coroutines[x];
-		string name = TO_NATIVE_STRING(importCoroutine->name);
-		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importCoroutine->space)];
-		for (uint32 y = 0; y < space->coroutines.Count(); y++)
+		const ImportTask* importTask = &importLibrary->tasks[x];
+		string name = TO_NATIVE_STRING(importTask->name);
+		RuntimeSpace* space = &runtimeLibrary->spaces[GetSpace(kernel, runtimeLibrary->spaces, 0, library, importLibrary, importTask->space)];
+		for (uint32 y = 0; y < space->tasks.Count(); y++)
 		{
-			RuntimeCoroutine* runtimeCoroutine = &runtimeLibrary->coroutines[space->coroutines[y]];
-			if (name == runtimeCoroutine->name)
+			RuntimeTask* runtimeTask = &runtimeLibrary->tasks[space->tasks[y]];
+			if (name == runtimeTask->name)
 			{
-				map->coroutines.Add(space->coroutines[y]);
-				goto next_coroutine;
+				map->tasks.Add(space->tasks[y]);
+				goto next_task;
 			}
 		}
-		EXCEPTION("携程查找失败");
-	next_coroutine:
+		EXCEPTION("任务查找失败");
+	next_task:
 		kernel->stringAgency->Release(name);
 	}
 }
@@ -546,18 +546,18 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		for (uint32 y = 0; y < importDelegate->references.Count(); y++)
 			*(Declaration*)(agency->code.GetPointer() + self->codeOffset + importDelegate->references[y]) = declaration;
 	}
-	for (uint32 x = 0; x < importLibrary->coroutines.Count(); x++)
+	for (uint32 x = 0; x < importLibrary->tasks.Count(); x++)
 	{
-		const ImportCoroutine* importCoroutine = &importLibrary->coroutines[x];
-		const RuntimeCoroutine* runtimeCoroutine = &runtimeLibrary->coroutines[maps[importIndex].coroutines[x]];
+		const ImportTask* importTask = &importLibrary->tasks[x];
+		const RuntimeTask* runtimeTask = &runtimeLibrary->tasks[maps[importIndex].tasks[x]];
 		returns.Clear();
-		for (uint32 y = 0; y < importCoroutine->returns.Count(); y++)
-			returns.Add(LocalToGlobal(self->index, maps, importCoroutine->returns[y]));
-		ASSERT(IsEquals(returns, runtimeCoroutine->returns), "携程返回值类型不匹配");
+		for (uint32 y = 0; y < importTask->returns.Count(); y++)
+			returns.Add(LocalToGlobal(self->index, maps, importTask->returns[y]));
+		ASSERT(IsEquals(returns, runtimeTask->returns), "任务返回值类型不匹配");
 
-		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Coroutine, x));
-		for (uint32 y = 0; y < importCoroutine->references.Count(); y++)
-			*(Declaration*)(agency->code.GetPointer() + self->codeOffset + importCoroutine->references[y]) = declaration;
+		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Task, x));
+		for (uint32 y = 0; y < importTask->references.Count(); y++)
+			*(Declaration*)(agency->code.GetPointer() + self->codeOffset + importTask->references[y]) = declaration;
 	}
 	for (uint32 x = 0; x < importLibrary->functions.Count(); x++)
 	{
@@ -734,12 +734,12 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 		TO_NATIVE_TUPLE(delegateParameters, info->parameters);
 		new (delegates.Add())RuntimeDelegate(info->isPublic, nativeAttributes, TO_NATIVE_STRING(info->name), NULL, delegateReturns, delegateParameters);
 	}
-	for (uint32 x = 0; x < library->coroutines.Count(); x++)
+	for (uint32 x = 0; x < library->tasks.Count(); x++)
 	{
-		const CoroutineDeclarationInfo* info = &library->coroutines[x];
+		const TaskDeclarationInfo* info = &library->tasks[x];
 		TO_NATIVE_ATTRIBUTES(nativeAttributes, info->attributes);
-		TO_NATIVE_TUPLE(coroutineReturns, info->returns);
-		new (coroutines.Add())RuntimeCoroutine(info->isPublic, nativeAttributes, TO_NATIVE_STRING(info->name), NULL, coroutineReturns);
+		TO_NATIVE_TUPLE(taskReturns, info->returns);
+		new (tasks.Add())RuntimeTask(info->isPublic, nativeAttributes, TO_NATIVE_STRING(info->name), NULL, taskReturns);
 	}
 	for (uint32 x = 0; x < library->functions.Count(); x++)
 	{

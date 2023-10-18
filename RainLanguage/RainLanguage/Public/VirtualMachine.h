@@ -68,7 +68,7 @@ public:
 	/// <exception>如果调用是无效状态会抛异常</exception>
 	const RainString GetExitMessage() const;
 	/// <summary>
-	/// 开始执行协程
+	/// 开始执行任务
 	/// </summary>
 	/// <param name="immediately">true:立即执行 false:下次Update执行</param>
 	/// <param name="ignoreWait">忽略遇到的wait关键字</param>
@@ -932,15 +932,15 @@ struct RAINLANGUAGE StartupParameter
 	/// </summary>
 	uint32 heapCapacity, heapGeneration;
 	/// <summary>
-	/// 协程初始容积
+	/// 任务初始容积
 	/// </summary>
-	uint32 coroutineCapacity;
+	uint32 taskCapacity;
 	/// <summary>
 	/// 执行栈初始容积
 	/// </summary>
 	uint32 executeStackCapacity;
 	/// <summary>
-	/// 协程异常的回调函数
+	/// 任务异常的回调函数
 	/// </summary>
 	OnExceptionExit onExceptionExit;
 	/// <summary>
@@ -948,8 +948,9 @@ struct RAINLANGUAGE StartupParameter
 	/// </summary>
 	ProgramDatabaseLoader programDatabaseLoader;
 
-	StartupParameter(const RainLibrary* libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, LibraryLoader libraryLoader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapGeneration, uint32 coroutineCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit, ProgramDatabaseLoader programDatabaseLoader)
-		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), coroutineCapacity(coroutineCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit), programDatabaseLoader(programDatabaseLoader) {}
+	StartupParameter(const RainLibrary* libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, LibraryLoader libraryLoader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapGeneration, uint32 taskCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit, ProgramDatabaseLoader programDatabaseLoader)
+		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), taskCapacity(taskCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit), programDatabaseLoader(programDatabaseLoader) {}
+	StartupParameter(const RainLibrary* libraries, uint32 libraryCount, EntityAction onReferenceEntity, EntityAction onReleaseEntity, LibraryLoader libraryLoader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit, ProgramDatabaseLoader programDatabaseLoader) : libraries(libraries), libraryCount(libraryCount), seed(0), stringCapacity(8), entityCapacity(8), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), nativeCallerLoader(nativeCallerLoader), heapCapacity(0xff), heapGeneration(8), taskCapacity(8), executeStackCapacity(0xff), onExceptionExit(onExceptionExit), programDatabaseLoader(programDatabaseLoader) {}
 };
 
 /// <summary>
@@ -958,9 +959,9 @@ struct RAINLANGUAGE StartupParameter
 struct RAINLANGUAGE RainKernelState
 {
 	/// <summary>
-	/// 当前协程数量
+	/// 当前任务数量
 	/// </summary>
-	uint32 coroutineCount;
+	uint32 taskCount;
 	/// <summary>
 	/// 当前字符串数量
 	/// </summary>
@@ -978,7 +979,7 @@ struct RAINLANGUAGE RainKernelState
 	/// </summary>
 	uint32 heapSize;
 
-	RainKernelState(const uint32& coroutineCount, const uint32& stringCount, const uint32& entityCount, const uint32& handleCount, const uint32& heapSize) : coroutineCount(coroutineCount), stringCount(stringCount), entityCount(entityCount), handleCount(handleCount), heapSize(heapSize) {}
+	RainKernelState(const uint32& taskCount, const uint32& stringCount, const uint32& entityCount, const uint32& handleCount, const uint32& heapSize) : taskCount(taskCount), stringCount(stringCount), entityCount(entityCount), handleCount(handleCount), heapSize(heapSize) {}
 };
 
 /// <summary>

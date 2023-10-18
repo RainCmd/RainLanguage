@@ -18,7 +18,6 @@ KEY_WORLD(struct, "struct")
 KEY_WORLD(class, "class")
 KEY_WORLD(interface, "interface")
 KEY_WORLD(const, "const")
-KEY_WORLD(expand, "expand")
 
 KEY_WORLD(global, "global")
 KEY_WORLD(base, "base")
@@ -40,7 +39,7 @@ KEY_WORLD(string, "string")
 KEY_WORLD(handle, "handle")
 KEY_WORLD(entity, "entity")
 KEY_WORLD(delegate, "delegate")
-KEY_WORLD(coroutine, "coroutine")
+KEY_WORLD(task, "task")
 KEY_WORLD(array, "array")
 
 KEY_WORLD(if, "if")
@@ -76,7 +75,6 @@ bool IsKeyWord(const String & value)
 	if (value == KeyWord_class()) return true;
 	if (value == KeyWord_interface()) return true;
 	if (value == KeyWord_const()) return true;
-	if (value == KeyWord_expand()) return true;
 
 	if (value == KeyWord_global()) return true;
 	if (value == KeyWord_base()) return true;
@@ -98,7 +96,7 @@ bool IsKeyWord(const String & value)
 	if (value == KeyWord_handle()) return true;
 	if (value == KeyWord_entity()) return true;
 	if (value == KeyWord_delegate()) return true;
-	if (value == KeyWord_coroutine()) return true;
+	if (value == KeyWord_task()) return true;
 	if (value == KeyWord_array()) return true;
 
 	if (value == KeyWord_if()) return true;

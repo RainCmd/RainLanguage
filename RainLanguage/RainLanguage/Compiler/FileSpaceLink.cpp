@@ -15,7 +15,7 @@ Type FileType::GetType(DeclarationManager* manager, const List<CompilingDeclarat
 		else if (declaration.category == DeclarationCategory::Class)return Type(declaration.library, TypeCode::Handle, declaration.index, dimension);
 		else if (declaration.category == DeclarationCategory::Interface)return Type(declaration.library, TypeCode::Interface, declaration.index, dimension);
 		else if (declaration.category == DeclarationCategory::Delegate)return Type(declaration.library, TypeCode::Delegate, declaration.index, dimension);
-		else if (declaration.category == DeclarationCategory::Coroutine)return Type(declaration.library, TypeCode::Coroutine, declaration.index, dimension);
+		else if (declaration.category == DeclarationCategory::Task)return Type(declaration.library, TypeCode::Task, declaration.index, dimension);
 		else
 		{
 			MESSAGE3(manager->messages, name, MessageType::ERROR_NOT_TYPE_DECLARATION, manager->GetDeclaration(declaration)->GetFullName(manager->stringAgency));
@@ -275,16 +275,16 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 			abstractDelegate->returns.AddElement(findType, 0);
 		}
 	}
-	for (uint32 x = 0; x < coroutines.Count(); x++)
+	for (uint32 x = 0; x < tasks.Count(); x++)
 	{
-		FileCoroutine* file = &coroutines[x];
-		CompilingCoroutine* compilingCoroutine = manager->compilingLibrary.coroutines[file->index];
-		AbstractCoroutine* abstractCoroutine = manager->selfLibaray->coroutines[file->index];
+		FileTask* file = &tasks[x];
+		CompilingTask* compilingTask = manager->compilingLibrary.tasks[file->index];
+		AbstractTask* abstractTask = manager->selfLibaray->tasks[file->index];
 		for (uint32 y = 0; y < file->returns.Count(); y++)
 		{
 			FIND_DECLARATION(file->returns[y]);
-			compilingCoroutine->returns.Add(findType);
-			abstractCoroutine->returns.AddElement(findType, 0);
+			compilingTask->returns.Add(findType);
+			abstractTask->returns.AddElement(findType, 0);
 		}
 	}
 	for (uint32 x = 0; x < natives.Count(); x++)

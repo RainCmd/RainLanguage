@@ -89,11 +89,11 @@ struct GlobalReferenceDelegate
 	inline GlobalReferenceDelegate(uint32 index) :index(index), references(0) {}
 };
 
-struct GlobalReferenceCoroutine
+struct GlobalReferenceTask
 {
 	uint32 index;
 	List<uint32, true> references;
-	inline GlobalReferenceCoroutine(uint32 index) :index(index), references(0) {}
+	inline GlobalReferenceTask(uint32 index) :index(index), references(0) {}
 };
 
 struct GlobalReferenceNative
@@ -112,10 +112,10 @@ struct GlobalReferenceLibrary
 	List<GlobalReferenceClass> classes;
 	List<GlobalReferenceInterface> interfaces;
 	List<GlobalReferenceDelegate> delegates;
-	List<GlobalReferenceCoroutine> coroutines;
+	List<GlobalReferenceTask> tasks;
 	List<GlobalReferenceFunction> functions;
 	List<GlobalReferenceNative> natives;
-	inline GlobalReferenceLibrary(uint32 index) :index(index), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), coroutines(0), functions(0), natives(0) {}
+	inline GlobalReferenceLibrary(uint32 index) :index(index), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), functions(0), natives(0) {}
 };
 
 struct GlobalReference

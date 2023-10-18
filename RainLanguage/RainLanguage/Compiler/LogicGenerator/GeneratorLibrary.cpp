@@ -54,8 +54,8 @@ void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agenc
 				case DeclarationCategory::Delegate:
 					space->delegates.Add(declaration.index);
 					break;
-				case DeclarationCategory::Coroutine:
-					space->coroutines.Add(declaration.index);
+				case DeclarationCategory::Task:
+					space->tasks.Add(declaration.index);
 					break;
 				case DeclarationCategory::Native:
 					space->natives.Add(declaration.index);
@@ -156,7 +156,7 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 
 Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 {
-	Library* result = new Library(new StringAgency(0xf), data, manager.compilingLibrary.dataSize, manager.selfLibaray->variables.Count(), manager.selfLibaray->enums.Count(), manager.selfLibaray->structs.Count(), manager.selfLibaray->classes.Count(), manager.selfLibaray->interfaces.Count(), manager.selfLibaray->delegates.Count(), manager.selfLibaray->coroutines.Count(), manager.selfLibaray->functions.Count(), manager.selfLibaray->natives.Count(), codeStrings.Count(), dataStrings.Count(), globalReference->libraryReferences.Count(), globalReference->libraries.Count());
+	Library* result = new Library(new StringAgency(0xf), data, manager.compilingLibrary.dataSize, manager.selfLibaray->variables.Count(), manager.selfLibaray->enums.Count(), manager.selfLibaray->structs.Count(), manager.selfLibaray->classes.Count(), manager.selfLibaray->interfaces.Count(), manager.selfLibaray->delegates.Count(), manager.selfLibaray->tasks.Count(), manager.selfLibaray->functions.Count(), manager.selfLibaray->natives.Count(), codeStrings.Count(), dataStrings.Count(), globalReference->libraryReferences.Count(), globalReference->libraries.Count());
 	result->code = code;
 	for (uint32 i = 0; i < globalReference->libraryReferences.Count(); i++) result->libraryReferences.Add(GetReferenceAddress(globalReference->libraryReferences[i]));
 	CollectSpace(manager.selfLibaray, result->spaces, result->stringAgency);
@@ -265,13 +265,13 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < abstractDelegate->parameters.Count(); y++) parameters.AddElement(globalReference->AddReference(abstractDelegate->parameters.GetType(y)), abstractDelegate->parameters.GetOffset(y));
 		new (result->delegates.Add())DelegateDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractDelegate), returns, parameters);
 	}
-	for (uint32 x = 0; x < manager.selfLibaray->coroutines.Count(); x++)
+	for (uint32 x = 0; x < manager.selfLibaray->tasks.Count(); x++)
 	{
-		AbstractCoroutine* abstractCoroutine = manager.selfLibaray->coroutines[x];
-		ATTRIBUTES(abstractCoroutine);
-		TupleInfo returns(abstractCoroutine->returns.Count(), abstractCoroutine->returns.size);
-		for (uint32 y = 0; y < abstractCoroutine->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractCoroutine->returns.GetType(y)), abstractCoroutine->returns.GetOffset(y));
-		new (result->coroutines.Add())CoroutineDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractCoroutine), returns);
+		AbstractTask* abstractTask = manager.selfLibaray->tasks[x];
+		ATTRIBUTES(abstractTask);
+		TupleInfo returns(abstractTask->returns.Count(), abstractTask->returns.size);
+		for (uint32 y = 0; y < abstractTask->returns.Count(); y++) returns.AddElement(globalReference->AddReference(abstractTask->returns.GetType(y)), abstractTask->returns.GetOffset(y));
+		new (result->tasks.Add())TaskDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractTask), returns);
 	}
 	for (uint32 x = 0; x < manager.selfLibaray->functions.Count(); x++)
 	{
@@ -312,7 +312,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	{
 		GlobalReferenceLibrary& referenceLibrary = globalReference->libraries[x];
 		AbstractLibrary* library = manager.GetLibrary(referenceLibrary.index);
-		ImportLibrary* importLibrary = new (result->imports.Add())ImportLibrary(referenceLibrary.variables.Count(), referenceLibrary.enums.Count(), referenceLibrary.structs.Count(), referenceLibrary.classes.Count(), referenceLibrary.interfaces.Count(), referenceLibrary.delegates.Count(), referenceLibrary.coroutines.Count(), referenceLibrary.functions.Count(), referenceLibrary.natives.Count());
+		ImportLibrary* importLibrary = new (result->imports.Add())ImportLibrary(referenceLibrary.variables.Count(), referenceLibrary.enums.Count(), referenceLibrary.structs.Count(), referenceLibrary.classes.Count(), referenceLibrary.interfaces.Count(), referenceLibrary.delegates.Count(), referenceLibrary.tasks.Count(), referenceLibrary.functions.Count(), referenceLibrary.natives.Count());
 		library->index = NULL;
 		new (importLibrary->spaces.Add())ImportSpace(NULL, result->stringAgency->AddAndRef(library->name));
 		for (uint32 y = 0; y < referenceLibrary.variables.Count(); y++)
@@ -450,14 +450,14 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			for (uint32 z = 0; z < abstractDelegate->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractDelegate->returns.GetType(z)));
 			new (importLibrary->delegates.Add())ImportDelegate(IMPORT_INFO_PARAMETER(Delegate), parameters, returns);
 		}
-		for (uint32 y = 0; y < referenceLibrary.coroutines.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary.tasks.Count(); y++)
 		{
-			GlobalReferenceCoroutine& referenceCoroutine = referenceLibrary.coroutines[y];
-			AbstractCoroutine* abstractCoroutine = library->coroutines[referenceCoroutine.index];
-			IMPORT_BASE_INFO(Coroutine);
-			List<Type, true> returns(abstractCoroutine->returns.Count());
-			for (uint32 z = 0; z < abstractCoroutine->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractCoroutine->returns.GetType(z)));
-			new (importLibrary->coroutines.Add())ImportCoroutine(IMPORT_INFO_PARAMETER(Coroutine), returns);
+			GlobalReferenceTask& referenceTask = referenceLibrary.tasks[y];
+			AbstractTask* abstractTask = library->tasks[referenceTask.index];
+			IMPORT_BASE_INFO(Task);
+			List<Type, true> returns(abstractTask->returns.Count());
+			for (uint32 z = 0; z < abstractTask->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractTask->returns.GetType(z)));
+			new (importLibrary->tasks.Add())ImportTask(IMPORT_INFO_PARAMETER(Task), returns);
 		}
 		for (uint32 y = 0; y < referenceLibrary.functions.Count(); y++)
 		{

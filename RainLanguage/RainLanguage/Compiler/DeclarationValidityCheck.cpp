@@ -47,8 +47,8 @@ Anchor GetName(DeclarationManager* manager, const CompilingDeclaration& declarat
 			return library->interfaces[declaration.definition]->functions[declaration.index]->name;
 		case DeclarationCategory::Delegate:
 			return library->delegates[declaration.index]->name;
-		case DeclarationCategory::Coroutine:
-			return library->coroutines[declaration.index]->name;
+		case DeclarationCategory::Task:
+			return library->tasks[declaration.index]->name;
 		case DeclarationCategory::Native:
 			return library->natives[declaration.index]->name;
 		case DeclarationCategory::Lambda:
@@ -360,9 +360,9 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		CompilingDelegate* compiling = library->delegates[x];
 		if (IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
 	}
-	for (uint32 x = 0; x < library->coroutines.Count(); x++)
+	for (uint32 x = 0; x < library->tasks.Count(); x++)
 	{
-		CompilingCoroutine* compiling = library->coroutines[x];
+		CompilingTask* compiling = library->tasks[x];
 		if (IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
 	}
 	for (uint32 x = 0; x < library->natives.Count(); x++)

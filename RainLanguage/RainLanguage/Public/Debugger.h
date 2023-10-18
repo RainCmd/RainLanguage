@@ -182,24 +182,24 @@ struct RAINLANGUAGE RainTraceIterator
 {
 private:
 	void* debugFrame;
-	void* coroutine;
+	void* task;
 	uint8* stack;
 	uint32 pointer;
 public:
-	RainTraceIterator(void* debugFrame, void* coroutine);
+	RainTraceIterator(void* debugFrame, void* task);
 	RainTraceIterator(const RainTraceIterator& other);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
 	bool IsValid();
 	/// <summary>
-	/// 当前活跃的协程
+	/// 当执行中的任务
 	/// </summary>
 	bool IsActive();
 	/// <summary>
 	/// 当前调用的实例ID
 	/// </summary>
-	integer CoroutineID();
+	integer TaskID();
 	/// <summary>
 	/// 迭代下一个调用栈追踪
 	/// </summary>
@@ -212,29 +212,29 @@ public:
 };
 
 /// <summary>
-/// 协程迭代器
+/// 任务迭代器
 /// </summary>
-struct RAINLANGUAGE RainCoroutineIterator
+struct RAINLANGUAGE RainTaskIterator
 {
 private:
 	void* debugFrame;
 	void* index;
 public:
-	RainCoroutineIterator(void* debugFrame);
-	RainCoroutineIterator(const RainCoroutineIterator& other);
+	RainTaskIterator(void* debugFrame);
+	RainTaskIterator(const RainTaskIterator& other);
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
 	bool IsValid();
 	/// <summary>
-	/// 下一个协程调用栈追踪迭代器
+	/// 下一个任务调用栈追踪迭代器
 	/// </summary>
 	bool Next();
 	/// <summary>
-	/// 当前协程调用栈追踪迭代器
+	/// 当前任务调用栈追踪迭代器
 	/// </summary>
 	RainTraceIterator Current();
-	~RainCoroutineIterator();
+	~RainTaskIterator();
 };
 
 /// <summary>
@@ -247,20 +247,20 @@ private:
 	void* library;
 	void* debugFrame;
 	void* map;
-	uint64 currentCoroutine;
+	uint64 currentTask;
 	uint32 currentTraceDeep;
 protected:
 	/// <summary>
 	/// 触发断点
 	/// </summary>
-	/// <param name="coroutine">协程唯一id</param>
-	virtual void OnHitBreakpoint(uint64 coroutine) = 0;
+	/// <param name="task">任务唯一id</param>
+	virtual void OnHitBreakpoint(uint64 task) = 0;
 	/// <summary>
 	/// 触发异常
 	/// </summary>
-	/// <param name="coroutine">协程唯一id</param>
+	/// <param name="task">任务唯一id</param>
 	/// <param name="message">异常信息</param>
-	virtual void OnCoroutineExit(uint64 coroutine, const RainString& message) = 0;
+	virtual void OnTaskExit(uint64 task, const RainString& message) = 0;
 	virtual void OnContinue() = 0;
 public:
 	StepType type;
@@ -283,9 +283,9 @@ public:
 	/// </summary>
 	RainDebuggerSpace GetSpace();
 	/// <summary>
-	/// 获取携程迭代器
+	/// 获取任务迭代器
 	/// </summary>
-	RainCoroutineIterator GetCoroutineIterator();
+	RainTaskIterator GetTaskIterator();
 	/// <summary>
 	/// 是否是断点状态
 	/// </summary>

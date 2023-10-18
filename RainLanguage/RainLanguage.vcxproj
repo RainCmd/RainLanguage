@@ -328,9 +328,10 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.h" />
-    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\TaskExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ExpressionReferenceExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\InvokerExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\LogicExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\OperationExpression.h" />
@@ -369,6 +370,7 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Token.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\VariableGenerator.h" />
     <ClInclude Include="RainLanguage\Compiler\Message.h" />
+    <ClInclude Include="RainLanguage\Compiler\ProgramDatabaseGenerator.h" />
     <ClInclude Include="RainLanguage\Compiler\Visibility.h" />
     <ClInclude Include="RainLanguage\DeclarationInfos.h" />
     <ClInclude Include="RainLanguage\Frame.h" />
@@ -379,23 +381,25 @@
     <ClInclude Include="RainLanguage\KernelLibraryInfo.h" />
     <ClInclude Include="RainLanguage\KeyWords.h" />
     <ClInclude Include="RainLanguage\Library.h" />
+    <ClInclude Include="RainLanguage\ProgramDatabase.h" />
     <ClInclude Include="RainLanguage\Public\Builder.h" />
     <ClInclude Include="RainLanguage\Public\BuilderDefinitions.h" />
+    <ClInclude Include="RainLanguage\Public\Debugger.h" />
     <ClInclude Include="RainLanguage\Public\MemoryAllocator.h" />
     <ClInclude Include="RainLanguage\Public\RainLibrary.h" />
     <ClInclude Include="RainLanguage\Public\Vector.h" />
     <ClInclude Include="RainLanguage\Public\Rain.h" />
     <ClInclude Include="RainLanguage\Public\VirtualMachine.h" />
     <ClInclude Include="RainLanguage\Public\VirtualMachineDefinitions.h" />
-    <ClInclude Include="RainLanguage\RainLanguage.h" />
+    <ClInclude Include="RainLanguage\Language.h" />
     <ClInclude Include="RainLanguage\Real\MathReal.h" />
     <ClInclude Include="RainLanguage\Real\Random.h" />
     <ClInclude Include="RainLanguage\Serialization.h" />
     <ClInclude Include="RainLanguage\String.h" />
     <ClInclude Include="RainLanguage\Type.h" />
     <ClInclude Include="RainLanguage\Vector\VectorMath.h" />
-    <ClInclude Include="RainLanguage\VirtualMachine\Coroutine.h" />
-    <ClInclude Include="RainLanguage\VirtualMachine\CoroutineAgency.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\Task.h" />
+    <ClInclude Include="RainLanguage\VirtualMachine\TaskAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\EntityAgency.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\Exceptions.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\HeapAgency.h" />
@@ -434,9 +438,10 @@
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.cpp" />
-    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CoroutineExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\TaskExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ExpressionReferenceExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\InvokerExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\LogicExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\OperationExpression.cpp" />
@@ -471,11 +476,13 @@
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\WhileStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\TemporaryVariableBlock.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\VariableGenerator.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\ProgramDatabaseGenerator.cpp" />
     <ClCompile Include="RainLanguage\KernelFunctions.cpp" />
     <ClCompile Include="RainLanguage\KernelLibraryInfo.cpp" />
     <ClCompile Include="RainLanguage\KeyWords.cpp" />
     <ClCompile Include="RainLanguage\Library.cpp" />
-    <ClCompile Include="RainLanguage\RainLanguage.cpp" />
+    <ClCompile Include="RainLanguage\ProgramDatabase.cpp" />
+    <ClCompile Include="RainLanguage\Language.cpp" />
     <ClCompile Include="RainLanguage\Real\Fixed.cpp" />
     <ClCompile Include="RainLanguage\Real\MathReal.cpp" />
     <ClCompile Include="RainLanguage\Real\Random.cpp" />
@@ -485,8 +492,9 @@
     <ClCompile Include="RainLanguage\Vector\Real2.cpp" />
     <ClCompile Include="RainLanguage\Vector\Real3.cpp" />
     <ClCompile Include="RainLanguage\Vector\Real4.cpp" />
-    <ClCompile Include="RainLanguage\VirtualMachine\Coroutine.cpp" />
-    <ClCompile Include="RainLanguage\VirtualMachine\CoroutineAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\Task.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\TaskAgency.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\Debugger.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\EntityAgency.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\InvokerWrapper.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\HeapAgency.cpp" />
@@ -499,6 +507,7 @@
     <ClCompile Include="RainLanguage\VirtualMachine\RuntimeLibrary.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="RainLanguage\kernel.rain" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

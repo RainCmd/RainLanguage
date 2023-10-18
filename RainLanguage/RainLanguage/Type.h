@@ -64,7 +64,7 @@ enum class TypeCode : uint8
 	Handle,
 	Interface,
 	Delegate,
-	Coroutine,
+	Task,
 };
 
 const struct Declaration

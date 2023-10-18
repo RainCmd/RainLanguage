@@ -67,7 +67,7 @@ void LogicVariable::ClearVariable(DeclarationManager* manager, Generator* genera
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			generator->WriteCode(*this);
 			break;

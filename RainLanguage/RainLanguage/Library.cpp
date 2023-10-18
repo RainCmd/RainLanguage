@@ -26,7 +26,7 @@ Serializer* Serialize(const Library* library)
 		serializer->SerializeList(space->classes);
 		serializer->SerializeList(space->interfaces);
 		serializer->SerializeList(space->delegates);
-		serializer->SerializeList(space->coroutines);
+		serializer->SerializeList(space->tasks);
 		serializer->SerializeList(space->functions);
 		serializer->SerializeList(space->natives);
 	}
@@ -133,10 +133,10 @@ Serializer* Serialize(const Library* library)
 		Serialize(serializer, info.returns);
 		Serialize(serializer, info.parameters);
 	}
-	serializer->Serialize(library->coroutines.Count());
-	for (uint32 i = 0; i < library->coroutines.Count(); i++)
+	serializer->Serialize(library->tasks.Count());
+	for (uint32 i = 0; i < library->tasks.Count(); i++)
 	{
-		const CoroutineDeclarationInfo& info = library->coroutines[i];
+		const TaskDeclarationInfo& info = library->tasks[i];
 		serializer->Serialize(info.isPublic);
 		serializer->SerializeList(info.attributes);
 		serializer->Serialize(info.name);
@@ -298,10 +298,10 @@ Serializer* Serialize(const Library* library)
 			serializer->SerializeList(info.parameters);
 			serializer->SerializeList(info.returns);
 		}
-		serializer->Serialize(importLibrary.coroutines.Count());
-		for (uint32 y = 0; y < importLibrary.coroutines.Count(); y++)
+		serializer->Serialize(importLibrary.tasks.Count());
+		for (uint32 y = 0; y < importLibrary.tasks.Count(); y++)
 		{
-			const ImportCoroutine& info = importLibrary.coroutines[y];
+			const ImportTask& info = importLibrary.tasks[y];
 			serializer->Serialize(info.space);
 			serializer->Serialize(info.name);
 			serializer->SerializeList(info.references);
@@ -362,7 +362,7 @@ const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		deserializer.Deserialize(space->classes);
 		deserializer.Deserialize(space->interfaces);
 		deserializer.Deserialize(space->delegates);
-		deserializer.Deserialize(space->coroutines);
+		deserializer.Deserialize(space->tasks);
 		deserializer.Deserialize(space->functions);
 		deserializer.Deserialize(space->natives);
 	}
@@ -472,14 +472,14 @@ const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		TupleInfo	parameters(0, 0); Deserialize(&deserializer, parameters);
 		new (result->delegates.Add())DelegateDeclarationInfo(isPublic, attributes, name, returs, parameters);
 	}
-	uint32 coroutineCount = deserializer.Deserialize<uint32>();
-	while (coroutineCount--)
+	uint32 taskCount = deserializer.Deserialize<uint32>();
+	while (taskCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
 		string		name = deserializer.Deserialize<string>();
 		TupleInfo	returs(0, 0); Deserialize(&deserializer, returs);
-		new (result->delegates.Add())CoroutineDeclarationInfo(isPublic, attributes, name, returs);
+		new (result->delegates.Add())TaskDeclarationInfo(isPublic, attributes, name, returs);
 	}
 	uint32 functionCount = deserializer.Deserialize<uint32>();
 	while (functionCount--)
@@ -644,14 +644,14 @@ const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			List<Type, true> returns(0); deserializer.Deserialize(returns);
 			new (importLibrary->delegates.Add())ImportDelegate(space, name, references, parameters, returns);
 		}
-		uint32 importCoroutineCount = deserializer.Deserialize<uint32>();
-		while (importCoroutineCount--)
+		uint32 importTaskCount = deserializer.Deserialize<uint32>();
+		while (importTaskCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
 			List<uint32, true> references(0); deserializer.Deserialize(references);
 			List<Type, true> returns(0); deserializer.Deserialize(returns);
-			new (importLibrary->coroutines.Add())ImportCoroutine(space, name, references, returns);
+			new (importLibrary->tasks.Add())ImportTask(space, name, references, returns);
 		}
 		uint32 importFunctionCount = deserializer.Deserialize<uint32>();
 		while (importFunctionCount--)

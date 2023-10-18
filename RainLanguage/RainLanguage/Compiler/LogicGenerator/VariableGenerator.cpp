@@ -97,7 +97,7 @@ void ClearTemporary(DeclarationManager* manager, Generator* generator, uint32 ad
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine: goto label_clear_stack_instruct;
+		case TypeCode::Task: goto label_clear_stack_instruct;
 		default: break;
 	}
 	EXCEPTION("无效的类型");
@@ -140,7 +140,7 @@ void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 of
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			generator->WriteCode(reference, offset);
 			break;
@@ -199,7 +199,7 @@ void ResetLocal(DeclarationManager* manager, Generator* generator, uint32 addres
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			generator->WriteCode(LOCAL(address));
 			break;

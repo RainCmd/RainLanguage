@@ -689,7 +689,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 							delete frameExpression; frameExpression = NULL;
 							blockStack.Peek()->statements.Add(new WaitStatement(lexical.anchor, NULL));
 						}
-						else if (frameExpression->returns.Count() == 1 && (frameExpression->returns[0] == TYPE_Bool || frameExpression->returns[0] == TYPE_Integer || frameExpression->returns[0].code == TypeCode::Coroutine))
+						else if (frameExpression->returns.Count() == 1 && (frameExpression->returns[0] == TYPE_Bool || frameExpression->returns[0] == TYPE_Integer || frameExpression->returns[0].code == TypeCode::Task))
 							blockStack.Peek()->statements.Add(new WaitStatement(lexical.anchor, frameExpression));
 						else MESSAGE2(parameter.manager->messages, frame, MessageType::ERROR_TYPE_MISMATCH);
 					}

@@ -27,7 +27,7 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 		else
 		{
 			expression->Generator(logicParamter);
-			parameter.generator->WriteCode(Instruct::BASE_WaitCoroutine);
+			parameter.generator->WriteCode(Instruct::BASE_WaitTask);
 			parameter.generator->WriteCode(logicParamter.results[0]);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}

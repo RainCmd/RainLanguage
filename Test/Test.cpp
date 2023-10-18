@@ -10,6 +10,7 @@
 #include <VirtualMachine.h>
 #include <MemoryAllocator.h>
 #include <map>
+#include <thread>
 
 class TestCodeLoader :public CodeLoader
 {
@@ -137,6 +138,8 @@ void OnExce(RainKernel*, const RainStackFrame* stackFrames, uint32 stackFrameCou
 	for (uint32 i = 0; i < stackFrameCount; i++)
 	{
 		str.assign(stackFrames[i].libraryName.value, stackFrames[i].libraryName.length);
+		std::wcout << str << ":";
+		str.assign(stackFrames[i].functionName.value, stackFrames[i].functionName.length);
 		std::wcout << str << " [" << stackFrames[i].address << "]\n";
 	}
 }
@@ -144,7 +147,7 @@ void OnExce(RainKernel*, const RainStackFrame* stackFrames, uint32 stackFrameCou
 void TestFunc()
 {
 
-	TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\RainScripts\\");
+	TestCodeLoader loader(L"D:\\Projects\\CPP\\RainLanguage\\Test\\RainScripts\\");
 	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, nullptr, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);
 	for (uint32 i = 0; i <= 8; i++)
@@ -163,15 +166,18 @@ void TestFunc()
 			std::wcout << source << " line:" << msg.line << "\tERR CODE:" << (uint32)msg.type << "\n";
 		}
 	}
-	std::wcout << L"输出宽字节测试\n";
 	if (!product->GetLevelMessageCount(ErrorLevel::Error))
 	{
-		StartupParameter parameter(product->GetLibrary(), 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce);
+		StartupParameter parameter(product->GetLibrary(), 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
 		RainKernel* kernel = CreateKernel(parameter);
-		RainFunction rf = kernel->FindFunction(L"Main");
-		InvokerWrapper iw = kernel->CreateInvoker(rf);
+		RainFunction rf = kernel->FindFunction(L"Main", true);
+		InvokerWrapper iw = rf.CreateInvoker();
 		iw.Start(true, false);
-		kernel->Update();
+		while (kernel->GetState().taskCount)
+		{
+			kernel->Update();
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
 		delete kernel;
 	}
 	delete product;
@@ -187,6 +193,8 @@ int main()
 
 	ClearStaticCache();
 
+	std::cout << "申请的内存总数：" << midx << "\n";
+	std::cout << "未释放的内存索引列表:\n";
 	for (auto it = mmap.begin(); it != mmap.end(); it++)
 		if (it->second < 0)
 			std::cout << it->second << "\n";

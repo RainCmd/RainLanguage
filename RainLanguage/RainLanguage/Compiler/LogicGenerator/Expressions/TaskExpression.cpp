@@ -1,24 +1,24 @@
-#include "CoroutineExpression.h"
+#include "TaskExpression.h"
 #include "InvokerExpression.h"
 #include "../VariableGenerator.h"
 
-void CoroutineCreateExpression::Generator(LogicGenerateParameter& parameter)
+void TaskCreateExpression::Generator(LogicGenerateParameter& parameter)
 {
-	GeneratCoroutineParameter(parameter, source, start, returns[0]);
+	GeneratTaskParameter(parameter, source, start, returns[0]);
 }
 
-CoroutineCreateExpression::~CoroutineCreateExpression()
+TaskCreateExpression::~TaskCreateExpression()
 {
 	delete source; source = NULL;
 }
 
-void GeneratCoroutineParameter(LogicGenerateParameter& parameter, Expression* parametersExpression)
+void GeneratTaskParameter(LogicGenerateParameter& parameter, Expression* parametersExpression)
 {
 	if (parametersExpression->returns.Count())
 	{
 		LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parametersExpression->returns.Count());
 		parametersExpression->Generator(parametersParameter);
-		parameter.generator->WriteCode(Instruct::BASE_SetCoroutineParameter);
+		parameter.generator->WriteCode(Instruct::BASE_SetTaskParameter);
 		parameter.generator->WriteCode(parameter.results[0]);
 		parameter.generator->WriteCode(parametersExpression->returns.Count());
 		CodeLocalAddressReference exceptionAddress = CodeLocalAddressReference();
@@ -105,7 +105,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, Expression* pa
 	}
 }
 
-void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration)
+void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration)
 {
 	LogicVariable result = parameter.GetResult(0, Type(declaration, 0));
 	if (ContainAny(invoker->type, ExpressionType::InvokerDelegateExpression))
@@ -120,15 +120,15 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 			parameter.generator->WriteCode(invokerParameter.results[0]);
 			parameter.generator->WriteCode(&endAddress);
 		}
-		parameter.generator->WriteCode(Instruct::BASE_CreateDelegateCoroutine);
+		parameter.generator->WriteCode(Instruct::BASE_CreateDelegateTask);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode(invokerParameter.results[0]);
 		parameter.generator->WriteCode(parameter.finallyAddress);
-		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
+		GeneratTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
+			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
 			parameter.generator->WriteCode(result);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
@@ -137,18 +137,18 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 	else if (ContainAny(invoker->type, ExpressionType::InvokerFunctionExpression))
 	{
 		InvokerFunctionExpression* invokerExpression = (InvokerFunctionExpression*)invoker;
-		parameter.generator->WriteCode(Instruct::BASE_CreateCoroutine);
+		parameter.generator->WriteCode(Instruct::BASE_CreateTask);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		if (invokerExpression->declaration.category == DeclarationCategory::Function) parameter.generator->WriteCode((uint8)FunctionType::Global);
-		else if (invokerExpression->declaration.category == DeclarationCategory::Native) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_CREATION_NATIVE_COROUTINE)
+		else if (invokerExpression->declaration.category == DeclarationCategory::Native) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK)
 		else EXCEPTION("这个申明类型不应该会走到这里");
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 		parameter.generator->WriteCode(invokerExpression->declaration.DefineFunction());
-		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
+		GeneratTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
+			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
 			parameter.generator->WriteCode(result);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
@@ -161,7 +161,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
 		parameter.generator->WriteCode(targetParameter.results[0]);
 		parameter.generator->WriteCode(parameter.finallyAddress);
-		parameter.generator->WriteCode(Instruct::BASE_CreateCoroutine);
+		parameter.generator->WriteCode(Instruct::BASE_CreateTask);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		if (invokerExpression->declaration.category == DeclarationCategory::StructFunction || invokerExpression->declaration.category == DeclarationCategory::ClassFunction)
@@ -175,10 +175,10 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
 		else EXCEPTION("这个申明类型不应该会走到这里");
-		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
+		GeneratTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
+			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
 			parameter.generator->WriteCode(result);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
@@ -203,7 +203,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 			parameter.generator->WriteCode(targetParameter.results[0]);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
-		parameter.generator->WriteCode(Instruct::BASE_CreateCoroutine);
+		parameter.generator->WriteCode(Instruct::BASE_CreateTask);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		if (invokerExpression->declaration.category == DeclarationCategory::ClassFunction)
@@ -224,10 +224,10 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
 		else EXCEPTION("这个申明类型不应该会走到这里");
-		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
+		GeneratTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
+			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
 			parameter.generator->WriteCode(result);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
@@ -241,7 +241,7 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		parameter.generator->WriteCode(thisVariable);
 		parameter.generator->WriteCodeGlobalReference((Declaration)invokerExpression->returns[0]);
 
-		parameter.generator->WriteCode(Instruct::BASE_CreateCoroutine);
+		parameter.generator->WriteCode(Instruct::BASE_CreateTask);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode((uint8)FunctionType::Reality);
@@ -249,22 +249,22 @@ void GeneratCoroutineParameter(LogicGenerateParameter& parameter, InvokerExpress
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 		parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
 		parameter.generator->WriteCodeGlobalReference(thisVariable.type);
-		GeneratCoroutineParameter(parameter, invokerExpression->parameters);
+		GeneratTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_CoroutineStart);
+			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
 			parameter.generator->WriteCode(result);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 	}
 }
 
-void CoroutineEvaluationExpression::Generator(LogicGenerateParameter& parameter)
+void TaskEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 {
 	for (uint32 i = 0; i < returns.Count(); i++) parameter.GetResult(i, returns[i]);
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, 1);
 	source->Generator(sourceParameter);
-	parameter.generator->WriteCode(Instruct::BASE_GetCoroutineResult);
+	parameter.generator->WriteCode(Instruct::BASE_GetTaskResult);
 	parameter.generator->WriteCode(sourceParameter.results[0]);
 	parameter.generator->WriteCode(indices.Count());
 	CodeLocalAddressReference exceptionAddress = CodeLocalAddressReference();
@@ -364,7 +364,7 @@ void CoroutineEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.finallyAddress->AddReference(parameter.generator, parameter.generator->GetPointer());
 }
 
-CoroutineEvaluationExpression::~CoroutineEvaluationExpression()
+TaskEvaluationExpression::~TaskEvaluationExpression()
 {
 	delete source; source = NULL;
 }

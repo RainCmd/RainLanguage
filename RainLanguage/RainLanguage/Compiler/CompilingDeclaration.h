@@ -22,7 +22,7 @@ enum class DeclarationCategory
 	Interface,            //库				接口索引            NULL
 	InterfaceFunction,    //库				接口方法索引        所属接口索引     
 	Delegate,             //库				委托类型索引        NULL
-	Coroutine,            //库				携程类型索引        NULL
+	Task,				  //库				任务类型索引        NULL
 	Native,				  //库				内部方法索引        NULL
 	Lambda,               //LIBRARY_SELF	方法列表索引        匿名函数索引
 	LambdaClosureValue,   //LIBRARY_SELF	成员变量索引        所属托管类索引
@@ -57,8 +57,8 @@ struct CompilingDeclaration
 			case DeclarationCategory::Delegate:
 				declaration = Declaration(library, TypeCode::Delegate, index);
 				return true;
-			case DeclarationCategory::Coroutine:
-				declaration = Declaration(library, TypeCode::Coroutine, index);
+			case DeclarationCategory::Task:
+				declaration = Declaration(library, TypeCode::Task, index);
 				return true;
 		}
 		return false;

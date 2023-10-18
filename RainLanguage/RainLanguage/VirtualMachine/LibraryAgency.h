@@ -34,7 +34,7 @@ public:
 	RuntimeClass* GetClass(const Type& type);
 	RuntimeInterface* GetInterface(const Type& type);
 	RuntimeDelegate* GetDelegate(const Type& type);
-	RuntimeCoroutine* GetCoroutine(const Type& type);
+	RuntimeTask* GetTask(const Type& type);
 	RuntimeVariable* GetVariable(const Variable& variable);
 	RuntimeFunction* GetFunction(const Function& function);
 	RuntimeNative* GetNative(const Native& native);

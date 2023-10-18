@@ -5,7 +5,7 @@
 #include "../Public/Debugger.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 #include "EntityAgency.h"
 
 typedef Dictionary<Declaration, Declaration, true> MAP;
@@ -397,7 +397,7 @@ RainDebuggerSpace::~RainDebuggerSpace()
 	debugFrame = NULL;
 }
 
-#define COROUTINE ((Coroutine*)coroutine)
+#define TASK ((Task*)task)
 RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line) : debugFrame(debugFrame), stack(stack), name(name), function(function), file(file), line(line)
 {
 	FRAME->Reference();
@@ -417,7 +417,7 @@ bool RainTrace::IsValid()
 
 bool RainTraceIterator::IsActive()
 {
-	if (IsValid()) return FRAME->library->kernel->coroutineAgency->GetCurrentCoroutine() == coroutine;
+	if (IsValid()) return FRAME->library->kernel->taskAgency->GetCurrentTask() == task;
 	return false;
 }
 
@@ -503,24 +503,24 @@ RainTrace::~RainTrace()
 	file = NULL;
 }
 
-RainTraceIterator::RainTraceIterator(void* debugFrame, void* coroutine) : debugFrame(debugFrame), coroutine(coroutine), stack(NULL), pointer(INVALID)
+RainTraceIterator::RainTraceIterator(void* debugFrame, void* task) : debugFrame(debugFrame), task(task), stack(NULL), pointer(INVALID)
 {
 	if (debugFrame) FRAME->Reference();
 }
 
-RainTraceIterator::RainTraceIterator(const RainTraceIterator& other) : debugFrame(other.debugFrame), coroutine(other.coroutine), stack(other.stack), pointer(other.pointer)
+RainTraceIterator::RainTraceIterator(const RainTraceIterator& other) : debugFrame(other.debugFrame), task(other.task), stack(other.stack), pointer(other.pointer)
 {
 	if (debugFrame) FRAME->Reference();
 }
 
 bool RainTraceIterator::IsValid()
 {
-	return debugFrame && FRAME->library && coroutine;
+	return debugFrame && FRAME->library && task;
 }
 
-integer RainTraceIterator::CoroutineID()
+integer RainTraceIterator::TaskID()
 {
-	if (IsValid()) return COROUTINE->instanceID;
+	if (IsValid()) return TASK->instanceID;
 	else return 0;
 }
 
@@ -532,12 +532,12 @@ bool RainTraceIterator::Next()
 		{
 			pointer = ((Frame*)stack)->pointer;
 			if (pointer == INVALID) stack = NULL;
-			else stack = COROUTINE->stack + ((Frame*)stack)->bottom;
+			else stack = TASK->stack + ((Frame*)stack)->bottom;
 		}
 		else
 		{
-			stack = COROUTINE->stack + COROUTINE->bottom;
-			pointer = COROUTINE->pointer;
+			stack = TASK->stack + TASK->bottom;
+			pointer = TASK->pointer;
 		}
 		return stack;
 	}
@@ -572,39 +572,39 @@ RainTraceIterator::~RainTraceIterator()
 	debugFrame = NULL;
 }
 
-RainCoroutineIterator::RainCoroutineIterator(void* debugFrame) : debugFrame(debugFrame), index(NULL)
+RainTaskIterator::RainTaskIterator(void* debugFrame) : debugFrame(debugFrame), index(NULL)
 {
 	if (debugFrame) FRAME->Reference();
 }
 
-RainCoroutineIterator::RainCoroutineIterator(const RainCoroutineIterator& other) : debugFrame(other.debugFrame), index(other.index)
+RainTaskIterator::RainTaskIterator(const RainTaskIterator& other) : debugFrame(other.debugFrame), index(other.index)
 {
 	if (debugFrame) FRAME->Reference();
 }
 
-bool RainCoroutineIterator::IsValid()
+bool RainTaskIterator::IsValid()
 {
 	return debugFrame && FRAME->library;
 }
 
-bool RainCoroutineIterator::Next()
+bool RainTaskIterator::Next()
 {
 	if (IsValid())
 	{
-		if (index) index = ((Invoker*)index)->coroutine->next;
-		else index = FRAME->library->kernel->coroutineAgency->GetHeadCoroutine();
+		if (index) index = ((Invoker*)index)->task->next;
+		else index = FRAME->library->kernel->taskAgency->GetHeadTask();
 		if (index) return true;
 	}
 	return false;
 }
 
-RainTraceIterator RainCoroutineIterator::Current()
+RainTraceIterator RainTaskIterator::Current()
 {
 	if (IsValid() && index) return RainTraceIterator(debugFrame, index);
 	return RainTraceIterator(NULL, NULL);
 }
 
-RainCoroutineIterator::~RainCoroutineIterator()
+RainTaskIterator::~RainTaskIterator()
 {
 	if (debugFrame) FRAME->Release();
 	debugFrame = NULL;
@@ -710,18 +710,18 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 			return false;
 		label_next_delegate:;
 		}
-		for (uint32 x = 0; x < importLibrary.coroutines.Count(); x++)
+		for (uint32 x = 0; x < importLibrary.tasks.Count(); x++)
 		{
-			String name = TO_KERNEL_STRING(importLibrary.coroutines[x].name);
-			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.coroutines[x].space, runtimeLibrary);
-			if (space) for (uint32 y = 0; y < space->coroutines.Count(); y++)
-				if (name.index == runtimeLibrary->coroutines[space->coroutines[y]].name)
+			String name = TO_KERNEL_STRING(importLibrary.tasks[x].name);
+			RuntimeSpace* space = GetSpace(kernel, library, importLibrary, importLibrary.tasks[x].space, runtimeLibrary);
+			if (space) for (uint32 y = 0; y < space->tasks.Count(); y++)
+				if (name.index == runtimeLibrary->tasks[space->tasks[y]].name)
 				{
-					map->Set(Declaration(importIndex, TypeCode::Coroutine, x), Declaration(runtimeLibrary->index, TypeCode::Coroutine, space->coroutines[y]));
-					goto label_next_coroutine;
+					map->Set(Declaration(importIndex, TypeCode::Task, x), Declaration(runtimeLibrary->index, TypeCode::Task, space->tasks[y]));
+					goto label_next_task;
 				}
 			return false;
-		label_next_coroutine:;
+		label_next_task:;
 		}
 	}
 	return true;
@@ -731,7 +731,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentCoroutine(), currentTraceDeep(INVALID), type(StepType::None), source(NULL), database(NULL)
+RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), type(StepType::None), source(NULL), database(NULL)
 {
 	if (kernel)
 	{
@@ -767,7 +767,7 @@ void RainDebugger::Broken()
 	}
 	if (share)
 	{
-		currentCoroutine = 0;
+		currentTask = 0;
 		currentTraceDeep = INVALID;
 		if (SHARE->kernel)
 		{
@@ -789,10 +789,10 @@ RainDebuggerSpace RainDebugger::GetSpace()
 	return RainDebuggerSpace(NULL, 0);
 }
 
-RainCoroutineIterator RainDebugger::GetCoroutineIterator()
+RainTaskIterator RainDebugger::GetTaskIterator()
 {
-	if (IsBreaking()) return RainCoroutineIterator(debugFrame);
-	else return RainCoroutineIterator(NULL);
+	if (IsBreaking()) return RainTaskIterator(debugFrame);
+	else return RainTaskIterator(NULL);
 }
 
 bool RainDebugger::IsBreaking()
@@ -840,7 +840,7 @@ void RainDebugger::Continue()
 {
 	if (IsBreaking())
 	{
-		currentCoroutine = 0;
+		currentTask = 0;
 		currentTraceDeep = INVALID;
 		OnContinue();
 	}
@@ -855,7 +855,7 @@ void RainDebugger::Step(StepType stepType)
 	}
 }
 
-void RainDebugger::OnBreak(uint64 coroutine, uint32 deep)
+void RainDebugger::OnBreak(uint64 task, uint32 deep)
 {
 	switch (type)
 	{
@@ -863,25 +863,25 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 deep)
 		case StepType::Pause:
 			break;
 		case StepType::Over:
-			if (coroutine != currentCoroutine) return;
+			if (task != currentTask) return;
 			if (currentTraceDeep == INVALID || deep > currentTraceDeep) return;
 			break;
 		case StepType::Into:
-			if (coroutine != currentCoroutine) return;
+			if (task != currentTask) return;
 			break;
 		case StepType::Out:
-			if (coroutine != currentCoroutine) return;
+			if (task != currentTask) return;
 			if (currentTraceDeep == INVALID || deep >= currentTraceDeep) return;
 			break;
 	}
 	if (IsActive() && !debugFrame)
 	{
 		type = StepType::None;
-		currentCoroutine = coroutine;
+		currentTask = task;
 		currentTraceDeep = deep;
 		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
 		debugFrame = frame;
-		OnHitBreakpoint(coroutine);
+		OnHitBreakpoint(task);
 		frame->debugger = NULL;
 		frame->library = NULL;
 		frame->Release();
@@ -889,13 +889,13 @@ void RainDebugger::OnBreak(uint64 coroutine, uint32 deep)
 	}
 }
 
-void RainDebugger::OnException(uint64 coroutine, const character* message, uint32 length)
+void RainDebugger::OnException(uint64 task, const character* message, uint32 length)
 {
 	if (IsActive() && !debugFrame)
 	{
 		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
 		debugFrame = frame;
-		OnCoroutineExit(coroutine, RainString(message, length));
+		OnTaskExit(task, RainString(message, length));
 		frame->debugger = NULL;
 		frame->library = NULL;
 		frame->Release();

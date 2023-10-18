@@ -2,17 +2,17 @@
 #include "../Language.h"
 #include "../Collections/List.h"
 #include "../Collections/Dictionary.h"
-#include "Coroutine.h"
+#include "Task.h"
 #include "Invoker.h"
 
 struct StartupParameter;
 class Kernel;
-class CoroutineAgency
+class TaskAgency
 {
 private:
 	Kernel* kernel;
-	Coroutine* head, * free, * current;
-	List<Coroutine*, true> coroutines;
+	Task* head, * free, * current;
+	List<Task*, true> tasks;
 	uint32 invokerCount, invokerInstance;
 	List<Invoker*, true> invokerPool;
 	Dictionary<uint64, Invoker*, true> invokerMap;
@@ -20,15 +20,15 @@ private:
 	Invoker* GetInvoker();
 public:
 	OnExceptionExit onExceptionExit;
-	CoroutineAgency(Kernel* kernel, const StartupParameter* parameter);
+	TaskAgency(Kernel* kernel, const StartupParameter* parameter);
 	Invoker* CreateInvoker(const Function& function);
 	Invoker* CreateInvoker(uint32 entry, const CallableInfo* info);
 	void Start(Invoker* invoker, bool immediately, bool ignoreWait);
 	void Update();
-	void Recycle(Coroutine* coroutine)
+	void Recycle(Task* task)
 	{
-		coroutine->next = free;
-		free = coroutine;
+		task->next = free;
+		free = task;
 		free->Recycle();
 	}
 	inline void Recycle(Invoker* invoker)
@@ -70,9 +70,9 @@ public:
 		else EXCEPTION("ÊµÀýidÓÐÎó");
 	}
 	void UpdateGlobalDataCache(uint8* data);
-	inline Coroutine* GetHeadCoroutine() { return head; }
-	inline Coroutine* GetCurrentCoroutine() { return current; }
-	uint32 CountCoroutine();
-	~CoroutineAgency();
+	inline Task* GetHeadTask() { return head; }
+	inline Task* GetCurrentTask() { return current; }
+	uint32 CountTask();
+	~TaskAgency();
 };
 

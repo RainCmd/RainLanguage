@@ -149,10 +149,10 @@ struct DelegateDeclarationInfo :DeclarationInfo, CallableInfo
 	inline DelegateDeclarationInfo(bool isPublic, const List<string, true>& attributes, string name, const TupleInfo& returns, const TupleInfo& parameters) :DeclarationInfo(isPublic, attributes, name), CallableInfo(returns, parameters) {}
 };
 
-struct CoroutineDeclarationInfo :DeclarationInfo
+struct TaskDeclarationInfo :DeclarationInfo
 {
 	TupleInfo returns;
-	inline CoroutineDeclarationInfo(bool isPublic, const List<string, true>& attributes, string name, const TupleInfo& returns) :DeclarationInfo(isPublic, attributes, name), returns(returns) {}
+	inline TaskDeclarationInfo(bool isPublic, const List<string, true>& attributes, string name, const TupleInfo& returns) :DeclarationInfo(isPublic, attributes, name), returns(returns) {}
 };
 
 struct FunctionDeclarationInfo :DeclarationInfo, CallableInfo

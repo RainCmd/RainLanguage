@@ -70,7 +70,7 @@ Anchor CompilingLibrary::GetName(const CompilingDeclaration& declaration)
 		case DeclarationCategory::Interface: return interfaces[declaration.index]->name;
 		case DeclarationCategory::InterfaceFunction: return interfaces[declaration.definition]->functions[declaration.index]->name;
 		case DeclarationCategory::Delegate: return delegates[declaration.index]->name;
-		case DeclarationCategory::Coroutine: return coroutines[declaration.index]->name;
+		case DeclarationCategory::Task: return tasks[declaration.index]->name;
 		case DeclarationCategory::Native: return natives[declaration.index]->name;
 		case DeclarationCategory::Lambda:
 		case DeclarationCategory::LambdaClosureValue:
@@ -95,8 +95,8 @@ CompilingLibrary::~CompilingLibrary()
 	interfaces.Clear();
 	for (uint32 i = 0; i < delegates.Count(); i++) delete delegates[i];
 	delegates.Clear();
-	for (uint32 i = 0; i < coroutines.Count(); i++) delete coroutines[i];
-	coroutines.Clear();
+	for (uint32 i = 0; i < tasks.Count(); i++) delete tasks[i];
+	tasks.Clear();
 	for (uint32 i = 0; i < natives.Count(); i++) delete natives[i];
 	natives.Clear();
 }

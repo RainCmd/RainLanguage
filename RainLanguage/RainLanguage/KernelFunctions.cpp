@@ -9,364 +9,364 @@
 #include "KernelDeclarations.h"
 #include "VirtualMachine/HeapAgency.h"
 #include "VirtualMachine/LibraryAgency.h"
-#include "VirtualMachine/CoroutineAgency.h"
+#include "VirtualMachine/TaskAgency.h"
 #include "VirtualMachine/EntityAgency.h"
 #include "Vector/VectorMath.h"
 
-#define RETURN_POINT ((uint32*)(stack + top + SIZE(Frame)))
-#define RETURN_VALUE(type,index) (*(type*)(IS_LOCAL(RETURN_POINT[index]) ? (stack + LOCAL_ADDRESS(RETURN_POINT[index])) : (kernel->libraryAgency->data.GetPointer() + RETURN_POINT[index])))
-#define PARAMETER_VALUE(returnCount,type,offset) (*(type*)(stack + top + SIZE(Frame) + (returnCount << 2) + offset))
+#define RETURN_POINT ((uint32*)(parameter.stack + parameter.top + SIZE(Frame)))
+#define RETURN_VALUE(type, index) (*(type*)(IS_LOCAL(RETURN_POINT[index]) ? (parameter.stack + LOCAL_ADDRESS(RETURN_POINT[index])) : (parameter.kernel->libraryAgency->data.GetPointer() + RETURN_POINT[index])))
+#define PARAMETER_VALUE(returnCount, type, offset) (*(type*)(parameter.stack + parameter.top + SIZE(Frame) + (returnCount << 2) + offset))
 
-#define GET_THIS_VALUE(returnCount,type)\
+#define GET_THIS_VALUE(returnCount, type)\
 		type thisValue;\
-		if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(returnCount, Handle, 0), thisValue))\
-			return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);\
+		if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(returnCount, Handle, 0), thisValue))\
+			return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);\
 
-#define CREATE_READONLY_VALUES(field,readonlyValuesType,elementType,count,referenceType)\
-		field = kernel->heapAgency->Alloc((Declaration)readonlyValuesType);\
-		kernel->heapAgency->StrongReference(field);\
-		kernel->heapAgency->referenceType##Reference(field);\
-		Handle values = kernel->heapAgency->Alloc(elementType, (integer)(count));\
-		((ReflectionReadonlyValues*)kernel->heapAgency->GetPoint(field))->values = values;\
-		kernel->heapAgency->WeakReference(values);\
-		kernel->heapAgency->StrongRelease(field);
+#define CREATE_READONLY_VALUES(field, readonlyValuesType, elementType, count, referenceType)\
+		field = parameter.kernel->heapAgency->Alloc((Declaration)readonlyValuesType);\
+		parameter.kernel->heapAgency->StrongReference(field);\
+		parameter.kernel->heapAgency->referenceType##Reference(field);\
+		Handle values = parameter.kernel->heapAgency->Alloc(elementType, (integer)(count));\
+		((ReflectionReadonlyValues*)parameter.kernel->heapAgency->GetPoint(field))->values = values;\
+		parameter.kernel->heapAgency->WeakReference(values);\
+		parameter.kernel->heapAgency->StrongRelease(field);
 
-#define THIS(returnCount,type) (*(type*)kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
+#define THIS(returnCount,type) (*(type*)parameter.kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
 
 #pragma region 运算符
-String Operation_Less_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (integer, integer)
+String Operation_Less_integer_integer(KernelInvokerParameter parameter)// bool < (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) < PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Less_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool < (real, real)
+String Operation_Less_real_real(KernelInvokerParameter parameter)// bool < (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) < PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Less_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool <= (integer, integer)
+String Operation_Less_Equals_integer_integer(KernelInvokerParameter parameter)// bool <= (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) <= PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Less_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool <= (real, real)
+String Operation_Less_Equals_real_real(KernelInvokerParameter parameter)// bool <= (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) <= PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Greater_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool > (integer, integer)
+String Operation_Greater_integer_integer(KernelInvokerParameter parameter)// bool > (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) > PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Greater_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool > (real, real)
+String Operation_Greater_real_real(KernelInvokerParameter parameter)// bool > (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) > PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Greater_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool >= (integer, integer)
+String Operation_Greater_Equals_integer_integer(KernelInvokerParameter parameter)// bool >= (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) >= PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Greater_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool >= (real, real)
+String Operation_Greater_Equals_real_real(KernelInvokerParameter parameter)// bool >= (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) >= PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Equals_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (bool, bool)
+String Operation_Equals_bool_bool(KernelInvokerParameter parameter)// bool == (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) == PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (integer, integer)
+String Operation_Equals_integer_integer(KernelInvokerParameter parameter)// bool == (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) == PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real, real)
+String Operation_Equals_real_real(KernelInvokerParameter parameter)// bool == (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) == PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Equals_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real2, real2)
+String Operation_Equals_real2_real2(KernelInvokerParameter parameter)// bool == (real2, real2)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real2, 0) == PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Equals_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real3, real3)
+String Operation_Equals_real3_real3(KernelInvokerParameter parameter)// bool == (real3, real3)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real3, 0) == PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Equals_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (real4, real4)
+String Operation_Equals_real4_real4(KernelInvokerParameter parameter)// bool == (real4, real4)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real4, 0) == PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Equals_string_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (string, string)
+String Operation_Equals_string_string(KernelInvokerParameter parameter)// bool == (string, string)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, string, 0) == PARAMETER_VALUE(1, string, SIZE(string));
 	return String();
 }
 
-String Operation_Equals_handle_handle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (handle, handle)
+String Operation_Equals_handle_handle(KernelInvokerParameter parameter)// bool == (handle, handle)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Handle, 0) == PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	return String();
 }
 
-String Operation_Equals_entity_entity(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (entity, entity)
+String Operation_Equals_entity_entity(KernelInvokerParameter parameter)// bool == (entity, entity)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Entity, 0) == PARAMETER_VALUE(1, Entity, SIZE(Entity));
 	return String();
 }
 
-String Operation_Equals_delegate_delegate(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (delegate, delegate)
+String Operation_Equals_delegate_delegate(KernelInvokerParameter parameter)// bool == (delegate, delegate)
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	if (left == right) RETURN_VALUE(bool, 0) = true;
-	else RETURN_VALUE(bool, 0) = *(Delegate*)kernel->heapAgency->GetPoint(left) == *(Delegate*)kernel->heapAgency->GetPoint(right);
+	else RETURN_VALUE(bool, 0) = *(Delegate*)parameter.kernel->heapAgency->GetPoint(left) == *(Delegate*)parameter.kernel->heapAgency->GetPoint(right);
 	return String();
 }
 
-String Operation_Equals_type_type(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool == (type, type)
+String Operation_Equals_type_type(KernelInvokerParameter parameter)// bool == (type, type)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0) == PARAMETER_VALUE(1, Type, SIZE(Type));
 	return String();
 }
 
-String Operation_Not_Equals_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (bool, bool)
+String Operation_Not_Equals_bool_bool(KernelInvokerParameter parameter)// bool != (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) != PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Not_Equals_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (integer, integer)
+String Operation_Not_Equals_integer_integer(KernelInvokerParameter parameter)// bool != (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) != PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Not_Equals_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real, real)
+String Operation_Not_Equals_real_real(KernelInvokerParameter parameter)// bool != (real, real)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, real, 0) != PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Not_Equals_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real2, real2)
+String Operation_Not_Equals_real2_real2(KernelInvokerParameter parameter)// bool != (real2, real2)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real2, 0) != PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Not_Equals_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real3, real3)
+String Operation_Not_Equals_real3_real3(KernelInvokerParameter parameter)// bool != (real3, real3)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real3, 0) != PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Not_Equals_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (real4, real4)
+String Operation_Not_Equals_real4_real4(KernelInvokerParameter parameter)// bool != (real4, real4)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Real4, 0) != PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Not_Equals_string_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (string, string)
+String Operation_Not_Equals_string_string(KernelInvokerParameter parameter)// bool != (string, string)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, string, 0) != PARAMETER_VALUE(1, string, SIZE(string));
 	return String();
 }
 
-String Operation_Not_Equals_handle_handle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (handle, handle)
+String Operation_Not_Equals_handle_handle(KernelInvokerParameter parameter)// bool != (handle, handle)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Handle, 0) != PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	return String();
 }
 
-String Operation_Not_Equals_entity_entity(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (entity, entity)
+String Operation_Not_Equals_entity_entity(KernelInvokerParameter parameter)// bool != (entity, entity)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Entity, 0) != PARAMETER_VALUE(1, Entity, SIZE(Entity));
 	return String();
 }
 
-String Operation_Not_Equals_delegate_delegate(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (delegate, delegate)
+String Operation_Not_Equals_delegate_delegate(KernelInvokerParameter parameter)// bool != (delegate, delegate)
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
 	if (left == right)RETURN_VALUE(bool, 0) = false;
-	else RETURN_VALUE(bool, 0) = *(Delegate*)kernel->heapAgency->GetPoint(left) != *(Delegate*)kernel->heapAgency->GetPoint(right);
+	else RETURN_VALUE(bool, 0) = *(Delegate*)parameter.kernel->heapAgency->GetPoint(left) != *(Delegate*)parameter.kernel->heapAgency->GetPoint(right);
 	return String();
 }
 
-String Operation_Not_Equals_type_type(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool != (type, type)
+String Operation_Not_Equals_type_type(KernelInvokerParameter parameter)// bool != (type, type)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0) != PARAMETER_VALUE(1, Type, SIZE(Type));
 	return String();
 }
 
-String Operation_And_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool & (bool, bool)
+String Operation_And_bool_bool(KernelInvokerParameter parameter)// bool & (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) && PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_And_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer & (integer, integer)
+String Operation_And_integer_integer(KernelInvokerParameter parameter)// integer & (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) & PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Or_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool | (bool, bool)
+String Operation_Or_bool_bool(KernelInvokerParameter parameter)// bool | (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) || PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Or_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer | (integer, integer)
+String Operation_Or_integer_integer(KernelInvokerParameter parameter)// integer | (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) | PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Xor_bool_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool ^ (bool, bool)
+String Operation_Xor_bool_bool(KernelInvokerParameter parameter)// bool ^ (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) ^ PARAMETER_VALUE(1, bool, SIZE(bool));
 	return String();
 }
 
-String Operation_Xor_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer ^ (integer, integer)
+String Operation_Xor_integer_integer(KernelInvokerParameter parameter)// integer ^ (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) ^ PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Left_Shift_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer << (integer, integer)
+String Operation_Left_Shift_integer_integer(KernelInvokerParameter parameter)// integer << (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) << PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Right_Shift_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer >> (integer, integer)
+String Operation_Right_Shift_integer_integer(KernelInvokerParameter parameter)// integer >> (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) >> PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Plus_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer + (integer, integer)
+String Operation_Plus_integer_integer(KernelInvokerParameter parameter)// integer + (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) + PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Plus_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real + (real, real)
+String Operation_Plus_real_real(KernelInvokerParameter parameter)// real + (real, real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) + PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Plus_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 + (real2, real2)
+String Operation_Plus_real2_real2(KernelInvokerParameter parameter)// real2 + (real2, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) + PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Plus_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 + (real3, real3)
+String Operation_Plus_real3_real3(KernelInvokerParameter parameter)// real3 + (real3, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) + PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Plus_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 + (real4, real4)
+String Operation_Plus_real4_real4(KernelInvokerParameter parameter)// real4 + (real4, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) + PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Plus_string_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, string)
+String Operation_Plus_string_string(KernelInvokerParameter parameter)// string + (string, string)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(string))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(string))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_string_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, bool)
+String Operation_Plus_string_bool(KernelInvokerParameter parameter)// string + (string, bool)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(kernel->stringAgency, PARAMETER_VALUE(1, bool, SIZE(string))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, bool, SIZE(string))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_string_char(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, char)
+String Operation_Plus_string_char(KernelInvokerParameter parameter)// string + (string, char)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(kernel->stringAgency, PARAMETER_VALUE(1, character, SIZE(string))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, character, SIZE(string))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_string_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, integer)
+String Operation_Plus_string_integer(KernelInvokerParameter parameter)// string + (string, integer)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(kernel->stringAgency, PARAMETER_VALUE(1, integer, SIZE(string))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, integer, SIZE(string))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_string_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, real)
+String Operation_Plus_string_real(KernelInvokerParameter parameter)// string + (string, real)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(kernel->stringAgency, PARAMETER_VALUE(1, real, SIZE(string))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, real, SIZE(string))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_string_handle(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)// string + (string, handle)
+String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string + (string, handle)
 {
-	if (coroutine->kernelInvoker)
+	if (parameter.task->kernelInvoker)
 	{
-		Invoker* invoker = coroutine->kernelInvoker;
+		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 			{
-				string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + kernel->stringAgency->Get(invoker->GetStringReturnValue(0)));
+				string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + parameter.kernel->stringAgency->Get(invoker->GetStringReturnValue(0)));
 				string& returnValue = RETURN_VALUE(string, 0);
-				kernel->stringAgency->Release(returnValue);
+				parameter.kernel->stringAgency->Release(returnValue);
 				returnValue = result;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return String();
 			}
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -377,31 +377,31 @@ String Operation_Plus_string_handle(Kernel* kernel, Coroutine* coroutine, uint8*
 	{
 		Handle handle = PARAMETER_VALUE(1, Handle, SIZE(string));
 		Type type;
-		if (!kernel->heapAgency->TryGetType(handle, type))return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-		Function function = kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-		kernel->coroutineAgency->Reference(invoker);
+		if (!parameter.kernel->heapAgency->TryGetType(handle, type))return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+		Function function = parameter.kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
+		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
+		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetBoxParameter(0, handle);
-		invoker->Start(true, coroutine->ignoreWait);
+		invoker->Start(true, parameter.task->ignoreWait);
 		switch (invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running:
-				coroutine->kernelInvoker = invoker;
+				parameter.task->kernelInvoker = invoker;
 				return String();
 			case InvokerState::Completed:
 			{
-				string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + kernel->stringAgency->Get(invoker->GetStringReturnValue(0)));
+				string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + parameter.kernel->stringAgency->Get(invoker->GetStringReturnValue(0)));
 				string& returnValue = RETURN_VALUE(string, 0);
-				kernel->stringAgency->Release(returnValue);
+				parameter.kernel->stringAgency->Release(returnValue);
 				returnValue = result;
-				kernel->coroutineAgency->Release(invoker);
+				parameter.kernel->taskAgency->Release(invoker);
 				return String();
 			}
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
+				parameter.kernel->taskAgency->Release(invoker);
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -410,75 +410,75 @@ String Operation_Plus_string_handle(Kernel* kernel, Coroutine* coroutine, uint8*
 	}
 }
 
-String Operation_Plus_string_type(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (string, type)
+String Operation_Plus_string_type(KernelInvokerParameter parameter)// string + (string, type)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + kernel->stringAgency->Get(GetTypeName(kernel, PARAMETER_VALUE(1, Type, SIZE(string)))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)) + parameter.kernel->stringAgency->Get(GetTypeName(parameter.kernel, PARAMETER_VALUE(1, Type, SIZE(string)))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_bool_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (bool, string)
+String Operation_Plus_bool_string(KernelInvokerParameter parameter)// string + (bool, string)
 {
-	string result = kernel->stringAgency->AddAndRef(ToString(kernel->stringAgency, PARAMETER_VALUE(1, bool, 0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(bool))));
+	string result = parameter.kernel->stringAgency->AddAndRef(ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, bool, 0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(bool))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_char_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (char, string)
+String Operation_Plus_char_string(KernelInvokerParameter parameter)// string + (char, string)
 {
-	string result = kernel->stringAgency->AddAndRef(ToString(kernel->stringAgency, PARAMETER_VALUE(1, character, 0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(character))));
+	string result = parameter.kernel->stringAgency->AddAndRef(ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, character, 0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(character))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_integer_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (integer, string)
+String Operation_Plus_integer_string(KernelInvokerParameter parameter)// string + (integer, string)
 {
-	string result = kernel->stringAgency->AddAndRef(ToString(kernel->stringAgency, PARAMETER_VALUE(1, integer, 0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(integer))));
+	string result = parameter.kernel->stringAgency->AddAndRef(ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, integer, 0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(integer))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_real_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (real, string)
+String Operation_Plus_real_string(KernelInvokerParameter parameter)// string + (real, string)
 {
-	string result = kernel->stringAgency->AddAndRef(ToString(kernel->stringAgency, PARAMETER_VALUE(1, real, 0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(real))));
+	string result = parameter.kernel->stringAgency->AddAndRef(ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, real, 0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(real))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Plus_handle_string(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)// string + (handle, string)
+String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string + (handle, string)
 {
-	if (coroutine->kernelInvoker)
+	if (parameter.task->kernelInvoker)
 	{
-		Invoker* invoker = coroutine->kernelInvoker;
+		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 			{
-				string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(invoker->GetStringReturnValue(0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Handle))));
+				string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(invoker->GetStringReturnValue(0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Handle))));
 				string& returnValue = RETURN_VALUE(string, 0);
-				kernel->stringAgency->Release(returnValue);
+				parameter.kernel->stringAgency->Release(returnValue);
 				returnValue = result;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return String();
 			}
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -489,31 +489,31 @@ String Operation_Plus_handle_string(Kernel* kernel, Coroutine* coroutine, uint8*
 	{
 		Handle handle = PARAMETER_VALUE(1, Handle, 0);
 		Type type;
-		if (!kernel->heapAgency->TryGetType(handle, type))return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-		Function function = kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-		kernel->coroutineAgency->Reference(invoker);
+		if (!parameter.kernel->heapAgency->TryGetType(handle, type)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+		Function function = parameter.kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
+		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
+		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetBoxParameter(0, handle);
-		invoker->Start(true, coroutine->ignoreWait);
+		invoker->Start(true, parameter.task->ignoreWait);
 		switch (invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running:
-				coroutine->kernelInvoker = invoker;
+				parameter.task->kernelInvoker = invoker;
 				return String();
 			case InvokerState::Completed:
 			{
-				string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(invoker->GetStringReturnValue(0)) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Handle))));
+				string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(invoker->GetStringReturnValue(0)) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Handle))));
 				string& returnValue = RETURN_VALUE(string, 0);
-				kernel->stringAgency->Release(returnValue);
+				parameter.kernel->stringAgency->Release(returnValue);
 				returnValue = result;
-				kernel->coroutineAgency->Release(invoker);
+				parameter.kernel->taskAgency->Release(invoker);
 				return String();
 			}
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
+				parameter.kernel->taskAgency->Release(invoker);
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -522,358 +522,358 @@ String Operation_Plus_handle_string(Kernel* kernel, Coroutine* coroutine, uint8*
 	}
 }
 
-String Operation_Plus_type_string(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// string + (type, string)
+String Operation_Plus_type_string(KernelInvokerParameter parameter)// string + (type, string)
 {
-	string result = kernel->stringAgency->AddAndRef(kernel->stringAgency->Get(GetTypeName(kernel, PARAMETER_VALUE(1, Type, 0))) + kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Type))));
+	string result = parameter.kernel->stringAgency->AddAndRef(parameter.kernel->stringAgency->Get(GetTypeName(parameter.kernel, PARAMETER_VALUE(1, Type, 0))) + parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, SIZE(Type))));
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result;
 	return String();
 }
 
-String Operation_Minus_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer - (integer, integer)
+String Operation_Minus_integer_integer(KernelInvokerParameter parameter)// integer - (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) - PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Minus_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real - (real, real)
+String Operation_Minus_real_real(KernelInvokerParameter parameter)// real - (real, real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) - PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Minus_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 - (real2, real2)
+String Operation_Minus_real2_real2(KernelInvokerParameter parameter)// real2 - (real2, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) - PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Minus_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 - (real3, real3)
+String Operation_Minus_real3_real3(KernelInvokerParameter parameter)// real3 - (real3, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) - PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Minus_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 - (real4, real4)
+String Operation_Minus_real4_real4(KernelInvokerParameter parameter)// real4 - (real4, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) - PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Mul_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer * (integer, integer)
+String Operation_Mul_integer_integer(KernelInvokerParameter parameter)// integer * (integer, integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) * PARAMETER_VALUE(1, integer, SIZE(integer));
 	return String();
 }
 
-String Operation_Mul_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real * (real, real)
+String Operation_Mul_real_real(KernelInvokerParameter parameter)// real * (real, real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, real, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real2_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 * (real2, real)
+String Operation_Mul_real2_real(KernelInvokerParameter parameter)// real2 * (real2, real)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) * PARAMETER_VALUE(1, real, SIZE(Real2));
 	return String();
 }
 
-String Operation_Mul_real3_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 * (real3, real)
+String Operation_Mul_real3_real(KernelInvokerParameter parameter)// real3 * (real3, real)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) * PARAMETER_VALUE(1, real, SIZE(Real3));
 	return String();
 }
 
-String Operation_Mul_real4_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 * (real4, real)
+String Operation_Mul_real4_real(KernelInvokerParameter parameter)// real4 * (real4, real)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) * PARAMETER_VALUE(1, real, SIZE(Real4));
 	return String();
 }
 
-String Operation_Mul_real_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 * (real, real2)
+String Operation_Mul_real_real2(KernelInvokerParameter parameter)// real2 * (real, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, Real2, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 * (real, real3)
+String Operation_Mul_real_real3(KernelInvokerParameter parameter)// real3 * (real, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, Real3, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 * (real, real4)
+String Operation_Mul_real_real4(KernelInvokerParameter parameter)// real4 * (real, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, real, 0) * PARAMETER_VALUE(1, Real4, SIZE(real));
 	return String();
 }
 
-String Operation_Mul_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 * (real2, real2)
+String Operation_Mul_real2_real2(KernelInvokerParameter parameter)// real2 * (real2, real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) * PARAMETER_VALUE(1, Real2, SIZE(Real2));
 	return String();
 }
 
-String Operation_Mul_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 * (real3, real3)
+String Operation_Mul_real3_real3(KernelInvokerParameter parameter)// real3 * (real3, real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) * PARAMETER_VALUE(1, Real3, SIZE(Real3));
 	return String();
 }
 
-String Operation_Mul_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 * (real4, real4)
+String Operation_Mul_real4_real4(KernelInvokerParameter parameter)// real4 * (real4, real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) * PARAMETER_VALUE(1, Real4, SIZE(Real4));
 	return String();
 }
 
-String Operation_Div_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer / (integer, integer)
+String Operation_Div_integer_integer(KernelInvokerParameter parameter)// integer / (integer, integer)
 {
 	integer divisor = PARAMETER_VALUE(1, integer, SIZE(integer));
-	if (divisor == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real / (real, real)
+String Operation_Div_real_real(KernelInvokerParameter parameter)// real / (real, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(real));
-	if (divisor == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real2_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 / (real2, real)
+String Operation_Div_real2_real(KernelInvokerParameter parameter)// real2 / (real2, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(Real2));
-	if (divisor == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real3_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 / (real3, real)
+String Operation_Div_real3_real(KernelInvokerParameter parameter)// real3 / (real3, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(Real3));
-	if (divisor == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real4_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 / (real4, real)
+String Operation_Div_real4_real(KernelInvokerParameter parameter)// real4 / (real4, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(Real4));
-	if (divisor == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 / (real, real2)
+String Operation_Div_real_real2(KernelInvokerParameter parameter)// real2 / (real, real2)
 {
 	Real2 divisor = PARAMETER_VALUE(1, Real2, SIZE(real));
-	if (divisor.x == 0 || divisor.y == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor.x == 0 || divisor.y == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 / (real, real3)
+String Operation_Div_real_real3(KernelInvokerParameter parameter)// real3 / (real, real3)
 {
 	Real3 divisor = PARAMETER_VALUE(1, Real3, SIZE(real));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 / (real, real4)
+String Operation_Div_real_real4(KernelInvokerParameter parameter)// real4 / (real, real4)
 {
 	Real4 divisor = PARAMETER_VALUE(1, Real4, SIZE(real));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real2_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 / (real2, real2)
+String Operation_Div_real2_real2(KernelInvokerParameter parameter)// real2 / (real2, real2)
 {
 	Real2 divisor = PARAMETER_VALUE(1, Real2, SIZE(Real2));
-	if (divisor.x == 0 || divisor.y == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor.x == 0 || divisor.y == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real3_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 / (real3, real3)
+String Operation_Div_real3_real3(KernelInvokerParameter parameter)// real3 / (real3, real3)
 {
 	Real3 divisor = PARAMETER_VALUE(1, Real3, SIZE(Real3));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) / divisor;
 	return String();
 }
 
-String Operation_Div_real4_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 / (real4, real4)
+String Operation_Div_real4_real4(KernelInvokerParameter parameter)// real4 / (real4, real4)
 {
 	Real4 divisor = PARAMETER_VALUE(1, Real4, SIZE(Real4));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) / divisor;
 	return String();
 }
 
-String Operation_Mod_integer_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer % (integer, integer)
+String Operation_Mod_integer_integer(KernelInvokerParameter parameter)// integer % (integer, integer)
 {
 	integer divisor = PARAMETER_VALUE(1, integer, SIZE(integer));
-	if (divisor == 0)kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) % divisor;
 	return String();
 }
 
-String Operation_Not_bool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// bool ! (bool)
+String Operation_Not_bool(KernelInvokerParameter parameter)// bool ! (bool)
 {
 	RETURN_VALUE(bool, 0) = !PARAMETER_VALUE(1, bool, 0);
 	return String();
 }
 
-String Operation_Inverse_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer ~ (integer)
+String Operation_Inverse_integer(KernelInvokerParameter parameter)// integer ~ (integer)
 {
 	RETURN_VALUE(integer, 0) = ~PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String Operation_Positive_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer + (integer)
+String Operation_Positive_integer(KernelInvokerParameter parameter)// integer + (integer)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String Operation_Positive_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real + (real)
+String Operation_Positive_real(KernelInvokerParameter parameter)// real + (real)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0);
 	return String();
 }
 
-String Operation_Positive_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 + (real2)
+String Operation_Positive_real2(KernelInvokerParameter parameter)// real2 + (real2)
 {
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0);
 	return String();
 }
 
-String Operation_Positive_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 + (real3)
+String Operation_Positive_real3(KernelInvokerParameter parameter)// real3 + (real3)
 {
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0);
 	return String();
 }
 
-String Operation_Positive_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 + (real4)
+String Operation_Positive_real4(KernelInvokerParameter parameter)// real4 + (real4)
 {
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0);
 	return String();
 }
 
-String Operation_Negative_integer(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// integer - (integer)
+String Operation_Negative_integer(KernelInvokerParameter parameter)// integer - (integer)
 {
 	RETURN_VALUE(integer, 0) = -PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String Operation_Negative_real(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real - (real)
+String Operation_Negative_real(KernelInvokerParameter parameter)// real - (real)
 {
 	RETURN_VALUE(real, 0) = -PARAMETER_VALUE(1, real, 0);
 	return String();
 }
 
-String Operation_Negative_real2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real2 - (real2)
+String Operation_Negative_real2(KernelInvokerParameter parameter)// real2 - (real2)
 {
 	RETURN_VALUE(Real2, 0) = -PARAMETER_VALUE(1, Real2, 0);
 	return String();
 }
 
-String Operation_Negative_real3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real3 - (real3)
+String Operation_Negative_real3(KernelInvokerParameter parameter)// real3 - (real3)
 {
 	RETURN_VALUE(Real3, 0) = -PARAMETER_VALUE(1, Real3, 0);
 	return String();
 }
 
-String Operation_Negative_real4(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)// real4 - (real4)
+String Operation_Negative_real4(KernelInvokerParameter parameter)// real4 - (real4)
 {
 	RETURN_VALUE(Real4, 0) = -PARAMETER_VALUE(1, Real4, 0);
 	return String();
 }
 
-String Operation_Increment_integer(Kernel*, Coroutine*, uint8*, uint32)// ++ (integer)
+String Operation_Increment_integer(KernelInvokerParameter)// ++ (integer)
 {
 	return String();//目前不支持引用传递，所以反射调用无效
 }
 
-String Operation_Increment_real(Kernel*, Coroutine*, uint8*, uint32)// ++ (real)
+String Operation_Increment_real(KernelInvokerParameter)// ++ (real)
 {
 	return String();//目前不支持引用传递，所以反射调用无效
 }
 
-String Operation_Decrement_integer(Kernel*, Coroutine*, uint8*, uint32)// -- (integer)
+String Operation_Decrement_integer(KernelInvokerParameter)// -- (integer)
 {
 	return String();//目前不支持引用传递，所以反射调用无效
 }
 
-String Operation_Decrement_real(Kernel*, Coroutine*, uint8*, uint32)// -- (real)
+String Operation_Decrement_real(KernelInvokerParameter)// -- (real)
 {
 	return String();//目前不支持引用传递，所以反射调用无效
 }
 #pragma endregion 运算符
 
 #pragma region 字节码转换
-String BytesConvertInteger(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (byte, byte, byte, byte, byte, byte, byte, byte)
+String BytesConvertInteger(KernelInvokerParameter parameter)//integer (byte, byte, byte, byte, byte, byte, byte, byte)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0);
 	return String();
 }
 
-String BytesConvertReal(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (byte, byte, byte, byte, byte, byte, byte, byte)
+String BytesConvertReal(KernelInvokerParameter parameter)//real (byte, byte, byte, byte, byte, byte, byte, byte)
 {
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0);
 	return String();
 }
 
-String BytesConvertString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string (byte[])
+String BytesConvertString(KernelInvokerParameter parameter)//string (byte[])
 {
 	Handle handle = PARAMETER_VALUE(1, Handle, 0);
 	integer length;
-	String error = kernel->heapAgency->TryGetArrayLength(handle, length);
+	String error = parameter.kernel->heapAgency->TryGetArrayLength(handle, length);
 	if (!error.IsEmpty())return error;
-	character* chars = (character*)kernel->heapAgency->GetArrayPoint(handle, 0);
-	RETURN_VALUE(string, 0) = kernel->stringAgency->AddAndRef(chars, (uint32)length >> 1);
+	character* chars = (character*)parameter.kernel->heapAgency->GetArrayPoint(handle, 0);
+	RETURN_VALUE(string, 0) = parameter.kernel->stringAgency->AddAndRef(chars, (uint32)length >> 1);
 	return String();
 }
 
-String IntegerConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//byte, byte, byte, byte, byte, byte, byte, byte (integer)
+String IntegerConvertBytes(KernelInvokerParameter parameter)//byte, byte, byte, byte, byte, byte, byte, byte (integer)
 {
 	RETURN_VALUE(uint64, 0) = PARAMETER_VALUE(8, uint64, 0);
 	return String();
 }
 
-String RealConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//byte, byte, byte, byte, byte, byte, byte, byte (real)
+String RealConvertBytes(KernelInvokerParameter parameter)//byte, byte, byte, byte, byte, byte, byte, byte (real)
 {
 	RETURN_VALUE(uint64, 0) = PARAMETER_VALUE(8, uint64, 0);
 	return String();
 }
 
-String StringConvertBytes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//byte[] (string)
+String StringConvertBytes(KernelInvokerParameter parameter)//byte[] (string)
 {
-	String value = kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0));
+	String value = parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0));
 	Handle* handle = &RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(*handle);
-	*handle = kernel->heapAgency->Alloc(Type(TYPE_Byte, 1), (integer)value.GetLength() << 1);
-	kernel->heapAgency->StrongReference(*handle);
-	character* pointer = (character*)kernel->heapAgency->GetArrayPoint(*handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(*handle);
+	*handle = parameter.kernel->heapAgency->Alloc(Type(TYPE_Byte, 1), (integer)value.GetLength() << 1);
+	parameter.kernel->heapAgency->StrongReference(*handle);
+	character* pointer = (character*)parameter.kernel->heapAgency->GetArrayPoint(*handle, 0);
 	Mcopy(value.GetPointer(), pointer, value.GetLength());
 	return String();
 }
 #pragma endregion 字节码转换
 
 #pragma region 数学计算
-String integer_Abs(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer)
+String integer_Abs(KernelInvokerParameter parameter)//integer (integer)
 {
 	integer value = PARAMETER_VALUE(1, integer, 0);
 	RETURN_VALUE(integer, 0) = value < 0 ? -value : value;
 	return String();
 }
 
-String integer_Clamp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer, integer)
+String integer_Clamp(KernelInvokerParameter parameter)//integer (integer, integer, integer)
 {
 	integer value = PARAMETER_VALUE(1, integer, 0);
 	integer min = PARAMETER_VALUE(1, integer, 8);
@@ -882,13 +882,13 @@ String integer_Clamp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//inte
 	return String();
 }
 
-String integer_GetRandomInt(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer ()
+String integer_GetRandomInt(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = kernel->random.Next();
+	RETURN_VALUE(integer, 0) = parameter.kernel->random.Next();
 	return String();
 }
 
-String integer_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer)
+String integer_Max(KernelInvokerParameter parameter)//integer (integer, integer)
 {
 	integer a = PARAMETER_VALUE(1, integer, 0);
 	integer b = PARAMETER_VALUE(1, integer, 8);
@@ -896,7 +896,7 @@ String integer_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//intege
 	return String();
 }
 
-String integer_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (integer, integer)
+String integer_Min(KernelInvokerParameter parameter)//integer (integer, integer)
 {
 	integer a = PARAMETER_VALUE(1, integer, 0);
 	integer b = PARAMETER_VALUE(1, integer, 8);
@@ -904,32 +904,32 @@ String integer_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//intege
 	return String();
 }
 
-String real_Abs(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Abs(KernelInvokerParameter parameter)//real (real)
 {
 	real value = PARAMETER_VALUE(1, real, 0);
 	RETURN_VALUE(real, 0) = value < 0 ? -value : value;
 	return String();
 }
 
-String real_Acos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Acos(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Acos(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Asin(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Asin(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Asin(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Atan(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Atan(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Atan(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Atan2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real)
+String real_Atan2(KernelInvokerParameter parameter)//real (real, real)
 {
 	real y = PARAMETER_VALUE(1, real, 0);
 	real x = PARAMETER_VALUE(1, real, 8);
@@ -937,13 +937,13 @@ String real_Atan2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (r
 	return String();
 }
 
-String real_Ceil(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Ceil(KernelInvokerParameter parameter)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Ceil(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Clamp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real, real)
+String real_Clamp(KernelInvokerParameter parameter)//real (real, real, real)
 {
 	real value = PARAMETER_VALUE(1, real, 0);
 	real min = PARAMETER_VALUE(1, real, 8);
@@ -952,31 +952,31 @@ String real_Clamp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (r
 	return String();
 }
 
-String real_Clamp01(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Clamp01(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Clamp01(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Cos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Cos(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Cos(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Floor(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Floor(KernelInvokerParameter parameter)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Floor(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_GetRandomReal(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real ()
+String real_GetRandomReal(KernelInvokerParameter parameter)//real ()
 {
-	RETURN_VALUE(real, 0) = kernel->random.NextReal();
+	RETURN_VALUE(real, 0) = parameter.kernel->random.NextReal();
 	return String();
 }
 
-String real_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real, real)
+String real_Lerp(KernelInvokerParameter parameter)//real (real, real, real)
 {
 	real a = PARAMETER_VALUE(1, real, 0);
 	real b = PARAMETER_VALUE(1, real, 8);
@@ -985,7 +985,7 @@ String real_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (re
 	return String();
 }
 
-String real_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real)
+String real_Max(KernelInvokerParameter parameter)//real (real, real)
 {
 	real a = PARAMETER_VALUE(1, real, 0);
 	real b = PARAMETER_VALUE(1, real, 8);
@@ -993,7 +993,7 @@ String real_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (rea
 	return String();
 }
 
-String real_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real, real)
+String real_Min(KernelInvokerParameter parameter)//real (real, real)
 {
 	real a = PARAMETER_VALUE(1, real, 0);
 	real b = PARAMETER_VALUE(1, real, 8);
@@ -1001,25 +1001,25 @@ String real_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (rea
 	return String();
 }
 
-String real_Round(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Round(KernelInvokerParameter parameter)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Round(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Sign(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (real)
+String real_Sign(KernelInvokerParameter parameter)//integer (real)
 {
 	RETURN_VALUE(integer, 0) = MathReal::Sign(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Sin(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Sin(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Sin(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_SinCos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real, real (real)
+String real_SinCos(KernelInvokerParameter parameter)//real, real (real)
 {
 	real value = PARAMETER_VALUE(2, real, 0);
 	RETURN_VALUE(real, 0) = MathReal::Sin(value);
@@ -1027,19 +1027,19 @@ String real_SinCos(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real, 
 	return String();
 }
 
-String real_Sqrt(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Sqrt(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Sqrt(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real_Tan(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real)
+String real_Tan(KernelInvokerParameter parameter)//real (real)
 {
 	RETURN_VALUE(real, 0) = MathReal::Tan(PARAMETER_VALUE(1, real, 0));
 	return String();
 }
 
-String real2_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
+String real2_Angle(KernelInvokerParameter parameter)//real (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1047,7 +1047,7 @@ String real2_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (
 	return String();
 }
 
-String real2_Cross(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
+String real2_Cross(KernelInvokerParameter parameter)//real (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1055,7 +1055,7 @@ String real2_Cross(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (
 	return String();
 }
 
-String real2_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real2, real2)
+String real2_Dot(KernelInvokerParameter parameter)//real (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1063,7 +1063,7 @@ String real2_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (re
 	return String();
 }
 
-String real2_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2, real)
+String real2_Lerp(KernelInvokerParameter parameter)//real2 (real2, real2, real)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1072,7 +1072,7 @@ String real2_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (
 	return String();
 }
 
-String real2_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2)
+String real2_Max(KernelInvokerParameter parameter)//real2 (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1080,7 +1080,7 @@ String real2_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (r
 	return String();
 }
 
-String real2_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (real2, real2)
+String real2_Min(KernelInvokerParameter parameter)//real2 (real2, real2)
 {
 	Real2 a = PARAMETER_VALUE(1, Real2, 0);
 	Real2 b = PARAMETER_VALUE(1, Real2, 16);
@@ -1088,7 +1088,7 @@ String real2_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 (r
 	return String();
 }
 
-String real3_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real3, real3)
+String real3_Angle(KernelInvokerParameter parameter)//real (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1096,7 +1096,7 @@ String real3_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (
 	return String();
 }
 
-String real3_Cross(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
+String real3_Cross(KernelInvokerParameter parameter)//real3 (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1104,7 +1104,7 @@ String real3_Cross(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 
 	return String();
 }
 
-String real3_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real3, real3)
+String real3_Dot(KernelInvokerParameter parameter)//real (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1112,7 +1112,7 @@ String real3_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (re
 	return String();
 }
 
-String real3_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3, real)
+String real3_Lerp(KernelInvokerParameter parameter)//real3 (real3, real3, real)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1121,7 +1121,7 @@ String real3_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (
 	return String();
 }
 
-String real3_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
+String real3_Max(KernelInvokerParameter parameter)//real3 (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1129,7 +1129,7 @@ String real3_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (r
 	return String();
 }
 
-String real3_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (real3, real3)
+String real3_Min(KernelInvokerParameter parameter)//real3 (real3, real3)
 {
 	Real3 a = PARAMETER_VALUE(1, Real3, 0);
 	Real3 b = PARAMETER_VALUE(1, Real3, 24);
@@ -1137,7 +1137,7 @@ String real3_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 (r
 	return String();
 }
 
-String real4_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real4, real4)
+String real4_Angle(KernelInvokerParameter parameter)//real (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1145,7 +1145,7 @@ String real4_Angle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (
 	return String();
 }
 
-String real4_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (real4, real4)
+String real4_Dot(KernelInvokerParameter parameter)//real (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1153,7 +1153,7 @@ String real4_Dot(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real (re
 	return String();
 }
 
-String real4_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4, real)
+String real4_Lerp(KernelInvokerParameter parameter)//real4 (real4, real4, real)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1162,7 +1162,7 @@ String real4_Lerp(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (
 	return String();
 }
 
-String real4_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4)
+String real4_Max(KernelInvokerParameter parameter)//real4 (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1170,7 +1170,7 @@ String real4_Max(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (r
 	return String();
 }
 
-String real4_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (real4, real4)
+String real4_Min(KernelInvokerParameter parameter)//real4 (real4, real4)
 {
 	Real4 a = PARAMETER_VALUE(1, Real4, 0);
 	Real4 b = PARAMETER_VALUE(1, Real4, 32);
@@ -1180,258 +1180,258 @@ String real4_Min(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 (r
 #pragma endregion 数学计算
 
 #pragma region 系统函数
-String Collect(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer (bool)
+String Collect(KernelInvokerParameter parameter)//integer (bool)
 {
-	uint32 heapTop = kernel->heapAgency->GetHeapTop();
-	kernel->heapAgency->GC(PARAMETER_VALUE(1, bool, 0));
-	RETURN_VALUE(integer, 0) = (integer)(heapTop - kernel->heapAgency->GetHeapTop());
+	uint32 heapTop = parameter.kernel->heapAgency->GetHeapTop();
+	parameter.kernel->heapAgency->GC(PARAMETER_VALUE(1, bool, 0));
+	RETURN_VALUE(integer, 0) = (integer)(heapTop - parameter.kernel->heapAgency->GetHeapTop());
 	return String();
 }
 
-String HeapTotalMemory(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer ()
+String HeapTotalMemory(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = kernel->heapAgency->GetHeapTop();
+	RETURN_VALUE(integer, 0) = parameter.kernel->heapAgency->GetHeapTop();
 	return String();
 }
 
-String CountHandle(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer ()
+String CountHandle(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = kernel->heapAgency->CountHandle();
+	RETURN_VALUE(integer, 0) = parameter.kernel->heapAgency->CountHandle();
 	return String();
 }
 
-String CountCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer ()
+String CountTask(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = kernel->coroutineAgency->CountCoroutine();
+	RETURN_VALUE(integer, 0) = parameter.kernel->taskAgency->CountTask();
 	return String();
 }
 
-String EntityCount(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer ()
+String EntityCount(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = kernel->entityAgency->Count();
+	RETURN_VALUE(integer, 0) = parameter.kernel->entityAgency->Count();
 	return String();
 }
 
-String StringCount(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer ()
+String StringCount(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = kernel->stringAgency->Count();
+	RETURN_VALUE(integer, 0) = parameter.kernel->stringAgency->Count();
 	return String();
 }
 
-String SetRandomSeed(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//(integer)
+String SetRandomSeed(KernelInvokerParameter parameter)//(integer)
 {
-	kernel->random.SetSeed(PARAMETER_VALUE(0, integer, 0));
+	parameter.kernel->random.SetSeed(PARAMETER_VALUE(0, integer, 0));
 	return String();
 }
 
-String LoadAssembly(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Assembly (string)
+String LoadAssembly(KernelInvokerParameter parameter)//Reflection.Assembly (string)
 {
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	RuntimeLibrary* library = kernel->libraryAgency->Load(PARAMETER_VALUE(1, string, 0));
-	kernel->heapAgency->StrongRelease(handle);
-	handle = library->spaces[0].GetReflection(kernel, library->index, 0);
-	kernel->heapAgency->StrongReference(handle);
+	RuntimeLibrary* library = parameter.kernel->libraryAgency->Load(PARAMETER_VALUE(1, string, 0));
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = library->spaces[0].GetReflection(parameter.kernel, library->index, 0);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String GetAssembles(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Assembly[] ()
+String GetAssembles(KernelInvokerParameter parameter)//Reflection.Assembly[] ()
 {
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(TYPE_Reflection_Assembly, (integer)kernel->libraryAgency->libraries.Count() + 1);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc(TYPE_Reflection_Assembly, (integer)parameter.kernel->libraryAgency->libraries.Count() + 1);
+	parameter.kernel->heapAgency->StrongReference(handle);
 
-	List<Handle, true> assembles = List<Handle, true>(kernel->libraryAgency->libraries.Count() + 1);
-	assembles.Add(kernel->libraryAgency->kernelLibrary->spaces[0].GetReflection(kernel, LIBRARY_KERNEL, 0));
-	for (uint32 i = 0; i < kernel->libraryAgency->libraries.Count(); i++)
-		assembles.Add(kernel->libraryAgency->libraries[i]->spaces[0].GetReflection(kernel, i, 0));
+	List<Handle, true> assembles = List<Handle, true>(parameter.kernel->libraryAgency->libraries.Count() + 1);
+	assembles.Add(parameter.kernel->libraryAgency->kernelLibrary->spaces[0].GetReflection(parameter.kernel, LIBRARY_KERNEL, 0));
+	for (uint32 i = 0; i < parameter.kernel->libraryAgency->libraries.Count(); i++)
+		assembles.Add(parameter.kernel->libraryAgency->libraries[i]->spaces[0].GetReflection(parameter.kernel, i, 0));
 
 	for (uint32 i = 0; i < assembles.Count(); i++)
 	{
-		*(Handle*)kernel->heapAgency->GetArrayPoint(handle, i) = assembles[i];
-		kernel->heapAgency->WeakReference(assembles[i]);
+		*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(handle, i) = assembles[i];
+		parameter.kernel->heapAgency->WeakReference(assembles[i]);
 	}
 	return String();
 }
 
-String GetCurrentCoroutineInstantID(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)//integer ()
+String GetCurrentTaskInstantID(KernelInvokerParameter parameter)//integer ()
 {
-	RETURN_VALUE(integer, 0) = (integer)coroutine->instanceID;
+	RETURN_VALUE(integer, 0) = (integer)parameter.task->instanceID;
 	return String();
 }
 #pragma endregion 系统函数
 
 #pragma region 基础类型成员函数
-String bool_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string bool.()
+String bool_ToString(KernelInvokerParameter parameter)//string bool.()
 {
-	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, bool, 0));
-	kernel->stringAgency->Reference(result.index);
+	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, bool, 0));
+	parameter.kernel->stringAgency->Reference(result.index);
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
 	return String();
 }
 
-String byte_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string byte.()
+String byte_ToString(KernelInvokerParameter parameter)//string byte.()
 {
-	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, uint8, 0));
-	kernel->stringAgency->Reference(result.index);
+	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, uint8, 0));
+	parameter.kernel->stringAgency->Reference(result.index);
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
 	return String();
 }
 
-String char_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string char.()
+String char_ToString(KernelInvokerParameter parameter)//string char.()
 {
-	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, character, 0));
-	kernel->stringAgency->Reference(result.index);
+	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, character, 0));
+	parameter.kernel->stringAgency->Reference(result.index);
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
 	return String();
 }
 
-String integer_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string integer.()
+String integer_ToString(KernelInvokerParameter parameter)//string integer.()
 {
-	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, integer, 0));
-	kernel->stringAgency->Reference(result.index);
+	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, integer, 0));
+	parameter.kernel->stringAgency->Reference(result.index);
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
 	return String();
 }
 
-String real_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string real.()
+String real_ToString(KernelInvokerParameter parameter)//string real.()
 {
-	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, real, 0));
-	kernel->stringAgency->Reference(result.index);
+	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, real, 0));
+	parameter.kernel->stringAgency->Reference(result.index);
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
 	return String();
 }
 
-String real2_Normalized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real2 real2.()
+String real2_Normalized(KernelInvokerParameter parameter)//real2 real2.()
 {
 	RETURN_VALUE(Real2, 0) = Normalized(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
-String real2_Magnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real2.()
+String real2_Magnitude(KernelInvokerParameter parameter)//real real2.()
 {
 	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
-String real2_SqrMagnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real2.()
+String real2_SqrMagnitude(KernelInvokerParameter parameter)//real real2.()
 {
 	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real2, 0));
 	return String();
 }
 
-String real3_Normalized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real3 real3.()
+String real3_Normalized(KernelInvokerParameter parameter)//real3 real3.()
 {
 	RETURN_VALUE(Real3, 0) = Normalized(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
-String real3_Magnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real3.()
+String real3_Magnitude(KernelInvokerParameter parameter)//real real3.()
 {
 	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
-String real3_SqrMagnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real3.()
+String real3_SqrMagnitude(KernelInvokerParameter parameter)//real real3.()
 {
 	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real3, 0));
 	return String();
 }
 
-String real4_Normalized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real4 real4.()
+String real4_Normalized(KernelInvokerParameter parameter)//real4 real4.()
 {
 	RETURN_VALUE(Real4, 0) = Normalized(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
-String real4_Magnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real4.()
+String real4_Magnitude(KernelInvokerParameter parameter)//real real4.()
 {
 	RETURN_VALUE(real, 0) = Magnitude(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
-String real4_SqrMagnitude(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real real4.()
+String real4_SqrMagnitude(KernelInvokerParameter parameter)//real real4.()
 {
 	RETURN_VALUE(real, 0) = SqrMagnitude(PARAMETER_VALUE(1, Real4, 0));
 	return String();
 }
 
-String enum_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string enum.() Declaration
+String enum_ToString(KernelInvokerParameter parameter)//string enum.() Declaration
 {
 	integer value = PARAMETER_VALUE(1, integer, 0);
 	const Declaration& declaration = PARAMETER_VALUE(1, Declaration, SIZE(integer));
-	string result = kernel->libraryAgency->GetEnum(Type(declaration, 0))->ToString(value, kernel->stringAgency).index;
-	kernel->stringAgency->Reference(result);
+	string result = parameter.kernel->libraryAgency->GetEnum(Type(declaration, 0))->ToString(value, parameter.kernel->stringAgency).index;
+	parameter.kernel->stringAgency->Reference(result);
 	RETURN_VALUE(string, 0) = result;
 	return String();
 }
 
-String type_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool type.()
+String type_IsPublic(KernelInvokerParameter parameter)//bool type.()
 {
 	Type* type = &PARAMETER_VALUE(1, Type, 0);
 	if (type->library == LIBRARY_KERNEL)RETURN_VALUE(bool, 0) = true;
 	else switch (type->code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		case TypeCode::Enum:
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
-			RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetRuntimeInfo(*type)->isPublic;
+		case TypeCode::Task:
+			RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetRuntimeInfo(*type)->isPublic;
 			break;
-		default: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		default: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 	}
 	return String();
 }
 
-String type_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyStrings type.()
+String type_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings type.()
 {
 	Type* type = &PARAMETER_VALUE(1, Type, 0);
 	if (type->dimension) *type = TYPE_Array;
 	switch (type->code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		case TypeCode::Enum:
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 		{
 			Handle& handle = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(handle);
-			handle = kernel->libraryAgency->GetRuntimeInfo(*type)->GetReflectionAttributes(kernel);
-			kernel->heapAgency->StrongReference(handle);
+			parameter.kernel->heapAgency->StrongRelease(handle);
+			handle = parameter.kernel->libraryAgency->GetRuntimeInfo(*type)->GetReflectionAttributes(parameter.kernel);
+			parameter.kernel->heapAgency->StrongReference(handle);
 		}
 		break;
-		default: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		default: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 	}
 	return String();
 }
 
-String type_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string type.()
+String type_GetName(KernelInvokerParameter parameter)//string type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = GetTypeName(kernel, type);
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = GetTypeName(parameter.kernel, type);
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String type_GetParent(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type type.()
+String type_GetParent(KernelInvokerParameter parameter)//type type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	Type& result = RETURN_VALUE(Type, 0);
@@ -1439,13 +1439,13 @@ String type_GetParent(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//typ
 	else if (type == TYPE_Handle) result = Type();
 	else switch (type.code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		case TypeCode::Enum:
 			result = Type();
 			break;
 		case TypeCode::Handle:
-			result = Type(kernel->libraryAgency->GetClass(type)->parents.Peek(), 0);
+			result = Type(parameter.kernel->libraryAgency->GetClass(type)->parents.Peek(), 0);
 			break;
 		case TypeCode::Interface:
 			result = TYPE_Interface;
@@ -1453,89 +1453,89 @@ String type_GetParent(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//typ
 		case TypeCode::Delegate:
 			result = TYPE_Delegate;
 			break;
-		case TypeCode::Coroutine:
-			result = TYPE_Coroutine;
+		case TypeCode::Task:
+			result = TYPE_Task;
 			break;
 	}
 	return String();
 }
 
-String type_GetInherits(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes type.()
+String type_GetInherits(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
 	if (type.dimension)type = TYPE_Array;
 	switch (type.code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		case TypeCode::Enum:
 			break;
 		case TypeCode::Handle:
 		{
-			RuntimeClass* info = kernel->libraryAgency->GetClass(type);
+			RuntimeClass* info = parameter.kernel->libraryAgency->GetClass(type);
 			if (!info->reflectionInherits)
 			{
 				CREATE_READONLY_VALUES(info->reflectionInherits, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->inherits.Count(), Strong);
 				Set<Declaration, true>::Iterator iterator = info->inherits.GetIterator();
 				uint32 index = 0;
-				while (iterator.Next()) *(Type*)kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
+				while (iterator.Next()) *(Type*)parameter.kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
 			}
 			handle = info->reflectionInherits;
 		}
 		break;
 		case TypeCode::Interface:
 		{
-			RuntimeInterface* info = kernel->libraryAgency->GetInterface(type);
+			RuntimeInterface* info = parameter.kernel->libraryAgency->GetInterface(type);
 			if (!info->reflectionInherits)
 			{
 				CREATE_READONLY_VALUES(info->reflectionInherits, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->inherits.Count(), Strong);
 				Set<Declaration, true>::Iterator iterator = info->inherits.GetIterator();
 				uint32 index = 0;
-				while (iterator.Next()) *(Type*)kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
+				while (iterator.Next()) *(Type*)parameter.kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
 			}
 			handle = info->reflectionInherits;
 		}
 		break;
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			break;
 	}
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String type_GetConstructors(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyMemberConstructors type.()
+String type_GetConstructors(KernelInvokerParameter parameter)//Reflection.ReadonlyMemberConstructors type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
 	if (type.dimension)type = TYPE_Array;
 	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
 	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Task) type = TYPE_Task;
 	switch (type.code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		case TypeCode::Enum:
 			break;
 		case TypeCode::Handle:
 		{
-			RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(type.library);
+			RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(type.library);
 			RuntimeClass* runtimeClass = &library->classes[type.index];
 			if (!runtimeClass->reflectionConstructors)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionConstructors, TYPE_Reflection_ReadonlyMemberConstructors, TYPE_Reflection_MemberConstructor, runtimeClass->constructors.Count(), Strong);
 				for (uint32 i = 0; i < runtimeClass->constructors.Count(); i++)
 				{
-					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberConstructor);
-					new ((ReflectionMemberConstructor*)kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
-					kernel->heapAgency->WeakReference(function);
+					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberConstructor);
+					new ((ReflectionMemberConstructor*)parameter.kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
+					parameter.kernel->heapAgency->WeakReference(function);
 				}
 			}
 			handle = runtimeClass->reflectionConstructors;
@@ -1543,38 +1543,38 @@ String type_GetConstructors(Kernel* kernel, Coroutine*, uint8* stack, uint32 top
 		break;
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 		default:
 			break;
 	}
 	return String();
 }
 
-String type_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyMemberVariables type.()
+String type_GetVariables(KernelInvokerParameter parameter)//Reflection.ReadonlyMemberVariables type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
 	if (type.dimension)type = TYPE_Array;
 	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
 	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Task) type = TYPE_Task;
 	switch (type.code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		{
-			RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(type);
+			RuntimeStruct* runtimeStruct = parameter.kernel->libraryAgency->GetStruct(type);
 			if (!runtimeStruct->reflectionVariables)
 			{
 				CREATE_READONLY_VALUES(runtimeStruct->reflectionVariables, TYPE_Reflection_ReadonlyMemberVariables, TYPE_Reflection_MemberVariable, runtimeStruct->variables.Count(), Strong);
 				for (uint32 i = 0; i < runtimeStruct->variables.Count(); i++)
 				{
-					Handle variable = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
-					new ((MemberVariable*)kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = variable;
-					kernel->heapAgency->WeakReference(variable);
+					Handle variable = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
+					new ((MemberVariable*)parameter.kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = variable;
+					parameter.kernel->heapAgency->WeakReference(variable);
 				}
 			}
 			handle = runtimeStruct->reflectionVariables;
@@ -1584,16 +1584,16 @@ String type_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 			break;
 		case TypeCode::Handle:
 		{
-			RuntimeClass* runtimeClass = kernel->libraryAgency->GetClass(type);
+			RuntimeClass* runtimeClass = parameter.kernel->libraryAgency->GetClass(type);
 			if (!runtimeClass->reflectionVariables)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionVariables, TYPE_Reflection_ReadonlyMemberVariables, TYPE_Reflection_MemberVariable, runtimeClass->variables.Count(), Strong);
 				for (uint32 i = 0; i < runtimeClass->variables.Count(); i++)
 				{
-					Handle variable = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
-					new ((MemberVariable*)kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = variable;
-					kernel->heapAgency->WeakReference(variable);
+					Handle variable = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
+					new ((MemberVariable*)parameter.kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = variable;
+					parameter.kernel->heapAgency->WeakReference(variable);
 				}
 			}
 			handle = runtimeClass->reflectionVariables;
@@ -1601,38 +1601,38 @@ String type_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 		break;
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			break;
 	}
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyMemberFunctions type.()
+String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyMemberFunctions type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension)type = TYPE_Array;
 	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Coroutine) type = TYPE_Coroutine;
+	else if (type.code == TypeCode::Task) type = TYPE_Task;
 
 	Handle* handle = &RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(*handle);
+	parameter.kernel->heapAgency->StrongRelease(*handle);
 	*handle = NULL;
 	switch (type.code)
 	{
-		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		{
-			RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(type);
+			RuntimeStruct* runtimeStruct = parameter.kernel->libraryAgency->GetStruct(type);
 			if (!runtimeStruct->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeStruct->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeStruct->functions.Count(), Strong);
 				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
 				{
-					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					new ((MemberFunction*)kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
-					kernel->heapAgency->WeakReference(function);
+					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
+					new ((MemberFunction*)parameter.kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
+					parameter.kernel->heapAgency->WeakReference(function);
 				}
 			}
 			*handle = runtimeStruct->reflectionFunctions;
@@ -1640,17 +1640,17 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 		break;
 		case TypeCode::Enum:
 		{
-			RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(TYPE_Enum);
-			RuntimeEnum* runtimeEnum = kernel->libraryAgency->GetEnum(type);
+			RuntimeStruct* runtimeStruct = parameter.kernel->libraryAgency->GetStruct(TYPE_Enum);
+			RuntimeEnum* runtimeEnum = parameter.kernel->libraryAgency->GetEnum(type);
 			if (!runtimeEnum->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeEnum->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeStruct->functions.Count(), Strong);
 				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
 				{
-					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					new ((MemberFunction*)kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
-					kernel->heapAgency->WeakReference(function);
+					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
+					new ((MemberFunction*)parameter.kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
+					parameter.kernel->heapAgency->WeakReference(function);
 				}
 			}
 			*handle = runtimeEnum->reflectionFunctions;
@@ -1658,17 +1658,17 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 		break;
 		case TypeCode::Handle:
 		{
-			RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(type.library);
+			RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(type.library);
 			RuntimeClass* runtimeClass = &library->classes[type.index];
 			if (!runtimeClass->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeClass->functions.Count(), Strong);
 				for (uint32 i = 0; i < runtimeClass->functions.Count(); i++)
 				{
-					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
-					kernel->heapAgency->WeakReference(function);
-					new ((ReflectionMemberConstructor*)kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
+					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
+					parameter.kernel->heapAgency->WeakReference(function);
+					new ((ReflectionMemberConstructor*)parameter.kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
 				}
 			}
 			*handle = runtimeClass->reflectionFunctions;
@@ -1676,43 +1676,43 @@ String type_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//
 		break;
 		case TypeCode::Interface:
 		{
-			RuntimeInterface* runtimeInterface = kernel->libraryAgency->GetInterface(type);
+			RuntimeInterface* runtimeInterface = parameter.kernel->libraryAgency->GetInterface(type);
 			if (!runtimeInterface->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeInterface->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeInterface->functions.Count(), Strong);
 				for (uint32 i = 0; i < runtimeInterface->functions.Count(); i++)
 				{
-					Handle function = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
-					*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = function;
-					kernel->heapAgency->WeakReference(function);
-					new ((MemberFunction*)kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
+					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
+					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
+					parameter.kernel->heapAgency->WeakReference(function);
+					new ((MemberFunction*)parameter.kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
 				}
 			}
 			*handle = runtimeInterface->reflectionFunctions;
 		}
 		break;
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			break;
 	}
-	kernel->heapAgency->StrongReference(*handle);
+	parameter.kernel->heapAgency->StrongReference(*handle);
 	return String();
 }
 
-String type_GetSpace(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Space type.()
+String type_GetSpace(KernelInvokerParameter parameter)//Reflection.Space type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	uint32 space;
-	if (!kernel->libraryAgency->TryGetSpace(type, space))return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+	if (!parameter.kernel->libraryAgency->TryGetSpace(type, space))return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 	Handle* handle = &RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(*handle);
-	*handle = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
-	kernel->heapAgency->StrongReference(*handle);
-	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(*handle))ReflectionSpace(type.library, space);
+	parameter.kernel->heapAgency->StrongRelease(*handle);
+	*handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
+	parameter.kernel->heapAgency->StrongReference(*handle);
+	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(*handle))ReflectionSpace(type.library, space);
 	return String();
 }
 
-String type_GetTypeCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.TypeCode type.()
+String type_GetTypeCode(KernelInvokerParameter parameter)//Reflection.TypeCode type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	integer& result = RETURN_VALUE(integer, 0);
@@ -1749,8 +1749,8 @@ String type_GetTypeCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//R
 		case TypeCode::Delegate:
 			result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Delegate;
 			break;
-		case TypeCode::Coroutine:
-			result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Coroutine;
+		case TypeCode::Task:
+			result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Task;
 			break;
 		default:
 			EXCEPTION("无效的类型");
@@ -1758,598 +1758,598 @@ String type_GetTypeCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//R
 	return String();
 }
 
-String type_IsAssignable(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool type.(type)
+String type_IsAssignable(KernelInvokerParameter parameter)//bool type.(type)
 {
 	Type& objectType = PARAMETER_VALUE(1, Type, 0);
 	Type& variableType = PARAMETER_VALUE(1, Type, SIZE(Type));
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->IsAssignable(variableType, objectType);
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->IsAssignable(variableType, objectType);
 	return String();
 }
 
-String type_IsValid(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool type.()
+String type_IsValid(KernelInvokerParameter parameter)//bool type.()
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0).code != TypeCode::Invalid;
 	return String();
 }
 
-String type_GetEnumElements(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer[] type.()
+String type_GetEnumElements(KernelInvokerParameter parameter)//integer[] type.()
 {
 	Type& enumType = PARAMETER_VALUE(1, Type, 0);
-	if (enumType.dimension || enumType.code != TypeCode::Enum) return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	if (enumType.dimension || enumType.code != TypeCode::Enum) return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	RuntimeEnum* runtimeEnum = kernel->libraryAgency->GetEnum(enumType);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(TYPE_Integer, runtimeEnum->values.Count());
-	kernel->heapAgency->StrongReference(handle);
+	RuntimeEnum* runtimeEnum = parameter.kernel->libraryAgency->GetEnum(enumType);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc(TYPE_Integer, runtimeEnum->values.Count());
+	parameter.kernel->heapAgency->StrongReference(handle);
 	for (uint32 i = 0; i < runtimeEnum->values.Count(); i++)
-		*(integer*)kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].value;
+		*(integer*)parameter.kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].value;
 	return String();
 }
 
-String type_GetEnumElementNames(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string[] type.()
+String type_GetEnumElementNames(KernelInvokerParameter parameter)//string[] type.()
 {
 	Type& enumType = PARAMETER_VALUE(1, Type, 0);
-	if (enumType.dimension || enumType.code != TypeCode::Enum) return kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	if (enumType.dimension || enumType.code != TypeCode::Enum) return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	RuntimeEnum* runtimeEnum = kernel->libraryAgency->GetEnum(enumType);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(TYPE_String, runtimeEnum->values.Count());
-	kernel->heapAgency->StrongReference(handle);
+	RuntimeEnum* runtimeEnum = parameter.kernel->libraryAgency->GetEnum(enumType);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc(TYPE_String, runtimeEnum->values.Count());
+	parameter.kernel->heapAgency->StrongReference(handle);
 	for (uint32 i = 0; i < runtimeEnum->values.Count(); i++)
 	{
-		*(string*)kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].name;
-		kernel->stringAgency->Reference(runtimeEnum->values[i].name);
+		*(string*)parameter.kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].name;
+		parameter.kernel->stringAgency->Reference(runtimeEnum->values[i].name);
 	}
 	return String();
 }
 
-String type_GetParameters(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes type.()
+String type_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (!type.dimension && type.code == TypeCode::Delegate)
 	{
-		RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
+		RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
 		if (!runtimeDelegate->reflectionParameters)
 		{
 			CREATE_READONLY_VALUES(runtimeDelegate->reflectionParameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeDelegate->parameters.Count(), Strong);
 			for (uint32 i = 0; i < runtimeDelegate->parameters.Count(); i++)
-				*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeDelegate->parameters.GetType(i);
+				*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeDelegate->parameters.GetType(i);
 		}
 		Handle* handle = &RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(*handle);
+		parameter.kernel->heapAgency->StrongRelease(*handle);
 		*handle = runtimeDelegate->reflectionParameters;
-		kernel->heapAgency->StrongReference(*handle);
+		parameter.kernel->heapAgency->StrongReference(*handle);
 		return String();
 	}
-	return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 }
 
-String type_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes type.()
+String type_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (!type.dimension)
 	{
 		if (type.code == TypeCode::Delegate)
 		{
-			RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
+			RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
 			if (!runtimeDelegate->reflectionReturns)
 			{
 				CREATE_READONLY_VALUES(runtimeDelegate->reflectionReturns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeDelegate->returns.Count(), Strong);
 				for (uint32 i = 0; i < runtimeDelegate->returns.Count(); i++)
-					*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeDelegate->returns.GetType(i);
+					*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeDelegate->returns.GetType(i);
 			}
 			Handle* handle = &RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(*handle);
+			parameter.kernel->heapAgency->StrongRelease(*handle);
 			*handle = runtimeDelegate->reflectionReturns;
-			kernel->heapAgency->StrongReference(*handle);
+			parameter.kernel->heapAgency->StrongReference(*handle);
 			return String();
 		}
-		else if (type.code == TypeCode::Coroutine)
+		else if (type.code == TypeCode::Task)
 		{
-			RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
-			if (!runtimeCoroutine->reflectionReturns)
+			RuntimeTask* runtimeTask = parameter.kernel->libraryAgency->GetTask(type);
+			if (!runtimeTask->reflectionReturns)
 			{
-				CREATE_READONLY_VALUES(runtimeCoroutine->reflectionReturns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeCoroutine->returns.Count(), Strong);
-				for (uint32 i = 0; i < runtimeCoroutine->returns.Count(); i++)
-					*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeCoroutine->returns.GetType(i);
+				CREATE_READONLY_VALUES(runtimeTask->reflectionReturns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeTask->returns.Count(), Strong);
+				for (uint32 i = 0; i < runtimeTask->returns.Count(); i++)
+					*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeTask->returns.GetType(i);
 			}
 			Handle* handle = &RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(*handle);
-			*handle = runtimeCoroutine->reflectionReturns;
-			kernel->heapAgency->StrongReference(*handle);
+			parameter.kernel->heapAgency->StrongRelease(*handle);
+			*handle = runtimeTask->reflectionReturns;
+			parameter.kernel->heapAgency->StrongReference(*handle);
 			return String();
 		}
 	}
-	return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE_OR_COROUTINE);
+	return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE_OR_TASK);
 }
 
-String type_CreateUninitialized(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.()
+String type_CreateUninitialized(KernelInvokerParameter parameter)//handle type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code == TypeCode::Delegate || type.code == TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if (type.dimension || type.code == TypeCode::Delegate || type.code == TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)type);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String type_CreateDelegate(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.Function)
+String type_CreateDelegate(KernelInvokerParameter parameter)//handle type.(Reflection.Function)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if (type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	Function function;
-	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
-	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
+	if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
+	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
 	if (runtimeFunction->parameters != runtimeDelegate->parameters)
-		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
+		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
 	if (runtimeFunction->returns != runtimeDelegate->returns)
-		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
+		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)type);
-	kernel->heapAgency->StrongReference(handle);
-	new ((Delegate*)kernel->heapAgency->GetPoint(handle))Delegate(runtimeFunction->entry);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	new ((Delegate*)parameter.kernel->heapAgency->GetPoint(handle))Delegate(runtimeFunction->entry);
 	return String();
 }
 
-String type_CreateDelegate2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.Native)
+String type_CreateDelegate2(KernelInvokerParameter parameter)//handle type.(Reflection.Native)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if (type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	Native native;
-	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), native))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(native);
-	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
+	if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), native))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
+	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
 	if (runtimeNative->parameters != runtimeDelegate->parameters)
-		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
+		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
 	if (runtimeNative->returns != runtimeDelegate->returns)
-		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
+		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)type);
-	kernel->heapAgency->StrongReference(handle);
-	new ((Delegate*)kernel->heapAgency->GetPoint(handle))Delegate(native);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	new ((Delegate*)parameter.kernel->heapAgency->GetPoint(handle))Delegate(native);
 	return String();
 }
 
-String type_CreateDelegate3(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.MemberFunction, handle)
+String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Reflection.MemberFunction, handle)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Delegate)return kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if (type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 
 	MemberFunction function;
-	if (!kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 
 	Handle thisParameter = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type thisParameterType;
-	if (!kernel->heapAgency->TryGetType(thisParameter, thisParameterType))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), thisParameterType))
-		return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-	Function globalFunction = kernel->libraryAgency->GetFunction(function, thisParameterType);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(globalFunction);
-	RuntimeDelegate* runtimeDelegate = kernel->libraryAgency->GetDelegate(type);
+	if (!parameter.kernel->heapAgency->TryGetType(thisParameter, thisParameterType))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if (!parameter.kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), thisParameterType))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	Function globalFunction = parameter.kernel->libraryAgency->GetFunction(function, thisParameterType);
+	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(globalFunction);
+	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
 	if (runtimeFunction->parameters.Count() != runtimeDelegate->parameters.Count() + 1)
-		return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
+		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
 	for (uint32 i = 0; i < runtimeDelegate->parameters.Count(); i++)
 		if (runtimeFunction->parameters.GetType(i + 1) != runtimeDelegate->parameters.GetType(i))
-			return kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
+			return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
 	if (runtimeFunction->returns != runtimeDelegate->returns)
-		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
+		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)type);
-	kernel->heapAgency->StrongReference(handle);
-	Delegate* pointer = (Delegate*)kernel->heapAgency->GetPoint(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	Delegate* pointer = (Delegate*)parameter.kernel->heapAgency->GetPoint(handle);
 	if (function.declaration.code == TypeCode::Struct)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Box);
-		kernel->heapAgency->WeakReference(thisParameter);
+		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
 	else if (function.declaration.code == TypeCode::Handle)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Virtual);
-		kernel->heapAgency->WeakReference(thisParameter);
+		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
 	else if (function.declaration.code == TypeCode::Interface)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Abstract);
-		kernel->heapAgency->WeakReference(thisParameter);
+		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
 	else EXCEPTION("无效的定义类型");
 	return String();
 }
 
-String type_CreateCoroutine(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.Function, handle[])
+String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflection.Function, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
+	if (type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + 4);
 	Function function;
-	if (!kernel->heapAgency->TryGetValue(functionHandle, function))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(function);
-	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
-	if (runtimeFunction->returns != runtimeCoroutine->returns)
-		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
+	if (!parameter.kernel->heapAgency->TryGetValue(functionHandle, function))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
+	RuntimeTask* runtimeTask = parameter.kernel->libraryAgency->GetTask(type);
+	if (runtimeFunction->returns != runtimeTask->returns)
+		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 	if (parametersHandle)
 	{
-		uint32 count = kernel->heapAgency->GetArrayLength(parametersHandle);
+		uint32 count = parameter.kernel->heapAgency->GetArrayLength(parametersHandle);
 		if (count != runtimeFunction->parameters.Count())
-			return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		for (uint32 i = 0; i < count; i++)
-			if (!kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
-				return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
+				return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		Handle& result = RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(result);
-		result = kernel->heapAgency->Alloc((Declaration)type);
-		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-		kernel->coroutineAgency->Reference(invoker);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		result = parameter.kernel->heapAgency->Alloc((Declaration)type);
+		parameter.kernel->heapAgency->StrongReference(result);
+		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
+		parameter.kernel->taskAgency->Reference(invoker);
 		for (uint32 i = 0; i < count; i++)
-			invoker->SetBoxParameter(i, *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i));
-		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
+			invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
+		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else if (!runtimeFunction->parameters.Count())
 	{
 		Handle& result = RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(result);
-		result = kernel->heapAgency->Alloc((Declaration)type);
-		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(function);
-		kernel->coroutineAgency->Reference(invoker);
-		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
+		parameter.kernel->heapAgency->StrongRelease(result);
+		result = parameter.kernel->heapAgency->Alloc((Declaration)type);
+		parameter.kernel->heapAgency->StrongReference(result);
+		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
+		parameter.kernel->taskAgency->Reference(invoker);
+		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
-	else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	return String();
 }
 
-String type_CreateCoroutine2(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(Reflection.MemberFunction, handle, handle[])
+String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflection.MemberFunction, handle, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Coroutine)return kernel->stringAgency->Add(EXCEPTION_NOT_COROUTINE);
+	if (type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	MemberFunction function;
-	if (!kernel->heapAgency->TryGetValue(functionHandle, function))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if (!parameter.kernel->heapAgency->TryGetValue(functionHandle, function))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	Handle targetHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type targetType;
-	if (!kernel->heapAgency->TryGetType(targetHandle, targetType))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), targetHandle))
-		return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	if (!parameter.kernel->heapAgency->TryGetType(targetHandle, targetType))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if (!parameter.kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), targetHandle))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
-	RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetMemberFunction(function);
-	RuntimeCoroutine* runtimeCoroutine = kernel->libraryAgency->GetCoroutine(type);
-	if (runtimeFunction->returns != runtimeCoroutine->returns)
-		return kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
+	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetMemberFunction(function);
+	RuntimeTask* runtimeTask = parameter.kernel->libraryAgency->GetTask(type);
+	if (runtimeFunction->returns != runtimeTask->returns)
+		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle) * 2);
 	if (parametersHandle)
 	{
-		uint32 count = kernel->heapAgency->GetArrayLength(parametersHandle);
+		uint32 count = parameter.kernel->heapAgency->GetArrayLength(parametersHandle);
 		if (count != runtimeFunction->parameters.Count() - 1)
-			return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		for (uint32 i = 0; i < count; i++)
-			if (!kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
-				return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
+				return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		Handle& result = RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(result);
-		result = kernel->heapAgency->Alloc((Declaration)type);
-		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
-		kernel->coroutineAgency->Reference(invoker);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		result = parameter.kernel->heapAgency->Alloc((Declaration)type);
+		parameter.kernel->heapAgency->StrongReference(result);
+		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(parameter.kernel->libraryAgency->GetFunction(function, targetType));
+		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
 		for (uint32 i = 0; i < count; i++)
-			invoker->SetBoxParameter(i + 1, *(Handle*)kernel->heapAgency->GetArrayPoint(parametersHandle, i));
-		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
+			invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
+		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else if (runtimeFunction->parameters.Count() == 1)
 	{
 		Handle& result = RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(result);
-		result = kernel->heapAgency->Alloc((Declaration)type);
-		kernel->heapAgency->StrongReference(result);
-		Invoker* invoker = kernel->coroutineAgency->CreateInvoker(kernel->libraryAgency->GetFunction(function, targetType));
-		kernel->coroutineAgency->Reference(invoker);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		result = parameter.kernel->heapAgency->Alloc((Declaration)type);
+		parameter.kernel->heapAgency->StrongReference(result);
+		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(parameter.kernel->libraryAgency->GetFunction(function, targetType));
+		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
-		*(uint64*)kernel->heapAgency->GetPoint(result) = invoker->instanceID;
+		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
-	else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	return String();
 }
 
-String type_CreateArray(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle type.(integer)
+String type_CreateArray(KernelInvokerParameter parameter)//handle type.(integer)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	integer length = PARAMETER_VALUE(1, integer, SIZE(Type));
 	Handle& result = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(result);
-	result = kernel->heapAgency->Alloc(type, length);
-	kernel->heapAgency->StrongReference(result);
+	parameter.kernel->heapAgency->StrongRelease(result);
+	result = parameter.kernel->heapAgency->Alloc(type, length);
+	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
 }
 
-String type_GetArrayRank(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
+String type_GetArrayRank(KernelInvokerParameter parameter)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Type, 0).dimension;
 	return String();
 }
 
-String type_GetArrayElementType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type type.()
+String type_GetArrayElementType(KernelInvokerParameter parameter)//type type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if (type.dimension)RETURN_VALUE(Type, 0) = Type(type, type.dimension - 1);
-	else return kernel->stringAgency->Add(EXCEPTION_NOT_ARRAY);
+	else return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ARRAY);
 	return String();
 }
 
-String string_GetLength(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer string.()
+String string_GetLength(KernelInvokerParameter parameter)//integer string.()
 {
-	RETURN_VALUE(integer, 0) = kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)).GetLength();
+	RETURN_VALUE(integer, 0) = parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)).GetLength();
 	return String();
 }
 
-String string_GetStringID(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer string.()
+String string_GetStringID(KernelInvokerParameter parameter)//integer string.()
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, string, 0);
 	return String();
 }
 
-String string_ToBool(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool string.()
+String string_ToBool(KernelInvokerParameter parameter)//bool string.()
 {
-	RETURN_VALUE(bool, 0) = ParseBool(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
+	RETURN_VALUE(bool, 0) = ParseBool(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
 	return String();
 }
 
-String string_ToInteger(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer string.()
+String string_ToInteger(KernelInvokerParameter parameter)//integer string.()
 {
-	RETURN_VALUE(integer, 0) = ParseInteger(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
+	RETURN_VALUE(integer, 0) = ParseInteger(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
 	return String();
 }
 
-String string_ToReal(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//real string.()
+String string_ToReal(KernelInvokerParameter parameter)//real string.()
 {
-	RETURN_VALUE(real, 0) = ParseReal(kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
+	RETURN_VALUE(real, 0) = ParseReal(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
 	return String();
 }
 
-String entity_GetEntityID(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer entity.()
+String entity_GetEntityID(KernelInvokerParameter parameter)//integer entity.()
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Entity, 0);
 	return String();
 }
 
-String handle_GetHandleID(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer handle.()
+String handle_GetHandleID(KernelInvokerParameter parameter)//integer handle.()
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Handle, 0);
 	return String();
 }
 
-String handle_ToString(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string handle.()
+String handle_ToString(KernelInvokerParameter parameter)//string handle.()
 {
-	String result = ToString(kernel->stringAgency, PARAMETER_VALUE(1, Handle, 0));
-	kernel->stringAgency->Reference(result.index);
+	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, Handle, 0));
+	parameter.kernel->stringAgency->Reference(result.index);
 	string& returnValue = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(returnValue);
+	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
 	return String();
 }
 
-String handle_GetType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)
+String handle_GetType(KernelInvokerParameter parameter)
 {
-	if (!kernel->heapAgency->TryGetType(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(Type, 0)))
-		return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if (!parameter.kernel->heapAgency->TryGetType(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(Type, 0)))
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	return String();
 }
 
-String coroutine_Start(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//coroutine.(bool, bool)
+String task_Start(KernelInvokerParameter parameter)//task.(bool, bool)
 {
 	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Unstart) return kernel->stringAgency->Add(EXCEPTION_COROUTINE_NOT_UNSTART);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
+	if (invoker->state != InvokerState::Unstart) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_UNSTART);
 	invoker->Start(PARAMETER_VALUE(0, bool, SIZE(Handle)), PARAMETER_VALUE(0, bool, SIZE(Handle) + SIZE(bool)));
 	return String();
 }
 
-String coroutine_Abort(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//coroutine.()
+String task_Abort(KernelInvokerParameter parameter)//task.()
 {
 	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)return kernel->stringAgency->Add(EXCEPTION_COROUTINE_NOT_RUNNING);
-	String message = kernel->stringAgency->Get(PARAMETER_VALUE(0, string, 4));
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
+	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	String message = parameter.kernel->stringAgency->Get(PARAMETER_VALUE(0, string, 4));
 	invoker->Abort(message);
 	return String();
 }
 
-String coroutine_GetState(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//CoroutineState coroutine.()
+String task_GetState(KernelInvokerParameter parameter)//TaskState task.()
 {
 	GET_THIS_VALUE(1, uint64);
-	RETURN_VALUE(integer, 0) = (integer)kernel->coroutineAgency->GetInvoker(thisValue)->state;
+	RETURN_VALUE(integer, 0) = (integer)parameter.kernel->taskAgency->GetInvoker(thisValue)->state;
 	return String();
 }
 
-String coroutine_GetExitCode(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string coroutine.()
+String task_GetExitCode(KernelInvokerParameter parameter)//string task.()
 {
 	GET_THIS_VALUE(1, uint64);
-	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
 	string& result = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(result);
+	parameter.kernel->stringAgency->Release(result);
 	result = invoker->exitMessage.index;
-	kernel->stringAgency->Reference(result);
+	parameter.kernel->stringAgency->Reference(result);
 	return String();
 }
 
-String coroutine_IsPause(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool coroutine.()
+String task_IsPause(KernelInvokerParameter parameter)//bool task.()
 {
 	GET_THIS_VALUE(1, uint64);
-	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
 	if (invoker->state != InvokerState::Running)RETURN_VALUE(bool, 0) = false;
 	else RETURN_VALUE(bool, 0) = invoker->IsPause();
 	return String();
 }
 
-String coroutine_Pause(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//coroutine.()
+String task_Pause(KernelInvokerParameter parameter)//task.()
 {
 	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)return kernel->stringAgency->Add(EXCEPTION_COROUTINE_NOT_RUNNING);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
+	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Pause();
 	return String();
 
 }
 
-String coroutine_Resume(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//coroutine.()
+String task_Resume(KernelInvokerParameter parameter)//task.()
 {
 	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = kernel->coroutineAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)return kernel->stringAgency->Add(EXCEPTION_COROUTINE_NOT_RUNNING);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
+	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Resume();
 	return String();
 }
 
-String array_GetLength(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer array.()
+String array_GetLength(KernelInvokerParameter parameter)//integer array.()
 {
-	return kernel->heapAgency->TryGetArrayLength(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(integer, 0));
+	return parameter.kernel->heapAgency->TryGetArrayLength(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(integer, 0));
 }
 #pragma endregion 基础类型成员函数
 
 #pragma region 反射
-String Reflection_ReadonlyValues_GetCount(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer Reflection.ReadonlyValues.()
+String Reflection_ReadonlyValues_GetCount(KernelInvokerParameter parameter)//integer Reflection.ReadonlyValues.()
 {
 	GET_THIS_VALUE(1, ReflectionReadonlyValues);
-	return kernel->heapAgency->TryGetArrayLength(thisValue.values, RETURN_VALUE(integer, 0));
+	return parameter.kernel->heapAgency->TryGetArrayLength(thisValue.values, RETURN_VALUE(integer, 0));
 }
 
-String Reflection_ReadonlyValues_GetStringElement(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.ReadonlyValues.(integer)
+String Reflection_ReadonlyValues_GetStringElement(KernelInvokerParameter parameter)//string Reflection.ReadonlyValues.(integer)
 {
 	GET_THIS_VALUE(1, ReflectionReadonlyValues);
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
-	String exitMessage = kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
+	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
 	if (!exitMessage.IsEmpty()) return exitMessage;
 	string& result = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(result);
+	parameter.kernel->stringAgency->Release(result);
 	result = *(string*)pointer;
-	kernel->stringAgency->Reference(result);
+	parameter.kernel->stringAgency->Reference(result);
 	return String();
 }
 
-String Reflection_ReadonlyValues_GetTypeElement(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type Reflection.ReadonlyValues.(integer)
+String Reflection_ReadonlyValues_GetTypeElement(KernelInvokerParameter parameter)//type Reflection.ReadonlyValues.(integer)
 {
 	GET_THIS_VALUE(1, ReflectionReadonlyValues);
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
-	String exitMessage = kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
+	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
 	if (!exitMessage.IsEmpty()) return exitMessage;
 	RETURN_VALUE(Type, 0) = *(Type*)pointer;
 	return String();
 }
 
-String Reflection_ReadonlyValues_GetHandleElement(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle Reflection.ReadonlyValues.(integer)
+String Reflection_ReadonlyValues_GetHandleElement(KernelInvokerParameter parameter)//handle Reflection.ReadonlyValues.(integer)
 {
 	GET_THIS_VALUE(1, ReflectionReadonlyValues);
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
-	String exitMessage = kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
+	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
 	if (!exitMessage.IsEmpty()) return exitMessage;
 	Handle& result = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(result);
+	parameter.kernel->heapAgency->StrongRelease(result);
 	result = *(Handle*)pointer;
-	kernel->heapAgency->StrongReference(result);
+	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
 }
 
-String Reflection_Variable_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer Reflection.Variable.()
+String Reflection_Variable_IsPublic(KernelInvokerParameter parameter)//integer Reflection.Variable.()
 {
 	GET_THIS_VALUE(1, Variable);
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetVariable(thisValue)->isPublic;
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetVariable(thisValue)->isPublic;
 	return String();
 }
 
-String Reflection_Variable_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyStrings Reflection.Variable.()
-{
-	GET_THIS_VALUE(1, Variable);
-	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetVariable(thisValue)->GetReflectionAttributes(kernel);
-	kernel->heapAgency->StrongReference(handle);
-	return String();
-}
-
-String Reflection_Variable_GetSpace(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Space Reflection.Variable.()
+String Reflection_Variable_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Variable.()
 {
 	GET_THIS_VALUE(1, Variable);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
-	kernel->heapAgency->StrongReference(handle);
-	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetVariable(thisValue)->space);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetVariable(thisValue)->GetReflectionAttributes(parameter.kernel);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Variable_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.Variable.()
+String Reflection_Variable_GetSpace(KernelInvokerParameter parameter)//Reflection.Space Reflection.Variable.()
+{
+	GET_THIS_VALUE(1, Variable);
+	Handle& handle = RETURN_VALUE(Handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetVariable(thisValue)->space);
+	return String();
+}
+
+String Reflection_Variable_GetName(KernelInvokerParameter parameter)//string Reflection.Variable.()
 {
 	GET_THIS_VALUE(1, Variable);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = kernel->libraryAgency->GetVariable(thisValue)->name;
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = parameter.kernel->libraryAgency->GetVariable(thisValue)->name;
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String Reflection_Variable_GetVariableType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type Reflection.Variable.()
+String Reflection_Variable_GetVariableType(KernelInvokerParameter parameter)//type Reflection.Variable.()
 {
 	GET_THIS_VALUE(1, Variable);
-	RETURN_VALUE(Type, 0) = kernel->libraryAgency->GetVariable(thisValue)->type;
+	RETURN_VALUE(Type, 0) = parameter.kernel->libraryAgency->GetVariable(thisValue)->type;
 	return String();
 }
 
-String Reflection_Variable_GetValue(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle Reflection.Variable.()
+String Reflection_Variable_GetValue(KernelInvokerParameter parameter)//handle Reflection.Variable.()
 {
 	GET_THIS_VALUE(1, Variable);
-	RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
+	RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 	RuntimeVariable& info = library->variables[thisValue.variable];
-	StrongBox(kernel, info.type, kernel->libraryAgency->data.GetPointer() + info.address, RETURN_VALUE(Handle, 0));
+	StrongBox(parameter.kernel, info.type, parameter.kernel->libraryAgency->data.GetPointer() + info.address, RETURN_VALUE(Handle, 0));
 	return String();
 }
 
-String Reflection_Variable_SetValue(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Variable.(handle)
+String Reflection_Variable_SetValue(KernelInvokerParameter parameter)//Reflection.Variable.(handle)
 {
 	GET_THIS_VALUE(0, Variable);
-	RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
+	RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 	RuntimeVariable& info = library->variables[thisValue.variable];
-	if (info.readonly)return kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
-	return StrongUnbox(kernel, info.type, PARAMETER_VALUE(0, Handle, SIZE(Handle)), kernel->libraryAgency->data.GetPointer() + info.address);
+	if (info.readonly)return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
+	return StrongUnbox(parameter.kernel, info.type, PARAMETER_VALUE(0, Handle, SIZE(Handle)), parameter.kernel->libraryAgency->data.GetPointer() + info.address);
 }
 
-String Reflection_MemberConstructor_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool Reflection.MemberConstructor.()
+String Reflection_MemberConstructor_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetConstructorFunction(thisValue)->isPublic;
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue)->isPublic;
 	return String();
 }
 
-String Reflection_MemberConstructor_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyStrings Reflection.MemberConstructor.()
+String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetConstructorFunction(thisValue)->GetReflectionAttributes(kernel);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue)->GetReflectionAttributes(parameter.kernel);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_MemberConstructor_GetDeclaringType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type Reflection.MemberConstructor.()
+String Reflection_MemberConstructor_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
@@ -2357,43 +2357,43 @@ String Reflection_MemberConstructor_GetDeclaringType(Kernel* kernel, Coroutine*,
 	return String();
 }
 
-String Reflection_MemberConstructor_GetParameters(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyTypes Reflection.MemberConstructor.()
+String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	if (!thisValue.parameters)
 	{
-		RuntimeFunction* info = kernel->libraryAgency->GetConstructorFunction(thisValue);
+		RuntimeFunction* info = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
 		THIS(1, ReflectionMemberConstructor).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.parameters;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_MemberConstructor_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)//handle Reflection.MemberConstructor.(handle[])
+String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//handle Reflection.MemberConstructor.(handle[])
 {
-	if (coroutine->kernelInvoker)
+	if (parameter.task->kernelInvoker)
 	{
-		Invoker* invoker = coroutine->kernelInvoker;
-		switch (coroutine->kernelInvoker->state)
+		Invoker* invoker = parameter.task->kernelInvoker;
+		switch (parameter.task->kernelInvoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return String();
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -2405,38 +2405,38 @@ String Reflection_MemberConstructor_Invoke(Kernel* kernel, Coroutine* coroutine,
 		GET_THIS_VALUE(1, ReflectionMemberConstructor);
 		ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 		Handle parameters = PARAMETER_VALUE(1, Handle, 4);
-		RuntimeFunction* constructor = kernel->libraryAgency->GetConstructorFunction(thisValue);
-		if (kernel->heapAgency->IsValid(parameters))
+		RuntimeFunction* constructor = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
+		if (parameter.kernel->heapAgency->IsValid(parameters))
 		{
-			uint32 length = kernel->heapAgency->GetArrayLength(parameters);
-			if (length != constructor->parameters.Count() - 1) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
+			if (length != constructor->parameters.Count() - 1) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			for (uint32 i = 0; i < length; i++)
-				if (!kernel->libraryAgency->IsAssignable(constructor->parameters.GetType(i + 1), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i)))
-					return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+				if (!parameter.kernel->libraryAgency->IsAssignable(constructor->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 			Handle& result = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(result);
-			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(constructor->entry, constructor);
-			kernel->coroutineAgency->Reference(invoker);
-			result = kernel->heapAgency->Alloc(thisValue.declaration);
-			kernel->heapAgency->StrongReference(result);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(constructor->entry, constructor);
+			parameter.kernel->taskAgency->Reference(invoker);
+			result = parameter.kernel->heapAgency->Alloc(thisValue.declaration);
+			parameter.kernel->heapAgency->StrongReference(result);
 			invoker->SetHandleParameter(0, result);
 			for (uint32 i = 0; i < length; i++)
-				invoker->SetBoxParameter(i + 1, *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i));
-			invoker->Start(true, coroutine->ignoreWait);
+				invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
-					coroutine->kernelInvoker = invoker;
+					parameter.task->kernelInvoker = invoker;
 					return String();
 				case InvokerState::Completed:
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return String();
 				case InvokerState::Aborted:
 				{
 					String exitMessage = invoker->exitMessage;
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
@@ -2446,196 +2446,196 @@ String Reflection_MemberConstructor_Invoke(Kernel* kernel, Coroutine* coroutine,
 		else if (constructor->parameters.Count() == 1)
 		{
 			Handle& result = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(result);
-			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(constructor->entry, constructor);
-			kernel->coroutineAgency->Reference(invoker);
-			result = kernel->heapAgency->Alloc(thisValue.declaration);
-			kernel->heapAgency->StrongReference(result);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(constructor->entry, constructor);
+			parameter.kernel->taskAgency->Reference(invoker);
+			result = parameter.kernel->heapAgency->Alloc(thisValue.declaration);
+			parameter.kernel->heapAgency->StrongReference(result);
 			invoker->SetHandleParameter(0, result);
-			invoker->Start(true, coroutine->ignoreWait);
+			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
-					coroutine->kernelInvoker = invoker;
+					parameter.task->kernelInvoker = invoker;
 					return String();
 				case InvokerState::Completed:
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return String();
 				case InvokerState::Aborted:
 				{
 					String exitMessage = invoker->exitMessage;
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	}
 }
 
-String Reflection_MemberVariable_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool Reflection.MemberVariable.()
+String Reflection_MemberVariable_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberVariable.()
 {
 	GET_THIS_VALUE(1, MemberVariable);
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetMemberVariable(thisValue)->isPublic;
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->isPublic;
 	return String();
 }
 
-String Reflection_MemberVariable_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyStrings Reflection.MemberVariable.()
+String Reflection_MemberVariable_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings Reflection.MemberVariable.()
 {
 	GET_THIS_VALUE(1, MemberVariable);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetMemberVariable(thisValue)->GetReflectionAttributes(kernel);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->GetReflectionAttributes(parameter.kernel);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_MemberVariable_GetDeclaringType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type Reflection.MemberVariable.()
+String Reflection_MemberVariable_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberVariable.()
 {
 	GET_THIS_VALUE(1, MemberVariable);
 	RETURN_VALUE(Type, 0) = Type(thisValue.declaration, 0);
 	return String();
 }
 
-String Reflection_MemberVariable_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.MemberVariable.()
+String Reflection_MemberVariable_GetName(KernelInvokerParameter parameter)//string Reflection.MemberVariable.()
 {
 	GET_THIS_VALUE(1, MemberVariable);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = kernel->libraryAgency->GetMemberVariable(thisValue)->name;
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->name;
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String Reflection_MemberVariable_GetVariableType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type Reflection.MemberVariable.()
+String Reflection_MemberVariable_GetVariableType(KernelInvokerParameter parameter)//type Reflection.MemberVariable.()
 {
 	GET_THIS_VALUE(1, MemberVariable);
-	RETURN_VALUE(Type, 0) = kernel->libraryAgency->GetMemberVariable(thisValue)->type;
+	RETURN_VALUE(Type, 0) = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->type;
 	return String();
 }
 
-String Reflection_MemberVariable_GetValue(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//handle Reflection.MemberVariable.(handle)
+String Reflection_MemberVariable_GetValue(KernelInvokerParameter parameter)//handle Reflection.MemberVariable.(handle)
 {
 	GET_THIS_VALUE(1, MemberVariable);
 	Handle& handle = PARAMETER_VALUE(1, Handle, SIZE(Handle));
-	if (!kernel->heapAgency->IsValid(handle)) return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	kernel->heapAgency->StrongRelease(handle);
-	RuntimeMemberVariable* info = kernel->libraryAgency->GetMemberVariable(thisValue);
-	uint8* pointer = kernel->heapAgency->GetPoint(handle) + info->address;
+	if (!parameter.kernel->heapAgency->IsValid(handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	RuntimeMemberVariable* info = parameter.kernel->libraryAgency->GetMemberVariable(thisValue);
+	uint8* pointer = parameter.kernel->heapAgency->GetPoint(handle) + info->address;
 	if (thisValue.declaration.code == TypeCode::Handle)
-		pointer += kernel->libraryAgency->GetClass(Type(thisValue.declaration, 0))->offset;
-	StrongBox(kernel, info->type, pointer, RETURN_VALUE(Handle, 0));
+		pointer += parameter.kernel->libraryAgency->GetClass(Type(thisValue.declaration, 0))->offset;
+	StrongBox(parameter.kernel, info->type, pointer, RETURN_VALUE(Handle, 0));
 	return String();
 }
 
-String Reflection_MemberVariable_SetValue(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.MemberVariable.(handle, handle)
+String Reflection_MemberVariable_SetValue(KernelInvokerParameter parameter)//Reflection.MemberVariable.(handle, handle)
 {
 	GET_THIS_VALUE(0, MemberVariable);
-	RuntimeMemberVariable* info = kernel->libraryAgency->GetMemberVariable(thisValue);
-	if (info->readonly)return kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
+	RuntimeMemberVariable* info = parameter.kernel->libraryAgency->GetMemberVariable(thisValue);
+	if (info->readonly) return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
 	Handle handle = PARAMETER_VALUE(0, Handle, SIZE(Handle));
-	if (!kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), handle)) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-	Handle parameter = PARAMETER_VALUE(0, Handle, SIZE(Handle) * 2);
-	if (!kernel->libraryAgency->IsAssignable(info->type, parameter)) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-	if (!kernel->heapAgency->IsValid(handle)) return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	uint8* pointer = kernel->heapAgency->GetPoint(handle) + info->address;
+	if (!parameter.kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	Handle value = PARAMETER_VALUE(0, Handle, SIZE(Handle) * 2);
+	if (!parameter.kernel->libraryAgency->IsAssignable(info->type, value)) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	if (!parameter.kernel->heapAgency->IsValid(handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	uint8* pointer = parameter.kernel->heapAgency->GetPoint(handle) + info->address;
 	if (thisValue.declaration.code == TypeCode::Handle)
-		pointer += kernel->libraryAgency->GetClass(Type(thisValue.declaration, 0))->offset;
-	return StrongUnbox(kernel, info->type, parameter, pointer);
+		pointer += parameter.kernel->libraryAgency->GetClass(Type(thisValue.declaration, 0))->offset;
+	return StrongUnbox(parameter.kernel, info->type, value, pointer);
 }
 
-String Reflection_MemberFunction_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//bool Reflection.MemberFunction.()
+String Reflection_MemberFunction_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberFunction.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberFunction);
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetMemberFunction(thisValue)->isPublic;
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetMemberFunction(thisValue)->isPublic;
 	return String();
 }
 
-String Reflection_MemberFunction_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyStrings Reflection.MemberFunction.()
+String Reflection_MemberFunction_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.MemberFunction.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberFunction);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetMemberFunction(thisValue)->GetReflectionAttributes(kernel);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetMemberFunction(thisValue)->GetReflectionAttributes(parameter.kernel);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_MemberFunction_GetDeclaringType(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//type Reflection.MemberFunction.()
+String Reflection_MemberFunction_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberFunction.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberFunction);
 	RETURN_VALUE(Type, 0) = Type(thisValue.declaration, 0);
 	return String();
 }
 
-String Reflection_MemberFunction_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.MemberFunction.()
+String Reflection_MemberFunction_GetName(KernelInvokerParameter parameter)//string Reflection.MemberFunction.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberFunction);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = kernel->libraryAgency->GetMemberFunction(thisValue)->name;
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = parameter.kernel->libraryAgency->GetMemberFunction(thisValue)->name;
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String Reflection_MemberFunction_GetParameters(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyTypes Reflection.MemberFunction.()
+String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberFunction.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberFunction);
 	if (!thisValue.parameters)
 	{
-		RuntimeFunction* info = kernel->libraryAgency->GetMemberFunction(thisValue);
+		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
 		THIS(1, ReflectionMemberFunction).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.parameters;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_MemberFunction_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.ReadonlyTypes Reflection.MemberFunction.()
+String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberFunction.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberFunction);
 	if (!thisValue.returns)
 	{
-		RuntimeFunction* info = kernel->libraryAgency->GetMemberFunction(thisValue);
+		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->returns.Count(), Weak);
 		THIS(1, ReflectionMemberFunction).returns = thisValue.returns;
 		for (uint32 i = 0; i < info->returns.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = info->returns.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = info->returns.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.returns;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_MemberFunction_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)//handle[] Reflection.MemberFunction.(handle, handle[])
+String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.MemberFunction.(handle, handle[])
 {
-	if (coroutine->kernelInvoker)
+	if (parameter.task->kernelInvoker)
 	{
-		Invoker* invoker = coroutine->kernelInvoker;
-		switch (coroutine->kernelInvoker->state)
+		Invoker* invoker = parameter.task->kernelInvoker;
+		switch (parameter.task->kernelInvoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 				invoker->GetReturns(RETURN_VALUE(Handle, 0));
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return String();
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -2647,42 +2647,42 @@ String Reflection_MemberFunction_Invoke(Kernel* kernel, Coroutine* coroutine, ui
 		GET_THIS_VALUE(1, ReflectionMemberFunction);
 		Handle target = PARAMETER_VALUE(1, Handle, 4);
 		Handle parameters = PARAMETER_VALUE(1, Handle, 8);
-		RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetMemberFunction(thisValue);
-		if (!kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), target))
-			return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-		if (kernel->heapAgency->IsValid(parameters))
+		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
+		if (!parameter.kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), target))
+			return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+		if (parameter.kernel->heapAgency->IsValid(parameters))
 		{
-			uint32 length = kernel->heapAgency->GetArrayLength(parameters);
-			if (length != runtimeFunction->parameters.Count() - 1) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
+			if (length != runtimeFunction->parameters.Count() - 1) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			for (uint32 i = 0; i < length; i++)
-				if (!kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i)))
-					return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+				if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 			Handle& result = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
-			kernel->heapAgency->StrongReference(result);
-			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
-			kernel->coroutineAgency->Reference(invoker);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
+			parameter.kernel->heapAgency->StrongReference(result);
+			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
+			parameter.kernel->taskAgency->Reference(invoker);
 			invoker->SetBoxParameter(0, target);
 			for (uint32 i = 0; i < length; i++)
-				invoker->SetBoxParameter(i + 1, *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i));
+				invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
 			if (thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
-			invoker->Start(true, coroutine->ignoreWait);
+			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
-					coroutine->kernelInvoker = invoker;
+					parameter.task->kernelInvoker = invoker;
 					return String();
 				case InvokerState::Completed:
 					invoker->GetReturns(result);
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return String();
 				case InvokerState::Aborted:
 				{
 					String exitMessage = invoker->exitMessage;
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
@@ -2692,131 +2692,131 @@ String Reflection_MemberFunction_Invoke(Kernel* kernel, Coroutine* coroutine, ui
 		else if (runtimeFunction->parameters.Count() == 1)
 		{
 			Handle result = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
-			kernel->heapAgency->StrongReference(result);
-			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
-			kernel->coroutineAgency->Reference(invoker);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
+			parameter.kernel->heapAgency->StrongReference(result);
+			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
+			parameter.kernel->taskAgency->Reference(invoker);
 			invoker->SetBoxParameter(0, target);
 			if (thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
-			invoker->Start(true, coroutine->ignoreWait);
+			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
-					coroutine->kernelInvoker = invoker;
+					parameter.task->kernelInvoker = invoker;
 					return String();
 				case InvokerState::Completed:
 					invoker->GetReturns(result);
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return String();
 				case InvokerState::Aborted:
 				{
 					String exitMessage = invoker->exitMessage;
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	}
 }
 
-String Reflection_Function_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer Reflection.Function.()
+String Reflection_Function_IsPublic(KernelInvokerParameter parameter)//integer Reflection.Function.()
 {
 	GET_THIS_VALUE(1, Function);
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetFunction(thisValue)->isPublic;
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetFunction(thisValue)->isPublic;
 	return String();
 }
 
-String Reflection_Function_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyStrings Reflection.Function.()
+String Reflection_Function_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Function.()
 {
 	GET_THIS_VALUE(1, ReflectionFunction);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetFunction(thisValue)->GetReflectionAttributes(kernel);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetFunction(thisValue)->GetReflectionAttributes(parameter.kernel);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Function_GetSpace(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Space Reflection.Function.()
+String Reflection_Function_GetSpace(KernelInvokerParameter parameter)//Reflection.Space Reflection.Function.()
 {
 	GET_THIS_VALUE(1, Function);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
-	kernel->heapAgency->StrongReference(handle);
-	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetFunction(thisValue)->space);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetFunction(thisValue)->space);
 	return String();
 }
 
-String Reflection_Function_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.Function.()
+String Reflection_Function_GetName(KernelInvokerParameter parameter)//string Reflection.Function.()
 {
 	GET_THIS_VALUE(1, Function);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = kernel->libraryAgency->GetFunction(thisValue)->name;
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = parameter.kernel->libraryAgency->GetFunction(thisValue)->name;
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String Reflection_Function_GetParameters(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes Reflection.Function.()
+String Reflection_Function_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Function.()
 {
 	GET_THIS_VALUE(1, ReflectionFunction);
 	if (!thisValue.parameters)
 	{
-		RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(thisValue);
+		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->parameters.Count(), Weak);
 		THIS(1, ReflectionFunction).parameters = thisValue.parameters;
 		for (uint32 i = 0; i < runtimeFunction->parameters.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->parameters.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.parameters;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Function_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes Reflection.Function.()
+String Reflection_Function_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Function.()
 {
 	GET_THIS_VALUE(1, ReflectionFunction);
 	if (!thisValue.returns)
 	{
-		RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(thisValue);
+		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->returns.Count(), Weak);
 		THIS(1, ReflectionFunction).returns = thisValue.returns;
 		for (uint32 i = 0; i < runtimeFunction->returns.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->returns.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->returns.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.returns;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Function_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)//handle[] Reflection.Function.(handle[])
+String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.Function.(handle[])
 {
-	if (coroutine->kernelInvoker)
+	if (parameter.task->kernelInvoker)
 	{
-		Invoker* invoker = coroutine->kernelInvoker;
-		switch (coroutine->kernelInvoker->state)
+		Invoker* invoker = parameter.task->kernelInvoker;
+		switch (parameter.task->kernelInvoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 				invoker->GetReturns(RETURN_VALUE(Handle, 0));
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return String();
 			case InvokerState::Aborted:
 			{
 				String exitMessage = invoker->exitMessage;
-				kernel->coroutineAgency->Release(invoker);
-				coroutine->kernelInvoker = NULL;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
@@ -2827,38 +2827,38 @@ String Reflection_Function_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* s
 	{
 		GET_THIS_VALUE(1, Function);
 		Handle parameters = PARAMETER_VALUE(1, Handle, 4);
-		RuntimeFunction* runtimeFunction = kernel->libraryAgency->GetFunction(thisValue);
-		if (kernel->heapAgency->IsValid(parameters))
+		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
+		if (parameter.kernel->heapAgency->IsValid(parameters))
 		{
-			uint32 length = kernel->heapAgency->GetArrayLength(parameters);
-			if (length != runtimeFunction->parameters.Count()) return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
+			if (length != runtimeFunction->parameters.Count()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 			for (uint32 i = 0; i < length; i++)
-				if (!kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i)))
-					return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+				if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 			Handle& result = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
-			kernel->heapAgency->StrongReference(result);
-			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
-			kernel->coroutineAgency->Reference(invoker);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
+			parameter.kernel->heapAgency->StrongReference(result);
+			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
+			parameter.kernel->taskAgency->Reference(invoker);
 			for (uint32 i = 0; i < length; i++)
-				invoker->SetBoxParameter(i, *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i));
-			invoker->Start(true, coroutine->ignoreWait);
+				invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
-					coroutine->kernelInvoker = invoker;
+					parameter.task->kernelInvoker = invoker;
 					return String();
 				case InvokerState::Completed:
 					invoker->GetReturns(result);
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return String();
 				case InvokerState::Aborted:
 				{
 					String exitMessage = invoker->exitMessage;
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
@@ -2868,351 +2868,351 @@ String Reflection_Function_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* s
 		else if (!runtimeFunction->parameters.Count())
 		{
 			Handle& result = RETURN_VALUE(Handle, 0);
-			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
-			kernel->heapAgency->StrongReference(result);
-			Invoker* invoker = kernel->coroutineAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
-			kernel->coroutineAgency->Reference(invoker);
-			invoker->Start(true, coroutine->ignoreWait);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeFunction->returns.Count());
+			parameter.kernel->heapAgency->StrongReference(result);
+			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
+			parameter.kernel->taskAgency->Reference(invoker);
+			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
-					coroutine->kernelInvoker = invoker;
+					parameter.task->kernelInvoker = invoker;
 					return String();
 				case InvokerState::Completed:
 					invoker->GetReturns(result);
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return String();
 				case InvokerState::Aborted:
 				{
 					String exitMessage = invoker->exitMessage;
-					kernel->coroutineAgency->Release(invoker);
+					parameter.kernel->taskAgency->Release(invoker);
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	}
 }
 
-String Reflection_Native_IsPublic(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//integer Reflection.Native.()
+String Reflection_Native_IsPublic(KernelInvokerParameter parameter)//integer Reflection.Native.()
 {
 	GET_THIS_VALUE(1, Native);
-	RETURN_VALUE(bool, 0) = kernel->libraryAgency->GetNative(thisValue)->isPublic;
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetNative(thisValue)->isPublic;
 	return String();
 }
 
-String Reflection_Native_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyStrings Reflection.Native.()
+String Reflection_Native_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Native.()
 {
 	GET_THIS_VALUE(1, ReflectionNative);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetNative(thisValue)->GetReflectionAttributes(kernel);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetNative(thisValue)->GetReflectionAttributes(parameter.kernel);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Native_GetSpace(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Space Reflection.Native.()
+String Reflection_Native_GetSpace(KernelInvokerParameter parameter)//Reflection.Space Reflection.Native.()
 {
 	GET_THIS_VALUE(1, Native);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
-	kernel->heapAgency->StrongReference(handle);
-	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetNative(thisValue)->space);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetNative(thisValue)->space);
 	return String();
 }
 
-String Reflection_Native_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.Native.()
+String Reflection_Native_GetName(KernelInvokerParameter parameter)//string Reflection.Native.()
 {
 	GET_THIS_VALUE(1, Native);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = kernel->libraryAgency->GetNative(thisValue)->name;
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = parameter.kernel->libraryAgency->GetNative(thisValue)->name;
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String Reflection_Native_GetParameters(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes Reflection.Native.()
+String Reflection_Native_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Native.()
 {
 	GET_THIS_VALUE(1, ReflectionNative);
 	if (!thisValue.parameters)
 	{
-		RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(thisValue);
+		RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->parameters.Count(), Weak);
 		THIS(1, ReflectionNative).parameters = thisValue.parameters;
 		for (uint32 i = 0; i < runtimeNative->parameters.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->parameters.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.parameters;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Native_GetReturns(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes Reflection.Native.()
+String Reflection_Native_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Native.()
 {
 	GET_THIS_VALUE(1, ReflectionNative);
 	if (!thisValue.returns)
 	{
-		RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(thisValue);
+		RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->returns.Count(), Weak);
 		THIS(1, ReflectionNative).returns = thisValue.returns;
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
-			*(Type*)kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->returns.GetType(i);
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->returns.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.returns;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Native_Invoke(Kernel* kernel, Coroutine* coroutine, uint8* stack, uint32 top)//handle[] Reflection.Native.(handle[])
+String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.Native.(handle[])
 {
 	GET_THIS_VALUE(1, Native);
 	Handle parameters = PARAMETER_VALUE(1, Handle, 4);
-	uint32 nativeLocal = top + SIZE(Frame) + 12;//返回值 + 反射对象 + 参数数组
-	RuntimeNative* runtimeNative = kernel->libraryAgency->GetNative(thisValue);
-	if (kernel->heapAgency->IsValid(parameters))
+	uint32 nativeLocal = parameter.top + SIZE(Frame) + 12;//返回值 + 反射对象 + 参数数组
+	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
+	if (parameter.kernel->heapAgency->IsValid(parameters))
 	{
-		uint32 length = kernel->heapAgency->GetArrayLength(parameters);
-		if (length != runtimeNative->parameters.Count())return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+		uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
+		if (length != runtimeNative->parameters.Count())return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		for (uint32 i = 0; i < length; i++)
-			if (!kernel->libraryAgency->IsAssignable(runtimeNative->parameters.GetType(i), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i)))
-				return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			if (!parameter.kernel->libraryAgency->IsAssignable(runtimeNative->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+				return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		uint32 nativeTop = nativeLocal + runtimeNative->returns.size;
 		uint32 stackSize = nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4 + runtimeNative->parameters.size;
-		if (coroutine->EnsureStackSize(stackSize)) return kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
-		Mzero(stack + nativeLocal, stackSize - nativeLocal);
-		uint32* returnAddresses = (uint32*)(stack + nativeTop + SIZE(Frame));
+		if (parameter.task->EnsureStackSize(stackSize)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+		Mzero(parameter.stack + nativeLocal, stackSize - nativeLocal);
+		uint32* returnAddresses = (uint32*)(parameter.stack + nativeTop + SIZE(Frame));
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			returnAddresses[i] = nativeLocal + runtimeNative->returns.GetOffset(i);
-		uint8* parameterAddress = stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4;
+		uint8* parameterAddress = parameter.stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4;
 		for (uint32 i = 0; i < length; i++)
 		{
-			String error = StrongUnbox(kernel, runtimeNative->parameters.GetType(i), *(Handle*)kernel->heapAgency->GetArrayPoint(parameters, i), parameterAddress + runtimeNative->parameters.GetOffset(i));
+			String error = StrongUnbox(parameter.kernel, runtimeNative->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i), parameterAddress + runtimeNative->parameters.GetOffset(i));
 			if (!error.IsEmpty())
 			{
-				ReleaseTuple(kernel, parameterAddress, runtimeNative->parameters);
+				ReleaseTuple(parameter.kernel, parameterAddress, runtimeNative->parameters);
 				return error;
 			}
 		}
-		String error = kernel->libraryAgency->InvokeNative(thisValue, stack, nativeTop);
-		ReleaseTuple(kernel, parameterAddress, runtimeNative->parameters);
+		String error = parameter.kernel->libraryAgency->InvokeNative(thisValue, parameter.stack, nativeTop);
+		ReleaseTuple(parameter.kernel, parameterAddress, runtimeNative->parameters);
 		Handle& result = RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(result);
-		result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
-		kernel->heapAgency->StrongReference(result);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
+		parameter.kernel->heapAgency->StrongReference(result);
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
-			WeakBox(kernel, runtimeNative->returns.GetType(i), stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)kernel->heapAgency->GetArrayPoint(result, i));
-		ReleaseTuple(kernel, stack + nativeLocal, runtimeNative->returns);
+			WeakBox(parameter.kernel, runtimeNative->returns.GetType(i), parameter.stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(result, i));
+		ReleaseTuple(parameter.kernel, parameter.stack + nativeLocal, runtimeNative->returns);
 		return error;
 	}
 	else if (!runtimeNative->parameters.Count())
 	{
 		uint32 nativeTop = nativeLocal + runtimeNative->returns.size;
 		uint32 stackSize = nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4 + runtimeNative->parameters.size;
-		if (coroutine->EnsureStackSize(stackSize)) return kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
-		Mzero(stack + nativeLocal, stackSize - nativeLocal);
-		uint32* returnAddresses = (uint32*)(stack + nativeTop + SIZE(Frame));
+		if (parameter.task->EnsureStackSize(stackSize)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+		Mzero(parameter.stack + nativeLocal, stackSize - nativeLocal);
+		uint32* returnAddresses = (uint32*)(parameter.stack + nativeTop + SIZE(Frame));
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			returnAddresses[i] = nativeLocal + runtimeNative->returns.GetOffset(i);
-		String error = kernel->libraryAgency->InvokeNative(thisValue, stack, nativeTop);
-		ReleaseTuple(kernel, stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4, runtimeNative->parameters);
+		String error = parameter.kernel->libraryAgency->InvokeNative(thisValue, parameter.stack, nativeTop);
+		ReleaseTuple(parameter.kernel, parameter.stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4, runtimeNative->parameters);
 		Handle& result = RETURN_VALUE(Handle, 0);
-		kernel->heapAgency->StrongRelease(result);
-		result = kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
-		kernel->heapAgency->StrongReference(result);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
+		parameter.kernel->heapAgency->StrongReference(result);
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
-			WeakBox(kernel, runtimeNative->returns.GetType(i), stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)kernel->heapAgency->GetArrayPoint(result, i));
-		ReleaseTuple(kernel, stack + nativeLocal, runtimeNative->returns);
+			WeakBox(parameter.kernel, runtimeNative->returns.GetType(i), parameter.stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(result, i));
+		ReleaseTuple(parameter.kernel, parameter.stack + nativeLocal, runtimeNative->returns);
 		return error;
 	}
-	else return kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 }
 
-String Reflection_Space_GetAttributes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyStrings Reflection.Space.()
+String Reflection_Space_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.attributes)
 	{
-		RuntimeSpace* space = &kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
+		RuntimeSpace* space = &parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.attributes, TYPE_Reflection_ReadonlyStrings, TYPE_String, space->attributes.Count(), Weak);
 		for (uint32 i = 0; i < space->attributes.Count(); i++)
 		{
-			*(string*)kernel->heapAgency->GetArrayPoint(values, i) = space->attributes[i];
-			kernel->stringAgency->Reference(space->attributes[i]);
+			*(string*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = space->attributes[i];
+			parameter.kernel->stringAgency->Reference(space->attributes[i]);
 		}
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.attributes;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Space_GetParent(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Space Reflection.Space.()
+String Reflection_Space_GetParent(KernelInvokerParameter parameter)//Reflection.Space Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
-	RuntimeSpace& space = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
+	RuntimeSpace& space = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	if (space.parent == INVALID)handle = NULL;
-	else handle = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[space.parent].GetReflection(kernel, thisValue.library, space.parent);
-	kernel->heapAgency->StrongReference(handle);
-	new ((ReflectionSpace*)kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].parent);
+	else handle = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[space.parent].GetReflection(parameter.kernel, thisValue.library, space.parent);
+	parameter.kernel->heapAgency->StrongReference(handle);
+	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].parent);
 	return String();
 }
 
-String Reflection_Space_GetChildren(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlySpaces Reflection.Space.()
+String Reflection_Space_GetChildren(KernelInvokerParameter parameter)//ReadonlySpaces Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.children)
 	{
-		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
+		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.children, TYPE_Reflection_ReadonlySpaces, TYPE_Reflection_Space, space.children.Count(), Weak);
 		THIS(1, ReflectionSpace).children = thisValue.children;
 		for (uint32 i = 0; i < space.children.Count(); i++)
 		{
-			Handle handle = library->spaces[space.children[i]].GetReflection(kernel, thisValue.library, space.children[i]);
-			*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = handle;
-			kernel->heapAgency->WeakReference(handle);
+			Handle handle = library->spaces[space.children[i]].GetReflection(parameter.kernel, thisValue.library, space.children[i]);
+			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
+			parameter.kernel->heapAgency->WeakReference(handle);
 		}
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.children;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Space_GetAssembly(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//Reflection.Assembly Reflection.Space.()
+String Reflection_Space_GetAssembly(KernelInvokerParameter parameter)//Reflection.Assembly Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[0].GetReflection(kernel, thisValue.library, 0);
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[0].GetReflection(parameter.kernel, thisValue.library, 0);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Space_GetName(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//string Reflection.Space.()
+String Reflection_Space_GetName(KernelInvokerParameter parameter)//string Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	string& name = RETURN_VALUE(string, 0);
-	kernel->stringAgency->Release(name);
-	name = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].name;
-	kernel->stringAgency->Reference(name);
+	parameter.kernel->stringAgency->Release(name);
+	name = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].name;
+	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
-String Reflection_Space_GetVariables(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyVariables Reflection.Space.()
+String Reflection_Space_GetVariables(KernelInvokerParameter parameter)//ReadonlyVariables Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.variables)
 	{
-		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
+		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.variables, TYPE_Reflection_ReadonlyVariables, TYPE_Reflection_Variable, space.variables.Count(), Weak);
 		THIS(1, ReflectionSpace).variables = thisValue.variables;
 		for (uint32 i = 0; i < space.variables.Count(); i++)
 		{
-			Handle handle = library->variables[space.variables[i]].GetReflection(kernel, thisValue.library, space.variables[i]);
-			*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = handle;
-			kernel->heapAgency->WeakReference(handle);
+			Handle handle = library->variables[space.variables[i]].GetReflection(parameter.kernel, thisValue.library, space.variables[i]);
+			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
+			parameter.kernel->heapAgency->WeakReference(handle);
 		}
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.variables;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Space_GetFunctions(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyFunctions Reflection.Space.()
+String Reflection_Space_GetFunctions(KernelInvokerParameter parameter)//ReadonlyFunctions Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.functions)
 	{
-		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
+		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.functions, TYPE_Reflection_ReadonlyFunctions, TYPE_Reflection_Function, space.functions.Count(), Weak);
 		THIS(1, ReflectionSpace).functions = thisValue.functions;
 		for (uint32 i = 0; i < space.functions.Count(); i++)
 		{
-			Handle handle = library->functions[space.functions[i]].GetReflection(kernel, thisValue.library, space.functions[i]);
-			*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = handle;
-			kernel->heapAgency->WeakReference(handle);
+			Handle handle = library->functions[space.functions[i]].GetReflection(parameter.kernel, thisValue.library, space.functions[i]);
+			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
+			parameter.kernel->heapAgency->WeakReference(handle);
 		}
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.functions;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Space_GetNatives(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyNatives Reflection.Space.()
+String Reflection_Space_GetNatives(KernelInvokerParameter parameter)//ReadonlyNatives Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.natives)
 	{
-		RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(thisValue.library);
+		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.natives, TYPE_Reflection_ReadonlyNatives, TYPE_Reflection_Native, space.natives.Count(), Weak);
 		THIS(1, ReflectionSpace).natives = thisValue.natives;
 		for (uint32 i = 0; i < space.natives.Count(); i++)
 		{
-			Handle handle = library->natives[space.natives[i]].GetReflection(kernel, thisValue.library, space.natives[i]);
-			*(Handle*)kernel->heapAgency->GetArrayPoint(values, i) = handle;
-			kernel->heapAgency->WeakReference(handle);
+			Handle handle = library->natives[space.natives[i]].GetReflection(parameter.kernel, thisValue.library, space.natives[i]);
+			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
+			parameter.kernel->heapAgency->WeakReference(handle);
 		}
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.natives;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
-String Reflection_Space_GetTypes(Kernel* kernel, Coroutine*, uint8* stack, uint32 top)//ReadonlyTypes Reflection.Space.()
+String Reflection_Space_GetTypes(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Space.()
 {
 	GET_THIS_VALUE(1, ReflectionSpace);
 	if (!thisValue.types)
 	{
-		RuntimeSpace& space = kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
-		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.coroutines.Count(), Weak);
+		RuntimeSpace& space = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
+		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.tasks.Count(), Weak);
 		THIS(1, ReflectionSpace).types = thisValue.types;
 		uint32 index = 0;
 		for (uint32 i = 0; i < space.enums.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, space.enums[i], 0);
+			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, space.enums[i], 0);
 		for (uint32 i = 0; i < space.structs.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, space.structs[i], 0);
+			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, space.structs[i], 0);
 		for (uint32 i = 0; i < space.classes.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, space.classes[i], 0);
+			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, space.classes[i], 0);
 		for (uint32 i = 0; i < space.interfaces.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, space.interfaces[i], 0);
+			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, space.interfaces[i], 0);
 		for (uint32 i = 0; i < space.delegates.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, space.delegates[i], 0);
-		for (uint32 i = 0; i < space.coroutines.Count(); i++)
-			new ((Type*)kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Coroutine, space.coroutines[i], 0);
+			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, space.delegates[i], 0);
+		for (uint32 i = 0; i < space.tasks.Count(); i++)
+			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Task, space.tasks[i], 0);
 	}
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	kernel->heapAgency->StrongRelease(handle);
+	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = thisValue.types;
-	kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 #pragma endregion 反射

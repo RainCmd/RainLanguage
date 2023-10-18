@@ -4,7 +4,7 @@
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
-#include "CoroutineAgency.h"
+#include "TaskAgency.h"
 #include "Exceptions.h"
 
 RainTypes::RainTypes(RainTypes& other) :types(other.types), count(other.count)
@@ -53,7 +53,7 @@ bool RainFunction::IsValid() const
 InvokerWrapper RainFunction::CreateInvoker() const
 {
 	ASSERT(IsValid(), "无效的函数");
-	return InvokerWrapper(((KernelShare*)share)->kernel->coroutineAgency->CreateInvoker(Function(library, index)));
+	return InvokerWrapper(((KernelShare*)share)->kernel->taskAgency->CreateInvoker(Function(library, index)));
 }
 RainTypes RainFunction::GetParameters() const
 {
@@ -121,7 +121,7 @@ Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(paramete
 	stringAgency = new StringAgency(parameter.stringCapacity);
 	entityAgency = new EntityAgency(this, &parameter);
 	libraryAgency = new LibraryAgency(this, &parameter);
-	coroutineAgency = new CoroutineAgency(this, &parameter);
+	taskAgency = new TaskAgency(this, &parameter);
 	heapAgency = new HeapAgency(this, &parameter);
 	libraryAgency->Init((Library*)parameter.libraries, parameter.libraryCount);
 }
@@ -279,7 +279,7 @@ RainFunctions Kernel::FindFunctions(const character* name, bool allowNoPublic)
 
 const RainKernelState Kernel::GetState()
 {
-	return RainKernelState(coroutineAgency->CountCoroutine(), stringAgency->Count(), entityAgency->Count(), heapAgency->CountHandle(), heapAgency->GetHeapTop());
+	return RainKernelState(taskAgency->CountTask(), stringAgency->Count(), entityAgency->Count(), heapAgency->CountHandle(), heapAgency->GetHeapTop());
 }
 
 uint32 Kernel::GC(bool full)
@@ -291,7 +291,7 @@ uint32 Kernel::GC(bool full)
 
 void Kernel::Update()
 {
-	coroutineAgency->Update();
+	taskAgency->Update();
 }
 
 bool Kernel::AddBreakpoint(uint32 address)
@@ -318,13 +318,13 @@ void Kernel::ClearBreakpoints()
 
 Kernel::~Kernel()
 {
-	for (Coroutine* index = coroutineAgency->GetHeadCoroutine(); index; index = index->next) index->exitMessage = stringAgency->Add(EXCEPTION_KERNEL_EXIT);
-	coroutineAgency->Update();
+	for (Task* index = taskAgency->GetHeadTask(); index; index = index->next) index->exitMessage = stringAgency->Add(EXCEPTION_KERNEL_EXIT);
+	taskAgency->Update();
 	share->kernel = NULL;
 	share->Release();
 	share = NULL;
 	delete heapAgency; heapAgency = NULL;
-	delete coroutineAgency; coroutineAgency = NULL;
+	delete taskAgency; taskAgency = NULL;
 	delete libraryAgency; libraryAgency = NULL;
 	delete entityAgency; entityAgency = NULL;
 	delete stringAgency; stringAgency = NULL;
@@ -357,7 +357,7 @@ string GetTypeName(Kernel* kernel, const Type& type)
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
-		case TypeCode::Coroutine:
+		case TypeCode::Task:
 			return kernel->libraryAgency->GetRuntimeInfo(type)->name;
 	}
 	return NULL;
