@@ -333,7 +333,7 @@ void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library
 		else library = libraries[i];
 	function = INVALID;
 	uint32 start = 0, end = library->functions.Count();
-	while (start < end)
+	while (start + 1 < end)
 	{
 		uint32 middle = (start + end) >> 1;
 		if (library->functions[middle].entry > pointer) end = middle;

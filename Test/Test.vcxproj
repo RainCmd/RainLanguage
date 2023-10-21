@@ -150,6 +150,7 @@
     <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="RainScripts\Test2.rain" />
     <None Include="RainScripts\TestRain.rain" />
   </ItemGroup>
   <ItemGroup>

@@ -9,8 +9,8 @@
 
 #define PARAMETER_ADDRESS (stack + top + SIZE(Frame) + info->returns.Count() * 4 + info->parameters.GetOffset(index))
 #define PARAMETER_VALUE(type) *(type*)PARAMETER_ADDRESS
-#define RETURN_ADDRESS (stack + *(uint32*)(stack + top + SIZE(Frame) + index * 4))
-#define RETURN_VALUE(type) *(type*)(stack + *(uint32*)(stack + top + SIZE(Frame) + index * 4))
+#define RETURN_ADDRESS (stack + LOCAL_ADDRESS(*(uint32*)(stack + top + SIZE(Frame) + index * 4)))
+#define RETURN_VALUE(type) *(type*)(stack + LOCAL_ADDRESS(*(uint32*)(stack + top + SIZE(Frame) + index * 4)))
 
 void Caller::ParameterTypeAssert(uint32 index, Type type) const
 {

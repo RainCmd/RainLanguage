@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="RainScripts\TestRain.rain" />
+    <None Include="RainScripts\Test2.rain" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Rain.natvis" />

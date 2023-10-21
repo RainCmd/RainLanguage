@@ -17,6 +17,7 @@ inline bool IsBlank(character value)
 		case ' ':
 		case '\r':
 		case '\t':
+		case '\n':
 			return true;
 	}
 	return false;

@@ -2,6 +2,8 @@
 #include "Serialization.h"
 #include "Collections/Hash.h"
 #include "Real/MathReal.h"
+#include <iostream>
+#include <string>
 
 uint32 GetHash(const character* value, uint32 length)
 {

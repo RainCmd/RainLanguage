@@ -609,7 +609,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
 					Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
 					Expression* conditionExpression = NULL;
-					if (parser.TryParse(condition, conditionExpression))
+					if (!condition.content.IsEmpty() && parser.TryParse(condition, conditionExpression))
 					{
 						if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
 							MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
@@ -644,7 +644,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
 					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
 					Expression* conditionExpression = NULL;
-					if (parser.TryParse(condition, conditionExpression))
+					if (!condition.content.IsEmpty() && parser.TryParse(condition, conditionExpression))
 					{
 						if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
 							MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);
@@ -657,7 +657,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					Anchor condition = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
 					ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
 					Expression* conditionExpression = NULL;
-					if (parser.TryParse(condition, conditionExpression))
+					if (!condition.content.IsEmpty() && parser.TryParse(condition, conditionExpression))
 					{
 						if (conditionExpression->returns.Count() != 1 || conditionExpression->returns[0] != TYPE_Bool)
 							MESSAGE2(parameter.manager->messages, condition, MessageType::ERROR_TYPE_MISMATCH);

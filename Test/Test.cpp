@@ -11,6 +11,8 @@
 #include <MemoryAllocator.h>
 #include <map>
 #include <thread>
+#include <time.h>
+#include <fstream>
 
 class TestCodeLoader :public CodeLoader
 {
@@ -91,19 +93,53 @@ public:
 	}
 };
 
-void Print(RainKernel*, const CallerWrapper* caller)
+void Print(RainKernel*, CallerWrapper* caller)
 {
 	const RainString value = caller->GetStringParameter(0);
 	std::wstring str;
 	str.assign(value.value, value.length);
-	std::wcout << str << L"\n";
+	std::wcout << str;// << L"\n";
 }
+
+void Clock(RainKernel*, CallerWrapper* caller)
+{
+	caller->SetReturnValue(0, (integer)clock());
+}
+
+void OpenFile(RainKernel*, CallerWrapper* caller)
+{
+	const RainString value = caller->GetStringParameter(0);
+	std::wstring path;
+	path.assign(value.value, value.length);
+	std::wfstream* file = new std::wfstream(path);
+	caller->SetEntityReturnValue(0, (uint64)file);
+}
+void FileReadLine(RainKernel*, CallerWrapper* caller)
+{
+	std::wfstream* file = (std::wfstream*)caller->GetEntityParameter(0);
+	std::wstring line;
+	bool end = !(bool)std::getline(*file, line);
+	caller->SetReturnValue(0, end);
+	caller->SetReturnValue(1, line.c_str());
+}
+void CloseFile(RainKernel*, CallerWrapper* caller)
+{
+	std::wfstream* file = (std::wfstream*)caller->GetEntityParameter(0);
+	file->close();
+	delete file;
+}
+
 
 OnCaller NativeLoader(RainKernel*, const RainString fullName, const RainType* parameters, uint32 parametersCount)
 {
 	std::wstring str; str.assign(fullName.value, fullName.length);
-	std::wcout << "Native Load:" << str << "\n";
-	return Print;
+	//std::wcout << "\n\nNative Load:" << str << "\n\n";
+	if (str == L"TestLib.Print") return Print;
+	else if (str == L"TestLib.Clock") return Clock;
+	else if (str == L"TestLib.OpenFile") return OpenFile;
+	else if (str == L"TestLib.FileReadLine") return FileReadLine;
+	else if (str == L"TestLib.CloseFile") return CloseFile;
+	return nullptr;
 }
 
 std::map<long long, uint32> mmap;
@@ -187,7 +223,7 @@ void TestFunc()
 int main()
 {
 	SetMemoryAllocator(ALLOC, FREE, REALLOC);
-	std::wcout.imbue(std::locale(""));
+	std::wcout.imbue(std::locale("zh_CN"));
 
 	TestFunc();
 
