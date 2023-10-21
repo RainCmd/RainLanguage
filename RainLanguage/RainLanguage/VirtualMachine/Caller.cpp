@@ -9,8 +9,9 @@
 
 #define PARAMETER_ADDRESS (stack + top + SIZE(Frame) + info->returns.Count() * 4 + info->parameters.GetOffset(index))
 #define PARAMETER_VALUE(type) *(type*)PARAMETER_ADDRESS
-#define RETURN_ADDRESS (stack + LOCAL_ADDRESS(*(uint32*)(stack + top + SIZE(Frame) + index * 4)))
-#define RETURN_VALUE(type) *(type*)(stack + LOCAL_ADDRESS(*(uint32*)(stack + top + SIZE(Frame) + index * 4)))
+#define RETURN_VALUE(type)\
+			uint32 reference = *(uint32*)(stack + top + SIZE(Frame) + index * 4);\
+			type& result = *(type*)(IS_LOCAL(reference) ? stack + LOCAL_ADDRESS(reference) : kernel->libraryAgency->data.GetPointer() + reference);
 
 void Caller::ParameterTypeAssert(uint32 index, Type type) const
 {
@@ -265,89 +266,99 @@ void Caller::GetEntityArrayParameter(uint32 index, uint64*& result) const
 void Caller::SetReturnValue(uint32 index, bool value)
 {
 	ReturnTypeAssert(index, TYPE_Bool);
-	RETURN_VALUE(bool) = value;
+	RETURN_VALUE(bool);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, uint8 value)
 {
 	ReturnTypeAssert(index, TYPE_Byte);
-	RETURN_VALUE(uint8) = value;
+	RETURN_VALUE(uint8);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, character value)
 {
 	ReturnTypeAssert(index, TYPE_Char);
-	RETURN_VALUE(character) = value;
+	RETURN_VALUE(character);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, integer value)
 {
 	ReturnTypeAssert(index, TYPE_Integer);
-	RETURN_VALUE(integer) = value;
+	RETURN_VALUE(integer);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, real value)
 {
 	ReturnTypeAssert(index, TYPE_Real);
-	RETURN_VALUE(real) = value;
+	RETURN_VALUE(real);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, Real2 value)
 {
 	ReturnTypeAssert(index, TYPE_Real2);
-	RETURN_VALUE(Real2) = value;
+	RETURN_VALUE(Real2);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, Real3 value)
 {
 	ReturnTypeAssert(index, TYPE_Real3);
-	RETURN_VALUE(Real3) = value;
+	RETURN_VALUE(Real3);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, Real4 value)
 {
 	ReturnTypeAssert(index, TYPE_Real4);
-	RETURN_VALUE(Real4) = value;
+	RETURN_VALUE(Real4);
+	result = value;
 }
 
 void Caller::SetEnumNameReturnValue(uint32 index, const RainString& elementName)
 {
 	ReturnTypeAssert(index, TypeCode::Enum);
-	RETURN_VALUE(integer) = GetEnumValue(kernel, info->returns.GetType(index), elementName.value, elementName.length);
+	RETURN_VALUE(integer);
+	result = GetEnumValue(kernel, info->returns.GetType(index), elementName.value, elementName.length);
 }
 
 void Caller::SetEnumValueReturnValue(uint32 index, integer value)
 {
 	ReturnTypeAssert(index, TypeCode::Enum);
-	RETURN_VALUE(integer) = value;
+	RETURN_VALUE(integer);
+	result = value;
 }
 
 void Caller::SetReturnValue(uint32 index, const RainString& value)
 {
 	ReturnTypeAssert(index, TYPE_String);
-	string* address = (string*)RETURN_ADDRESS;
-	string result = kernel->stringAgency->AddAndRef(value.value, value.length);
-	kernel->stringAgency->Release(*address);
-	*address = result;
+
+	RETURN_VALUE(string);
+	kernel->stringAgency->Release(result);
+	result = kernel->stringAgency->AddAndRef(value.value, value.length);
 }
 
 void Caller::SetEntityReturnValue(uint32 index, uint64 value)
 {
 	ReturnTypeAssert(index, TYPE_Entity);
-	Entity* address = (Entity*)RETURN_ADDRESS;
-	kernel->entityAgency->Release(*address);
-	*address = kernel->entityAgency->Add(value);
-	kernel->entityAgency->Reference(*address);
+	RETURN_VALUE(Entity);
+	kernel->entityAgency->Release(result);
+	result = kernel->entityAgency->Add(value);
+	kernel->entityAgency->Reference(result);
 }
 
 Handle Caller::GetArrayReturnValue(uint32 index, Type elementType, uint32 length)
 {
 	ASSERT(info->returns.GetType(index) == Type(elementType, 1), "参数类型错误");
-	Handle& handle = RETURN_VALUE(Handle);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(elementType, length);
-	kernel->heapAgency->StrongReference(handle);
-	return handle;
+	RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(result);
+	result = kernel->heapAgency->Alloc(elementType, length);
+	kernel->heapAgency->StrongReference(result);
+	return result;
 }
 
 void Caller::SetReturnValue(uint32 index, bool* values, uint32 length)
@@ -402,28 +413,28 @@ void Caller::SetEnumNameReturnValue(uint32 index, RainString* values, uint32 len
 {
 	Type type = info->returns.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
-	Handle& handle = RETURN_VALUE(Handle);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(Type(type, 0), length);
-	kernel->heapAgency->StrongReference(handle);
+	RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(result);
+	result = kernel->heapAgency->Alloc(Type(type, 0), length);
+	kernel->heapAgency->StrongReference(result);
 	type = Type(type, 0);
-	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = GetEnumValue(kernel, type, values[length].value, values[length].length);
+	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(result, length)) = GetEnumValue(kernel, type, values[length].value, values[length].length);
 }
 
 void Caller::SetEnumNameReturnValue(uint32 index, character** values, uint32 length)
 {
 	Type type = info->returns.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
-	Handle& handle = RETURN_VALUE(Handle);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(Type(type, 0), length);
-	kernel->heapAgency->StrongReference(handle);
+	RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(result);
+	result = kernel->heapAgency->Alloc(Type(type, 0), length);
+	kernel->heapAgency->StrongReference(result);
 	type = Type(type, 0);
 	while (length--)
 	{
 		uint32 nameLength = 0;
 		while (values[length][nameLength]) nameLength++;
-		*(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = GetEnumValue(kernel, type, values[length], nameLength);
+		*(integer*)(kernel->heapAgency->GetArrayPoint(result, length)) = GetEnumValue(kernel, type, values[length], nameLength);
 	}
 }
 
@@ -431,11 +442,11 @@ void Caller::SetEnumValueReturnValue(uint32 index, integer* values, uint32 lengt
 {
 	Type type = info->returns.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
-	Handle& handle = RETURN_VALUE(Handle);
-	kernel->heapAgency->StrongRelease(handle);
-	handle = kernel->heapAgency->Alloc(Type(type, 0), length);
-	kernel->heapAgency->StrongReference(handle);
-	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(handle, length)) = values[length];
+	RETURN_VALUE(Handle);
+	kernel->heapAgency->StrongRelease(result);
+	result = kernel->heapAgency->Alloc(Type(type, 0), length);
+	kernel->heapAgency->StrongReference(result);
+	while (length--) *(integer*)(kernel->heapAgency->GetArrayPoint(result, length)) = values[length];
 }
 
 void Caller::SetReturnValue(uint32 index, RainString* values, uint32 length)
