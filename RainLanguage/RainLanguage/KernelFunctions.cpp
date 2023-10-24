@@ -381,7 +381,7 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 		Function function = parameter.kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
 		parameter.kernel->taskAgency->Reference(invoker);
-		invoker->SetBoxParameter(0, handle);
+		invoker->SetHandleParameter(0, handle);
 		invoker->Start(true, parameter.task->ignoreWait);
 		switch (invoker->state)
 		{
@@ -493,7 +493,7 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 		Function function = parameter.kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
 		parameter.kernel->taskAgency->Reference(invoker);
-		invoker->SetBoxParameter(0, handle);
+		invoker->SetHandleParameter(0, handle);
 		invoker->Start(true, parameter.task->ignoreWait);
 		switch (invoker->state)
 		{
@@ -1994,7 +1994,14 @@ String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflectio
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
 		parameter.kernel->taskAgency->Reference(invoker);
 		for (uint32 i = 0; i < count; i++)
-			invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
+		{
+			String error = invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
+			if (!error.IsEmpty())
+			{
+				parameter.kernel->taskAgency->Release(invoker);
+				return error;
+			}
+		}
 		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else if (!runtimeFunction->parameters.Count())
@@ -2048,7 +2055,14 @@ String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflecti
 		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
 		for (uint32 i = 0; i < count; i++)
-			invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
+		{
+			String error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
+			if (!error.IsEmpty())
+			{
+				parameter.kernel->taskAgency->Release(invoker);
+				return error;
+			}
+		}
 		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
 	else if (runtimeFunction->parameters.Count() == 1)
@@ -2422,7 +2436,14 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 			parameter.kernel->heapAgency->StrongReference(result);
 			invoker->SetHandleParameter(0, result);
 			for (uint32 i = 0; i < length; i++)
-				invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+			{
+				String error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+				if (!error.IsEmpty())
+				{
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
+			}
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
@@ -2664,9 +2685,21 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			parameter.kernel->heapAgency->StrongReference(result);
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
-			invoker->SetBoxParameter(0, target);
+			String error = invoker->SetBoxParameter(0, target);
+			if (!error.IsEmpty())
+			{
+				parameter.kernel->taskAgency->Release(invoker);
+				return error;
+			}
 			for (uint32 i = 0; i < length; i++)
-				invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+			{
+				String error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+				if (!error.IsEmpty())
+				{
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
+			}
 			if (thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
@@ -2697,7 +2730,12 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			parameter.kernel->heapAgency->StrongReference(result);
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
-			invoker->SetBoxParameter(0, target);
+			String error = invoker->SetBoxParameter(0, target);
+			if (!error.IsEmpty())
+			{
+				parameter.kernel->taskAgency->Release(invoker);
+				return error;
+			}
 			if (thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
@@ -2843,7 +2881,14 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
 			for (uint32 i = 0; i < length; i++)
-				invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+			{
+				String error = invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+				if (!error.IsEmpty())
+				{
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
+			}
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{

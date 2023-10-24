@@ -258,12 +258,27 @@ bool LibraryAgency::IsAssignable(const Type& variableType, Handle handle)
 Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 {
 	if (type.dimension) type = TYPE_Array;
-	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
-	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Task) type = TYPE_Task;
+	else switch (type.code)
+	{
+		case TypeCode::Invalid: break;
+		case TypeCode::Struct:
+			if (function.declaration == TYPE_Handle) type = TYPE_Handle;
+			break;
+		case TypeCode::Enum:
+			type = TYPE_Enum;
+			break;
+		case TypeCode::Handle:
+		case TypeCode::Interface: break;
+		case TypeCode::Delegate:
+			type = TYPE_Delegate;
+			break;
+		case TypeCode::Task:
+			type = TYPE_Task;
+			break;
+		default: break;
+	}
 
 	if (function.declaration == type) return GetFunction(function);
-	else if (function.declaration.code == TypeCode::Struct) type = TYPE_Handle;
 	if (IsAssignable(Type(function.declaration, 0), type))
 	{
 		uint32 characteristic = GetFunctionCharacteristic(function);
