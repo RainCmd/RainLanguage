@@ -24,8 +24,9 @@ struct GlobalReferenceEnum
 	};
 	uint32 index;
 	List<uint32, true> references;
-	List<Element> elements;
+	List<Element*, true> elements;
 	inline GlobalReferenceEnum(uint32 index) :index(index), references(0), elements(0) {}
+	~GlobalReferenceEnum();
 };
 
 struct GlobalReferenceFunction
@@ -46,9 +47,10 @@ struct GlobalReferenceStruct
 	};
 	uint32 index;
 	List<uint32, true> references;
-	List<Variable> variables;
-	List<GlobalReferenceFunction> functions;
+	List<Variable*, true> variables;
+	List<GlobalReferenceFunction*, true> functions;
 	inline GlobalReferenceStruct(uint32 index) :index(index), references(0), variables(0), functions(0) {}
+	~GlobalReferenceStruct();
 };
 
 struct GlobalReferenceClass
@@ -62,10 +64,11 @@ struct GlobalReferenceClass
 	};
 	uint32 index;
 	List<uint32, true> references;
-	List<Variable> variables;
-	List<GlobalReferenceFunction> constructors;
-	List<GlobalReferenceFunction> functions;
+	List<Variable*, true> variables;
+	List<GlobalReferenceFunction*, true> constructors;
+	List<GlobalReferenceFunction*, true> functions;
 	inline GlobalReferenceClass(uint32 index) :index(index), references(0), variables(0), constructors(0), functions(0) {}
+	~GlobalReferenceClass();
 };
 
 struct GlobalReferenceInterface
@@ -78,8 +81,9 @@ struct GlobalReferenceInterface
 	};
 	uint32 index;
 	List<uint32, true> references;
-	List<Function> functions;
+	List<Function*, true> functions;
 	inline GlobalReferenceInterface(uint32 index) :index(index), references(0), functions(0) {}
+	~GlobalReferenceInterface();
 };
 
 struct GlobalReferenceDelegate
@@ -106,16 +110,17 @@ struct GlobalReferenceNative
 struct GlobalReferenceLibrary
 {
 	uint32 index;
-	List<GlobalReferenceVariable> variables;
-	List<GlobalReferenceEnum> enums;
-	List<GlobalReferenceStruct> structs;
-	List<GlobalReferenceClass> classes;
-	List<GlobalReferenceInterface> interfaces;
-	List<GlobalReferenceDelegate> delegates;
-	List<GlobalReferenceTask> tasks;
-	List<GlobalReferenceFunction> functions;
-	List<GlobalReferenceNative> natives;
+	List<GlobalReferenceVariable*, true> variables;
+	List<GlobalReferenceEnum*, true> enums;
+	List<GlobalReferenceStruct*, true> structs;
+	List<GlobalReferenceClass*, true> classes;
+	List<GlobalReferenceInterface*, true> interfaces;
+	List<GlobalReferenceDelegate*, true> delegates;
+	List<GlobalReferenceTask*, true> tasks;
+	List<GlobalReferenceFunction*, true> functions;
+	List<GlobalReferenceNative*, true> natives;
 	inline GlobalReferenceLibrary(uint32 index) :index(index), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), functions(0), natives(0) {}
+	~GlobalReferenceLibrary();
 };
 
 struct GlobalReference
@@ -137,7 +142,7 @@ struct GlobalReference
 	};
 	Generator* generator;
 	DeclarationManager* manager;
-	List<GlobalReferenceLibrary> libraries;
+	List<GlobalReferenceLibrary*, true> libraries;
 	List<uint32, true> libraryReferences;
 	Dictionary<uint32, List<VariableReference, true>*, true> variableReferences;
 	Dictionary<MemberVariable, List<VariableReference, true>*, true> memberVariableReferences;//class成员字段引用

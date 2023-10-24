@@ -8,9 +8,9 @@
 
 #define IMPORT_BASE_INFO(importName)\
 	AddSpace(abstract##importName->space, importLibrary->spaces, result->stringAgency);\
-	List<uint32, true> reference##importName##Declaration(reference##importName.references.Count());\
-	for (uint32 z = 0; z < reference##importName.references.Count(); z++)\
-		reference##importName##Declaration.Add(GetReferenceAddress(reference##importName.references[z]));
+	List<uint32, true> reference##importName##Declaration(reference##importName->references.Count());\
+	for (uint32 z = 0; z < reference##importName->references.Count(); z++)\
+		reference##importName##Declaration.Add(GetReferenceAddress(reference##importName->references[z]));
 
 #define IMPORT_INFO_PARAMETER(importName) abstract##importName->space->index, result->stringAgency->AddAndRef(abstract##importName->name), reference##importName##Declaration
 
@@ -310,127 +310,127 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 	for (uint32 x = 0; x < globalReference->libraryReferences.Count(); x++) result->libraryReferences.Add(GetReferenceAddress(globalReference->libraryReferences[x]));
 	for (uint32 x = 0; x < globalReference->libraries.Count(); x++)
 	{
-		GlobalReferenceLibrary& referenceLibrary = globalReference->libraries[x];
-		AbstractLibrary* library = manager.GetLibrary(referenceLibrary.index);
-		ImportLibrary* importLibrary = new (result->imports.Add())ImportLibrary(referenceLibrary.variables.Count(), referenceLibrary.enums.Count(), referenceLibrary.structs.Count(), referenceLibrary.classes.Count(), referenceLibrary.interfaces.Count(), referenceLibrary.delegates.Count(), referenceLibrary.tasks.Count(), referenceLibrary.functions.Count(), referenceLibrary.natives.Count());
+		GlobalReferenceLibrary* referenceLibrary = globalReference->libraries[x];
+		AbstractLibrary* library = manager.GetLibrary(referenceLibrary->index);
+		ImportLibrary* importLibrary = new (result->imports.Add())ImportLibrary(referenceLibrary->variables.Count(), referenceLibrary->enums.Count(), referenceLibrary->structs.Count(), referenceLibrary->classes.Count(), referenceLibrary->interfaces.Count(), referenceLibrary->delegates.Count(), referenceLibrary->tasks.Count(), referenceLibrary->functions.Count(), referenceLibrary->natives.Count());
 		library->index = NULL;
 		new (importLibrary->spaces.Add())ImportSpace(NULL, result->stringAgency->AddAndRef(library->name));
-		for (uint32 y = 0; y < referenceLibrary.variables.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->variables.Count(); y++)
 		{
-			GlobalReferenceVariable& referenceVariable = referenceLibrary.variables[y];
-			AbstractVariable* abstractVariable = library->variables[referenceVariable.index];
+			GlobalReferenceVariable* referenceVariable = referenceLibrary->variables[y];
+			AbstractVariable* abstractVariable = library->variables[referenceVariable->index];
 			IMPORT_BASE_INFO(Variable);
-			List<VariableReference, true> addressReferences(referenceVariable.addressReferences.Count());
-			for (uint32 z = 0; z < referenceVariable.addressReferences.Count(); z++)
-				new (addressReferences.Add())VariableReference(GetReferenceAddress(referenceVariable.addressReferences[z].reference), referenceVariable.addressReferences[z].offset);
+			List<VariableReference, true> addressReferences(referenceVariable->addressReferences.Count());
+			for (uint32 z = 0; z < referenceVariable->addressReferences.Count(); z++)
+				new (addressReferences.Add())VariableReference(GetReferenceAddress(referenceVariable->addressReferences[z].reference), referenceVariable->addressReferences[z].offset);
 			new (importLibrary->variables.Add())ImportVariable(IMPORT_INFO_PARAMETER(Variable), globalReference->AddReference(abstractVariable->type), addressReferences);
 		}
-		for (uint32 y = 0; y < referenceLibrary.enums.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->enums.Count(); y++)
 		{
-			GlobalReferenceEnum& referenceEnum = referenceLibrary.enums[y];
-			AbstractEnum* abstractEnum = library->enums[referenceEnum.index];
+			GlobalReferenceEnum* referenceEnum = referenceLibrary->enums[y];
+			AbstractEnum* abstractEnum = library->enums[referenceEnum->index];
 			IMPORT_BASE_INFO(Enum);
-			List<ImportEnum::Element> elements(referenceEnum.elements.Count());
-			for (uint32 z = 0; z < referenceEnum.elements.Count(); z++)
+			List<ImportEnum::Element> elements(referenceEnum->elements.Count());
+			for (uint32 z = 0; z < referenceEnum->elements.Count(); z++)
 			{
-				GlobalReferenceEnum::Element& referenceElement = referenceEnum.elements[z];
-				List<uint32, true> addressReferences(referenceElement.addressReferences.Count());
-				for (uint32 w = 0; w < referenceElement.addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceElement.addressReferences[w]));
-				new (elements.Add())ImportEnum::Element(result->stringAgency->AddAndRef(abstractEnum->elements[referenceElement.index]), addressReferences);
+				GlobalReferenceEnum::Element* referenceElement = referenceEnum->elements[z];
+				List<uint32, true> addressReferences(referenceElement->addressReferences.Count());
+				for (uint32 w = 0; w < referenceElement->addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceElement->addressReferences[w]));
+				new (elements.Add())ImportEnum::Element(result->stringAgency->AddAndRef(abstractEnum->elements[referenceElement->index]), addressReferences);
 			}
 			new (importLibrary->enums.Add())ImportEnum(IMPORT_INFO_PARAMETER(Enum), elements);
 		}
-		for (uint32 y = 0; y < referenceLibrary.structs.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->structs.Count(); y++)
 		{
-			GlobalReferenceStruct& referenceStruct = referenceLibrary.structs[y];
-			AbstractStruct* abstractStruct = library->structs[referenceStruct.index];
+			GlobalReferenceStruct* referenceStruct = referenceLibrary->structs[y];
+			AbstractStruct* abstractStruct = library->structs[referenceStruct->index];
 			IMPORT_BASE_INFO(Struct);
-			List<ImportStruct::Variable> memberVariables(referenceStruct.variables.Count());
-			for (uint32 z = 0; z < referenceStruct.variables.Count(); z++)
+			List<ImportStruct::Variable> memberVariables(referenceStruct->variables.Count());
+			for (uint32 z = 0; z < referenceStruct->variables.Count(); z++)
 			{
-				GlobalReferenceStruct::Variable& referenceMember = referenceStruct.variables[z];
-				AbstractVariable* abstractMember = abstractStruct->variables[referenceMember.index];
-				List<uint32, true> memberReferences(referenceMember.references.Count());
-				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
+				GlobalReferenceStruct::Variable* referenceMember = referenceStruct->variables[z];
+				AbstractVariable* abstractMember = abstractStruct->variables[referenceMember->index];
+				List<uint32, true> memberReferences(referenceMember->references.Count());
+				for (uint32 w = 0; w < referenceMember->references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember->references[w]));
 				new (memberVariables.Add())ImportStruct::Variable(globalReference->AddReference(abstractMember->type), memberReferences);
 			}
-			List<ImportStruct::Function> memberFunctions(referenceStruct.functions.Count());
-			for (uint32 z = 0; z < referenceStruct.functions.Count(); z++)
+			List<ImportStruct::Function> memberFunctions(referenceStruct->functions.Count());
+			for (uint32 z = 0; z < referenceStruct->functions.Count(); z++)
 			{
-				GlobalReferenceFunction& referenceMember = referenceStruct.functions[z];
-				AbstractFunction* abstractMember = library->functions[abstractStruct->functions[referenceMember.index]];
-				List<uint32, true> memberReferences(referenceMember.references.Count());
-				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
+				GlobalReferenceFunction* referenceMember = referenceStruct->functions[z];
+				AbstractFunction* abstractMember = library->functions[abstractStruct->functions[referenceMember->index]];
+				List<uint32, true> memberReferences(referenceMember->references.Count());
+				for (uint32 w = 0; w < referenceMember->references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember->references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
 				for (uint32 w = 0; w < abstractMember->parameters.Count(); w++) parameters.Add(globalReference->AddReference(abstractMember->parameters.GetType(w)));
 				List<Type, true> returns(abstractMember->returns.Count());
 				for (uint32 w = 0; w < abstractMember->returns.Count(); w++) returns.Add(globalReference->AddReference(abstractMember->returns.GetType(w)));
-				List<uint32, true> addressReferences(referenceMember.addressReferences.Count());
-				for (uint32 w = 0; w < referenceMember.addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceMember.addressReferences[w]));
+				List<uint32, true> addressReferences(referenceMember->addressReferences.Count());
+				for (uint32 w = 0; w < referenceMember->addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceMember->addressReferences[w]));
 				new (memberFunctions.Add())ImportStruct::Function(result->stringAgency->AddAndRef(abstractMember->name), parameters, returns, memberReferences, addressReferences);
 			}
 			new (importLibrary->structs.Add())ImportStruct(IMPORT_INFO_PARAMETER(Struct), memberVariables, memberFunctions);
 		}
-		for (uint32 y = 0; y < referenceLibrary.classes.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->classes.Count(); y++)
 		{
-			GlobalReferenceClass& referenceClass = referenceLibrary.classes[y];
-			AbstractClass* abstractClass = library->classes[referenceClass.index];
+			GlobalReferenceClass* referenceClass = referenceLibrary->classes[y];
+			AbstractClass* abstractClass = library->classes[referenceClass->index];
 			IMPORT_BASE_INFO(Class);
 			List<Declaration, true> inherits(abstractClass->inherits.Count());
 			for (uint32 z = 0; z < abstractClass->inherits.Count(); z++) inherits.Add(globalReference->AddReference((Declaration)abstractClass->inherits[z]));
-			List <ImportClass::Variable> memberVariables(referenceClass.variables.Count());
-			for (uint32 z = 0; z < referenceClass.variables.Count(); z++)
+			List <ImportClass::Variable> memberVariables(referenceClass->variables.Count());
+			for (uint32 z = 0; z < referenceClass->variables.Count(); z++)
 			{
-				GlobalReferenceClass::Variable& referenceMember = referenceClass.variables[z];
-				AbstractVariable* abstractMember = abstractClass->variables[referenceMember.index];
-				List<uint32, true> memberReferences(referenceMember.references.Count());
-				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
-				List<VariableReference, true> memberAddressReferences(referenceMember.addressReferences.Count());
-				for (uint32 w = 0; w < referenceMember.addressReferences.Count(); w++) new (memberAddressReferences.Add())VariableReference(GetReferenceAddress(referenceMember.addressReferences[w].reference), referenceMember.addressReferences[w].offset);
+				GlobalReferenceClass::Variable* referenceMember = referenceClass->variables[z];
+				AbstractVariable* abstractMember = abstractClass->variables[referenceMember->index];
+				List<uint32, true> memberReferences(referenceMember->references.Count());
+				for (uint32 w = 0; w < referenceMember->references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember->references[w]));
+				List<VariableReference, true> memberAddressReferences(referenceMember->addressReferences.Count());
+				for (uint32 w = 0; w < referenceMember->addressReferences.Count(); w++) new (memberAddressReferences.Add())VariableReference(GetReferenceAddress(referenceMember->addressReferences[w].reference), referenceMember->addressReferences[w].offset);
 				new (memberVariables.Add())ImportClass::Variable(result->stringAgency->AddAndRef(abstractMember->name), globalReference->AddReference(abstractMember->type), memberReferences, memberAddressReferences);
 			}
-			List<ImportClass::Constructor> constructors(referenceClass.constructors.Count());
-			for (uint32 z = 0; z < referenceClass.constructors.Count(); z++)
+			List<ImportClass::Constructor> constructors(referenceClass->constructors.Count());
+			for (uint32 z = 0; z < referenceClass->constructors.Count(); z++)
 			{
-				GlobalReferenceFunction& referenceMember = referenceClass.constructors[z];
-				AbstractFunction* abstractMember = library->functions[abstractClass->constructors[referenceMember.index]];
-				List<uint32, true> memberReferences(referenceMember.references.Count());
-				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
+				GlobalReferenceFunction* referenceMember = referenceClass->constructors[z];
+				AbstractFunction* abstractMember = library->functions[abstractClass->constructors[referenceMember->index]];
+				List<uint32, true> memberReferences(referenceMember->references.Count());
+				for (uint32 w = 0; w < referenceMember->references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember->references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
 				for (uint32 w = 0; w < abstractMember->parameters.Count(); w++) parameters.Add(globalReference->AddReference(abstractMember->parameters.GetType(w)));
-				List<uint32, true> addressReferences(referenceMember.addressReferences.Count());
-				for (uint32 w = 0; w < referenceMember.addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceMember.addressReferences[w]));
+				List<uint32, true> addressReferences(referenceMember->addressReferences.Count());
+				for (uint32 w = 0; w < referenceMember->addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceMember->addressReferences[w]));
 				new (constructors.Add())ImportClass::Constructor(parameters, memberReferences, addressReferences);
 			}
-			List<ImportClass::Function> memberFunctions(referenceClass.functions.Count());
-			for (uint32 z = 0; z < referenceClass.functions.Count(); z++)
+			List<ImportClass::Function> memberFunctions(referenceClass->functions.Count());
+			for (uint32 z = 0; z < referenceClass->functions.Count(); z++)
 			{
-				GlobalReferenceFunction& referenceMember = referenceClass.functions[z];
-				AbstractFunction* abstractMember = library->functions[abstractClass->functions[referenceMember.index]];
-				List<uint32, true> memberReferences(referenceMember.references.Count());
-				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
+				GlobalReferenceFunction* referenceMember = referenceClass->functions[z];
+				AbstractFunction* abstractMember = library->functions[abstractClass->functions[referenceMember->index]];
+				List<uint32, true> memberReferences(referenceMember->references.Count());
+				for (uint32 w = 0; w < referenceMember->references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember->references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
 				for (uint32 w = 0; w < abstractMember->parameters.Count(); w++) parameters.Add(globalReference->AddReference(abstractMember->parameters.GetType(w)));
 				List<Type, true> returns(abstractMember->returns.Count());
 				for (uint32 w = 0; w < abstractMember->returns.Count(); w++) returns.Add(globalReference->AddReference(abstractMember->returns.GetType(w)));
-				List<uint32, true> addressReferences(referenceMember.addressReferences.Count());
-				for (uint32 w = 0; w < referenceMember.addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceMember.addressReferences[w]));
+				List<uint32, true> addressReferences(referenceMember->addressReferences.Count());
+				for (uint32 w = 0; w < referenceMember->addressReferences.Count(); w++)addressReferences.Add(GetReferenceAddress(referenceMember->addressReferences[w]));
 				new (memberFunctions.Add())ImportClass::Function(result->stringAgency->AddAndRef(abstractMember->name), parameters, returns, memberReferences, addressReferences);
 			}
 			new (importLibrary->classes.Add())ImportClass(IMPORT_INFO_PARAMETER(Class), globalReference->AddReference((Declaration)abstractClass->parent), inherits, memberVariables, constructors, memberFunctions);
 		}
-		for (uint32 y = 0; y < referenceLibrary.interfaces.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->interfaces.Count(); y++)
 		{
-			GlobalReferenceInterface& referenceInterface = referenceLibrary.interfaces[y];
-			AbstractInterface* abstractInterface = library->interfaces[referenceInterface.index];
+			GlobalReferenceInterface* referenceInterface = referenceLibrary->interfaces[y];
+			AbstractInterface* abstractInterface = library->interfaces[referenceInterface->index];
 			IMPORT_BASE_INFO(Interface);
-			List<ImportInterface::Function> memberFunctions(referenceInterface.functions.Count());
-			for (uint32 z = 0; z < referenceInterface.functions.Count(); z++)
+			List<ImportInterface::Function> memberFunctions(referenceInterface->functions.Count());
+			for (uint32 z = 0; z < referenceInterface->functions.Count(); z++)
 			{
-				GlobalReferenceInterface::Function& referenceMember = referenceInterface.functions[z];
-				AbstractFunction* abstractMember = abstractInterface->functions[referenceMember.index];
-				List<uint32, true> memberReferences(referenceMember.references.Count());
-				for (uint32 w = 0; w < referenceMember.references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember.references[w]));
+				GlobalReferenceInterface::Function* referenceMember = referenceInterface->functions[z];
+				AbstractFunction* abstractMember = abstractInterface->functions[referenceMember->index];
+				List<uint32, true> memberReferences(referenceMember->references.Count());
+				for (uint32 w = 0; w < referenceMember->references.Count(); w++)memberReferences.Add(GetReferenceAddress(referenceMember->references[w]));
 				List<Type, true> parameters(abstractMember->parameters.Count());
 				for (uint32 w = 0; w < abstractMember->parameters.Count(); w++) parameters.Add(globalReference->AddReference(abstractMember->parameters.GetType(w)));
 				List<Type, true> returns(abstractMember->returns.Count());
@@ -439,10 +439,10 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			}
 			new (importLibrary->interfaces.Add())ImportInterface(IMPORT_INFO_PARAMETER(Interface), memberFunctions);
 		}
-		for (uint32 y = 0; y < referenceLibrary.delegates.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->delegates.Count(); y++)
 		{
-			GlobalReferenceDelegate& referenceDelegate = referenceLibrary.delegates[y];
-			AbstractDelegate* abstractDelegate = library->delegates[referenceDelegate.index];
+			GlobalReferenceDelegate* referenceDelegate = referenceLibrary->delegates[y];
+			AbstractDelegate* abstractDelegate = library->delegates[referenceDelegate->index];
 			IMPORT_BASE_INFO(Delegate);
 			List<Type, true> parameters(abstractDelegate->parameters.Count());
 			for (uint32 z = 0; z < abstractDelegate->parameters.Count(); z++) parameters.Add(globalReference->AddReference(abstractDelegate->parameters.GetType(z)));
@@ -450,32 +450,32 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 			for (uint32 z = 0; z < abstractDelegate->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractDelegate->returns.GetType(z)));
 			new (importLibrary->delegates.Add())ImportDelegate(IMPORT_INFO_PARAMETER(Delegate), parameters, returns);
 		}
-		for (uint32 y = 0; y < referenceLibrary.tasks.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->tasks.Count(); y++)
 		{
-			GlobalReferenceTask& referenceTask = referenceLibrary.tasks[y];
-			AbstractTask* abstractTask = library->tasks[referenceTask.index];
+			GlobalReferenceTask* referenceTask = referenceLibrary->tasks[y];
+			AbstractTask* abstractTask = library->tasks[referenceTask->index];
 			IMPORT_BASE_INFO(Task);
 			List<Type, true> returns(abstractTask->returns.Count());
 			for (uint32 z = 0; z < abstractTask->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractTask->returns.GetType(z)));
 			new (importLibrary->tasks.Add())ImportTask(IMPORT_INFO_PARAMETER(Task), returns);
 		}
-		for (uint32 y = 0; y < referenceLibrary.functions.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->functions.Count(); y++)
 		{
-			GlobalReferenceFunction& referenceFunction = referenceLibrary.functions[y];
-			AbstractFunction* abstractFunction = library->functions[referenceFunction.index];
+			GlobalReferenceFunction* referenceFunction = referenceLibrary->functions[y];
+			AbstractFunction* abstractFunction = library->functions[referenceFunction->index];
 			IMPORT_BASE_INFO(Function);
 			List<Type, true> parameters(abstractFunction->parameters.Count());
 			for (uint32 z = 0; z < abstractFunction->parameters.Count(); z++) parameters.Add(globalReference->AddReference(abstractFunction->parameters.GetType(z)));
 			List<Type, true> returns(abstractFunction->returns.Count());
 			for (uint32 z = 0; z < abstractFunction->returns.Count(); z++) returns.Add(globalReference->AddReference(abstractFunction->returns.GetType(z)));
-			List<uint32, true> addressReferences(referenceFunction.addressReferences.Count());
-			for (uint32 z = 0; z < referenceFunction.addressReferences.Count(); z++)addressReferences.Add(GetReferenceAddress(referenceFunction.addressReferences[z]));
+			List<uint32, true> addressReferences(referenceFunction->addressReferences.Count());
+			for (uint32 z = 0; z < referenceFunction->addressReferences.Count(); z++)addressReferences.Add(GetReferenceAddress(referenceFunction->addressReferences[z]));
 			new (importLibrary->functions.Add())ImportFunction(IMPORT_INFO_PARAMETER(Function), parameters, returns, addressReferences);
 		}
-		for (uint32 y = 0; y < referenceLibrary.natives.Count(); y++)
+		for (uint32 y = 0; y < referenceLibrary->natives.Count(); y++)
 		{
-			GlobalReferenceNative& referenceNative = referenceLibrary.natives[y];
-			AbstractNative* abstractNative = library->natives[referenceNative.index];
+			GlobalReferenceNative* referenceNative = referenceLibrary->natives[y];
+			AbstractNative* abstractNative = library->natives[referenceNative->index];
 			IMPORT_BASE_INFO(Native);
 			List<Type, true> parameters(abstractNative->parameters.Count());
 			for (uint32 z = 0; z < abstractNative->parameters.Count(); z++) parameters.Add(globalReference->AddReference(abstractNative->parameters.GetType(z)));
