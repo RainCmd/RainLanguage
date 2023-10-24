@@ -358,7 +358,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 		if (!compilingConstructor->expression.content.IsEmpty())
 		{
 			Lexical lexical;
-			if (!TryAnalysis(compilingConstructor->expression, 0, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则肯定是前面文件解析出错了");
+			if (!TryAnalysis(compilingConstructor->expression, compilingConstructor->expression.position, lexical, parameter.manager->messages))EXCEPTION("第一个词必定是this或base，否则肯定是前面文件解析出错了");
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
 			if (lexical.anchor == KeyWord_this())
 			{
@@ -539,7 +539,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 				}
 				else
 				{
-					if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages) && lexical.anchor != KeyWord_elseif() && lexical.anchor != KeyWord_else())
+					if (TryAnalysis(lineAnchor, lineAnchor.position, lexical, parameter.manager->messages) && lexical.anchor != KeyWord_elseif() && lexical.anchor != KeyWord_else())
 					{
 						statement = blockStack.Pop();
 						while (blockStack.Count() && blockStack.Peek()->indent == line.indent)
@@ -552,7 +552,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					break;
 				}
 			}
-			if (TryAnalysis(lineAnchor, 0, lexical, parameter.manager->messages))
+			if (TryAnalysis(lineAnchor, lineAnchor.position, lexical, parameter.manager->messages))
 			{
 				if (lexical.anchor == KeyWord_if()) ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, localContext, destructor);
 				else if (lexical.anchor == KeyWord_elseif())
@@ -621,13 +621,13 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 				{
 					Anchor forExpression = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
 					Anchor front, conditionAndBack;
-					if (Split(forExpression, 0, SplitFlag::Semicolon, front, conditionAndBack, parameter.manager->messages) == LexicalType::Semicolon)
+					if (Split(forExpression, forExpression.position, SplitFlag::Semicolon, front, conditionAndBack, parameter.manager->messages) == LexicalType::Semicolon)
 					{
 						ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, localContext, NULL, destructor);
 						Expression* frontExpression = NULL, * conditionExpression = NULL, * backExpression = NULL;
 						parser.TryParse(front, frontExpression);
 						Anchor condition, back;
-						if (Split(conditionAndBack, 0, SplitFlag::Semicolon, condition, back, parameter.manager->messages) == LexicalType::Semicolon)
+						if (Split(conditionAndBack, conditionAndBack.position, SplitFlag::Semicolon, condition, back, parameter.manager->messages) == LexicalType::Semicolon)
 						{
 							parser.TryParse(condition, conditionExpression);
 							parser.TryParse(back, backExpression);

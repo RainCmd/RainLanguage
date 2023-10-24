@@ -100,7 +100,7 @@ bool TryRemoveBracket(const Anchor& anchor, Anchor& result, MessageCollector* me
 	result = anchor.Trim();
 	if (result.content.IsEmpty()) return true;
 	Anchor splitLeft, splitRight;
-	if (Split(result, 0, SplitFlag::Bracket0, splitLeft, splitRight, messages) == LexicalType::BracketRight0 && splitLeft.position == result.position && splitRight.GetEnd() == result.GetEnd())
+	if (Split(result, result.position, SplitFlag::Bracket0, splitLeft, splitRight, messages) == LexicalType::BracketRight0 && splitLeft.position == result.position && splitRight.GetEnd() == result.GetEnd())
 	{
 		result = result.Sub(splitLeft.GetEnd(), splitRight.position - splitLeft.GetEnd());
 		return true;
@@ -1511,7 +1511,7 @@ bool TryParseLambdaParameter(const Anchor& anchor, Anchor& parameter, MessageCol
 		return true;
 	}
 	Lexical lexical;
-	if (TryAnalysis(anchor, 0, lexical, messages))
+	if (TryAnalysis(anchor, anchor.position, lexical, messages))
 	{
 		if (lexical.type != LexicalType::Word)
 		{
@@ -1541,7 +1541,7 @@ bool ExpressionParser::TryParseLambda(const Anchor& parameterAnchor, const Ancho
 	TryRemoveBracket(parameterAnchor, anchor, manager->messages);
 	List<Anchor> parameters(0);
 	Anchor left, right;
-	while (Split(anchor, 0, SplitFlag::Comma | SplitFlag::Semicolon, left, right, manager->messages) != LexicalType::Unknow)
+	while (Split(anchor, anchor.position, SplitFlag::Comma | SplitFlag::Semicolon, left, right, manager->messages) != LexicalType::Unknow)
 	{
 		if (TryParseLambdaParameter(left.Trim(), left, manager->messages) && !left.content.IsEmpty()) parameters.Add(left);
 		else return false;
@@ -1753,7 +1753,7 @@ bool ExpressionParser::TryParseQuestion(const Anchor& condition, const Anchor& e
 		if (ContainAll(conditionExpression->attribute, Attribute::Value))
 		{
 			Anchor left, right;
-			if (Split(expression, 0, SplitFlag::Colon, left, right, manager->messages) == LexicalType::Unknow)
+			if (Split(expression, expression.position, SplitFlag::Colon, left, right, manager->messages) == LexicalType::Unknow)
 			{
 				Expression* action;
 				if (TryParse(expression, action))
@@ -1863,19 +1863,19 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	Anchor trim;
 	if (TryRemoveBracket(anchor, trim, manager->messages)) return TryParse(trim, result);
 	Anchor splitLeft, splitRight;
-	if (Split(anchor, 0, SplitFlag::Semicolon, splitLeft, splitRight, manager->messages) == LexicalType::Semicolon) return TryParse(splitLeft, splitRight, result);
-	LexicalType splitType = Split(anchor, 0, (SplitFlag)((uint32)SplitFlag::Lambda | (uint32)SplitFlag::Assignment | (uint32)SplitFlag::Question), splitLeft, splitRight, manager->messages);
+	if (Split(anchor, anchor.position, SplitFlag::Semicolon, splitLeft, splitRight, manager->messages) == LexicalType::Semicolon) return TryParse(splitLeft, splitRight, result);
+	LexicalType splitType = Split(anchor, anchor.position, (SplitFlag)((uint32)SplitFlag::Lambda | (uint32)SplitFlag::Assignment | (uint32)SplitFlag::Question), splitLeft, splitRight, manager->messages);
 	if (splitType == LexicalType::Lambda) return TryParseLambda(splitLeft, splitRight, result);
 	else if (splitType == LexicalType::Question) return TryParseQuestion(splitLeft, splitRight, result);
 	else if (splitType != LexicalType::Unknow) return TryParseAssignment(splitType, splitLeft, splitRight, result);
-	if (Split(anchor, 0, SplitFlag::Comma, splitLeft, splitRight, manager->messages) == LexicalType::Comma) return TryParse(splitLeft, splitRight, result);
-	if (Split(anchor, 0, SplitFlag::QuestionNull, splitLeft, splitRight, manager->messages) == LexicalType::QuestionNull) return TryParseQuestionNull(splitLeft, splitRight, result);
+	if (Split(anchor, anchor.position, SplitFlag::Comma, splitLeft, splitRight, manager->messages) == LexicalType::Comma) return TryParse(splitLeft, splitRight, result);
+	if (Split(anchor, anchor.position, SplitFlag::QuestionNull, splitLeft, splitRight, manager->messages) == LexicalType::QuestionNull) return TryParseQuestionNull(splitLeft, splitRight, result);
 
 	List<Expression*, true>expressionStack(0);
 	List<Token> tokenStack(0);
 	Attribute attribute = Attribute::None;
 	Lexical lexical;
-	for (uint32 index = 0; TryAnalysis(anchor, index, lexical, manager->messages);)
+	for (uint32 index = anchor.position; TryAnalysis(anchor, index, lexical, manager->messages);)
 	{
 		switch (lexical.type)
 		{

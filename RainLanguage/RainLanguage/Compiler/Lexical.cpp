@@ -1,8 +1,8 @@
 #include "Lexical.h"
 #include "Character.h"
-#define LEXICAL(length,type) lexical = Lexical(segment.source, segment.content.Sub(index, length), segment.line, index, type)
-#define CHECK_NEXT(distance,symbol) (index + distance < segment.content.GetLength() && segment.content[index + distance] == symbol)
-#define NEXT(distance) (index + distance < segment.content.GetLength() ? segment.content[index + distance] : '\0')
+#define LEXICAL(length,type) lexical = Lexical(segment.source, segment.content.Sub(index - segment.position, length), segment.line, index, type)
+#define CHECK_NEXT(distance,symbol) (index + distance < segment.GetEnd() && segment.content[index + distance - segment.position] == symbol)
+#define NEXT(distance) (index + distance < segment.GetEnd() ? segment.content[index + distance - segment.position] : '\0')
 #define MESSAGE(type) MESSAGE2(messages, lexical.anchor, type);
 #define MATCH(symbol)\
 	if (CHECK_NEXT(0, symbol))\
@@ -98,9 +98,9 @@ bool IsReloadable(LexicalType type)
 
 bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageCollector* messages)
 {
-	while (index < segment.content.GetLength() && IsBlank(segment.content[index]))index++;
-	if (index < segment.content.GetLength())
-		switch (segment.content[index])
+	while (index < segment.GetEnd() && IsBlank(segment.content[index - segment.position]))index++;
+	if (index < segment.GetEnd())
+		switch (segment.content[index - segment.position])
 		{
 			case '(':
 				LEXICAL(1, LexicalType::BracketLeft0);
@@ -182,7 +182,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				if (CHECK_NEXT(1, '=')) LEXICAL(2, LexicalType::DivAssignment);
 				else if (CHECK_NEXT(1, '/'))
 				{
-					LEXICAL(segment.content.GetLength() - index, LexicalType::Annotation);
+					LEXICAL(segment.GetEnd() - index, LexicalType::Annotation);
 					return false;
 				}
 				else LEXICAL(1, LexicalType::Div);
@@ -221,7 +221,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 			case '\'':
 			{
 				uint32 i = 1;
-				while (index + i < segment.content.GetLength())
+				while (index + i < segment.GetEnd())
 				{
 					if (CHECK_NEXT(i, '\''))
 					{
@@ -231,7 +231,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 					else if (CHECK_NEXT(i, '\\'))
 					{
 						i++;
-						if (index + i >= segment.content.GetLength())break;
+						if (index + i >= segment.GetEnd())break;
 					}
 					i++;
 				}
@@ -242,7 +242,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 			case '\"':
 			{
 				uint32 i = 1;
-				while (index + i < segment.content.GetLength())
+				while (index + i < segment.GetEnd())
 				{
 					if (CHECK_NEXT(i, '\"'))
 					{
@@ -252,7 +252,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 					else if (CHECK_NEXT(i, '\\'))
 					{
 						i++;
-						if (index + i >= segment.content.GetLength())break;
+						if (index + i >= segment.GetEnd())break;
 					}
 					i++;
 				}
@@ -265,9 +265,9 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				return true;
 			case '\n': return false;
 			default:
-				if (IsNumber(segment.content[index]))
+				if (IsNumber(segment.content[index - segment.position]))
 				{
-					if (segment.content[index] == '0')
+					if (segment.content[index - segment.position] == '0')
 					{
 						character next_1 = ((character)NEXT(1) | 0x20);
 						if (next_1 == 'b')
@@ -310,7 +310,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 					LEXICAL(i, dot ? LexicalType::ConstReal : LexicalType::ConstNumber);
 					return true;
 				}
-				else if (IsLetter(segment.content[index]))
+				else if (IsLetter(segment.content[index - segment.position]))
 				{
 					uint32 i = 1;
 					while (IsLetterOrNumber(NEXT(i)))i++;
@@ -337,7 +337,7 @@ bool TryAnalysis(const Line& line, uint32 index, Lexical& lexical, MessageCollec
 
 bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical& lexical)
 {
-	while (index < segment.content.GetLength() && IsBlank(segment.content[index])) index++;
+	while (index < segment.GetEnd() && IsBlank(segment.content[index - segment.position])) index++;
 	switch (type)
 	{
 		case LexicalType::Unknow: break;
