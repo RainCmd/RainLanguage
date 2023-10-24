@@ -71,7 +71,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 			case LexicalType::Comma:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::Comma))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}
@@ -79,16 +79,16 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 			case LexicalType::Semicolon:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::Semicolon))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}
 				break;
 			case LexicalType::Assignment:
-label_assignment:
+			label_assignment:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::Assignment))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}
@@ -97,7 +97,7 @@ label_assignment:
 			case LexicalType::Lambda:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::Lambda))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}
@@ -139,7 +139,7 @@ label_assignment:
 			case LexicalType::Question:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::Question))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}
@@ -154,7 +154,7 @@ label_assignment:
 			case LexicalType::QuestionNull:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::QuestionNull))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}
@@ -167,7 +167,7 @@ label_assignment:
 				}
 				else if (ContainAny(flag, SplitFlag::Colon))
 				{
-					left = anchor.Sub(0, index).Trim();
+					left = anchor.Sub(anchor.position, index - anchor.position).Trim();
 					right = anchor.Sub(lexical.anchor.GetEnd()).Trim();
 					return lexical.type;
 				}

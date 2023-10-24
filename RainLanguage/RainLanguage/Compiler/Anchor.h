@@ -20,11 +20,11 @@ struct Anchor
 	}
 	inline Anchor Sub(uint32 start, uint32 length)const
 	{
-		return Anchor(source, content.Sub(start, length), line, position + start);
+		return Anchor(source, content.Sub(start - position, length), line, position + start);
 	}
-	inline Anchor Sub(uint32 start)const
+	inline Anchor Sub(uint32 start) const
 	{
-		return Sub(start, content.GetLength() - start);
+		return Sub(start, position + content.GetLength() - start);
 	}
 	inline bool operator==(const Anchor& other)const
 	{
