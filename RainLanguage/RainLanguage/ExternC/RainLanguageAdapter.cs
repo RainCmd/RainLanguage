@@ -1,0 +1,1413 @@
+﻿using System;
+using System.Runtime.InteropServices;
+
+public enum RainType
+{
+    /// <summary>
+    /// 内部类型
+    /// </summary>
+    Internal,
+    /// <summary>
+    /// 布尔类型
+    /// </summary>
+    Bool,
+    /// <summary>
+    /// 字节类型
+    /// </summary>
+    Byte,
+    /// <summary>
+    /// 字符类型
+    /// </summary>
+    Character,
+    /// <summary>
+    /// 整数类型
+    /// </summary>
+    Integer,
+    /// <summary>
+    /// 实数类型
+    /// </summary>
+    Real,
+    /// <summary>
+    /// 二维向量
+    /// </summary>
+    Real2,
+    /// <summary>
+    /// 三维向量
+    /// </summary>
+    Real3,
+    /// <summary>
+    /// 四维向量
+    /// </summary>
+    Real4,
+    /// <summary>
+    /// 枚举类型
+    /// </summary>
+    Enum,
+    /// <summary>
+    /// 字符串类型
+    /// </summary>
+    String,
+    /// <summary>
+    /// 实体类型
+    /// </summary>
+    Entity,
+
+    /// <summary>
+    /// 数组标识
+    /// </summary>
+    ArrayFlag = 0x10,
+}
+public unsafe struct Data
+{
+    public byte* data;
+    public uint size;
+    public Data(byte* data, uint size)
+    {
+        this.data = data;
+        this.size = size;
+    }
+}
+public delegate Data DataLoader(string name);
+public struct BuildParameter
+{
+    public interface ICodeFile
+    {
+        string Path { get; }
+        string Content { get; }
+    }
+    public string name;
+    public bool debug;
+    public ICodeFile[] files;
+    public DataLoader liibraryLoader;
+    public uint errorLevel;
+}
+public struct ErrorMessageDetail
+{
+    uint messageType;
+    uint line;
+    uint start;
+    uint length;
+}
+public struct KernelState
+{
+    uint taskCount;
+    uint stringCount;
+    uint entityCount;
+    uint handleCount;
+    uint heapSize;
+}
+public struct RainStackFrame
+{
+    public string libName;
+    public string funName;
+    public uint address;
+    public RainStackFrame(string libName, string funName, uint address)
+    {
+        this.libName = libName;
+        this.funName = funName;
+        this.address = address;
+    }
+}
+public delegate void EntityAction(RainLanguageAdapter.RainKernel kernel, ulong entity);
+public delegate void OnCaller(RainLanguageAdapter.RainKernel kernel, RainLanguageAdapter.RainCaller caller);
+public delegate OnCaller CallerLoader(RainLanguageAdapter.RainKernel kernel, string fullName, RainType[] parameters);
+public delegate void ExceptionExit(RainLanguageAdapter.RainKernel kernel, RainStackFrame[] frames, string msg);
+public struct StartupParameter
+{
+    public RainLanguageAdapter.RainLibrary[] libraries;
+    public long seed;
+    public uint stringCapacity;
+    public uint entityCapacity;
+    public EntityAction onReferenceEntity, onReleaseEntity;
+    public DataLoader libraryLoader;
+    public CallerLoader callerLoader;
+    public ExceptionExit onExceptionExit;
+    public DataLoader programDatabaseLoader;
+}
+public struct Real
+{
+#if FIXED_REAL
+    private readonly long value;
+    public Real(double value) { this.value = (long)(value * ratio); }
+    const long ratio = 0x10000;
+    public static implicit operator double(Real value)
+    {
+        return (double)value.value / ratio;
+    }
+    public static implicit operator Real(double value)
+    {
+        return new Real(value);
+    }
+#else
+    public readonly double value;
+    public Real(double value) { this.value = value; }
+    public static implicit operator double(Real value) { return value.value; }
+    public static implicit operator Real(double value) { return new Real(value); }
+#endif
+}
+public struct Real2 { public Real x, y; }
+public struct Real3 { public Real x, y, z; }
+public struct Real4 { public Real x, y, z, w; }
+public unsafe class RainLanguageAdapter
+{
+    private static T* AllocMemory<T>(int size) where T : unmanaged
+    {
+        return (T*)Marshal.AllocHGlobal(size * sizeof(T));
+    }
+    private static char* GetEctype(string value)
+    {
+        var result = AllocMemory<char>(value.Length + 1);
+        fixed (char* pvalue = value)
+            for (int i = 0; i < value.Length; i++)
+                result[i] = pvalue[i];
+        result[value.Length] = '\0';
+        return result;
+    }
+    private static void FreeMemory(void* ptr)
+    {
+        Marshal.FreeHGlobal((IntPtr)ptr);
+    }
+    private struct CodeLoaderResult
+    {
+        bool end;
+        char* path;
+        char* content;
+        public CodeLoaderResult(bool end, char* path, char* content)
+        {
+            this.end = end;
+            this.path = path;
+            this.content = content;
+        }
+    }
+    private delegate CodeLoaderResult CodeLoader();
+    private delegate void* LibraryLoader(void* libraryName);
+    private struct ExternBuildParameter
+    {
+        char* name;
+        bool debug;
+        CodeLoader CodeLoader;
+        LibraryLoader LibraryLoader;
+        uint errorLevel;
+        public ExternBuildParameter(char* name, bool debug, CodeLoader codeLoader, LibraryLoader libraryLoader, uint errorLevel)
+        {
+            this.name = name;
+            this.debug = debug;
+            CodeLoader = codeLoader;
+            LibraryLoader = libraryLoader;
+            this.errorLevel = errorLevel;
+        }
+    }
+    public class Product : IDisposable
+    {
+        private void* product;
+        public Product(void* product) { this.product = product; }
+        public uint ErrorLevel { get { return ProductGetErrorLevel(product); } }
+        public uint GetErrorCount(uint level) { return ProductGetErrorCount(product, level); }
+        public ErrorMessage GetErrorMessage(uint level, uint index) { return new ErrorMessage(ProductGetError(product, level, index)); }
+        public RainLibrary GetLibrary() { return new RainLibrary(ProductGetLibrary(product)); }
+        public RainProgramDatabase GetProgramDatabase() { return new RainProgramDatabase(ProductGetRainProgramDatabase(product)); }
+        public void Dispose()
+        {
+            if (product == null) return;
+            DeleteProduct(product);
+            product = null;
+        }
+        ~Product() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteProduct", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteProduct(void* product);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ProductGetErrorLevel", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint ProductGetErrorLevel(void* product);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ProductGetErrorCount", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint ProductGetErrorCount(void* product, uint level);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ProductGetError", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* ProductGetError(void* product, uint level, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ProductGetLibrary", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* ProductGetLibrary(void* product);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ProductGetRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* ProductGetRainProgramDatabase(void* product);
+    }
+    public class ErrorMessage : IDisposable
+    {
+        private void* msg;
+        public ErrorMessage(void* msg)
+        {
+            this.msg = msg;
+        }
+        public string Path
+        {
+            get
+            {
+                using (var str = new NativeString(Extern_RainErrorMessageGetPath(msg)))
+                    return str.Value;
+            }
+        }
+        public ErrorMessageDetail Detail
+        {
+            get
+            {
+                return RainErrorMessageGetDetail(msg);
+            }
+        }
+        public string ExteraMsg
+        {
+            get
+            {
+                using (var str = new NativeString(RainErrorMessageGetExtraMessage(msg)))
+                    return str.Value;
+            }
+        }
+        public void Dispose()
+        {
+            if (msg == null) return;
+            DeleteRainErrorMessage(msg);
+            msg = null;
+        }
+        ~ErrorMessage() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainErrorMessage", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* Extern_RainErrorMessageGetPath(void* msg);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetDetail", CallingConvention = CallingConvention.Cdecl)]
+        private extern static ErrorMessageDetail RainErrorMessageGetDetail(void* msg);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetExtraMessage", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* RainErrorMessageGetExtraMessage(void* msg);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainErrorMessage", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* DeleteRainErrorMessage(void* msg);
+    }
+    public class RainLibrary : IDisposable
+    {
+        private void* library;
+        public RainLibrary(void* library)
+        {
+            this.library = library;
+        }
+        public RainBuffer Serialize()
+        {
+            return new RainBuffer(SerializeRainLibrary(library));
+        }
+        internal void* GetSource() { return library; }
+        public void Dispose()
+        {
+            if (library == null) return;
+            DeleteRainLibrary(library);
+            library = null;
+        }
+        ~RainLibrary() { Dispose(); }
+        public static RainLibrary Create(byte* data, uint length)
+        {
+            return new RainLibrary(DeserializeRainLibrary(data, length));
+        }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* SerializeRainLibrary(void* library);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeserializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* DeserializeRainLibrary(byte* data, uint length);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainLibrary", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteRainLibrary(void* library);
+    }
+    public class RainProgramDatabase : IDisposable
+    {
+        private void* database;
+        public RainProgramDatabase(void* database)
+        {
+            this.database = database;
+        }
+        public RainBuffer Serialize()
+        {
+            return new RainBuffer(SerializeRainProgramDatabase(database));
+        }
+        public void* GetSource() { return database; }
+        public void Dispose()
+        {
+            if (database == null) return;
+            DeleteRainProgramDatabase(database);
+            database = null;
+        }
+        ~RainProgramDatabase() { Dispose(); }
+        public static RainProgramDatabase Create(byte* data, uint length)
+        {
+            return new RainProgramDatabase(DeserializeRainProgramDatabase(data, length));
+        }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* SerializeRainProgramDatabase(void* database);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeserializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* DeserializeRainProgramDatabase(void* data, uint length);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteRainProgramDatabase(void* database);
+    }
+    private struct ExternNativeString
+    {
+        public char* value;
+        public uint length;
+    }
+    private class NativeString : IDisposable
+    {
+        private void* value;
+        public NativeString(void* value)
+        {
+            this.value = value;
+        }
+        public string Value
+        {
+            get
+            {
+                return new string(RainStringGetChars(value));
+            }
+        }
+        public void Dispose()
+        {
+            if (value == null) return;
+            DeleteRainString(value);
+            value = null;
+        }
+        ~NativeString() { Dispose(); }
+        internal static NativeString Create(char* value)
+        {
+            return new NativeString(CreateRainString(value));
+        }
+        internal static string GetString(void* value)
+        {
+            return new string(RainStringGetChars(value));
+        }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CreateRainString", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* CreateRainString(char* msg);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainStringGetChars", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char* RainStringGetChars(void* msg);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainString", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteRainString(void* msg);
+    }
+    public class RainBuffer : IDisposable
+    {
+        private void* value;
+        public RainBuffer(void* value)
+        {
+            this.value = value;
+        }
+        public byte* Data { get { return RainBufferGetData(value); } }
+        public uint Length { get { return RainBufferGetCount(value); } }
+        public void Dispose()
+        {
+            if (value == null) return;
+            DeleteRainBuffer(value);
+            value = null;
+        }
+        ~RainBuffer() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainBufferGetData", CallingConvention = CallingConvention.Cdecl)]
+        public extern static byte* RainBufferGetData(void* value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainBufferGetCount", CallingConvention = CallingConvention.Cdecl)]
+        public extern static uint RainBufferGetCount(void* value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainBuffer", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void DeleteRainBuffer(void* value);
+    }
+    private struct ExternRainStackFram
+    {
+        public ExternNativeString libName;
+        public ExternNativeString functionName;
+        public uint address;
+    }
+    private delegate void ExternEntityAction(void* kernel, ulong entity);
+    private delegate void ExternOnCaller(void* kernel, void* caller);
+    private delegate ExternOnCaller ExternNativeCallerLoader(void* kernel, ExternNativeString fullName, byte* parameters, uint parameterCount);
+    private delegate void ExternExceptionExit(void* kernel, ExternRainStackFram* frames, uint count, ExternNativeString msg);
+    private delegate void* ExternProgramDatabaseLoader(void* name);
+    private struct ExternStartupParameter
+    {
+        void** libraries;
+        uint libraryCount;
+        long seed;
+        uint stringCapacity;
+        uint entityCapacity;
+        ExternEntityAction onReferenecEntity, onReleaseEntity;
+        LibraryLoader libraryLoader;
+        ExternNativeCallerLoader nativeCallerLoader;
+        uint heapCapacity, heapGeneration;
+        uint taskCapacity;
+        uint executeStackCapacity;
+        ExternExceptionExit onExceptionExit;
+        ExternProgramDatabaseLoader programDatabaseLoader;
+        public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit, ExternProgramDatabaseLoader programDatabaseLoader)
+        {
+            this.libraries = libraries;
+            this.libraryCount = libraryCount;
+            this.seed = seed;
+            this.stringCapacity = stringCapacity;
+            this.entityCapacity = entityCapacity;
+            this.onReferenecEntity = onReferenecEntity;
+            this.onReleaseEntity = onReleaseEntity;
+            this.libraryLoader = libraryLoader;
+            this.nativeCallerLoader = nativeCallerLoader;
+            this.heapCapacity = heapCapacity;
+            this.heapGeneration = heapGeneration;
+            this.taskCapacity = taskCapacity;
+            this.executeStackCapacity = executeStackCapacity;
+            this.onExceptionExit = onExceptionExit;
+            this.programDatabaseLoader = programDatabaseLoader;
+        }
+    }
+    public class RainKernel : IDisposable
+    {
+        private void* kernel;
+        public RainKernel(void* kernel)
+        {
+            this.kernel = kernel;
+        }
+        public KernelState State { get { return KernelGetState(kernel); } }
+        public RainFunction FindFunction(string name, bool allowNoPublic)
+        {
+            fixed (char* pointer = name)
+            {
+                var function = KernelFindFunction(kernel, pointer, allowNoPublic);
+                if (function == null) return null;
+                return new RainFunction(function);
+            }
+        }
+        public RainFunctions FindFunctions(string name, bool allowNoPublic)
+        {
+            fixed (char* pointer = name)
+            {
+                var function = KernelFindFunctions(kernel, pointer, allowNoPublic);
+                if (function == null) return null;
+                return new RainFunctions(function);
+            }
+        }
+        public uint GC(bool full)
+        {
+            return KernelGC(kernel, full);
+        }
+        public void Update()
+        {
+            KernelUpdate(kernel);
+        }
+        public virtual void Dispose()
+        {
+            if (kernel == null) return;
+            DeleteKernel(kernel);
+            kernel = null;
+        }
+        ~RainKernel() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelFindFunction", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* KernelFindFunction(void* kernel, char* name, bool allowNoPublic);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelFindFunctions", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* KernelFindFunctions(void* kernel, char* name, bool allowNoPublic);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelGetState", CallingConvention = CallingConvention.Cdecl)]
+        private extern static KernelState KernelGetState(void* kernel);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelGC", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint KernelGC(void* kernel, bool full);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelUpdate", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void KernelUpdate(void* kernel);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteKernel", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteKernel(void* kernel);
+    }
+    public class RainKernelCopy : RainKernel
+    {
+        public RainKernelCopy(void* kernel) : base(kernel) { }
+        public override void Dispose() { }
+    }
+    public class RainFunction : IDisposable
+    {
+        private void* function;
+        public RainFunction(void* function)
+        {
+            this.function = function;
+        }
+        public bool IsValid { get { return RainFunctionIsValid(function); } }
+        public RainTypes GetParameters()
+        {
+            return new RainTypes(RainFunctionGetParameters(function));
+        }
+        public RainTypes GetReturns()
+        {
+            return new RainTypes(RainFunctionGetReturns(function));
+        }
+        public RainInvoekr CreateInvoker()
+        {
+            return new RainInvoekr(RainFunctionCreateInvoekr(function));
+        }
+        public void Dispose()
+        {
+            if (function == null) return;
+            DeleteRainFunction(function);
+            function = null;
+        }
+        ~RainFunction() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionIsValid", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool RainFunctionIsValid(void* function);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionCreateInvoekr", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* RainFunctionCreateInvoekr(void* function);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionGetParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* RainFunctionGetParameters(void* function);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionGetReturns", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* RainFunctionGetReturns(void* function);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainFunction", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteRainFunction(void* function);
+    }
+    public class RainFunctions : IDisposable
+    {
+        private void* functions;
+        public RainFunctions(void* functions)
+        {
+            this.functions = functions;
+        }
+        public uint Count { get { return RainFunctionsGetCount(functions); } }
+        public RainFunction this[uint index]
+        {
+            get
+            {
+                var function = RainFunctionsGetFunction(functions, index);
+                if (function == null) return null;
+                return new RainFunction(function);
+            }
+        }
+        public void Dispose()
+        {
+            if (functions == null) return;
+            DeleteRainFunctions(functions);
+            functions = null;
+        }
+        ~RainFunctions() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionsGetCount", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint RainFunctionsGetCount(void* functions);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionsGetFunction", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* RainFunctionsGetFunction(void* functions, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainFunctions", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteRainFunctions(void* function);
+    }
+    public class RainTypes : IDisposable
+    {
+        private void* types;
+        public RainTypes(void* types)
+        {
+            this.types = types;
+        }
+        public uint Count { get { return RainTypesGetCount(types); } }
+        public RainType this[uint index] { get { return (RainType)RainTypesGetType(types, index); } }
+        public void Dispose()
+        {
+            if (types == null) return;
+            DeleteRainTypes(types);
+            types = null;
+        }
+        ~RainTypes() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainTypesGetCount", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint RainTypesGetCount(void* types);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainTypesGetType", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint RainTypesGetType(void* types, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainTypes", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteRainTypes(void* types);
+    }
+    public class RainInvoekr : IDisposable
+    {
+        private void* invoker;
+        public RainInvoekr(void* invoker)
+        {
+            this.invoker = invoker;
+        }
+        public ulong InstanceID { get { return InvokerWrapperGetInstanceID(invoker); } }
+        public bool IsValid { get { return InvokerWrapperIsValid(invoker); } }
+        public byte State { get { return InvokerWrapperGetState(invoker); } }
+        public bool IsPause { get { return InvokerWrapperIsPause(invoker); } }
+        public string GetExitMessage()
+        {
+            using (var nativeString = new NativeString(Extern_InvokerWrapperGetExitMessage(invoker)))
+            {
+                return nativeString.Value;
+            }
+        }
+        public void Start(bool immediately, bool ignoreWait)
+        {
+            InvokerWrapperStart(invoker, immediately, ignoreWait);
+        }
+        public void Pause()
+        {
+            InvokerWrapperPause(invoker);
+        }
+        public void Resume()
+        {
+            InvokerWrapperResume(invoker);
+        }
+        public void Abort(string error)
+        {
+            fixed (char* pointer = error)
+            {
+                InvokerWrapperAbort(invoker, pointer);
+            }
+        }
+        public bool GetBoolReturnValue(uint index)
+        {
+            return InvokerWrapperGetBoolReturnValue(invoker, index);
+        }
+        public byte GetByteReturnValue(uint index)
+        {
+            return InvokerWrapperGetByteReturnValue(invoker, index);
+        }
+        public char GetCharReturnValue(uint index)
+        {
+            return InvokerWrapperGetCharReturnValue(invoker, index);
+        }
+        public long GetIntegerReturnValue(uint index)
+        {
+            return InvokerWrapperGetIntegerReturnValue(invoker, index);
+        }
+        public Real GetRealReturnValue(uint index)
+        {
+            return InvokerWrapperGetRealReturnValue(invoker, index);
+        }
+        public Real2 GetReal2ReturnValue(uint index)
+        {
+            return InvokerWrapperGetReal2ReturnValue(invoker, index);
+        }
+        public Real3 GetReal3ReturnValue(uint index)
+        {
+            return InvokerWrapperGetReal3ReturnValue(invoker, index);
+        }
+        public Real4 GetReal4ReturnValue(uint index)
+        {
+            return InvokerWrapperGetReal4ReturnValue(invoker, index);
+        }
+        public long GetEnumReturnValue(uint index)
+        {
+            return InvokerWrapperGetEnumValueReturnValue(invoker, index);
+        }
+        public string GetEnumNameReturnValue(uint index)
+        {
+            using (var nativeString = new NativeString(InvokerWrapperGetEnumNameReturnValue(invoker, index)))
+            {
+                return nativeString.Value;
+            }
+        }
+        public string GetStringReturnValue(uint index)
+        {
+            using (var nativeString = new NativeString(InvokerWrapperGetStringReturnValue(invoker, index)))
+            {
+                return nativeString.Value;
+            }
+        }
+        public ulong GetEntityReturnValue(uint index)
+        {
+            return InvokerWrapperGetEntityReturnValue(invoker, index);
+        }
+        private uint GetArrayReturnValueLength(uint index)
+        {
+            return InvokerWapperGetArrayReturnValueLength(invoker, index);
+        }
+        private delegate T* ArrayReturnValueGetter<T>(void* invoker, uint index) where T : unmanaged;
+        private T[] GetArrayReturnValue<T>(ArrayReturnValueGetter<T> getter, uint index) where T : unmanaged
+        {
+            var pointer = getter(invoker, index);
+            var result = new T[GetArrayReturnValueLength(index)];
+            for (var i = 0; i < result.Length; i++) result[i] = pointer[i];
+            FreeArray(pointer);
+            return result;
+        }
+        public bool[] GetBoolsReturnValue(uint index)
+        {
+            return GetArrayReturnValue<bool>(InvokerWapperGetBoolArrayReturnValue, index);
+        }
+        public byte[] GetBytesReturnValue(uint index)
+        {
+            return GetArrayReturnValue<byte>(InvokerWapperGetByteArrayReturnValue, index);
+        }
+        public char[] GetCharsReturnValue(uint index)
+        {
+            return GetArrayReturnValue<char>(InvokerWapperGetCharArrayReturnValue, index);
+        }
+        public long[] GetIntegersReturnValue(uint index)
+        {
+            return GetArrayReturnValue<long>(InvokerWapperGetIntegerArrayReturnValue, index);
+        }
+        public Real[] GetRealsReturnValue(uint index)
+        {
+            return GetArrayReturnValue<Real>(InvokerWapperGetRealArrayReturnValue, index);
+        }
+        public Real2[] GetReal2sReturnValue(uint index)
+        {
+            return GetArrayReturnValue<Real2>(InvokerWapperGetReal2ArrayReturnValue, index);
+        }
+        public Real3[] GetReal3sReturnValue(uint index)
+        {
+            return GetArrayReturnValue<Real3>(InvokerWapperGetReal3ArrayReturnValue, index);
+        }
+        public Real4[] GetReal4sReturnValue(uint index)
+        {
+            return GetArrayReturnValue<Real4>(InvokerWapperGetReal4ArrayReturnValue, index);
+        }
+        public long[] GetEnumsReturnValue(uint index)
+        {
+            return GetArrayReturnValue<long>(InvokerWapperGetEnumValueArrayReturnValue, index);
+        }
+        public string[] GetEnumNamesReturnValue(uint index)
+        {
+            var pointer = InvokerWapperGetEnumNameArrayReturnValue(invoker, index);
+            var result = new string[GetArrayReturnValueLength(index)];
+            for (int i = 0; i < result.Length; i++) result[i] = new string(pointer[i]);
+            FreeArray(pointer);
+            return result;
+        }
+        public string[] GetStringsReturnValue(uint index)
+        {
+            var pointer = InvokerWapperGetStringArrayReturnValue(invoker, index);
+            var result = new string[GetArrayReturnValueLength(index)];
+            for (int i = 0; i < result.Length; i++) result[i] = new string(pointer[i]);
+            FreeArray(pointer);
+            return result;
+        }
+        public ulong[] GetEntitysReturnValue(uint index)
+        {
+            return GetArrayReturnValue<ulong>(InvokerWapperGetEntityArrayReturnValue, index);
+        }
+        public void SetBoolParameter(uint index, bool value)
+        {
+            InvokerWapperSetBoolParameter(invoker, index, value);
+        }
+        public void SetByteParameter(uint index, byte value)
+        {
+            InvokerWapperSetByteParameter(invoker, index, value);
+        }
+        public void SetCharParameter(uint index, char value)
+        {
+            InvokerWapperSetCharParameter(invoker, index, value);
+        }
+        public void SetIntegerParameter(uint index, int value)
+        {
+            InvokerWapperSetIntegerParameter(invoker, index, value);
+        }
+        public void SetRealParameter(uint index, Real value)
+        {
+            InvokerWapperSetRealParameter(invoker, index, value);
+        }
+        public void SetReal2Parameter(uint index, Real2 value)
+        {
+            InvokerWapperSetReal2Parameter(invoker, index, value);
+        }
+        public void SetReal3Parameter(uint index, Real3 value)
+        {
+            InvokerWapperSetReal3Parameter(invoker, index, value);
+        }
+        public void SetReal4Parameter(uint index, Real4 value)
+        {
+            InvokerWapperSetReal4Parameter(invoker, index, value);
+        }
+        public void SetEnumValueParameter(uint index, long value)
+        {
+            InvokerWapperSetEnumValueParameter(invoker, index, value);
+        }
+        public void SetEnumNameParameter(uint index, string name)
+        {
+            fixed (char* pname = name) InvokerWapperSetEnumNameParameter(invoker, index, pname);
+        }
+        public void SetStringParameter(uint index, string value)
+        {
+            fixed (char* pvalue = value) InvokerWapperSetStringParameter(invoker, index, pvalue);
+        }
+        public void SetEntityParameter(uint index, ulong value)
+        {
+            InvokerWapperSetEntityParameter(invoker, index, value);
+        }
+        public void SetBoolParameters(uint index, bool[] value)
+        {
+            fixed (bool* pvalue = value) InvokerWapperSetBoolParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetByteParameters(uint index, byte[] value)
+        {
+            fixed (byte* pvalue = value) InvokerWapperSetByteParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetCharParameters(uint index, char[] value)
+        {
+            fixed (char* pvalue = value) InvokerWapperSetCharParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetIntegerParameters(uint index, long[] value)
+        {
+            fixed (long* pvalue = value) InvokerWapperSetIntegerParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetRealParameters(uint index, Real[] value)
+        {
+            fixed (Real* pvalue = value) InvokerWapperSetRealParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetReal2Parameters(uint index, Real2[] value)
+        {
+            fixed (Real2* pvalue = value) InvokerWapperSetReal2Parameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetReal3Parameters(uint index, Real3[] value)
+        {
+            fixed (Real3* pvalue = value) InvokerWapperSetReal3Parameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetReal4Parameters(uint index, Real4[] value)
+        {
+            fixed (Real4* pvalue = value) InvokerWapperSetReal4Parameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetEnumValueParameter(uint index, long[] value)
+        {
+            fixed (long* pvalue = value) InvokerWapperSetEnumValueParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void SetEnumNameParameters(uint index, string[] value)
+        {
+            char** values = (char**)Marshal.AllocHGlobal(value.Length * sizeof(char*));
+            for (int i = 0; i < value.Length; i++) values[i] = GetEctype(value[i]);
+
+            InvokerWapperSetEnumNameParameters(invoker, index, values, (uint)value.Length);
+
+            for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
+            Marshal.FreeHGlobal((IntPtr)values);
+        }
+        public void SetStringParameters(uint index, string[] value)
+        {
+            char** values = (char**)Marshal.AllocHGlobal(value.Length * sizeof(char*));
+            for (int i = 0; i < value.Length; i++) values[i] = GetEctype(value[i]);
+
+            InvokerWapperSetStringParameters(invoker, index, values, (uint)value.Length);
+
+            for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
+            Marshal.FreeHGlobal((IntPtr)values);
+        }
+        public void SetEntityParameters(uint index, ulong[] value)
+        {
+            fixed (ulong* pvalue = value) InvokerWapperSetEntityParameters(invoker, index, pvalue, (uint)value.Length);
+        }
+        public void Dispose()
+        {
+            if (invoker == null) return;
+            DeleteInvokerWrapper(invoker);
+            invoker = null;
+        }
+        ~RainInvoekr() { Dispose(); }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetKernel", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* InvokerWrapperGetKernel(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetInstanceID", CallingConvention = CallingConvention.Cdecl)]
+        private extern static ulong InvokerWrapperGetInstanceID(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperIsValid", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool InvokerWrapperIsValid(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetState", CallingConvention = CallingConvention.Cdecl)]
+        private extern static byte InvokerWrapperGetState(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetExitMessage", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* Extern_InvokerWrapperGetExitMessage(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperStart", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWrapperStart(void* invoker, bool immediately, bool ignoreWait);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperIsPause", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool InvokerWrapperIsPause(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperPause", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWrapperPause(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperResume", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWrapperResume(void* invoker);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperAbort", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWrapperAbort(void* invoker, char* error);
+        //get return value
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetBoolReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool InvokerWrapperGetBoolReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetByteReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static byte InvokerWrapperGetByteReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetCharReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char InvokerWrapperGetCharReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetIntegerReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long InvokerWrapperGetIntegerReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetRealReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real InvokerWrapperGetRealReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetReal2ReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real2 InvokerWrapperGetReal2ReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetReal3ReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real3 InvokerWrapperGetReal3ReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetReal4ReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real4 InvokerWrapperGetReal4ReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetEnumValueReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long InvokerWrapperGetEnumValueReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetEnumNameReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* InvokerWrapperGetEnumNameReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetStringReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* InvokerWrapperGetStringReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetEntityReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static ulong InvokerWrapperGetEntityReturnValue(void* invoker, uint index);
+        //get return array value
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetArrayReturnValueLength", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint InvokerWapperGetArrayReturnValueLength(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetBoolArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool* InvokerWapperGetBoolArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetByteArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static byte* InvokerWapperGetByteArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetCharArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char* InvokerWapperGetCharArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetIntegerArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long* InvokerWapperGetIntegerArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetRealArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real* InvokerWapperGetRealArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetReal2ArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real2* InvokerWapperGetReal2ArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetReal3ArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real3* InvokerWapperGetReal3ArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetReal4ArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real4* InvokerWapperGetReal4ArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetEnumValueArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long* InvokerWapperGetEnumValueArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetEnumNameArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char** InvokerWapperGetEnumNameArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetStringArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char** InvokerWapperGetStringArrayReturnValue(void* invoker, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperGetEntityArrayReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static ulong* InvokerWapperGetEntityArrayReturnValue(void* invoker, uint index);
+        //set parameter
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetBoolParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetBoolParameter(void* invoker, uint index, bool value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetByteParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetByteParameter(void* invoker, uint index, byte value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetCharParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetCharParameter(void* invoker, uint index, char value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetIntegerParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetIntegerParameter(void* invoker, uint index, long value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetRealParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetRealParameter(void* invoker, uint index, Real value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal2Parameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetReal2Parameter(void* invoker, uint index, Real2 value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal3Parameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetReal3Parameter(void* invoker, uint index, Real3 value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal4Parameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetReal4Parameter(void* invoker, uint index, Real4 value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEnumValueParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetEnumValueParameter(void* invoker, uint index, long value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEnumNameParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetEnumNameParameter(void* invoker, uint index, char* value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetStringParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetStringParameter(void* invoker, uint index, char* value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEntityParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetEntityParameter(void* invoker, uint index, ulong value);
+        //set parameters
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetBoolParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetBoolParameters(void* invoker, uint index, bool* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetByteParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetByteParameters(void* invoker, uint index, byte* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetCharParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetCharParameters(void* invoker, uint index, char* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetIntegerParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetIntegerParameters(void* invoker, uint index, long* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetRealParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetRealParameters(void* invoker, uint index, Real* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal2Parameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetReal2Parameters(void* invoker, uint index, Real2* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal3Parameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetReal3Parameters(void* invoker, uint index, Real3* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal4Parameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetReal4Parameters(void* invoker, uint index, Real4* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEnumValueParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetEnumValueParameters(void* invoker, uint index, long* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEnumNameParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetEnumNameParameters(void* invoker, uint index, char** value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetStringParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetStringParameters(void* invoker, uint index, char** value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEntityParameters", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void InvokerWapperSetEntityParameters(void* invoker, uint index, ulong* value, uint count);
+
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteInvokerWrapper", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void DeleteInvokerWrapper(void* invoker);
+    }
+    public struct RainCaller
+    {
+        private void* caller;
+        public RainCaller(void* caller)
+        {
+            this.caller = caller;
+        }
+        public bool GetBoolParameter(uint index)
+        {
+            return CallerWrapperGetBoolParameter(caller, index);
+        }
+        public byte GetByteParameter(uint index)
+        {
+            return CallerWrapperGetByteParameter(caller, index);
+        }
+        public char GetCharParameter(uint index)
+        {
+            return CallerWrapperGetCharParameter(caller, index);
+        }
+        public long GetIntegerParameter(uint index)
+        {
+            return CallerWrapperGetIntegerParameter(caller, index);
+        }
+        public Real GetRealParameter(uint index)
+        {
+            return CallerWrapperGetRealParameter(caller, index);
+        }
+        public Real2 GetReal2Parameter(uint index)
+        {
+            return CallerWrapperGetReal2Parameter(caller, index);
+        }
+        public Real3 GetReal3Parameter(uint index)
+        {
+            return CallerWrapperGetReal3Parameter(caller, index);
+        }
+        public Real4 GetReal4Parameter(uint index)
+        {
+            return CallerWrapperGetReal4Parameter(caller, index);
+        }
+        public long GetEnumValueParameter(uint index)
+        {
+            return CallerWrapperGetEnumValueParameter(caller, index);
+        }
+        public string GetEnumNameParameter(uint index)
+        {
+            using (var name = new NativeString(CallerWrapperGetEnumNameParameter(caller, index)))
+                return name.Value;
+        }
+        public string GetStringParameter(uint index)
+        {
+            using (var value = new NativeString(CallerWrapperGetStringParameter(caller, index)))
+                return value.Value;
+        }
+        private delegate T* CallerParametersGetter<T>(void* caller, uint index) where T : unmanaged;
+        public uint GetArrayParameterLength(uint index)
+        {
+            return CallerWrapperGetArrayParameterLength(caller, index);
+        }
+        private T[] GetParameters<T>(CallerParametersGetter<T> getter, uint index) where T : unmanaged
+        {
+            var pointer = getter(caller, index);
+            var result = new T[GetArrayParameterLength(index)];
+            for (int i = 0; i < result.Length; i++) result[i] = pointer[i];
+            FreeArray(pointer);
+            return result;
+        }
+        public bool[] GetBoolsParameter(uint index)
+        {
+            return GetParameters<bool>(CallerWrapperGetBoolArrayParameter, index);
+        }
+        public byte[] GetBytesParameter(uint index)
+        {
+            return GetParameters<byte>(CallerWrapperGetByteArrayParameter, index);
+        }
+        public char[] GetCharsParameter(uint index)
+        {
+            return GetParameters<char>(CallerWrapperGetCharArrayParameter, index);
+        }
+        public long[] GetIntegersParameter(uint index)
+        {
+            return GetParameters<long>(CallerWrapperGetIntegerArrayParameter, index);
+        }
+        public Real[] GetRealsParameter(uint index)
+        {
+            return GetParameters<Real>(CallerWrapperGetRealArrayParameter, index);
+        }
+        public Real2[] GetReal2sParameter(uint index)
+        {
+            return GetParameters<Real2>(CallerWrapperGetReal2ArrayParameter, index);
+        }
+        public Real3[] GetReal3sParameter(uint index)
+        {
+            return GetParameters<Real3>(CallerWrapperGetReal3ArrayParameter, index);
+        }
+        public Real4[] GetReal4sParameter(uint index)
+        {
+            return GetParameters<Real4>(CallerWrapperGetReal4ArrayParameter, index);
+        }
+        public long[] GetEnumValuesParameter(uint index)
+        {
+            return GetParameters<long>(CallerWrapperGetEnumArrayValueParameter, index);
+        }
+        public string[] GetEnumNamesParameter(uint index)
+        {
+            var result = new string[GetArrayParameterLength(index)];
+            var values = CallerWrapperGetEnumArrayNameParameter(caller, index);
+            for (int i = 0; i < result.Length; i++) result[i] = new string(values[i]);
+            FreeArray(values);
+            return result;
+        }
+        public string[] GetStringsParameter(uint index)
+        {
+            var result = new string[GetArrayParameterLength(index)];
+            var values = CallerWrapperGetStringArrayParameter(caller, index);
+            for (int i = 0; i < result.Length; i++) result[i] = new string(values[i]);
+            FreeArray(values);
+            return result;
+        }
+        public ulong[] GetEntitysParameter(uint index)
+        {
+            return GetParameters<ulong>(CallerWrapperGetEntityArrayParameter, index);
+        }
+        public void SetBoolReutnrValue(uint index, bool value)
+        {
+            CallerWrapperSetBoolReturnValue(caller, index, value);
+        }
+        public void SetByteReturnValue(uint index, byte value)
+        {
+            CallerWrapperSetByteReturnValue(caller, index, value);
+        }
+        public void SetCharReturnValue(uint index, char value)
+        {
+            CallerWrapperSetCharReturnValue(caller, index, value);
+        }
+        public void SetIntegerReturnValue(uint index, long value)
+        {
+            CallerWrapperSetIntegerReturnValue(caller, index, value);
+        }
+        public void SetRealReturnValue(uint index, Real value)
+        {
+            CallerWrapperSetRealReturnValue(caller, index, value);
+        }
+        public void SetReal2ReturnValue(uint index, Real2 value)
+        {
+            CallerWrapperSetReal2ReturnValue(caller, index, value);
+        }
+        public void SetReal3ReturnValue(uint index, Real3 value)
+        {
+            CallerWrapperSetReal3ReturnValue(caller, index, value);
+        }
+        public void SetReal4ReturnValue(uint index, Real4 value)
+        {
+            CallerWrapperSetReal4ReturnValue(caller, index, value);
+        }
+        public void SetEnumValueReturnValue(uint index, long value)
+        {
+            CallerWrapperSetEnumValueReturnValue(caller, index, value);
+        }
+        public void SetEnumNameReturnValue(uint index, string value)
+        {
+            fixed (char* pvalue = value) CallerWrapperSetEnumNameReturnValue(caller, index, pvalue);
+        }
+        public void SetStringReturnValue(uint index, string value)
+        {
+            fixed (char* pvalue = value) CallerWrapperSetStringReturnValue(caller, index, pvalue);
+        }
+        public void SetEntityReturnValue(uint index, ulong value)
+        {
+            CallerWrapperSetEntityReturnValue(caller, index, value);
+        }
+        public void SetBoolsReturnValue(uint index, bool[] value)
+        {
+            fixed (bool* pvalue = value) CallerWrapperSetBoolReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetBytesReturnValue(uint index, byte[] value)
+        {
+            fixed (byte* pvalue = value) CallerWrapperSetByteReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetCharsReturnValue(uint index, char[] value)
+        {
+            fixed (char* pvalue = value) CallerWrapperSetCharReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetIntegersReturnValue(uint index, long[] value)
+        {
+            fixed (long* pvalue = value) CallerWrapperSetIntegerReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetRealsReturnValue(uint index, Real[] value)
+        {
+            fixed (Real* pvalue = value) CallerWrapperSetRealReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetReal2sReturnValue(uint index, Real2[] value)
+        {
+            fixed (Real2* pvalue = value) CallerWrapperSetReal2ReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetReal3sReturnValue(uint index, Real3[] value)
+        {
+            fixed (Real3* pvalue = value) CallerWrapperSetReal3ReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetReal4sReturnValue(uint index, Real4[] value)
+        {
+            fixed (Real4* pvalue = value) CallerWrapperSetReal4ReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetEnumValuesReturnValue(uint index, long[] value)
+        {
+            fixed (long* pvalue = value) CallerWrapperSetEnumValueReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetEnumNamesReturnValue(uint index, string[] names)
+        {
+            var values = new char*[names.Length];
+            for (int i = 0; i < names.Length; i++) values[i] = GetEctype(names[i]);
+            fixed (char** pvalues = values) CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)names.Length);
+            for (int i = 0; i < names.Length; i++) FreeMemory(values[i]);
+        }
+        public void SetStringsReturnValue(uint index, string[] value)
+        {
+            var values = new char*[value.Length];
+            for (int i = 0; i < value.Length; i++) values[i] = GetEctype(value[i]);
+            fixed (char** pvalues = values) CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)value.Length);
+            for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
+        }
+        public void SetEntitysReturnValue(uint index, ulong[] value)
+        {
+            fixed (ulong* pvalue = value) CallerWrapperSetEntityReturnValues(caller, index, pvalue, (uint)value.Length);
+        }
+        public void SetException(string message)
+        {
+            fixed (char* pmsg = message) CallerWrapperSetException(caller, pmsg);
+        }
+        //get parameter
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetBoolParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool CallerWrapperGetBoolParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetByteParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static byte CallerWrapperGetByteParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetCharParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char CallerWrapperGetCharParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetIntegerParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long CallerWrapperGetIntegerParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetRealParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real CallerWrapperGetRealParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetReal2Parameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real2 CallerWrapperGetReal2Parameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetReal3Parameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real3 CallerWrapperGetReal3Parameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetReal4Parameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real4 CallerWrapperGetReal4Parameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEnumValueParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long CallerWrapperGetEnumValueParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEnumNameParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* CallerWrapperGetEnumNameParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetStringParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* CallerWrapperGetStringParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEntityParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static ulong CallerWrapperGetEntityParameter(void* caller, uint index);
+        //get parameters
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetArrayParameterLength", CallingConvention = CallingConvention.Cdecl)]
+        private extern static uint CallerWrapperGetArrayParameterLength(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetBoolArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static bool* CallerWrapperGetBoolArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetByteArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static byte* CallerWrapperGetByteArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetCharArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char* CallerWrapperGetCharArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetIntegerArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long* CallerWrapperGetIntegerArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetRealArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real* CallerWrapperGetRealArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetReal2ArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real2* CallerWrapperGetReal2ArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetReal3ArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real3* CallerWrapperGetReal3ArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetReal4ArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static Real4* CallerWrapperGetReal4ArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEnumArrayValueParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static long* CallerWrapperGetEnumArrayValueParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEnumArrayNameParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char** CallerWrapperGetEnumArrayNameParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetStringArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char** CallerWrapperGetStringArrayParameter(void* caller, uint index);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEntityArrayParameter", CallingConvention = CallingConvention.Cdecl)]
+        private extern static ulong* CallerWrapperGetEntityArrayParameter(void* caller, uint index);
+        //set return value
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetBoolReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetBoolReturnValue(void* caller, uint index, bool value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetByteReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetByteReturnValue(void* caller, uint index, byte value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetCharReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetCharReturnValue(void* caller, uint index, char value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetIntegerReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetIntegerReturnValue(void* caller, uint index, long value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetRealReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetRealReturnValue(void* caller, uint index, Real value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal2ReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetReal2ReturnValue(void* caller, uint index, Real2 value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal3ReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetReal3ReturnValue(void* caller, uint index, Real3 value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal4ReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetReal4ReturnValue(void* caller, uint index, Real4 value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEnumValueReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetEnumValueReturnValue(void* caller, uint index, long value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEnumNameReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetEnumNameReturnValue(void* caller, uint index, char* value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetStringReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetStringReturnValue(void* caller, uint index, char* value);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEntityReturnValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetEntityReturnValue(void* caller, uint index, ulong value);
+        //set return values
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetBoolReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetBoolReturnValues(void* caller, uint index, bool* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetByteReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetByteReturnValues(void* caller, uint index, byte* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetCharReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetCharReturnValues(void* caller, uint index, char* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetIntegerReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetIntegerReturnValues(void* caller, uint index, long* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetRealReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetRealReturnValues(void* caller, uint index, Real* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal2ReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetReal2ReturnValues(void* caller, uint index, Real2* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal3ReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetReal3ReturnValues(void* caller, uint index, Real3* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal4ReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetReal4ReturnValues(void* caller, uint index, Real4* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEnumValueReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetEnumValueReturnValues(void* caller, uint index, long* value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEnumNameReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetEnumNameReturnValues(void* caller, uint index, char** value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetStringReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetStringReturnValues(void* caller, uint index, char** value, uint count);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEntityReturnValues", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetEntityReturnValues(void* caller, uint index, ulong* value, uint count);
+
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetException", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void CallerWrapperSetException(void* caller, char* value);
+    }
+    const string RainLanguageDLLName = "RainLanguage.dll";
+
+    [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ClearStaticCache", CallingConvention = CallingConvention.Cdecl)]
+    public extern static void ClearStaticCache();
+
+    [DllImport(RainLanguageDLLName, EntryPoint = "Extern_Build", CallingConvention = CallingConvention.Cdecl)]
+    private extern static void* Build(ExternBuildParameter parameter);
+    private class CodeLoadHelper
+    {
+        private BuildParameter.ICodeFile[] files;
+        private uint index;
+        public CodeLoadHelper(BuildParameter.ICodeFile[] files)
+        {
+            this.files = files;
+            index = 0;
+        }
+        public CodeLoaderResult LoadNext()
+        {
+            if (index < files.Length)
+            {
+                var file = files[index++];
+                fixed (char* ppath = file.Path)
+                fixed (char* pcontent = file.Content)
+                    return new CodeLoaderResult(false, ppath, pcontent);
+            }
+            else return new CodeLoaderResult(true, null, null);
+        }
+    }
+    public static Product BuildProduct(BuildParameter parameter)
+    {
+        fixed (char* name = parameter.name)
+        {
+            return new Product(Build(new ExternBuildParameter(name, parameter.debug,
+                new CodeLoadHelper(parameter.files).LoadNext,
+                libName =>
+                {
+                    var data = parameter.liibraryLoader(NativeString.GetString(libName));
+                    return RainLibrary.Create(data.data, data.size).GetSource();
+                }, parameter.errorLevel)));
+        }
+    }
+    [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CreateKernel", CallingConvention = CallingConvention.Cdecl)]
+    private extern static void* CreateKernel(ExternStartupParameter parameter);
+    public static RainKernel CreateKernel(StartupParameter startupParameter)
+    {
+        var libraries = new void*[startupParameter.libraries.Length];
+        for (int i = 0; i < startupParameter.libraries.Length; i++) libraries[i] = startupParameter.libraries[i].GetSource();
+        fixed (void** plibraries = libraries)
+            return new RainKernel(CreateKernel(new ExternStartupParameter(plibraries, (uint)startupParameter.libraries.Length, startupParameter.seed, startupParameter.stringCapacity, startupParameter.entityCapacity,
+                (kernel, entity) => startupParameter.onReferenceEntity(new RainKernelCopy(kernel), entity),
+                (kernel, entity) => startupParameter.onReleaseEntity(new RainKernelCopy(kernel), entity),
+                libName =>
+                {
+                    var data = startupParameter.libraryLoader(NativeString.GetString(libName));
+                    return RainLibrary.Create(data.data, data.size).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                },
+                (kernel, fullName, parameters, parameterCount) =>
+                {
+                    var rainTypeParameters = new RainType[parameterCount];
+                    for (int i = 0; i < parameterCount; i++) rainTypeParameters[i] = (RainType)parameters[i];
+                    var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), new string(fullName.value), rainTypeParameters);
+                    return (k, c) => onCaller(new RainKernel(k), new RainCaller(c));
+                }, 0x10000, 8, 0x10, 0x100,
+                (kernel, stackFrames, count, msg) =>
+                {
+                    var frames = new RainStackFrame[count];
+                    for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(new string(stackFrames[i].libName.value), new string(stackFrames[i].functionName.value), stackFrames[i].address);
+                    startupParameter.onExceptionExit(new RainKernelCopy(kernel), frames, new string(msg.value));
+                },
+                libName =>
+                {
+                    var data = startupParameter.programDatabaseLoader(NativeString.GetString(libName));
+                    return RainProgramDatabase.Create(data.data, data.size).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                }
+                )));
+    }
+    public delegate void* Alloc(uint size);
+    public delegate void Free(void* pointer);
+    public delegate void* Realloc(void* pointer, uint size);
+    [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SetMemoryAllocator", CallingConvention = CallingConvention.Cdecl)]
+    public extern static void SetMemoryAllocator(Alloc alloc, Free free, Realloc realloc);
+    [DllImport(RainLanguageDLLName, EntryPoint = "Extern_FreeArray", CallingConvention = CallingConvention.Cdecl)]
+    public extern static void FreeArray(void* pointer);
+}
