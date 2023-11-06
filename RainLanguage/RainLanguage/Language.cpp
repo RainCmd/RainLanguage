@@ -59,9 +59,9 @@ void operator delete(void* pointer)
 	Free(pointer);
 }
 
-void SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc _rainRealloc)
+void SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc rainRealloc)
 {
 	_alloc = rainAlloc;
 	_free = rainFree;
-	_realloc = _rainRealloc;
+	_realloc = rainRealloc;
 }

@@ -123,7 +123,7 @@ Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(paramete
 	libraryAgency = new LibraryAgency(this, &parameter);
 	taskAgency = new TaskAgency(this, &parameter);
 	heapAgency = new HeapAgency(this, &parameter);
-	libraryAgency->Init((Library*)parameter.libraries, parameter.libraryCount);
+	libraryAgency->Init((const Library**)parameter.libraries, parameter.libraryCount);
 }
 
 Function FindFunction(Kernel* kernel, RuntimeLibrary* library, RuntimeSpace* space, const character* name, uint32 nameLength, bool allowNoPublic)

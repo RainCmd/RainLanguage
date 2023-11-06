@@ -1950,13 +1950,13 @@ label_next_instruct:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
 			real right = VARIABLE(real, rightValue);
-			if (right)
+			if (right == 0) EXCEPTION_EXIT(REAL_Divide, EXCEPTION_DIVIDE_BY_ZERO)
+			else
 			{
 				uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
 				uint32 leftValue = INSTRUCT_VALUE(uint32, 5);
 				VARIABLE(real, resultValue) = VARIABLE(real, leftValue) / right;
 			}
-			else EXCEPTION_EXIT(REAL_Divide, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, REAL_Divide);
 		}
 		goto label_next_instruct;
@@ -2625,7 +2625,7 @@ void Task::Recycle()
 					new (frames.Add())RainStackFrame(RainString(libraryName.GetPointer(), libraryName.GetLength()), RainString(fullName.GetPointer(), fullName.GetLength()), address - library->codeOffset);
 				}
 			}
-			kernel->taskAgency->onExceptionExit(kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
+			kernel->taskAgency->onExceptionExit(*kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
 		}
 		invoker->task = NULL;
 		invoker = NULL;

@@ -2693,7 +2693,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			}
 			for (uint32 i = 0; i < length; i++)
 			{
-				String error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+				error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
 				if (!error.IsEmpty())
 				{
 					parameter.kernel->taskAgency->Release(invoker);

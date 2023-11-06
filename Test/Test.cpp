@@ -93,44 +93,44 @@ public:
 	}
 };
 
-void Print(RainKernel*, CallerWrapper* caller)
+void Print(RainKernel&, CallerWrapper& caller)
 {
-	const RainString value = caller->GetStringParameter(0);
+	const RainString value = caller.GetStringParameter(0);
 	std::wstring str;
 	str.assign(value.value, value.length);
 	std::wcout << str;// << L"\n";
 }
 
-void Clock(RainKernel*, CallerWrapper* caller)
+void Clock(RainKernel&, CallerWrapper& caller)
 {
-	caller->SetReturnValue(0, (integer)clock());
+	caller.SetReturnValue(0, (integer)clock());
 }
 
-void OpenFile(RainKernel*, CallerWrapper* caller)
+void OpenFile(RainKernel&, CallerWrapper& caller)
 {
-	const RainString value = caller->GetStringParameter(0);
+	const RainString value = caller.GetStringParameter(0);
 	std::wstring path;
 	path.assign(value.value, value.length);
 	std::wfstream* file = new std::wfstream(path);
-	caller->SetEntityReturnValue(0, (uint64)file);
+	caller.SetEntityReturnValue(0, (uint64)file);
 }
-void FileReadLine(RainKernel*, CallerWrapper* caller)
+void FileReadLine(RainKernel&, CallerWrapper& caller)
 {
-	std::wfstream* file = (std::wfstream*)caller->GetEntityParameter(0);
+	std::wfstream* file = (std::wfstream*)caller.GetEntityParameter(0);
 	std::wstring line;
 	bool end = !(bool)std::getline(*file, line);
-	caller->SetReturnValue(0, end);
-	caller->SetReturnValue(1, line.c_str());
+	caller.SetReturnValue(0, end);
+	caller.SetReturnValue(1, line.c_str());
 }
-void CloseFile(RainKernel*, CallerWrapper* caller)
+void CloseFile(RainKernel&, CallerWrapper& caller)
 {
-	std::wfstream* file = (std::wfstream*)caller->GetEntityParameter(0);
+	std::wfstream* file = (std::wfstream*)caller.GetEntityParameter(0);
 	file->close();
 	delete file;
 }
 
 
-OnCaller NativeLoader(RainKernel*, const RainString fullName, const RainType* parameters, uint32 parametersCount)
+OnCaller NativeLoader(RainKernel&, const RainString fullName, const RainType* parameters, uint32 parametersCount)
 {
 	std::wstring str; str.assign(fullName.value, fullName.length);
 	//std::wcout << "\n\nNative Load:" << str << "\n\n";
@@ -165,7 +165,7 @@ void FREE(void* pointer)
 	free(pointer);
 }
 
-void OnExce(RainKernel*, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message)
+void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message)
 {
 	std::wstring str;
 	str.assign(message.value, message.length);
@@ -204,7 +204,8 @@ void TestFunc()
 	}
 	if (!product->GetLevelMessageCount(ErrorLevel::Error))
 	{
-		StartupParameter parameter(product->GetLibrary(), 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
+		const RainLibrary* library = product->GetLibrary();
+		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction rf = kernel->FindFunction(L"Main", true);
 		InvokerWrapper iw = rf.CreateInvoker();

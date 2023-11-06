@@ -39,7 +39,7 @@ typedef const RainLibrary* (*LibraryLoader)(const RainString& name);
 /// </summary>
 /// <param name="library">库</param>
 /// <returns>序列化后的数据</returns>
-RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary* library);
+RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary& library);
 /// <summary>
 /// 反序列化库
 /// </summary>
@@ -65,7 +65,7 @@ typedef const RainProgramDatabase* (*ProgramDatabaseLoader)(const RainString& na
 /// <summary>
 /// 序列化调试数据
 /// </summary>
-RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase* database);
+RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase& database);
 /// <summary>
 /// 反序列化调试数据
 /// </summary>

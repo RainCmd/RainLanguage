@@ -1,4 +1,5 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
+#if !DOTNET
 #include "framework.h"
 
 BOOL APIENTRY DllMain( HMODULE,
@@ -16,4 +17,4 @@ BOOL APIENTRY DllMain( HMODULE,
     }
     return TRUE;
 }
-
+#endif

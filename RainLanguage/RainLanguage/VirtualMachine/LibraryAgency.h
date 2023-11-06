@@ -23,7 +23,7 @@ public:
 	List<uint8, true> code;
 	List<uint8, true> data;
 	LibraryAgency(Kernel* kernel, const StartupParameter* parameter);
-	void Init(const Library* libraries, uint32 count);
+	void Init(const Library** libraries, uint32 count);
 	uint32 GetTypeStackSize(const Type& type);
 	uint32 GetTypeHeapSize(const Declaration& type);
 	uint8 GetTypeAlignment(const Type& type);

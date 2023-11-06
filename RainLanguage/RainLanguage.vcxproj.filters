@@ -348,6 +348,9 @@
     <ClInclude Include="RainLanguage\Compiler\ProgramDatabaseGenerator.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="RainLanguage\ExternC\ExternC.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -624,6 +627,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Compiler\ProgramDatabaseGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\ExternC\ExternC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

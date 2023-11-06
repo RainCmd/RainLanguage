@@ -24,7 +24,7 @@ Entity EntityAgency::Add(uint64 value)
 	slot.value = value;
 	slot.reference = 0;
 	map.Set(value, entity);
-	if (reference) reference(kernel, value);
+	if (reference) reference(*kernel, value);
 	return entity;
 }
 
@@ -46,7 +46,7 @@ void EntityAgency::Release(Entity entity)
 			slot.value = 0;
 			map.Remove(value);
 			frees.Add(entity);
-			if (release) release(kernel, value);
+			if (release) release(*kernel, value);
 		}
 	}
 }
@@ -56,5 +56,5 @@ EntityAgency::~EntityAgency()
 	if (release)
 		for (uint32 i = 1; i < slots.Count(); i++)
 			if (slots[i].value)
-				release(kernel, slots[i].value);
+				release(*kernel, slots[i].value);
 }
