@@ -20,7 +20,7 @@ private:
 		size = GetPrime(size);
 		Free(buckets);
 		buckets = Malloc<uint32>(size);
-		slots = Realloc<Slot>(slots, top);
+		slots = Realloc<Slot>(slots, size);
 		for (uint32 i = 0; i < size; i++)buckets[i] = INVALID;
 		for (uint32 i = 0; i < size; i++)
 		{

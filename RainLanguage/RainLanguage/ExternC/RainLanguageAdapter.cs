@@ -1,5 +1,126 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+
+public enum RainErrorLevel : uint
+{
+    Error,
+    WarringLevel1,
+    WarringLevel2,
+    WarringLevel3,
+    WarringLevel4,
+    LoggerLevel1,
+    LoggerLevel2,
+    LoggerLevel3,
+    LoggerLevel4,
+};
+/// <summary>
+/// 错误信息
+/// </summary>
+public enum MessageType : uint
+{
+    ERROR = RainErrorLevel.Error << 24,
+    ERROR_MISSING_PAIRED_SYMBOL,            //缺少配对的符号
+    ERROR_UNKNOWN_SYMBOL,                   //未知的符号
+    ERROR_INDENT,                           //缩进问题
+    ERROR_INPUT_STRINGL,                    //输入字符串
+    ERROR_INPUT_COMMA_OR_SEMICOLON,         //输入逗号或分号
+    ERROR_UNEXPECTED_LEXCAL,                //意外的词条
+    ERROR_ATTRIBUTE_INVALID,                //属性无效
+    ERROR_MISSING_NAME,                     //缺少名称
+    ERROR_MISSING_TYPE,                     //缺少类型
+    ERROR_UNEXPECTED_LINE_END,              //以外的行尾
+    ERROR_CONSTANT_NOT_ASSIGNMENT,          //常量未赋值
+    ERROR_MISSING_ASSIGNMENT_EXPRESSION,    //缺少赋值表达式
+    ERROR_MISSING_IDENTIFIER,               //缺少标识符
+    ERROR_MISSING_EXPRESSION,               //缺少表达式
+    ERROR_INVALID_IDENTIFIER,               //无效的标识符
+    ERROR_INVALID_VISIBILITY,               //无效的可访问性修饰符
+    ERROR_NOT_VARIABLE_DECLARATION,         //不是变量声明
+    ERROR_INVALID_INITIALIZER,              //无效的初始化
+    ERROR_LIBRARY_LOAD_FAIL,                //程序集加载失败
+    ERROR_RELY_DECLARATION_LOAD_FAIL,       //依赖的声明加载失败
+    ERROR_RELY_DECLARATION_AMBIGUITY,       //依赖的声明不明确
+    ERROR_RELY_DECLARATION_MISMATCHING,     //依赖的声明与实际类型不匹配
+    ERROR_IMPORT_SELF,                      //不能导入正在编译的库
+    ERROR_IMPORT_NAMESPACE_NOT_FOUND,       //导入的命名空间未找到
+    ERROR_DUPLICATE_DECLARATION,            //重复的声明
+    ERROR_RELY_SPACE_EQUIVOCAL,             //依赖空间不明确
+    ERROR_DECLARATION_EQUIVOCAL,            //查找申明不明确
+    ERROR_EXPRESSION_EQUIVOCAL,             //表达式意义不明确
+    ERROR_TYPE_EQUIVOCAL,                   //类型不明确
+    ERROR_DECLARATION_NOT_FOUND,            //申明未找到
+    ERROR_ENUM_ELEMENT_NOT_FOUND,           //枚举元素未找到
+    ERROR_NOT_TYPE_DECLARATION,             //不是类型申明
+    ERROR_NAME_IS_KEY_WORD,                 //名字是关键字
+    ERROR_DUPLICATION_NAME,                 //重名
+    ERROR_NAME_SAME_AS_NAMESPACE,           //与命名空间同名
+    ERROR_INVALID_OVERLOAD,                 //无效的重载
+    ERROR_INVALID_OVERRIDE,                 //无效的重写
+    ERROR_STRUCT_NO_CONSTRUCTOR,            //结构体不允许有构造函数
+    ERROR_STRUCT_CYCLIC_INCLUSION,          //结构体循环包含
+    ERROR_CIRCULAR_INHERITANCE,             //循环继承
+    ERROR_DUPLICATE_INHERITANCE,            //重复继承
+    ERROR_INTERFACE_NOT_IMPLEMENTED,        //接口未实现
+    ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT,       //实现的接口函数返回值类型不一致
+    ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT,          //重写的父类函数返回值类型不一致
+    ERROR_TASK_RETURN_TYPES_INCONSISTENT,                   //任务函数返回值类型不一致
+    ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT,                //委托参数类型不一致
+    ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT,                   //委托返回值类型不一致
+    ERROR_INVALID_OPERATOR,                 //无效的操作
+    ERROR_TYPE_MISMATCH,                    //类型不匹配
+    ERROR_NOT_HANDLE_TYPE,                  //不是句柄类型
+    ERROR_NOT_DELEGATE_TYPE,                //不是委托类型
+    ERROR_WRONG_NUMBER_OF_INDICES,          //索引数错误
+    ERROR_NOT_MEMBER_METHOD,                //不在成员函数中
+    ERROR_METHOD_NOT_FOUND,                 //函数未找到
+    ERROR_OPERATOR_NOT_FOUND,               //操作未找到
+    ERROR_CONSTRUCTOR_NOT_FOUND,            //构造函数未找到
+    ERROR_NUMBER_OF_PARAMETERS,             //参数数量错误
+    ERROR_DESTRUCTOR_ALLOC,                 //析构函数中申请托管内存
+    ERROR_TUPLE_INDEX_NOT_CONSTANT,         //元组索引不是常量
+    ERROR_INDEX_OUT_OF_RANGE,               //索引越界
+    ERROR_EXPRESSION_NOT_VALUE,             //表达式不是个值
+    ERROR_TYPE_CANNOT_BE_NULL,              //类型不可为空
+    ERROR_EXPRESSION_UNASSIGNABLE,          //表达式不可赋值
+    ERROR_DIVISION_BY_ZERO,                 //除零
+    ERROR_GENERATOR_CONSTANT_EVALUATION_FAIL,                   //常量值计算失败
+    ERROR_UNSUPPORTED_CONSTANT_TYPES,       //不支持的常量类型
+    ERROR_CONSTRUCTOR_CALL_ITSELF,          //构造函数调用自身
+    ERROR_MISSING_RETURN,                   //缺少返回值
+    ERROR_TYPE_NUMBER_ERROR,                //类型数量错误
+    ERROR_ONLY_BE_USED_IN_LOOP,             //只能在循环中使用
+    ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,               //不在循环中
+    ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,               //不支持用本地函数创建任务
+    ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,                       //不支持的特殊函数
+
+    WARRING_LEVEL1 = RainErrorLevel.WarringLevel1 << 24,
+    WARRING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
+    WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,   //析构函数属性将被丢弃
+    WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,   //析构函数的可访问性修饰会被忽略
+
+    WARRING_LEVEL2 = RainErrorLevel.WarringLevel2 << 24,
+
+    WARRING_LEVEL3 = RainErrorLevel.WarringLevel3 << 24,
+
+    WARRING_LEVEL4 = RainErrorLevel.WarringLevel4 << 24,
+
+    LOGGER_LEVEL1 = RainErrorLevel.LoggerLevel1 << 24,
+    LOGGER_LEVEL1_DISCARD_ATTRIBUTE,        //被丢弃的属性
+    LOGGER_LEVEL1_REPEATED_ATTRIBUTE,       //重复的属性
+
+    LOGGER_LEVEL2 = RainErrorLevel.LoggerLevel2 << 24,
+
+    LOGGER_LEVEL3 = RainErrorLevel.LoggerLevel3 << 24,
+
+    LOGGER_LEVEL4 = RainErrorLevel.LoggerLevel4 << 24,
+    LOGGER_LEVEL4_MISSING_VISIBILITY,       //可访问性修饰缺失，将使用默认可访问性修饰
+    LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION,            //未处理的核心特殊函数
+    LOGGER_LEVEL4_DISCARDED_EXPRESSION,     //丢弃的表达式
+    LOGGER_LEVEL4_INACCESSIBLE_STATEMENT,   //无法访问的语句
+
+    INVALID = 0xFFFFFFFF
+}
 
 public enum RainType
 {
@@ -67,7 +188,7 @@ public unsafe struct Data
         this.size = size;
     }
 }
-public delegate Data DataLoader(string name);
+public delegate byte[] DataLoader(string name);
 public struct BuildParameter
 {
     public interface ICodeFile
@@ -77,24 +198,32 @@ public struct BuildParameter
     }
     public string name;
     public bool debug;
-    public ICodeFile[] files;
+    public IList<ICodeFile> files;
     public DataLoader liibraryLoader;
-    public uint errorLevel;
+    public RainErrorLevel errorLevel;
+    public BuildParameter(string name, bool debug, IList<ICodeFile> files, DataLoader liibraryLoader, RainErrorLevel errorLevel)
+    {
+        this.name = name;
+        this.debug = debug;
+        this.files = files;
+        this.liibraryLoader = liibraryLoader;
+        this.errorLevel = errorLevel;
+    }
 }
 public struct ErrorMessageDetail
 {
-    uint messageType;
-    uint line;
-    uint start;
-    uint length;
+    public MessageType messageType;
+    public uint line;
+    public uint start;
+    public uint length;
 }
 public struct KernelState
 {
-    uint taskCount;
-    uint stringCount;
-    uint entityCount;
-    uint handleCount;
-    uint heapSize;
+    public uint taskCount;
+    public uint stringCount;
+    public uint entityCount;
+    public uint handleCount;
+    public uint heapSize;
 }
 public struct RainStackFrame
 {
@@ -127,7 +256,8 @@ public struct StartupParameter
 public struct Real
 {
 #if FIXED_REAL
-    private readonly long value;
+    public readonly long value;
+    public Real(long value) { this.value = value; }
     public Real(double value) { this.value = (long)(value * ratio); }
     const long ratio = 0x10000;
     public static implicit operator double(Real value)
@@ -150,6 +280,7 @@ public struct Real3 { public Real x, y, z; }
 public struct Real4 { public Real x, y, z, w; }
 public unsafe class RainLanguageAdapter
 {
+    private const string RainLanguageDLLName = "RainLanguage.dll";
     private static T* AllocMemory<T>(int size) where T : unmanaged
     {
         return (T*)Marshal.AllocHGlobal(size * sizeof(T));
@@ -201,11 +332,11 @@ public unsafe class RainLanguageAdapter
     {
         private void* product;
         public Product(void* product) { this.product = product; }
-        public uint ErrorLevel { get { return ProductGetErrorLevel(product); } }
-        public uint GetErrorCount(uint level) { return ProductGetErrorCount(product, level); }
-        public ErrorMessage GetErrorMessage(uint level, uint index) { return new ErrorMessage(ProductGetError(product, level, index)); }
-        public RainLibrary GetLibrary() { return new RainLibrary(ProductGetLibrary(product)); }
-        public RainProgramDatabase GetProgramDatabase() { return new RainProgramDatabase(ProductGetRainProgramDatabase(product)); }
+        public RainErrorLevel ErrorLevel { get { return (RainErrorLevel)ProductGetErrorLevel(product); } }
+        public uint GetErrorCount(RainErrorLevel level) { return ProductGetErrorCount(product, (uint)level); }
+        public ErrorMessage GetErrorMessage(RainErrorLevel level, uint index) { return new ErrorMessage(ProductGetError(product, (uint)level, index)); }
+        public RainLibrary GetLibrary() { return new RainLibraryCopy(ProductGetLibrary(product)); }
+        public RainProgramDatabase GetProgramDatabase() { return new RainProgramDatabaseCopy(ProductGetRainProgramDatabase(product)); }
         public void Dispose()
         {
             if (product == null) return;
@@ -284,7 +415,7 @@ public unsafe class RainLanguageAdapter
             return new RainBuffer(SerializeRainLibrary(library));
         }
         internal void* GetSource() { return library; }
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (library == null) return;
             DeleteRainLibrary(library);
@@ -302,6 +433,11 @@ public unsafe class RainLanguageAdapter
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainLibrary", CallingConvention = CallingConvention.Cdecl)]
         private extern static void DeleteRainLibrary(void* library);
     }
+    private class RainLibraryCopy : RainLibrary
+    {
+        public RainLibraryCopy(void* library) : base(library) { }
+        public override void Dispose() { }
+    }
     public class RainProgramDatabase : IDisposable
     {
         private void* database;
@@ -314,7 +450,7 @@ public unsafe class RainLanguageAdapter
             return new RainBuffer(SerializeRainProgramDatabase(database));
         }
         public void* GetSource() { return database; }
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (database == null) return;
             DeleteRainProgramDatabase(database);
@@ -331,6 +467,11 @@ public unsafe class RainLanguageAdapter
         private extern static void* DeserializeRainProgramDatabase(void* data, uint length);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
         private extern static void DeleteRainProgramDatabase(void* database);
+    }
+    private class RainProgramDatabaseCopy : RainProgramDatabase
+    {
+        public RainProgramDatabaseCopy(void* database) : base(database) { }
+        public override void Dispose() { }
     }
     private struct ExternNativeString
     {
@@ -495,7 +636,7 @@ public unsafe class RainLanguageAdapter
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteKernel", CallingConvention = CallingConvention.Cdecl)]
         private extern static void DeleteKernel(void* kernel);
     }
-    public class RainKernelCopy : RainKernel
+    private class RainKernelCopy : RainKernel
     {
         public RainKernelCopy(void* kernel) : base(kernel) { }
         public override void Dispose() { }
@@ -764,7 +905,7 @@ public unsafe class RainLanguageAdapter
         {
             InvokerWapperSetCharParameter(invoker, index, value);
         }
-        public void SetIntegerParameter(uint index, int value)
+        public void SetIntegerParameter(uint index, long value)
         {
             InvokerWapperSetIntegerParameter(invoker, index, value);
         }
@@ -1327,7 +1468,6 @@ public unsafe class RainLanguageAdapter
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetException", CallingConvention = CallingConvention.Cdecl)]
         private extern static void CallerWrapperSetException(void* caller, char* value);
     }
-    const string RainLanguageDLLName = "RainLanguage.dll";
 
     [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ClearStaticCache", CallingConvention = CallingConvention.Cdecl)]
     public extern static void ClearStaticCache();
@@ -1336,16 +1476,16 @@ public unsafe class RainLanguageAdapter
     private extern static void* Build(ExternBuildParameter parameter);
     private class CodeLoadHelper
     {
-        private BuildParameter.ICodeFile[] files;
-        private uint index;
-        public CodeLoadHelper(BuildParameter.ICodeFile[] files)
+        private IList<BuildParameter.ICodeFile> files;
+        private int index;
+        public CodeLoadHelper(IList<BuildParameter.ICodeFile> files)
         {
             this.files = files;
             index = 0;
         }
         public CodeLoaderResult LoadNext()
         {
-            if (index < files.Length)
+            if (index < files.Count)
             {
                 var file = files[index++];
                 fixed (char* ppath = file.Path)
@@ -1364,8 +1504,9 @@ public unsafe class RainLanguageAdapter
                 libName =>
                 {
                     var data = parameter.liibraryLoader(NativeString.GetString(libName));
-                    return RainLibrary.Create(data.data, data.size).GetSource();
-                }, parameter.errorLevel)));
+                    fixed (byte* pdata = data)
+                        return RainLibrary.Create(pdata, (uint)data.Length).GetSource();
+                }, (uint)parameter.errorLevel)));
         }
     }
     [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CreateKernel", CallingConvention = CallingConvention.Cdecl)]
@@ -1381,7 +1522,8 @@ public unsafe class RainLanguageAdapter
                 libName =>
                 {
                     var data = startupParameter.libraryLoader(NativeString.GetString(libName));
-                    return RainLibrary.Create(data.data, data.size).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                    fixed (byte* pdata = data)
+                        return RainLibrary.Create(pdata, (uint)data.Length).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
                 },
                 (kernel, fullName, parameters, parameterCount) =>
                 {
@@ -1399,7 +1541,8 @@ public unsafe class RainLanguageAdapter
                 libName =>
                 {
                     var data = startupParameter.programDatabaseLoader(NativeString.GetString(libName));
-                    return RainProgramDatabase.Create(data.data, data.size).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                    fixed (byte* pdata = data)
+                        return RainProgramDatabase.Create(pdata, (uint)data.Length).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
                 }
                 )));
     }
