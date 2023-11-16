@@ -383,7 +383,7 @@ public unsafe class RainLanguageAdapter
         {
             get
             {
-                using (var str = new NativeString(Extern_RainErrorMessageGetPath(msg)))
+                using (var str = new NativeString(RainErrorMessageGetPath(msg)))
                     return str.Value;
             }
         }
@@ -409,8 +409,8 @@ public unsafe class RainLanguageAdapter
             msg = null;
         }
         ~ErrorMessage() { Dispose(); }
-        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainErrorMessage", CallingConvention = CallingConvention.Cdecl)]
-        private extern static void* Extern_RainErrorMessageGetPath(void* msg);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetPath", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* RainErrorMessageGetPath(void* msg);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetDetail", CallingConvention = CallingConvention.Cdecl)]
         private extern static ErrorMessageDetail RainErrorMessageGetDetail(void* msg);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetExtraMessage", CallingConvention = CallingConvention.Cdecl)]
