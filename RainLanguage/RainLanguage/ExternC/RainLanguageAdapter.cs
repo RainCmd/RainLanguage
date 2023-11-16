@@ -252,7 +252,22 @@ public struct StartupParameter
     public CallerLoader callerLoader;
     public ExceptionExit onExceptionExit;
     public DataLoader programDatabaseLoader;
+
+    public StartupParameter(RainLanguageAdapter.RainLibrary[] libraries, long seed, uint stringCapacity, uint entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, DataLoader libraryLoader, CallerLoader callerLoader, ExceptionExit onExceptionExit, DataLoader programDatabaseLoader)
+    {
+        this.libraries = libraries;
+        this.seed = seed;
+        this.stringCapacity = stringCapacity;
+        this.entityCapacity = entityCapacity;
+        this.onReferenceEntity = onReferenceEntity;
+        this.onReleaseEntity = onReleaseEntity;
+        this.libraryLoader = libraryLoader;
+        this.callerLoader = callerLoader;
+        this.onExceptionExit = onExceptionExit;
+        this.programDatabaseLoader = programDatabaseLoader;
+    }
 }
+[Serializable]
 public struct Real
 {
 #if FIXED_REAL
@@ -280,7 +295,7 @@ public struct Real3 { public Real x, y, z; }
 public struct Real4 { public Real x, y, z, w; }
 public unsafe class RainLanguageAdapter
 {
-    private const string RainLanguageDLLName = "RainLanguage.dll";
+    private const string RainLanguageDLLName = "RainLanguage";
     private static T* AllocMemory<T>(int size) where T : unmanaged
     {
         return (T*)Marshal.AllocHGlobal(size * sizeof(T));
@@ -422,9 +437,9 @@ public unsafe class RainLanguageAdapter
             library = null;
         }
         ~RainLibrary() { Dispose(); }
-        public static RainLibrary Create(byte* data, uint length)
+        public static RainLibrary Create(byte[] data)
         {
-            return new RainLibrary(DeserializeRainLibrary(data, length));
+            fixed (byte* pdata = data) return new RainLibrary(DeserializeRainLibrary(pdata, (uint)data.Length));
         }
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
         private extern static void* SerializeRainLibrary(void* library);
@@ -457,9 +472,9 @@ public unsafe class RainLanguageAdapter
             database = null;
         }
         ~RainProgramDatabase() { Dispose(); }
-        public static RainProgramDatabase Create(byte* data, uint length)
+        public static RainProgramDatabase Create(byte[] data)
         {
-            return new RainProgramDatabase(DeserializeRainProgramDatabase(data, length));
+            fixed (byte* pdata = data) return new RainProgramDatabase(DeserializeRainProgramDatabase(pdata, (uint)data.Length));
         }
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
         private extern static void* SerializeRainProgramDatabase(void* database);
@@ -590,7 +605,7 @@ public unsafe class RainLanguageAdapter
             this.kernel = kernel;
         }
         public KernelState State { get { return KernelGetState(kernel); } }
-        public RainFunction FindFunction(string name, bool allowNoPublic)
+        public RainFunction FindFunction(string name, bool allowNoPublic = false)
         {
             fixed (char* pointer = name)
             {
@@ -599,7 +614,7 @@ public unsafe class RainLanguageAdapter
                 return new RainFunction(function);
             }
         }
-        public RainFunctions FindFunctions(string name, bool allowNoPublic)
+        public RainFunctions FindFunctions(string name, bool allowNoPublic = false)
         {
             fixed (char* pointer = name)
             {
@@ -1504,8 +1519,7 @@ public unsafe class RainLanguageAdapter
                 libName =>
                 {
                     var data = parameter.liibraryLoader(NativeString.GetString(libName));
-                    fixed (byte* pdata = data)
-                        return RainLibrary.Create(pdata, (uint)data.Length).GetSource();
+                    return RainLibrary.Create(data).GetSource();
                 }, (uint)parameter.errorLevel)));
         }
     }
@@ -1522,8 +1536,7 @@ public unsafe class RainLanguageAdapter
                 libName =>
                 {
                     var data = startupParameter.libraryLoader(NativeString.GetString(libName));
-                    fixed (byte* pdata = data)
-                        return RainLibrary.Create(pdata, (uint)data.Length).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                    return RainLibrary.Create(data).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
                 },
                 (kernel, fullName, parameters, parameterCount) =>
                 {
@@ -1541,8 +1554,7 @@ public unsafe class RainLanguageAdapter
                 libName =>
                 {
                     var data = startupParameter.programDatabaseLoader(NativeString.GetString(libName));
-                    fixed (byte* pdata = data)
-                        return RainProgramDatabase.Create(pdata, (uint)data.Length).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                    return RainProgramDatabase.Create(data).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
                 }
                 )));
     }
