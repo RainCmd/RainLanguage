@@ -1,7 +1,4 @@
-﻿// Test.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
-
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <locale>
 #include <codecvt>
@@ -10,86 +7,68 @@
 #include <VirtualMachine.h>
 #include <MemoryAllocator.h>
 #include <map>
+#include <vector>
 #include <thread>
 #include <time.h>
 #include <fstream>
 
-class TestCodeLoader :public CodeLoader
+using namespace std;
+
+class TestCodeLoader : public CodeLoader
 {
-	std::wstring dir;
-	std::wstring path;
-	std::wstring content;
-	char* buffer;
-	uint32 count, size;
-	intptr_t hFind;
-	_wfinddata_t data;
-	bool first;
-	void Read()
+	vector<wstring> files;
+	wstring path;
+	wstring content;
+	bool EndWith(wstring src, wstring suffix)
 	{
-		path.assign(dir);
-		path.append(data.name);
-		if (size < data.size)
+		if (src.size() < suffix.size()) return false;
+		size_t d = src.size() - suffix.size();
+		for (size_t i = 0; i < suffix.size(); i++)
+			if (src.at(i + d) != suffix.at(i))
+				return false;
+		return true;
+	}
+	void LoadFiles(wstring dir) {
+		_wfinddata_t data;
+		wstring tmp;
+		intptr_t handle = _wfindfirst(tmp.assign(dir).append(L"*").c_str(), &data);
+		if (handle != -1)
 		{
-			size = data.size;
-			buffer = buffer ? (char*)realloc(buffer, size) : (char*)malloc(size);
+			do {
+				wstring path = data.name;
+				if (EndWith(path, L".")) continue;
+				path = tmp.assign(dir).append(path);
+				if (data.attrib & _A_SUBDIR)
+					LoadFiles(path.append(L"\\"));
+				else if (EndWith(path, L".rain"))
+					files.push_back(path);
+			} while (_wfindnext(handle, &data) == 0);
 		}
-		FILE* file = 0;
-		_wfopen_s(&file, path.c_str(), L"r");
-		if (file)
-		{
-			count = fread(buffer, 1, data.size, file);
-			buffer[count] = '\0';
-			std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
-			content = cvt.from_bytes(buffer);
-			fclose(file);
-		}
+		_findclose(handle);
 	}
 public:
-	TestCodeLoader(const character* path)
-	{
-		dir.assign(path);
-		//std::wcout.imbue(std::locale("", LC_CTYPE));
-		std::wstring p; p.assign(dir); p.append(L"\\*.rain");
-		this->path = std::wstring();
-		buffer = nullptr;
-		count = size = 0;
-		hFind = _wfindfirst(p.c_str(), &data);
-		first = true;
+	TestCodeLoader(wstring dir) {
+		LoadFiles(dir);
 	}
-	bool LoadNext()
-	{
-		if (first)
-		{
-			if (hFind != -1)
-			{
-				Read();
-				first = false;
-				return true;
-			}
-		}
-		else if (!_wfindnext(hFind, &data))
-		{
-			Read();
-			return true;
-		}
-		return false;
+	bool LoadNext() {
+		if (files.empty()) return false;
+		path = files.back();
+		files.pop_back();
+		return true;
 	}
-	const RainString CurrentPath()
-	{
+	const RainString CurrentPath() {
 		return RainString(path.c_str(), path.length());
 	}
-	const RainString CurrentContent()
-	{
-		return RainString(content.c_str(), content.length());
-	}
-	~TestCodeLoader()
-	{
-		_findclose(hFind);
-		if (buffer != nullptr)
+	const RainString CurrentContent() {
+		wfstream file(path);
+		content.clear();
+		wstring line;
+		while (getline(file, line))
 		{
-			free(buffer);
-			buffer = nullptr;
+			content.append(line);
+			content.append(1, L'\n');
 		}
+		return RainString(content.c_str(), content.length());
 	}
 };
 
@@ -142,29 +121,37 @@ OnCaller NativeLoader(RainKernel&, const RainString fullName, const RainType* pa
 	return nullptr;
 }
 
-std::map<long long, uint32> mmap;
-uint32 midx = 0;
+std::map<long long, int> mmap;
+int midx = 0;
 void* ALLOC(uint32 size)
 {
 	void* result = malloc((size_t)size);
 	midx++;
 	mmap[(long long)result] = midx;
+	//std::cout << "A" << midx << std::endl;
 	return result;
 }
 void* REALLOC(void* pointer, uint32 size)
 {
+	//std::cout << "R" << -mmap[(long long)pointer] << std::endl;
 	mmap[(long long)pointer] = -1;
 	void* result = realloc(pointer, (size_t)size);
 	midx++;
 	mmap[(long long)result] = midx;
+	//std::cout << "R" << midx << std::endl;
 	return result;
 }
 void FREE(void* pointer)
 {
+	//std::cout << "F" << -mmap[(long long)pointer] << std::endl;
 	mmap[(long long)pointer] = -1;
 	free(pointer);
 }
 
+const RainLibrary* OnLibraryLoader(const RainString& libName)
+{
+	return nullptr;
+}
 void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message)
 {
 	std::wstring str;
@@ -183,8 +170,9 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 void TestFunc()
 {
 
-	TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\TestScripts\\");
-	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, nullptr, ErrorLevel::WarringLevel4);
+	//TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\TestScripts\\");
+	TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
+	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);
 	for (uint32 i = 0; i <= 8; i++)
 	{
@@ -207,14 +195,14 @@ void TestFunc()
 		const RainLibrary* library = product->GetLibrary();
 		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
 		RainKernel* kernel = CreateKernel(parameter);
-		RainFunction rf = kernel->FindFunction(L"Main", true);
+		/*RainFunction rf = kernel->FindFunction(L"Main", true);
 		InvokerWrapper iw = rf.CreateInvoker();
 		iw.Start(true, false);
 		while (kernel->GetState().taskCount)
 		{
 			kernel->Update();
 			std::this_thread::sleep_for(std::chrono::seconds(1));
-		}
+		}*/
 		delete kernel;
 	}
 	delete product;
@@ -233,6 +221,6 @@ int main()
 	std::cout << "申请的内存总数：" << midx << "\n";
 	std::cout << "未释放的内存索引列表:\n";
 	for (auto it = mmap.begin(); it != mmap.end(); it++)
-		if (it->second < 0)
+		if (it->second >= 0)
 			std::cout << it->second << "\n";
 }
