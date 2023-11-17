@@ -240,3 +240,15 @@ public:
 		return result;
 	}
 };
+
+template<typename T>
+struct PointerList : public List<T*, true>
+{
+	explicit PointerList(uint32 capacity) : List<T*, true>(capacity) {}
+	PointerList(const List<T*, true>& other) : List<T*, true>(other) {}
+	PointerList(List<T*, true>&& other) noexcept : List<T*, true>(other) {}
+	~PointerList()
+	{
+		for (uint32 i = 0; i < this->Count(); i++) delete (*this)[i];
+	}
+};

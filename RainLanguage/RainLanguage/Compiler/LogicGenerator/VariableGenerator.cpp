@@ -92,8 +92,7 @@ void ClearTemporary(DeclarationManager* manager, Generator* generator, uint32 ad
 				for (uint32 i = 0; i < variables.Count(); i++)
 					ClearTemporary(manager, generator, address, offset + variables[i]->address, reference, variables[i]->type);
 			}
-			break;
-		case TypeCode::Enum: break;
+		case TypeCode::Enum: return;
 		case TypeCode::Handle:
 		case TypeCode::Interface:
 		case TypeCode::Delegate:
@@ -156,8 +155,8 @@ void VariableGenerator::ResetTemporary(DeclarationManager* manager, Generator* g
 		generator->BeginInsert(address);
 		for (uint32 i = 0; i < statementTemporaries.Count(); i++)
 			ClearTemporary(manager, generator, address, 0, statementTemporaries[i]->reference, statementTemporaries[i]->type);
-		finallyAddress->SetAddress(generator, generator->GetPointer());
 		generator->EndInsert();
+		finallyAddress->SetAddress(generator, generator->GetPointer());
 		for (uint32 i = 0; i < statementTemporaries.Count(); i++)
 			::ResetTemporary(manager, generator, 0, statementTemporaries[i]->reference, statementTemporaries[i]->type);
 	}

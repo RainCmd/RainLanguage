@@ -805,7 +805,9 @@ label_next_instruct:
 						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
 						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
 						ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo.target), "无效的装箱对象");
-						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(kernel->heapAgency->GetType(delegateInfo.target));
+						Type targetType = kernel->heapAgency->GetType(delegateInfo.target);
+						if (targetType.code == TypeCode::Enum) targetType = TYPE_Enum;
+						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(targetType);
 						uint8* address = stack + top + parameterStart;
 						if (EnsureStackSize(top + parameterStart + info->size + parameterSize)) EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_STACK_OVERFLOW);
 						Mcopy<uint8>(kernel->heapAgency->GetPoint(delegateInfo.target), address, info->size);
@@ -1066,6 +1068,7 @@ label_next_instruct:
 						Type type;
 						if (kernel->heapAgency->TryGetType(delegateInfo.target, type))
 						{
+							if (type.code == TypeCode::Enum) type = TYPE_Enum;
 							const RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
 							top -= MemoryAlignment(info->size, MEMORY_ALIGNMENT_MAX);
 							bottom = top;
@@ -2366,6 +2369,7 @@ label_next_instruct:
 					}
 					else
 					{
+						if (type.code == TypeCode::Enum) type = TYPE_Enum;
 						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(type);
 						for (uint32 i = 0; i < count; i++)
 						{

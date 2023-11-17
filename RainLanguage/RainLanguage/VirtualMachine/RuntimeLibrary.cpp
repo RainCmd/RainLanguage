@@ -772,8 +772,11 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 		{
 			RuntimeStruct* runtimeStruct = &structs[indices[x]];
 			for (uint32 y = 0; y < runtimeStruct->variables.Count(); y++)
-				if (runtimeStruct->variables[y].type.library == index && indices.IndexOf(runtimeStruct->variables[y].type.index) != INVALID)
+			{
+				Type type = runtimeStruct->variables[y].type;
+				if (type.library == index && type.code == TypeCode::Struct && indices.IndexOf(type.index) != INVALID)
 					goto next_struct;
+			}
 			runtimeStruct->ColletcGCFields(kernel);
 			indices.RemoveAtSwap(x--);
 		next_struct:;

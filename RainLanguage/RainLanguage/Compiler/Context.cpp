@@ -112,8 +112,11 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 
 bool Context::TryFindSpace(DeclarationManager* manager, const Anchor& name, AbstractSpace*& result)
 {
-	if (compilingSpace->abstract->children.TryGet(name.content, result)) return true;
-	List<AbstractSpace*, true>spaces = List<AbstractSpace*, true>(0);
+	CompilingSpace* index = compilingSpace;
+	while (index)
+		if (index->abstract->children.TryGet(name.content, result)) return true;
+		else index = index->parent;
+	List<AbstractSpace*, true> spaces = List<AbstractSpace*, true>(0);
 	for (uint32 i = 0; i < relies->Count(); i++)
 		if ((*relies)[i]->children.TryGet(name.content, result))
 			spaces.Add(result);

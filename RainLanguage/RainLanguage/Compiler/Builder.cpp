@@ -178,27 +178,27 @@ RainProduct* Build(const BuildParameter& parameter)
 	MessageCollector* messages = new MessageCollector(parameter.messageLevel);
 
 	DeclarationManager manager = DeclarationManager(parameter.libraryLoader, &stringAgency, messages, stringAgency.Add(parameter.name.value, parameter.name.length));
-	List<List<AbstractSpace*, true>*, true> relySpaceCollector(0);
+	PointerList<List<AbstractSpace*, true>> relySpaceCollector(0);
 
-	List<FileSpace> fileSpaces = List<FileSpace>(0);
+	PointerList<FileSpace> fileSpaces = PointerList<FileSpace>(0);
 	while (parameter.codeLoader->LoadNext())
 	{
 		RainString path = parameter.codeLoader->CurrentPath();
 		RainString content = parameter.codeLoader->CurrentContent();
 		LineReader lineReader(&stringAgency, stringAgency.Add(path.value, path.length), content.value, content.length);
 		ParseParameter parseParameter = ParseParameter(&lineReader, messages);
-		new (fileSpaces.Add())FileSpace(&manager.compilingLibrary, INVALID, &parseParameter);
+		fileSpaces.Add(new FileSpace(&manager.compilingLibrary, INVALID, &parseParameter));
 	}
 	COMPILE_TERMINATION_CHECK;
 
 	for (uint32 i = 0; i < fileSpaces.Count(); i++)
-		fileSpaces[i].Tidy(&manager);
+		fileSpaces[i]->Tidy(&manager);
 	COMPILE_TERMINATION_CHECK;
 
 	manager.selfLibaray = new AbstractLibrary(&manager.compilingLibrary, AbstractParameter(&stringAgency, &manager, messages));
 
 	for (uint32 i = 0; i < fileSpaces.Count(); i++)
-		fileSpaces[i].Link(&manager, &relySpaceCollector);
+		fileSpaces[i]->Link(&manager, &relySpaceCollector);
 	COMPILE_TERMINATION_CHECK;
 
 	DeclarationValidityCheck(&manager);

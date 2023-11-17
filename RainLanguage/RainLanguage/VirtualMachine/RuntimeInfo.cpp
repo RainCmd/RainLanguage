@@ -47,7 +47,7 @@ void GCFieldInfo::ColletcGCFields(Kernel* kernel, const List<RuntimeMemberVariab
 		if (IsHandleType(variable->type)) handleFields.Add(variable->address);
 		else if (variable->type == TYPE_String) stringFields.Add(variable->address);
 		else if (variable->type == TYPE_Entity) entityFields.Add(variable->address);
-		else
+		else if (variable->type.code == TypeCode::Struct)
 		{
 			RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(variable->type);
 			for (uint32 y = 0; y < runtimeStruct->handleFields.Count(); y++)
