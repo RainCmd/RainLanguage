@@ -342,56 +342,56 @@ bool* Extern_InvokerWapperGetBoolArrayReturnValue(InvokerWrapper* invoker, uint3
 
 uint8* Extern_InvokerWapperGetByteArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	uint8* result;
+	uint8* result = Malloc<uint8>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetByteArrayReturnValue(index, result);
 	return result;
 }
 
 character* Extern_InvokerWapperGetCharArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	character* result;
+	character* result = Malloc<character>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetCharArrayReturnValue(index, result);
 	return result;
 }
 
 integer* Extern_InvokerWapperGetIntegerArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	integer* result;
+	integer* result = Malloc<integer>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetIntegerArrayReturnValue(index, result);
 	return result;
 }
 
 Extern_Real* Extern_InvokerWapperGetRealArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	real* result;
+	real* result = Malloc<real>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetRealArrayReturnValue(index, result);
 	return(Extern_Real*)result;
 }
 
 Extern_Real2* Extern_InvokerWapperGetReal2ArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	Real2* result;
+	Real2* result = Malloc<Real2>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetReal2ArrayReturnValue(index, result);
 	return (Extern_Real2*)result;
 }
 
 Extern_Real3* Extern_InvokerWapperGetReal3ArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	Real3* result;
+	Real3* result = Malloc<Real3>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetReal3ArrayReturnValue(index, result);
 	return (Extern_Real3*)result;
 }
 
 Extern_Real4* Extern_InvokerWapperGetReal4ArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	Real4* result;
+	Real4* result = Malloc<Real4>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetReal4ArrayReturnValue(index, result);
 	return (Extern_Real4*)result;
 }
 
 integer* Extern_InvokerWapperGetEnumValueArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	integer* result;
+	integer* result = Malloc<integer>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetEnumValueArrayReturnValue(index, result);
 	return result;
 }
@@ -420,7 +420,7 @@ const character** Extern_InvokerWapperGetStringArrayReturnValue(InvokerWrapper* 
 
 uint64* Extern_InvokerWapperGetEntityArrayReturnValue(InvokerWrapper* invoker, uint32 index)
 {
-	uint64* result;
+	uint64* result = Malloc<uint64>(invoker->GetArrayReturnValueLength(index));
 	invoker->GetEntityArrayReturnValue(index, result);
 	return result;
 }
