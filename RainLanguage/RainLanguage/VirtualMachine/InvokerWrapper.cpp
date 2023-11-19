@@ -35,7 +35,7 @@ InvokerWrapper::~InvokerWrapper()
 	else if (invoker && INVOKER->instanceID == instanceID)
 	{
 		INVOKER->hold--;
-		if (!INVOKER->hold) delete invoker;
+		if (!INVOKER->hold) delete INVOKER;
 	}
 }
 
