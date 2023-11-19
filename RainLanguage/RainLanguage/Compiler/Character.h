@@ -50,13 +50,12 @@ inline bool IsHexadecimal(character value)
 }
 inline bool IsLetter(character value)
 {
-	if (value == '_')return true;
+	if (value == '_' || value > 128) return true;
 	value |= 0x20;
 	return value >= 'a' && value <= 'z';
 }
 inline bool IsLetterOrNumber(character value)
 {
-	if (IsDigit(value))return true;
-	value |= 0x20;
-	return value >= 'a' && value <= 'z';
+	if (IsNumber(value)) return true;
+	return IsLetter(value);
 }
