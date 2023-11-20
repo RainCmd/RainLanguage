@@ -2173,7 +2173,7 @@ String task_Start(KernelInvokerParameter parameter)//task.(bool, bool)
 	return String();
 }
 
-String task_Abort(KernelInvokerParameter parameter)//task.()
+String task_Abort(KernelInvokerParameter parameter)//task.(string)
 {
 	GET_THIS_VALUE(0, uint64);
 	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);

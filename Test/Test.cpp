@@ -1,4 +1,4 @@
-ï»¿#include <iostream>
+#include <iostream>
 #include <string>
 #include <locale>
 #include <codecvt>
@@ -75,9 +75,9 @@ public:
 void Print(RainKernel&, CallerWrapper& caller)
 {
 	const RainString value = caller.GetStringParameter(0);
-	std::wstring str;
+	wstring str;
 	str.assign(value.value, value.length);
-	std::wcout << str;// << L"\n";
+	wcout << str;// << L"\n";
 }
 
 void Clock(RainKernel&, CallerWrapper& caller)
@@ -88,22 +88,22 @@ void Clock(RainKernel&, CallerWrapper& caller)
 void OpenFile(RainKernel&, CallerWrapper& caller)
 {
 	const RainString value = caller.GetStringParameter(0);
-	std::wstring path;
+	wstring path;
 	path.assign(value.value, value.length);
-	std::wfstream* file = new std::wfstream(path);
+	wfstream* file = new wfstream(path);
 	caller.SetEntityReturnValue(0, (uint64)file);
 }
 void FileReadLine(RainKernel&, CallerWrapper& caller)
 {
-	std::wfstream* file = (std::wfstream*)caller.GetEntityParameter(0);
-	std::wstring line;
-	bool end = !(bool)std::getline(*file, line);
+	wfstream* file = (wfstream*)caller.GetEntityParameter(0);
+	wstring line;
+	bool end = !(bool)getline(*file, line);
 	caller.SetReturnValue(0, end);
 	caller.SetReturnValue(1, line.c_str());
 }
 void CloseFile(RainKernel&, CallerWrapper& caller)
 {
-	std::wfstream* file = (std::wfstream*)caller.GetEntityParameter(0);
+	wfstream* file = (wfstream*)caller.GetEntityParameter(0);
 	file->close();
 	delete file;
 }
@@ -111,8 +111,8 @@ void CloseFile(RainKernel&, CallerWrapper& caller)
 
 OnCaller NativeLoader(RainKernel&, const RainString fullName, const RainType* parameters, uint32 parametersCount)
 {
-	std::wstring str; str.assign(fullName.value, fullName.length);
-	//std::wcout << "\n\nNative Load:" << str << "\n\n";
+	wstring str; str.assign(fullName.value, fullName.length);
+	//wcout << "\n\nNative Load:" << str << "\n\n";
 	if (str == L"TestLib.Print") return Print;
 	else if (str == L"TestLib.Clock") return Clock;
 	else if (str == L"TestLib.OpenFile") return OpenFile;
@@ -121,29 +121,29 @@ OnCaller NativeLoader(RainKernel&, const RainString fullName, const RainType* pa
 	return nullptr;
 }
 
-std::map<long long, int> mmap;
+map<long long, int> mmap;
 int midx = 0;
 void* ALLOC(uint32 size)
 {
 	void* result = malloc((size_t)size);
 	midx++;
 	mmap[(long long)result] = midx;
-	//std::cout << "A" << midx << std::endl;
+	//cout << "A" << midx << endl;
 	return result;
 }
 void* REALLOC(void* pointer, uint32 size)
 {
-	//std::cout << "R" << -mmap[(long long)pointer] << std::endl;
+	//cout << "R" << -mmap[(long long)pointer] << endl;
 	mmap[(long long)pointer] = -1;
 	void* result = realloc(pointer, (size_t)size);
 	midx++;
 	mmap[(long long)result] = midx;
-	//std::cout << "R" << midx << std::endl;
+	//cout << "R" << midx << endl;
 	return result;
 }
 void FREE(void* pointer)
 {
-	//std::cout << "F" << -mmap[(long long)pointer] << std::endl;
+	//cout << "F" << -mmap[(long long)pointer] << endl;
 	mmap[(long long)pointer] = -1;
 	free(pointer);
 }
@@ -154,16 +154,16 @@ const RainLibrary* OnLibraryLoader(const RainString& libName)
 }
 void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message)
 {
-	std::wstring str;
+	wstring str;
 	str.assign(message.value, message.length);
-	std::wcout << L"å¼‚å¸¸ä¿¡æ¯:" << str << "\n";
-	std::wcout << L"å †æ ˆ:\n";
+	wcout << L"Òì³£ÐÅÏ¢:" << str << "\n";
+	wcout << L"¶ÑÕ»:\n";
 	for (uint32 i = 0; i < stackFrameCount; i++)
 	{
 		str.assign(stackFrames[i].libraryName.value, stackFrames[i].libraryName.length);
-		std::wcout << str << ":";
+		wcout << str << ":";
 		str.assign(stackFrames[i].functionName.value, stackFrames[i].functionName.length);
-		std::wcout << str << " [" << stackFrames[i].address << "]\n";
+		wcout << str << " [" << stackFrames[i].address << "]\n";
 	}
 }
 
@@ -178,16 +178,16 @@ void TestFunc()
 	{
 		ErrorLevel el = (ErrorLevel)i;
 		uint32 c = product->GetLevelMessageCount(el);
-		if (c) std::cout << "ERR_LVL:" << i << "\n";
+		if (c) cout << "ERR_LVL:" << i << "\n";
 		for (uint32 j = 0; j < c; j++)
 		{
 			RainErrorMessage msg = product->GetErrorMessage(el, j);
-			std::wstring message;
+			wstring message;
 			message.assign(msg.message.value, msg.message.length);
-			std::wcout << message << "\n";
-			std::wstring source;
+			wcout << message << "\n";
+			wstring source;
 			source.assign(msg.path.value, msg.path.length);
-			std::wcout << source << " line:" << msg.line << "\tERR CODE:" << (uint32)msg.type << "\n";
+			wcout << source << " line:" << msg.line << "\tERR CODE:" << (uint32)msg.type << "\n";
 		}
 	}
 	if (!product->GetLevelMessageCount(ErrorLevel::Error))
@@ -201,7 +201,7 @@ void TestFunc()
 		while (kernel->GetState().taskCount)
 		{
 			kernel->Update();
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			this_thread::sleep_for(chrono::seconds(1));
 		}
 		delete kernel;
 	}
@@ -212,15 +212,14 @@ void TestFunc()
 int main()
 {
 	SetMemoryAllocator(ALLOC, FREE, REALLOC);
-	std::wcout.imbue(std::locale("zh_CN"));
 
 	TestFunc();
 
 	ClearStaticCache();
 
-	std::cout << "\n\n\nç”³è¯·çš„å†…å­˜æ€»æ•°ï¼š" << midx << "\n";
-	std::cout << "æœªé‡Šæ”¾çš„å†…å­˜ç´¢å¼•åˆ—è¡¨:\n";
+	cout << "\n\n\nÉêÇëµÄÄÚ´æ×ÜÊý£º" << midx << "\n";
+	cout << "Î´ÊÍ·ÅµÄÄÚ´æË÷ÒýÁÐ±í:\n";
 	for (auto it = mmap.begin(); it != mmap.end(); it++)
 		if (it->second >= 0)
-			std::cout << it->second << "\n";
+			cout << it->second << "\n";
 }

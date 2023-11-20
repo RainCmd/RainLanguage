@@ -37,37 +37,37 @@ namespace kernel
 		public real Magnitude()
 		public real SqrMagnitude()
 	public struct enum
-		public string ToString() Declaration									//º¯ÊıÃûºóµÄDeclarationÊÇ±àÒëÆ÷Ìí¼ÓµÄ²ÎÊı£¬¶ÔÓÃ»§Í¸Ã÷
+		public string ToString() Declaration									//å‡½æ•°ååçš„Declarationæ˜¯ç¼–è¯‘å™¨æ·»åŠ çš„å‚æ•°ï¼Œå¯¹ç”¨æˆ·é€æ˜
 	public struct type
 		public bool IsPublic()
 		public Reflection.ReadonlyStrings GetAttributes()
 		public string GetName()
 		public type GetParent()
 		public Reflection.ReadonlyTypes GetInherits()
-		public Reflection.ReadonlyMemberConstructors GetConstructors()			//Ö»·µ»Øµ±Ç°ÀàĞÍÖĞ¶¨ÒåµÄ¹¹Ôìº¯Êı
-		public Reflection.ReadonlyMemberVariables GetVariables()				//Ö»·µ»Øµ±Ç°ÀàĞÍÖĞ¶¨ÒåµÄ×Ö¶Î
-		public Reflection.ReadonlyMemberFunctions GetFunctions()				//Ö»·µ»Øµ±Ç°ÀàĞÍÖĞ¶¨ÒåµÄº¯Êı
+		public Reflection.ReadonlyMemberConstructors GetConstructors()			//åªè¿”å›å½“å‰ç±»å‹ä¸­å®šä¹‰çš„æ„é€ å‡½æ•°
+		public Reflection.ReadonlyMemberVariables GetVariables()				//åªè¿”å›å½“å‰ç±»å‹ä¸­å®šä¹‰çš„å­—æ®µ
+		public Reflection.ReadonlyMemberFunctions GetFunctions()				//åªè¿”å›å½“å‰ç±»å‹ä¸­å®šä¹‰çš„å‡½æ•°
 		public Reflection.Space GetSpace()
 		public Reflection.TypeCode GetTypeCode()
-		public bool IsAssignable(type)											//ÅĞ¶Ïµ±Ç°ÀàĞÍµÄ¶ÔÏóÊÇ·ñ¿É¸³Öµ¸øÄ¿±êÀàĞÍµÄ±äÁ¿
+		public bool IsAssignable(type)											//åˆ¤æ–­å½“å‰ç±»å‹çš„å¯¹è±¡æ˜¯å¦å¯èµ‹å€¼ç»™ç›®æ ‡ç±»å‹çš„å˜é‡
 		public bool IsValid()
 		public integer[] GetEnumElements()
-		public Reflection.ReadonlyTypes GetParameters()							//Î¯ÍĞµÄ²ÎÊıÀàĞÍÁĞ±í
-		public Reflection.ReadonlyTypes GetReturns()							//Î¯ÍĞ»òÈÎÎñµÄ·µ»ØÖµÀàĞÍÁĞ±í
-		public handle CreateDelegate(Reflection.Function)													//´´½¨È«¾Öº¯ÊıµÄÎ¯ÍĞ¶ÔÏó£¬·µ»Øµ±Ç°ÀàĞÍµÄÎ¯ÍĞ¶ÔÏó
-		public handle CreateDelegate(Reflection.Native)														//´´½¨±¾µØº¯ÊıµÄÎ¯ÍĞ¶ÔÏó£¬·µ»Øµ±Ç°ÀàĞÍµÄÎ¯ÍĞ¶ÔÏó
-		public handle CreateDelegate(Reflection.MemberFunction, handle target)								//´´½¨³ÉÔ±º¯ÊıµÄÎ¯ÍĞ¶ÔÏó£¬·µ»Øµ±Ç°ÀàĞÍµÄÎ¯ÍĞ¶ÔÏó
-		public handle StartTask(Reflection.Function function, handle[] parameters)							//´´½¨²¢Ö´ĞĞÒ»¸öÈÎÎñ£¬·µ»Øµ±Ç°ÀàĞÍµÄÈÎÎñ¶ÔÏó
-		public handle StartTask(Reflection.MemberFunction function, handle target, handle[] parameters)		//´´½¨²¢Ö´ĞĞÒ»¸öÈÎÎñ£¬·µ»Øµ±Ç°ÀàĞÍµÄÈÎÎñ¶ÔÏó
+		public Reflection.ReadonlyTypes GetParameters()							//å§”æ‰˜çš„å‚æ•°ç±»å‹åˆ—è¡¨
+		public Reflection.ReadonlyTypes GetReturns()							//å§”æ‰˜æˆ–ä»»åŠ¡çš„è¿”å›å€¼ç±»å‹åˆ—è¡¨
+		public handle CreateDelegate(Reflection.Function)													//åˆ›å»ºå…¨å±€å‡½æ•°çš„å§”æ‰˜å¯¹è±¡ï¼Œè¿”å›å½“å‰ç±»å‹çš„å§”æ‰˜å¯¹è±¡
+		public handle CreateDelegate(Reflection.Native)														//åˆ›å»ºæœ¬åœ°å‡½æ•°çš„å§”æ‰˜å¯¹è±¡ï¼Œè¿”å›å½“å‰ç±»å‹çš„å§”æ‰˜å¯¹è±¡
+		public handle CreateDelegate(Reflection.MemberFunction, handle target)								//åˆ›å»ºæˆå‘˜å‡½æ•°çš„å§”æ‰˜å¯¹è±¡ï¼Œè¿”å›å½“å‰ç±»å‹çš„å§”æ‰˜å¯¹è±¡
+		public handle StartTask(Reflection.Function function, handle[] parameters)							//åˆ›å»ºå¹¶æ‰§è¡Œä¸€ä¸ªä»»åŠ¡ï¼Œè¿”å›å½“å‰ç±»å‹çš„ä»»åŠ¡å¯¹è±¡
+		public handle StartTask(Reflection.MemberFunction function, handle target, handle[] parameters)		//åˆ›å»ºå¹¶æ‰§è¡Œä¸€ä¸ªä»»åŠ¡ï¼Œè¿”å›å½“å‰ç±»å‹çš„ä»»åŠ¡å¯¹è±¡
 		public integer GetArrayRank()
 		public type GetArrayElementType()
-	public struct string							//GC×Ö¶Î¼ÓÉÏ×ÔÉí
+	public struct string							//GCå­—æ®µåŠ ä¸Šè‡ªèº«
 		public integer GetLength()
 		public integer GetStringID()
 		public bool ToBool()
 		public integer ToInteger()
 		public real ToReal()
-	public struct entity							//GC×Ö¶Î¼ÓÉÏ×ÔÉí
+	public struct entity							//GCå­—æ®µåŠ ä¸Šè‡ªèº«
 		public integer GetEntityID()
 	public class handle
 		public integer GetHandleID()
@@ -77,7 +77,7 @@ namespace kernel
 	public class delegate handle
 	public class task handle
 		public Start(bool immediately, bool ignoreWait)
-		public Abort()
+		public Abort(string message)
 		public TaskState GetState()
 		public string GetExitCode()
 		public bool IsPause()
@@ -132,12 +132,12 @@ namespace kernel
 	public string operator + (string, char)
 	public string operator + (string, integer)
 	public string operator + (string, real)
-	public string operator + (string, handle)		//Èç¹ûÍ¨¹ı·´Éäµ÷ÓÃÔò»á¶ÔhandleµÄToString×öÊµµ÷ÓÃ£¬ÕâÊÇÒòÎª×ÓÀàµÄToStringº¯ÊıÖĞ¿ÉÄÜÓĞwait²Ù×÷£¬¶ø·´ÉäÂß¼­ÊÇÔÚc++ÖĞÖ´ĞĞµÄ£¬ÎŞ·¨±£´æÖ´ĞĞÕ»À´µÈ´ıToString·µ»Ø
+	public string operator + (string, handle)		//å¦‚æœé€šè¿‡åå°„è°ƒç”¨åˆ™ä¼šå¯¹handleçš„ToStringåšå®è°ƒç”¨ï¼Œè¿™æ˜¯å› ä¸ºå­ç±»çš„ToStringå‡½æ•°ä¸­å¯èƒ½æœ‰waitæ“ä½œï¼Œè€Œåå°„é€»è¾‘æ˜¯åœ¨c++ä¸­æ‰§è¡Œçš„ï¼Œæ— æ³•ä¿å­˜æ‰§è¡Œæ ˆæ¥ç­‰å¾…ToStringè¿”å›
 	public string operator + (bool, string)
 	public string operator + (char, string)
 	public string operator + (integer, string)
 	public string operator + (real, string)
-	public string operator + (handle, string)		//Èç¹ûÍ¨¹ı·´Éäµ÷ÓÃÔò»á¶ÔhandleµÄToString×öÊµµ÷ÓÃ£¬ÕâÊÇÒòÎª×ÓÀàµÄToStringº¯ÊıÖĞ¿ÉÄÜÓĞwait²Ù×÷£¬¶ø·´ÉäÂß¼­ÊÇÔÚc++ÖĞÖ´ĞĞµÄ£¬ÎŞ·¨±£´æÖ´ĞĞÕ»À´µÈ´ıToString·µ»Ø
+	public string operator + (handle, string)		//å¦‚æœé€šè¿‡åå°„è°ƒç”¨åˆ™ä¼šå¯¹handleçš„ToStringåšå®è°ƒç”¨ï¼Œè¿™æ˜¯å› ä¸ºå­ç±»çš„ToStringå‡½æ•°ä¸­å¯èƒ½æœ‰waitæ“ä½œï¼Œè€Œåå°„é€»è¾‘æ˜¯åœ¨c++ä¸­æ‰§è¡Œçš„ï¼Œæ— æ³•ä¿å­˜æ‰§è¡Œæ ˆæ¥ç­‰å¾…ToStringè¿”å›
 	public integer operator - (integer, integer)
 	public real operator - (real, real)
 	public real2 operator - (real2, real2)
@@ -179,10 +179,10 @@ namespace kernel
 	public real2 operator - (real2)
 	public real3 operator - (real3)
 	public real4 operator - (real4)
-	public operator ++ (integer)			//·´Éäµ÷ÓÃ¸Ãº¯ÊıÎŞĞ§¹û£¬ÕâÀïÖ»ÊÇ¸öÉùÃ÷
-	public operator ++ (real)				//·´Éäµ÷ÓÃ¸Ãº¯ÊıÎŞĞ§¹û£¬ÕâÀïÖ»ÊÇ¸öÉùÃ÷
-	public operator -- (integer)			//·´Éäµ÷ÓÃ¸Ãº¯ÊıÎŞĞ§¹û£¬ÕâÀïÖ»ÊÇ¸öÉùÃ÷
-	public operator -- (real)				//·´Éäµ÷ÓÃ¸Ãº¯ÊıÎŞĞ§¹û£¬ÕâÀïÖ»ÊÇ¸öÉùÃ÷
+	public operator ++ (integer)			//åå°„è°ƒç”¨è¯¥å‡½æ•°æ— æ•ˆæœï¼Œè¿™é‡Œåªæ˜¯ä¸ªå£°æ˜
+	public operator ++ (real)				//åå°„è°ƒç”¨è¯¥å‡½æ•°æ— æ•ˆæœï¼Œè¿™é‡Œåªæ˜¯ä¸ªå£°æ˜
+	public operator -- (integer)			//åå°„è°ƒç”¨è¯¥å‡½æ•°æ— æ•ˆæœï¼Œè¿™é‡Œåªæ˜¯ä¸ªå£°æ˜
+	public operator -- (real)				//åå°„è°ƒç”¨è¯¥å‡½æ•°æ— æ•ˆæœï¼Œè¿™é‡Œåªæ˜¯ä¸ªå£°æ˜
 
 	namespace BitConvert
 		public integer BytesConvertInteger(byte, byte, byte, byte, byte, byte, byte, byte)
