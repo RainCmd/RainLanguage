@@ -140,6 +140,12 @@ public:
 		return values[count - 1];
 	}
 	inline void RemoveAt(uint32 index) { RemoveAt(index, 1); }
+	void RemoveDuplication()
+	{
+		for (uint32 x = 0; x < count; x++)
+			for (uint32 y = x + 1; y < count; y++)
+				if (values[x] == values[y]) values[y--] = values[--count];
+	}
 	void RemoveAtSwap(uint32 index)
 	{
 		if (!IsBitwise) Destruct(values + index, 1);

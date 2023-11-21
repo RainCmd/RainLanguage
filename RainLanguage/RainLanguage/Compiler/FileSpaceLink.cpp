@@ -40,7 +40,7 @@ bool TryGetDeclaration(FileSpace* space, const Anchor& name, CompilingDeclaratio
 
 void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true>*, true>* relySpaceCollector)
 {
-	for (uint32 i = 0; i < children.Count(); i++) children[i].Link(manager, relySpaceCollector);
+	for (uint32 i = 0; i < children.Count(); i++) children[i]->Link(manager, relySpaceCollector);
 	List<AbstractSpace*, true>* relies = new List<AbstractSpace*, true>(relyCompilingSpaces.Count() + relySpaces.Count());
 	relySpaceCollector->Add(relies);
 	relies->Add(relySpaces);

@@ -150,7 +150,7 @@ struct FileSpace
 {
 	CompilingSpace* compiling;
 	List<Anchor> attributes;
-	List<FileSpace> children;
+	List<FileSpace*, true> children;
 	List<List<Anchor>> imports;
 
 	List<FileVariable> variables;

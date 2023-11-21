@@ -14,18 +14,22 @@ void FileSpace::InitRelies(DeclarationManager* manager)
 	for (uint32 x = 0; x < imports.Count(); x++)
 	{
 		List<Anchor>* importSpace = &imports[x];
-		CompilingSpace* compilingSpace;
-		if (compiling->children.TryGet((*importSpace)[0].content, compilingSpace))
+		for (CompilingSpace* index = compiling; index; index = index->parent)
 		{
-			for (uint32 y = 1; y < importSpace->Count(); y++)
-				if (compilingSpace->children.TryGet((*importSpace)[y].content, compilingSpace))
-				{
-					MESSAGE2(manager->messages, (*importSpace)[y], MessageType::ERROR_IMPORT_NAMESPACE_NOT_FOUND);
-					break;
-				}
-			if (compilingSpace)relyCompilingSpaces.Add(compilingSpace);
+			CompilingSpace* compilingSpace;
+			if (index->children.TryGet((*importSpace)[0].content, compilingSpace))
+			{
+				for (uint32 y = 1; y < importSpace->Count(); y++)
+					if (compilingSpace->children.TryGet((*importSpace)[y].content, compilingSpace))
+					{
+						MESSAGE2(manager->messages, (*importSpace)[y], MessageType::ERROR_IMPORT_NAMESPACE_NOT_FOUND);
+						break;
+					}
+				if (compilingSpace) relyCompilingSpaces.Add(compilingSpace);
+				goto label_next_import;
+			}
 		}
-		else if ((*importSpace)[0].content == manager->name) MESSAGE2(manager->messages, (*importSpace)[0], MessageType::ERROR_IMPORT_SELF)
+		if ((*importSpace)[0].content == manager->name) MESSAGE2(manager->messages, (*importSpace)[0], MessageType::ERROR_IMPORT_SELF)
 		else
 		{
 			AbstractSpace* abstractSpace = manager->GetLibrary((*importSpace)[0].content);
@@ -37,18 +41,26 @@ void FileSpace::InitRelies(DeclarationManager* manager)
 						MESSAGE2(manager->messages, (*importSpace)[y], MessageType::ERROR_IMPORT_NAMESPACE_NOT_FOUND);
 						break;
 					}
-				if (abstractSpace)relySpaces.Add(abstractSpace);
+				if (abstractSpace) relySpaces.Add(abstractSpace);
 			}
 			else MESSAGE2(manager->messages, (*importSpace)[0], MessageType::ERROR_IMPORT_NAMESPACE_NOT_FOUND);
 		}
+	label_next_import:;
 	}
+	relyCompilingSpaces.RemoveDuplication();
+	relySpaces.RemoveDuplication();
 }
 
 void FileSpace::Tidy(DeclarationManager* manager)
 {
 	InitRelies(manager);
 
-	for (uint32 i = 0; i < children.Count(); i++) children[i].Tidy(manager);
+	for (uint32 i = 0; i < children.Count(); i++)
+	{
+		children[i]->relyCompilingSpaces.Add(relyCompilingSpaces);
+		children[i]->relySpaces.Add(relySpaces);
+		children[i]->Tidy(manager);
+	}
 
 	CompilingLibrary* library = &manager->compilingLibrary;
 	List<CompilingDeclaration, true>* declarations;

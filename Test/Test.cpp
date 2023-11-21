@@ -170,8 +170,8 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 void TestFunc()
 {
 
-	TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\TestScripts\\");
-	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
+	//TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\TestScripts\\");
+	TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
 	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);
 	for (uint32 i = 0; i <= 8; i++)
