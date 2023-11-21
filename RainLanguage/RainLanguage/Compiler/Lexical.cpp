@@ -89,6 +89,7 @@ bool IsReloadable(LexicalType type)
 		case LexicalType::ConstHexadecimal:
 		case LexicalType::ConstChars:
 		case LexicalType::ConstString:
+		case LexicalType::TemplateString:
 		case LexicalType::Word:
 		case LexicalType::Backslash:
 		default: break;
@@ -260,6 +261,43 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				MESSAGE(MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				return true;
 			}
+			case '$':
+				if (CHECK_NEXT(1, '\"'))
+				{
+					uint32 i = 2;
+					while (index + i < segment.GetEnd())
+					{
+						if (CHECK_NEXT(i, '\"'))
+						{
+							LEXICAL(i + 1, LexicalType::TemplateString);
+							return true;
+						}
+						else if (CHECK_NEXT(i, '\\'))
+						{
+							i++;
+							if (index + i >= segment.GetEnd()) break;
+						}
+						else if (CHECK_NEXT(i, '{'))
+						{
+							if (CHECK_NEXT(i + 1, '{')) i++;
+							else
+							{
+								Anchor block = MatchStringTemplateBlock(segment, index + i, messages);
+								i += block.content.GetLength();
+								if (index + i >= segment.GetEnd()) break;
+							}
+						}
+						i++;
+					}
+					LEXICAL(i, LexicalType::TemplateString);
+					MESSAGE(MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+				}
+				else
+				{
+					LEXICAL(1, LexicalType::Unknow);
+					MESSAGE(MessageType::ERROR_UNKNOWN_SYMBOL);
+				}
+				return true;
 			case '\\':
 				LEXICAL(1, LexicalType::Backslash);
 				return true;
@@ -423,6 +461,7 @@ bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical
 		case LexicalType::ConstHexadecimal:
 		case LexicalType::ConstChars:
 		case LexicalType::ConstString:
+		case LexicalType::TemplateString:
 		case LexicalType::Word:
 		case LexicalType::Backslash:
 		default: break;
@@ -433,6 +472,21 @@ bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical
 bool TryMatchNext(const Line& line, uint32 index, LexicalType type, Lexical& lexical)
 {
 	return TryMatchNext(Anchor(line.source, line.content, line.number, 0), index, type, lexical);
+}
+
+Anchor MatchStringTemplateBlock(const Anchor& segment, uint32 index, MessageCollector* message)
+{
+	ASSERT_DEBUG(segment.content[index - segment.position] == '{', "需要保留前后花括号");
+	uint32 start = index; index++;
+	Lexical lexical;
+	while (TryAnalysis(segment, index, lexical, message))
+	{
+		index = lexical.anchor.GetEnd();
+		if (lexical.type == LexicalType::BracketRight2)
+			return segment.Sub(start, index - start);
+	}
+	MESSAGE2(message, segment.Sub(index, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+	return segment.Sub(index);
 }
 
 bool TryExtractName(const Anchor& segment, uint32 start, uint32& index, List<Anchor>* name, MessageCollector* messages)

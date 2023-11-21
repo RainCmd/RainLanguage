@@ -65,6 +65,7 @@ enum class LexicalType
 	ConstHexadecimal,       // 数字(十六进制)
 	ConstChars,             // 数字(单引号字符串)
 	ConstString,            // 字符串
+	TemplateString,         // 模板字符串
 	Word,                   // 单词
 	Backslash,              // 反斜杠
 };
@@ -80,6 +81,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 bool TryAnalysis(const Line& line, uint32 index, Lexical& lexical, MessageCollector* messages);
 bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical& lexical);//仅用来匹配可能有冲突的符号
 bool TryMatchNext(const Line& line, uint32 index, LexicalType type, Lexical& lexical);//仅用来匹配可能有冲突的符号
+Anchor MatchStringTemplateBlock(const Anchor& segment, uint32 index, MessageCollector* message);
 bool TryExtractName(const Anchor& segment, uint32 start, uint32& index, List<Anchor>* name, MessageCollector* messages);
 bool TryExtractName(const Line& line, uint32 start, uint32& index, List<Anchor>* name, MessageCollector* messages);
 uint32 ExtractDimension(const Anchor& segment, uint32& index);

@@ -97,80 +97,84 @@ CompilingDeclaration GetImportDeclaration(AbstractLibrary* library, const Librar
 void InitImports(const Library* source, uint32 importIndex, AbstractDeclarationMap* map, const AbstractParameter& parameter)
 {
 	const ImportLibrary* importSource = &source->imports[importIndex];
-	AbstractLibrary* library = parameter.manager->GetLibrary(STRING_ID_TO_NATIVE_STRING(source, importSource->spaces[0].name));
-
-	for (uint32 i = 1; i < importSource->enums.Count(); i++)
+	String libraryName = STRING_ID_TO_NATIVE_STRING(source, importSource->spaces[0].name);
+	AbstractLibrary* library = parameter.manager->GetLibrary(libraryName);
+	if (library) 
 	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->enums[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Enum, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->enums[i].space, name, parameter);
-		if (globalDeclaration.category != DeclarationCategory::Invalid)
+		for (uint32 i = 1; i < importSource->enums.Count(); i++)
 		{
-			if (globalDeclaration.category == DeclarationCategory::Enum)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Enum, globalDeclaration.index, 0));
-			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			String name = STRING_ID_TO_NATIVE_STRING(source, importSource->enums[i].name);
+			Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Enum, i);
+			CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->enums[i].space, name, parameter);
+			if (globalDeclaration.category != DeclarationCategory::Invalid)
+			{
+				if (globalDeclaration.category == DeclarationCategory::Enum)
+					map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Enum, globalDeclaration.index, 0));
+				else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			}
+		}
+		for (uint32 i = 0; i < importSource->structs.Count(); i++)
+		{
+			String name = STRING_ID_TO_NATIVE_STRING(source, importSource->structs[i].name);
+			Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Struct, i);
+			CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->structs[i].space, name, parameter);
+			if (globalDeclaration.category != DeclarationCategory::Invalid)
+			{
+				if (globalDeclaration.category == DeclarationCategory::Struct)
+					map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Struct, globalDeclaration.index, 0));
+				else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			}
+		}
+		for (uint32 i = 0; i < importSource->classes.Count(); i++)
+		{
+			String name = STRING_ID_TO_NATIVE_STRING(source, importSource->classes[i].name);
+			Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Handle, i);
+			CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->classes[i].space, name, parameter);
+			if (globalDeclaration.category != DeclarationCategory::Invalid)
+			{
+				if (globalDeclaration.category == DeclarationCategory::Class)
+					map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Handle, globalDeclaration.index, 0));
+				else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			}
+		}
+		for (uint32 i = 0; i < importSource->interfaces.Count(); i++)
+		{
+			String name = STRING_ID_TO_NATIVE_STRING(source, importSource->interfaces[i].name);
+			Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Interface, i);
+			CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->interfaces[i].space, name, parameter);
+			if (globalDeclaration.category != DeclarationCategory::Invalid)
+			{
+				if (globalDeclaration.category == DeclarationCategory::Interface)
+					map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Interface, globalDeclaration.index, 0));
+				else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			}
+		}
+		for (uint32 i = 0; i < importSource->delegates.Count(); i++)
+		{
+			String name = STRING_ID_TO_NATIVE_STRING(source, importSource->delegates[i].name);
+			Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Delegate, i);
+			CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->delegates[i].space, name, parameter);
+			if (globalDeclaration.category != DeclarationCategory::Invalid)
+			{
+				if (globalDeclaration.category == DeclarationCategory::Delegate)
+					map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Delegate, globalDeclaration.index, 0));
+				else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			}
+		}
+		for (uint32 i = 0; i < importSource->tasks.Count(); i++)
+		{
+			String name = STRING_ID_TO_NATIVE_STRING(source, importSource->tasks[i].name);
+			Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Task, i);
+			CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->tasks[i].space, name, parameter);
+			if (globalDeclaration.category != DeclarationCategory::Invalid)
+			{
+				if (globalDeclaration.category == DeclarationCategory::Task)
+					map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Task, globalDeclaration.index, 0));
+				else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
+			}
 		}
 	}
-	for (uint32 i = 0; i < importSource->structs.Count(); i++)
-	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->structs[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Struct, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->structs[i].space, name, parameter);
-		if (globalDeclaration.category != DeclarationCategory::Invalid)
-		{
-			if (globalDeclaration.category == DeclarationCategory::Struct)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Struct, globalDeclaration.index, 0));
-			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
-		}
-	}
-	for (uint32 i = 0; i < importSource->classes.Count(); i++)
-	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->classes[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Handle, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->classes[i].space, name, parameter);
-		if (globalDeclaration.category != DeclarationCategory::Invalid)
-		{
-			if (globalDeclaration.category == DeclarationCategory::Class)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Handle, globalDeclaration.index, 0));
-			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
-		}
-	}
-	for (uint32 i = 0; i < importSource->interfaces.Count(); i++)
-	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->interfaces[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Interface, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->interfaces[i].space, name, parameter);
-		if (globalDeclaration.category != DeclarationCategory::Invalid)
-		{
-			if (globalDeclaration.category == DeclarationCategory::Interface)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Interface, globalDeclaration.index, 0));
-			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
-		}
-	}
-	for (uint32 i = 0; i < importSource->delegates.Count(); i++)
-	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->delegates[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Delegate, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->delegates[i].space, name, parameter);
-		if (globalDeclaration.category != DeclarationCategory::Invalid)
-		{
-			if (globalDeclaration.category == DeclarationCategory::Delegate)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Delegate, globalDeclaration.index, 0));
-			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
-		}
-	}
-	for (uint32 i = 0; i < importSource->tasks.Count(); i++)
-	{
-		String name = STRING_ID_TO_NATIVE_STRING(source, importSource->tasks[i].name);
-		Declaration sourceDeclaration = Declaration(importIndex, TypeCode::Task, i);
-		CompilingDeclaration globalDeclaration = GetImportDeclaration(library, source, importSource, importSource->tasks[i].space, name, parameter);
-		if (globalDeclaration.category != DeclarationCategory::Invalid)
-		{
-			if (globalDeclaration.category == DeclarationCategory::Task)
-				map->map.Set(sourceDeclaration, Type(LIBRARY_KERNEL, TypeCode::Task, globalDeclaration.index, 0));
-			else MESSAGE5(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_MISMATCHING, 0, 0, 0);
-		}
-	}
+	else MESSAGE6(parameter.messages, libraryName, MessageType::ERROR_LIBRARY_LOAD_FAIL, 0, 0, 0, TEXT("引用程序集加载失败"));
 }
 void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const Library* source, uint32 spaceIndex, AbstractDeclarationMap* map, const AbstractParameter& parameter)
 {

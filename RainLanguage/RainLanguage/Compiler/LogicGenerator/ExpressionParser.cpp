@@ -88,6 +88,44 @@ bool TryGetHexValue(character value, uint32 result)
 	return false;
 }
 
+inline character EscapeCharacter(uint32& index, const character* value, uint32 length)
+{
+	character element = value[index];
+	if (element == 'a') element = '\a';
+	else if (element == 'b') element = '\b';
+	else if (element == 'f') element = '\f';
+	else if (element == 'n') element = '\n';
+	else if (element == 'r') element = '\r';
+	else if (element == 't') element = '\t';
+	else if (element == 'v') element = '\v';
+	else if (element == '0') element = '\0';
+	else if (element == 'x')
+	{
+		uint32 value1 = 0, value2 = 0;
+		if (++index < length && TryGetHexValue(value[index], value1))
+		{
+			if (++index < length && TryGetHexValue(value[index], value2)) element = (character)(value1 * 16 + value2);
+			else index -= 2;
+		}
+		else index--;
+	}
+	else if (element == 'u')
+	{
+		if (index + 4 < length)
+		{
+			uint32 resultChar = 0u, temp = 0;
+			uint32 idx = index;
+			while (idx - index < 4 && TryGetHexValue(value[++idx], temp)) resultChar = (resultChar << 4) + temp;
+			if (idx == index + 4)
+			{
+				index = idx;
+				element = (character)resultChar;
+			}
+		}
+	}
+	return element;
+}
+
 bool CheckBlurry(const List<Type, true>& types)
 {
 	for (uint32 i = 0; i < types.Count(); i++)
@@ -1731,6 +1769,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 					case LexicalType::ConstHexadecimal:
 					case LexicalType::ConstChars:
 					case LexicalType::ConstString:
+					case LexicalType::TemplateString:
 					case LexicalType::Word:
 					case LexicalType::Backslash:
 					default:
@@ -2854,53 +2893,14 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					integer value = 0;
 					String& content = lexical.anchor.content;
-					for (uint32 i = 0; i < content.GetLength(); i++)
+					for (uint32 i = 1, length = content.GetLength(); i < length; i++)
 					{
 						integer element = content[i];
 						if (element != '\'')
 						{
 							value <<= 8;
-							if (element == '\\')
-							{
-								if (++i < content.GetLength())
-								{
-									element = content[i];
-									if (element == 'a') element = '\a';
-									else if (element == 'b') element = '\b';
-									else if (element == 'f') element = '\f';
-									else if (element == 'n') element = '\n';
-									else if (element == 'r') element = '\r';
-									else if (element == 't') element = '\t';
-									else if (element == 'v') element = '\v';
-									else if (element == '0') element = '\0';
-									else if (element == 'x')
-									{
-										uint32 value1 = 0, value2 = 0;
-										if (++i < content.GetLength() && TryGetHexValue(content[i], value1))
-										{
-											if (++i < content.GetLength() && TryGetHexValue(content[i], value2)) element = value1 * 16 + value2;
-											else i -= 2;
-										}
-										else i--;
-									}
-									else if (element == 'u')
-									{
-										if (i + 4 < content.GetLength())
-										{
-											uint32 resultChar = 0u, temp = 0;
-											uint32 idx = i;
-											while (idx - i < 4 && TryGetHexValue(content[++idx], temp)) resultChar = (resultChar << 4) + temp;
-											if (idx == i + 4)
-											{
-												i = idx;
-												element = (char)resultChar;
-											}
-										}
-									}
-									value += element & 0xff;
-								}
-							}
-							else value += element & 0xff;
+							if (element != '\\') value += element & 0xff;
+							else if (++i < length) value += EscapeCharacter(i, content.GetPointer(), length) & 0xff;
 						}
 					}
 					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
@@ -2913,52 +2913,13 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				{
 					String& content = lexical.anchor.content;
 					List<character, true> stringBuilder(content.GetLength());
-					for (uint32 i = 0; i < content.GetLength(); i++)
+					for (uint32 i = 1, length = content.GetLength(); i < length; i++)
 					{
 						character element = content[i];
 						if (element != '\"')
 						{
-							if (element == '\\')
-							{
-								if (++i < content.GetLength())
-								{
-									element = content[i];
-									if (element == 'a') element = '\a';
-									else if (element == 'b') element = '\b';
-									else if (element == 'f') element = '\f';
-									else if (element == 'n') element = '\n';
-									else if (element == 'r') element = '\r';
-									else if (element == 't') element = '\t';
-									else if (element == 'v') element = '\v';
-									else if (element == '0') element = '\0';
-									else if (element == 'x')
-									{
-										uint32 value1 = 0, value2 = 0;
-										if (++i < content.GetLength() && TryGetHexValue(content[i], value1))
-										{
-											if (++i < content.GetLength() && TryGetHexValue(content[i], value2)) element = (char)(value1 * 16 + value2);
-											else i -= 2;
-										}
-										else i--;
-									}
-									else if (element == 'u')
-									{
-										if (i + 4 < content.GetLength())
-										{
-											uint32 resultChar = 0u, value = 0;
-											uint32 idx = i;
-											while (idx - i < 4 && TryGetHexValue(content[++idx], value)) resultChar = (resultChar << 4) + value;
-											if (idx == i + 4)
-											{
-												i = idx;
-												element = (char)resultChar;
-											}
-										}
-									}
-									stringBuilder.Add(element);
-								}
-							}
-							else stringBuilder.Add(element);
+							if (element != '\\') stringBuilder.Add(element);
+							else if (++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
 						}
 					}
 					expressionStack.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
@@ -2967,6 +2928,100 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				}
 				goto label_error_unexpected_lexcal;
 #pragma endregion
+			case LexicalType::TemplateString:
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					String& content = lexical.anchor.content;
+					List<character, true> stringBuilder(content.GetLength());
+					List<Expression*, true> parameters(2);
+					Expression* stringExpression = NULL;
+					Expression* constStringExpression;
+					for (uint32 i = 2, length = content.GetLength(); i < length; i++)
+					{
+						character element = content[i];
+						if (element != '\"')
+						{
+							if (element == '{')
+							{
+								if (i + 1 < content.GetLength() && content[i + 1] != '{')
+								{
+									Anchor block = MatchStringTemplateBlock(lexical.anchor, lexical.anchor.position + i, manager->messages);
+									if (block.content[block.content.GetLength() - 1] == '}')
+									{
+										Expression* blockExpression;
+										if (TryParse(block.Sub(block.position + 1, block.content.GetLength() - 2), blockExpression))
+										{
+											constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
+											stringBuilder.Clear();
+											if (stringExpression)
+											{
+												parameters.Clear();
+												parameters.Add(stringExpression);
+												parameters.Add(constStringExpression);
+												stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
+												if (!stringExpression)
+												{
+													expressionStack.Add(blockExpression);
+													goto label_parse_fail;
+												}
+											}
+											else stringExpression = constStringExpression;
+											parameters.Clear();
+											parameters.Add(stringExpression);
+											parameters.Add(blockExpression);
+											stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
+											if (!stringExpression) goto label_parse_fail;
+										}
+										else
+										{
+											if (stringExpression) expressionStack.Add(stringExpression);
+											goto label_parse_fail;
+										}
+									}
+									else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+									i += block.content.GetLength() - 1;
+								}
+								else
+								{
+									stringBuilder.Add(element);
+									i++;
+								}
+							}
+							else if (element == '}')
+							{
+								if (i + 1 < length && content[i + 1] == '}')
+								{
+									stringBuilder.Add(element);
+									i++;
+								}
+								else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+							}
+							else if (element != '\\') stringBuilder.Add(element);
+							else if (++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+						}
+					}
+					constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
+					if (stringExpression)
+					{
+						parameters.Clear();
+						parameters.Add(stringExpression);
+						parameters.Add(constStringExpression);
+						stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
+						if (stringExpression)
+						{
+							expressionStack.Add(stringExpression);
+							attribute = stringExpression->attribute;
+						}
+						else goto label_parse_fail;
+					}
+					else
+					{
+						expressionStack.Add(constStringExpression);
+						attribute = Attribute::Constant;
+					}
+					break;
+				}
+				goto label_error_unexpected_lexcal;
 			case LexicalType::Word:
 				if (lexical.anchor.content == KeyWord_global())
 				{

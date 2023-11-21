@@ -179,6 +179,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 			case LexicalType::ConstHexadecimal:
 			case LexicalType::ConstChars:
 			case LexicalType::ConstString:
+			case LexicalType::TemplateString:
 			case LexicalType::Word:
 				break;
 			case LexicalType::Backslash:

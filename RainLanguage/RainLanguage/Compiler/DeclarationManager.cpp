@@ -223,7 +223,6 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& libraryName)
 			return result;
 		}
 	}
-	MESSAGE6(messages, libraryName, MessageType::ERROR_LIBRARY_LOAD_FAIL, 0, 0, 0, TEXT("引用程序集加载失败"));
 	return NULL;
 }
 
