@@ -40,7 +40,7 @@ private:
 		while (sidx != INVALID)
 		{
 			Slot* slot = slots + sidx;
-			if (slot->hash == hash && slot->value == value)return true;
+			if (slot->hash == hash && slot->value == value) return true;
 			sidx = slot->next;
 		}
 		return false;

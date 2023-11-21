@@ -306,3 +306,9 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 		}
 	}
 }
+
+FileSpace::~FileSpace()
+{
+	for (uint32 i = 0; i < children.Count(); i++) delete children[i];
+	children.Clear();
+}

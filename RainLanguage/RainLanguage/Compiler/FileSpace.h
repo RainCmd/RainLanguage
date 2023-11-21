@@ -176,4 +176,6 @@ struct FileSpace
 	void InitRelies(DeclarationManager* manager);
 	void Tidy(DeclarationManager* manager);
 	void Link(DeclarationManager* manager, List<List<AbstractSpace*, true>*, true>* relySpaceCollector);
+
+	~FileSpace();
 };
