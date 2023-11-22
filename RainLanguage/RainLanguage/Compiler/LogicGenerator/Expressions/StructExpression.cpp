@@ -71,6 +71,11 @@ StructConstructorExpression::~StructConstructorExpression()
 }
 
 #define VECTOR_FLAG(targetIndex,sourceIndex) (uint32)(0x10 | (targetIndex) | ((sourceIndex) << 2) )
+bool VectorMemberExpression::IsReferenceMember()
+{
+	if (ContainAny(target->type, ExpressionType::VariableMemberExpression)) return ((VariableMemberExpression*)target)->IsReferenceMember();
+	return ContainAny(target->type, ExpressionType::ArrayEvaluationExpression);
+}
 void VectorMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
@@ -107,6 +112,7 @@ void VectorMemberExpression::GeneratorAssignment(LogicGenerateParameter& paramet
 			flag |= VECTOR_FLAG(indices[i], i);
 		}
 		parameter.generator->WriteCode(flag);
+		if (IsReferenceMember()) target->GeneratorAssignment(targetParameter);
 	}
 	else if (parameter.results[0] != logicVariable)
 	{
@@ -115,6 +121,7 @@ void VectorMemberExpression::GeneratorAssignment(LogicGenerateParameter& paramet
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
 		parameter.generator->WriteCode(LogicVariable(targetParameter.results[0], returns[0], indices[0] * SIZE(real)));
 		parameter.generator->WriteCode(parameter.results[0]);
+		if (IsReferenceMember()) target->GeneratorAssignment(targetParameter);
 	}
 }
 

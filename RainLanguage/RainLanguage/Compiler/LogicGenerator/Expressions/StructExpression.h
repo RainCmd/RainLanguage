@@ -37,6 +37,7 @@ public:
 class VectorMemberExpression :public VariableExpression
 {
 	LogicVariable logicVariable;
+	bool IsReferenceMember();
 public:
 	Expression* target;
 	List<uint32, true> indices;
