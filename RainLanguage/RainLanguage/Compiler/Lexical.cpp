@@ -238,7 +238,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				}
 				LEXICAL(i, LexicalType::ConstChars);
 				MESSAGE(MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-				return true;
+				return false;
 			}
 			case '\"':
 			{
@@ -259,7 +259,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 				}
 				LEXICAL(i, LexicalType::ConstString);
 				MESSAGE(MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-				return true;
+				return false;
 			}
 			case '$':
 				if (CHECK_NEXT(1, '\"'))
@@ -283,7 +283,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 							else
 							{
 								Anchor block = MatchStringTemplateBlock(segment, index + i, messages);
-								i += block.content.GetLength();
+								i += block.content.GetLength() - 1;
 								if (index + i >= segment.GetEnd()) break;
 							}
 						}
@@ -297,7 +297,7 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 					LEXICAL(1, LexicalType::Unknow);
 					MESSAGE(MessageType::ERROR_UNKNOWN_SYMBOL);
 				}
-				return true;
+				return false;
 			case '\\':
 				LEXICAL(1, LexicalType::Backslash);
 				return true;
