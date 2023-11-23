@@ -121,29 +121,46 @@ OnCaller NativeLoader(RainKernel&, const RainString fullName, const RainType* pa
 	return nullptr;
 }
 
+
 map<long long, int> mmap;
 int midx = 0;
+void OnAlloc(long long key, int idx)
+{
+	auto it = mmap.find(key);
+	if (it != mmap.end())
+	{
+		if (it->second >= 0)
+			cout << "realloc" << endl;
+	}
+}
+void OnFree(int idx)
+{
+	if (idx < 0)
+	{
+		cout << "refree" << endl;
+	}
+}
 void* ALLOC(uint32 size)
 {
 	void* result = malloc((size_t)size);
 	midx++;
+	OnAlloc((long long)result, midx);
 	mmap[(long long)result] = midx;
-	//cout << "A" << midx << endl;
 	return result;
 }
 void* REALLOC(void* pointer, uint32 size)
 {
-	//cout << "R" << -mmap[(long long)pointer] << endl;
+	OnFree(mmap[(long long)pointer]);
 	mmap[(long long)pointer] = -1;
 	void* result = realloc(pointer, (size_t)size);
 	midx++;
+	OnAlloc((long long)result, midx);
 	mmap[(long long)result] = midx;
-	//cout << "R" << midx << endl;
 	return result;
 }
 void FREE(void* pointer)
 {
-	//cout << "F" << -mmap[(long long)pointer] << endl;
+	OnFree(mmap[(long long)pointer]);
 	mmap[(long long)pointer] = -1;
 	free(pointer);
 }
@@ -170,7 +187,7 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 void TestFunc()
 {
 
-	TestCodeLoader loader(L"D:\\Projects\\CPP\\RainLanguage\\Test\\RainScripts\\");
+	TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\TestScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
 	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);

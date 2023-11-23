@@ -18,5 +18,13 @@
     <ClCompile Include="RainLauncher.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="LauncherUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RainLauncher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

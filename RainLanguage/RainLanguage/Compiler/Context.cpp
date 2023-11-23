@@ -149,6 +149,11 @@ bool Context::TryFindSpace(DeclarationManager* manager, const Anchor& name, Abst
 		}
 		return true;
 	}
+	else if (name.content == manager->kernelLibaray->name)
+	{
+		result = manager->kernelLibaray;
+		return true;
+	}
 	else return false;
 }
 
