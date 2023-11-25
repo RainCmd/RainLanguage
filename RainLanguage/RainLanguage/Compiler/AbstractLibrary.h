@@ -118,6 +118,7 @@ struct AbstractSpace
 		}
 		return false;
 	}
+	void AddDeclaration(const String& declarationName, const CompilingDeclaration& declaratioin);
 	String GetFullName(StringAgency* stringAgency);
 	virtual ~AbstractSpace();
 };

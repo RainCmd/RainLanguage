@@ -99,7 +99,7 @@ void InitImports(const Library* source, uint32 importIndex, AbstractDeclarationM
 	const ImportLibrary* importSource = &source->imports[importIndex];
 	String libraryName = STRING_ID_TO_NATIVE_STRING(source, importSource->spaces[0].name);
 	AbstractLibrary* library = parameter.manager->GetLibrary(libraryName);
-	if (library) 
+	if (library)
 	{
 		for (uint32 i = 1; i < importSource->enums.Count(); i++)
 		{
@@ -195,6 +195,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Variable, library->variables.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
 			library->variables.Add(new AbstractVariable(name, declaration, attributes, space, info->readonly, map->LocalToGlobal(info->type), info->address));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->functions.Count(); x++)
@@ -206,6 +207,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Function, library->functions.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
 			library->functions.Add(new AbstractFunction(name, declaration, attributes, space, map->LocalToGlobal(info->parameters), map->LocalToGlobal(info->returns)));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->enums.Count(); x++)
@@ -220,6 +222,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			for (uint32 y = 0; y < info->elements.Count(); y++)
 				elements.Add(STRING_ID_TO_NATIVE_STRING(source, info->elements[y].name));
 			library->enums.Add(new AbstractEnum(name, declaration, attributes, space, elements));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->structs.Count(); x++)
@@ -256,6 +259,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 				}
 			}
 			library->structs.Add(new AbstractStruct(name, declaration, attributes, space, memberVariables, memberFunctions, info->size, info->alignment));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->classes.Count(); x++)
@@ -308,6 +312,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 				}
 			}
 			library->classes.Add(new AbstractClass(name, declaration, attributes, space, map->LocalToGlobal(info->parent), map->LocalToGlobal(info->inherits), memberConstructors, memberVariables, memberFunctions, info->size, info->alignment));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->interfaces.Count(); x++)
@@ -329,6 +334,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 				memberFunctions.Add(new AbstractFunction(memberName, memberDeclaration, memberAttributes, space, map->LocalToGlobal(memberInfo->parameters), map->LocalToGlobal(memberInfo->returns)));
 			}
 			library->interfaces.Add(new AbstractInterface(name, declaration, attributes, space, map->LocalToGlobal(info->inherits), memberFunctions));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->delegates.Count(); x++)
@@ -340,6 +346,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Delegate, library->delegates.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
 			library->delegates.Add(new AbstractDelegate(name, declaration, attributes, space, map->LocalToGlobal(info->parameters), map->LocalToGlobal(info->returns)));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->tasks.Count(); x++)
@@ -351,6 +358,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Task, library->tasks.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
 			library->tasks.Add(new AbstractTask(name, declaration, attributes, space, map->LocalToGlobal(info->returns)));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 	for (uint32 x = 0; x < sourceSpace->natives.Count(); x++)
@@ -362,6 +370,7 @@ void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const L
 			CompilingDeclaration declaration = CompilingDeclaration(library->library, Visibility::Public, DeclarationCategory::Native, library->natives.Count(), NULL);
 			List<String> attributes = ToNativeAttributes(parameter.stringAgency, source->stringAgency, info->attributes);
 			library->natives.Add(new AbstractNative(name, declaration, attributes, space, map->LocalToGlobal(info->parameters), map->LocalToGlobal(info->returns)));
+			space->AddDeclaration(name, declaration);
 		}
 	}
 }

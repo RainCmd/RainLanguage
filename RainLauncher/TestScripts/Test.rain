@@ -1,0 +1,22 @@
+native Print(string)
+Main()
+    N1.N12.Show()
+
+namespace N1
+
+    namespace N11
+
+        public integer i11 = 11
+    namespace N12
+
+        public Show()
+            Print("N12:" + N11.i11)
+            Print($"\n>>> {N2.N21.Get()} <<<\n")
+
+namespace N2 
+    string i = "N2S"
+    namespace N21
+        string i = "N21S"
+        public string Get()
+            var i = 210
+            return global i

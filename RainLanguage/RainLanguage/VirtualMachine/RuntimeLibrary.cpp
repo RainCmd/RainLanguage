@@ -149,6 +149,12 @@ RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, const Library* libr
 	}
 	for (uint32 x = 0; x < library->libraryReferences.Count(); x++)
 		*(uint32*)(agency->code.GetPointer() + codeOffset + library->libraryReferences[x]) = index;
+
+	for (uint32 x = 0; x < library->spaces.Count(); x++)
+	{
+		TO_NATIVE_ATTRIBUTES(nativeAttributes, library->spaces[x].attributes);
+		new (spaces.Add())RuntimeSpace(kernel->stringAgency, library, &library->spaces[x], nativeAttributes);
+	}
 }
 
 void RelocationMethods(RuntimeLibrary* runtimeLibrary, uint32 interfaceIndex, const  InterfaceDeclarationInfo* info, const List<LocalToGlobalMap>& maps)
@@ -627,11 +633,6 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 	for (uint32 i = 0; i < library->imports.Count(); i++) MakeLocalToGlobalMap(kernel, maps.Add(), library, i);
 	for (uint32 i = 0; i < library->imports.Count(); i++) InitImportData(kernel, i, library, this, maps);
 
-	for (uint32 x = 0; x < library->spaces.Count(); x++)
-	{
-		TO_NATIVE_ATTRIBUTES(nativeAttributes, library->spaces[x].attributes);
-		new (spaces.Add())RuntimeSpace(kernel->stringAgency, library, &library->spaces[x], nativeAttributes);
-	}
 	for (uint32 x = 0; x < library->variables.Count(); x++)
 	{
 		const ReferenceVariableDeclarationInfo* info = &library->variables[x];

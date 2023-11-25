@@ -118,13 +118,17 @@ int main(int cnt, char** args)
 		StartupParameter parameter(&library, 1, nullptr, nullptr, nullptr, NativeLoader, OnExceptionExitFunc, nullptr);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction entry = kernel->FindFunction(_args.entry.c_str(), true);
-		InvokerWrapper invoker = entry.CreateInvoker();
-		invoker.Start(true, false);
-		while (kernel->GetState().taskCount)
+		if (entry.IsValid())
 		{
-			this_thread::sleep_for(chrono::milliseconds(1000 / _args.fps));
-			kernel->Update();
+			InvokerWrapper invoker = entry.CreateInvoker();
+			invoker.Start(true, false);
+			while (kernel->GetState().taskCount)
+			{
+				this_thread::sleep_for(chrono::milliseconds(1000 / _args.fps));
+				kernel->Update();
+			}
 		}
+		else wcout << _args.entry << L"未找到" << endl;
 	}
 	delete product;
 

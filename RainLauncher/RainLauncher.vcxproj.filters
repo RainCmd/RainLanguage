@@ -18,12 +18,12 @@
     <ClCompile Include="RainLauncher.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="LauncherUtils.cpp">
+    <ClCompile Include="Args.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RainLauncher.h">
+    <ClInclude Include="Args.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

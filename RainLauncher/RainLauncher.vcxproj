@@ -281,11 +281,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="LauncherUtils.cpp" />
+    <ClCompile Include="Args.cpp" />
     <ClCompile Include="RainLauncher.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RainLauncher.h" />
+    <ClInclude Include="Args.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,6 +26,17 @@ AbstractInterface::~AbstractInterface()
 	functions.Clear();
 }
 
+void AbstractSpace::AddDeclaration(const String& declarationName, const CompilingDeclaration& declaratioin)
+{
+	List<CompilingDeclaration, true>* list;
+	if (!declarations.TryGet(declarationName, list))
+	{
+		list = new List<CompilingDeclaration, true>(1);
+		declarations.Set(declarationName, list);
+	}
+	list->Add(declaratioin);
+}
+
 String AbstractSpace::GetFullName(StringAgency* stringAgency)
 {
 	String result = name;

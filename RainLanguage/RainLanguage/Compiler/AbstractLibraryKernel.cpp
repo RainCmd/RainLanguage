@@ -2,16 +2,6 @@
 
 #define EMPTY_STRINGS (List<String>(0))
 
-void SpaceAddDeclaration(AbstractSpace* space, const String& name, const CompilingDeclaration& declaration)
-{
-	List<CompilingDeclaration, true>* list;
-	if (!space->declarations.TryGet(name, list))
-	{
-		list = new List<CompilingDeclaration, true>(1);
-		space->declarations.Set(name, list);
-	}
-	list->Add(declaration);
-}
 inline List<Type, true> KernelToCompiling(const List<Declaration, true>& declarations)
 {
 	List<Type, true> results = List<Type, true>(declarations.Count());
@@ -33,25 +23,25 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 	{
 		AbstractVariable* abstractVariable = library->variables[info->variables[i]];
 		abstractVariable->space = space;
-		SpaceAddDeclaration(space, abstractVariable->name, abstractVariable->declaration);
+		space->AddDeclaration(abstractVariable->name, abstractVariable->declaration);
 	}
 	for (uint32 i = 0; i < info->functions.Count(); i++)
 	{
 		AbstractFunction* abstractFunction = library->functions[info->functions[i]];
 		abstractFunction->space = space;
-		SpaceAddDeclaration(space, abstractFunction->name, abstractFunction->declaration);
+		space->AddDeclaration(abstractFunction->name, abstractFunction->declaration);
 	}
 	for (uint32 i = 0; i < info->enums.Count(); i++)
 	{
 		AbstractEnum* abstractEnum = library->enums[info->enums[i]];
 		abstractEnum->space = space;
-		SpaceAddDeclaration(space, abstractEnum->name, abstractEnum->declaration);
+		space->AddDeclaration(abstractEnum->name, abstractEnum->declaration);
 	}
 	for (uint32 x = 0; x < info->structs.Count(); x++)
 	{
 		AbstractStruct* abstractStruct = library->structs[info->structs[x]];
 		abstractStruct->space = space;
-		SpaceAddDeclaration(space, abstractStruct->name, abstractStruct->declaration);
+		space->AddDeclaration(abstractStruct->name, abstractStruct->declaration);
 		for (uint32 y = 0; y < abstractStruct->variables.Count(); y++)
 			abstractStruct->variables[y]->space = space;
 		for (uint32 y = 0; y < abstractStruct->functions.Count(); y++)
@@ -65,7 +55,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 	{
 		AbstractClass* abstractClass = library->classes[info->classes[x]];
 		abstractClass->space = space;
-		SpaceAddDeclaration(space, abstractClass->name, abstractClass->declaration);
+		space->AddDeclaration(abstractClass->name, abstractClass->declaration);
 		for (uint32 y = 0; y < abstractClass->constructors.Count(); y++)
 		{
 			AbstractFunction* constructor = library->functions[abstractClass->constructors[y]];
@@ -85,7 +75,7 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 	{
 		AbstractInterface* abstractInterface = library->interfaces[info->interfaces[x]];
 		abstractInterface->space = space;
-		SpaceAddDeclaration(space, abstractInterface->name, abstractInterface->declaration);
+		space->AddDeclaration(abstractInterface->name, abstractInterface->declaration);
 		for (uint32 y = 0; y < abstractInterface->functions.Count(); y++)
 			abstractInterface->functions[y]->space = space;
 	}
@@ -93,13 +83,13 @@ void CreateKernelAbstractSpace(AbstractLibrary* library, KernelLibraryInfo::Spac
 	{
 		AbstractDelegate* abstractDelegate = library->delegates[info->delegates[x]];
 		abstractDelegate->space = space;
-		SpaceAddDeclaration(space, abstractDelegate->name, abstractDelegate->declaration);
+		space->AddDeclaration(abstractDelegate->name, abstractDelegate->declaration);
 	}
 	for (uint32 x = 0; x < info->tasks.Count(); x++)
 	{
 		AbstractTask* abstractTask = library->tasks[info->tasks[x]];
 		abstractTask->space = space;
-		SpaceAddDeclaration(space, abstractTask->name, abstractTask->declaration);
+		space->AddDeclaration(abstractTask->name, abstractTask->declaration);
 	}
 }
 

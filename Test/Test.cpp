@@ -165,10 +165,6 @@ void FREE(void* pointer)
 	free(pointer);
 }
 
-const RainLibrary* OnLibraryLoader(const RainString& libName)
-{
-	return nullptr;
-}
 void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message)
 {
 	wstring str;
@@ -184,10 +180,23 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 	}
 }
 
+const RainLibrary* test2Lib;
+const RainLibrary* OnLibraryLoader(const RainString& libName)
+{
+	return test2Lib;
+}
 void TestFunc()
 {
+	TestCodeLoader loader2(L"D:\\Projects\\CPP\\RainLanguage\\Test\\RainTest2\\");
+	BuildParameter parameter2(RainString::Create(L"TestLib2"), false, &loader2, nullptr, ErrorLevel::WarringLevel4);
+	RainProduct* product2 = Build(parameter2);
+	const RainLibrary* lib2 = product2->GetLibrary();
+	const RainBuffer<uint8>* buf2 = Serialize(*lib2);
+	test2Lib = DeserializeLibrary(buf2->Data(), buf2->Count());
+	delete product2;
+	delete buf2;
 
-	TestCodeLoader loader(L"E:\\Projects\\CPP\\RainLanguage\\Test\\TestScripts\\");
+	TestCodeLoader loader(L"D:\\Projects\\CPP\\RainLanguage\\Test\\RainScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
 	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);
@@ -210,7 +219,7 @@ void TestFunc()
 	if (!product->GetLevelMessageCount(ErrorLevel::Error))
 	{
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
+		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, OnLibraryLoader, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction rf = kernel->FindFunction(L"Main", true);
 		InvokerWrapper iw = rf.CreateInvoker();
@@ -223,6 +232,7 @@ void TestFunc()
 		delete kernel;
 	}
 	delete product;
+	delete test2Lib;
 
 }
 
