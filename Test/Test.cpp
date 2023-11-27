@@ -196,7 +196,7 @@ void TestFunc()
 	delete product2;
 	delete buf2;
 
-	TestCodeLoader loader(L"./RainScripts/");
+	TestCodeLoader loader(L".\\TestScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
 	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);

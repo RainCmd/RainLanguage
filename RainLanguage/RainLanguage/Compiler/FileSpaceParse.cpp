@@ -200,15 +200,25 @@ label_parse_type:
 	{
 		if (TryAnalysis(line, index, lexical, messages))
 		{
+			uint32 dimesnion = 0;
+			if (lexical.type == LexicalType::BracketLeft1)
+			{
+				dimesnion = ExtractDimension(line, index);
+				if (!TryAnalysis(line, index, lexical, messages))
+				{
+					MESSAGE2(messages, line, MessageType::ERROR_MISSING_NAME);
+					return false;
+				}
+			}
 			if (lexical.type == LexicalType::Word || (operatorReloadable && IsReloadable(lexical.type)))
 			{
-				new (types.Add())FileType(names, 0);
+				new (types.Add())FileType(names, dimesnion);
 				name = lexical.anchor;
 				return true;
 			}
 			else if (lexical.type == LexicalType::Comma || lexical.type == LexicalType::Semicolon)
 			{
-				new (types.Add())FileType(names, 0);
+				new (types.Add())FileType(names, dimesnion);
 				segmented = true;
 				index = lexical.anchor.GetEnd();
 				goto label_parse_type;
