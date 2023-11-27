@@ -872,8 +872,12 @@ public unsafe class RainLanguageAdapter
     }
     private struct ExternNativeString
     {
-        public char* value;
-        public uint length;
+        char* value;
+        uint length;
+        public static implicit operator string(ExternNativeString nativeString)
+        {
+            return new string(nativeString.value, 0, (int)nativeString.length);
+        }
     }
     private class NativeString : IDisposable
     {
@@ -1928,14 +1932,14 @@ public unsafe class RainLanguageAdapter
                 {
                     var rainTypeParameters = new RainType[parameterCount];
                     for (int i = 0; i < parameterCount; i++) rainTypeParameters[i] = (RainType)parameters[i];
-                    var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), new string(fullName.value), rainTypeParameters);
+                    var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), fullName, rainTypeParameters);
                     return (k, c) => onCaller(new RainKernel(k), new RainCaller(c));
                 }, 0x10000, 8, 0x10, 0x100,
                 (kernel, stackFrames, count, msg) =>
                 {
                     var frames = new RainStackFrame[count];
-                    for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(new string(stackFrames[i].libName.value), new string(stackFrames[i].functionName.value), stackFrames[i].address);
-                    startupParameter.onExceptionExit(new RainKernelCopy(kernel), frames, new string(msg.value));
+                    for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(stackFrames[i].libName, stackFrames[i].functionName, stackFrames[i].address);
+                    startupParameter.onExceptionExit(new RainKernelCopy(kernel), frames, msg);
                 },
                 libName =>
                 {
