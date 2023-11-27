@@ -13,6 +13,16 @@ wstring S2WS(string src)
 	return result;
 	return L"";
 }
+bool IsEquals(const char* left, const char* right)
+{
+	int index = 0;
+	while (true)
+	{
+		if (left[index] != right[index]) return false;
+		if (!left[index++]) break;
+	}
+	return true;
+}
 Args Parse(int cnt, char** args)
 {
 	Args result = Args(L"ÓêÑÔ²âÊÔ¹¤³Ì", L".\\", L"Main", 10);
@@ -21,22 +31,22 @@ Args Parse(int cnt, char** args)
 		char* arg = args[i];
 		if (*arg != '-') continue;
 		for (size_t j = 0; arg[j]; j++) arg[j] |= 0x20;
-		if (arg == "-name")
+		if (IsEquals(arg, "-name"))
 		{
 			if (++i >= cnt) break;
 			result.name = S2WS(args[i]);
 		}
-		else if (arg == "-path")
+		else if (IsEquals(arg, "-path"))
 		{
 			if (++i >= cnt) break;
 			result.path = S2WS(args[i]);
 		}
-		else if (arg == "-entry")
+		else if (IsEquals(arg, "-entry"))
 		{
 			if (++i >= cnt) break;
 			result.entry = S2WS(args[i]);
 		}
-		else if (arg == "-fps")
+		else if (IsEquals(arg, "-fps"))
 		{
 			if (++i >= cnt) break;
 			result.entry = atoi(args[i]);

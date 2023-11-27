@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 public enum RainErrorLevel : uint
@@ -265,6 +266,387 @@ public struct StartupParameter
         this.callerLoader = callerLoader;
         this.onExceptionExit = onExceptionExit;
         this.programDatabaseLoader = programDatabaseLoader;
+    }
+}
+public struct CallerHelper
+{
+    public readonly object target;
+    public readonly MethodInfo method;
+    private readonly object[] parameters;
+    private readonly Type[] parameterSourceTypes;
+    private readonly RainType[] parameterTypes;
+    private readonly FieldInfo[] returnValueFields;
+    private readonly RainType[] returnTypes;
+    private readonly OnCaller caller;
+    public CallerHelper(MethodInfo method) : this(null, method) { }
+    public CallerHelper(object instance, MethodInfo method)
+    {
+        target = instance;
+        this.method = method;
+        var parameters = method.GetParameters();
+        this.parameters = new object[parameters.Length];
+        parameterTypes = new RainType[parameters.Length];
+        parameterSourceTypes = new Type[parameters.Length];
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            parameterSourceTypes[i] = parameters[i].ParameterType;
+            parameterTypes[i] = GetRainType(parameters[i].ParameterType);
+        }
+        returnValueFields = null;
+        if (method.ReturnType != typeof(void))
+        {
+            var returnType = GetRainType(method.ReturnType);
+            if (returnType == RainType.Internal)
+            {
+                returnValueFields = method.ReturnType.GetFields();
+                returnTypes = new RainType[returnValueFields.Length];
+                for (int i = 0; i < returnValueFields.Length; i++)
+                    returnTypes[i] = GetRainType(returnValueFields[i].FieldType);
+            }
+            else returnTypes = new RainType[1] { returnType };
+        }
+        else returnTypes = new RainType[0];
+        try
+        {
+            var parameter_kernel = Expression.Parameter(typeof(RainLanguageAdapter.RainKernel));
+            var parameter_caller = Expression.Parameter(typeof(RainLanguageAdapter.RainCaller));
+            caller = Expression.Lambda<OnCaller>(GenerateExpression(instance, method, parameterTypes, returnTypes, returnValueFields, parameter_kernel, parameter_caller), parameter_kernel, parameter_caller).Compile();
+        }
+        catch
+        {
+            caller = null;
+        }
+    }
+    public static CallerHelper Create<T>(string functionName)
+    {
+        return Create<T>(null, functionName);
+    }
+    public static CallerHelper Create<T>(object instance, string functionName)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        return new CallerHelper(instance, typeof(T).GetMethod(functionName, flags));
+    }
+    private static Expression GenerateExpression(object instance, MethodInfo method, RainType[] parameterTypes, RainType[] returnTypes, FieldInfo[] returnValueFields, ParameterExpression kernel, ParameterExpression caller)
+    {
+        var type_caller = typeof(RainLanguageAdapter.RainCaller);
+        var caller_parameters = new Expression[parameterTypes.Length];
+        for (uint i = 0; i < parameterTypes.Length; i++)
+        {
+            var methodName = GetParameterFunctionName(parameterTypes[i]);
+            if (string.IsNullOrEmpty(methodName)) caller_parameters[i] = Expression.Constant(null);
+            else caller_parameters[i] = Expression.Call(caller, type_caller.GetMethod(methodName), Expression.Constant(i));
+        }
+        var caller_return_value = instance == null ? Expression.Call(method, caller_parameters) : Expression.Call(Expression.Constant(instance), method, caller_parameters);
+        if (returnTypes.Length > 0)
+        {
+            if (returnValueFields == null)
+            {
+                var methodName = GetReturnFunctionName(returnTypes[0]);
+                if (!string.IsNullOrEmpty(methodName)) return Expression.Call(caller, type_caller.GetMethod(methodName), Expression.Constant(0u), caller_return_value);
+            }
+            else if (returnValueFields.Length > 0)
+            {
+                Expression result = null;
+                for (uint i = 0; i < returnValueFields.Length; i++)
+                {
+                    var methodName = GetReturnFunctionName(returnTypes[i]);
+                    if (!string.IsNullOrEmpty(methodName))
+                    {
+                        var field_value = Expression.Field(caller_return_value, returnValueFields[i]);
+                        var expression = Expression.Call(caller, type_caller.GetMethod(methodName), Expression.Constant(i), field_value);
+                        if (result == null) result = expression;
+                        else result = Expression.Block(result, expression);
+                    }
+                }
+                if (result != null) return result;
+            }
+        }
+        return caller_return_value;
+    }
+    private static string GetReturnFunctionName(RainType type)
+    {
+        if ((type & RainType.ArrayFlag) > 0)
+        {
+            type &= ~RainType.ArrayFlag;
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool: return "SetBoolsReturnValue";
+                case RainType.Byte: return "SetBytesReturnValue";
+                case RainType.Character: return "SetCharsReturnValue";
+                case RainType.Integer: return "SetIntegersReturnValue";
+                case RainType.Real: return "SetRealsReturnValue";
+                case RainType.Real2: return "SetReal2sReturnValue";
+                case RainType.Real3: return "SetReal3sReturnValue";
+                case RainType.Real4: return "SetReal4sReturnValue";
+                case RainType.Enum: return "SetEnumValuesReturnValue";
+                case RainType.String: return "SetStringsReturnValue";
+                case RainType.Entity: return "SetEntitysReturnValue";
+                case RainType.ArrayFlag: break;
+            }
+        }
+        else
+        {
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool: return "SetBoolReturnValue";
+                case RainType.Byte: return "SetByteReturnValue";
+                case RainType.Character: return "SetCharReturnValue";
+                case RainType.Integer: return "SetIntegerReturnValue";
+                case RainType.Real: return "SetRealReturnValue";
+                case RainType.Real2: return "SetReal2ReturnValue";
+                case RainType.Real3: return "SetReal3ReturnValue";
+                case RainType.Real4: return "SetReal4ReturnValue";
+                case RainType.Enum: return "SetEnumValueReturnValue";
+                case RainType.String: return "SetStringReturnValue";
+                case RainType.Entity: return "SetEntityReturnValue";
+                case RainType.ArrayFlag: break;
+            }
+        }
+        return null;
+    }
+    private static string GetParameterFunctionName(RainType type)
+    {
+        if ((type & RainType.ArrayFlag) > 0)
+        {
+            type &= ~RainType.ArrayFlag;
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool: return "etBoolsParameter";
+                case RainType.Byte: return "GetBytesParameter";
+                case RainType.Character: return "GetCharsParameter";
+                case RainType.Integer: return "GetIntegersParameter";
+                case RainType.Real: return "GetRealsParameter";
+                case RainType.Real2: return "GetReal2sParameter";
+                case RainType.Real3: return "GetReal3sParameter";
+                case RainType.Real4: return "GetReal4sParameter";
+                case RainType.Enum: return "GetEnumValuesParameter";
+                case RainType.String: return "GetStringsParameter";
+                case RainType.Entity: return "GetEntitysParameter";
+                case RainType.ArrayFlag: break;
+            }
+        }
+        else
+        {
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool: return "GetBoolParameter";
+                case RainType.Byte: return "GetByteParameter";
+                case RainType.Character: return "GetCharParameter";
+                case RainType.Integer: return "GetIntegerParameter";
+                case RainType.Real: return "GetRealParameter";
+                case RainType.Real2: return "GetReal2Parameter";
+                case RainType.Real3: return "GetReal3Parameter";
+                case RainType.Real4: return "GetReal4Parameter";
+                case RainType.Enum: return "GetEnumValueParameter";
+                case RainType.String: return "GetStringParameter";
+                case RainType.Entity: return "GetEntityParameter";
+                case RainType.ArrayFlag: break;
+            }
+        }
+        return null;
+    }
+    public void OnCaller(RainLanguageAdapter.RainKernel kernel, RainLanguageAdapter.RainCaller caller)
+    {
+        if (this.caller != null) this.caller(kernel, caller);
+        else
+        {
+            for (uint i = 0; i < parameterTypes.Length; i++)
+                parameters[i] = GetParameter(i, parameterTypes[i], caller);
+            var result = method.Invoke(target, parameters);
+            if (result != null && returnTypes.Length > 0)
+            {
+                if (returnValueFields == null) SetReturn(0, returnTypes[0], caller, result);
+                else for (uint i = 0; i < returnValueFields.Length; i++)
+                        SetReturn(i, returnTypes[i], caller, returnValueFields[i].GetValue(result));
+            }
+        }
+    }
+    private static void SetReturn(uint index, RainType type, RainLanguageAdapter.RainCaller caller, object value)
+    {
+        if ((type & RainType.ArrayFlag) > 0)
+        {
+            type &= ~RainType.ArrayFlag;
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool:
+                    caller.SetBoolsReturnValue(index, (bool[])value);
+                    break;
+                case RainType.Byte:
+                    caller.SetBytesReturnValue(index, (byte[])value);
+                    break;
+                case RainType.Character:
+                    caller.SetCharsReturnValue(index, (char[])value);
+                    break;
+                case RainType.Integer:
+                    caller.SetIntegersReturnValue(index, (long[])value);
+                    break;
+                case RainType.Real:
+                    caller.SetRealsReturnValue(index, (Real[])value);
+                    break;
+                case RainType.Real2:
+                    caller.SetReal2sReturnValue(index, (Real2[])value);
+                    break;
+                case RainType.Real3:
+                    caller.SetReal3sReturnValue(index, (Real3[])value);
+                    break;
+                case RainType.Real4:
+                    caller.SetReal4sReturnValue(index, (Real4[])value);
+                    break;
+                case RainType.Enum:
+                    {
+                        var list = (IList)value;
+                        var values = new long[list.Count];
+                        for (int i = 0; i < values.Length; i++) values[i] = GetEnumValue(list[i]);
+                        caller.SetEnumValuesReturnValue(index, values);
+                    }
+                    break;
+                case RainType.String:
+                    caller.SetStringsReturnValue(index, (string[])value);
+                    break;
+                case RainType.Entity:
+                    caller.SetEntitysReturnValue(index, (ulong[])value);
+                    break;
+                case RainType.ArrayFlag: break;
+            }
+        }
+        else
+        {
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool:
+                    caller.SetBoolReturnValue(index, (bool)value);
+                    break;
+                case RainType.Byte:
+                    caller.SetByteReturnValue(index, (byte)value);
+                    break;
+                case RainType.Character:
+                    caller.SetCharReturnValue(index, (char)value);
+                    break;
+                case RainType.Integer:
+                    caller.SetIntegerReturnValue(index, (long)value);
+                    break;
+                case RainType.Real:
+                    caller.SetRealReturnValue(index, (Real)value);
+                    break;
+                case RainType.Real2:
+                    caller.SetReal2ReturnValue(index, (Real2)value);
+                    break;
+                case RainType.Real3:
+                    caller.SetReal3ReturnValue(index, (Real3)value);
+                    break;
+                case RainType.Real4:
+                    caller.SetReal4ReturnValue(index, (Real4)value);
+                    break;
+                case RainType.Enum:
+                    caller.SetEnumValueReturnValue(index, GetEnumValue(value));
+                    break;
+                case RainType.String:
+                    caller.SetStringReturnValue(index, (string)value);
+                    break;
+                case RainType.Entity:
+                    caller.SetEntityReturnValue(index, (ulong)value);
+                    break;
+                case RainType.ArrayFlag: break;
+            }
+        }
+    }
+    private object GetParameter(uint index, RainType type, RainLanguageAdapter.RainCaller caller)
+    {
+        if ((type & RainType.ArrayFlag) > 0)
+        {
+            type &= ~RainType.ArrayFlag;
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool: return caller.GetBoolsParameter(index);
+                case RainType.Byte: return caller.GetBytesParameter(index);
+                case RainType.Character: return caller.GetCharsParameter(index);
+                case RainType.Integer: return caller.GetIntegersParameter(index);
+                case RainType.Real: return caller.GetRealsParameter(index);
+                case RainType.Real2: return caller.GetReal2sParameter(index);
+                case RainType.Real3: return caller.GetReal3sParameter(index);
+                case RainType.Real4: return caller.GetReal4sParameter(index);
+                case RainType.Enum:
+                    {
+                        var enumType = parameterSourceTypes[index].GetElementType();
+                        var values = caller.GetEnumValuesParameter(index);
+                        var result = Array.CreateInstance(enumType, values.Length);
+                        for (var i = 0; i < values.Length; i++)
+                            result.SetValue(Enum.ToObject(enumType, values[i]), i);
+                        return result;
+                    }
+                case RainType.String: return caller.GetStringsParameter(index);
+                case RainType.Entity: return caller.GetEntitysParameter(index);
+                case RainType.ArrayFlag: break;
+            }
+        }
+        else
+        {
+            switch (type)
+            {
+                case RainType.Internal: break;
+                case RainType.Bool: return caller.GetBoolParameter(index);
+                case RainType.Byte: return caller.GetByteParameter(index);
+                case RainType.Character: return caller.GetCharParameter(index);
+                case RainType.Integer: return caller.GetIntegerParameter(index);
+                case RainType.Real: return caller.GetRealParameter(index);
+                case RainType.Real2: return caller.GetReal2Parameter(index);
+                case RainType.Real3: return caller.GetReal3Parameter(index);
+                case RainType.Real4: return caller.GetReal4Parameter(index);
+                case RainType.Enum: return Enum.ToObject(parameterSourceTypes[index], caller.GetEnumValueParameter(index));
+                case RainType.String: return caller.GetStringParameter(index);
+                case RainType.Entity: return caller.GetEntityParameter(index);
+                case RainType.ArrayFlag: break;
+            }
+        }
+        return null;
+    }
+    private static RainType GetRainType(Type type)
+    {
+        if (type == typeof(bool)) return RainType.Bool;
+        else if (type == typeof(byte)) return RainType.Byte;
+        else if (type == typeof(char)) return RainType.Character;
+        else if (type == typeof(long)) return RainType.Integer;
+        else if (type == typeof(Real)) return RainType.Real;
+        else if (type == typeof(Real2)) return RainType.Real2;
+        else if (type == typeof(Real3)) return RainType.Real3;
+        else if (type == typeof(Real4)) return RainType.Real4;
+        else if (type == typeof(string)) return RainType.String;
+        else if (type == typeof(ulong)) return RainType.Entity;
+        else if (type.IsEnum) return RainType.Enum;
+        if (type.IsArray && type.GetArrayRank() == 1) return GetRainType(type.GetElementType()) | RainType.ArrayFlag;
+        return RainType.Internal;
+    }
+    private static long GetEnumValue(object value)
+    {
+        switch (((Enum)value).GetTypeCode())
+        {
+            case TypeCode.Boolean: break;
+            case TypeCode.Byte: return (byte)value;
+            case TypeCode.Char: return (char)value;
+            case TypeCode.DateTime:
+            case TypeCode.DBNull:
+            case TypeCode.Decimal:
+            case TypeCode.Double:
+            case TypeCode.Empty: break;
+            case TypeCode.Int16: return (short)value;
+            case TypeCode.Int32: return (int)value;
+            case TypeCode.Int64: return (long)value;
+            case TypeCode.Object: break;
+            case TypeCode.SByte: return (sbyte)value;
+            case TypeCode.Single:
+            case TypeCode.String: break;
+            case TypeCode.UInt16: return (ushort)value;
+            case TypeCode.UInt32: return (uint)value;
+            case TypeCode.UInt64: return (long)(ulong)value;
+        }
+        return 0;
     }
 }
 [Serializable]
@@ -1202,6 +1584,10 @@ public unsafe class RainLanguageAdapter
             using (var value = new NativeString(CallerWrapperGetStringParameter(caller, index)))
                 return value.Value;
         }
+        public ulong GetEntityParameter(uint index)
+        {
+            return CallerWrapperGetEntityParameter(caller, index);
+        }
         private delegate T* CallerParametersGetter<T>(void* caller, uint index) where T : unmanaged;
         public uint GetArrayParameterLength(uint index)
         {
@@ -1271,7 +1657,7 @@ public unsafe class RainLanguageAdapter
         {
             return GetParameters<ulong>(CallerWrapperGetEntityArrayParameter, index);
         }
-        public void SetBoolReutnrValue(uint index, bool value)
+        public void SetBoolReturnValue(uint index, bool value)
         {
             CallerWrapperSetBoolReturnValue(caller, index, value);
         }

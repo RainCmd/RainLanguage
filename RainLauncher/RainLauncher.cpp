@@ -128,7 +128,7 @@ int main(int cnt, char** args)
 				kernel->Update();
 			}
 		}
-		else wcout << _args.entry << L"未找到" << endl;
+		else wcout << "entry:" << _args.entry << " not found" << endl;
 	}
 	delete product;
 
