@@ -243,7 +243,7 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 			if ((*relies)[x]->declarations.TryGet(name.content, declarations))
 				for (uint32 y = 0; y < declarations->Count(); y++)
 					if (IsVisible(manager, (*declarations)[y]))
-						results.Add(*declarations);
+						results.Add((*declarations)[y]);
 		if (results.Count() == 1)return true;
 		else if (results.Count() > 1)
 		{

@@ -32,4 +32,6 @@
 *.app
 .vs
 */x64
+*/obj
+*/bin
 Test

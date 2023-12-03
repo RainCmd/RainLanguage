@@ -24,7 +24,7 @@ inline bool IsBlank(character value)
 }
 inline bool IsNumber(character value)
 {
-	return value >= '0' && value < '9';
+	return value >= '0' && value <= '9';
 }
 inline bool IsDigit(character value)
 {

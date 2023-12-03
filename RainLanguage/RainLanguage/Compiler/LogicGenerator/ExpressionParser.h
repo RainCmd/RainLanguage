@@ -45,7 +45,7 @@ struct ExpressionParser
 	bool TryParseAssignment(LexicalType type, const Anchor& left, const Anchor& right, Expression*& result);
 	bool TryParseQuestion(const Anchor& condition, const  Anchor& expression, Expression*& result);
 	bool TryParseQuestionNull(const Anchor& left, const  Anchor& right, Expression*& result);
-	bool TryParse(const Anchor& left, const  Anchor& right, Expression*& result);
+	bool TryParseTuple(SplitFlag flag, LexicalType type, Anchor anchor, Expression*& result);
 	bool TryParse(const Anchor& anchor, Expression*& result);
 };
 

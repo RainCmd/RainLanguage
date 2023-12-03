@@ -696,7 +696,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable)) return false;
 			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
-			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
+			if (!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
 			{
 				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
 				return false;
@@ -715,7 +715,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))return false;
 			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
-			if (!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
+			if (!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
 			{
 				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
 				return false;
@@ -1854,22 +1854,32 @@ bool ExpressionParser::TryParseQuestionNull(const Anchor& left, const  Anchor& r
 	return false;
 }
 
-bool ExpressionParser::TryParse(const Anchor& left, const Anchor& right, Expression*& result)
+bool ExpressionParser::TryParseTuple(SplitFlag flag, LexicalType type, Anchor anchor, Expression*& result)
 {
-	if (left.content.IsEmpty()) return TryParse(right, result);
-	if (right.content.IsEmpty()) return TryParse(left, result);
-	Expression* leftExpression = NULL, * rightExpression = NULL;
-	if (TryParse(left, leftExpression) && TryParse(right, rightExpression))
+	Anchor splitLeft, splitRight;
+	if ((Split(anchor, anchor.position, flag, splitLeft, splitRight, manager->messages) == type))
 	{
+		Expression* expression;
 		List<Expression*, true> expressions(2);
-		expressions.Add(leftExpression);
-		expressions.Add(rightExpression);
-		result = Combine(expressions);
-		return true;
+		do
+		{
+			if (TryParse(splitLeft, expression))
+			{
+				expressions.Add(expression);
+				anchor = splitRight;
+			}
+			else goto label_error;
+		} while (Split(anchor, anchor.position, flag, splitLeft, splitRight, manager->messages) == type);
+		if (TryParse(anchor, expression))
+		{
+			expressions.Add(expression);
+			result = Combine(expressions);
+			return true;
+		}
+	label_error:
+		while (expressions.Count()) delete expressions.Pop();
+		result = NULL;
 	}
-	delete leftExpression;
-	delete rightExpression;
-	result = NULL;
 	return false;
 }
 
@@ -1901,13 +1911,13 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	}
 	Anchor trim;
 	if (TryRemoveBracket(anchor, trim, manager->messages)) return TryParse(trim, result);
+	if (TryParseTuple(SplitFlag::Semicolon, LexicalType::Semicolon, anchor, result)) return true;
 	Anchor splitLeft, splitRight;
-	if (Split(anchor, anchor.position, SplitFlag::Semicolon, splitLeft, splitRight, manager->messages) == LexicalType::Semicolon) return TryParse(splitLeft, splitRight, result);
-	LexicalType splitType = Split(anchor, anchor.position, (SplitFlag)((uint32)SplitFlag::Lambda | (uint32)SplitFlag::Assignment | (uint32)SplitFlag::Question), splitLeft, splitRight, manager->messages);
+	LexicalType splitType = Split(anchor, anchor.position, SplitFlag::Lambda | SplitFlag::Assignment | SplitFlag::Question, splitLeft, splitRight, manager->messages);
 	if (splitType == LexicalType::Lambda) return TryParseLambda(splitLeft, splitRight, result);
 	else if (splitType == LexicalType::Question) return TryParseQuestion(splitLeft, splitRight, result);
 	else if (splitType != LexicalType::Unknow) return TryParseAssignment(splitType, splitLeft, splitRight, result);
-	if (Split(anchor, anchor.position, SplitFlag::Comma, splitLeft, splitRight, manager->messages) == LexicalType::Comma) return TryParse(splitLeft, splitRight, result);
+	if (TryParseTuple(SplitFlag::Comma, LexicalType::Comma, anchor, result)) return true;
 	if (Split(anchor, anchor.position, SplitFlag::QuestionNull, splitLeft, splitRight, manager->messages) == LexicalType::QuestionNull) return TryParseQuestionNull(splitLeft, splitRight, result);
 
 	List<Expression*, true>expressionStack(0);
@@ -2731,6 +2741,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				Lexical identifierLexical;
 				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
 				{
+					index = identifierLexical.anchor.GetEnd();
 					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
 					{
 						Expression* expression = expressionStack.Pop();
@@ -2746,7 +2757,8 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 								{
 									expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, true);
 									expressionStack.Add(expression);
-									break;
+									attribute = expression->attribute;
+									goto label_next_lexical;
 								}
 								else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
 							}
