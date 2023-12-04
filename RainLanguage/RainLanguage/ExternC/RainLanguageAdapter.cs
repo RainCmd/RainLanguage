@@ -183,16 +183,6 @@ namespace RainLanguage
         /// </summary>
         ArrayFlag = 0x10,
     }
-    public unsafe struct Data
-    {
-        public byte* data;
-        public uint size;
-        public Data(byte* data, uint size)
-        {
-            this.data = data;
-            this.size = size;
-        }
-    }
     public delegate byte[] DataLoader(string name);
     public struct BuildParameter
     {
@@ -215,6 +205,7 @@ namespace RainLanguage
             this.errorLevel = errorLevel;
         }
     }
+    [StructLayout(LayoutKind.Sequential)]
     public struct ErrorMessageDetail
     {
         public MessageType messageType;
@@ -222,6 +213,7 @@ namespace RainLanguage
         public uint start;
         public uint length;
     }
+    [StructLayout(LayoutKind.Sequential)]
     public struct KernelState
     {
         public uint taskCount;
@@ -272,7 +264,7 @@ namespace RainLanguage
             this.programDatabaseLoader = programDatabaseLoader;
         }
     }
-    public struct CallerHelper
+    public readonly struct CallerHelper
     {
         public readonly object target;
         public readonly MethodInfo method;
@@ -314,7 +306,7 @@ namespace RainLanguage
             {
                 var parameter_kernel = Expression.Parameter(typeof(RainLanguageAdapter.RainKernel));
                 var parameter_caller = Expression.Parameter(typeof(RainLanguageAdapter.RainCaller));
-                caller = Expression.Lambda<OnCaller>(GenerateExpression(instance, method, parameterTypes, returnTypes, returnValueFields, parameter_kernel, parameter_caller), parameter_kernel, parameter_caller).Compile();
+                caller = Expression.Lambda<OnCaller>(GenerateExpression(instance, method, parameterTypes, returnTypes, returnValueFields, parameter_caller), parameter_kernel, parameter_caller).Compile();
             }
             catch
             {
@@ -330,7 +322,7 @@ namespace RainLanguage
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             return new CallerHelper(instance, typeof(T).GetMethod(functionName, flags));
         }
-        private static Expression GenerateExpression(object instance, MethodInfo method, RainType[] parameterTypes, RainType[] returnTypes, FieldInfo[] returnValueFields, ParameterExpression kernel, ParameterExpression caller)
+        private static Expression GenerateExpression(object instance, MethodInfo method, RainType[] parameterTypes, RainType[] returnTypes, FieldInfo[] returnValueFields, ParameterExpression caller)
         {
             var type_caller = typeof(RainLanguageAdapter.RainCaller);
             var caller_parameters = new Expression[parameterTypes.Length];
@@ -653,8 +645,8 @@ namespace RainLanguage
             return 0;
         }
     }
-    [Serializable]
-    public struct Real
+    [Serializable, StructLayout(LayoutKind.Sequential)]
+    public readonly struct Real
     {
 #if FIXED_REAL
     public readonly long value;
@@ -676,8 +668,11 @@ namespace RainLanguage
         public static implicit operator Real(double value) { return new Real(value); }
 #endif
     }
+    [Serializable, StructLayout(LayoutKind.Sequential)]
     public struct Real2 { public Real x, y; }
+    [Serializable, StructLayout(LayoutKind.Sequential)]
     public struct Real3 { public Real x, y, z; }
+    [Serializable, StructLayout(LayoutKind.Sequential)]
     public struct Real4 { public Real x, y, z, w; }
     public unsafe class RainLanguageAdapter
     {
@@ -699,11 +694,12 @@ namespace RainLanguage
         {
             Marshal.FreeHGlobal((IntPtr)ptr);
         }
-        private struct CodeLoaderResult
+        [StructLayout(LayoutKind.Sequential)]
+        private readonly struct CodeLoaderResult
         {
-            bool end;
-            char* path;
-            char* content;
+            readonly bool end;
+            readonly char* path;
+            readonly char* content;
             public CodeLoaderResult(bool end, char* path, char* content)
             {
                 this.end = end;
@@ -713,13 +709,14 @@ namespace RainLanguage
         }
         private delegate CodeLoaderResult CodeLoader();
         private delegate void* LibraryLoader(void* libraryName);
-        private struct ExternBuildParameter
+        [StructLayout(LayoutKind.Sequential)]
+        private readonly struct ExternBuildParameter
         {
-            char* name;
-            bool debug;
-            CodeLoader CodeLoader;
-            LibraryLoader LibraryLoader;
-            uint errorLevel;
+            readonly char* name;
+            readonly bool debug;
+            readonly CodeLoader CodeLoader;
+            readonly LibraryLoader LibraryLoader;
+            readonly uint errorLevel;
             public ExternBuildParameter(char* name, bool debug, CodeLoader codeLoader, LibraryLoader libraryLoader, uint errorLevel)
             {
                 this.name = name;
@@ -874,10 +871,11 @@ namespace RainLanguage
             public RainProgramDatabaseCopy(void* database) : base(database) { }
             public override void Dispose() { }
         }
-        private struct ExternNativeString
+        [StructLayout(LayoutKind.Sequential)]
+        private readonly struct ExternNativeString
         {
-            char* value;
-            uint length;
+            readonly char* value;
+            readonly uint length;
             public static implicit operator string(ExternNativeString nativeString)
             {
                 return new string(nativeString.value, 0, (int)nativeString.length);
@@ -942,6 +940,7 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainBuffer", CallingConvention = CallingConvention.Cdecl)]
             public extern static void DeleteRainBuffer(void* value);
         }
+        [StructLayout(LayoutKind.Sequential)]
         private struct ExternRainStackFram
         {
             public ExternNativeString libName;
@@ -953,21 +952,22 @@ namespace RainLanguage
         private delegate ExternOnCaller ExternNativeCallerLoader(void* kernel, ExternNativeString fullName, byte* parameters, uint parameterCount);
         private delegate void ExternExceptionExit(void* kernel, ExternRainStackFram* frames, uint count, ExternNativeString msg);
         private delegate void* ExternProgramDatabaseLoader(void* name);
-        private struct ExternStartupParameter
+        [StructLayout(LayoutKind.Sequential)]
+        private readonly struct ExternStartupParameter
         {
-            void** libraries;
-            uint libraryCount;
-            long seed;
-            uint stringCapacity;
-            uint entityCapacity;
-            ExternEntityAction onReferenecEntity, onReleaseEntity;
-            LibraryLoader libraryLoader;
-            ExternNativeCallerLoader nativeCallerLoader;
-            uint heapCapacity, heapGeneration;
-            uint taskCapacity;
-            uint executeStackCapacity;
-            ExternExceptionExit onExceptionExit;
-            ExternProgramDatabaseLoader programDatabaseLoader;
+            readonly void** libraries;
+            readonly uint libraryCount;
+            readonly long seed;
+            readonly uint stringCapacity;
+            readonly uint entityCapacity;
+            readonly ExternEntityAction onReferenecEntity, onReleaseEntity;
+            readonly LibraryLoader libraryLoader;
+            readonly ExternNativeCallerLoader nativeCallerLoader;
+            readonly uint heapCapacity, heapGeneration;
+            readonly uint taskCapacity;
+            readonly uint executeStackCapacity;
+            readonly ExternExceptionExit onExceptionExit;
+            readonly ExternProgramDatabaseLoader programDatabaseLoader;
             public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit, ExternProgramDatabaseLoader programDatabaseLoader)
             {
                 this.libraries = libraries;
@@ -1539,9 +1539,10 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteInvokerWrapper", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteInvokerWrapper(void* invoker);
         }
-        public struct RainCaller
+        [StructLayout(LayoutKind.Sequential)]
+        public readonly struct RainCaller
         {
-            private void* caller;
+            private readonly void* caller;
             public RainCaller(void* caller)
             {
                 this.caller = caller;

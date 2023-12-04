@@ -3,6 +3,7 @@
 #include "../Public/Builder.h"
 #include "../Public//VirtualMachine.h"
 #include "../Public/MemoryAllocator.h"
+
 struct Extern_CodeLoaderResult
 {
 	bool end;

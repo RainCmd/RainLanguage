@@ -96,7 +96,7 @@ void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frame
 int main(int cnt, char** args)
 {
 	Args _args = Parse(cnt, args);
-	_args.path = L"D:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\";
+	//_args.path = L"D:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\";
 	CodeLoadHelper helper(_args.path);
 	BuildParameter parameter(RainString(_args.name.c_str(), (uint32)_args.name.size()), false, &helper, nullptr, ErrorLevel::WarringLevel4);
 	auto product = Build(parameter);
