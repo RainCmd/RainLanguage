@@ -1884,11 +1884,15 @@ namespace RainLanguage
 
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_Build", CallingConvention = CallingConvention.Cdecl)]
         private extern static void* Build(ExternBuildParameter parameter);
-        private class CodeLoadHelper
+        private class CodeLoadHelper : IDisposable
         {
+            private char* path;
+            private char* content;
             private readonly IEnumerator<BuildParameter.ICodeFile> files;
             public CodeLoadHelper(IEnumerable<BuildParameter.ICodeFile> files)
             {
+                path = null;
+                content = null;
                 this.files = files.GetEnumerator();
             }
             public CodeLoaderResult LoadNext()
@@ -1896,12 +1900,21 @@ namespace RainLanguage
                 if (files.MoveNext())
                 {
                     var file = files.Current;
-                    fixed (char* ppath = file.Path)
-                    fixed (char* pcontent = file.Content)
-                        return new CodeLoaderResult(false, ppath, pcontent);
+                    Dispose();
+                    path = GetEctype(file.Path);
+                    content = GetEctype(file.Content);
+                    return new CodeLoaderResult(false, path, content);
                 }
                 else return new CodeLoaderResult(true, null, null);
             }
+            private void Dispose()
+            {
+                if (path != null) FreeMemory(path);
+                path = null;
+                if (content != null) FreeMemory(content);
+                content = null;
+            }
+            ~CodeLoadHelper() { Dispose(); }
         }
         public static Product BuildProduct(BuildParameter parameter)
         {

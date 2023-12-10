@@ -96,9 +96,10 @@ void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frame
 int main(int cnt, char** args)
 {
 	Args _args = Parse(cnt, args);
-	//_args.path = L"D:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\";
+	_args.path = L"D:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\";
+label_restart:
 	CodeLoadHelper helper(_args.path);
-	BuildParameter parameter(RainString(_args.name.c_str(), (uint32)_args.name.size()), false, &helper, nullptr, ErrorLevel::WarringLevel4);
+	BuildParameter parameter(RainString(_args.name.c_str(), (uint32)_args.name.size()), false, &helper, nullptr, ErrorLevel::LoggerLevel4);
 	auto product = Build(parameter);
 	for (uint32 i = 0; i <= (uint32)ErrorLevel::LoggerLevel4; i++)
 	{
@@ -109,7 +110,7 @@ int main(int cnt, char** args)
 			auto msg = product->GetErrorMessage(lvl, j);
 			if (msg.message.length)
 				wcout << wstring(msg.message.value, msg.message.length) << "\n";
-			wcout << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]\tERR CODE:" << (uint32)msg.type << endl;
+			wcout << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]\nERR CODE:" << (uint32)msg.type << endl;
 		}
 	}
 	if (product->GetLevelMessageCount(ErrorLevel::Error)) wcout << L"编译失败！" << endl;
@@ -132,5 +133,10 @@ int main(int cnt, char** args)
 		else wcout << "entry:" << _args.entry << " not found" << endl;
 	}
 	delete product;
-
+	cout << "\n再次编译？";
+	char c[20];
+	cin >> c;
+	cout << endl;
+	if ((*c | 0x20) == 'y')
+		goto label_restart;
 }
