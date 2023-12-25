@@ -740,6 +740,7 @@ namespace RainLanguage
                 if (product == null) return;
                 DeleteProduct(product);
                 product = null;
+                GC.SuppressFinalize(this);
             }
             ~Product() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteProduct", CallingConvention = CallingConvention.Cdecl)]
@@ -790,6 +791,7 @@ namespace RainLanguage
                 if (msg == null) return;
                 DeleteRainErrorMessage(msg);
                 msg = null;
+                GC.SuppressFinalize(this);
             }
             ~ErrorMessage() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetPath", CallingConvention = CallingConvention.Cdecl)]
@@ -818,6 +820,7 @@ namespace RainLanguage
                 if (library == null) return;
                 DeleteRainLibrary(library);
                 library = null;
+                GC.SuppressFinalize(this);
             }
             ~RainLibrary() { Dispose(); }
             public static RainLibrary Create(byte[] data)
@@ -853,6 +856,7 @@ namespace RainLanguage
                 if (database == null) return;
                 DeleteRainProgramDatabase(database);
                 database = null;
+                GC.SuppressFinalize(this);
             }
             ~RainProgramDatabase() { Dispose(); }
             public static RainProgramDatabase Create(byte[] data)
@@ -900,6 +904,7 @@ namespace RainLanguage
                 if (value == null) return;
                 DeleteRainString(value);
                 value = null;
+                GC.SuppressFinalize(this);
             }
             ~NativeString() { Dispose(); }
             internal static NativeString Create(char* value)
@@ -931,6 +936,7 @@ namespace RainLanguage
                 if (value == null) return;
                 DeleteRainBuffer(value);
                 value = null;
+                GC.SuppressFinalize(this);
             }
             ~RainBuffer() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainBufferGetData", CallingConvention = CallingConvention.Cdecl)]
@@ -1026,6 +1032,7 @@ namespace RainLanguage
                 if (kernel == null) return;
                 DeleteKernel(kernel);
                 kernel = null;
+                System.GC.SuppressFinalize(this);
             }
             ~RainKernel() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelFindFunction", CallingConvention = CallingConvention.Cdecl)]
@@ -1071,6 +1078,7 @@ namespace RainLanguage
                 if (function == null) return;
                 DeleteRainFunction(function);
                 function = null;
+                GC.SuppressFinalize(this);
             }
             ~RainFunction() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionIsValid", CallingConvention = CallingConvention.Cdecl)]
@@ -1106,6 +1114,7 @@ namespace RainLanguage
                 if (functions == null) return;
                 DeleteRainFunctions(functions);
                 functions = null;
+                GC.SuppressFinalize(this);
             }
             ~RainFunctions() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionsGetCount", CallingConvention = CallingConvention.Cdecl)]
@@ -1129,6 +1138,7 @@ namespace RainLanguage
                 if (types == null) return;
                 DeleteRainTypes(types);
                 types = null;
+                GC.SuppressFinalize(this);
             }
             ~RainTypes() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainTypesGetCount", CallingConvention = CallingConvention.Cdecl)]
@@ -1152,9 +1162,7 @@ namespace RainLanguage
             public string GetExitMessage()
             {
                 using (var nativeString = new NativeString(Extern_InvokerWrapperGetExitMessage(invoker)))
-                {
                     return nativeString.Value;
-                }
             }
             public void Start(bool immediately, bool ignoreWait)
             {
@@ -1214,16 +1222,12 @@ namespace RainLanguage
             public string GetEnumNameReturnValue(uint index)
             {
                 using (var nativeString = new NativeString(InvokerWrapperGetEnumNameReturnValue(invoker, index)))
-                {
                     return nativeString.Value;
-                }
             }
             public string GetStringReturnValue(uint index)
             {
                 using (var nativeString = new NativeString(InvokerWrapperGetStringReturnValue(invoker, index)))
-                {
                     return nativeString.Value;
-                }
             }
             public ulong GetEntityReturnValue(uint index)
             {
@@ -1411,6 +1415,7 @@ namespace RainLanguage
                 if (invoker == null) return;
                 DeleteInvokerWrapper(invoker);
                 invoker = null;
+                GC.SuppressFinalize(this);
             }
             ~RainInvoekr() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetKernel", CallingConvention = CallingConvention.Cdecl)]
@@ -1907,12 +1912,13 @@ namespace RainLanguage
                 }
                 else return new CodeLoaderResult(true, null, null);
             }
-            private void Dispose()
+            public void Dispose()
             {
                 if (path != null) FreeMemory(path);
                 path = null;
                 if (content != null) FreeMemory(content);
                 content = null;
+                GC.SuppressFinalize(this);
             }
             ~CodeLoadHelper() { Dispose(); }
         }
@@ -1970,6 +1976,6 @@ namespace RainLanguage
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SetMemoryAllocator", CallingConvention = CallingConvention.Cdecl)]
         public extern static void SetMemoryAllocator(Alloc alloc, Free free, Realloc realloc);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_FreeArray", CallingConvention = CallingConvention.Cdecl)]
-        public extern static void FreeArray(void* pointer);
+        private extern static void FreeArray(void* pointer);
     }
 }
