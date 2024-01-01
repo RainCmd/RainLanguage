@@ -1,6 +1,7 @@
 #include "Random.h"
 #include "MathReal.h"
 
+#undef INT32_MAX
 constexpr int32 INT32_MAX = 0x7FFFFFFF;
 int32 Random::InternalSample()
 {

@@ -1,6 +1,8 @@
 #pragma once
 #include "Public/Rain.h"
-
+#ifdef __arm__
+#include <unistd.h>
+#endif
 #define TEXT(value) L ## value
 #define EXCEPTION(message) throw L ## message
 #define ASSERT(condition,message) if(!(condition)) EXCEPTION(message);
@@ -9,11 +11,11 @@
 #else
 #define ASSERT_DEBUG(condition,message)
 #endif // DEBUG
-
+#undef NULL
+#define NULL 0
 typedef uint32 string;
 typedef uint32 Handle;
 typedef uint32 Entity;
-#define NULL 0
 constexpr uint32 MAX_STACK_SIZE = 0x3FFFFFFF;
 constexpr uint32 MAX_HEAP_SIZE = 0x3FFFFFFF;
 

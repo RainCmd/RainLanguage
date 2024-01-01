@@ -1,9 +1,17 @@
 #pragma once
 
+#ifdef __arm__
+#ifdef RAINLANGUAGE_EXPORTS
+#define RAINLANGUAGE __attribute__(visibility("default"))
+#else
+#define RAINLANGUAGE
+#endif
+#else
 #ifdef RAINLANGUAGE_EXPORTS
 #define RAINLANGUAGE _declspec(dllexport)
 #else
 #define RAINLANGUAGE _declspec(dllimport)
+#endif
 #endif
 
 typedef unsigned char uint8;

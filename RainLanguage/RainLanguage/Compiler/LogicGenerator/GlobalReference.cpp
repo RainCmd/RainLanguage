@@ -41,8 +41,8 @@ GlobalReferenceLibrary::~GlobalReferenceLibrary()
 
 #define ADD_DECLARATION_REFERENCE(category,type)\
 		{\
-			CompilingDeclaration result = AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::##category, declaration.index, NULL));\
-			return Declaration(result.library, TypeCode::##type, result.index);\
+			CompilingDeclaration result = AddReference(CompilingDeclaration(declaration.library, Visibility::None, category, declaration.index, NULL));\
+			return Declaration(result.library, type, result.index);\
 		}
 
 template<typename T>
@@ -334,12 +334,12 @@ Declaration GlobalReference::AddReference(const Declaration& declaration)
 	switch (declaration.code)
 	{
 		case TypeCode::Invalid: return declaration;
-		case TypeCode::Struct: ADD_DECLARATION_REFERENCE(Struct, Struct);
-		case TypeCode::Enum: ADD_DECLARATION_REFERENCE(Enum, Enum);
-		case TypeCode::Handle: ADD_DECLARATION_REFERENCE(Class, Handle);
-		case TypeCode::Interface: ADD_DECLARATION_REFERENCE(Interface, Interface);
-		case TypeCode::Delegate: ADD_DECLARATION_REFERENCE(Delegate, Delegate);
-		case TypeCode::Task: ADD_DECLARATION_REFERENCE(Task, Task);
+		case TypeCode::Struct: ADD_DECLARATION_REFERENCE(DeclarationCategory::Struct, TypeCode::Struct);
+		case TypeCode::Enum: ADD_DECLARATION_REFERENCE(DeclarationCategory::Enum, TypeCode::Enum);
+		case TypeCode::Handle: ADD_DECLARATION_REFERENCE(DeclarationCategory::Class, TypeCode::Handle);
+		case TypeCode::Interface: ADD_DECLARATION_REFERENCE(DeclarationCategory::Interface, TypeCode::Interface);
+		case TypeCode::Delegate: ADD_DECLARATION_REFERENCE(DeclarationCategory::Delegate, TypeCode::Delegate);
+		case TypeCode::Task: ADD_DECLARATION_REFERENCE(DeclarationCategory::Task, TypeCode::Task);
 		default: EXCEPTION("ÎÞÐ§µÄTypeCode");
 	}
 }
