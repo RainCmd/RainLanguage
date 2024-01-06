@@ -629,6 +629,9 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClInclude Include="RainLanguage\VirtualMachine\Task.h" />
     <ClInclude Include="RainLanguage\VirtualMachine\TaskAgency.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="to_utf8.py" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

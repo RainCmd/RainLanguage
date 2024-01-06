@@ -208,4 +208,7 @@
     <ClInclude Include="RainLanguage\String.h" />
     <ClInclude Include="RainLanguage\Type.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="to_utf8.py" />
+  </ItemGroup>
 </Project>

@@ -369,11 +369,11 @@ Main()
 ``` java
 namespace kernel
     public enum TaskState
-		Unstart     //未开始执行
-		Running     //执行中
-		Completed   //已完成
-		Aborted     //因抛异常而终止
-		Invalid     //任务已失效
+        Unstart     //未开始执行
+        Running     //执行中
+        Completed   //已完成
+        Aborted     //因抛异常而终止
+        Invalid     //任务已失效
 
     public class task
         //开始执行异步函数，如果是使用start创建的task会自动调用Start(true, false)
@@ -381,17 +381,17 @@ namespace kernel
         public Start(bool immediately, bool ignoreWait)
         //终止异步函数，会在异步函数当前执行的位置主动引发一次异常，参数为异常消息
         //如果任务当前不是运行状态则会抛异常
-		public Abort(string message)
+        public Abort(string message)
         //获取任务当前状态
-		public TaskState GetState()
+        public TaskState GetState()
         //任务异常终止时获取终止信息
-		public string GetExitCode()
+        public string GetExitCode()
         //任务是暂停状态，这个为true不影响GetState的返回值为Running
-		public bool IsPause()
+        public bool IsPause()
         //暂停任务
-		public Pause()
+        public Pause()
         //恢复任务
-		public Resume()
+        public Resume()
 ```
 #### 创建并执行task
 ``` java
