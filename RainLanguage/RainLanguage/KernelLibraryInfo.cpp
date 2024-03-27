@@ -522,7 +522,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		Space* space = new KernelLibraryInfo::Space(KERNEL_STRING("System"), root);
 		//space Exceptions
 		{
-			Space* exceptionSpace = new KernelLibraryInfo::Space(KERNEL_STRING("Exception"), space);
+			Space* exceptionSpace = new KernelLibraryInfo::Space(KERNEL_STRING("Exceptions"), space);
 			REGISTER_VARIABLE(true, exceptionSpace, "NullReference", TYPE_String, AddData(EXCEPTION_NULL_REFERENCE));
 			REGISTER_VARIABLE(true, exceptionSpace, "InvalidTask", TYPE_String, AddData(EXCEPTION_INVALID_TASK));
 			REGISTER_VARIABLE(true, exceptionSpace, "OutOfRange", TYPE_String, AddData(EXCEPTION_OUT_OF_RANGE));

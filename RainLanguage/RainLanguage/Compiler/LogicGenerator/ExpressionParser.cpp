@@ -2336,6 +2336,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
 						}
 					}
+					else MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_INVALID_OPERATOR);
 					expressionStack.Add(source);
 				}
 				else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
