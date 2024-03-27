@@ -200,22 +200,22 @@ Attribute ExpressionParser::GetVariableAttribute(const CompilingDeclaration& dec
 {
 	switch (declaration.category)
 	{
-		case DeclarationCategory::Variable:
-			if (manager->GetLibrary(declaration.library)->variables[declaration.index]->readonly)
-			{
-				if (declaration.library == LIBRARY_KERNEL || declaration.library == LIBRARY_SELF)return Attribute::Constant;
-				else return Attribute::Value;
-			}
-			else return Attribute::Assignable | Attribute::Value;
-		case DeclarationCategory::StructVariable:
-			if (manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
-			else return Attribute::Assignable | Attribute::Value;
-		case DeclarationCategory::ClassVariable:
-			if (manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
-			else return Attribute::Assignable | Attribute::Value;
-		case DeclarationCategory::LambdaClosureValue:
-		case DeclarationCategory::LocalVariable:
-			return Attribute::Assignable | Attribute::Value;
+	case DeclarationCategory::Variable:
+		if (manager->GetLibrary(declaration.library)->variables[declaration.index]->readonly)
+		{
+			if (declaration.library == LIBRARY_KERNEL || declaration.library == LIBRARY_SELF)return Attribute::Constant;
+			else return Attribute::Value;
+		}
+		else return Attribute::Assignable | Attribute::Value;
+	case DeclarationCategory::StructVariable:
+		if (manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
+		else return Attribute::Assignable | Attribute::Value;
+	case DeclarationCategory::ClassVariable:
+		if (manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
+		else return Attribute::Assignable | Attribute::Value;
+	case DeclarationCategory::LambdaClosureValue:
+	case DeclarationCategory::LocalVariable:
+		return Attribute::Assignable | Attribute::Value;
 	}
 	EXCEPTION("无效的定义类型");
 }
@@ -224,17 +224,17 @@ Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
 {
 	switch (declaration.category)
 	{
-		case DeclarationCategory::Variable:
-			return manager->GetLibrary(declaration.library)->variables[declaration.index]->type;
-		case DeclarationCategory::StructVariable:
-			return manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->type;
-		case DeclarationCategory::ClassVariable:
-			return manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
-		case DeclarationCategory::LambdaClosureValue:
-			if (closure)return closure->GetVariableType(declaration);
-			else EXCEPTION("不在闭包中");
-		case DeclarationCategory::LocalVariable:
-			return localContext->GetLocal(declaration.index).type;
+	case DeclarationCategory::Variable:
+		return manager->GetLibrary(declaration.library)->variables[declaration.index]->type;
+	case DeclarationCategory::StructVariable:
+		return manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->type;
+	case DeclarationCategory::ClassVariable:
+		return manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
+	case DeclarationCategory::LambdaClosureValue:
+		if (closure)return closure->GetVariableType(declaration);
+		else EXCEPTION("不在闭包中");
+	case DeclarationCategory::LocalVariable:
+		return localContext->GetLocal(declaration.index).type;
 	}
 	EXCEPTION("不是个变量");
 }
@@ -928,268 +928,268 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 {
 	switch (token.type)
 	{
-		case TokenType::Invalid:
-		case TokenType::LogicOperationPriority:
-			break;
-		case TokenType::LogicAnd:
-		{
-			Expression* left, * right;
-			if (expressionStack.Count() >= 2)
-			{
-				right = expressionStack.Pop();
-				left = expressionStack.Pop();
-			}
-			else
-			{
-				MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
-				return Attribute::Invalid;
-			}
-			if (TryAssignmentConvert(left, TYPE_Bool) && TryAssignmentConvert(right, TYPE_Bool))
-			{
-				bool leftValue;
-				if (left->TryEvaluation(leftValue, evaluationParameter))
-				{
-					if (leftValue)
-					{
-						delete left; left = NULL;
-						right->attribute &= Attribute::Value;
-						expressionStack.Add(right);
-						return right->attribute;
-					}
-					else
-					{
-						MESSAGE2(manager->messages, right->anchor, MessageType::LOGGER_LEVEL4_DISCARDED_EXPRESSION);
-						delete left; left = NULL;
-						delete right; right = NULL;
-						ConstantBooleanExpression* expression = new ConstantBooleanExpression(token.anchor, false);
-						expressionStack.Add(expression);
-						return expression->attribute;
-					}
-				}
-				else
-				{
-					LogicAndExpression* expression = new LogicAndExpression(token.anchor, left, right);
-					expressionStack.Add(expression);
-					return expression->attribute;
-				}
-			}
-			expressionStack.Add(left);
-			expressionStack.Add(right);
-			return Attribute::Invalid;
-		}
-		case TokenType::LogicOr:
-		{
-			Expression* left, * right;
-			if (expressionStack.Count() >= 2)
-			{
-				right = expressionStack.Pop();
-				left = expressionStack.Pop();
-			}
-			else
-			{
-				MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
-				return Attribute::Invalid;
-			}
-			if (TryAssignmentConvert(left, TYPE_Bool) && TryAssignmentConvert(right, TYPE_Bool))
-			{
-				bool leftValue;
-				if (left->TryEvaluation(leftValue, evaluationParameter))
-				{
-					if (leftValue)
-					{
-						MESSAGE2(manager->messages, right->anchor, MessageType::LOGGER_LEVEL4_DISCARDED_EXPRESSION);
-						delete left; left = NULL;
-						delete right; right = NULL;
-						ConstantBooleanExpression* expression = new ConstantBooleanExpression(token.anchor, true);
-						expressionStack.Add(expression);
-						return expression->attribute;
-					}
-					else
-					{
-						delete left; left = NULL;
-						right->attribute &= Attribute::Value;
-						expressionStack.Add(right);
-						return right->attribute;
-					}
-				}
-				else
-				{
-					LogicOrExpression* expression = new LogicOrExpression(token.anchor, left, right);
-					expressionStack.Add(expression);
-					return expression->attribute;
-				}
-			}
-			expressionStack.Add(left);
-			expressionStack.Add(right);
-			return Attribute::Invalid;
-		}
+	case TokenType::Invalid:
+	case TokenType::LogicOperationPriority:
 		break;
-		case TokenType::CompareOperationPriority:
-			break;
-		case TokenType::Less: BINARY_OPERATOR(Less);
-		case TokenType::Greater: BINARY_OPERATOR(Greater);
-		case TokenType::LessEquals: BINARY_OPERATOR(LessEquals);
-		case TokenType::GreaterEquals: BINARY_OPERATOR(GreaterEquals);
-		case TokenType::Equals: BINARY_OPERATOR(Equals);
-		case TokenType::NotEquals: BINARY_OPERATOR(NotEquals);
-		case TokenType::BitOperationPriority:
-			break;
-		case TokenType::BitAnd: BINARY_OPERATOR(BitAnd);
-		case TokenType::BitOr: BINARY_OPERATOR(BitOr);
-		case TokenType::BitXor: BINARY_OPERATOR(BitXor);
-		case TokenType::ShiftLeft: BINARY_OPERATOR(ShiftLeft);
-		case TokenType::ShiftRight: BINARY_OPERATOR(ShiftRight);
-		case TokenType::ElementaryOperationPriority:
-			break;
-		case TokenType::Plus: BINARY_OPERATOR(Plus);
-		case TokenType::Minus: BINARY_OPERATOR(Minus);
-		case TokenType::IntermediateOperationPriority:
-			break;
-		case TokenType::Mul: BINARY_OPERATOR(Mul);
-		case TokenType::Div: BINARY_OPERATOR(Div);
-		case TokenType::Mod: BINARY_OPERATOR(Mod);
-		case TokenType::SymbolicOperationPriority:
-			break;
-		case TokenType::Casting:
+	case TokenType::LogicAnd:
+	{
+		Expression* left, * right;
+		if (expressionStack.Count() >= 2)
 		{
-			Expression* left, * right;
-			if (expressionStack.Count() >= 2)
+			right = expressionStack.Pop();
+			left = expressionStack.Pop();
+		}
+		else
+		{
+			MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
+			return Attribute::Invalid;
+		}
+		if (TryAssignmentConvert(left, TYPE_Bool) && TryAssignmentConvert(right, TYPE_Bool))
+		{
+			bool leftValue;
+			if (left->TryEvaluation(leftValue, evaluationParameter))
 			{
-				right = expressionStack.Pop();
-				left = expressionStack.Pop();
-			}
-			else
-			{
-				MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
-				return Attribute::Invalid;
-			}
-			ASSERT_DEBUG(ContainAll(left->type, ExpressionType::TypeExpression), "左边不是类型表达式");
-			if (ContainAll(right->attribute, Attribute::Value))
-			{
-				Type targetType = ((TypeExpression*)left)->customType;
-				Type& sourceType = right->returns.Peek();
-				uint32 measure; bool convert;
-				delete left; left = NULL;
-				if (TryConvert(manager, sourceType, targetType, convert, measure))
+				if (leftValue)
 				{
-					if (convert)
-					{
-						List<uint32, true> casts(1); casts.Add(0);
-						List<Type, true> types(1); types.Add(targetType);
-						right = new TupleCastExpression(right->anchor, types, right, casts);
-					}
-					else right = new CastExpression(right->anchor, targetType, right);
+					delete left; left = NULL;
+					right->attribute &= Attribute::Value;
 					expressionStack.Add(right);
 					return right->attribute;
 				}
 				else
 				{
-					List<Type, true> types(1);
-					types.Add(targetType);
-					if (targetType == TYPE_Byte)
+					MESSAGE2(manager->messages, right->anchor, MessageType::LOGGER_LEVEL4_DISCARDED_EXPRESSION);
+					delete left; left = NULL;
+					delete right; right = NULL;
+					ConstantBooleanExpression* expression = new ConstantBooleanExpression(token.anchor, false);
+					expressionStack.Add(expression);
+					return expression->attribute;
+				}
+			}
+			else
+			{
+				LogicAndExpression* expression = new LogicAndExpression(token.anchor, left, right);
+				expressionStack.Add(expression);
+				return expression->attribute;
+			}
+		}
+		expressionStack.Add(left);
+		expressionStack.Add(right);
+		return Attribute::Invalid;
+	}
+	case TokenType::LogicOr:
+	{
+		Expression* left, * right;
+		if (expressionStack.Count() >= 2)
+		{
+			right = expressionStack.Pop();
+			left = expressionStack.Pop();
+		}
+		else
+		{
+			MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
+			return Attribute::Invalid;
+		}
+		if (TryAssignmentConvert(left, TYPE_Bool) && TryAssignmentConvert(right, TYPE_Bool))
+		{
+			bool leftValue;
+			if (left->TryEvaluation(leftValue, evaluationParameter))
+			{
+				if (leftValue)
+				{
+					MESSAGE2(manager->messages, right->anchor, MessageType::LOGGER_LEVEL4_DISCARDED_EXPRESSION);
+					delete left; left = NULL;
+					delete right; right = NULL;
+					ConstantBooleanExpression* expression = new ConstantBooleanExpression(token.anchor, true);
+					expressionStack.Add(expression);
+					return expression->attribute;
+				}
+				else
+				{
+					delete left; left = NULL;
+					right->attribute &= Attribute::Value;
+					expressionStack.Add(right);
+					return right->attribute;
+				}
+			}
+			else
+			{
+				LogicOrExpression* expression = new LogicOrExpression(token.anchor, left, right);
+				expressionStack.Add(expression);
+				return expression->attribute;
+			}
+		}
+		expressionStack.Add(left);
+		expressionStack.Add(right);
+		return Attribute::Invalid;
+	}
+	break;
+	case TokenType::CompareOperationPriority:
+		break;
+	case TokenType::Less: BINARY_OPERATOR(Less);
+	case TokenType::Greater: BINARY_OPERATOR(Greater);
+	case TokenType::LessEquals: BINARY_OPERATOR(LessEquals);
+	case TokenType::GreaterEquals: BINARY_OPERATOR(GreaterEquals);
+	case TokenType::Equals: BINARY_OPERATOR(Equals);
+	case TokenType::NotEquals: BINARY_OPERATOR(NotEquals);
+	case TokenType::BitOperationPriority:
+		break;
+	case TokenType::BitAnd: BINARY_OPERATOR(BitAnd);
+	case TokenType::BitOr: BINARY_OPERATOR(BitOr);
+	case TokenType::BitXor: BINARY_OPERATOR(BitXor);
+	case TokenType::ShiftLeft: BINARY_OPERATOR(ShiftLeft);
+	case TokenType::ShiftRight: BINARY_OPERATOR(ShiftRight);
+	case TokenType::ElementaryOperationPriority:
+		break;
+	case TokenType::Plus: BINARY_OPERATOR(Plus);
+	case TokenType::Minus: BINARY_OPERATOR(Minus);
+	case TokenType::IntermediateOperationPriority:
+		break;
+	case TokenType::Mul: BINARY_OPERATOR(Mul);
+	case TokenType::Div: BINARY_OPERATOR(Div);
+	case TokenType::Mod: BINARY_OPERATOR(Mod);
+	case TokenType::SymbolicOperationPriority:
+		break;
+	case TokenType::Casting:
+	{
+		Expression* left, * right;
+		if (expressionStack.Count() >= 2)
+		{
+			right = expressionStack.Pop();
+			left = expressionStack.Pop();
+		}
+		else
+		{
+			MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_MISSING_EXPRESSION);
+			return Attribute::Invalid;
+		}
+		ASSERT_DEBUG(ContainAll(left->type, ExpressionType::TypeExpression), "左边不是类型表达式");
+		if (ContainAll(right->attribute, Attribute::Value))
+		{
+			Type targetType = ((TypeExpression*)left)->customType;
+			Type& sourceType = right->returns.Peek();
+			uint32 measure; bool convert;
+			delete left; left = NULL;
+			if (TryConvert(manager, sourceType, targetType, convert, measure))
+			{
+				if (convert)
+				{
+					List<uint32, true> casts(1); casts.Add(0);
+					List<Type, true> types(1); types.Add(targetType);
+					right = new TupleCastExpression(right->anchor, types, right, casts);
+				}
+				else right = new CastExpression(right->anchor, targetType, right);
+				expressionStack.Add(right);
+				return right->attribute;
+			}
+			else
+			{
+				List<Type, true> types(1);
+				types.Add(targetType);
+				if (targetType == TYPE_Byte)
+				{
+					if (sourceType == TYPE_Char)
 					{
-						if (sourceType == TYPE_Char)
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_C2B, right);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-						else if (sourceType == TYPE_Integer || (!sourceType.dimension && sourceType.code == TypeCode::Enum))
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2B, right);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-						else if (sourceType == TYPE_Real)
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_R2I, right);
-							expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2B, expression);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-					}
-					else if (targetType == TYPE_Char)
-					{
-						if (sourceType == TYPE_Integer || (!sourceType.dimension && sourceType.code == TypeCode::Enum))
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2C, right);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-						else if (sourceType == TYPE_Real)
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_R2I, right);
-							expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2C, expression);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-					}
-					else if (targetType == TYPE_Integer)
-					{
-						if (!sourceType.dimension && sourceType.code == TypeCode::Enum)
-						{
-							Expression* expression = new CastExpression(token.anchor, targetType, right);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-						else if (sourceType == TYPE_Real)
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_R2I, right);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-					}
-					else if (!targetType.dimension && targetType.code == TypeCode::Enum)
-					{
-						if (sourceType == TYPE_Byte)
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_B2I, right);
-							expression = new CastExpression(token.anchor, targetType, expression);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-						else if (sourceType == TYPE_Char)
-						{
-							Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_C2I, right);
-							expression = new CastExpression(token.anchor, targetType, expression);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-						else if (sourceType == TYPE_Integer)
-						{
-							Expression* expression = new CastExpression(token.anchor, targetType, right);
-							expressionStack.Add(expression);
-							return expression->attribute;
-						}
-					}
-					if (sourceType == TYPE_Handle && !IsHandleType(targetType))
-					{
-						Expression* expression = new UnboxExpression(token.anchor, targetType, right);
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_C2B, right);
 						expressionStack.Add(expression);
 						return expression->attribute;
 					}
-					else if (IsHandleType(sourceType) && IsHandleType(targetType) && TryConvert(manager, targetType, sourceType, convert, measure))
+					else if (sourceType == TYPE_Integer || (!sourceType.dimension && sourceType.code == TypeCode::Enum))
 					{
-						Expression* expression = new HandleCastExpression(token.anchor, targetType, right);
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2B, right);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+					else if (sourceType == TYPE_Real)
+					{
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_R2I, right);
+						expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2B, expression);
 						expressionStack.Add(expression);
 						return expression->attribute;
 					}
 				}
+				else if (targetType == TYPE_Char)
+				{
+					if (sourceType == TYPE_Integer || (!sourceType.dimension && sourceType.code == TypeCode::Enum))
+					{
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2C, right);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+					else if (sourceType == TYPE_Real)
+					{
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_R2I, right);
+						expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_I2C, expression);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+				}
+				else if (targetType == TYPE_Integer)
+				{
+					if (!sourceType.dimension && sourceType.code == TypeCode::Enum)
+					{
+						Expression* expression = new CastExpression(token.anchor, targetType, right);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+					else if (sourceType == TYPE_Real)
+					{
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_R2I, right);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+				}
+				else if (!targetType.dimension && targetType.code == TypeCode::Enum)
+				{
+					if (sourceType == TYPE_Byte)
+					{
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_B2I, right);
+						expression = new CastExpression(token.anchor, targetType, expression);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+					else if (sourceType == TYPE_Char)
+					{
+						Expression* expression = new InstructOperationExpression(token.anchor, types, Instruct::CASTING_C2I, right);
+						expression = new CastExpression(token.anchor, targetType, expression);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+					else if (sourceType == TYPE_Integer)
+					{
+						Expression* expression = new CastExpression(token.anchor, targetType, right);
+						expressionStack.Add(expression);
+						return expression->attribute;
+					}
+				}
+				if (sourceType == TYPE_Handle && !IsHandleType(targetType))
+				{
+					Expression* expression = new UnboxExpression(token.anchor, targetType, right);
+					expressionStack.Add(expression);
+					return expression->attribute;
+				}
+				else if (IsHandleType(sourceType) && IsHandleType(targetType) && TryConvert(manager, targetType, sourceType, convert, measure))
+				{
+					Expression* expression = new HandleCastExpression(token.anchor, targetType, right);
+					expressionStack.Add(expression);
+					return expression->attribute;
+				}
 			}
-			else expressionStack.Add(left);
-			MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_INVALID_OPERATOR);
-			expressionStack.Add(right);
-			return Attribute::Invalid;
 		}
+		else expressionStack.Add(left);
+		MESSAGE2(manager->messages, token.anchor, MessageType::ERROR_INVALID_OPERATOR);
+		expressionStack.Add(right);
+		return Attribute::Invalid;
+	}
+	break;
+	case TokenType::Not: UNARY_OPERATION(Not);
+	case TokenType::Inverse: UNARY_OPERATION(Inverse);
+	case TokenType::Positive: UNARY_OPERATION(Positive);
+	case TokenType::Negative: UNARY_OPERATION(Negative);
+	case TokenType::IncrementLeft: UNARY_OPERATION(IncrementLeft);
+	case TokenType::DecrementLeft: UNARY_OPERATION(DecrementLeft);
+	default:
 		break;
-		case TokenType::Not: UNARY_OPERATION(Not);
-		case TokenType::Inverse: UNARY_OPERATION(Inverse);
-		case TokenType::Positive: UNARY_OPERATION(Positive);
-		case TokenType::Negative: UNARY_OPERATION(Negative);
-		case TokenType::IncrementLeft: UNARY_OPERATION(IncrementLeft);
-		case TokenType::DecrementLeft: UNARY_OPERATION(DecrementLeft);
-		default:
-			break;
 	}
 	EXCEPTION("无效的Token类型");
 }
@@ -1309,184 +1309,184 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 		CompilingDeclaration declaration = declarations.Peek();
 		switch (declaration.category)
 		{
-			case DeclarationCategory::Invalid: break;
-			case DeclarationCategory::Variable:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+		case DeclarationCategory::Invalid: break;
+		case DeclarationCategory::Variable:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				VariableGlobalExpression* expression = new VariableGlobalExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), GetVariableType(declaration));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				index = lexical.anchor.GetEnd();
+				return true;
+			}
+			break;
+		case DeclarationCategory::Function:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				index = lexical.anchor.GetEnd();
+				return true;
+			}
+			break;
+		case DeclarationCategory::Enum:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				index = lexical.anchor.GetEnd();
+				TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Enum, declaration.index, ExtractDimension(anchor, index)));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				return true;
+			}
+			break;
+		case DeclarationCategory::EnumElement: EXCEPTION("枚举内没有逻辑代码，不会直接查找到枚举");
+		case DeclarationCategory::Struct:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				index = lexical.anchor.GetEnd();
+				TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Struct, declaration.index, ExtractDimension(anchor, index)));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				return true;
+			}
+			break;
+		case DeclarationCategory::StructVariable:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				Expression* thisExpression;
+				if (TryGetThisValueExpression(lexical.anchor, thisExpression))
 				{
-					VariableGlobalExpression* expression = new VariableGlobalExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), GetVariableType(declaration));
+					VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
 					index = lexical.anchor.GetEnd();
 					return true;
 				}
-				break;
-			case DeclarationCategory::Function:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				else EXCEPTION("如果不在成员函数中不可能直接找到成员字段");
+			}
+			break;
+		case DeclarationCategory::StructFunction:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				Expression* thisExpression;
+				if (TryGetThisValueExpression(lexical.anchor, thisExpression))
 				{
-					MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
+					MethodMemberExpression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
 					index = lexical.anchor.GetEnd();
 					return true;
 				}
-				break;
-			case DeclarationCategory::Enum:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				else EXCEPTION("如果不在成员函数中不可能直接找到成员函数");
+			}
+			break;
+		case DeclarationCategory::Class:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				index = lexical.anchor.GetEnd();
+				TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Handle, declaration.index, ExtractDimension(anchor, index)));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				return true;
+			}
+			break;
+		case DeclarationCategory::Constructor: EXCEPTION("构造函数不参与重载决议");
+		case DeclarationCategory::ClassVariable:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				Expression* thisExpression;
+				if (TryGetThisValueExpression(lexical.anchor, thisExpression))
 				{
-					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Enum, declaration.index, ExtractDimension(anchor, index)));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					return true;
-				}
-				break;
-			case DeclarationCategory::EnumElement: EXCEPTION("枚举内没有逻辑代码，不会直接查找到枚举");
-			case DeclarationCategory::Struct:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Struct, declaration.index, ExtractDimension(anchor, index)));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					return true;
-				}
-				break;
-			case DeclarationCategory::StructVariable:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					Expression* thisExpression;
-					if (TryGetThisValueExpression(lexical.anchor, thisExpression))
-					{
-						VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
-						expressionStack.Add(expression);
-						attribute = expression->attribute;
-						index = lexical.anchor.GetEnd();
-						return true;
-					}
-					else EXCEPTION("如果不在成员函数中不可能直接找到成员字段");
-				}
-				break;
-			case DeclarationCategory::StructFunction:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					Expression* thisExpression;
-					if (TryGetThisValueExpression(lexical.anchor, thisExpression))
-					{
-						MethodMemberExpression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
-						expressionStack.Add(expression);
-						attribute = expression->attribute;
-						index = lexical.anchor.GetEnd();
-						return true;
-					}
-					else EXCEPTION("如果不在成员函数中不可能直接找到成员函数");
-				}
-				break;
-			case DeclarationCategory::Class:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Handle, declaration.index, ExtractDimension(anchor, index)));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					return true;
-				}
-				break;
-			case DeclarationCategory::Constructor: EXCEPTION("构造函数不参与重载决议");
-			case DeclarationCategory::ClassVariable:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					Expression* thisExpression;
-					if (TryGetThisValueExpression(lexical.anchor, thisExpression))
-					{
-						VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
-						expressionStack.Add(expression);
-						attribute = expression->attribute;
-						index = lexical.anchor.GetEnd();
-						return true;
-					}
-					else EXCEPTION("如果不在成员函数中不可能直接找到成员字段");
-				}
-				break;
-			case DeclarationCategory::ClassFunction:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					Expression* thisExpression;
-					if (TryGetThisValueExpression(lexical.anchor, thisExpression))
-					{
-						MethodVirtualExpression* expression = new MethodVirtualExpression(lexical.anchor, thisExpression, declarations, false);
-						expressionStack.Add(expression);
-						attribute = expression->attribute;
-						index = lexical.anchor.GetEnd();
-						return true;
-					}
-					else EXCEPTION("如果不在成员函数中不可能直接找到成员函数");
-				}
-				break;
-			case DeclarationCategory::Interface:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Interface, declaration.index, ExtractDimension(anchor, index)));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					return true;
-				}
-				break;
-			case DeclarationCategory::InterfaceFunction: EXCEPTION("接口内没有逻辑代码，不会直接查找到接口函数");
-			case DeclarationCategory::Delegate:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Delegate, declaration.index, ExtractDimension(anchor, index)));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					return true;
-				}
-				break;
-			case DeclarationCategory::Task:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					index = lexical.anchor.GetEnd();
-					TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Task, declaration.index, ExtractDimension(anchor, index)));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					return true;
-				}
-				break;
-			case DeclarationCategory::Native:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
+					VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
 					index = lexical.anchor.GetEnd();
 					return true;
 				}
-				break;
-			case DeclarationCategory::Lambda: EXCEPTION("lambda不参与重载决议");
-			case DeclarationCategory::LambdaClosureValue:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				else EXCEPTION("如果不在成员函数中不可能直接找到成员字段");
+			}
+			break;
+		case DeclarationCategory::ClassFunction:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				Expression* thisExpression;
+				if (TryGetThisValueExpression(lexical.anchor, thisExpression))
 				{
-					CompilingDeclaration lambdaDeclaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, 0, NULL);
-					VariableLocalExpression* lambdaClosure = new VariableLocalExpression(lexical.anchor, lambdaDeclaration, Attribute::Value, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
-					VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), lambdaClosure, GetVariableType(declaration));
+					MethodVirtualExpression* expression = new MethodVirtualExpression(lexical.anchor, thisExpression, declarations, false);
 					expressionStack.Add(expression);
 					attribute = expression->attribute;
 					index = lexical.anchor.GetEnd();
 					return true;
 				}
-				break;
-			case DeclarationCategory::LocalVariable:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					VariableLocalExpression* expression = new VariableLocalExpression(lexical.anchor, declaration, Attribute::Assignable | Attribute::Value, GetVariableType(declaration));
-					expressionStack.Add(expression);
-					attribute = expression->attribute;
-					index = lexical.anchor.GetEnd();
-					return true;
-				}
-				break;
-			default: break;
+				else EXCEPTION("如果不在成员函数中不可能直接找到成员函数");
+			}
+			break;
+		case DeclarationCategory::Interface:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				index = lexical.anchor.GetEnd();
+				TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Interface, declaration.index, ExtractDimension(anchor, index)));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				return true;
+			}
+			break;
+		case DeclarationCategory::InterfaceFunction: EXCEPTION("接口内没有逻辑代码，不会直接查找到接口函数");
+		case DeclarationCategory::Delegate:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				index = lexical.anchor.GetEnd();
+				TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Delegate, declaration.index, ExtractDimension(anchor, index)));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				return true;
+			}
+			break;
+		case DeclarationCategory::Task:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				index = lexical.anchor.GetEnd();
+				TypeExpression* expression = new TypeExpression(lexical.anchor, Type(declaration.library, TypeCode::Task, declaration.index, ExtractDimension(anchor, index)));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				return true;
+			}
+			break;
+		case DeclarationCategory::Native:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				MethodExpression* expression = new MethodExpression(lexical.anchor, declarations);
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				index = lexical.anchor.GetEnd();
+				return true;
+			}
+			break;
+		case DeclarationCategory::Lambda: EXCEPTION("lambda不参与重载决议");
+		case DeclarationCategory::LambdaClosureValue:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				CompilingDeclaration lambdaDeclaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, 0, NULL);
+				VariableLocalExpression* lambdaClosure = new VariableLocalExpression(lexical.anchor, lambdaDeclaration, Attribute::Value, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
+				VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), lambdaClosure, GetVariableType(declaration));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				index = lexical.anchor.GetEnd();
+				return true;
+			}
+			break;
+		case DeclarationCategory::LocalVariable:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				VariableLocalExpression* expression = new VariableLocalExpression(lexical.anchor, declaration, Attribute::Assignable | Attribute::Value, GetVariableType(declaration));
+				expressionStack.Add(expression);
+				attribute = expression->attribute;
+				index = lexical.anchor.GetEnd();
+				return true;
+			}
+			break;
+		default: break;
 		}
 	}
 	else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
@@ -1603,177 +1603,177 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 			{
 				switch (type)
 				{
-					case LexicalType::Unknow:
-					case LexicalType::BracketLeft0:
-					case LexicalType::BracketLeft1:
-					case LexicalType::BracketLeft2:
-					case LexicalType::BracketRight0:
-					case LexicalType::BracketRight1:
-					case LexicalType::BracketRight2:
-					case LexicalType::Comma:
-					case LexicalType::Semicolon:
-						break;
-					case LexicalType::Assignment:
-						goto label_assignment;
-					label_reparse_left_and_assignment:
-						leftExpression = new ExpressionReferenceExpression(leftExpression);
-					label_assignment:
-						if (leftExpression->returns.Count() == rightExpression->returns.Count())
+				case LexicalType::Unknow:
+				case LexicalType::BracketLeft0:
+				case LexicalType::BracketLeft1:
+				case LexicalType::BracketLeft2:
+				case LexicalType::BracketRight0:
+				case LexicalType::BracketRight1:
+				case LexicalType::BracketRight2:
+				case LexicalType::Comma:
+				case LexicalType::Semicolon:
+					break;
+				case LexicalType::Assignment:
+					goto label_assignment;
+				label_reparse_left_and_assignment:
+					leftExpression = new ExpressionReferenceExpression(leftExpression);
+				label_assignment:
+					if (leftExpression->returns.Count() == rightExpression->returns.Count())
+					{
+						if (TryInferLeftValueType(leftExpression, Span<Type, true>(&rightExpression->returns)) && TryAssignmentConvert(rightExpression, Span<Type, true>(&leftExpression->returns)))
 						{
-							if (TryInferLeftValueType(leftExpression, Span<Type, true>(&rightExpression->returns)) && TryAssignmentConvert(rightExpression, Span<Type, true>(&leftExpression->returns)))
-							{
-								result = new TupleAssignmentExpression(left, leftExpression, rightExpression);
-								return true;
-							}
+							result = new TupleAssignmentExpression(left, leftExpression, rightExpression);
+							return true;
 						}
-						else MESSAGE2(manager->messages, right, MessageType::ERROR_TYPE_MISMATCH);
-						delete rightExpression;
-						delete leftExpression;
-						return false;
-					case LexicalType::Equals:
-					case LexicalType::Lambda:
-					case LexicalType::BitAnd:
-					case LexicalType::LogicAnd:
-						break;
-					case LexicalType::BitAndAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateBitAndOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
 					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::BitOr:
-					case LexicalType::LogicOr:
-						break;
-					case LexicalType::BitOrAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateBitOrOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::BitXor:
-						break;
-					case LexicalType::BitXorAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateBitXorOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Less:
-					case LexicalType::LessEquals:
-					case LexicalType::ShiftLeft:
-						break;
-					case LexicalType::ShiftLeftAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateShiftLeftOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Greater:
-					case LexicalType::GreaterEquals:
-					case LexicalType::ShiftRight:
-						break;
-					case LexicalType::ShiftRightAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateShiftRightOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Plus:
-					case LexicalType::Increment:
-						break;
-					case LexicalType::PlusAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreatePlusOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Minus:
-					case LexicalType::Decrement:
-					case LexicalType::RealInvoker:
-						break;
-					case LexicalType::MinusAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateMinusOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Mul:
-						break;
-					case LexicalType::MulAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateMulOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Div:
-						break;
-					case LexicalType::DivAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateDivOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Annotation:
-					case LexicalType::Mod:
-						break;
-					case LexicalType::ModAssignment:
-					{
-						List<Expression*, true> parameters(2);
-						parameters.Add(leftExpression);
-						parameters.Add(rightExpression);
-						rightExpression = CreateModOperator(left, this, Combine(parameters));
-						if (!rightExpression) return false;
-					}
-					goto label_reparse_left_and_assignment;
-					case LexicalType::Not:
-					case LexicalType::NotEquals:
-					case LexicalType::Negate:
-					case LexicalType::Dot:
-					case LexicalType::Question:
-					case LexicalType::QuestionDot:
-					case LexicalType::QuestionRealInvoke:
-					case LexicalType::QuestionInvoke:
-					case LexicalType::QuestionIndex:
-					case LexicalType::QuestionNull:
-					case LexicalType::Colon:
-					case LexicalType::ConstReal:
-					case LexicalType::ConstNumber:
-					case LexicalType::ConstBinary:
-					case LexicalType::ConstHexadecimal:
-					case LexicalType::ConstChars:
-					case LexicalType::ConstString:
-					case LexicalType::TemplateString:
-					case LexicalType::Word:
-					case LexicalType::Backslash:
-					default:
-						break;
+					else MESSAGE2(manager->messages, right, MessageType::ERROR_TYPE_MISMATCH);
+					delete rightExpression;
+					delete leftExpression;
+					return false;
+				case LexicalType::Equals:
+				case LexicalType::Lambda:
+				case LexicalType::BitAnd:
+				case LexicalType::LogicAnd:
+					break;
+				case LexicalType::BitAndAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateBitAndOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::BitOr:
+				case LexicalType::LogicOr:
+					break;
+				case LexicalType::BitOrAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateBitOrOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::BitXor:
+					break;
+				case LexicalType::BitXorAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateBitXorOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Less:
+				case LexicalType::LessEquals:
+				case LexicalType::ShiftLeft:
+					break;
+				case LexicalType::ShiftLeftAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateShiftLeftOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Greater:
+				case LexicalType::GreaterEquals:
+				case LexicalType::ShiftRight:
+					break;
+				case LexicalType::ShiftRightAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateShiftRightOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Plus:
+				case LexicalType::Increment:
+					break;
+				case LexicalType::PlusAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreatePlusOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Minus:
+				case LexicalType::Decrement:
+				case LexicalType::RealInvoker:
+					break;
+				case LexicalType::MinusAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateMinusOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Mul:
+					break;
+				case LexicalType::MulAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateMulOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Div:
+					break;
+				case LexicalType::DivAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateDivOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Annotation:
+				case LexicalType::Mod:
+					break;
+				case LexicalType::ModAssignment:
+				{
+					List<Expression*, true> parameters(2);
+					parameters.Add(leftExpression);
+					parameters.Add(rightExpression);
+					rightExpression = CreateModOperator(left, this, Combine(parameters));
+					if (!rightExpression) return false;
+				}
+				goto label_reparse_left_and_assignment;
+				case LexicalType::Not:
+				case LexicalType::NotEquals:
+				case LexicalType::Negate:
+				case LexicalType::Dot:
+				case LexicalType::Question:
+				case LexicalType::QuestionDot:
+				case LexicalType::QuestionRealInvoke:
+				case LexicalType::QuestionInvoke:
+				case LexicalType::QuestionIndex:
+				case LexicalType::QuestionNull:
+				case LexicalType::Colon:
+				case LexicalType::ConstReal:
+				case LexicalType::ConstNumber:
+				case LexicalType::ConstBinary:
+				case LexicalType::ConstHexadecimal:
+				case LexicalType::ConstChars:
+				case LexicalType::ConstString:
+				case LexicalType::TemplateString:
+				case LexicalType::Word:
+				case LexicalType::Backslash:
+				default:
+					break;
 				}
 				EXCEPTION("词法类型错误");
 			}
@@ -1928,161 +1928,174 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	{
 		switch (lexical.type)
 		{
-			case LexicalType::Unknow: goto label_error_unexpected_lexcal;
-			case LexicalType::BracketLeft0:
+		case LexicalType::Unknow: goto label_error_unexpected_lexcal;
+		case LexicalType::BracketLeft0:
+		{
+			Expression* tuple;
+			if (TryParseBracket(anchor, index, SplitFlag::Bracket0, tuple))
 			{
-				Expression* tuple;
-				if (TryParseBracket(anchor, index, SplitFlag::Bracket0, tuple))
+				if (ContainAny(attribute, Attribute::Method))
 				{
-					if (ContainAny(attribute, Attribute::Method))
+					ASSERT_DEBUG(ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression | ExpressionType::MethodMemberExpression | ExpressionType::MethodVirtualExpression), "非函数类型的表达式不应该进这个分支");
+					if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression))
 					{
-						ASSERT_DEBUG(ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression | ExpressionType::MethodMemberExpression | ExpressionType::MethodVirtualExpression), "非函数类型的表达式不应该进这个分支");
-						if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodExpression))
+						MethodExpression* methodExpression = (MethodExpression*)expressionStack.Pop();
+						AbstractCallable* callable;
+						if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
 						{
-							MethodExpression* methodExpression = (MethodExpression*)expressionStack.Pop();
-							AbstractCallable* callable;
-							if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
+							if (TryAssignmentConvert(tuple, callable->parameters.GetTypesSpan()))
 							{
-								if (TryAssignmentConvert(tuple, callable->parameters.GetTypesSpan()))
-								{
-									Expression* expression = new InvokerFunctionExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, callable->declaration);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									delete methodExpression; methodExpression = NULL;
-									goto label_next_lexical;
-								}
+								Expression* expression = new InvokerFunctionExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, callable->declaration);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								delete methodExpression; methodExpression = NULL;
+								goto label_next_lexical;
 							}
-							else MESSAGE2(manager->messages, methodExpression->anchor, MessageType::ERROR_METHOD_NOT_FOUND);
-							expressionStack.Add(methodExpression);
-							expressionStack.Add(tuple);
-							goto label_parse_fail;
 						}
-						else if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodMemberExpression))
-						{
-							MethodMemberExpression* methodExpression = (MethodMemberExpression*)expressionStack.Pop();
-							AbstractCallable* callable;
-							if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
-							{
-								if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
-								{
-									Expression* expression = new InvokerMemberExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, methodExpression->target, callable->declaration, methodExpression->question);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									methodExpression->target = NULL;
-									delete methodExpression; methodExpression = NULL;
-									goto label_next_lexical;
-								}
-							}
-							else MESSAGE2(manager->messages, methodExpression->anchor, MessageType::ERROR_METHOD_NOT_FOUND);
-							expressionStack.Add(methodExpression);
-							expressionStack.Add(tuple);
-							goto label_parse_fail;
-						}
-						else if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodVirtualExpression))
-						{
-							MethodVirtualExpression* methodExpression = (MethodVirtualExpression*)expressionStack.Pop();
-							AbstractCallable* callable;
-							if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
-							{
-								if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
-								{
-									Expression* expression = new InvokerVirtualMemberExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, methodExpression->target, callable->declaration, methodExpression->question);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									methodExpression->target = NULL;
-									delete methodExpression; methodExpression = NULL;
-									goto label_next_lexical;
-								}
-							}
-							else MESSAGE2(manager->messages, methodExpression->anchor, MessageType::ERROR_METHOD_NOT_FOUND);
-							expressionStack.Add(methodExpression);
-							expressionStack.Add(tuple);
-							goto label_parse_fail;
-						}
-						else EXCEPTION("未知的调用");
-					}
-					else if (ContainAny(attribute, Attribute::Callable))
-					{
-						Expression* callableExpression = expressionStack.Pop();
-						ASSERT_DEBUG(callableExpression->returns.Count() == 1 && !callableExpression->returns.Peek().dimension && callableExpression->returns.Peek().code == TypeCode::Delegate, "只有委托类型才会走这个分支");
-						AbstractDelegate* declaration = (AbstractDelegate*)manager->GetDeclaration(callableExpression->returns.Peek());
-						if (TryAssignmentConvert(tuple, declaration->parameters.GetTypesSpan()))
-						{
-							Expression* expression = new InvokerDelegateExpression(callableExpression->anchor, declaration->returns.GetTypes(), callableExpression, tuple, false);
-							expressionStack.Add(expression);
-							attribute = expression->attribute;
-							goto label_next_lexical;
-						}
-						expressionStack.Add(callableExpression);
+						else MESSAGE2(manager->messages, methodExpression->anchor, MessageType::ERROR_METHOD_NOT_FOUND);
+						expressionStack.Add(methodExpression);
 						expressionStack.Add(tuple);
 						goto label_parse_fail;
 					}
-					else if (ContainAny(attribute, Attribute::Type))
+					else if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodMemberExpression))
 					{
-						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型错误");
-						Type type = typeExpression->customType;
-						if (type == TYPE_Real2)
+						MethodMemberExpression* methodExpression = (MethodMemberExpression*)expressionStack.Pop();
+						AbstractCallable* callable;
+						if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
 						{
-							if (CheckConvertVectorParameter(tuple, 2))
+							if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
 							{
-								Expression* expression = new VectorConstructorExpression(lexical.anchor, 2, tuple);
+								Expression* expression = new InvokerMemberExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, methodExpression->target, callable->declaration, methodExpression->question);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
-								delete typeExpression; typeExpression = NULL;
+								methodExpression->target = NULL;
+								delete methodExpression; methodExpression = NULL;
 								goto label_next_lexical;
 							}
 						}
-						else if (type == TYPE_Real3)
+						else MESSAGE2(manager->messages, methodExpression->anchor, MessageType::ERROR_METHOD_NOT_FOUND);
+						expressionStack.Add(methodExpression);
+						expressionStack.Add(tuple);
+						goto label_parse_fail;
+					}
+					else if (ContainAny(expressionStack.Peek()->type, ExpressionType::MethodVirtualExpression))
+					{
+						MethodVirtualExpression* methodExpression = (MethodVirtualExpression*)expressionStack.Pop();
+						AbstractCallable* callable;
+						if (TryGetFunction(methodExpression->anchor, methodExpression->declarations, tuple, callable))
 						{
-							if (CheckConvertVectorParameter(tuple, 3))
+							if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
 							{
-								Expression* expression = new VectorConstructorExpression(lexical.anchor, 3, tuple);
+								Expression* expression = new InvokerVirtualMemberExpression(methodExpression->anchor, callable->returns.GetTypes(), tuple, methodExpression->target, callable->declaration, methodExpression->question);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
-								delete typeExpression; typeExpression = NULL;
+								methodExpression->target = NULL;
+								delete methodExpression; methodExpression = NULL;
 								goto label_next_lexical;
 							}
 						}
-						else if (type == TYPE_Real4)
+						else MESSAGE2(manager->messages, methodExpression->anchor, MessageType::ERROR_METHOD_NOT_FOUND);
+						expressionStack.Add(methodExpression);
+						expressionStack.Add(tuple);
+						goto label_parse_fail;
+					}
+					else EXCEPTION("未知的调用");
+				}
+				else if (ContainAny(attribute, Attribute::Callable))
+				{
+					Expression* callableExpression = expressionStack.Pop();
+					ASSERT_DEBUG(callableExpression->returns.Count() == 1 && !callableExpression->returns.Peek().dimension && callableExpression->returns.Peek().code == TypeCode::Delegate, "只有委托类型才会走这个分支");
+					AbstractDelegate* declaration = (AbstractDelegate*)manager->GetDeclaration(callableExpression->returns.Peek());
+					if (TryAssignmentConvert(tuple, declaration->parameters.GetTypesSpan()))
+					{
+						Expression* expression = new InvokerDelegateExpression(callableExpression->anchor, declaration->returns.GetTypes(), callableExpression, tuple, false);
+						expressionStack.Add(expression);
+						attribute = expression->attribute;
+						goto label_next_lexical;
+					}
+					expressionStack.Add(callableExpression);
+					expressionStack.Add(tuple);
+					goto label_parse_fail;
+				}
+				else if (ContainAny(attribute, Attribute::Type))
+				{
+					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
+					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型错误");
+					Type type = typeExpression->customType;
+					if (type == TYPE_Real2)
+					{
+						if (CheckConvertVectorParameter(tuple, 2))
 						{
-							if (CheckConvertVectorParameter(tuple, 4))
-							{
-								Expression* expression = new VectorConstructorExpression(lexical.anchor, 4, tuple);
-								expressionStack.Add(expression);
-								attribute = expression->attribute;
-								delete typeExpression; typeExpression = NULL;
-								goto label_next_lexical;
-							}
+							Expression* expression = new VectorConstructorExpression(lexical.anchor, 2, tuple);
+							expressionStack.Add(expression);
+							attribute = expression->attribute;
+							delete typeExpression; typeExpression = NULL;
+							goto label_next_lexical;
 						}
-						else if (!type.dimension)
+					}
+					else if (type == TYPE_Real3)
+					{
+						if (CheckConvertVectorParameter(tuple, 3))
 						{
-							if (type.code == TypeCode::Handle)
+							Expression* expression = new VectorConstructorExpression(lexical.anchor, 3, tuple);
+							expressionStack.Add(expression);
+							attribute = expression->attribute;
+							delete typeExpression; typeExpression = NULL;
+							goto label_next_lexical;
+						}
+					}
+					else if (type == TYPE_Real4)
+					{
+						if (CheckConvertVectorParameter(tuple, 4))
+						{
+							Expression* expression = new VectorConstructorExpression(lexical.anchor, 4, tuple);
+							expressionStack.Add(expression);
+							attribute = expression->attribute;
+							delete typeExpression; typeExpression = NULL;
+							goto label_next_lexical;
+						}
+					}
+					else if (!type.dimension)
+					{
+						if (type.code == TypeCode::Handle)
+						{
+							AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
+							AbstractClass* abstractClass = abstractLibrary->classes[type.index];
+							List<CompilingDeclaration, true> declarations(abstractClass->constructors.Count());
+							for (uint32 i = 0; i < abstractClass->constructors.Count(); i++)
+								declarations.Add(abstractLibrary->functions[abstractClass->constructors[i]]->declaration);
+							AbstractCallable* callable;
+							if (TryGetFunction(typeExpression->anchor, declarations, tuple, callable))
 							{
-								AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
-								AbstractClass* abstractClass = abstractLibrary->classes[type.index];
-								List<CompilingDeclaration, true> declarations(abstractClass->constructors.Count());
-								for (uint32 i = 0; i < abstractClass->constructors.Count(); i++)
-									declarations.Add(abstractLibrary->functions[abstractClass->constructors[i]]->declaration);
-								AbstractCallable* callable;
-								if (TryGetFunction(typeExpression->anchor, declarations, tuple, callable))
+								if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
 								{
-									if (TryAssignmentConvert(tuple, Span<Type, true>(&callable->parameters.GetTypes(), 1)))
-									{
-										if (destructor)MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
-										InvokerConstructorExpression* expression = new InvokerConstructorExpression(typeExpression->anchor, type, tuple, callable->declaration);
-										expressionStack.Add(expression);
-										attribute = expression->attribute;
-										delete typeExpression; typeExpression = NULL;
-										goto label_next_lexical;
-									}
+									if (destructor)MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+									InvokerConstructorExpression* expression = new InvokerConstructorExpression(typeExpression->anchor, type, tuple, callable->declaration);
+									expressionStack.Add(expression);
+									attribute = expression->attribute;
+									delete typeExpression; typeExpression = NULL;
+									goto label_next_lexical;
 								}
-								else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_CONSTRUCTOR_NOT_FOUND);
 							}
-							else if (type.code == TypeCode::Struct)
+							else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_CONSTRUCTOR_NOT_FOUND);
+						}
+						else if (type.code == TypeCode::Struct)
+						{
+							AbstractStruct* abstractStruct = (AbstractStruct*)manager->GetDeclaration(type);
+							if (!tuple->returns.Count())
 							{
-								AbstractStruct* abstractStruct = (AbstractStruct*)manager->GetDeclaration(type);
-								if (!tuple->returns.Count())
+								Expression* expression = new StructConstructorExpression(typeExpression->anchor, abstractStruct->declaration, tuple);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								delete typeExpression; typeExpression = NULL;
+								goto label_next_lexical;
+							}
+							else if (abstractStruct->variables.Count() == tuple->returns.Count())
+							{
+								List<Type, true> members(abstractStruct->variables.Count());
+								for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
+									members.Add(abstractStruct->variables[i]->type);
+								if (TryAssignmentConvert(tuple, Span<Type, true>(&members)))
 								{
 									Expression* expression = new StructConstructorExpression(typeExpression->anchor, abstractStruct->declaration, tuple);
 									expressionStack.Add(expression);
@@ -2090,98 +2103,137 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									delete typeExpression; typeExpression = NULL;
 									goto label_next_lexical;
 								}
-								else if (abstractStruct->variables.Count() == tuple->returns.Count())
-								{
-									List<Type, true> members(abstractStruct->variables.Count());
-									for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
-										members.Add(abstractStruct->variables[i]->type);
-									if (TryAssignmentConvert(tuple, Span<Type, true>(&members)))
-									{
-										Expression* expression = new StructConstructorExpression(typeExpression->anchor, abstractStruct->declaration, tuple);
-										expressionStack.Add(expression);
-										attribute = expression->attribute;
-										delete typeExpression; typeExpression = NULL;
-										goto label_next_lexical;
-									}
-								}
-								else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_NUMBER_OF_PARAMETERS);
 							}
-							else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_INVALID_OPERATOR);
+							else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_NUMBER_OF_PARAMETERS);
 						}
-						expressionStack.Add(typeExpression);
+						else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_INVALID_OPERATOR);
+					}
+					expressionStack.Add(typeExpression);
+					expressionStack.Add(tuple);
+					goto label_parse_fail;
+				}
+				else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					expressionStack.Add(tuple);
+					attribute = tuple->attribute;
+					goto label_next_lexical;
+				}
+				expressionStack.Add(tuple);
+				goto label_error_unexpected_lexcal;
+			}
+			goto label_parse_fail;
+		}
+		case LexicalType::BracketLeft1:
+		{
+			Expression* tuple;
+			if (TryParseBracket(anchor, index, SplitFlag::Bracket1, tuple))
+			{
+				for (uint32 i = 0; i < tuple->returns.Count(); i++)
+					if (tuple->returns[i] != TYPE_Integer)
+					{
+						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_MISMATCH);
 						expressionStack.Add(tuple);
 						goto label_parse_fail;
 					}
-					else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(tuple);
-						attribute = tuple->attribute;
-						goto label_next_lexical;
-					}
-					expressionStack.Add(tuple);
-					goto label_error_unexpected_lexcal;
-				}
-				goto label_parse_fail;
-			}
-			case LexicalType::BracketLeft1:
-			{
-				Expression* tuple;
-				if (TryParseBracket(anchor, index, SplitFlag::Bracket1, tuple))
+				if (ContainAll(attribute, Attribute::Array | Attribute::Value))
 				{
-					for (uint32 i = 0; i < tuple->returns.Count(); i++)
-						if (tuple->returns[i] != TYPE_Integer)
-						{
-							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_MISMATCH);
-							expressionStack.Add(tuple);
-							goto label_parse_fail;
-						}
-					if (ContainAll(attribute, Attribute::Array | Attribute::Value))
+					Expression* arrayExpression = expressionStack.Pop();
+					Type type = arrayExpression->returns.Peek();
+					if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
+					else if (tuple->returns.Count() == 1)
 					{
-						Expression* arrayExpression = expressionStack.Pop();
-						Type type = arrayExpression->returns.Peek();
-						if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
-						else if (tuple->returns.Count() == 1)
+						if (type.dimension)
 						{
-							if (type.dimension)
-							{
-								Expression* expression = new ArrayEvaluationExpression(arrayExpression->anchor, arrayExpression, tuple, Type(type, type.dimension - 1));
-								expressionStack.Add(expression);
-								attribute = expression->attribute;
-								goto label_next_lexical;
-							}
-							else if (type == TYPE_String)
-							{
-								Expression* expression = new StringEvaluationExpression(arrayExpression->anchor, arrayExpression, tuple);
-								expressionStack.Add(expression);
-								attribute = expression->attribute;
-								goto label_next_lexical;
-							}
-							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_MISMATCH);
-						}
-						else if (tuple->returns.Count() == 2)
-						{
-							if (destructor) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
-							Expression* expression = new ArraySubExpression(arrayExpression->anchor, arrayExpression, tuple);
+							Expression* expression = new ArrayEvaluationExpression(arrayExpression->anchor, arrayExpression, tuple, Type(type, type.dimension - 1));
 							expressionStack.Add(expression);
 							attribute = expression->attribute;
 							goto label_next_lexical;
 						}
-						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-						expressionStack.Add(arrayExpression);
+						else if (type == TYPE_String)
+						{
+							Expression* expression = new StringEvaluationExpression(arrayExpression->anchor, arrayExpression, tuple);
+							expressionStack.Add(expression);
+							attribute = expression->attribute;
+							goto label_next_lexical;
+						}
+						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_MISMATCH);
 					}
-					else if (ContainAny(attribute, Attribute::Tuple))
+					else if (tuple->returns.Count() == 2)
 					{
-						Expression* source = expressionStack.Pop();
-						if (CheckBlurry(source->returns)) MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
-						else if (tuple->returns.Count())
+						if (destructor) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+						Expression* expression = new ArraySubExpression(arrayExpression->anchor, arrayExpression, tuple);
+						expressionStack.Add(expression);
+						attribute = expression->attribute;
+						goto label_next_lexical;
+					}
+					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+					expressionStack.Add(arrayExpression);
+				}
+				else if (ContainAny(attribute, Attribute::Tuple))
+				{
+					Expression* source = expressionStack.Pop();
+					if (CheckBlurry(source->returns)) MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
+					else if (tuple->returns.Count())
+					{
+						List<integer, true> indices(tuple->returns.Count());
+						if (tuple->TryEvaluationIndices(indices, evaluationParameter))
+						{
+							for (uint32 i = 0; i < indices.Count(); i++)
+							{
+								if (indices[i] < 0) indices[i] += source->returns.Count();
+								if (indices[i] < 0 || indices[i] >= source->returns.Count())
+								{
+									MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
+									expressionStack.Add(source);
+									expressionStack.Add(tuple);
+									goto label_parse_fail;
+								}
+							}
+							List<Type, true> returns(indices.Count());
+							for (uint32 i = 0; i < indices.Count(); i++)
+								returns.Add(source->returns[(uint32)indices[i]]);
+							Expression* expression = new TupleEvaluationExpression(source->anchor, returns, source, indices);
+							expressionStack.Add(expression);
+							attribute = expression->attribute;
+							delete tuple; tuple = NULL;
+							goto label_next_lexical;
+						}
+						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
+					}
+					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_EXPRESSION);
+					expressionStack.Add(source);
+				}
+				else if (ContainAny(attribute, Attribute::Task))
+				{
+					Expression* source = expressionStack.Pop();
+					Type type = source->returns.Peek();
+					if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
+					else
+					{
+						AbstractTask* abstractTask = (AbstractTask*)manager->GetDeclaration(type);
+						if (tuple->returns.Count() == 0)
+						{
+							if (tuple->anchor.content.IsEmpty())
+							{
+								List<integer, true> indices(abstractTask->returns.Count());
+								for (integer i = 0; i < abstractTask->returns.Count(); i++) indices.Add(i);
+								Expression* expression = new TaskEvaluationExpression(source->anchor, abstractTask->returns.GetTypes(), source, indices);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								delete tuple; tuple = NULL;
+								goto label_next_lexical;
+							}
+							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
+						}
+						else
 						{
 							List<integer, true> indices(tuple->returns.Count());
 							if (tuple->TryEvaluationIndices(indices, evaluationParameter))
 							{
 								for (uint32 i = 0; i < indices.Count(); i++)
 								{
-									if (indices[i] < 0) indices[i] += source->returns.Count();
-									if (indices[i] < 0 || indices[i] >= source->returns.Count())
+									if (indices[i] < 0) indices[i] += abstractTask->returns.Count();
+									if (indices[i] < 0 || indices[i] >= abstractTask->returns.Count())
 									{
 										MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
 										expressionStack.Add(source);
@@ -2190,1186 +2242,1134 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 									}
 								}
 								List<Type, true> returns(indices.Count());
-								for (uint32 i = 0; i < indices.Count(); i++)
-									returns.Add(source->returns[(uint32)indices[i]]);
-								Expression* expression = new TupleEvaluationExpression(source->anchor, returns, source, indices);
+								for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractTask->returns.GetType((uint32)indices[i]));
+								Expression* expression = new TaskEvaluationExpression(source->anchor, returns, source, indices);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
 								delete tuple; tuple = NULL;
 								goto label_next_lexical;
 							}
-							else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
+							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
 						}
-						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_EXPRESSION);
-						expressionStack.Add(source);
 					}
-					else if (ContainAny(attribute, Attribute::Task))
+					expressionStack.Add(source);
+				}
+				else if (ContainAny(attribute, Attribute::Type))
+				{
+					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
+					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "不是类型表达式");
+					Type type = typeExpression->customType;
+					if (tuple->returns.Count() == 0)
 					{
-						Expression* source = expressionStack.Pop();
-						Type type = source->returns.Peek();
-						if (type == TYPE_Blurry) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
-						else
+						if (tuple->anchor.content.IsEmpty())
 						{
-							AbstractTask* abstractTask = (AbstractTask*)manager->GetDeclaration(type);
-							if (tuple->returns.Count() == 0)
-							{
-								if (tuple->anchor.content.IsEmpty())
-								{
-									List<integer, true> indices(abstractTask->returns.Count());
-									for (integer i = 0; i < abstractTask->returns.Count(); i++) indices.Add(i);
-									Expression* expression = new TaskEvaluationExpression(source->anchor, abstractTask->returns.GetTypes(), source, indices);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									delete tuple; tuple = NULL;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
-							}
-							else
-							{
-								List<integer, true> indices(tuple->returns.Count());
-								if (tuple->TryEvaluationIndices(indices, evaluationParameter))
-								{
-									for (uint32 i = 0; i < indices.Count(); i++)
-									{
-										if (indices[i] < 0) indices[i] += abstractTask->returns.Count();
-										if (indices[i] < 0 || indices[i] >= abstractTask->returns.Count())
-										{
-											MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
-											expressionStack.Add(source);
-											expressionStack.Add(tuple);
-											goto label_parse_fail;
-										}
-									}
-									List<Type, true> returns(indices.Count());
-									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractTask->returns.GetType((uint32)indices[i]));
-									Expression* expression = new TaskEvaluationExpression(source->anchor, returns, source, indices);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									delete tuple; tuple = NULL;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
-							}
+							typeExpression->customType = Type(type, type.dimension + 1);
+							expressionStack.Add(typeExpression);
+							delete tuple; tuple = NULL;
+							goto label_next_lexical;
 						}
-						expressionStack.Add(source);
+						else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 					}
-					else if (ContainAny(attribute, Attribute::Type))
+					else if (tuple->returns.Count() == 1)
 					{
-						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "不是类型表达式");
-						Type type = typeExpression->customType;
+						if (destructor) MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+						type.dimension++;
+						Expression* expression = new ArrayCreateExpression(typeExpression->anchor, tuple, type);
+						expressionStack.Add(expression);
+						attribute = expression->attribute;
+						delete typeExpression; typeExpression = NULL;
+						goto label_next_lexical;
+					}
+					else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INVALID_OPERATOR);
+					expressionStack.Add(typeExpression);
+				}
+				else if (ContainAny(attribute, Attribute::Value))
+				{
+					Expression* source = expressionStack.Pop();
+					Type type = source->returns.Peek();
+					if (!type.dimension && type.code == TypeCode::Struct)
+					{
+						AbstractStruct* abstractStruct = (AbstractStruct*)manager->GetDeclaration(type);
 						if (tuple->returns.Count() == 0)
 						{
 							if (tuple->anchor.content.IsEmpty())
 							{
-								typeExpression->customType = Type(type, type.dimension + 1);
-								expressionStack.Add(typeExpression);
+								List<integer, true> indices(abstractStruct->variables.Count());
+								List<Type, true> returns(abstractStruct->variables.Count());
+								for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
+								{
+									indices.Add(i);
+									returns.Add(abstractStruct->variables[i]->type);
+								}
+								Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
 								delete tuple; tuple = NULL;
 								goto label_next_lexical;
 							}
-							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-						}
-						else if (tuple->returns.Count() == 1)
-						{
-							if (destructor) MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
-							type.dimension++;
-							Expression* expression = new ArrayCreateExpression(typeExpression->anchor, tuple, type);
-							expressionStack.Add(expression);
-							attribute = expression->attribute;
-							delete typeExpression; typeExpression = NULL;
-							goto label_next_lexical;
-						}
-						else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INVALID_OPERATOR);
-						expressionStack.Add(typeExpression);
-					}
-					else if (ContainAny(attribute, Attribute::Value))
-					{
-						Expression* source = expressionStack.Pop();
-						Type type = source->returns.Peek();
-						if (!type.dimension && type.code == TypeCode::Struct)
-						{
-							AbstractStruct* abstractStruct = (AbstractStruct*)manager->GetDeclaration(type);
-							if (tuple->returns.Count() == 0)
-							{
-								if (tuple->anchor.content.IsEmpty())
-								{
-									List<integer, true> indices(abstractStruct->variables.Count());
-									List<Type, true> returns(abstractStruct->variables.Count());
-									for (uint32 i = 0; i < abstractStruct->variables.Count(); i++)
-									{
-										indices.Add(i);
-										returns.Add(abstractStruct->variables[i]->type);
-									}
-									Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									delete tuple; tuple = NULL;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
-							}
-							else
-							{
-								List<integer, true> indices(tuple->returns.Count());
-								if (tuple->TryEvaluationIndices(indices, evaluationParameter))
-								{
-									for (uint32 i = 0; i < indices.Count(); i++)
-									{
-										if (indices[i] < 0) indices[i] += abstractStruct->variables.Count();
-										if (indices[i] < 0 || indices[i] >= abstractStruct->variables.Count())
-										{
-											MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
-											expressionStack.Add(source);
-											expressionStack.Add(tuple);
-											goto label_parse_fail;
-										}
-									}
-									List<Type, true> returns(indices.Count());
-									for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractStruct->variables[(uint32)indices[i]]->type);
-									Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									delete tuple; tuple = NULL;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
-							}
-						}
-						expressionStack.Add(source);
-					}
-					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-					expressionStack.Add(tuple);
-				}
-				goto label_parse_fail;
-			}
-			case LexicalType::BracketLeft2:
-			{
-				Expression* tuple;
-				if (TryParseBracket(anchor, index, SplitFlag::Bracket2, tuple))
-				{
-					if (ContainAny(attribute, Attribute::Type))
-					{
-						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型错");
-						Type elementType = Type(typeExpression->customType, typeExpression->customType.dimension + ExtractDimension(anchor, index));
-						List<Type, true> types(tuple->returns.Count());
-						for (uint32 i = 0; i < tuple->returns.Count(); i++) types.Add(elementType);
-						if (TryAssignmentConvert(tuple, Span<Type, true>(&types)))
-						{
-							ArrayInitExpression* expression = new ArrayInitExpression(typeExpression->anchor, tuple, Type(elementType, elementType.dimension + 1));
-							expressionStack.Add(expression);
-							attribute = expression->attribute;
-							delete typeExpression; typeExpression = NULL;
-							goto label_next_lexical;
-						}
-						expressionStack.Add(typeExpression);
-					}
-					else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						BlurrySetExpression* expression = new BlurrySetExpression(lexical.anchor, tuple);
-						expressionStack.Add(expression);
-						attribute = expression->attribute;
-						goto label_next_lexical;
-					}
-					expressionStack.Add(tuple);
-					goto label_error_unexpected_lexcal;
-				}
-				goto label_parse_fail;
-			}
-			case LexicalType::BracketRight0:
-			case LexicalType::BracketRight1:
-			case LexicalType::BracketRight2:
-			case LexicalType::Comma:
-			case LexicalType::Semicolon:
-			case LexicalType::Assignment:goto label_error_unexpected_lexcal;
-#pragma region operator
-			case LexicalType::Equals:
-				PUSH_TOKEN(TokenType::Equals, Attribute::Operator);
-				break;
-			case LexicalType::Lambda:goto label_error_unexpected_lexcal;
-			case LexicalType::BitAnd:
-				if (ContainAny(attribute, Attribute::Type))
-				{
-					PUSH_TOKEN(TokenType::Casting, Attribute::Operator);
-				}
-				else PUSH_TOKEN(TokenType::BitAnd, Attribute::Operator);
-				break;
-			case LexicalType::LogicAnd:
-				PUSH_TOKEN(TokenType::LogicAnd, Attribute::Operator);
-				break;
-			case LexicalType::BitAndAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::BitOr:
-				PUSH_TOKEN(TokenType::BitOr, Attribute::Operator);
-				break;
-			case LexicalType::LogicOr:
-				PUSH_TOKEN(TokenType::LogicOr, Attribute::Operator);
-				break;
-			case LexicalType::BitOrAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::BitXor:
-				PUSH_TOKEN(TokenType::BitXor, Attribute::Operator);
-				break;
-			case LexicalType::BitXorAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Less:
-				if (ContainAny(attribute, Attribute::Value))
-				{
-					PUSH_TOKEN(TokenType::Less, Attribute::Operator);
-					break;
-				}
-				else
-				{
-					index = lexical.anchor.GetEnd();
-					if (TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
-					{
-						Type type = MatchBaseType(lexical.anchor);
-						if (type.IsValid())
-						{
-							index = lexical.anchor.GetEnd();
-							type.dimension = ExtractDimension(anchor, index);
-							expressionStack.Add(new TypeExpression(lexical.anchor, type));
-							attribute = Attribute::Type;
+							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
 						}
 						else
 						{
-							List<CompilingDeclaration, true> declarations(0);
-							if (!TryFindDeclaration(lexical.anchor, declarations))
+							List<integer, true> indices(tuple->returns.Count());
+							if (tuple->TryEvaluationIndices(indices, evaluationParameter))
 							{
-								AbstractSpace* space = NULL;
-								if (!context.TryFindSpace(manager, lexical.anchor, space))
+								for (uint32 i = 0; i < indices.Count(); i++)
 								{
-									MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-									goto label_parse_fail;
-								}
-								if (!TryFindDeclaration(anchor, index, lexical, space, declarations))
-									goto label_parse_fail;
-							}
-							if (!TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-								goto label_parse_fail;
-						}
-						if (TryMatchNext(anchor, index, LexicalType::Greater, lexical))
-						{
-							Expression* expression = expressionStack.Pop();
-							if (ContainAny(expression->type, ExpressionType::TypeExpression))
-							{
-								TypeExpression* typeExpression = (TypeExpression*)expression;
-								expression = new ConstantTypeExpression(typeExpression->anchor, typeExpression->customType);
-								attribute = expression->attribute;
-								expressionStack.Add(expression);
-								delete typeExpression;
-								break;
-							}
-							else
-							{
-								expressionStack.Add(expression);
-								MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_TYPE_DECLARATION);
-							}
-						}
-						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-						goto label_parse_fail;
-					}
-					else goto label_error_unexpected_lexcal;
-				}
-			case LexicalType::LessEquals:
-				PUSH_TOKEN(TokenType::LessEquals, Attribute::Operator);
-				break;
-			case LexicalType::ShiftLeft:
-				PUSH_TOKEN(TokenType::ShiftLeft, Attribute::Operator);
-				break;
-			case LexicalType::ShiftLeftAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Greater:
-				PUSH_TOKEN(TokenType::Greater, Attribute::Operator);
-				break;
-			case LexicalType::GreaterEquals:
-				PUSH_TOKEN(TokenType::GreaterEquals, Attribute::Operator);
-				break;
-			case LexicalType::ShiftRight:
-				PUSH_TOKEN(TokenType::ShiftRight, Attribute::Operator);
-				break;
-			case LexicalType::ShiftRightAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Plus:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					PUSH_TOKEN(TokenType::Positive, Attribute::Operator);
-				}
-				else PUSH_TOKEN(TokenType::Plus, Attribute::Operator);
-				break;
-			case LexicalType::Increment:
-				if (ContainAny(attribute, Attribute::Assignable | Attribute::Value))
-				{
-					Expression* operatorExpression = CreateIncrementRightOperator(lexical.anchor, this, expressionStack.Pop());
-					if (operatorExpression)
-					{
-						expressionStack.Add(operatorExpression);
-						attribute = operatorExpression->attribute;
-					}
-					else goto label_parse_fail;
-				}
-				else PUSH_TOKEN(TokenType::IncrementLeft, Attribute::Operator);
-				break;
-			case LexicalType::PlusAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Minus:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					PUSH_TOKEN(TokenType::Negative, Attribute::Operator);
-				}
-				else PUSH_TOKEN(TokenType::Minus, Attribute::Operator);
-				break;
-			case LexicalType::Decrement:
-				if (ContainAny(attribute, Attribute::Assignable | Attribute::Value))
-				{
-					Expression* operatorExpression = CreateDecrementRightOperator(lexical.anchor, this, expressionStack.Pop());
-					if (operatorExpression)
-					{
-						expressionStack.Add(operatorExpression);
-						attribute = operatorExpression->attribute;
-					}
-					else goto label_parse_fail;
-				}
-				else PUSH_TOKEN(TokenType::DecrementLeft, Attribute::Operator);
-				break;
-			case LexicalType::RealInvoker:
-			{
-				Lexical identifierLexical;
-				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
-				{
-					index = identifierLexical.anchor.GetEnd();
-					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
-					{
-						Expression* expression = expressionStack.Pop();
-						ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
-						Type type = expression->returns[0];
-						if (type.dimension)type = TYPE_Array;
-						if (type.code == TypeCode::Handle)
-						{
-							List<CompilingDeclaration, true> declarations(0);
-							if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
-							{
-								if (declarations.Count() > 1 || declarations[0].category == DeclarationCategory::ClassFunction)
-								{
-									expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, false);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else
-								{
-									expressionStack.Add(expression);
-									MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-									goto label_parse_fail;
-								}
-							}
-							else
-							{
-								expressionStack.Add(expression);
-								MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-								goto label_parse_fail;
-							}
-						}
-						else
-						{
-							expressionStack.Add(expression);
-							MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
-							goto label_parse_fail;
-						}
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
-				goto label_parse_fail;
-			}
-			break;
-			case LexicalType::MinusAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Mul:
-				PUSH_TOKEN(TokenType::Mul, Attribute::Operator);
-				break;
-			case LexicalType::MulAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Div:
-				PUSH_TOKEN(TokenType::Div, Attribute::Operator);
-				break;
-			case LexicalType::DivAssignment:
-			case LexicalType::Annotation: goto label_error_unexpected_lexcal;
-			case LexicalType::Mod:
-				PUSH_TOKEN(TokenType::Mod, Attribute::Operator);
-				break;
-			case LexicalType::ModAssignment:goto label_error_unexpected_lexcal;
-			case LexicalType::Not:
-				PUSH_TOKEN(TokenType::Not, Attribute::Operator);
-				break;
-			case LexicalType::NotEquals:
-				PUSH_TOKEN(TokenType::NotEquals, Attribute::Operator);
-				break;
-			case LexicalType::Negate:
-				PUSH_TOKEN(TokenType::Inverse, Attribute::Operator);
-				break;
-#pragma endregion
-			case LexicalType::Dot:
-			{
-				Lexical identifierLexical;
-				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
-				{
-					index = identifierLexical.anchor.GetEnd();
-					if (identifierLexical.type == LexicalType::Word)
-						if (ContainAny(attribute, Attribute::Type))
-						{
-							TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-							ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
-							if (typeExpression->customType.code == TypeCode::Enum)
-							{
-								Type customType = typeExpression->customType;
-								delete typeExpression; typeExpression = NULL;
-								List<String>& elements = manager->GetLibrary(customType.library)->enums[customType.index]->elements;
-								for (uint32 elementIndex = 0; elementIndex < elements.Count(); elementIndex++)
-									if (elements[elementIndex] == identifierLexical.anchor.content)
+									if (indices[i] < 0) indices[i] += abstractStruct->variables.Count();
+									if (indices[i] < 0 || indices[i] >= abstractStruct->variables.Count())
 									{
-										EnumElementExpression* expression = new EnumElementExpression(identifierLexical.anchor, CompilingDeclaration(customType.library, Visibility::Public, DeclarationCategory::EnumElement, elementIndex, customType.index));
-										expressionStack.Add(expression);
-										attribute = expression->attribute;
-										goto label_next_lexical;
-									}
-								MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_ENUM_ELEMENT_NOT_FOUND);
-								goto label_parse_fail;
-							}
-							else expressionStack.Add(typeExpression);
-						}
-						else if (ContainAny(attribute, Attribute::Value))
-						{
-							Expression* expression = expressionStack.Pop();
-							ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
-							Type type = expression->returns[0];
-							List<CompilingDeclaration, true> declarations(0);
-							if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
-							{
-								if (declarations.Count() == 1 && (declarations.Peek().category == DeclarationCategory::StructVariable || declarations.Peek().category == DeclarationCategory::ClassVariable))
-								{
-									CompilingDeclaration declaration = declarations.Peek();
-									if (declaration.category == DeclarationCategory::StructVariable) type = manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->type;
-									else if (declaration.category == DeclarationCategory::ClassVariable) type = manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
-									expression = new VariableMemberExpression(identifierLexical.anchor, declaration, GetVariableAttribute(declaration), expression, type);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								if (declarations.Peek().category == DeclarationCategory::StructFunction)
-								{
-									expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, false);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else if (declarations.Peek().category == DeclarationCategory::ClassFunction || declarations.Peek().category == DeclarationCategory::InterfaceFunction)
-								{
-									expression = new MethodVirtualExpression(identifierLexical.anchor, expression, declarations, false);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else
-								{
-									expressionStack.Add(expression);
-									MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-									goto label_parse_fail;
-								}
-							}
-							else
-							{
-								VectorMemberExpression* vectorMemberExpression;
-								if (TryCreateVectorMemberExpression(identifierLexical.anchor, expression, vectorMemberExpression))
-								{
-									expressionStack.Add(vectorMemberExpression);
-									attribute = vectorMemberExpression->attribute;
-									goto label_next_lexical;
-								}
-								expressionStack.Add(expression);
-								MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-								goto label_parse_fail;
-							}
-						}
-					goto label_error_unexpected_lexcal;
-				}
-				else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
-				goto label_parse_fail;
-			}
-			case LexicalType::Question: goto label_error_unexpected_lexcal;
-			case LexicalType::QuestionDot:
-			{
-				Lexical identifierLexical;
-				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
-				{
-					index = identifierLexical.anchor.GetEnd();
-					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
-					{
-						Expression* expression = expressionStack.Pop();
-						ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
-						Type type = expression->returns[0];
-						if (type.dimension)type = TYPE_Array;
-						if (IsHandleType(type))
-						{
-							List<CompilingDeclaration, true> declarations(0);
-							if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
-							{
-								if (declarations.Count() == 1 && declarations.Peek().category == DeclarationCategory::ClassVariable)
-								{
-									CompilingDeclaration declaration = declarations.Peek();
-									type = manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
-									expression = new VariableQuestionMemberExpression(identifierLexical.anchor, declaration, expression, type);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else if (declarations.Peek().category == DeclarationCategory::ClassFunction || declarations.Peek().category == DeclarationCategory::InterfaceFunction)
-								{
-									expression = new MethodVirtualExpression(identifierLexical.anchor, expression, declarations, true);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-							}
-							else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-						}
-						else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
-						expressionStack.Add(expression);
-						goto label_parse_fail;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
-				goto label_parse_fail;
-			}
-			case LexicalType::QuestionRealInvoke:
-			{
-				Lexical identifierLexical;
-				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
-				{
-					index = identifierLexical.anchor.GetEnd();
-					if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
-					{
-						Expression* expression = expressionStack.Pop();
-						ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
-						Type type = expression->returns[0];
-						if (type.dimension)type = TYPE_Array;
-						if (IsHandleType(type))
-						{
-							List<CompilingDeclaration, true> declarations(0);
-							if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
-							{
-								if (declarations.Count() > 1 || declarations[0].category == DeclarationCategory::ClassFunction)
-								{
-									expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, true);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-							}
-							else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-						}
-						else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
-						expressionStack.Add(expression);
-						goto label_parse_fail;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
-				goto label_parse_fail;
-			}
-			break;
-			case LexicalType::QuestionInvoke:
-				if (ContainAll(attribute, Attribute::Value | Attribute::Callable))
-				{
-					Expression* tuple;
-					if (TryParseBracket(anchor, index, SplitFlag::Bracket0, tuple))
-					{
-						Expression* delegateExpression = expressionStack.Pop();
-						if (delegateExpression->returns.Count() == 1 && !delegateExpression->returns.Peek().dimension && delegateExpression->returns.Peek().code == TypeCode::Delegate)
-						{
-							CompilingDeclaration declaration = manager->GetDeclaration(delegateExpression->returns.Peek())->declaration;
-							if (TryAssignmentConvert(tuple, manager->GetParameters(declaration)))
-							{
-								Expression* expression = new InvokerDelegateExpression(delegateExpression->anchor, manager->GetReturns(declaration), delegateExpression, tuple, true);
-								expressionStack.Add(expression);
-								attribute = expression->attribute;
-								goto label_next_lexical;
-							}
-						}
-						else MESSAGE2(manager->messages, delegateExpression->anchor, MessageType::ERROR_NOT_DELEGATE_TYPE);
-						expressionStack.Add(tuple);
-						expressionStack.Add(delegateExpression);
-					}
-					goto label_parse_fail;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::QuestionIndex:
-			{
-				Expression* tuple;
-				if (TryParseBracket(anchor, index, SplitFlag::Bracket1, tuple))
-				{
-					List<Type, true> indexTypes(tuple->returns.Count());
-					for (uint32 i = 0; i < tuple->returns.Count(); i++) indexTypes.Add(TYPE_Integer);
-					if (TryAssignmentConvert(tuple, Span<Type, true>(&indexTypes)))
-					{
-						if (ContainAny(attribute, Attribute::Array))
-						{
-							Expression* arrayExpression = expressionStack.Pop();
-							if (arrayExpression->returns[0] == TYPE_Blurry) MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
-							else if (arrayExpression->returns[0] == TYPE_String) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR)
-							{
-								if (tuple->returns.Count() == 1)
-								{
-									Type arrayType = arrayExpression->returns[0];
-									Expression* expression = new ArrayQuestionEvaluationExpression(lexical.anchor, arrayExpression, tuple, Type(arrayType, arrayType.dimension - 1));
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else if (tuple->returns.Count() == 2)
-								{
-									if (destructor) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
-									Expression* expression = new ArrayQuestionSubExpression(lexical.anchor, arrayExpression, tuple);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_WRONG_NUMBER_OF_INDICES);
-							}
-							expressionStack.Add(arrayExpression);
-						}
-						else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INVALID_OPERATOR);
-					}
-					expressionStack.Add(tuple);
-				}
-				goto label_parse_fail;
-			}
-			case LexicalType::QuestionNull:
-			case LexicalType::Colon: goto label_error_unexpected_lexcal;
-#pragma region 常量
-			case LexicalType::ConstReal:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					String value = lexical.anchor.content.Replace(manager->stringAgency->Add(TEXT("_")), String());
-					expressionStack.Add(new ConstantRealExpression(lexical.anchor, ParseReal(value)));
-					attribute = Attribute::Constant;
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::ConstNumber:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					String value = lexical.anchor.content.Replace(manager->stringAgency->Add(TEXT("_")), String());
-					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, ParseInteger(value)));
-					attribute = Attribute::Constant;
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::ConstBinary:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					integer value = 0;
-					String& content = lexical.anchor.content;
-					for (uint32 i = 2; i < content.GetLength(); i++)
-					{
-						character element = content[i];
-						if (element != '_')
-						{
-							value <<= 1;
-							if (element == '1') value++;
-						}
-					}
-					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
-					attribute = Attribute::Constant;
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::ConstHexadecimal:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					integer value = 0;
-					String& content = lexical.anchor.content;
-					for (uint32 i = 2; i < content.GetLength(); i++)
-					{
-						integer element = content[i];
-						if (element != '_')
-						{
-							value <<= 4;
-							if (element >= '0' && element <= '9')value += element - '0';
-							else value += (element | 0x20) - 'a' + 10;
-						}
-					}
-					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
-					attribute = Attribute::Constant;
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::ConstChars:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					integer value = 0;
-					String& content = lexical.anchor.content;
-					for (uint32 i = 1, length = content.GetLength(); i < length; i++)
-					{
-						integer element = content[i];
-						if (element != '\'')
-						{
-							value <<= 8;
-							if (element != '\\') value += element & 0xff;
-							else if (++i < length) value += EscapeCharacter(i, content.GetPointer(), length) & 0xff;
-						}
-					}
-					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
-					attribute = Attribute::Constant;
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::ConstString:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					String& content = lexical.anchor.content;
-					List<character, true> stringBuilder(content.GetLength());
-					for (uint32 i = 1, length = content.GetLength(); i < length; i++)
-					{
-						character element = content[i];
-						if (element != '\"')
-						{
-							if (element != '\\') stringBuilder.Add(element);
-							else if (++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
-						}
-					}
-					expressionStack.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
-					attribute = Attribute::Constant;
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-#pragma endregion
-			case LexicalType::TemplateString:
-				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-				{
-					String& content = lexical.anchor.content;
-					List<character, true> stringBuilder(content.GetLength());
-					List<Expression*, true> parameters(2);
-					Expression* stringExpression = NULL;
-					Expression* constStringExpression;
-					for (uint32 i = 2, length = content.GetLength(); i < length; i++)
-					{
-						character element = content[i];
-						if (element != '\"')
-						{
-							if (element == '{')
-							{
-								if (i + 1 < content.GetLength() && content[i + 1] != '{')
-								{
-									Anchor block = MatchStringTemplateBlock(lexical.anchor, lexical.anchor.position + i, manager->messages);
-									if (block.content[block.content.GetLength() - 1] == '}')
-									{
-										Expression* blockExpression;
-										if (TryParse(block.Sub(block.position + 1, block.content.GetLength() - 2), blockExpression))
-										{
-											constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
-											stringBuilder.Clear();
-											if (stringExpression)
-											{
-												parameters.Clear();
-												parameters.Add(stringExpression);
-												parameters.Add(constStringExpression);
-												stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
-												if (!stringExpression)
-												{
-													expressionStack.Add(blockExpression);
-													goto label_parse_fail;
-												}
-											}
-											else stringExpression = constStringExpression;
-											parameters.Clear();
-											parameters.Add(stringExpression);
-											parameters.Add(blockExpression);
-											stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
-											if (!stringExpression) goto label_parse_fail;
-										}
-										else
-										{
-											if (stringExpression) expressionStack.Add(stringExpression);
-											goto label_parse_fail;
-										}
-									}
-									else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-									i += block.content.GetLength() - 1;
-								}
-								else
-								{
-									stringBuilder.Add(element);
-									i++;
-								}
-							}
-							else if (element == '}')
-							{
-								if (i + 1 < length && content[i + 1] == '}')
-								{
-									stringBuilder.Add(element);
-									i++;
-								}
-								else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-							}
-							else if (element != '\\') stringBuilder.Add(element);
-							else if (++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
-						}
-					}
-					constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
-					if (stringExpression)
-					{
-						parameters.Clear();
-						parameters.Add(stringExpression);
-						parameters.Add(constStringExpression);
-						stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
-						if (stringExpression)
-						{
-							expressionStack.Add(stringExpression);
-							attribute = stringExpression->attribute;
-						}
-						else goto label_parse_fail;
-					}
-					else
-					{
-						expressionStack.Add(constStringExpression);
-						attribute = Attribute::Constant;
-					}
-					break;
-				}
-				goto label_error_unexpected_lexcal;
-			case LexicalType::Word:
-				if (lexical.anchor.content == KeyWord_global())
-				{
-					if (TryAnalysis(anchor, lexical.anchor.GetEnd(), lexical, manager->messages) && lexical.type == LexicalType::Word)
-					{
-						List<CompilingDeclaration, true> declarations(0);
-						AbstractSpace* space = NULL;
-						Context globalContext = Context(context.compilingSpace, context.relies);
-						index = lexical.anchor.GetEnd();
-						if (globalContext.TryFindDeclaration(manager, lexical.anchor, declarations))
-						{
-							if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-								goto label_next_lexical;
-							goto label_parse_fail;
-						}
-						else if (globalContext.TryFindSpace(manager, lexical.anchor, space))
-						{
-							if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-								goto label_next_lexical;
-							goto label_parse_fail;
-						}
-						else
-						{
-							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-							goto label_parse_fail;
-						}
-					}
-					MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-					goto label_parse_fail;
-				}
-				else if (lexical.anchor.content == KeyWord_base())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						if (context.declaration.category == DeclarationCategory::Class)
-						{
-							Expression* thisExpression;
-							if (TryGetThisValueExpression(lexical.anchor, thisExpression))
-							{
-								Lexical nextLexical;
-								if (TryAnalysis(anchor, lexical.anchor.GetEnd(), nextLexical, manager->messages) && nextLexical.type == LexicalType::Dot)
-								{
-									if (TryAnalysis(anchor, nextLexical.anchor.GetEnd(), lexical, manager->messages))
-									{
-										if (lexical.type == LexicalType::Word)
-										{
-											List<CompilingDeclaration, true> declarations(0);
-											if (context.TryFindMember(manager, lexical.anchor.content, manager->GetParent(thisExpression->returns.Peek()), declarations))
-											{
-												if (declarations.Count() == 1 && declarations.Peek().category == DeclarationCategory::ClassVariable)
-												{
-													Expression* expression = new VariableMemberExpression(lexical.anchor, declarations.Peek(), GetVariableAttribute(declarations.Peek()), thisExpression, GetVariableType(declarations.Peek()));
-													expressionStack.Add(expression);
-													attribute = expression->attribute;
-												}
-												else
-												{
-													Expression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
-													expressionStack.Add(expression);
-													attribute = expression->attribute;
-												}
-												break;
-											}
-											else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-										}
-										else MESSAGE2(manager->messages, nextLexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-									}
-									else MESSAGE2(manager->messages, nextLexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
-								}
-								else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-								expressionStack.Add(thisExpression);
-							}
-						}
-						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
-						goto label_parse_fail;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_this())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						if (context.declaration.category == DeclarationCategory::Struct || context.declaration.category == DeclarationCategory::Class)
-						{
-							Expression* thisExpression;
-							if (TryGetThisValueExpression(lexical.anchor, thisExpression))
-							{
-								expressionStack.Add(thisExpression);
-								attribute = thisExpression->attribute;
-								break;
-							}
-						}
-						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
-						goto label_parse_fail;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_true())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new ConstantBooleanExpression(lexical.anchor, true));
-						attribute = Attribute::Constant;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_false())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new ConstantBooleanExpression(lexical.anchor, false));
-						attribute = Attribute::Constant;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_null())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						expressionStack.Add(new ConstantNullExpression(lexical.anchor));
-						attribute = Attribute::Constant;
-						break;
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_var())
-				{
-					if (ContainAny(attribute, Attribute::None))
-					{
-						Lexical identifier;
-						if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifier, manager->messages) && identifier.type == LexicalType::Word)
-						{
-							if (IsKeyWord(identifier.anchor.content))
-							{
-								MESSAGE2(manager->messages, identifier.anchor, MessageType::ERROR_NAME_IS_KEY_WORD);
-								goto label_parse_fail;
-							}
-							else
-							{
-								index = identifier.anchor.GetEnd();
-								expressionStack.Add(new BlurryVariableDeclarationExpression(identifier.anchor));
-								attribute = Attribute::Assignable;
-								goto label_next_lexical;
-							}
-						}
-					}
-					goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_is())
-				{
-					if (ContainAny(attribute, Attribute::Value))
-					{
-						Expression* expression = expressionStack.Pop();
-						if (expression->returns.Count() == 1 && IsHandleType(expression->returns[0]))
-						{
-							List<CompilingDeclaration, true> declarations(0);
-							index = lexical.anchor.GetEnd();
-							if (TryFindDeclaration(anchor, index, declarations))
-							{
-								Declaration declaration;
-								if (declarations.Count() == 1 && declarations.Peek().TryGetDeclaration(declaration))
-								{
-									Type targetType = Type(declaration, ExtractDimension(anchor, index));
-									VariableLocalExpression* localExpression = NULL;
-									if (TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
-									{
-										if (IsKeyWord(lexical.anchor.content))
-										{
-											MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NAME_IS_KEY_WORD);
-											expressionStack.Add(expression);
-											goto label_parse_fail;
-										}
-										else
-										{
-											Local local = localContext->AddLocal(lexical.anchor, targetType);
-											localExpression = new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, targetType);
-											index = lexical.anchor.GetEnd();
-										}
-									}
-									expression = new IsCastExpression(lexical.anchor, expression, localExpression, targetType);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
-								}
-								MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-							}
-							expressionStack.Add(expression);
-							goto label_parse_fail;
-						}
-						expressionStack.Add(expression);
-						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-						goto label_parse_fail;
-					}
-					else goto label_error_unexpected_lexcal;
-				}
-				else if (lexical.anchor.content == KeyWord_as())
-				{
-					if (ContainAny(attribute, Attribute::Value))
-					{
-						Expression* expression = expressionStack.Pop();
-						if (expression->returns.Count() == 1 && IsHandleType(expression->returns.Peek()))
-						{
-							List<CompilingDeclaration, true> declarations(0);
-							index = lexical.anchor.GetEnd();
-							if (TryFindDeclaration(anchor, index, declarations))
-							{
-								Declaration declaration;
-								if (declarations.Count() == 1 && declarations.Peek().TryGetDeclaration(declaration))
-								{
-									uint32 dimension = ExtractDimension(anchor, index);
-									Type targetType = Type(declaration, dimension);
-									if (!IsHandleType(targetType))
-									{
-										MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
-										expressionStack.Add(expression);
+										MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INDEX_OUT_OF_RANGE);
+										expressionStack.Add(source);
+										expressionStack.Add(tuple);
 										goto label_parse_fail;
 									}
-									expression = new AsCastExpression(lexical.anchor, Type(declaration, dimension), expression);
-									expressionStack.Add(expression);
-									attribute = expression->attribute;
-									goto label_next_lexical;
 								}
-								MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+								List<Type, true> returns(indices.Count());
+								for (uint32 i = 0; i < indices.Count(); i++) returns.Add(abstractStruct->variables[(uint32)indices[i]]->type);
+								Expression* expression = new StructMemberExpression(source->anchor, source, indices, returns);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								delete tuple; tuple = NULL;
+								goto label_next_lexical;
 							}
-							expressionStack.Add(expression);
-							goto label_parse_fail;
+							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TUPLE_INDEX_NOT_CONSTANT);
 						}
+					}
+					expressionStack.Add(source);
+				}
+				else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+				expressionStack.Add(tuple);
+			}
+			goto label_parse_fail;
+		}
+		case LexicalType::BracketLeft2:
+		{
+			Expression* tuple;
+			if (TryParseBracket(anchor, index, SplitFlag::Bracket2, tuple))
+			{
+				if (ContainAny(attribute, Attribute::Type))
+				{
+					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
+					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型错");
+					Type elementType = Type(typeExpression->customType, typeExpression->customType.dimension + ExtractDimension(anchor, index));
+					List<Type, true> types(tuple->returns.Count());
+					for (uint32 i = 0; i < tuple->returns.Count(); i++) types.Add(elementType);
+					if (TryAssignmentConvert(tuple, Span<Type, true>(&types)))
+					{
+						ArrayInitExpression* expression = new ArrayInitExpression(typeExpression->anchor, tuple, Type(elementType, elementType.dimension + 1));
 						expressionStack.Add(expression);
-						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
-						goto label_parse_fail;
+						attribute = expression->attribute;
+						delete typeExpression; typeExpression = NULL;
+						goto label_next_lexical;
 					}
-					else goto label_error_unexpected_lexcal;
+					expressionStack.Add(typeExpression);
 				}
-				else if (lexical.anchor.content == KeyWord_start())
+				else if (ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						Expression* invokerExpression;
-						if (TryParse(anchor.Sub(lexical.anchor.GetEnd()), invokerExpression))
-						{
-							if (ContainAny(invokerExpression->type, ExpressionType::InvokerExpression))
-							{
-								BlurryTaskExpression* taskExpression = new BlurryTaskExpression(lexical.anchor, (InvokerExpression*)invokerExpression, true);
-								expressionStack.Add(taskExpression);
-								attribute = taskExpression->attribute;
-								index = anchor.GetEnd();
-								goto label_next_lexical;
-							}
-							expressionStack.Add(invokerExpression);
-							MESSAGE2(manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
-						}
-						goto label_parse_fail;
-					}
-					else goto label_error_unexpected_lexcal;
+					BlurrySetExpression* expression = new BlurrySetExpression(lexical.anchor, tuple);
+					expressionStack.Add(expression);
+					attribute = expression->attribute;
+					goto label_next_lexical;
 				}
-				else if (lexical.anchor.content == KeyWord_new())
-				{
-					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-					{
-						Expression* invokerExpression;
-						if (TryParse(anchor.Sub(lexical.anchor.GetEnd()), invokerExpression))
-						{
-							if (ContainAny(invokerExpression->type, ExpressionType::InvokerExpression))
-							{
-								BlurryTaskExpression* taskExpression = new BlurryTaskExpression(lexical.anchor, (InvokerExpression*)invokerExpression, false);
-								expressionStack.Add(taskExpression);
-								attribute = taskExpression->attribute;
-								index = anchor.GetEnd();
-								goto label_next_lexical;
-							}
-							expressionStack.Add(invokerExpression);
-							MESSAGE2(manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
-						}
-						goto label_parse_fail;
-					}
-					else goto label_error_unexpected_lexcal;
-				}
-				else
+				expressionStack.Add(tuple);
+				goto label_error_unexpected_lexcal;
+			}
+			goto label_parse_fail;
+		}
+		case LexicalType::BracketRight0:
+		case LexicalType::BracketRight1:
+		case LexicalType::BracketRight2:
+		case LexicalType::Comma:
+		case LexicalType::Semicolon:
+		case LexicalType::Assignment:goto label_error_unexpected_lexcal;
+#pragma region operator
+		case LexicalType::Equals:
+			PUSH_TOKEN(TokenType::Equals, Attribute::Operator);
+			break;
+		case LexicalType::Lambda:goto label_error_unexpected_lexcal;
+		case LexicalType::BitAnd:
+			if (ContainAny(attribute, Attribute::Type))
+			{
+				PUSH_TOKEN(TokenType::Casting, Attribute::Operator);
+			}
+			else PUSH_TOKEN(TokenType::BitAnd, Attribute::Operator);
+			break;
+		case LexicalType::LogicAnd:
+			PUSH_TOKEN(TokenType::LogicAnd, Attribute::Operator);
+			break;
+		case LexicalType::BitAndAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::BitOr:
+			PUSH_TOKEN(TokenType::BitOr, Attribute::Operator);
+			break;
+		case LexicalType::LogicOr:
+			PUSH_TOKEN(TokenType::LogicOr, Attribute::Operator);
+			break;
+		case LexicalType::BitOrAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::BitXor:
+			PUSH_TOKEN(TokenType::BitXor, Attribute::Operator);
+			break;
+		case LexicalType::BitXorAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Less:
+			if (ContainAny(attribute, Attribute::Value))
+			{
+				PUSH_TOKEN(TokenType::Less, Attribute::Operator);
+				break;
+			}
+			else
+			{
+				index = lexical.anchor.GetEnd();
+				if (TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
 				{
 					Type type = MatchBaseType(lexical.anchor);
 					if (type.IsValid())
 					{
-						if (ContainAny(attribute, Attribute::None | Attribute::Operator))
-						{
-							index = lexical.anchor.GetEnd();
-							type.dimension = ExtractDimension(anchor, index);
-							expressionStack.Add(new TypeExpression(lexical.anchor, type));
-							attribute = Attribute::Type;
-							goto label_next_lexical;
-						}
-						goto label_error_unexpected_lexcal;
-					}
-					else if (IsKeyWord(lexical.anchor.content)) goto label_error_unexpected_lexcal;
-					else if (ContainAny(attribute, Attribute::Type))
-					{
-						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
-						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
-						Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
-						delete typeExpression; typeExpression = NULL;
-						expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
-						attribute = expressionStack.Peek()->attribute;
-						break;
+						index = lexical.anchor.GetEnd();
+						type.dimension = ExtractDimension(anchor, index);
+						expressionStack.Add(new TypeExpression(lexical.anchor, type));
+						attribute = Attribute::Type;
 					}
 					else
 					{
 						List<CompilingDeclaration, true> declarations(0);
-						AbstractSpace* space = NULL;
-						if (TryFindDeclaration(lexical.anchor, declarations))
+						if (!TryFindDeclaration(lexical.anchor, declarations))
 						{
-							if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							AbstractSpace* space = NULL;
+							if (!context.TryFindSpace(manager, lexical.anchor, space))
+							{
+								MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+								goto label_parse_fail;
+							}
+							if (!TryFindDeclaration(anchor, index, lexical, space, declarations))
+								goto label_parse_fail;
+						}
+						if (!TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							goto label_parse_fail;
+					}
+					if (TryMatchNext(anchor, index, LexicalType::Greater, lexical))
+					{
+						Expression* expression = expressionStack.Pop();
+						if (ContainAny(expression->type, ExpressionType::TypeExpression))
+						{
+							TypeExpression* typeExpression = (TypeExpression*)expression;
+							expression = new ConstantTypeExpression(typeExpression->anchor, typeExpression->customType);
+							attribute = expression->attribute;
+							expressionStack.Add(expression);
+							delete typeExpression;
+							break;
+						}
+						else
+						{
+							expressionStack.Add(expression);
+							MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_TYPE_DECLARATION);
+						}
+					}
+					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+					goto label_parse_fail;
+				}
+				else goto label_error_unexpected_lexcal;
+			}
+		case LexicalType::LessEquals:
+			PUSH_TOKEN(TokenType::LessEquals, Attribute::Operator);
+			break;
+		case LexicalType::ShiftLeft:
+			PUSH_TOKEN(TokenType::ShiftLeft, Attribute::Operator);
+			break;
+		case LexicalType::ShiftLeftAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Greater:
+			PUSH_TOKEN(TokenType::Greater, Attribute::Operator);
+			break;
+		case LexicalType::GreaterEquals:
+			PUSH_TOKEN(TokenType::GreaterEquals, Attribute::Operator);
+			break;
+		case LexicalType::ShiftRight:
+			PUSH_TOKEN(TokenType::ShiftRight, Attribute::Operator);
+			break;
+		case LexicalType::ShiftRightAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Plus:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				PUSH_TOKEN(TokenType::Positive, Attribute::Operator);
+			}
+			else PUSH_TOKEN(TokenType::Plus, Attribute::Operator);
+			break;
+		case LexicalType::Increment:
+			if (ContainAny(attribute, Attribute::Assignable | Attribute::Value))
+			{
+				Expression* operatorExpression = CreateIncrementRightOperator(lexical.anchor, this, expressionStack.Pop());
+				if (operatorExpression)
+				{
+					expressionStack.Add(operatorExpression);
+					attribute = operatorExpression->attribute;
+				}
+				else goto label_parse_fail;
+			}
+			else PUSH_TOKEN(TokenType::IncrementLeft, Attribute::Operator);
+			break;
+		case LexicalType::PlusAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Minus:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				PUSH_TOKEN(TokenType::Negative, Attribute::Operator);
+			}
+			else PUSH_TOKEN(TokenType::Minus, Attribute::Operator);
+			break;
+		case LexicalType::Decrement:
+			if (ContainAny(attribute, Attribute::Assignable | Attribute::Value))
+			{
+				Expression* operatorExpression = CreateDecrementRightOperator(lexical.anchor, this, expressionStack.Pop());
+				if (operatorExpression)
+				{
+					expressionStack.Add(operatorExpression);
+					attribute = operatorExpression->attribute;
+				}
+				else goto label_parse_fail;
+			}
+			else PUSH_TOKEN(TokenType::DecrementLeft, Attribute::Operator);
+			break;
+		case LexicalType::RealInvoker:
+		{
+			Lexical identifierLexical;
+			if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
+			{
+				index = identifierLexical.anchor.GetEnd();
+				if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
+				{
+					Expression* expression = expressionStack.Pop();
+					ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
+					Type type = expression->returns[0];
+					if (type.dimension)type = TYPE_Array;
+					if (type.code == TypeCode::Handle)
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
+						{
+							if (declarations.Count() > 1 || declarations[0].category == DeclarationCategory::ClassFunction)
+							{
+								expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, false);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
 								goto label_next_lexical;
+							}
+							else
+							{
+								expressionStack.Add(expression);
+								MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+								goto label_parse_fail;
+							}
+						}
+						else
+						{
+							expressionStack.Add(expression);
+							MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
 							goto label_parse_fail;
 						}
-						else if (context.TryFindSpace(manager, lexical.anchor, space))
+					}
+					else
+					{
+						expressionStack.Add(expression);
+						MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
+						goto label_parse_fail;
+					}
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
+			goto label_parse_fail;
+		}
+		break;
+		case LexicalType::MinusAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Mul:
+			PUSH_TOKEN(TokenType::Mul, Attribute::Operator);
+			break;
+		case LexicalType::MulAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Div:
+			PUSH_TOKEN(TokenType::Div, Attribute::Operator);
+			break;
+		case LexicalType::DivAssignment:
+		case LexicalType::Annotation: goto label_error_unexpected_lexcal;
+		case LexicalType::Mod:
+			PUSH_TOKEN(TokenType::Mod, Attribute::Operator);
+			break;
+		case LexicalType::ModAssignment:goto label_error_unexpected_lexcal;
+		case LexicalType::Not:
+			PUSH_TOKEN(TokenType::Not, Attribute::Operator);
+			break;
+		case LexicalType::NotEquals:
+			PUSH_TOKEN(TokenType::NotEquals, Attribute::Operator);
+			break;
+		case LexicalType::Negate:
+			PUSH_TOKEN(TokenType::Inverse, Attribute::Operator);
+			break;
+#pragma endregion
+		case LexicalType::Dot:
+		{
+			Lexical identifierLexical;
+			if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
+			{
+				index = identifierLexical.anchor.GetEnd();
+				if (identifierLexical.type == LexicalType::Word)
+					if (ContainAny(attribute, Attribute::Type))
+					{
+						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
+						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
+						if (typeExpression->customType.code == TypeCode::Enum)
 						{
-							if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							Type customType = typeExpression->customType;
+							delete typeExpression; typeExpression = NULL;
+							List<String>& elements = manager->GetLibrary(customType.library)->enums[customType.index]->elements;
+							for (uint32 elementIndex = 0; elementIndex < elements.Count(); elementIndex++)
+								if (elements[elementIndex] == identifierLexical.anchor.content)
+								{
+									EnumElementExpression* expression = new EnumElementExpression(identifierLexical.anchor, CompilingDeclaration(customType.library, Visibility::Public, DeclarationCategory::EnumElement, elementIndex, customType.index));
+									expressionStack.Add(expression);
+									attribute = expression->attribute;
+									goto label_next_lexical;
+								}
+							MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_ENUM_ELEMENT_NOT_FOUND);
+							goto label_parse_fail;
+						}
+						else expressionStack.Add(typeExpression);
+					}
+					else if (ContainAny(attribute, Attribute::Value))
+					{
+						Expression* expression = expressionStack.Pop();
+						ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
+						Type type = expression->returns[0];
+						List<CompilingDeclaration, true> declarations(0);
+						if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
+						{
+							if (declarations.Count() == 1 && (declarations.Peek().category == DeclarationCategory::StructVariable || declarations.Peek().category == DeclarationCategory::ClassVariable))
+							{
+								CompilingDeclaration declaration = declarations.Peek();
+								if (declaration.category == DeclarationCategory::StructVariable) type = manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->type;
+								else if (declaration.category == DeclarationCategory::ClassVariable) type = manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
+								expression = new VariableMemberExpression(identifierLexical.anchor, declaration, GetVariableAttribute(declaration), expression, type);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
 								goto label_next_lexical;
+							}
+							if (declarations.Peek().category == DeclarationCategory::StructFunction)
+							{
+								expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, false);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else if (declarations.Peek().category == DeclarationCategory::ClassFunction || declarations.Peek().category == DeclarationCategory::InterfaceFunction)
+							{
+								expression = new MethodVirtualExpression(identifierLexical.anchor, expression, declarations, false);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else
+							{
+								expressionStack.Add(expression);
+								MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+								goto label_parse_fail;
+							}
+						}
+						else
+						{
+							VectorMemberExpression* vectorMemberExpression;
+							if (TryCreateVectorMemberExpression(identifierLexical.anchor, expression, vectorMemberExpression))
+							{
+								expressionStack.Add(vectorMemberExpression);
+								attribute = vectorMemberExpression->attribute;
+								goto label_next_lexical;
+							}
+							expressionStack.Add(expression);
+							MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+							goto label_parse_fail;
+						}
+					}
+				goto label_error_unexpected_lexcal;
+			}
+			else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
+			goto label_parse_fail;
+		}
+		case LexicalType::Question: goto label_error_unexpected_lexcal;
+		case LexicalType::QuestionDot:
+		{
+			Lexical identifierLexical;
+			if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
+			{
+				index = identifierLexical.anchor.GetEnd();
+				if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
+				{
+					Expression* expression = expressionStack.Pop();
+					ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
+					Type type = expression->returns[0];
+					if (type.dimension)type = TYPE_Array;
+					if (IsHandleType(type))
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
+						{
+							if (declarations.Count() == 1 && declarations.Peek().category == DeclarationCategory::ClassVariable)
+							{
+								CompilingDeclaration declaration = declarations.Peek();
+								type = manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
+								expression = new VariableQuestionMemberExpression(identifierLexical.anchor, declaration, expression, type);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else if (declarations.Peek().category == DeclarationCategory::ClassFunction || declarations.Peek().category == DeclarationCategory::InterfaceFunction)
+							{
+								expression = new MethodVirtualExpression(identifierLexical.anchor, expression, declarations, true);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+						}
+						else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+					}
+					else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
+					expressionStack.Add(expression);
+					goto label_parse_fail;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
+			goto label_parse_fail;
+		}
+		case LexicalType::QuestionRealInvoke:
+		{
+			Lexical identifierLexical;
+			if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifierLexical, manager->messages))
+			{
+				index = identifierLexical.anchor.GetEnd();
+				if (identifierLexical.type == LexicalType::Word && ContainAny(attribute, Attribute::Value))
+				{
+					Expression* expression = expressionStack.Pop();
+					ASSERT_DEBUG(expression->returns.Count() == 1, "返回值数量不唯一的表达式属性应该是元组");
+					Type type = expression->returns[0];
+					if (type.dimension)type = TYPE_Array;
+					if (IsHandleType(type))
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						if (context.TryFindMember(manager, identifierLexical.anchor.content, type, declarations))
+						{
+							if (declarations.Count() > 1 || declarations[0].category == DeclarationCategory::ClassFunction)
+							{
+								expression = new MethodMemberExpression(identifierLexical.anchor, expression, declarations, true);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+						}
+						else MESSAGE2(manager->messages, identifierLexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+					}
+					else MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
+					expressionStack.Add(expression);
+					goto label_parse_fail;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
+			goto label_parse_fail;
+		}
+		break;
+		case LexicalType::QuestionInvoke:
+			if (ContainAll(attribute, Attribute::Value | Attribute::Callable))
+			{
+				Expression* tuple;
+				if (TryParseBracket(anchor, index, SplitFlag::Bracket0, tuple))
+				{
+					Expression* delegateExpression = expressionStack.Pop();
+					if (delegateExpression->returns.Count() == 1 && !delegateExpression->returns.Peek().dimension && delegateExpression->returns.Peek().code == TypeCode::Delegate)
+					{
+						CompilingDeclaration declaration = manager->GetDeclaration(delegateExpression->returns.Peek())->declaration;
+						if (TryAssignmentConvert(tuple, manager->GetParameters(declaration)))
+						{
+							Expression* expression = new InvokerDelegateExpression(delegateExpression->anchor, manager->GetReturns(declaration), delegateExpression, tuple, true);
+							expressionStack.Add(expression);
+							attribute = expression->attribute;
+							goto label_next_lexical;
+						}
+					}
+					else MESSAGE2(manager->messages, delegateExpression->anchor, MessageType::ERROR_NOT_DELEGATE_TYPE);
+					expressionStack.Add(tuple);
+					expressionStack.Add(delegateExpression);
+				}
+				goto label_parse_fail;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::QuestionIndex:
+		{
+			Expression* tuple;
+			if (TryParseBracket(anchor, index, SplitFlag::Bracket1, tuple))
+			{
+				List<Type, true> indexTypes(tuple->returns.Count());
+				for (uint32 i = 0; i < tuple->returns.Count(); i++) indexTypes.Add(TYPE_Integer);
+				if (TryAssignmentConvert(tuple, Span<Type, true>(&indexTypes)))
+				{
+					if (ContainAny(attribute, Attribute::Array))
+					{
+						Expression* arrayExpression = expressionStack.Pop();
+						if (arrayExpression->returns[0] == TYPE_Blurry) MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_TYPE_EQUIVOCAL)
+						else if (arrayExpression->returns[0] == TYPE_String) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR)
+						{
+							if (tuple->returns.Count() == 1)
+							{
+								Type arrayType = arrayExpression->returns[0];
+								Expression* expression = new ArrayQuestionEvaluationExpression(lexical.anchor, arrayExpression, tuple, Type(arrayType, arrayType.dimension - 1));
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else if (tuple->returns.Count() == 2)
+							{
+								if (destructor) MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DESTRUCTOR_ALLOC);
+								Expression* expression = new ArrayQuestionSubExpression(lexical.anchor, arrayExpression, tuple);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_WRONG_NUMBER_OF_INDICES);
+						}
+						expressionStack.Add(arrayExpression);
+					}
+					else MESSAGE2(manager->messages, tuple->anchor, MessageType::ERROR_INVALID_OPERATOR);
+				}
+				expressionStack.Add(tuple);
+			}
+			goto label_parse_fail;
+		}
+		case LexicalType::QuestionNull:
+		case LexicalType::Colon: goto label_error_unexpected_lexcal;
+#pragma region 常量
+		case LexicalType::ConstReal:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				String value = lexical.anchor.content.Replace(manager->stringAgency->Add(TEXT("_")), String());
+				expressionStack.Add(new ConstantRealExpression(lexical.anchor, ParseReal(value)));
+				attribute = Attribute::Constant;
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::ConstNumber:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				String value = lexical.anchor.content.Replace(manager->stringAgency->Add(TEXT("_")), String());
+				expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, ParseInteger(value)));
+				attribute = Attribute::Constant;
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::ConstBinary:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				integer value = 0;
+				String& content = lexical.anchor.content;
+				for (uint32 i = 2; i < content.GetLength(); i++)
+				{
+					character element = content[i];
+					if (element != '_')
+					{
+						value <<= 1;
+						if (element == '1') value++;
+					}
+				}
+				expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
+				attribute = Attribute::Constant;
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::ConstHexadecimal:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				integer value = 0;
+				String& content = lexical.anchor.content;
+				for (uint32 i = 2; i < content.GetLength(); i++)
+				{
+					integer element = content[i];
+					if (element != '_')
+					{
+						value <<= 4;
+						if (element >= '0' && element <= '9')value += element - '0';
+						else value += (element | 0x20) - 'a' + 10;
+					}
+				}
+				expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
+				attribute = Attribute::Constant;
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::ConstChars:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				integer value = 0;
+				String& content = lexical.anchor.content;
+				for (uint32 i = 1, length = content.GetLength(); i < length; i++)
+				{
+					integer element = content[i];
+					if (element != '\'')
+					{
+						value <<= 8;
+						if (element != '\\') value += element & 0xff;
+						else if (++i < length) value += EscapeCharacter(i, content.GetPointer(), length) & 0xff;
+					}
+				}
+				expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
+				attribute = Attribute::Constant;
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::ConstString:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				String& content = lexical.anchor.content;
+				List<character, true> stringBuilder(content.GetLength());
+				for (uint32 i = 1, length = content.GetLength(); i < length; i++)
+				{
+					character element = content[i];
+					if (element != '\"')
+					{
+						if (element != '\\') stringBuilder.Add(element);
+						else if (++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+					}
+				}
+				expressionStack.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
+				attribute = Attribute::Constant;
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+#pragma endregion
+		case LexicalType::TemplateString:
+			if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+			{
+				String& content = lexical.anchor.content;
+				List<character, true> stringBuilder(content.GetLength());
+				List<Expression*, true> parameters(2);
+				Expression* stringExpression = NULL;
+				Expression* constStringExpression;
+				for (uint32 i = 2, length = content.GetLength(); i < length; i++)
+				{
+					character element = content[i];
+					if (element != '\"')
+					{
+						if (element == '{')
+						{
+							if (i + 1 < content.GetLength() && content[i + 1] != '{')
+							{
+								Anchor block = MatchStringTemplateBlock(lexical.anchor, lexical.anchor.position + i, manager->messages);
+								if (block.content[block.content.GetLength() - 1] == '}')
+								{
+									Expression* blockExpression;
+									if (TryParse(block.Sub(block.position + 1, block.content.GetLength() - 2), blockExpression))
+									{
+										constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
+										stringBuilder.Clear();
+										if (stringExpression)
+										{
+											parameters.Clear();
+											parameters.Add(stringExpression);
+											parameters.Add(constStringExpression);
+											stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
+											if (!stringExpression)
+											{
+												expressionStack.Add(blockExpression);
+												goto label_parse_fail;
+											}
+										}
+										else stringExpression = constStringExpression;
+										parameters.Clear();
+										parameters.Add(stringExpression);
+										parameters.Add(blockExpression);
+										stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
+										if (!stringExpression) goto label_parse_fail;
+									}
+									else
+									{
+										if (stringExpression) expressionStack.Add(stringExpression);
+										goto label_parse_fail;
+									}
+								}
+								else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+								i += block.content.GetLength() - 1;
+							}
+							else
+							{
+								stringBuilder.Add(element);
+								i++;
+							}
+						}
+						else if (element == '}')
+						{
+							if (i + 1 < length && content[i + 1] == '}')
+							{
+								stringBuilder.Add(element);
+								i++;
+							}
+							else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+						}
+						else if (element != '\\') stringBuilder.Add(element);
+						else if (++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+					}
+				}
+				constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
+				if (stringExpression)
+				{
+					parameters.Clear();
+					parameters.Add(stringExpression);
+					parameters.Add(constStringExpression);
+					stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
+					if (stringExpression)
+					{
+						expressionStack.Add(stringExpression);
+						attribute = stringExpression->attribute;
+					}
+					else goto label_parse_fail;
+				}
+				else
+				{
+					expressionStack.Add(constStringExpression);
+					attribute = Attribute::Constant;
+				}
+				break;
+			}
+			goto label_error_unexpected_lexcal;
+		case LexicalType::Word:
+			if (lexical.anchor.content == KeyWord_global())
+			{
+				if (TryAnalysis(anchor, lexical.anchor.GetEnd(), lexical, manager->messages) && lexical.type == LexicalType::Word)
+				{
+					List<CompilingDeclaration, true> declarations(0);
+					AbstractSpace* space = NULL;
+					Context globalContext = Context(context.compilingSpace, context.relies);
+					index = lexical.anchor.GetEnd();
+					if (globalContext.TryFindDeclaration(manager, lexical.anchor, declarations))
+					{
+						if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							goto label_next_lexical;
+						goto label_parse_fail;
+					}
+					else if (globalContext.TryFindSpace(manager, lexical.anchor, space))
+					{
+						if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							goto label_next_lexical;
+						goto label_parse_fail;
+					}
+					else
+					{
+						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+						goto label_parse_fail;
+					}
+				}
+				MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
+				goto label_parse_fail;
+			}
+			else if (lexical.anchor.content == KeyWord_base())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					if (context.declaration.category == DeclarationCategory::Class)
+					{
+						Expression* thisExpression;
+						if (TryGetThisValueExpression(lexical.anchor, thisExpression))
+						{
+							Lexical nextLexical;
+							if (TryAnalysis(anchor, lexical.anchor.GetEnd(), nextLexical, manager->messages) && nextLexical.type == LexicalType::Dot)
+							{
+								if (TryAnalysis(anchor, nextLexical.anchor.GetEnd(), lexical, manager->messages))
+								{
+									if (lexical.type == LexicalType::Word)
+									{
+										List<CompilingDeclaration, true> declarations(0);
+										if (context.TryFindMember(manager, lexical.anchor.content, manager->GetParent(thisExpression->returns.Peek()), declarations))
+										{
+											if (declarations.Count() == 1 && declarations.Peek().category == DeclarationCategory::ClassVariable)
+											{
+												Expression* expression = new VariableMemberExpression(lexical.anchor, declarations.Peek(), GetVariableAttribute(declarations.Peek()), thisExpression, GetVariableType(declarations.Peek()));
+												expressionStack.Add(expression);
+												attribute = expression->attribute;
+											}
+											else
+											{
+												Expression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
+												expressionStack.Add(expression);
+												attribute = expression->attribute;
+											}
+											break;
+										}
+										else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+									}
+									else MESSAGE2(manager->messages, nextLexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
+								}
+								else MESSAGE2(manager->messages, nextLexical.anchor, MessageType::ERROR_MISSING_IDENTIFIER);
+							}
+							else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+							expressionStack.Add(thisExpression);
+						}
+					}
+					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
+					goto label_parse_fail;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_this())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					if (context.declaration.category == DeclarationCategory::Struct || context.declaration.category == DeclarationCategory::Class)
+					{
+						Expression* thisExpression;
+						if (TryGetThisValueExpression(lexical.anchor, thisExpression))
+						{
+							expressionStack.Add(thisExpression);
+							attribute = thisExpression->attribute;
+							break;
+						}
+					}
+					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
+					goto label_parse_fail;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_true())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					expressionStack.Add(new ConstantBooleanExpression(lexical.anchor, true));
+					attribute = Attribute::Constant;
+					break;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_false())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					expressionStack.Add(new ConstantBooleanExpression(lexical.anchor, false));
+					attribute = Attribute::Constant;
+					break;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_null())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					expressionStack.Add(new ConstantNullExpression(lexical.anchor));
+					attribute = Attribute::Constant;
+					break;
+				}
+				goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_var())
+			{
+				if (ContainAny(attribute, Attribute::None))
+				{
+					Lexical identifier;
+					if (TryAnalysis(anchor, lexical.anchor.GetEnd(), identifier, manager->messages) && identifier.type == LexicalType::Word)
+					{
+						if (IsKeyWord(identifier.anchor.content))
+						{
+							MESSAGE2(manager->messages, identifier.anchor, MessageType::ERROR_NAME_IS_KEY_WORD);
 							goto label_parse_fail;
 						}
 						else
 						{
-							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-							goto label_parse_fail;
+							index = identifier.anchor.GetEnd();
+							expressionStack.Add(new BlurryVariableDeclarationExpression(identifier.anchor));
+							attribute = Attribute::Assignable;
+							goto label_next_lexical;
 						}
 					}
-
 				}
-				break;
-			case LexicalType::Backslash:
-			default:
-			label_error_unexpected_lexcal:
-				MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
-				goto label_parse_fail;
-				break;
+				goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_is())
+			{
+				if (ContainAny(attribute, Attribute::Value))
+				{
+					Expression* expression = expressionStack.Pop();
+					if (expression->returns.Count() == 1 && IsHandleType(expression->returns[0]))
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						index = lexical.anchor.GetEnd();
+						if (TryFindDeclaration(anchor, index, declarations))
+						{
+							Declaration declaration;
+							if (declarations.Count() == 1 && declarations.Peek().TryGetDeclaration(declaration))
+							{
+								Type targetType = Type(declaration, ExtractDimension(anchor, index));
+								VariableLocalExpression* localExpression = NULL;
+								if (TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
+								{
+									if (IsKeyWord(lexical.anchor.content))
+									{
+										MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NAME_IS_KEY_WORD);
+										expressionStack.Add(expression);
+										goto label_parse_fail;
+									}
+									else
+									{
+										Local local = localContext->AddLocal(lexical.anchor, targetType);
+										localExpression = new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, targetType);
+										index = lexical.anchor.GetEnd();
+									}
+								}
+								expression = new IsCastExpression(lexical.anchor, expression, localExpression, targetType);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+						}
+						expressionStack.Add(expression);
+						goto label_parse_fail;
+					}
+					expressionStack.Add(expression);
+					MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+					goto label_parse_fail;
+				}
+				else goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_as())
+			{
+				if (ContainAny(attribute, Attribute::Value))
+				{
+					Expression* expression = expressionStack.Pop();
+					if (expression->returns.Count() == 1 && IsHandleType(expression->returns.Peek()))
+					{
+						List<CompilingDeclaration, true> declarations(0);
+						index = lexical.anchor.GetEnd();
+						if (TryFindDeclaration(anchor, index, declarations))
+						{
+							Declaration declaration;
+							if (declarations.Count() == 1 && declarations.Peek().TryGetDeclaration(declaration))
+							{
+								uint32 dimension = ExtractDimension(anchor, index);
+								Type targetType = Type(declaration, dimension);
+								if (!IsHandleType(targetType))
+								{
+									MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_NOT_HANDLE_TYPE);
+									expressionStack.Add(expression);
+									goto label_parse_fail;
+								}
+								expression = new AsCastExpression(lexical.anchor, Type(declaration, dimension), expression);
+								expressionStack.Add(expression);
+								attribute = expression->attribute;
+								goto label_next_lexical;
+							}
+							MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+						}
+						expressionStack.Add(expression);
+						goto label_parse_fail;
+					}
+					expressionStack.Add(expression);
+					MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+					goto label_parse_fail;
+				}
+				else goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_start())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					Expression* invokerExpression;
+					if (TryParse(anchor.Sub(lexical.anchor.GetEnd()), invokerExpression))
+					{
+						if (ContainAny(invokerExpression->type, ExpressionType::InvokerExpression))
+						{
+							BlurryTaskExpression* taskExpression = new BlurryTaskExpression(lexical.anchor, (InvokerExpression*)invokerExpression, true);
+							expressionStack.Add(taskExpression);
+							attribute = taskExpression->attribute;
+							index = anchor.GetEnd();
+							goto label_next_lexical;
+						}
+						expressionStack.Add(invokerExpression);
+						MESSAGE2(manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
+					}
+					goto label_parse_fail;
+				}
+				else goto label_error_unexpected_lexcal;
+			}
+			else if (lexical.anchor.content == KeyWord_new())
+			{
+				if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+				{
+					Expression* invokerExpression;
+					if (TryParse(anchor.Sub(lexical.anchor.GetEnd()), invokerExpression))
+					{
+						if (ContainAny(invokerExpression->type, ExpressionType::InvokerExpression))
+						{
+							BlurryTaskExpression* taskExpression = new BlurryTaskExpression(lexical.anchor, (InvokerExpression*)invokerExpression, false);
+							expressionStack.Add(taskExpression);
+							attribute = taskExpression->attribute;
+							index = anchor.GetEnd();
+							goto label_next_lexical;
+						}
+						expressionStack.Add(invokerExpression);
+						MESSAGE2(manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
+					}
+					goto label_parse_fail;
+				}
+				else goto label_error_unexpected_lexcal;
+			}
+			else
+			{
+				Type type = MatchBaseType(lexical.anchor);
+				if (type.IsValid())
+				{
+					if (ContainAny(attribute, Attribute::None | Attribute::Operator))
+					{
+						index = lexical.anchor.GetEnd();
+						type.dimension = ExtractDimension(anchor, index);
+						expressionStack.Add(new TypeExpression(lexical.anchor, type));
+						attribute = Attribute::Type;
+						goto label_next_lexical;
+					}
+					goto label_error_unexpected_lexcal;
+				}
+				else if (IsKeyWord(lexical.anchor.content)) goto label_error_unexpected_lexcal;
+				else if (ContainAny(attribute, Attribute::Type))
+				{
+					TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
+					ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型不对");
+					Local local = localContext->AddLocal(lexical.anchor, typeExpression->customType);
+					delete typeExpression; typeExpression = NULL;
+					expressionStack.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
+					attribute = expressionStack.Peek()->attribute;
+					break;
+				}
+				else
+				{
+					List<CompilingDeclaration, true> declarations(0);
+					AbstractSpace* space = NULL;
+					if (TryFindDeclaration(lexical.anchor, declarations))
+					{
+						if (TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							goto label_next_lexical;
+						goto label_parse_fail;
+					}
+					else if (context.TryFindSpace(manager, lexical.anchor, space))
+					{
+						if (TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							goto label_next_lexical;
+						goto label_parse_fail;
+					}
+					else
+					{
+						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+						goto label_parse_fail;
+					}
+				}
+
+			}
+			break;
+		case LexicalType::Backslash:
+		default:
+		label_error_unexpected_lexcal:
+			MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
+			goto label_parse_fail;
+			break;
 		}
 		index = lexical.anchor.GetEnd();
 	label_next_lexical:;
@@ -3387,6 +3387,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	}
 	else if (expressionStack.Count()) result = expressionStack.Pop();
 	else result = GetEmptyTupleExpression();
+	if (ContainAny(result->attribute, Attribute::Type)) MESSAGE2(manager->messages, result->anchor, MessageType::WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION);
 	return true;
 
 label_parse_fail:

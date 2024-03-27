@@ -103,6 +103,7 @@ namespace RainLanguage
         WARRING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
         WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,   //析构函数属性将被丢弃
         WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,   //析构函数的可访问性修饰会被忽略
+        WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
 
         WARRING_LEVEL2 = RainErrorLevel.WarringLevel2 << 24,
 
