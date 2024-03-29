@@ -437,7 +437,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(7);
 		REGISTER_MEMBER_FUNCTIONS(true, "Start", TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_Bool, TYPE_Bool), task_Start);
-		REGISTER_MEMBER_FUNCTIONS(true, "Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Abort);
+		REGISTER_MEMBER_FUNCTIONS(true, "Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_String), task_Abort);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetState", CreateTypeList(TYPE_TaskState), CreateTypeList(TYPE_Task), task_GetState);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetExitCode", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Task), task_GetExitCode);
 		REGISTER_MEMBER_FUNCTIONS(true, "IsPause", CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Task), task_IsPause);

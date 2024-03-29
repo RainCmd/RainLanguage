@@ -187,7 +187,7 @@ const RainLibrary* OnLibraryLoader(const RainString& libName)
 }
 void TestFunc()
 {
-	TestCodeLoader loader2(L".\\TestScriptsRef\\");
+	TestCodeLoader loader2(L".\\RainTest2\\");
 	BuildParameter parameter2(RainString::Create(L"TestLib2"), false, &loader2, nullptr, ErrorLevel::WarringLevel4);
 	RainProduct* product2 = Build(parameter2);
 	const RainLibrary* lib2 = product2->GetLibrary();
@@ -196,7 +196,7 @@ void TestFunc()
 	delete product2;
 	delete buf2;
 
-	TestCodeLoader loader(L".\\TestScripts\\");
+	TestCodeLoader loader(L".\\RainScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
 	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);

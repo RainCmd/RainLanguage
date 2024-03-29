@@ -34,7 +34,7 @@ namespace RainLanguage
         ERROR_ATTRIBUTE_INVALID,                //属性无效
         ERROR_MISSING_NAME,                     //缺少名称
         ERROR_MISSING_TYPE,                     //缺少类型
-        ERROR_UNEXPECTED_LINE_END,              //以外的行尾
+        ERROR_UNEXPECTED_LINE_END,              //意外的行尾
         ERROR_CONSTANT_NOT_ASSIGNMENT,          //常量未赋值
         ERROR_MISSING_ASSIGNMENT_EXPRESSION,    //缺少赋值表达式
         ERROR_MISSING_IDENTIFIER,               //缺少标识符

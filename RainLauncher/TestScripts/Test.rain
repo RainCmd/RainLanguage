@@ -1,6 +1,7 @@
 native Print(string)
 Main()
-    N1.N12.Show()
+    //N1.N12.Show()
+    Print("¹þ¹þ¹þ")
 
 namespace N1
 
