@@ -293,6 +293,7 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 
 String StringAgency::Add(const character* value, uint32 length)
 {
+	ASSERT_DEBUG(!length || *value, "插入的字符串内包含\\0，这可能会破坏字符串系统");
 	String result = String(share, InternalAdd(value, length));
 	slots[result.index].reference--;
 	return result;

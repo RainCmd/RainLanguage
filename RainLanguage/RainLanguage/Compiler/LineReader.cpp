@@ -3,7 +3,9 @@
 
 Line LineReader::CurrentLine()
 {
-	return Line(source, indent, line, stringAgency->Add(buffer + start, end - start));
+	uint32 lineEnd = end;
+	while (lineEnd > start && IsBlank(buffer[lineEnd - 1])) lineEnd--;
+	return Line(source, indent, line, stringAgency->Add(buffer + start, lineEnd - start));
 }
 
 bool LineReader::ReadLine()

@@ -114,14 +114,14 @@ enum class MessageType :uint32
 	LOGGER_LEVEL1_REPEATED_ATTRIBUTE,		//重复的属性
 
 	LOGGER_LEVEL2 = ((uint32)ErrorLevel::LoggerLevel2) << 24,
-
-	LOGGER_LEVEL3 = ((uint32)ErrorLevel::LoggerLevel3) << 24,
-
-	LOGGER_LEVEL4 = ((uint32)ErrorLevel::LoggerLevel4) << 24,
-	LOGGER_LEVEL4_MISSING_VISIBILITY,		//可访问性修饰缺失，将使用默认可访问性修饰
-	LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION,			//未处理的核心特殊函数
 	LOGGER_LEVEL4_DISCARDED_EXPRESSION,		//丢弃的表达式
 	LOGGER_LEVEL4_INACCESSIBLE_STATEMENT,	//无法访问的语句
+
+	LOGGER_LEVEL3 = ((uint32)ErrorLevel::LoggerLevel3) << 24,
+	LOGGER_LEVEL4_MISSING_VISIBILITY,		//可访问性修饰缺失，将使用默认可访问性修饰
+
+	LOGGER_LEVEL4 = ((uint32)ErrorLevel::LoggerLevel4) << 24,
+	LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION,			//未处理的核心特殊函数
 
 	INVALID = 0xFFFFFFFF
 };
