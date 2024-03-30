@@ -1227,10 +1227,14 @@ String SetRandomSeed(KernelInvokerParameter parameter)//(integer)
 String LoadAssembly(KernelInvokerParameter parameter)//Reflection.Assembly (string)
 {
 	Handle& handle = RETURN_VALUE(Handle, 0);
-	RuntimeLibrary* library = parameter.kernel->libraryAgency->Load(PARAMETER_VALUE(1, string, 0));
+	RuntimeLibrary* library = parameter.kernel->libraryAgency->Load(PARAMETER_VALUE(1, string, 0), false);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	handle = library->spaces[0].GetReflection(parameter.kernel, library->index, 0);
-	parameter.kernel->heapAgency->StrongReference(handle);
+	if (library)
+	{
+		handle = library->spaces[0].GetReflection(parameter.kernel, library->index, 0);
+		parameter.kernel->heapAgency->StrongReference(handle);
+	}
+	else handle = NULL;
 	return String();
 }
 

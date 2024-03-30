@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace RainLanguage
 {
@@ -826,6 +827,7 @@ namespace RainLanguage
             ~RainLibrary() { Dispose(); }
             public static RainLibrary Create(byte[] data)
             {
+                if(data== null) return null;
                 fixed (byte* pdata = data) return new RainLibrary(DeserializeRainLibrary(pdata, (uint)data.Length));
             }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
@@ -862,6 +864,7 @@ namespace RainLanguage
             ~RainProgramDatabase() { Dispose(); }
             public static RainProgramDatabase Create(byte[] data)
             {
+                if (data == null) return null;
                 fixed (byte* pdata = data) return new RainProgramDatabase(DeserializeRainProgramDatabase(pdata, (uint)data.Length));
             }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
@@ -1931,8 +1934,9 @@ namespace RainLanguage
                     new CodeLoadHelper(parameter.files).LoadNext,
                     libName =>
                     {
-                        var data = parameter.liibraryLoader(NativeString.GetString(libName));
-                        return RainLibrary.Create(data).GetSource();
+                        var lib = RainLibrary.Create(parameter.liibraryLoader(NativeString.GetString(libName)));
+                        if (lib == null) return null;
+                        return lib.GetSource();
                     }, (uint)parameter.errorLevel)));
             }
         }
@@ -1948,8 +1952,9 @@ namespace RainLanguage
                     (kernel, entity) => startupParameter.onReleaseEntity(new RainKernelCopy(kernel), entity),
                     libName =>
                     {
-                        var data = startupParameter.libraryLoader(NativeString.GetString(libName));
-                        return RainLibrary.Create(data).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                        var lib = RainLibrary.Create(startupParameter.libraryLoader(NativeString.GetString(libName)));
+                        if (lib == null) return null;
+                        return lib.GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
                     },
                     (kernel, fullName, parameters, parameterCount) =>
                     {
@@ -1966,8 +1971,9 @@ namespace RainLanguage
                     },
                     libName =>
                     {
-                        var data = startupParameter.programDatabaseLoader(NativeString.GetString(libName));
-                        return RainProgramDatabase.Create(data).GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
+                        var pdb = RainProgramDatabase.Create(startupParameter.programDatabaseLoader(NativeString.GetString(libName)));
+                        if (pdb == null) return null;
+                        return pdb.GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
                     }
                     )));
         }

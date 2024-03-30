@@ -42,7 +42,7 @@ public:
 	RuntimeFunction* GetConstructorFunction(const MemberFunction& function);
 	RuntimeFunction* GetMemberFunction(const MemberFunction& function);
 	bool TryGetSpace(const Type& type, uint32& space);
-	RuntimeLibrary* Load(string name);
+	RuntimeLibrary* Load(string name, bool assert = true);
 	RuntimeLibrary* Load(const Library* library);
 	inline uint32 GetFunctionCharacteristic(const MemberFunction& function)
 	{

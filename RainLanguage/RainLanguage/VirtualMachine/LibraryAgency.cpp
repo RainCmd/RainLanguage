@@ -186,7 +186,7 @@ bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 	return false;
 }
 
-RuntimeLibrary* LibraryAgency::Load(string name)
+RuntimeLibrary* LibraryAgency::Load(string name, bool assert)
 {
 	if (name == kernelLibrary->spaces[0].name) return kernelLibrary;
 	for (uint32 i = 0; i < libraries.Count(); i++)
@@ -194,7 +194,8 @@ RuntimeLibrary* LibraryAgency::Load(string name)
 			return libraries[i];
 	String libraryName = kernel->stringAgency->Get(name);
 	Library* library = (Library*)libraryLoader(RainString(libraryName.GetPointer(), libraryName.GetLength()));
-	ASSERT(library, "Libraryº”‘ÿ ß∞‹");
+	if (assert) { ASSERT(library, "Libraryº”‘ÿ ß∞‹"); }
+	else if (!library) return NULL;
 	return Load(library);
 }
 
