@@ -1174,6 +1174,11 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 					expressionStack.Add(expression);
 					return expression->attribute;
 				}
+				else if (TryAssignmentConvert(right, targetType))
+				{
+					expressionStack.Add(right);
+					return right->attribute;
+				}
 			}
 		}
 		else expressionStack.Add(left);
