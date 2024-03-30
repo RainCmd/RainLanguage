@@ -310,7 +310,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 	{
 	label_parse:
 		Line line = parameter->reader->CurrentLine();
-		if (line.content.IsEmpty()) return;
+
 		if (TryParseAttributes(line, attributeCollector, parameter->messages)) continue;
 
 		Lexical lexical;
