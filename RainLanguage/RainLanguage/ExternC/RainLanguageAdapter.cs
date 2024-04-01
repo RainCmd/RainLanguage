@@ -296,7 +296,7 @@ namespace RainLanguage
                 var returnType = GetRainType(method.ReturnType);
                 if (returnType == RainType.Internal)
                 {
-                    returnValueFields = method.ReturnType.GetFields();
+                    returnValueFields = method.ReturnType.GetFields(BindingFlags.Instance | BindingFlags.Public);
                     returnTypes = new RainType[returnValueFields.Length];
                     for (int i = 0; i < returnValueFields.Length; i++)
                         returnTypes[i] = GetRainType(returnValueFields[i].FieldType);
