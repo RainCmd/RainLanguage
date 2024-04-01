@@ -479,7 +479,7 @@ const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
 		string		name = deserializer.Deserialize<string>();
 		TupleInfo	returs(0, 0); Deserialize(&deserializer, returs);
-		new (result->delegates.Add())TaskDeclarationInfo(isPublic, attributes, name, returs);
+		new (result->tasks.Add())TaskDeclarationInfo(isPublic, attributes, name, returs);
 	}
 	uint32 functionCount = deserializer.Deserialize<uint32>();
 	while (functionCount--)
