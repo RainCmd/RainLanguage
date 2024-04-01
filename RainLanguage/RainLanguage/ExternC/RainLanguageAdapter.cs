@@ -1961,7 +1961,7 @@ namespace RainLanguage
                         var rainTypeParameters = new RainType[parameterCount];
                         for (int i = 0; i < parameterCount; i++) rainTypeParameters[i] = (RainType)parameters[i];
                         var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), fullName, rainTypeParameters);
-                        return (k, c) => onCaller(new RainKernel(k), new RainCaller(c));
+                        return (k, c) => onCaller(new RainKernelCopy(k), new RainCaller(c));
                     }, 0x10000, 8, 0x10, 0x100,
                     (kernel, stackFrames, count, msg) =>
                     {
