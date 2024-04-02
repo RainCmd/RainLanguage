@@ -380,7 +380,7 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributeCollec
 	uint32 index;
 	Visibility visibility = ParseVisibility(line, index, parameter->messages);
 	Lexical lexical;
-	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_UNEXPECTED_LINE_END, lexical, parameter->messages))return false;
+	if (!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_UNEXPECTED_LINE_END, lexical, parameter->messages)) return false;
 
 	CHECK_VISIABLE(line, Space);
 	Anchor name, expression; FileType type;
@@ -468,6 +468,7 @@ void FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility,
 	while (parameter->reader->ReadLine())
 	{
 		Line current = parameter->reader->CurrentLine();
+		if (!TryAnalysis(current, 0, lexical, parameter->messages)) continue;
 		if (!CheckIndent(current, indent, line.indent)) break;
 
 		if (TryGetNextLexical(current, 0, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))
@@ -503,6 +504,7 @@ void FileSpace::ParseStruct(const Line& line, uint32 index, Visibility visibilit
 	{
 	label_parse:
 		Line current = parameter->reader->CurrentLine();
+		if (!TryAnalysis(current, 0, lexical, parameter->messages)) continue;
 		if (!CheckIndent(current, indent, line.indent))break;
 
 		if (TryParseAttributes(current, attributeCollector, parameter->messages)) continue;
@@ -559,6 +561,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 	{
 	label_parse:
 		Line current = parameter->reader->CurrentLine();
+		if (!TryAnalysis(current, 0, lexical, parameter->messages)) continue;
 		if (!CheckIndent(current, indent, line.indent))break;
 
 		if (TryParseAttributes(current, attributeCollector, parameter->messages))continue;
@@ -649,6 +652,7 @@ lable_parse_inherits:
 	while (parameter->reader->ReadLine())
 	{
 		Line current = parameter->reader->CurrentLine();
+		if (!TryAnalysis(current, 0, lexical, parameter->messages)) continue;
 		if (!CheckIndent(current, indent, line.indent)) break;
 
 		if (TryParseAttributes(current, attributeCollector, parameter->messages)) continue;
