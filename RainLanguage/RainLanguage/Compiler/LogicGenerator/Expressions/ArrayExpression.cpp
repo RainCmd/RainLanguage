@@ -80,7 +80,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 				}
 				else
 				{
-					parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Bitwise);
+					parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_Struct);
 					parameter.generator->WriteCode(result);
 					parameter.generator->WriteCode(arrayVariable);
 					parameter.generator->WriteCode(indexVariable);
