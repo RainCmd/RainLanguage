@@ -177,7 +177,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 			}
 			else
 			{
-				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Bitwise);
+				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_Struct);
 				parameter.generator->WriteCode(arrayVariable);
 				parameter.generator->WriteCode(indexVariable);
 				parameter.generator->WriteCode(offset);
