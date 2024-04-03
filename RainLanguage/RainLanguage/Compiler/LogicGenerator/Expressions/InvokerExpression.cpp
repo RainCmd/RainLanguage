@@ -87,14 +87,16 @@ void GenerateInvokerParameters(LogicGenerateParameter& parameter, uint32 paramet
 void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 {
 	AbstractDelegate* abstractDelegate = parameter.manager->GetLibrary(invoker->returns[0].library)->delegates[invoker->returns[0].index];
+	CodeLocalAddressReference clearResultsAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter invokerParameter = LogicGenerateParameter(parameter, 1);
 	invoker->Generator(invokerParameter);
 	if (question)
 	{
+		CodeLocalAddressReference invokAddress = CodeLocalAddressReference();
 		parameter.generator->WriteCode(Instruct::BASE_NullJump);
 		parameter.generator->WriteCode(invokerParameter.results[0]);
-		parameter.generator->WriteCode(&returnAddress);
+		parameter.generator->WriteCode(&clearResultsAddress);
 	}
 	else
 	{
@@ -119,6 +121,10 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::FUNCTION_CustomCall);
 	parameter.generator->WriteCode(invokerParameter.results[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
+	parameter.generator->WriteCode(Instruct::BASE_Jump);
+	parameter.generator->WriteCode(&returnAddress);
+	clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.ClearVariables(returns);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
@@ -168,6 +174,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	else if (declaration.category == DeclarationCategory::Constructor) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->constructors[declaration.index]];
 	else if (declaration.category == DeclarationCategory::ClassFunction) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->functions[declaration.index]];
 	else EXCEPTION("语义解析可能有bug");
+	CodeLocalAddressReference clearResultsAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
@@ -176,7 +183,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_NullJump);
 			parameter.generator->WriteCode(targetParameter.results[0]);
-			parameter.generator->WriteCode(&returnAddress);
+			parameter.generator->WriteCode(&clearResultsAddress);
 		}
 		else
 		{
@@ -202,6 +209,10 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	}
 	parameter.generator->WriteCode(Instruct::FUNCTION_MemberCall);
 	parameter.generator->WriteCodeGlobalAddressReference(declaration);
+	parameter.generator->WriteCode(Instruct::BASE_Jump);
+	parameter.generator->WriteCode(&returnAddress);
+	clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.ClearVariables(returns);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
@@ -218,6 +229,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	else if (declaration.category == DeclarationCategory::Constructor) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->constructors[declaration.index]];
 	else if (declaration.category == DeclarationCategory::ClassFunction) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->functions[declaration.index]];
 	else EXCEPTION("语义解析可能有bug");
+	CodeLocalAddressReference clearResultsAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
@@ -225,7 +237,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	{
 		parameter.generator->WriteCode(Instruct::BASE_NullJump);
 		parameter.generator->WriteCode(targetParameter.results[0]);
-		parameter.generator->WriteCode(&returnAddress);
+		parameter.generator->WriteCode(&clearResultsAddress);
 	}
 	else
 	{
@@ -247,6 +259,10 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
+	parameter.generator->WriteCode(Instruct::BASE_Jump);
+	parameter.generator->WriteCode(&returnAddress);
+	clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.ClearVariables(returns);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 

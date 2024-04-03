@@ -360,7 +360,7 @@ void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo)
 {
 	for (uint32 i = 0; i < tupleInfo.Count(); i++)
-		if (IsHandleType(tupleInfo.GetType(i))) kernel->heapAgency->StrongRelease(*(Handle*)address + tupleInfo.GetOffset(i));
+		if (IsHandleType(tupleInfo.GetType(i))) kernel->heapAgency->StrongRelease(*(Handle*)(address + tupleInfo.GetOffset(i)));
 		else if (tupleInfo.GetType(i).code == TypeCode::Struct)
 			kernel->libraryAgency->GetStruct(tupleInfo.GetType(i))->StrongRelease(kernel, address);
 }
