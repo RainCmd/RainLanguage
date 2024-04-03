@@ -2434,7 +2434,7 @@ label_next_instruct:
 					VARIABLE(bool, resultValue) = *(Delegate*)kernel->heapAgency->GetPoint(left) == *(Delegate*)kernel->heapAgency->GetPoint(right);
 				else VARIABLE(bool, resultValue) = false;
 			}
-			instruct += 9;
+			instruct += 13;
 		}
 		goto label_next_instruct;
 		case Instruct::DELEGATE_NotEquals:
@@ -2452,7 +2452,7 @@ label_next_instruct:
 					VARIABLE(bool, resultValue) = *(Delegate*)kernel->heapAgency->GetPoint(left) != *(Delegate*)kernel->heapAgency->GetPoint(right);
 				else VARIABLE(bool, resultValue) = true;
 			}
-			instruct += 9;
+			instruct += 13;
 		}
 		goto label_next_instruct;
 #pragma endregion Delegate
