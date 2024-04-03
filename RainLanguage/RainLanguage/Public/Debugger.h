@@ -264,7 +264,6 @@ protected:
 	virtual void OnContinue() = 0;
 public:
 	StepType type;
-	const RainLibrary* source;
 	const RainProgramDatabase* database;
 	/// <summary>
 	/// ´´½¨µ÷ÊÔÆ÷

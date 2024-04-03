@@ -63,7 +63,7 @@ class ProgramDatabase : public RainProgramDatabase
 public:
 	StringAgency* agency;
 	String name;
-	List<DebugFunction> functions;
+	List<DebugFunction*, true> functions;
 	List<DebugStatement, true> statements;
 	Dictionary<String, DebugFile*> files;
 	ProgramDatabase(const String& name);

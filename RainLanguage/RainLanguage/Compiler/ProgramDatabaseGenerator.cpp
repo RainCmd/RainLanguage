@@ -5,28 +5,29 @@
 
 ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : database(NULL), currentFile(NULL), localMap(0)
 {
-	if (debug) database = new ProgramDatabase(name);
+	if(debug) database = new ProgramDatabase(name);
 }
 
 void ProgramDatabaseGenerator::AddFunction(const String& file)
 {
-	if (database)
+	if(database)
 	{
 		localMap.Clear();
-		DebugFunction* function = new (database->functions.Add())DebugFunction();
+		DebugFunction* function = new DebugFunction();
 		function->file = database->agency->Add(file);
-		if (!database->files.TryGet(function->file, currentFile))
+		if(!database->files.TryGet(function->file, currentFile))
 		{
 			currentFile = new DebugFile();
 			database->files.Set(function->file, currentFile);
 		}
-		currentFile->functions.Add(database->functions.Count() - 1);
+		currentFile->functions.Add(database->functions.Count());
+		database->functions.Add(function);
 	}
 }
 
 void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line)
 {
-	if (database && database->functions.Count())
+	if(database && database->functions.Count())
 	{
 		currentFile->statements.Set(line, database->statements.Count());
 		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->AddCodeReference(generator->WriteCode(Instruct::BREAK)));
@@ -40,26 +41,26 @@ void ProgramDatabaseGenerator::AddLocal(Local* local, uint32 address, GlobalRefe
 
 void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
 {
-	if (database && database->functions.Count())
+	if(database && database->functions.Count())
 	{
-		DebugFunction& function = database->functions.Peek();
+		DebugFunction* function = database->functions.Peek();
 		uint32 localIndex;
-		if (!localMap.TryGet(index, localIndex))
+		if(!localMap.TryGet(index, localIndex))
 		{
-			localIndex = function.locals.Count();
-			new (function.locals.Add())DebugLocal(database->agency->Add(anchor.content), address, globalReference->AddReference(type));
+			localIndex = function->locals.Count();
+			new (function->locals.Add())DebugLocal(database->agency->Add(anchor.content), address, globalReference->AddReference(type));
 			localMap.Set(index, localIndex);
 		}
-		function.localAnchors.Set(DebugAnchor(anchor.line, anchor.position), localIndex);
+		function->localAnchors.Set(DebugAnchor(anchor.line, anchor.position), localIndex);
 	}
 }
 
 void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uint32 index, GlobalReference* globalReference)
 {
-	if (database)
+	if(database)
 	{
 		DebugFile* file;
-		if (!database->files.TryGet(name.source, file))
+		if(!database->files.TryGet(name.source, file))
 		{
 			file = new DebugFile();
 			database->files.Set(database->agency->Add(name.source), file);
@@ -73,8 +74,8 @@ ProgramDatabase* ProgramDatabaseGenerator::GetResult(Generator* generator)
 {
 	ProgramDatabase* result = database;
 	database = NULL;
-	if (result) for (uint32 i = 0; i < result->statements.Count(); i++)
-		result->statements[i].pointer = generator->GetReferenceAddress(result->statements[i].pointer); 
+	if(result) for(uint32 i = 0; i < result->statements.Count(); i++)
+		result->statements[i].pointer = generator->GetReferenceAddress(result->statements[i].pointer);
 	return result;
 }
 

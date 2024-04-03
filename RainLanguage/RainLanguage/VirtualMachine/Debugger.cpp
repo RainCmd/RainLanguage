@@ -23,7 +23,7 @@ public:
 };
 
 #define FRAME ((DebugFrame*)debugFrame)
-Type GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
+static Type GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
 {
 	if (IsHandleType(type) && address) return frame->library->kernel->heapAgency->GetType(*(Handle*)address);
 	else return type;
@@ -252,7 +252,7 @@ RainString RainDebuggerVariable::GetValue()
 	return RainString(nullptr, 0);
 }
 
-uint32 ParseReals(StringAgency* agency, const RainString& value, real* results, uint32 max)
+static uint32 ParseReals(StringAgency* agency, const RainString& value, real* results, uint32 max)
 {
 	uint32 count = 0, start = 0;
 	for (uint32 i = 0; i < value.length && count < max; i++)
@@ -435,11 +435,11 @@ RainString RainTrace::FileName()
 
 uint32 RainTrace::LocalCount()
 {
-	if (IsValid() && function != INVALID) return ((ProgramDatabase*)FRAME->debugger->database)->functions[function].locals.Count();
+	if (IsValid() && function != INVALID) return ((ProgramDatabase*)FRAME->debugger->database)->functions[function]->locals.Count();
 	return 0;
 }
 
-Declaration DebugToKernel(uint32 index, MAP* map, const Declaration& declaration)
+static Declaration DebugToKernel(uint32 index, MAP* map, const Declaration& declaration)
 {
 	if (declaration.library == LIBRARY_KERNEL) return declaration;
 	else if (declaration.library == LIBRARY_SELF) return Declaration(index, declaration.code, declaration.index);
@@ -453,7 +453,7 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 	if (IsValid() && function != INVALID)
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
-		DebugLocal& local = database->functions[function].locals[index];
+		DebugLocal& local = database->functions[function]->locals[index];
 		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type), local.type.dimension));
 	}
 	return RainDebuggerVariable();
@@ -466,9 +466,9 @@ bool RainTrace::TryGetVariable(const RainString& fileName, uint32 lineNumber, ui
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
 		DebugAnchor anchor(lineNumber, characterIndex);
 		uint32 localIndex;
-		if (function != INVALID && database->functions[function].localAnchors.TryGet(anchor, localIndex))
+		if (function != INVALID && database->functions[function]->localAnchors.TryGet(anchor, localIndex))
 		{
-			DebugLocal& local = database->functions[function].locals[localIndex];
+			DebugLocal& local = database->functions[function]->locals[localIndex];
 			Type localType;
 			if (FRAME->map->TryGet(local.type, localType)) variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(localType));
 			else EXCEPTION("映射逻辑可能有BUG");
@@ -558,7 +558,7 @@ RainTrace RainTraceIterator::Current()
 			if (statement != INVALID)
 			{
 				DebugStatement& debugStatement = database->statements[statement];
-				return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), debugStatement.function, new String(database->functions[debugStatement.function].file), debugStatement.line);
+				return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), debugStatement.function, new String(database->functions[debugStatement.function]->file), debugStatement.line);
 			}
 		}
 		return RainTrace(debugFrame, NULL, new String(library->functions[function].GetFullName(library->kernel, library->index)), INVALID, NULL, 0);
@@ -611,7 +611,7 @@ RainTaskIterator::~RainTaskIterator()
 }
 
 #define TO_KERNEL_STRING(value) kernel->stringAgency->Add(library->stringAgency->Get(value))
-RuntimeSpace* GetSpace(Kernel* kernel, Library* library, const ImportLibrary& importLibrary, uint32 importSpaceIndex, RuntimeLibrary* runtimeLibrary)
+static RuntimeSpace* GetSpace(Kernel* kernel, Library* library, const ImportLibrary& importLibrary, uint32 importSpaceIndex, RuntimeLibrary* runtimeLibrary)
 {
 	String spaceName = TO_KERNEL_STRING(importLibrary.spaces[importSpaceIndex].name);
 	if (importSpaceIndex)
@@ -626,7 +626,7 @@ RuntimeSpace* GetSpace(Kernel* kernel, Library* library, const ImportLibrary& im
 	return NULL;
 }
 
-bool InitMap(Kernel* kernel, Library* library, MAP* map)
+static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 {
 	for (uint32 importIndex = 0; importIndex < library->imports.Count(); importIndex++)
 	{
@@ -731,7 +731,7 @@ bool InitMap(Kernel* kernel, Library* library, MAP* map)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), type(StepType::None), source(NULL), database(NULL)
+RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), type(StepType::None), database(NULL)
 {
 	if (kernel)
 	{
@@ -741,8 +741,8 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(N
 			if (agency->libraries[i]->spaces[0].name == targetName.index)
 			{
 				library = agency->libraries[i];
-				source = agency->libraryLoader(name);
-				database = agency->programDatabaseLoader(name);
+				const RainLibrary* source = agency->libraryLoader(name);
+				database = agency->programDatabaseLoader(name);//todo pdb需要持久化
 				if (!source || !database) break;
 				if (KERNEL->debugger) KERNEL->debugger->Broken();
 				KERNEL->debugger = this;
@@ -751,7 +751,7 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(N
 				if (InitMap(KERNEL, (Library*)source, (MAP*)map)) return;
 				else break;
 			}
-		delete source; delete database;
+		delete database;
 	}
 }
 
@@ -778,7 +778,6 @@ void RainDebugger::Broken()
 		SHARE->Release();
 		share = NULL;
 		library = NULL;
-		delete source; source = NULL;
 		delete database; database = NULL;
 	}
 }

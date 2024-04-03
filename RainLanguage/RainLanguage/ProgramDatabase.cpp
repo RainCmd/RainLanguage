@@ -28,6 +28,7 @@ uint32 ProgramDatabase::GetStatement(uint32 instructAddress) const
 
 ProgramDatabase::~ProgramDatabase()
 {
+	for(uint32 i = 0; i < functions.Count(); i++) delete functions[i];
 	Dictionary<String, DebugFile*>::Iterator iterator = files.GetIterator();
 	while (iterator.Next()) delete iterator.CurrentValue();
 	files.Clear();
@@ -44,18 +45,18 @@ RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase& datab
 	serializer->Serialize(source->functions.Count());
 	for (uint32 x = 0; x < source->functions.Count(); x++)
 	{
-		DebugFunction& function = source->functions[x];
-		serializer->Serialize(function.file.index);
-		serializer->Serialize(function.locals.Count());
-		for (uint32 y = 0; y < function.locals.Count(); y++)
+		DebugFunction* function = source->functions[x];
+		serializer->Serialize(function->file.index);
+		serializer->Serialize(function->locals.Count());
+		for (uint32 y = 0; y < function->locals.Count(); y++)
 		{
-			DebugLocal& local = function.locals[y];
+			DebugLocal& local = function->locals[y];
 			serializer->Serialize(local.name.index);
 			serializer->Serialize(local.address);
 			serializer->Serialize(local.type);
 		}
-		serializer->Serialize(function.localAnchors.Count());
-		Dictionary<DebugAnchor, uint32, true>::Iterator localIterator = function.localAnchors.GetIterator();
+		serializer->Serialize(function->localAnchors.Count());
+		Dictionary<DebugAnchor, uint32, true>::Iterator localIterator = function->localAnchors.GetIterator();
 		while (localIterator.Next())
 		{
 			serializer->Serialize(localIterator.CurrentKey());
@@ -96,7 +97,7 @@ RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, u
 	uint32 functionCount = deserializer.Deserialize<uint32>();
 	while (functionCount--)
 	{
-		DebugFunction* function = new (result->functions.Add())DebugFunction();
+		DebugFunction* function = new DebugFunction();
 		function->file = agency->Get(deserializer.Deserialize<string>());
 		uint32 localCount = deserializer.Deserialize<uint32>();
 		while (localCount--)
@@ -112,6 +113,7 @@ RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, u
 			DebugAnchor anchor = deserializer.Deserialize<DebugAnchor>();
 			function->localAnchors.Set(anchor, deserializer.Deserialize<uint32>());
 		}
+		result->functions.Add(function);
 	}
 	deserializer.Deserialize(result->statements);
 	uint32 fileCount = deserializer.Deserialize<uint32>();
