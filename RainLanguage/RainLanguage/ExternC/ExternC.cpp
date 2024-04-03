@@ -876,6 +876,11 @@ const RainProgramDatabase* Extern_DeserializeRainProgramDatabase(uint8* data, ui
 	return DeserializeDatabase(data, size);
 }
 
+void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const RainString*& file, uint32& line)
+{
+	file = new RainString(database->GetPosition(instructAddress, line));
+}
+
 void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database)
 {
 	Delete(database);

@@ -70,6 +70,7 @@ public:
 	ProgramDatabase(StringAgency* agency) : agency(agency), functions(0), statements(0), files(0) {}
 	const uint32 GetStatement(const RainString& file, uint32 line) const;
 	uint32 GetStatement(uint32 instructAddress) const;
+	const RainString GetPosition(uint32 instructAddress, uint32& line) const;
 	~ProgramDatabase();
 };
 

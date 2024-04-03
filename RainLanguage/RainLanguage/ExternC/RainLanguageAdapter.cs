@@ -906,6 +906,12 @@ namespace RainLanguage
                 return new RainBuffer(SerializeRainProgramDatabase(database));
             }
             public void* GetSource() { return database; }
+            public void GetPosition(uint instructAddress, out string file, out uint line)
+            {
+                RainProgramDatabaseGetPosition(database, instructAddress, out var filePointer, out line);
+                using (var nativeString = new NativeString(filePointer))
+                    file = nativeString.Value;
+            }
             public virtual void Dispose()
             {
                 if (database == null) return;
@@ -923,6 +929,8 @@ namespace RainLanguage
             private extern static void* SerializeRainProgramDatabase(void* database);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeserializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* DeserializeRainProgramDatabase(void* data, uint length);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainProgramDatabaseGetPosition", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void RainProgramDatabaseGetPosition(void* database, uint instructAddress, out void* file, out uint line);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainProgramDatabase(void* database);
 

@@ -55,6 +55,13 @@ class RAINLANGUAGE RainProgramDatabase
 {
 public:
 	RainProgramDatabase() = default;
+	/// <summary>
+	/// 根据指令地址获取所在的文件和行数
+	/// </summary>
+	/// <param name="instructAddress">指令地址</param>
+	/// <param name="line">文件中的行数</param>
+	/// <returns>文件名</returns>
+	virtual const RainString GetPosition(uint32 instructAddress, uint32& line) const = 0;
 	virtual ~RainProgramDatabase() {}
 };
 /// <summary>
