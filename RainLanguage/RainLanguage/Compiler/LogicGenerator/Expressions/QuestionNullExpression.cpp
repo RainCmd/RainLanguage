@@ -1,5 +1,6 @@
 #include "QuestionNullExpression.h"
 #include "../Generator.h"
+#include "LogicExpression.h"
 
 void QuestionNullExpression::Generator(LogicGenerateParameter& parameter)
 {
@@ -10,6 +11,7 @@ void QuestionNullExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
 	parameter.generator->WriteCode(leftParameter.results[0]);
 	parameter.generator->WriteCode(&rightAddress);
+	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), leftParameter.results[0]);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&endAddress);
 	rightAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
