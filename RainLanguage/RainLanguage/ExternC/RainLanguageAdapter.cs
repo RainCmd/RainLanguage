@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using static RainLanguage.RainLanguageAdapter;
 
 namespace RainLanguage
 {
@@ -766,7 +767,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)product).GetHashCode();
             }
-            public static implicit operator bool(Product product) { return product != null && product.product != null; }
+            public static implicit operator bool(Product product) { return !ReferenceEquals(product, null) && product.product != null; }
             public static bool operator ==(Product left, Product right)
             {
                 if (!left && !right) return true;
@@ -830,7 +831,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)msg).GetHashCode();
             }
-            public static implicit operator bool(ErrorMessage msg) { return msg != null && msg.msg != null; }
+            public static implicit operator bool(ErrorMessage msg) { return !ReferenceEquals(msg, null) && msg.msg != null; }
             public static bool operator ==(ErrorMessage left, ErrorMessage right)
             {
                 if (!left && !right) return true;
@@ -879,7 +880,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)library).GetHashCode();
             }
-            public static implicit operator bool(RainLibrary library) { return library != null && library.library != null; }
+            public static implicit operator bool(RainLibrary library) { return !ReferenceEquals(library, null) && library.library != null; }
             public static bool operator ==(RainLibrary left, RainLibrary right)
             {
                 if (!left && !right) return true;
@@ -896,7 +897,7 @@ namespace RainLanguage
         public class RainProgramDatabase : IDisposable
         {
             private void* database;
-            public RainProgramDatabase(void* database)
+            protected RainProgramDatabase(void* database)
             {
                 this.database = database;
             }
@@ -933,7 +934,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)database).GetHashCode();
             }
-            public static implicit operator bool(RainProgramDatabase database) { return database != null && database.database != null; }
+            public static implicit operator bool(RainProgramDatabase database) { return !ReferenceEquals(database, null) && database.database != null; }
             public static bool operator ==(RainProgramDatabase left, RainProgramDatabase right)
             {
                 if (!left && !right) return true;
@@ -1006,7 +1007,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)value).GetHashCode();
             }
-            public static implicit operator bool(NativeString value) { return value != null && value.value != null; }
+            public static implicit operator bool(NativeString value) { return !ReferenceEquals(value, null) && value.value != null; }
             public static bool operator ==(NativeString left, NativeString right)
             {
                 if (!left && !right) return true;
@@ -1061,7 +1062,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)value).GetHashCode();
             }
-            public static implicit operator bool(RainBuffer value) { return value != null && value.value != null; }
+            public static implicit operator bool(RainBuffer value) { return !ReferenceEquals(value, null) && value.value != null; }
             public static bool operator ==(RainBuffer left, RainBuffer right)
             {
                 if (!left && !right) return true;
@@ -1180,7 +1181,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)kernel).GetHashCode();
             }
-            public static implicit operator bool(RainKernel kernel) { return kernel != null && kernel.kernel != null; }
+            public static implicit operator bool(RainKernel kernel) { return !ReferenceEquals(kernel, null) && kernel.kernel != null; }
             public static bool operator ==(RainKernel left, RainKernel right)
             {
                 if (!left && !right) return true;
@@ -1241,7 +1242,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)function).GetHashCode();
             }
-            public static implicit operator bool(RainFunction function) { return function != null && function.function != null; }
+            public static implicit operator bool(RainFunction function) { return !ReferenceEquals(function, null) && function.function != null; }
             public static bool operator ==(RainFunction left, RainFunction right)
             {
                 if (!left && !right) return true;
@@ -1290,7 +1291,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)functions).GetHashCode();
             }
-            public static implicit operator bool(RainFunctions functions) { return functions != null && functions.functions != null; }
+            public static implicit operator bool(RainFunctions functions) { return !ReferenceEquals(functions, null) && functions.functions != null; }
             public static bool operator ==(RainFunctions left, RainFunctions right)
             {
                 if (!left && !right) return true;
@@ -1331,7 +1332,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)types).GetHashCode();
             }
-            public static implicit operator bool(RainTypes types) { return types != null && types.types != null; }
+            public static implicit operator bool(RainTypes types) { return !ReferenceEquals(types, null) && types.types != null; }
             public static bool operator ==(RainTypes left, RainTypes right)
             {
                 if (!left && !right) return true;
@@ -1744,7 +1745,7 @@ namespace RainLanguage
             {
                 return -494256651 + ((long)invoker).GetHashCode();
             }
-            public static implicit operator bool(RainInvoker invoker) { return invoker != null && invoker.invoker != null; }
+            public static implicit operator bool(RainInvoker invoker) { return !ReferenceEquals(invoker, null) && invoker.invoker != null; }
             public static bool operator ==(RainInvoker left, RainInvoker right)
             {
                 if (!left && !right) return true;
