@@ -1953,17 +1953,17 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Refl
 	Delegate* pointer = (Delegate*)parameter.kernel->heapAgency->GetPoint(handle);
 	if (function.declaration.code == TypeCode::Struct)
 	{
-		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Box);
+		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Box);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
 	else if (function.declaration.code == TypeCode::Handle)
 	{
-		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Virtual);
+		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Virtual);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
 	else if (function.declaration.code == TypeCode::Interface)
 	{
-		new (pointer)Delegate(runtimeFunction->entry, thisParameter, FunctionType::Abstract);
+		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Abstract);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
 	else EXCEPTION("无效的定义类型");

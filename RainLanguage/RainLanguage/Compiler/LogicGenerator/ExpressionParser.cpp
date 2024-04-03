@@ -474,7 +474,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if (TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))
 			{
-				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
+				ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction || callable->declaration.category == DeclarationCategory::InterfaceFunction, "类型错误");
 				if (!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
 				{
 					MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);

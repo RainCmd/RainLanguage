@@ -26,24 +26,27 @@ const struct Native
 	inline Native() :library(INVALID), function(INVALID) {}
 	inline Native(uint32 library, uint32 function) : library(library), function(function) {}
 };
-
+// FunctionType			entry		target		native		function
+// Global				¡Ì			-			-			-		
+// Native				-			-			¡Ì			-
+// Box					¡Ì			¡Ì			-			¡Ì
+// Reality				¡Ì			¡Ì			-			¡Ì
+// Virtual				¡Ì			¡Ì			-			¡Ì
+// Abstract				¡Ì			¡Ì			-			¡Ì
 const struct Delegate
 {
+	uint32 entry;
+	uint32 target;
 	union
 	{
-		uint32 entry;
-		uint32 library;
-	};
-	union
-	{
-		uint32 target;
-		uint32 function;
+		Function function;
+		Native native;
 	};
 	FunctionType type;
-	inline Delegate() :entry(INVALID), target(NULL), type((FunctionType)0) {}
-	inline Delegate(uint32 entry, uint32 target, FunctionType type) : entry(entry), target(target), type(type) {}
-	inline Delegate(uint32 entry) : entry(entry), target(NULL), type(FunctionType::Global) {}
-	inline Delegate(Native native) : library(native.library), function(native.function), type(FunctionType::Native) {}
+	inline Delegate() :entry(INVALID), target(NULL), function(), type((FunctionType)0) {}
+	inline Delegate(uint32 entry, uint32 target, Function function, FunctionType type) : entry(entry), target(target), function(function), type(type) {}
+	inline Delegate(uint32 entry) : entry(entry), target(NULL), function(), type(FunctionType::Global) {}
+	inline Delegate(Native native) : entry(INVALID), target(NULL), native(native), type(FunctionType::Native) {}
 	inline bool operator==(const Delegate& other)const
 	{
 		return entry == other.entry && target == other.target && type == other.type;

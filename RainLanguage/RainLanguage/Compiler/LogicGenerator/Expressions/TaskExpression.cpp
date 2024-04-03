@@ -158,9 +158,12 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 		InvokerMemberExpression* invokerExpression = (InvokerMemberExpression*)invoker;
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		invokerExpression->target->Generator(targetParameter);
-		parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-		parameter.generator->WriteCode(targetParameter.results[0]);
-		parameter.generator->WriteCode(parameter.finallyAddress);
+		if (IsHandleType(invokerExpression->target->returns[0])) 
+		{
+			parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
+			parameter.generator->WriteCode(targetParameter.results[0]);
+			parameter.generator->WriteCode(parameter.finallyAddress);
+		}
 		parameter.generator->WriteCode(Instruct::BASE_CreateTask);
 		parameter.generator->WriteCode(result);
 		parameter.generator->WriteCodeGlobalReference(declaration);
@@ -212,7 +215,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 			parameter.generator->WriteCode(targetParameter.results[0]);
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 			parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
-			parameter.generator->WriteCodeGlobalReference(invokerExpression->target->returns[0]);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::InterfaceFunction)
 		{
@@ -220,7 +223,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 			parameter.generator->WriteCode(targetParameter.results[0]);
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 			parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
-			parameter.generator->WriteCodeGlobalReference(invokerExpression->target->returns[0]);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
 		else EXCEPTION("这个申明类型不应该会走到这里");

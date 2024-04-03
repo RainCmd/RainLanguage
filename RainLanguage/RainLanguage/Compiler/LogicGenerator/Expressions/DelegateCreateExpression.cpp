@@ -53,7 +53,8 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 	if (declaration.category == DeclarationCategory::StructFunction) parameter.generator->WriteCode((uint8)FunctionType::Box);
 	else if (declaration.category == DeclarationCategory::ClassFunction) parameter.generator->WriteCode((uint8)FunctionType::Reality);
 	parameter.generator->WriteCode(sourceVariable);
-	parameter.generator->WriteCodeGlobalAddressReference(declaration);
+	parameter.generator->WriteCodeGlobalReference(declaration);
+	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	if (question) endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
@@ -91,7 +92,7 @@ void VirtualFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& 
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	if (question)endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	if (question) endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
 VirtualFunctionDelegateCreateExpression::~VirtualFunctionDelegateCreateExpression()
@@ -132,7 +133,9 @@ void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& pa
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	parameter.generator->WriteCode((uint8)FunctionType::Reality);
 	parameter.generator->WriteCode(closureVariable);
-	parameter.generator->WriteCodeGlobalAddressReference(CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Function, parameter.manager->selfLibaray->classes[closure.index]->functions[0], NULL));
+	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Function, parameter.manager->selfLibaray->classes[closure.index]->functions[0], NULL);
+	parameter.generator->WriteCodeGlobalReference(declaration);
+	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
