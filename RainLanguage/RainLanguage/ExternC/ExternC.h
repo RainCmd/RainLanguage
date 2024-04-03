@@ -79,7 +79,7 @@ extern "C"
 	RAINLANGUAGE void Extern_KernelUpdate(RainKernel* kernel);
 
 	RAINLANGUAGE bool Extern_RainFunctionIsValid(RainFunction* function);
-	RAINLANGUAGE InvokerWrapper* Extern_RainFunctionCreateInvoekr(RainFunction* function);
+	RAINLANGUAGE InvokerWrapper* Extern_RainFunctionCreateInvoker(RainFunction* function);
 	RAINLANGUAGE RainTypes* Extern_RainFunctionGetParameters(RainFunction* function);
 	RAINLANGUAGE RainTypes* Extern_RainFunctionGetReturns(RainFunction* function);
 	RAINLANGUAGE void Extern_DeleteRainFunction(RainFunction* function);

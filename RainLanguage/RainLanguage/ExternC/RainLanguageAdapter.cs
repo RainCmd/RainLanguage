@@ -757,6 +757,23 @@ namespace RainLanguage
             private extern static void* ProductGetLibrary(void* product);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ProductGetRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* ProductGetRainProgramDatabase(void* product);
+
+            public override bool Equals(object obj)
+            {
+                return obj is Product product && product.product == this.product;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)product).GetHashCode();
+            }
+            public static implicit operator bool(Product product) { return product != null && product.product != null; }
+            public static bool operator ==(Product left, Product right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.product == right.product;
+                return false;
+            }
+            public static bool operator !=(Product left, Product right) { return !(left == right); }
         }
         public class ErrorMessage : IDisposable
         {
@@ -804,6 +821,23 @@ namespace RainLanguage
             private extern static void* RainErrorMessageGetExtraMessage(void* msg);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainErrorMessage", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* DeleteRainErrorMessage(void* msg);
+
+            public override bool Equals(object obj)
+            {
+                return obj is ErrorMessage msg && msg.msg == this.msg;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)msg).GetHashCode();
+            }
+            public static implicit operator bool(ErrorMessage msg) { return msg != null && msg.msg != null; }
+            public static bool operator ==(ErrorMessage left, ErrorMessage right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.msg == right.msg;
+                return false;
+            }
+            public static bool operator !=(ErrorMessage left, ErrorMessage right) { return !(left == right); }
         }
         public class RainLibrary : IDisposable
         {
@@ -827,7 +861,7 @@ namespace RainLanguage
             ~RainLibrary() { Dispose(); }
             public static RainLibrary Create(byte[] data)
             {
-                if(data== null) return null;
+                if (data == null) return null;
                 fixed (byte* pdata = data) return new RainLibrary(DeserializeRainLibrary(pdata, (uint)data.Length));
             }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
@@ -836,6 +870,23 @@ namespace RainLanguage
             private extern static void* DeserializeRainLibrary(byte* data, uint length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainLibrary", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainLibrary(void* library);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainLibrary library && library.library == this.library;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)library).GetHashCode();
+            }
+            public static implicit operator bool(RainLibrary library) { return library != null && library.library != null; }
+            public static bool operator ==(RainLibrary left, RainLibrary right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.library == right.library;
+                return false;
+            }
+            public static bool operator !=(RainLibrary left, RainLibrary right) { return !(left == right); }
         }
         private class RainLibraryCopy : RainLibrary
         {
@@ -873,6 +924,23 @@ namespace RainLanguage
             private extern static void* DeserializeRainProgramDatabase(void* data, uint length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainProgramDatabase(void* database);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainProgramDatabase database && database.database == this.database;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)database).GetHashCode();
+            }
+            public static implicit operator bool(RainProgramDatabase database) { return database != null && database.database != null; }
+            public static bool operator ==(RainProgramDatabase left, RainProgramDatabase right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.database == right.database;
+                return false;
+            }
+            public static bool operator !=(RainProgramDatabase left, RainProgramDatabase right) { return !(left == right); }
         }
         private class RainProgramDatabaseCopy : RainProgramDatabase
         {
@@ -892,15 +960,19 @@ namespace RainLanguage
         private class NativeString : IDisposable
         {
             private void* value;
+            private string result;
             public NativeString(void* value)
             {
                 this.value = value;
+                result = null;
             }
             public string Value
             {
                 get
                 {
-                    return new string(RainStringGetChars(value));
+                    if (value == null) return null;
+                    else if (result == null) result = new string(RainStringGetChars(value));
+                    return result;
                 }
             }
             public void Dispose()
@@ -925,16 +997,47 @@ namespace RainLanguage
             private extern static char* RainStringGetChars(void* msg);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainString", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainString(void* msg);
+
+            public override bool Equals(object obj)
+            {
+                return obj is NativeString value && value.value == this.value;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)value).GetHashCode();
+            }
+            public static implicit operator bool(NativeString value) { return value != null && value.value != null; }
+            public static bool operator ==(NativeString left, NativeString right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.Value == right.Value;
+                return false;
+            }
+            public static bool operator !=(NativeString left, NativeString right) { return !(left == right); }
         }
         public class RainBuffer : IDisposable
         {
             private void* value;
+            private byte[] result;
             public RainBuffer(void* value)
             {
                 this.value = value;
+                result = null;
             }
-            public byte* Data { get { return RainBufferGetData(value); } }
-            public uint Length { get { return RainBufferGetCount(value); } }
+            public byte[] Data
+            {
+                get
+                {
+                    if (value == null) return null;
+                    else if (result == null)
+                    {
+                        result = new byte[RainBufferGetCount(value)];
+                        var pointer = RainBufferGetData(value);
+                        for (int i = 0; i < result.Length; i++) result[i] = pointer[i];
+                    }
+                    return result;
+                }
+            }
             public void Dispose()
             {
                 if (value == null) return;
@@ -949,6 +1052,23 @@ namespace RainLanguage
             public extern static uint RainBufferGetCount(void* value);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainBuffer", CallingConvention = CallingConvention.Cdecl)]
             public extern static void DeleteRainBuffer(void* value);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainBuffer value && value.value == this.value;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)value).GetHashCode();
+            }
+            public static implicit operator bool(RainBuffer value) { return value != null && value.value != null; }
+            public static bool operator ==(RainBuffer left, RainBuffer right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.value == right.value;
+                return false;
+            }
+            public static bool operator !=(RainBuffer left, RainBuffer right) { return !(left == right); }
         }
         [StructLayout(LayoutKind.Sequential)]
         private struct ExternRainStackFram
@@ -1051,6 +1171,23 @@ namespace RainLanguage
             private extern static void KernelUpdate(void* kernel);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteKernel", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteKernel(void* kernel);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainKernel kernel && kernel.kernel == this.kernel;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)kernel).GetHashCode();
+            }
+            public static implicit operator bool(RainKernel kernel) { return kernel != null && kernel.kernel != null; }
+            public static bool operator ==(RainKernel left, RainKernel right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.kernel == right.kernel;
+                return false;
+            }
+            public static bool operator !=(RainKernel left, RainKernel right) { return !(left == right); }
         }
         private class RainKernelCopy : RainKernel
         {
@@ -1073,9 +1210,9 @@ namespace RainLanguage
             {
                 return new RainTypes(RainFunctionGetReturns(function));
             }
-            public RainInvoekr CreateInvoker()
+            public RainInvoker CreateInvoker()
             {
-                return new RainInvoekr(RainFunctionCreateInvoekr(function));
+                return new RainInvoker(RainFunctionCreateInvoker(function));
             }
             public void Dispose()
             {
@@ -1087,14 +1224,31 @@ namespace RainLanguage
             ~RainFunction() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionIsValid", CallingConvention = CallingConvention.Cdecl)]
             private extern static bool RainFunctionIsValid(void* function);
-            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionCreateInvoekr", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* RainFunctionCreateInvoekr(void* function);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionCreateInvoker", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* RainFunctionCreateInvoker(void* function);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionGetParameters", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* RainFunctionGetParameters(void* function);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainFunctionGetReturns", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* RainFunctionGetReturns(void* function);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainFunction", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainFunction(void* function);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainFunction function && function.function == this.function;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)function).GetHashCode();
+            }
+            public static implicit operator bool(RainFunction function) { return function != null && function.function != null; }
+            public static bool operator ==(RainFunction left, RainFunction right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.function == right.function;
+                return false;
+            }
+            public static bool operator !=(RainFunction left, RainFunction right) { return !(left == right); }
         }
         public class RainFunctions : IDisposable
         {
@@ -1127,6 +1281,23 @@ namespace RainLanguage
             private extern static void* RainFunctionsGetFunction(void* functions, uint index);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainFunctions", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainFunctions(void* function);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainFunctions functions && functions.functions == this.functions;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)functions).GetHashCode();
+            }
+            public static implicit operator bool(RainFunctions functions) { return functions != null && functions.functions != null; }
+            public static bool operator ==(RainFunctions left, RainFunctions right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.functions == right.functions;
+                return false;
+            }
+            public static bool operator !=(RainFunctions left, RainFunctions right) { return !(left == right); }
         }
         public class RainTypes : IDisposable
         {
@@ -1151,11 +1322,28 @@ namespace RainLanguage
             private extern static uint RainTypesGetType(void* types, uint index);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainTypes", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteRainTypes(void* types);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainTypes types && types.types == this.types;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)types).GetHashCode();
+            }
+            public static implicit operator bool(RainTypes types) { return types != null && types.types != null; }
+            public static bool operator ==(RainTypes left, RainTypes right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.types == right.types;
+                return false;
+            }
+            public static bool operator !=(RainTypes left, RainTypes right) { return !(left == right); }
         }
-        public class RainInvoekr : IDisposable
+        public class RainInvoker : IDisposable
         {
             private void* invoker;
-            public RainInvoekr(void* invoker)
+            public RainInvoker(void* invoker)
             {
                 this.invoker = invoker;
             }
@@ -1421,7 +1609,7 @@ namespace RainLanguage
                 invoker = null;
                 GC.SuppressFinalize(this);
             }
-            ~RainInvoekr() { Dispose(); }
+            ~RainInvoker() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetKernel", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* InvokerWrapperGetKernel(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetInstanceID", CallingConvention = CallingConvention.Cdecl)]
@@ -1547,6 +1735,23 @@ namespace RainLanguage
 
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteInvokerWrapper", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteInvokerWrapper(void* invoker);
+
+            public override bool Equals(object obj)
+            {
+                return obj is RainInvoker invoker && invoker.invoker == this.invoker;
+            }
+            public override int GetHashCode()
+            {
+                return -494256651 + ((long)invoker).GetHashCode();
+            }
+            public static implicit operator bool(RainInvoker invoker) { return invoker != null && invoker.invoker != null; }
+            public static bool operator ==(RainInvoker left, RainInvoker right)
+            {
+                if (!left && !right) return true;
+                if (left && right) return left.invoker == right.invoker;
+                return false;
+            }
+            public static bool operator !=(RainInvoker left, RainInvoker right) { return !(left == right); }
         }
         [StructLayout(LayoutKind.Sequential)]
         public readonly struct RainCaller

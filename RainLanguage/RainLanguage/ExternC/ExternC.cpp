@@ -165,7 +165,7 @@ bool Extern_RainFunctionIsValid(RainFunction* function)
 	return function->IsValid();
 }
 
-InvokerWrapper* Extern_RainFunctionCreateInvoekr(RainFunction* function)
+InvokerWrapper* Extern_RainFunctionCreateInvoker(RainFunction* function)
 {
 	return new InvokerWrapper(function->CreateInvoker());
 }
