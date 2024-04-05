@@ -187,14 +187,15 @@ const RainLibrary* OnLibraryLoader(const RainString& libName)
 }
 void TestFunc()
 {
-	TestCodeLoader loader2(L".\\RainTest2\\");
+	/*TestCodeLoader loader2(L".\\RainTest2\\");
 	BuildParameter parameter2(RainString::Create(L"TestLib2"), false, &loader2, nullptr, ErrorLevel::WarringLevel4);
 	RainProduct* product2 = Build(parameter2);
 	const RainLibrary* lib2 = product2->GetLibrary();
 	const RainBuffer<uint8>* buf2 = Serialize(*lib2);
 	test2Lib = DeserializeLibrary(buf2->Data(), buf2->Count());
 	delete product2;
-	delete buf2;
+	delete buf2;*/
+	test2Lib = nullptr;
 
 	TestCodeLoader loader(L".\\RainScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
@@ -222,12 +223,19 @@ void TestFunc()
 		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, OnLibraryLoader, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction rf = kernel->FindFunction(L"Main", true);
-		InvokerWrapper iw = rf.CreateInvoker();
-		iw.Start(true, false);
-		while (kernel->GetState().taskCount)
+		if (rf.IsValid())
 		{
-			kernel->Update();
-			this_thread::sleep_for(chrono::seconds(1));
+			InvokerWrapper iw = rf.CreateInvoker();
+			iw.Start(true, false);
+			while (kernel->GetState().taskCount)
+			{
+				kernel->Update();
+				this_thread::sleep_for(chrono::milliseconds(300));
+			}
+		}
+		else
+		{
+			wcout << "ÎÞÐ§µÄRainFunction\n";
 		}
 		delete kernel;
 	}
@@ -239,7 +247,7 @@ void TestFunc()
 int main()
 {
 	SetMemoryAllocator(ALLOC, FREE, REALLOC);
-
+	wcout.imbue(locale("zh_CN.UTF-8"));
 	TestFunc();
 
 	ClearStaticCache();

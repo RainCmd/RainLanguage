@@ -119,7 +119,7 @@ enum class Proto
 	SEND_SetLocal,
 };
 
-bool Resize(char*& data, int& size, int targetSize)
+static bool Resize(char*& data, int& size, int targetSize)
 {
 	if (size >= targetSize) return true;
 	int resultSize = size;
@@ -131,7 +131,7 @@ bool Resize(char*& data, int& size, int targetSize)
 	return true;
 }
 
-void Copy(char* src, char* trg, int size)
+static void Copy(char* src, char* trg, int size)
 {
 	while (size--) trg[size] = src[size];
 }
@@ -139,7 +139,7 @@ void Copy(char* src, char* trg, int size)
 int sendBufferSize = 1024;
 char* sendBuffer = nullptr;
 
-void Send(Proto proto, const DataPackage& pkg)
+static void Send(Proto proto, const DataPackage& pkg)
 {
 	if (cSock == INVALID_SOCKET) return;
 	int sendSize = pkg.pos + 5;
@@ -569,7 +569,7 @@ void AcceptClient()
 {
 	sockaddr_in cAddr = {};
 	int addrLen = sizeof(sockaddr_in);
-	while (true)
+	while (wsaStartuped)
 	{
 		cSock = accept(sSock, (sockaddr*)&cAddr, &addrLen);
 		if (cSock == INVALID_SOCKET) break;
