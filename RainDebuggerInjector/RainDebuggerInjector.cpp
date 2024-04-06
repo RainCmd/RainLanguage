@@ -42,18 +42,21 @@ static void Copy(LPCSTR src, char* trg)
 
 int main(int cnt, char** args)
 {
-	if(cnt == 2 && *args[1] == '+')
+	if(cnt == 2)
 	{
-		wcout.imbue(locale(""));
-		vector<Process> ps;
-		GetProcesses(ps);
-		for(size_t i = 0; i < ps.size(); i++)
+		if(*args[1] == '+')
 		{
-			Process& p = ps[i];
-			wcout << "id" << p.id << endl;
-			Out(L"name", p.name);
-			Out(L"title", p.title);
-			Out(L"path", p.path);
+			wcout.imbue(locale(""));
+			vector<Process> ps;
+			GetProcesses(ps);
+			for(size_t i = 0; i < ps.size(); i++)
+			{
+				Process& p = ps[i];
+				wcout << "id" << p.id << endl;
+				Out(L"name", p.name);
+				Out(L"title", p.title);
+				Out(L"path", p.path);
+			}
 		}
 	}
 	else if(cnt == 6)

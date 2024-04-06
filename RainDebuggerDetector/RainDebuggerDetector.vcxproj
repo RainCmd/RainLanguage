@@ -165,12 +165,14 @@
     <ClInclude Include="DebuggerAdaptor.h" />
     <ClInclude Include="ExternC.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Package.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DebuggerAdaptor.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ExternC.cpp" />
+    <ClCompile Include="Package.cpp" />
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

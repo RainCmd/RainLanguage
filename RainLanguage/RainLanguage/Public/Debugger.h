@@ -275,7 +275,7 @@ public:
 	/// <param name="name">调试目标库名</param>
 	/// <param name="kernel">调试目标虚拟机</param>
 	/// <param name="database">符号表</param>
-	RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database, RainProgramDatabaseUnloader unloader);
+	RainDebugger(const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
 	/// <summary>
@@ -362,3 +362,10 @@ RAINLANGUAGE uint32 GetDebuggableCount();
 /// <param name="loader">符号表加载器</param>
 /// <param name="unloader">符号表卸载器</param>
 RAINLANGUAGE void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader);
+
+/// <summary>
+/// 检查虚拟机是否加载了库
+/// </summary>
+/// <param name="kernel">虚拟机</param>
+/// <param name="libraryName">库名</param>
+RAINLANGUAGE bool IsRainKernelContainLibrary(const RainKernel* kernel, const RainString& libraryName);

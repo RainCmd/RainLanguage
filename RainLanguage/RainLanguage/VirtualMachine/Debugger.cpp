@@ -731,7 +731,7 @@ static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database, RainProgramDatabaseUnloader unloader) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(unloader), type(StepType::None), database(database)
+RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(unloader), type(StepType::None), database(nullptr)
 {
 	if(kernel)
 	{
@@ -743,11 +743,18 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, const Rai
 				library = agency->libraries[i];
 				const RainLibrary* source = agency->libraryLoader(name);
 				if(!source) return;
+				database = loader(name);
+				if(!database)
+				{
+					agency->libraryUnloader(source);
+					return;
+				}
 				if(KERNEL->debugger) KERNEL->debugger->Broken();
 				KERNEL->debugger = this;
 				share = KERNEL->share;
 				SHARE->Reference();
 				if(!InitMap(KERNEL, (Library*)source, (MAP*)map)) Broken();
+				agency->libraryUnloader(source);
 				break;
 			}
 
@@ -947,4 +954,17 @@ void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader&
 	kernel = debuggerSlots[index].share->kernel;
 	loader = debuggerSlots[index].loader;
 	unloader = debuggerSlots[index].unloader;
+}
+
+bool IsRainKernelContainLibrary(const RainKernel* kernel, const RainString& libraryName)
+{
+	if(kernel)
+	{
+		String name = KERNEL->stringAgency->Add(libraryName.value, libraryName.length);
+		LibraryAgency* agency = KERNEL->libraryAgency;
+		for(uint32 i = 0; i < agency->libraries.Count(); i++)
+			if(agency->libraries[i]->spaces[0].name == name.index)
+				return true;
+	}
+	return false;
 }
