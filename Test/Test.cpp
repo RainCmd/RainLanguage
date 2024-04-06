@@ -21,49 +21,56 @@ class TestCodeLoader : public CodeLoader
 	wstring content;
 	bool EndWith(wstring src, wstring suffix)
 	{
-		if (src.size() < suffix.size()) return false;
+		if(src.size() < suffix.size()) return false;
 		size_t d = src.size() - suffix.size();
-		for (size_t i = 0; i < suffix.size(); i++)
-			if (src.at(i + d) != suffix.at(i))
+		for(size_t i = 0; i < suffix.size(); i++)
+			if(src.at(i + d) != suffix.at(i))
 				return false;
 		return true;
 	}
-	void LoadFiles(wstring dir) {
+	void LoadFiles(wstring dir)
+	{
 		_wfinddata_t data;
 		wstring tmp;
 		intptr_t handle = _wfindfirst(tmp.assign(dir).append(L"*").c_str(), &data);
-		if (handle != -1)
+		if(handle != -1)
 		{
-			do {
+			do
+			{
 				wstring path = data.name;
-				if (EndWith(path, L".")) continue;
+				if(EndWith(path, L".")) continue;
 				path = tmp.assign(dir).append(path);
-				if (data.attrib & _A_SUBDIR)
+				if(data.attrib & _A_SUBDIR)
 					LoadFiles(path.append(L"\\"));
-				else if (EndWith(path, L".rain"))
+				else if(EndWith(path, L".rain"))
 					files.push_back(path);
-			} while (_wfindnext(handle, &data) == 0);
+			}
+			while(_wfindnext(handle, &data) == 0);
 		}
 		_findclose(handle);
 	}
 public:
-	TestCodeLoader(wstring dir) {
+	TestCodeLoader(wstring dir)
+	{
 		LoadFiles(dir);
 	}
-	bool LoadNext() {
-		if (files.empty()) return false;
+	bool LoadNext()
+	{
+		if(files.empty()) return false;
 		path = files.back();
 		files.pop_back();
 		return true;
 	}
-	const RainString CurrentPath() {
+	const RainString CurrentPath()
+	{
 		return RainString(path.c_str(), path.length());
 	}
-	const RainString CurrentContent() {
+	const RainString CurrentContent()
+	{
 		wfstream file(path);
 		content.clear();
 		wstring line;
-		while (getline(file, line))
+		while(getline(file, line))
 		{
 			content.append(line);
 			content.append(1, L'\n');
@@ -113,11 +120,11 @@ OnCaller NativeLoader(RainKernel&, const RainString fullName, const RainType* pa
 {
 	wstring str; str.assign(fullName.value, fullName.length);
 	//wcout << "\n\nNative Load:" << str << "\n\n";
-	if (str == L"TestLib.Print") return Print;
-	else if (str == L"TestLib.Clock") return Clock;
-	else if (str == L"TestLib.OpenFile") return OpenFile;
-	else if (str == L"TestLib.FileReadLine") return FileReadLine;
-	else if (str == L"TestLib.CloseFile") return CloseFile;
+	if(str == L"TestLib.Print") return Print;
+	else if(str == L"TestLib.Clock") return Clock;
+	else if(str == L"TestLib.OpenFile") return OpenFile;
+	else if(str == L"TestLib.FileReadLine") return FileReadLine;
+	else if(str == L"TestLib.CloseFile") return CloseFile;
 	return nullptr;
 }
 
@@ -127,15 +134,15 @@ int midx = 0;
 void OnAlloc(long long key, int idx)
 {
 	auto it = mmap.find(key);
-	if (it != mmap.end())
+	if(it != mmap.end())
 	{
-		if (it->second >= 0)
+		if(it->second >= 0)
 			cout << "realloc" << endl;
 	}
 }
 void OnFree(int idx)
 {
-	if (idx < 0)
+	if(idx < 0)
 	{
 		cout << "refree" << endl;
 	}
@@ -171,7 +178,7 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 	str.assign(message.value, message.length);
 	wcout << L"异常信息:" << str << "\n";
 	wcout << L"堆栈:\n";
-	for (uint32 i = 0; i < stackFrameCount; i++)
+	for(uint32 i = 0; i < stackFrameCount; i++)
 	{
 		str.assign(stackFrames[i].libraryName.value, stackFrames[i].libraryName.length);
 		wcout << str << ":";
@@ -199,14 +206,14 @@ void TestFunc()
 
 	TestCodeLoader loader(L".\\RainScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
-	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, ErrorLevel::WarringLevel4);
+	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, nullptr, ErrorLevel::WarringLevel4);
 	RainProduct* product = Build(parameter);
-	for (uint32 i = 0; i <= 8; i++)
+	for(uint32 i = 0; i <= 8; i++)
 	{
 		ErrorLevel el = (ErrorLevel)i;
 		uint32 c = product->GetLevelMessageCount(el);
-		if (c) cout << "ERR_LVL:" << i << "\n";
-		for (uint32 j = 0; j < c; j++)
+		if(c) cout << "ERR_LVL:" << i << "\n";
+		for(uint32 j = 0; j < c; j++)
 		{
 			RainErrorMessage msg = product->GetErrorMessage(el, j);
 			wstring message;
@@ -217,17 +224,17 @@ void TestFunc()
 			wcout << source << " line:" << msg.line << "\tERR CODE:" << (uint32)msg.type << "\n";
 		}
 	}
-	if (!product->GetLevelMessageCount(ErrorLevel::Error))
+	if(!product->GetLevelMessageCount(ErrorLevel::Error))
 	{
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, OnLibraryLoader, NativeLoader, 0xff, 8, 8, 0xff, OnExce, nullptr);
+		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, OnLibraryLoader, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction rf = kernel->FindFunction(L"Main", true);
-		if (rf.IsValid())
+		if(rf.IsValid())
 		{
 			InvokerWrapper iw = rf.CreateInvoker();
 			iw.Start(true, false);
-			while (kernel->GetState().taskCount)
+			while(kernel->GetState().taskCount)
 			{
 				kernel->Update();
 				this_thread::sleep_for(chrono::milliseconds(300));
@@ -254,7 +261,7 @@ int main()
 
 	cout << "\n\n\n申请的内存总数：" << midx << "\n";
 	cout << "未释放的内存索引列表:\n";
-	for (auto it = mmap.begin(); it != mmap.end(); it++)
-		if (it->second >= 0)
+	for(auto it = mmap.begin(); it != mmap.end(); it++)
+		if(it->second >= 0)
 			cout << it->second << "\n";
 }

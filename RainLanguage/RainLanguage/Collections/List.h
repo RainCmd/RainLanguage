@@ -154,17 +154,17 @@ public:
 	}
 	uint32 RemoveAll(const Predicate& predicate)
 	{
-		uint32 count = this->count;
-		for (uint32 i = 0; i < count; i++)
+		uint32 max = count;  count = 0;
+		for (uint32 i = 0; i < max; i++)
 		{
-			if (predicate(values[i]))
+			if (!predicate(values[i]))
 			{
-				if (this->count < i)Mcopy(values + i, values + this->count, 1);
-				this->count++;
+				if (count < i) Mcopy(values + i, values + this->count, 1);
+				count++;
 			}
 			else if (!IsBitwise) Destruct(values + i, 1);
 		}
-		return count - this->count;
+		return max - count;
 	}
 	uint32 IndexOf(const T& value)
 	{

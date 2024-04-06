@@ -1,7 +1,7 @@
 #pragma once
 #include "../Public/Rain.h"
 #include "../Public/Builder.h"
-#include "../Public//VirtualMachine.h"
+#include "../Public/VirtualMachine.h"
 #include "../Public/MemoryAllocator.h"
 
 struct Extern_CodeLoaderResult
@@ -16,7 +16,8 @@ struct Extern_BuildParameter
 	character* name;
 	bool debug;
 	Extern_CodeLoader codeLoader;
-	LibraryLoader libraryLoader;
+	RainLibraryLoader libraryLoader;
+	RainLibraryUnloader libraryUnloader;
 	uint32 errorLevel;
 };
 struct Extern_ErrorMessage
@@ -214,6 +215,8 @@ extern "C"
 	RAINLANGUAGE const RainProgramDatabase* Extern_DeserializeRainProgramDatabase(uint8* data, uint32 size);
 	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const RainString*& file, uint32& line);
 	RAINLANGUAGE void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database);
+
+	RAINLANGUAGE void Extern_RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 
 	RAINLANGUAGE void Extern_SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc rainRealloc);
 	RAINLANGUAGE void Extern_FreeArray(void* pointer);

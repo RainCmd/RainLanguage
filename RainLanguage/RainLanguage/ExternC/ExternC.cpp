@@ -1,11 +1,12 @@
 #include "ExternC.h"
+#include "../Public/Debugger.h"
 #include "../Language.h"
 #define CONVERT(type, value) *(type*)&value
 
 const RainString ExternHelper_GetRainString(character* value)
 {
 	uint32 length = 0;
-	while (value[length]) length++;
+	while(value[length]) length++;
 	return RainString(value, length);
 }
 
@@ -20,7 +21,7 @@ public:
 	bool LoadNext()
 	{
 		Extern_CodeLoaderResult result = loader();
-		if (!result.end)
+		if(!result.end)
 		{
 			path = ExternHelper_GetRainString(result.path);
 			content = ExternHelper_GetRainString(result.content);
@@ -39,7 +40,7 @@ void Extern_ClearStaticCache()
 RainProduct* Extern_Build(Extern_BuildParameter parameter)
 {
 	Extern_CodeLoaderHelper helper(parameter.codeLoader);
-	BuildParameter buildParameter(ExternHelper_GetRainString(parameter.name), parameter.debug, &helper, parameter.libraryLoader, (ErrorLevel)parameter.errorLevel);
+	BuildParameter buildParameter(ExternHelper_GetRainString(parameter.name), parameter.debug, &helper, parameter.libraryLoader, parameter.libraryUnloader, (ErrorLevel)parameter.errorLevel);
 	return Build(buildParameter);
 }
 
@@ -402,7 +403,7 @@ const character** Extern_InvokerWapperGetEnumNameArrayReturnValue(InvokerWrapper
 	RainString* resultStrings = Malloc<RainString>(length);
 	invoker->GetEnumNameArrayReturnValue(index, resultStrings);
 	const character** result = Malloc<const character*>(length);
-	for (uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
+	for(uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
 	Free(resultStrings);
 	return result;
 }
@@ -413,7 +414,7 @@ const character** Extern_InvokerWapperGetStringArrayReturnValue(InvokerWrapper* 
 	RainString* resultStrings = Malloc<RainString>(length);
 	invoker->GetStringArrayReturnValue(index, resultStrings);
 	const character** result = Malloc<const character*>(length);
-	for (uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
+	for(uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
 	Free(resultStrings);
 	return result;
 }
@@ -688,7 +689,7 @@ const character** Extern_CallerWrapperGetEnumArrayNameParameter(CallerWrapper* c
 	RainString* resultStrings = Malloc<RainString>(length);
 	caller->GetEnumArrayNameParameter(index, resultStrings);
 	const character** result = Malloc<const character*>(length);
-	for (uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
+	for(uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
 	Free(resultStrings);
 	return result;
 }
@@ -699,7 +700,7 @@ const character** Extern_CallerWrapperGetStringArrayParameter(CallerWrapper* cal
 	RainString* resultStrings = Malloc<RainString>(length);
 	caller->GetStringArrayParameter(index, resultStrings);
 	const character** result = Malloc<const character*>(length);
-	for (uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
+	for(uint32 i = 0; i < length; i++) result[i] = resultStrings[i].value;
 	Free(resultStrings);
 	return result;
 }
@@ -884,6 +885,11 @@ void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32
 void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database)
 {
 	Delete(database);
+}
+
+void Extern_RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
+{
+	RegistDebugger(kernel, loader, unloader);
 }
 
 void Extern_SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc rainRealloc)

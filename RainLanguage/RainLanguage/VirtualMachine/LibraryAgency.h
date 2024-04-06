@@ -16,7 +16,8 @@ public:
 	uint32 functionCharacteristic = 0;
 	Kernel* kernel;
 	RuntimeLibrary* kernelLibrary;
-	LibraryLoader libraryLoader;
+	RainLibraryLoader libraryLoader;
+	RainLibraryUnloader libraryUnloader;
 	NativeCallerLoader nativeCallerLoader;
 	List<RuntimeLibrary*, true> libraries;
 	List<uint8, true> code;

@@ -12,6 +12,7 @@ void Debugger::OnContinue()
 {
 }
 
-Debugger::Debugger(const RainString& name, RainKernel* kernel) : RainDebugger(name, kernel)
+Debugger::Debugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database, RainProgramDatabaseUnloader unloader)
+	:RainDebugger(name, kernel, database, unloader)
 {
 }

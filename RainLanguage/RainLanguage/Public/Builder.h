@@ -46,13 +46,17 @@ const struct RAINLANGUAGE BuildParameter
 	/// <summary>
 	/// 引用库加载器
 	/// </summary>
-	LibraryLoader libraryLoader;
+	RainLibraryLoader libraryLoader;
+	/// <summary>
+	/// 引用库卸载器
+	/// </summary>
+	RainLibraryUnloader libraryUnloader;
 	/// <summary>
 	/// 编译信息等级
 	/// </summary>
 	ErrorLevel messageLevel;
 
-	inline BuildParameter(const RainString& name, bool debug, CodeLoader* codeLoader, const LibraryLoader& libraryLoader, ErrorLevel messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), messageLevel(messageLevel) {}
+	inline BuildParameter(const RainString& name, bool debug, CodeLoader* codeLoader, const RainLibraryLoader& libraryLoader, const RainLibraryUnloader libraryUnloader, ErrorLevel messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), libraryUnloader(libraryUnloader), messageLevel(messageLevel) {}
 };
 
 /// <summary>

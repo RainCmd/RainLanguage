@@ -7,7 +7,7 @@
 #include "TaskAgency.h"
 #include "Caller.h"
 
-LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
+LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), libraryUnloader(parameter->libraryUnloader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
 void LibraryAgency::Init(const Library** initialLibraries, uint32 count)
 {
@@ -15,32 +15,32 @@ void LibraryAgency::Init(const Library** initialLibraries, uint32 count)
 	kernelLibrary->kernel = kernel;
 	kernelLibrary->InitRuntimeData(GetKernelLibrary(), LIBRARY_KERNEL);
 	kernel->taskAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
-	for (uint32 i = 0; i < count; i++) Load(initialLibraries[i]);
+	for(uint32 i = 0; i < count; i++) Load(initialLibraries[i]);
 }
 
 uint32 LibraryAgency::GetTypeStackSize(const Type& type)
 {
-	if (IsHandleType(type)) return SIZE(Handle);
-	else if (type.code == TypeCode::Struct)
+	if(IsHandleType(type)) return SIZE(Handle);
+	else if(type.code == TypeCode::Struct)
 	{
-		if (type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+		if(type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 		else return GetStruct(type)->size;
 	}
-	else if (type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].size;
+	else if(type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].size;
 	EXCEPTION("无效的TypeCode");
 }
 
 uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 {
-	switch (declaration.code)
+	switch(declaration.code)
 	{
 		case TypeCode::Struct:
-			if (declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+			if(declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 			else return GetLibrary(declaration.library)->structs[declaration.index].size;
 		case TypeCode::Enum: return SIZE(integer);
 		case TypeCode::Handle:
 		{
-			if (declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->classes[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+			if(declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->classes[declaration.index].size;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 			const RuntimeClass* runtimeClass = &GetLibrary(declaration.library)->classes[declaration.index];
 			return runtimeClass->offset + runtimeClass->size;
 		}
@@ -53,27 +53,27 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 
 uint8 LibraryAgency::GetTypeAlignment(const Type& type)
 {
-	if (IsHandleType(type)) return GetKernelLibrary()->classes[TYPE_Handle.index].alignment;
-	else if (type.code == TypeCode::Struct)
+	if(IsHandleType(type)) return GetKernelLibrary()->classes[TYPE_Handle.index].alignment;
+	else if(type.code == TypeCode::Struct)
 	{
-		if (type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].alignment;//kernel初始化的时候没运行时数据，所以要从原始数据中取
+		if(type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].alignment;//kernel初始化的时候没运行时数据，所以要从原始数据中取
 		else return GetStruct(type)->alignment;
 	}
-	else if (type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].alignment;
+	else if(type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].alignment;
 	EXCEPTION("无效的TypeCode");
 }
 
 RuntimeLibrary* LibraryAgency::GetLibrary(uint32 library)
 {
-	if (library == LIBRARY_KERNEL) return kernelLibrary;
+	if(library == LIBRARY_KERNEL) return kernelLibrary;
 	ASSERT_DEBUG(library != INVALID && library < libraries.Count(), "无效的程序集ID");
 	return libraries[library];
 }
 
 RuntimeInfo* LibraryAgency::GetRuntimeInfo(const Type& type)
 {
-	if (type.dimension) return GetClass(type);
-	switch (type.code)
+	if(type.dimension) return GetClass(type);
+	switch(type.code)
 	{
 		case TypeCode::Invalid: EXCEPTION("无效的类型");
 		case TypeCode::Struct: return GetStruct(type);
@@ -100,28 +100,28 @@ RuntimeStruct* LibraryAgency::GetStruct(const Type& type)
 
 RuntimeClass* LibraryAgency::GetClass(const Type& type)
 {
-	if (type.dimension) return &GetLibrary(TYPE_Array.library)->classes[TYPE_Array.index];
+	if(type.dimension) return &GetLibrary(TYPE_Array.library)->classes[TYPE_Array.index];
 	ASSERT_DEBUG(type.code == TypeCode::Handle, "定义类型检查失败");
 	return &GetLibrary(type.library)->classes[type.index];
 }
 
 RuntimeInterface* LibraryAgency::GetInterface(const Type& type)
 {
-	if (type.dimension) return &GetLibrary(TYPE_Array.library)->interfaces[TYPE_Array.index];
+	if(type.dimension) return &GetLibrary(TYPE_Array.library)->interfaces[TYPE_Array.index];
 	ASSERT_DEBUG(type.code == TypeCode::Interface, "定义类型检查失败");
 	return &GetLibrary(type.library)->interfaces[type.index];
 }
 
 RuntimeDelegate* LibraryAgency::GetDelegate(const Type& type)
 {
-	if (type.dimension) return &GetLibrary(TYPE_Array.library)->delegates[TYPE_Array.index];
+	if(type.dimension) return &GetLibrary(TYPE_Array.library)->delegates[TYPE_Array.index];
 	ASSERT_DEBUG(type.code == TypeCode::Delegate, "定义类型检查失败");
 	return &GetLibrary(type.library)->delegates[type.index];
 }
 
 RuntimeTask* LibraryAgency::GetTask(const Type& type)
 {
-	if (type.dimension) return &GetLibrary(TYPE_Array.library)->tasks[TYPE_Array.index];
+	if(type.dimension) return &GetLibrary(TYPE_Array.library)->tasks[TYPE_Array.index];
 	ASSERT_DEBUG(type.code == TypeCode::Task, "定义类型检查失败");
 	return &GetLibrary(type.library)->tasks[type.index];
 }
@@ -144,9 +144,9 @@ RuntimeNative* LibraryAgency::GetNative(const Native& native)
 RuntimeMemberVariable* LibraryAgency::GetMemberVariable(const MemberVariable& variable)
 {
 	RuntimeLibrary* runtimeLibrary = GetLibrary(variable.declaration.library);
-	if (variable.declaration.code == TypeCode::Struct)
+	if(variable.declaration.code == TypeCode::Struct)
 		return &runtimeLibrary->structs[variable.declaration.index].variables[variable.variable];
-	else if (variable.declaration.code == TypeCode::Handle)
+	else if(variable.declaration.code == TypeCode::Handle)
 		return &runtimeLibrary->classes[variable.declaration.index].variables[variable.variable];
 	EXCEPTION("类型错误");
 }
@@ -154,7 +154,7 @@ RuntimeMemberVariable* LibraryAgency::GetMemberVariable(const MemberVariable& va
 RuntimeFunction* LibraryAgency::GetConstructorFunction(const MemberFunction& function)
 {
 	RuntimeLibrary* runtimeLibrary = GetLibrary(function.declaration.library);
-	if (function.declaration.code == TypeCode::Handle)
+	if(function.declaration.code == TypeCode::Handle)
 		return&runtimeLibrary->functions[runtimeLibrary->classes[function.declaration.index].constructors[function.function]];
 	EXCEPTION("类型错误");
 }
@@ -162,16 +162,16 @@ RuntimeFunction* LibraryAgency::GetConstructorFunction(const MemberFunction& fun
 RuntimeFunction* LibraryAgency::GetMemberFunction(const MemberFunction& function)
 {
 	RuntimeLibrary* runtimeLibrary = GetLibrary(function.declaration.library);
-	if (function.declaration.code == TypeCode::Struct)
+	if(function.declaration.code == TypeCode::Struct)
 		return&runtimeLibrary->functions[runtimeLibrary->structs[function.declaration.index].functions[function.function]];
-	else if (function.declaration.code == TypeCode::Handle)
+	else if(function.declaration.code == TypeCode::Handle)
 		return&runtimeLibrary->functions[runtimeLibrary->classes[function.declaration.index].functions[function.function].index];
 	EXCEPTION("类型错误");
 }
 
 bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 {
-	switch (type.code)
+	switch(type.code)
 	{
 		case TypeCode::Invalid: break;
 		case TypeCode::Struct:
@@ -188,24 +188,26 @@ bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
 
 RuntimeLibrary* LibraryAgency::Load(string name, bool assert)
 {
-	if (name == kernelLibrary->spaces[0].name) return kernelLibrary;
-	for (uint32 i = 0; i < libraries.Count(); i++)
-		if (libraries[i]->spaces[0].name == name)
+	if(name == kernelLibrary->spaces[0].name) return kernelLibrary;
+	for(uint32 i = 0; i < libraries.Count(); i++)
+		if(libraries[i]->spaces[0].name == name)
 			return libraries[i];
 	String libraryName = kernel->stringAgency->Get(name);
 	Library* library = (Library*)libraryLoader(RainString(libraryName.GetPointer(), libraryName.GetLength()));
-	if (assert) { ASSERT(library, "Library加载失败"); }
-	else if (!library) return NULL;
-	return Load(library);
+	if(assert) { ASSERT(library, "Library加载失败"); }
+	else if(!library) return NULL;
+	RuntimeLibrary* result = Load(library);
+	if(libraryUnloader) libraryUnloader(library);
+	return result;
 }
 
 RuntimeLibrary* LibraryAgency::Load(const Library* library)
 {
 	uint8* address = data.GetPointer();
 	RuntimeLibrary* result = new RuntimeLibrary(kernel, libraries.Count(), library);
-	if (address != data.GetPointer()) kernel->taskAgency->UpdateGlobalDataCache(data.GetPointer());
+	if(address != data.GetPointer()) kernel->taskAgency->UpdateGlobalDataCache(data.GetPointer());
 	libraries.Add(result);
-	for (uint32 i = 0; i < library->imports.Count(); i++)
+	for(uint32 i = 0; i < library->imports.Count(); i++)
 	{
 		RuntimeLibrary* rely = Load(kernel->stringAgency->Add(library->stringAgency->Get(library->imports[i].spaces[0].name)).index);
 		ASSERT(rely->kernel, "Library可能存在循环依赖");
@@ -218,32 +220,32 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 
 bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectType)
 {
-	if (variableType == objectType) return true;
-	else if (!variableType.dimension)
+	if(variableType == objectType) return true;
+	else if(!variableType.dimension)
 	{
-		if (objectType.dimension) return variableType == TYPE_Handle || variableType == TYPE_Array;
-		else if (objectType.code == TypeCode::Handle)
+		if(objectType.dimension) return variableType == TYPE_Handle || variableType == TYPE_Array;
+		else if(objectType.code == TypeCode::Handle)
 		{
-			if (variableType == TYPE_Handle) return true;
-			else if (variableType == TYPE_Interface) return (bool)GetClass(objectType)->inherits.Count();
-			else if (variableType.code == TypeCode::Handle)
+			if(variableType == TYPE_Handle) return true;
+			else if(variableType == TYPE_Interface) return (bool)GetClass(objectType)->inherits.Count();
+			else if(variableType.code == TypeCode::Handle)
 			{
 				const RuntimeClass* baseInfo = GetClass(variableType);
 				const RuntimeClass* subInfo = GetClass(objectType);
 				return baseInfo->parents.Count() < subInfo->parents.Count() && subInfo->parents[baseInfo->parents.Count()] == variableType;
 			}
-			else if (variableType.code == TypeCode::Interface) return GetClass(objectType)->inherits.Contains(variableType);
+			else if(variableType.code == TypeCode::Interface) return GetClass(objectType)->inherits.Contains(variableType);
 		}
-		else if (objectType.code == TypeCode::Interface)
+		else if(objectType.code == TypeCode::Interface)
 		{
-			if (variableType == TYPE_Handle || variableType == TYPE_Interface) return true;
-			else if (variableType.code == TypeCode::Interface)
+			if(variableType == TYPE_Handle || variableType == TYPE_Interface) return true;
+			else if(variableType.code == TypeCode::Interface)
 				return GetLibrary(objectType.library)->interfaces[objectType.index].inherits.Contains(variableType);
 		}
-		else if (objectType.code == TypeCode::Delegate) return variableType == TYPE_Delegate || variableType == TYPE_Handle;
-		else if (objectType.code == TypeCode::Task) return variableType == TYPE_Task || variableType == TYPE_Handle;
-		else if (objectType == TYPE_Integer) return variableType.code == TypeCode::Enum;
-		else if (objectType == TYPE_Array) return variableType == TYPE_Handle;
+		else if(objectType.code == TypeCode::Delegate) return variableType == TYPE_Delegate || variableType == TYPE_Handle;
+		else if(objectType.code == TypeCode::Task) return variableType == TYPE_Task || variableType == TYPE_Handle;
+		else if(objectType == TYPE_Integer) return variableType.code == TypeCode::Enum;
+		else if(objectType == TYPE_Array) return variableType == TYPE_Handle;
 	}
 	return false;
 }
@@ -251,19 +253,19 @@ bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectTyp
 bool LibraryAgency::IsAssignable(const Type& variableType, Handle handle)
 {
 	Type handleType;
-	if (kernel->heapAgency->TryGetType(handle, handleType)) return IsAssignable(variableType, handleType);
-	else if (IsHandleType(variableType) || variableType == TYPE_Entity) return true;
+	if(kernel->heapAgency->TryGetType(handle, handleType)) return IsAssignable(variableType, handleType);
+	else if(IsHandleType(variableType) || variableType == TYPE_Entity) return true;
 	return false;
 }
 
 Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 {
-	if (type.dimension) type = TYPE_Array;
-	else switch (type.code)
+	if(type.dimension) type = TYPE_Array;
+	else switch(type.code)
 	{
 		case TypeCode::Invalid: break;
 		case TypeCode::Struct:
-			if (function.declaration == TYPE_Handle) type = TYPE_Handle;
+			if(function.declaration == TYPE_Handle) type = TYPE_Handle;
 			break;
 		case TypeCode::Enum:
 			type = TYPE_Enum;
@@ -279,12 +281,12 @@ Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 		default: break;
 	}
 
-	if (function.declaration == type) return GetFunction(function);
-	if (IsAssignable(Type(function.declaration, 0), type))
+	if(function.declaration == type) return GetFunction(function);
+	if(IsAssignable(Type(function.declaration, 0), type))
 	{
 		uint32 characteristic = GetFunctionCharacteristic(function);
 		MemberFunction result;
-		if (GetClass(type)->relocations.TryGet(characteristic, result)) return GetFunction(result);
+		if(GetClass(type)->relocations.TryGet(characteristic, result)) return GetFunction(result);
 		else EXCEPTION("函数映射失败");
 	}
 	EXCEPTION("类型错误");
@@ -292,12 +294,12 @@ Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 
 Function LibraryAgency::GetFunction(const MemberFunction& function)
 {
-	if (function.declaration.code == TypeCode::Struct)
+	if(function.declaration.code == TypeCode::Struct)
 	{
 		const RuntimeLibrary* library = GetLibrary(function.declaration.library);
 		return Function(function.declaration.library, library->structs[function.declaration.index].functions[function.function]);
 	}
-	else if (function.declaration.code == TypeCode::Handle)
+	else if(function.declaration.code == TypeCode::Handle)
 	{
 		const RuntimeLibrary* library = GetLibrary(function.declaration.library);
 		return Function(function.declaration.library, library->classes[function.declaration.index].functions[function.function].index);
@@ -319,48 +321,48 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 {
 	RuntimeLibrary* library = GetLibrary(native.library);
 	RuntimeNative* info = &library->natives[native.function];
-	if (!info->caller)
+	if(!info->caller)
 	{
 		List<character, true> fullName(32);
 		String name = kernel->stringAgency->Get(info->name);
 		fullName.Add(name.GetPointer(), name.GetLength());
-		for (uint32 index = info->space; index != INVALID; index = library->spaces[index].parent)
+		for(uint32 index = info->space; index != INVALID; index = library->spaces[index].parent)
 		{
 			fullName.Insert(0, TEXT('.'));
 			name = kernel->stringAgency->Get(library->spaces[index].name);
 			fullName.Insert(0, name.GetPointer(), name.GetLength());
 		}
 		List<RainType, true> rainTypes(info->parameters.Count());
-		for (uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));
+		for(uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));
 		info->caller = kernel->libraryAgency->nativeCallerLoader(*kernel, RainString(fullName.GetPointer(), fullName.Count()), rainTypes.GetPointer(), rainTypes.Count());
 		ASSERT(info->caller, "本地函数绑定失败");
 	}
 	Caller caller(kernel, info, stack, top);
 	info->caller(*kernel, caller);
-	if (caller.GetException()) return kernel->stringAgency->Get(caller.GetException());
+	if(caller.GetException()) return kernel->stringAgency->Get(caller.GetException());
 	else return String();
 }
 
 void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library, uint32& function)
 {
 	library = kernelLibrary;
-	for (uint32 i = 0; i < libraries.Count(); i++)
-		if (pointer < libraries[i]->codeOffset) break;
+	for(uint32 i = 0; i < libraries.Count(); i++)
+		if(pointer < libraries[i]->codeOffset) break;
 		else library = libraries[i];
 	function = INVALID;
 	uint32 start = 0, end = library->functions.Count();
-	while (start + 1 < end)
+	while(start + 1 < end)
 	{
 		uint32 middle = (start + end) >> 1;
-		if (library->functions[middle].entry > pointer) end = middle;
+		if(library->functions[middle].entry > pointer) end = middle;
 		else function = start = middle;
 	}
 }
 
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo)
 {
-	for (uint32 i = 0; i < tupleInfo.Count(); i++)
-		if (IsHandleType(tupleInfo.GetType(i))) kernel->heapAgency->StrongRelease(*(Handle*)(address + tupleInfo.GetOffset(i)));
-		else if (tupleInfo.GetType(i).code == TypeCode::Struct)
+	for(uint32 i = 0; i < tupleInfo.Count(); i++)
+		if(IsHandleType(tupleInfo.GetType(i))) kernel->heapAgency->StrongRelease(*(Handle*)(address + tupleInfo.GetOffset(i)));
+		else if(tupleInfo.GetType(i).code == TypeCode::Struct)
 			kernel->libraryAgency->GetStruct(tupleInfo.GetType(i))->StrongRelease(kernel, address);
 }

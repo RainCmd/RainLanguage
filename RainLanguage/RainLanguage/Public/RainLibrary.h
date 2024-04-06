@@ -33,7 +33,11 @@ public:
 /// 库加载器
 /// </summary>
 /// <param name="name">库名</param>
-typedef const RainLibrary* (*LibraryLoader)(const RainString& name);
+typedef const RainLibrary* (*RainLibraryLoader)(const RainString& name);
+/// <summary>
+/// 库卸载器
+/// </summary>
+typedef void (*RainLibraryUnloader)(const RainLibrary* library);
 /// <summary>
 /// 序列化库
 /// </summary>
@@ -68,7 +72,11 @@ public:
 /// 调试数据加载器
 /// </summary>
 /// <param name="name">库名</param>
-typedef const RainProgramDatabase* (*ProgramDatabaseLoader)(const RainString& name);
+typedef const RainProgramDatabase* (*RainProgramDatabaseLoader)(const RainString& name);
+/// <summary>
+/// 调试器使用完成后释放调试数据的回调
+/// </summary>
+typedef void (*RainProgramDatabaseUnloader)(const RainProgramDatabase* database);
 /// <summary>
 /// 序列化调试数据
 /// </summary>

@@ -10,7 +10,8 @@ struct AbstractLibrary;
 class LambdaGenerator;
 struct DeclarationManager
 {
-	LibraryLoader loader;
+	RainLibraryLoader loader;
+	RainLibraryUnloader unloader;
 	StringAgency* stringAgency;
 	MessageCollector* messages;
 	String name;
@@ -18,7 +19,7 @@ struct DeclarationManager
 	AbstractLibrary* kernelLibaray, * selfLibaray;
 	List<AbstractLibrary*, true> relies;
 	List<LambdaGenerator*, true> lambdaGenerators;
-	DeclarationManager(LibraryLoader loader, StringAgency* stringAgency, MessageCollector* messages, const String& name);
+	DeclarationManager(RainLibraryLoader loader, RainLibraryUnloader unloader, StringAgency* stringAgency, MessageCollector* messages, const String& name);
 
 	AbstractDeclaration* GetDeclaration(const CompilingDeclaration& declaration);
 	AbstractDeclaration* GetDeclaration(Type type);

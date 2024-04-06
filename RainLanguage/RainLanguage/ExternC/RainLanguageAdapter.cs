@@ -647,18 +647,18 @@ namespace RainLanguage
     public readonly struct Real
     {
 #if FIXED_REAL
-    public readonly long value;
-    public Real(long value) { this.value = value; }
-    public Real(double value) { this.value = (long)(value * ratio); }
-    const long ratio = 0x10000;
-    public static implicit operator double(Real value)
-    {
-        return (double)value.value / ratio;
-    }
-    public static implicit operator Real(double value)
-    {
-        return new Real(value);
-    }
+        public readonly long value;
+        public Real(long value) { this.value = value; }
+        public Real(double value) { this.value = (long)(value * ratio); }
+        const long ratio = 0x10000;
+        public static implicit operator double(Real value)
+        {
+            return (double)value.value / ratio;
+        }
+        public static implicit operator Real(double value)
+        {
+            return new Real(value);
+        }
 #else
         public readonly double value;
         public Real(double value) { this.value = value; }
@@ -707,20 +707,23 @@ namespace RainLanguage
         }
         private delegate CodeLoaderResult CodeLoader();
         private delegate void* LibraryLoader(void* libraryName);
+        private delegate void LibraryUnloader(void* library);
         [StructLayout(LayoutKind.Sequential)]
         private readonly struct ExternBuildParameter
         {
             readonly char* name;
             readonly bool debug;
-            readonly CodeLoader CodeLoader;
-            readonly LibraryLoader LibraryLoader;
+            readonly CodeLoader codeLoader;
+            readonly LibraryLoader libraryLoader;
+            readonly LibraryUnloader libraryUnloader;
             readonly uint errorLevel;
-            public ExternBuildParameter(char* name, bool debug, CodeLoader codeLoader, LibraryLoader libraryLoader, uint errorLevel)
+            public ExternBuildParameter(char* name, bool debug, CodeLoader codeLoader, LibraryLoader libraryLoader, LibraryUnloader libraryUnloader, uint errorLevel)
             {
                 this.name = name;
                 this.debug = debug;
-                CodeLoader = codeLoader;
-                LibraryLoader = libraryLoader;
+                this.codeLoader = codeLoader;
+                this.libraryLoader = libraryLoader;
+                this.libraryUnloader = libraryUnloader;
                 this.errorLevel = errorLevel;
             }
         }
@@ -838,7 +841,7 @@ namespace RainLanguage
         public class RainLibrary : IDisposable
         {
             private void* library;
-            public RainLibrary(void* library)
+            protected RainLibrary(void* library)
             {
                 this.library = library;
             }
@@ -857,15 +860,19 @@ namespace RainLanguage
             ~RainLibrary() { Dispose(); }
             public static RainLibrary Create(byte[] data)
             {
+                return new RainLibrary(InternalCreate(data));
+            }
+            internal static void* InternalCreate(byte[] data)
+            {
                 if (data == null) return null;
-                fixed (byte* pdata = data) return new RainLibrary(DeserializeRainLibrary(pdata, (uint)data.Length));
+                fixed (byte* pdata = data) return DeserializeRainLibrary(pdata, (uint)data.Length);
             }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* SerializeRainLibrary(void* library);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeserializeRainLibrary", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* DeserializeRainLibrary(byte* data, uint length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainLibrary", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void DeleteRainLibrary(void* library);
+            internal extern static void DeleteRainLibrary(void* library);
 
             public override bool Equals(object obj)
             {
@@ -886,7 +893,7 @@ namespace RainLanguage
         }
         private class RainLibraryCopy : RainLibrary
         {
-            public RainLibraryCopy(void* library) : base(library) { }
+            internal RainLibraryCopy(void* library) : base(library) { }
             public override void Dispose() { }
         }
         public class RainProgramDatabase : IDisposable
@@ -917,8 +924,12 @@ namespace RainLanguage
             ~RainProgramDatabase() { Dispose(); }
             public static RainProgramDatabase Create(byte[] data)
             {
+                return new RainProgramDatabase(InternalCreate(data));
+            }
+            internal static void* InternalCreate(byte[] data)
+            {
                 if (data == null) return null;
-                fixed (byte* pdata = data) return new RainProgramDatabase(DeserializeRainProgramDatabase(pdata, (uint)data.Length));
+                fixed (byte* pdata = data) return DeserializeRainProgramDatabase(pdata, (uint)data.Length);
             }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* SerializeRainProgramDatabase(void* database);
@@ -927,7 +938,7 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainProgramDatabaseGetPosition", CallingConvention = CallingConvention.Cdecl)]
             private extern static void RainProgramDatabaseGetPosition(void* database, uint instructAddress, out void* file, out uint line);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void DeleteRainProgramDatabase(void* database);
+            internal extern static void DeleteRainProgramDatabase(void* database);
 
             public override bool Equals(object obj)
             {
@@ -1095,12 +1106,13 @@ namespace RainLanguage
             readonly uint entityCapacity;
             readonly ExternEntityAction onReferenecEntity, onReleaseEntity;
             readonly LibraryLoader libraryLoader;
+            readonly LibraryUnloader libraryUnloader;
             readonly ExternNativeCallerLoader nativeCallerLoader;
             readonly uint heapCapacity, heapGeneration;
             readonly uint taskCapacity;
             readonly uint executeStackCapacity;
             readonly ExternExceptionExit onExceptionExit;
-            public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit)
+            public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, LibraryUnloader libraryUnloader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit)
             {
                 this.libraries = libraries;
                 this.libraryCount = libraryCount;
@@ -1110,6 +1122,7 @@ namespace RainLanguage
                 this.onReferenecEntity = onReferenecEntity;
                 this.onReleaseEntity = onReleaseEntity;
                 this.libraryLoader = libraryLoader;
+                this.libraryUnloader = libraryUnloader;
                 this.nativeCallerLoader = nativeCallerLoader;
                 this.heapCapacity = heapCapacity;
                 this.heapGeneration = heapGeneration;
@@ -1151,6 +1164,12 @@ namespace RainLanguage
             public void Update()
             {
                 KernelUpdate(kernel);
+            }
+            public void EnableDebug(DataLoader progressDatabaseLoader)
+            {
+                RegistDebugger(kernel,
+                    name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name))),
+                    RainProgramDatabase.DeleteRainProgramDatabase);
             }
             public virtual void Dispose()
             {
@@ -2138,12 +2157,9 @@ namespace RainLanguage
             {
                 return new Product(Build(new ExternBuildParameter(name, parameter.debug,
                     new CodeLoadHelper(parameter.files).LoadNext,
-                    libName =>
-                    {
-                        var lib = RainLibrary.Create(parameter.liibraryLoader(NativeString.GetString(libName)));
-                        if (lib == null) return null;
-                        return lib.GetSource();
-                    }, (uint)parameter.errorLevel)));
+                    libName => RainLibrary.InternalCreate(parameter.liibraryLoader(NativeString.GetString(libName))),
+                    RainLibrary.DeleteRainLibrary,
+                    (uint)parameter.errorLevel)));
             }
         }
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CreateKernel", CallingConvention = CallingConvention.Cdecl)]
@@ -2156,12 +2172,8 @@ namespace RainLanguage
                 return new RainKernel(CreateKernel(new ExternStartupParameter(plibraries, (uint)startupParameter.libraries.Length, startupParameter.seed, startupParameter.stringCapacity, startupParameter.entityCapacity,
                     (kernel, entity) => startupParameter.onReferenceEntity(new RainKernelCopy(kernel), entity),
                     (kernel, entity) => startupParameter.onReleaseEntity(new RainKernelCopy(kernel), entity),
-                    libName =>
-                    {
-                        var lib = RainLibrary.Create(startupParameter.libraryLoader(NativeString.GetString(libName)));
-                        if (lib == null) return null;
-                        return lib.GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
-                    },
+                    libName => RainLibrary.InternalCreate(startupParameter.libraryLoader(NativeString.GetString(libName))),
+                    RainLibrary.DeleteRainLibrary,
                     (kernel, fullName, parameters, parameterCount) =>
                     {
                         var rainTypeParameters = new RainType[parameterCount];
@@ -2176,6 +2188,10 @@ namespace RainLanguage
                         startupParameter.onExceptionExit(new RainKernelCopy(kernel), frames, msg);
                     })));
         }
+        private delegate void* ExternProgramDatabaseLoader(void* name);
+        private delegate void ExternProgramDatabaseUnloader(void* database);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RegistDebugger", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void RegistDebugger(void* kernel, ExternProgramDatabaseLoader loader, ExternProgramDatabaseUnloader unloader);
         public delegate void* Alloc(uint size);
         public delegate void Free(void* pointer);
         public delegate void* Realloc(void* pointer, uint size);

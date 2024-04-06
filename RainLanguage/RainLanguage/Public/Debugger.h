@@ -249,6 +249,7 @@ private:
 	void* map;
 	uint64 currentTask;
 	uint32 currentTraceDeep;
+	RainProgramDatabaseUnloader unloader;
 protected:
 	/// <summary>
 	/// 触发断点
@@ -274,7 +275,7 @@ public:
 	/// <param name="name">调试目标库名</param>
 	/// <param name="kernel">调试目标虚拟机</param>
 	/// <param name="database">符号表</param>
-	RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database);
+	RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database, RainProgramDatabaseUnloader unloader);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
 	/// <summary>
@@ -338,3 +339,26 @@ public:
 	void OnException(uint64, const character*, uint32);
 	virtual ~RainDebugger();
 };
+
+/// <summary>
+/// 将虚拟机注册到可调试列表中
+/// </summary>
+/// <param name="kernel">虚拟机</param>
+/// <param name="loader">符号表加载器</param>
+/// <param name="unloader">符号表卸载器</param>
+void RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
+
+/// <summary>
+/// 获取可调试虚拟机列表数量
+/// </summary>
+/// <returns>列表数量</returns>
+uint32 GetDebuggableCount();
+
+/// <summary>
+/// 获取可调试虚拟机
+/// </summary>
+/// <param name="index">列表索引</param>
+/// <param name="kernel">虚拟机</param>
+/// <param name="loader">符号表加载器</param>
+/// <param name="unloader">符号表卸载器</param>
+void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader);

@@ -7,6 +7,6 @@ protected:
 	void OnTaskExit(uint64 task, const RainString& message);
 	void OnContinue();
 public:
-	Debugger(const RainString& name, RainKernel* kernel);
+	Debugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database, RainProgramDatabaseUnloader unloader);
 };
 

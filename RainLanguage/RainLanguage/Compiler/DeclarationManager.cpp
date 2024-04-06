@@ -3,8 +3,8 @@
 #include "../KernelDeclarations.h"
 #include "./LogicGenerator/LambdaGenerator.h"
 
-DeclarationManager::DeclarationManager(LibraryLoader loader, StringAgency* stringAgency, MessageCollector* messages, const String& name)
-	:loader(loader), stringAgency(stringAgency), messages(messages), name(name),
+DeclarationManager::DeclarationManager(RainLibraryLoader loader, RainLibraryUnloader unloader, StringAgency* stringAgency, MessageCollector* messages, const String& name)
+	:loader(loader), unloader(unloader), stringAgency(stringAgency), messages(messages), name(name),
 	compilingLibrary(name), kernelLibaray(NULL), selfLibaray(NULL), relies(0), lambdaGenerators(0)
 {
 	kernelLibaray = AbstractLibrary::GetKernelAbstractLibrary(AbstractParameter(stringAgency, this, messages));
@@ -13,7 +13,7 @@ DeclarationManager::DeclarationManager(LibraryLoader loader, StringAgency* strin
 AbstractDeclaration* DeclarationManager::GetDeclaration(const CompilingDeclaration& declaration)
 {
 	AbstractLibrary* library = GetLibrary(declaration.library);
-	switch (declaration.category)
+	switch(declaration.category)
 	{
 		case DeclarationCategory::Invalid: break;
 		case DeclarationCategory::Variable: return library->variables[declaration.index];
@@ -43,8 +43,8 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(const CompilingDeclarati
 
 AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
 {
-	if (type.dimension)type = TYPE_Array;
-	switch (type.code)
+	if(type.dimension)type = TYPE_Array;
+	switch(type.code)
 	{
 		case TypeCode::Invalid: EXCEPTION("无效的类型");
 		case TypeCode::Struct:
@@ -66,7 +66,7 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
 List<Type, true>& DeclarationManager::GetReturns(const CompilingDeclaration& declaration)
 {
 	AbstractLibrary* library = GetLibrary(declaration.library);
-	switch (declaration.category)
+	switch(declaration.category)
 	{
 		case DeclarationCategory::Invalid:
 		case DeclarationCategory::Variable: break;
@@ -104,7 +104,7 @@ List<Type, true>& DeclarationManager::GetReturns(const CompilingDeclaration& dec
 const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclaration& declaration)
 {
 	AbstractLibrary* library = GetLibrary(declaration.library);
-	switch (declaration.category)
+	switch(declaration.category)
 	{
 		case DeclarationCategory::Invalid:
 		case DeclarationCategory::Variable: break;
@@ -142,20 +142,20 @@ const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclarat
 Type DeclarationManager::GetParent(const Type& type)
 {
 	ASSERT_DEBUG(type.code == TypeCode::Handle, "不是托管类型声明");
-	if (type.dimension) return TYPE_Array;
-	else if (type.library == LIBRARY_KERNEL) return kernelLibaray->classes[type.index]->parent;
-	else if (type.library == LIBRARY_SELF) return compilingLibrary.classes[type.index]->parent;
+	if(type.dimension) return TYPE_Array;
+	else if(type.library == LIBRARY_KERNEL) return kernelLibaray->classes[type.index]->parent;
+	else if(type.library == LIBRARY_SELF) return compilingLibrary.classes[type.index]->parent;
 	else return relies[type.library]->classes[type.index]->parent;
 }
 
 uint32 DeclarationManager::GetStackSize(const Type& type, uint8& alignment)
 {
-	if (type.dimension)
+	if(type.dimension)
 	{
 		alignment = MEMORY_ALIGNMENT_4;
 		return SIZE(Handle);
 	}
-	else switch (type.code)
+	else switch(type.code)
 	{
 		case TypeCode::Invalid: break;
 		case TypeCode::Struct:
@@ -180,18 +180,18 @@ uint32 DeclarationManager::GetStackSize(const Type& type, uint8& alignment)
 
 bool DeclarationManager::IsBitwise(const Type& type)
 {
-	if (type.dimension) return false;
-	else switch (type.code)
+	if(type.dimension) return false;
+	else switch(type.code)
 	{
 		case TypeCode::Invalid: break;
 		case TypeCode::Struct:
-			if (type == TYPE_Bool || type == TYPE_Byte || type == TYPE_Char || type == TYPE_Integer || type == TYPE_Real || type == TYPE_Real2 || type == TYPE_Real3 || type == TYPE_Real4 || type == TYPE_Enum || type == TYPE_Type) return true;
-			else if (type == TYPE_String || type == TYPE_Entity) return false;
+			if(type == TYPE_Bool || type == TYPE_Byte || type == TYPE_Char || type == TYPE_Integer || type == TYPE_Real || type == TYPE_Real2 || type == TYPE_Real3 || type == TYPE_Real4 || type == TYPE_Enum || type == TYPE_Type) return true;
+			else if(type == TYPE_String || type == TYPE_Entity) return false;
 			else
 			{
 				AbstractStruct* info = GetLibrary(type.library)->structs[type.index];
-				for (uint32 i = 0; i < info->variables.Count(); i++)
-					if (!IsBitwise(info->variables[i]->type))
+				for(uint32 i = 0; i < info->variables.Count(); i++)
+					if(!IsBitwise(info->variables[i]->type))
 						return false;
 				return true;
 			}
@@ -207,19 +207,20 @@ bool DeclarationManager::IsBitwise(const Type& type)
 
 AbstractLibrary* DeclarationManager::GetLibrary(const String& libraryName)
 {
-	if (libraryName == kernelLibaray->name) return kernelLibaray;
-	else if (libraryName == name) return selfLibaray;
-	for (uint32 i = 0; i < relies.Count(); i++)
-		if (relies[i]->name == libraryName)
+	if(libraryName == kernelLibaray->name) return kernelLibaray;
+	else if(libraryName == name) return selfLibaray;
+	for(uint32 i = 0; i < relies.Count(); i++)
+		if(relies[i]->name == libraryName)
 			return relies[i];
-	if (loader)
+	if(loader)
 	{
 		Library* library = (Library*)loader(RainString(libraryName.GetPointer(), libraryName.GetLength()));
-		if (library)
+		if(library)
 		{
 			uint32 index = relies.Count();
 			AbstractLibrary* result = new AbstractLibrary(library, index, AbstractParameter(stringAgency, this, messages));
 			relies.Add(result);
+			if(unloader) unloader(library);
 			return result;
 		}
 	}
@@ -228,11 +229,11 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& libraryName)
 
 bool TryGetInterfaceInherit(DeclarationManager* manager, Type subType, Type baseType, uint32& depth)
 {
-	if (subType == baseType) return true;
+	if(subType == baseType) return true;
 	AbstractInterface* index = manager->GetLibrary(subType.library)->interfaces[subType.index];
 	depth++;
-	for (uint32 i = 0; i < index->inherits.Count(); i++)
-		if (TryGetInterfaceInherit(manager, index->inherits[i], baseType, depth))
+	for(uint32 i = 0; i < index->inherits.Count(); i++)
+		if(TryGetInterfaceInherit(manager, index->inherits[i], baseType, depth))
 			return true;
 	depth--;
 	return false;
@@ -240,84 +241,84 @@ bool TryGetInterfaceInherit(DeclarationManager* manager, Type subType, Type base
 
 bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType, uint32& depth)
 {
-	if (baseType == subType)
+	if(baseType == subType)
 	{
 		depth = 0;
 		return true;
 	}
-	if (!baseType.dimension)
+	if(!baseType.dimension)
 	{
-		if (subType.dimension)
+		if(subType.dimension)
 		{
-			if (baseType == TYPE_Array)
+			if(baseType == TYPE_Array)
 			{
 				depth = 1;
 				return true;
 			}
-			else if (baseType == TYPE_Handle)
+			else if(baseType == TYPE_Handle)
 			{
 				depth = 2;
 				return true;
 			}
 		}
-		else if (subType.code == TypeCode::Delegate)
+		else if(subType.code == TypeCode::Delegate)
 		{
-			if (baseType == TYPE_Delegate)
+			if(baseType == TYPE_Delegate)
 			{
 				depth = 1;
 				return true;
 			}
-			else if (baseType == TYPE_Handle)
+			else if(baseType == TYPE_Handle)
 			{
 				depth = 2;
 				return true;
 			}
 		}
-		else if (subType.code == TypeCode::Task)
+		else if(subType.code == TypeCode::Task)
 		{
-			if (baseType == TYPE_Task)
+			if(baseType == TYPE_Task)
 			{
 				depth = 1;
 				return true;
 			}
-			else if (baseType == TYPE_Handle)
+			else if(baseType == TYPE_Handle)
 			{
 				depth = 2;
 				return true;
 			}
 		}
-		else if (subType.code == TypeCode::Interface)
+		else if(subType.code == TypeCode::Interface)
 		{
-			if (baseType == TYPE_Interface)
+			if(baseType == TYPE_Interface)
 			{
 				depth = 1;
 				return true;
 			}
-			else if (baseType == TYPE_Handle)
+			else if(baseType == TYPE_Handle)
 			{
 				depth = 2;
 				return true;
 			}
-			else if (baseType.code == TypeCode::Interface)
+			else if(baseType.code == TypeCode::Interface)
 			{
 				depth = 0;
 				return TryGetInterfaceInherit(this, subType, baseType, depth);
 			}
 		}
-		else if (subType.code == TypeCode::Handle)
+		else if(subType.code == TypeCode::Handle)
 		{
 			Type index = subType;
 			depth = 0;
-			while (index.code == TypeCode::Handle)
+			while(index.code == TypeCode::Handle)
 			{
 				AbstractClass* declaration = GetLibrary(index.library)->classes[index.index];
-				if (baseType.code == TypeCode::Interface)
-					for (uint32 i = 0; i < declaration->inherits.Count(); i++)
-						if (TryGetInterfaceInherit(this, declaration->inherits[i], baseType, depth))
+				if(baseType.code == TypeCode::Interface)
+					for(uint32 i = 0; i < declaration->inherits.Count(); i++)
+						if(TryGetInterfaceInherit(this, declaration->inherits[i], baseType, depth))
 							return true;
 				depth++;
 				index = GetParent(index);
-				if (index == baseType)return true;
+				if(index == baseType)return true;
 			}
 		}
 	}
@@ -328,9 +329,9 @@ DeclarationManager::~DeclarationManager()
 {
 	delete kernelLibaray; kernelLibaray = NULL;
 	delete selfLibaray; selfLibaray = NULL;
-	for (uint32 i = 0; i < relies.Count(); i++) delete relies[i];
+	for(uint32 i = 0; i < relies.Count(); i++) delete relies[i];
 	relies.Clear();
-	for (uint32 i = 0; i < lambdaGenerators.Count(); i++) delete lambdaGenerators[i];
+	for(uint32 i = 0; i < lambdaGenerators.Count(); i++) delete lambdaGenerators[i];
 	lambdaGenerators.Clear();
 }
 

@@ -731,7 +731,7 @@ static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), type(StepType::None), database(database)
+RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database, RainProgramDatabaseUnloader unloader) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(unloader), type(StepType::None), database(database)
 {
 	if(kernel)
 	{
@@ -777,7 +777,8 @@ void RainDebugger::Broken()
 		SHARE->Release();
 		share = NULL;
 		library = NULL;
-		delete database; database = NULL;
+		if(unloader && database) unloader(database);
+		database = NULL;
 	}
 }
 
@@ -906,4 +907,44 @@ RainDebugger::~RainDebugger()
 	delete (MAP*)map;
 	map = NULL;
 	Broken();
+}
+
+struct DebuggerSlot
+{
+	KernelShare* share;
+	RainProgramDatabaseLoader loader;
+	RainProgramDatabaseUnloader unloader;
+
+	DebuggerSlot(KernelShare* share, const RainProgramDatabaseLoader& loader, const RainProgramDatabaseUnloader& unloader)
+		: share(share), loader(loader), unloader(unloader)
+	{
+	}
+};
+static List<DebuggerSlot, true> debuggerSlots = List<DebuggerSlot, true>(0);
+static bool InvalidDebugger(DebuggerSlot& slot)
+{
+	return slot.share->kernel;
+}
+
+void RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
+{
+	debuggerSlots.RemoveAll(InvalidDebugger);
+	if(kernel)
+	{
+		KernelShare* share = ((Kernel*)kernel)->share;
+		share->Reference();
+		debuggerSlots.Add(DebuggerSlot(share, loader, unloader));
+	}
+}
+
+uint32 GetDebuggableCount()
+{
+	return debuggerSlots.Count();
+}
+
+void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader)
+{
+	kernel = debuggerSlots[index].share->kernel;
+	loader = debuggerSlots[index].loader;
+	unloader = debuggerSlots[index].unloader;
 }
