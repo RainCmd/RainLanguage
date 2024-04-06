@@ -261,6 +261,9 @@ protected:
 	/// <param name="task">任务唯一id</param>
 	/// <param name="message">异常信息</param>
 	virtual void OnTaskExit(uint64 task, const RainString& message) = 0;
+	/// <summary>
+	/// 继续执行
+	/// </summary>
 	virtual void OnContinue() = 0;
 public:
 	StepType type;
@@ -270,7 +273,8 @@ public:
 	/// </summary>
 	/// <param name="name">调试目标库名</param>
 	/// <param name="kernel">调试目标虚拟机</param>
-	RainDebugger(const RainString& name, RainKernel* kernel);
+	/// <param name="database">符号表</param>
+	RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
 	/// <summary>

@@ -8,7 +8,7 @@ struct DetectorParam
 	char projectPath[MAX_PATH];
 	char projectName[MAX_PATH];
 	DWORD pid;
-	DWORD* port;
+	unsigned short* port;
 };
 
 static void Out(wstring title, wstring value)
@@ -65,11 +65,11 @@ int main(int cnt, char** args)
 			projectName = args[5];
 		if(InjectDll(pid, dir, file))
 		{
-			DetectorParam param;
+			DetectorParam param{};
 			Copy(projectPath, param.projectPath);
 			Copy(projectName, param.projectName);
 			param.pid = GetCurrentProcessId();
-			DWORD port = 0;
+			unsigned short port = 0;
 			param.port = &port;
 			ExeRemoteFunc(pid, file, "StartDetectorServer", &param, sizeof(DetectorParam));
 			wcout << port << endl;

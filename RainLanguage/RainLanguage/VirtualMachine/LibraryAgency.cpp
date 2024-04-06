@@ -7,7 +7,7 @@
 #include "TaskAgency.h"
 #include "Caller.h"
 
-LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), programDatabaseLoader(parameter->programDatabaseLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
+LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
 void LibraryAgency::Init(const Library** initialLibraries, uint32 count)
 {

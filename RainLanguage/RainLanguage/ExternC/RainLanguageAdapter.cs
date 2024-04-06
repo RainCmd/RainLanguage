@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using static RainLanguage.RainLanguageAdapter;
 
 namespace RainLanguage
 {
@@ -251,9 +249,7 @@ namespace RainLanguage
         public DataLoader libraryLoader;
         public CallerLoader callerLoader;
         public ExceptionExit onExceptionExit;
-        public DataLoader programDatabaseLoader;
-
-        public StartupParameter(RainLanguageAdapter.RainLibrary[] libraries, long seed, uint stringCapacity, uint entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, DataLoader libraryLoader, CallerLoader callerLoader, ExceptionExit onExceptionExit, DataLoader programDatabaseLoader)
+        public StartupParameter(RainLanguageAdapter.RainLibrary[] libraries, long seed, uint stringCapacity, uint entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, DataLoader libraryLoader, CallerLoader callerLoader, ExceptionExit onExceptionExit)
         {
             this.libraries = libraries;
             this.seed = seed;
@@ -264,7 +260,6 @@ namespace RainLanguage
             this.libraryLoader = libraryLoader;
             this.callerLoader = callerLoader;
             this.onExceptionExit = onExceptionExit;
-            this.programDatabaseLoader = programDatabaseLoader;
         }
     }
     public readonly struct CallerHelper
@@ -1090,7 +1085,6 @@ namespace RainLanguage
         private delegate void ExternOnCaller(void* kernel, void* caller);
         private delegate ExternOnCaller ExternNativeCallerLoader(void* kernel, ExternNativeString fullName, byte* parameters, uint parameterCount);
         private delegate void ExternExceptionExit(void* kernel, ExternRainStackFram* frames, uint count, ExternNativeString msg);
-        private delegate void* ExternProgramDatabaseLoader(void* name);
         [StructLayout(LayoutKind.Sequential)]
         private readonly struct ExternStartupParameter
         {
@@ -1106,8 +1100,7 @@ namespace RainLanguage
             readonly uint taskCapacity;
             readonly uint executeStackCapacity;
             readonly ExternExceptionExit onExceptionExit;
-            readonly ExternProgramDatabaseLoader programDatabaseLoader;
-            public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit, ExternProgramDatabaseLoader programDatabaseLoader)
+            public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit)
             {
                 this.libraries = libraries;
                 this.libraryCount = libraryCount;
@@ -1123,7 +1116,6 @@ namespace RainLanguage
                 this.taskCapacity = taskCapacity;
                 this.executeStackCapacity = executeStackCapacity;
                 this.onExceptionExit = onExceptionExit;
-                this.programDatabaseLoader = programDatabaseLoader;
             }
         }
         public class RainKernel : IDisposable
@@ -2182,14 +2174,7 @@ namespace RainLanguage
                         var frames = new RainStackFrame[count];
                         for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(stackFrames[i].libName, stackFrames[i].functionName, stackFrames[i].address);
                         startupParameter.onExceptionExit(new RainKernelCopy(kernel), frames, msg);
-                    },
-                    libName =>
-                    {
-                        var pdb = RainProgramDatabase.Create(startupParameter.programDatabaseLoader(NativeString.GetString(libName)));
-                        if (pdb == null) return null;
-                        return pdb.GetSource();//可能会因为触发gc导致数据在加载完成之前被回收
-                    }
-                    )));
+                    })));
         }
         public delegate void* Alloc(uint size);
         public delegate void Free(void* pointer);

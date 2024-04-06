@@ -17,7 +17,6 @@ public:
 	Kernel* kernel;
 	RuntimeLibrary* kernelLibrary;
 	LibraryLoader libraryLoader;
-	ProgramDatabaseLoader programDatabaseLoader;
 	NativeCallerLoader nativeCallerLoader;
 	List<RuntimeLibrary*, true> libraries;
 	List<uint8, true> code;

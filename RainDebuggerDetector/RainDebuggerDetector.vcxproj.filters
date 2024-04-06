@@ -18,7 +18,13 @@
     <ClInclude Include="framework.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="Server.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternC.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggerAdaptor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -26,7 +32,13 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="Server.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ExternC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DebuggerAdaptor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

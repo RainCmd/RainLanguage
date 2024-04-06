@@ -731,7 +731,7 @@ static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), type(StepType::None), database(NULL)
+RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, const RainProgramDatabase* database) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), type(StepType::None), database(database)
 {
 	if(kernel)
 	{
@@ -743,11 +743,6 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(N
 				library = agency->libraries[i];
 				const RainLibrary* source = agency->libraryLoader(name);
 				if(!source) return;
-				const RainProgramDatabase* sourceDatabase = agency->programDatabaseLoader(name);
-				if(!sourceDatabase) return;
-				const RainBuffer<uint8>* buffer = Serialize(*sourceDatabase);
-				database = DeserializeDatabase(buffer->Data(), buffer->Count());
-				delete buffer;
 				if(KERNEL->debugger) KERNEL->debugger->Broken();
 				KERNEL->debugger = this;
 				share = KERNEL->share;
@@ -755,7 +750,7 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel) : share(N
 				if(!InitMap(KERNEL, (Library*)source, (MAP*)map)) Broken();
 				break;
 			}
-		
+
 	}
 }
 
