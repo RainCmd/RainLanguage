@@ -1,5 +1,6 @@
 #pragma once
 #include "Debugger.h"
+
 class Debugger : public RainDebugger
 {
 protected:

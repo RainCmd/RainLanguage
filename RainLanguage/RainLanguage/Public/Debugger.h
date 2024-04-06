@@ -346,13 +346,13 @@ public:
 /// <param name="kernel">虚拟机</param>
 /// <param name="loader">符号表加载器</param>
 /// <param name="unloader">符号表卸载器</param>
-void RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
+RAINLANGUAGE void RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 
 /// <summary>
 /// 获取可调试虚拟机列表数量
 /// </summary>
 /// <returns>列表数量</returns>
-uint32 GetDebuggableCount();
+RAINLANGUAGE uint32 GetDebuggableCount();
 
 /// <summary>
 /// 获取可调试虚拟机
@@ -361,4 +361,4 @@ uint32 GetDebuggableCount();
 /// <param name="kernel">虚拟机</param>
 /// <param name="loader">符号表加载器</param>
 /// <param name="unloader">符号表卸载器</param>
-void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader);
+RAINLANGUAGE void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader);
