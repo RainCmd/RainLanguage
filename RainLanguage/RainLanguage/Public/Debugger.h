@@ -46,37 +46,37 @@ public:
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>
-	bool IsValid();
+	bool IsValid() const;
 	/// <summary>
 	/// 获取变量名
 	/// </summary>
-	RainString GetName();
+	RainString GetName() const;
 	/// <summary>
 	/// 获取变量地址
 	/// </summary>
 	/// <returns></returns>
-	uint8* GetAddress();
+	uint8* GetAddress() const;
 	/// <summary>
 	/// 获取成员数量
 	/// </summary>
-	uint32 MemberCount();
+	uint32 MemberCount() const;
 	/// <summary>
 	/// 获取成员变量
 	/// </summary>
-	RainDebuggerVariable GetMember(uint32 index);
+	RainDebuggerVariable GetMember(uint32 index) const;
 	/// <summary>
 	/// 获取数组长度
 	/// </summary>
-	uint32 ArrayLength();
+	uint32 ArrayLength() const;
 	/// <summary>
 	/// 获取数组元素
 	/// </summary>
-	RainDebuggerVariable GetElement(uint32 index);
+	RainDebuggerVariable GetElement(uint32 index) const;
 	/// <summary>
 	/// 获取变量值
 	/// </summary>
 	/// <returns></returns>
-	RainString GetValue();
+	RainString GetValue() const;
 	/// <summary>
 	/// 设置变量值
 	/// </summary>
@@ -174,14 +174,16 @@ public:
 	/// </summary>
 	RainDebuggerVariable GetLocal(uint32 index);
 	/// <summary>
+	/// 获取局部变量
+	/// </summary>
+	RainDebuggerVariable GetLocal(const RainString& name);
+	/// <summary>
 	/// 当前栈上下文中文本对应的变量数据
 	/// </summary>
 	/// <param name="fileName">文件名</param>
 	/// <param name="lineNumber">行号</param>
 	/// <param name="characterIndex">单词首字符索引</param>
-	/// <param name="variable">变量数据</param>
-	/// <returns>成功获取到变量数据则返回true,否则返回false</returns>
-	bool TryGetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex, RainDebuggerVariable& variable);
+	RainDebuggerVariable GetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex);
 	~RainTrace();
 };
 
@@ -209,7 +211,7 @@ public:
 	/// <summary>
 	/// 当前调用的实例ID
 	/// </summary>
-	integer TaskID();
+	uint64 TaskID();
 	/// <summary>
 	/// 迭代下一个调用栈追踪
 	/// </summary>
@@ -300,6 +302,10 @@ public:
 	/// 获取任务迭代器
 	/// </summary>
 	RainTaskIterator GetTaskIterator();
+	/// <summary>
+	/// 获取调用栈追踪迭代器
+	/// </summary>
+	RainTraceIterator GetTraceIterator(uint64 taskID);
 	/// <summary>
 	/// 是否是断点状态
 	/// </summary>

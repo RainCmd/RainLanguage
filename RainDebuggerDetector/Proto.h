@@ -111,4 +111,14 @@ enum class Proto : uint
 	//		uint32	memberIndex
 	//	string	value
 	SEND_SetLocal,
+
+	//	uint64	taskId
+	//	uint32	traceDeep
+	//	string	file
+	//	uint32	line
+	//	uint32	character
+	RECV_Eual,
+	//	bool	hasResult
+	//		string	value
+	SEND_Eual,
 };

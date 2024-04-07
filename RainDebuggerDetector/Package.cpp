@@ -17,8 +17,7 @@ wstring ReadPackage::ReadString()
 {
 	uint length = ReadUint32();
 	if(position + length > size) throw "数组越界";
-	string result;
-	result.assign(buffer + position, length);
+	string result(buffer + position, length);
 	position += length;
 	return UTF_8To16(result);
 }

@@ -20,6 +20,7 @@ private:
 public:
 	inline bool IsValid() const { return valid; }
 	ReadPackage(char* buffer, uint size);
+	inline bool ReadBool() { return Read<bool>(1); }
 	inline Proto ReadProto() { return Read<Proto>(4); }
 	inline uint ReadUint32() { return Read<uint>(4); }
 	inline ulong ReadUint64() { return Read<ulong>(8); }
@@ -41,6 +42,10 @@ private:
 	}
 public:
 	WritePackage() :buffer(nullptr), size(4), position(4) {}
+	inline bool& WriteBool(bool value)
+	{
+		return Write<bool>(value, 1);
+	}
 	inline Proto& WriteProto(Proto proto)
 	{
 		return Write<Proto>(proto, 4);

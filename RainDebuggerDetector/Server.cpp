@@ -15,6 +15,62 @@ static SOCKET cSocket = INVALID_SOCKET;
 static sockaddr_in addr = {};
 static Debugger* debugger = nullptr;
 
+static void WriteSummary(WritePackage& writer, const RainDebuggerVariable& variable)
+{
+	RainString rs_variableName = variable.GetName();
+	wstring variableName(rs_variableName.value, rs_variableName.length);
+	writer.WriteString(variableName);
+	writer.WriteUint32((uint32)variable.type);
+	RainString rs_variableValue = variable.GetValue();
+	wstring variableValue(rs_variableValue.value, rs_variableValue.length);
+	writer.WriteString(variableValue);
+}
+
+static void WriteExpand(WritePackage& writer, const RainDebuggerVariable& variable)
+{
+	if(IsArray(variable.type))
+	{
+		uint32 count = variable.ArrayLength();
+		writer.WriteUint32(count);
+		for(uint32 i = 0; i < count; i++) WriteSummary(writer, variable.GetElement(i));
+	}
+	else
+	{
+		uint32 count = variable.MemberCount();
+		writer.WriteUint32(count);
+		for(uint32 i = 0; i < count; i++) WriteSummary(writer, variable.GetMember(i));
+	}
+}
+
+static bool GetVariable(ReadPackage& reader, WritePackage& writer, RainDebuggerVariable& variable)
+{
+	uint32 count = reader.ReadUint32();
+	writer.WriteUint32(count);
+	while(count--)
+	{
+		uint32 index = reader.ReadUint32();
+		if(IsArray(variable.type)) variable = variable.GetElement(index);
+		else variable = variable.GetMember(index);
+		if(!variable.IsValid()) return false;
+		writer.WriteUint32(index);
+	}
+	return true;
+}
+
+static bool GetSpace(ReadPackage& reader, WritePackage& writer, RainDebuggerSpace& space)
+{
+	uint32 count = reader.ReadUint32();
+	writer.WriteUint32(count);
+	while(count--)
+	{
+		wstring name = reader.ReadString();
+		space = space.GetChild(RainString(name.c_str(), name.length()));
+		if(space.IsValid()) writer.WriteString(name);
+		else return false;
+	}
+	return true;
+}
+
 static void Send(SOCKET socket, const WritePackage& package)
 {
 	uint length;
@@ -86,40 +142,24 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RECV_Space:
 		{
 			if(!debugger->IsBreaking()) return;
-			uint32 nameCount = reader.ReadUint32();
 			WritePackage writer;
 			writer.WriteProto(Proto::SEND_Space);
-			writer.WriteUint32(nameCount);
+
 			RainDebuggerSpace space = debugger->GetSpace();
-			while(nameCount--)
-			{
-				wstring spaceName = reader.ReadString();
-				space = space.GetChild(RainString(spaceName.c_str(), spaceName.length()));
-				if(space.IsValid()) writer.WriteString(spaceName);
-				else return;
-			}
+			if(!GetSpace(reader, writer, space)) return;
+
 			uint32 childCount = space.ChildCount();
 			writer.WriteUint32(childCount);
 			for(uint32 i = 0; i < childCount; i++)
 			{
 				RainDebuggerSpace child = space.GetChild(i);
 				RainString rs_childName = child.GetName();
-				wstring childName; childName.assign(rs_childName.value, rs_childName.length);
+				wstring childName(rs_childName.value, rs_childName.length);
 				writer.WriteString(childName);
 			}
 			uint32 variableCount = space.VariableCount();
 			writer.WriteUint32(variableCount);
-			for(uint32 i = 0; i < variableCount; i++)
-			{
-				RainDebuggerVariable variable = space.GetVariable(i);
-				RainString rs_variableName = variable.GetName();
-				wstring variableName; variableName.assign(rs_variableName.value, rs_variableName.length);
-				writer.WriteString(variableName);
-				writer.WriteUint32((uint32)variable.type);
-				RainString rs_variableValue = variable.GetValue();
-				wstring variableValue; variableValue.assign(rs_variableValue.value, rs_variableValue.length);
-				writer.WriteString(variableValue);
-			}
+			for(uint32 i = 0; i < variableCount; i++) WriteSummary(writer, space.GetVariable(i));
 			Send(socket, writer);
 		}
 		break;
@@ -127,48 +167,147 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RECV_Global:
 		{
 			if(!debugger->IsBreaking()) return;
-			uint32 nameCount = reader.ReadUint32();
 			WritePackage writer;
 			writer.WriteProto(Proto::SEND_Global);
-			writer.WriteUint32(nameCount);
+
 			RainDebuggerSpace space = debugger->GetSpace();
-			while(nameCount--)
-			{
-				wstring spaceName = reader.ReadString();
-				space = space.GetChild(RainString(spaceName.c_str(), spaceName.length()));
-				if(space.IsValid()) writer.WriteString(spaceName);
-				else return;
-			}
+			if(!GetSpace(reader, writer, space)) return;
+
 			wstring variableName = reader.ReadString();
 			RainDebuggerVariable variable = space.GetVariable(RainString(variableName.c_str(), variableName.length()));
 			if(!variable.IsValid()) return;
 			writer.WriteString(variableName);
-			uint32 memberIndexCount = reader.ReadUint32();
-			writer.WriteUint32(memberIndexCount);
-			while(memberIndexCount--)
-			{
-				uint32 memberIndex = reader.ReadUint32();
 
-				writer.WriteUint32(memberIndex);
-			}
+			if(!GetVariable(reader, writer, variable)) return;
+
+			WriteExpand(writer, variable);
+
+			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Global:
-			break;
+		case Proto::SEND_Global: break;
 		case Proto::RECV_SetGlobal:
-			break;
-		case Proto::SEND_SetGlobal:
-			break;
-		case Proto::SEND_Task:
-			break;
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::SEND_SetGlobal);
+
+			RainDebuggerSpace space = debugger->GetSpace();
+			if(!GetSpace(reader, writer, space)) return;
+
+			wstring variableName = reader.ReadString();
+			RainDebuggerVariable variable = space.GetVariable(RainString(variableName.c_str(), variableName.length()));
+			if(!variable.IsValid()) return;
+			writer.WriteString(variableName);
+
+			if(!GetVariable(reader, writer, variable)) return;
+
+			wstring variableValue = reader.ReadString();
+			variable.SetValue(RainString(variableValue.c_str(), variableValue.length()));
+			RainString rs_variableValue = variable.GetValue();
+			variableValue.assign(rs_variableValue.value, rs_variableValue.length);
+			writer.WriteString(variableValue);
+
+			Send(socket, writer);
+		}
+		break;
+		case Proto::SEND_SetGlobal: break;
+		case Proto::SEND_Task: break;
 		case Proto::RECV_Local:
-			break;
-		case Proto::SEND_Local:
-			break;
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::SEND_Local);
+
+			uint64 taskID = reader.ReadUint64();
+			RainTraceIterator iterator = debugger->GetTraceIterator(taskID);
+			if(!iterator.IsValid()) return;
+			writer.WriteUint64(taskID);
+
+			uint32 deep = reader.ReadUint32();
+			writer.WriteUint32(deep);
+			while(deep--) if(!iterator.Next()) return;
+
+			RainTrace trace = iterator.Current();
+			wstring localName = reader.ReadString();
+			RainDebuggerVariable variable = trace.GetLocal(RainString(localName.c_str(), localName.length()));
+			if(!variable.IsValid()) return;
+			writer.WriteString(localName);
+
+			if(!GetVariable(reader, writer, variable)) return;
+
+			WriteExpand(writer, variable);
+
+			Send(socket, writer);
+		}
+		break;
+		case Proto::SEND_Local: break;
 		case Proto::RECV_SetLocal:
-			break;
-		case Proto::SEND_SetLocal:
-			break;
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::SEND_SetLocal);
+
+			uint64 taskID = reader.ReadUint64();
+			RainTraceIterator iterator = debugger->GetTraceIterator(taskID);
+			if(!iterator.IsValid()) return;
+			writer.WriteUint64(taskID);
+
+			uint32 deep = reader.ReadUint32();
+			writer.WriteUint32(deep);
+			while(deep--) if(!iterator.Next()) return;
+
+			RainTrace trace = iterator.Current();
+			wstring localName = reader.ReadString();
+			RainDebuggerVariable variable = trace.GetLocal(RainString(localName.c_str(), localName.length()));
+			if(!variable.IsValid()) return;
+			writer.WriteString(localName);
+
+			if(!GetVariable(reader, writer, variable)) return;
+
+			wstring variableValue = reader.ReadString();
+			variable.SetValue(RainString(variableValue.c_str(), variableValue.length()));
+			RainString rs_variableValue = variable.GetValue();
+			variableValue.assign(rs_variableValue.value, rs_variableValue.length);
+			writer.WriteString(variableValue);
+
+			Send(socket, writer);
+		}
+		break;
+		case Proto::SEND_SetLocal: break;
+		case Proto::RECV_Eual:
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::SEND_Eual);
+
+			uint64 taskID = reader.ReadUint64();
+			RainTraceIterator iterator = debugger->GetTraceIterator(taskID);
+			if(!iterator.IsValid()) return;
+			writer.WriteUint64(taskID);
+
+			uint32 deep = reader.ReadUint32();
+			writer.WriteUint32(deep);
+			while(deep--) if(!iterator.Next()) return;
+
+			RainTrace trace = iterator.Current();
+			wstring file = reader.ReadString();
+			uint32 line = reader.ReadUint32();
+			uint32 character = reader.ReadUint32();
+			RainDebuggerVariable variable = trace.GetVariable(RainString(file.c_str(), file.length()), line, character);
+			if(variable.IsValid())
+			{
+				writer.WriteBool(true);
+				RainString rs_variableValue = variable.GetValue();
+				wstring variableValue(rs_variableValue.value, rs_variableValue.length);
+				writer.WriteString(variableValue);
+			}
+			else writer.WriteBool(false);
+
+			Send(socket, writer);
+		}
+		break;
+		case Proto::SEND_Eual: break;
 		default:
 			break;
 	}

@@ -43,18 +43,18 @@ RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : 
 	if(other.internalType) internalType = new Type(*(Type*)other.internalType);
 }
 
-bool RainDebuggerVariable::IsValid()
+bool RainDebuggerVariable::IsValid() const
 {
 	return debugFrame && FRAME->library && internalType;
 }
 
-RainString RainDebuggerVariable::GetName()
+RainString RainDebuggerVariable::GetName() const
 {
 	if(IsValid() && name) return RainString(((String*)name)->GetPointer(), ((String*)name)->GetLength());
 	else return RainString(NULL, 0);
 }
 
-uint8* RainDebuggerVariable::GetAddress()
+uint8* RainDebuggerVariable::GetAddress() const
 {
 	if(IsValid())
 	{
@@ -69,7 +69,7 @@ uint8* RainDebuggerVariable::GetAddress()
 	return NULL;
 }
 
-uint32 RainDebuggerVariable::MemberCount()
+uint32 RainDebuggerVariable::MemberCount() const
 {
 	if(type == RainType::Internal && IsValid())
 	{
@@ -84,7 +84,7 @@ uint32 RainDebuggerVariable::MemberCount()
 	return 0;
 }
 
-RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index)
+RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 {
 	uint8* variableAddress = GetAddress();
 	if(variableAddress && type == RainType::Internal && IsValid())
@@ -108,7 +108,7 @@ RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index)
 	return RainDebuggerVariable();
 }
 
-uint32 RainDebuggerVariable::ArrayLength()
+uint32 RainDebuggerVariable::ArrayLength() const
 {
 	if(IsValid() && address)
 	{
@@ -123,7 +123,7 @@ uint32 RainDebuggerVariable::ArrayLength()
 	return 0;
 }
 
-RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index)
+RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index) const
 {
 	if(IsValid() && address)
 	{
@@ -138,7 +138,7 @@ RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index)
 	return RainDebuggerVariable();
 }
 
-RainString RainDebuggerVariable::GetValue()
+RainString RainDebuggerVariable::GetValue() const
 {
 	if(IsValid())
 	{
@@ -474,12 +474,6 @@ bool RainTrace::IsValid()
 	return debugFrame && FRAME->library;
 }
 
-bool RainTraceIterator::IsActive()
-{
-	if(IsValid()) return FRAME->library->kernel->taskAgency->GetCurrentTask() == task;
-	return false;
-}
-
 RainString RainTrace::FunctionName()
 {
 	if(IsValid() && name) return RainString(((String*)name)->GetPointer(), ((String*)name)->GetLength());
@@ -518,36 +512,50 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 	return RainDebuggerVariable();
 }
 
-bool RainTrace::TryGetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex, RainDebuggerVariable& variable)
+RainDebuggerVariable RainTrace::GetLocal(const RainString& name)
+{
+	if(IsValid() && function != INVALID)
+	{
+		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
+		String localName = database->agency->Add(name.value, name.length);
+		for(uint32 i = 0; i < database->functions[function]->locals.Count(); i++)
+		{
+			DebugLocal& local = database->functions[function]->locals[i];
+			if(local.name == localName)
+				return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
+		}
+	}
+	return RainDebuggerVariable();
+}
+
+RainDebuggerVariable RainTrace::GetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex)
 {
 	if(IsValid())
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
-		String file = database->agency->Add(fileName.value, fileName.length);
+		String file_name = database->agency->Add(fileName.value, fileName.length);
 		DebugAnchor anchor(lineNumber, characterIndex);
 		if(function != INVALID)
 		{
 			uint32 localIndex;
 			DebugFunction* debugFunction = database->functions[function];
-			if(debugFunction->file == file && debugFunction->localAnchors.TryGet(anchor, localIndex))
+			if(debugFunction->file == file_name && debugFunction->localAnchors.TryGet(anchor, localIndex))
 			{
 				DebugLocal& local = database->functions[function]->locals[localIndex];
-				variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
-				return true;
+				return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
 			}
 		}
 		DebugFile* debugFile;
 		DebugGlobal globalVariable;
-		if(database->files.TryGet(file, debugFile) && debugFile->globalAnchors.TryGet(anchor, globalVariable))
+		if(database->files.TryGet(file_name, debugFile) && debugFile->globalAnchors.TryGet(anchor, globalVariable))
 		{
 			RuntimeLibrary* library = FRAME->library;
 			Type globalVariablDeclaration = DebugToKernel(library->index, FRAME->map, Type(globalVariable.library, TypeCode::Invalid, globalVariable.index, 0));
 			RuntimeVariable& runtimeVariable = library->kernel->libraryAgency->GetLibrary(globalVariablDeclaration.library)->variables[globalVariablDeclaration.index];
-			variable = RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
-			return true;
+			return RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
 		}
 	}
-	return false;
+	return RainDebuggerVariable();
 }
 
 RainTrace::~RainTrace()
@@ -575,7 +583,13 @@ bool RainTraceIterator::IsValid()
 	return debugFrame && FRAME->library && task;
 }
 
-integer RainTraceIterator::TaskID()
+bool RainTraceIterator::IsActive()
+{
+	if(IsValid()) return FRAME->library->kernel->taskAgency->GetCurrentTask() == task;
+	return false;
+}
+
+uint64 RainTraceIterator::TaskID()
 {
 	if(IsValid()) return TASK->instanceID;
 	else return 0;
@@ -648,7 +662,7 @@ bool RainTaskIterator::Next()
 {
 	if(IsValid())
 	{
-		if(index) index = ((Invoker*)index)->task->next;
+		if(index) index = ((Task*)index)->next;
 		else index = FRAME->library->kernel->taskAgency->GetHeadTask();
 		if(index) return true;
 	}
@@ -848,7 +862,7 @@ void RainDebugger::Broken()
 
 RainDebuggerSpace RainDebugger::GetSpace()
 {
-	if(IsActive() && debugFrame) return RainDebuggerSpace(debugFrame, 0);
+	if(IsBreaking()) return RainDebuggerSpace(debugFrame, 0);
 	return RainDebuggerSpace(NULL, 0);
 }
 
@@ -856,6 +870,17 @@ RainTaskIterator RainDebugger::GetTaskIterator()
 {
 	if(IsBreaking()) return RainTaskIterator(debugFrame);
 	else return RainTaskIterator(NULL);
+}
+
+RainTraceIterator RainDebugger::GetTraceIterator(uint64 taskID)
+{
+	if(IsBreaking())
+	{
+		for(Task* index = SHARE->kernel->taskAgency->GetHeadTask(); index; index = index->next)
+			if(index->instanceID == taskID)
+				return RainTraceIterator(debugFrame, index);
+	}
+	return RainTraceIterator(NULL, NULL);
 }
 
 bool RainDebugger::IsBreaking()
