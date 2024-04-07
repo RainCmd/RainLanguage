@@ -17,7 +17,7 @@ struct KernelShare
 	uint32 count;
 	inline KernelShare(Kernel* kernel) :kernel(kernel), count(1) {}
 	inline void Reference() { count++; }
-	inline void Release() { if (!(--count)) delete this; }
+	inline void Release() { if(!(--count)) delete this; }
 };
 class Kernel :public RainKernel
 {
@@ -53,18 +53,22 @@ public:
 
 inline RainType GetRainType(const Type& type)
 {
-	if (type.dimension == 1) return (RainType)((uint32)GetRainType(Type(type, 0)) | (uint32)RainType::ArrayFlag);
-	else if (type == TYPE_Bool) return RainType::Bool;
-	else if (type == TYPE_Byte) return RainType::Byte;
-	else if (type == TYPE_Char) return RainType::Character;
-	else if (type == TYPE_Integer) return RainType::Integer;
-	else if (type == TYPE_Real) return RainType::Real;
-	else if (type == TYPE_Real2) return RainType::Real2;
-	else if (type == TYPE_Real3) return RainType::Real3;
-	else if (type == TYPE_Real4) return RainType::Real4;
-	else if (type.dimension == 0 && type.code == TypeCode::Enum) return RainType::Enum;
-	else if (type == TYPE_String) return RainType::String;
-	else if (type == TYPE_Entity) return RainType::Entity;
+	if(type.dimension)
+	{
+		if(type.dimension == 1) return GetRainType(Type(type, 0)) | RainType::ArrayFlag;
+		else return RainType::Internal | RainType::ArrayFlag;
+	}
+	else if(type == TYPE_Bool) return RainType::Bool;
+	else if(type == TYPE_Byte) return RainType::Byte;
+	else if(type == TYPE_Char) return RainType::Character;
+	else if(type == TYPE_Integer) return RainType::Integer;
+	else if(type == TYPE_Real) return RainType::Real;
+	else if(type == TYPE_Real2) return RainType::Real2;
+	else if(type == TYPE_Real3) return RainType::Real3;
+	else if(type == TYPE_Real4) return RainType::Real4;
+	else if(type.dimension == 0 && type.code == TypeCode::Enum) return RainType::Enum;
+	else if(type == TYPE_String) return RainType::String;
+	else if(type == TYPE_Entity) return RainType::Entity;
 	return RainType::Internal;
 }
 

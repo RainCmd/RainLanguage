@@ -33,7 +33,7 @@ RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), add
 RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), type(RainType::Internal)
 {
 	if(debugFrame) FRAME->Reference();
-	if(internalType) type = GetRainType(*(Type*)internalType);
+	if(internalType) type = GetRainType(GetTargetType(*(Type*)internalType, address, FRAME));
 }
 
 RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(NULL), address(other.address), internalType(NULL), type(other.type)
@@ -218,8 +218,22 @@ RainString RainDebuggerVariable::GetValue()
 		}
 		else if(targetType == TYPE_Entity)
 		{
-			String result = ToString(agency, (integer)FRAME->library->kernel->entityAgency->Get(*(Entity*)valueAddress));
-			return RainString(result.GetPointer(), result.GetLength());
+			Entity entity = *(Entity*)valueAddress;
+			if(entity)
+			{
+				String fragments[4];
+				fragments[0] = ToString(agency, (integer)entity);
+				fragments[1] = agency->Add(TEXT("["));
+				fragments[2] = ToString(agency, (integer)FRAME->library->kernel->entityAgency->Get(entity));
+				fragments[3] = agency->Add(TEXT("]"));
+				String result = agency->Combine(fragments, 4);
+				return RainString(result.GetPointer(), result.GetLength());
+			}
+			else
+			{
+				String result = KeyWord_null();
+				return RainString(result.GetPointer(), result.GetLength());
+			}
 		}
 		else if(targetType.dimension)
 		{
@@ -307,10 +321,13 @@ void RainDebuggerVariable::SetValue(const RainString& value)
 		}
 		else if(targetType == TYPE_Entity)
 		{
-			Entity& target = *(Entity*)valueAddress;
-			FRAME->library->kernel->entityAgency->Release(target);
-			target = FRAME->library->kernel->entityAgency->Add((uint64)ParseInteger(agency->Add(value.value, value.length)));
-			FRAME->library->kernel->entityAgency->Reference(target);
+			String nullString = KeyWord_null();
+			if(value.length == nullString.GetLength() && nullString == value.value)
+			{
+				Entity& target = *(Entity*)valueAddress;
+				FRAME->library->kernel->entityAgency->Release(target);
+				target = NULL;
+			}
 		}
 		else if(targetType.dimension == 0 && targetType.code == TypeCode::Enum)
 		{
@@ -320,6 +337,19 @@ void RainDebuggerVariable::SetValue(const RainString& value)
 			{
 				enumValue = ParseInteger(agency->Add(value.value, value.length));
 				if(enumValue == 0) enumValue = GetEnumValue(FRAME->library->kernel, targetType, value.value, value.length);
+			}
+		}
+		else if(IsHandleType(*(Type*)internalType))
+		{
+			String nullString = KeyWord_null();
+			if(value.length == nullString.GetLength() && nullString == value.value)
+			{
+				HeapAgency* heap = FRAME->library->kernel->heapAgency;
+				Handle& target = *(Handle*)address;
+				if((uint64)address >= (uint64)heap->GetPoint(NULL) && (uint64)address < (uint64)(heap->GetPoint(NULL) + heap->GetHeapTop()))
+					heap->WeakRelease(target);
+				else heap->StrongRelease(target);
+				target = NULL;
 			}
 		}
 	}
@@ -493,27 +523,28 @@ bool RainTrace::TryGetVariable(const RainString& fileName, uint32 lineNumber, ui
 	if(IsValid())
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
+		String file = database->agency->Add(fileName.value, fileName.length);
 		DebugAnchor anchor(lineNumber, characterIndex);
-		uint32 localIndex;
-		if(function != INVALID && database->functions[function]->localAnchors.TryGet(anchor, localIndex))
+		if(function != INVALID)
 		{
-			//todo 局部变量没用到fileName，可能有问题
-			DebugLocal& local = database->functions[function]->locals[localIndex];
-			variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
-			return true;
-		}
-		else
-		{
-			DebugFile* debugFile;
-			DebugGlobal globalVariable;
-			if(database->files.TryGet(database->agency->Add(fileName.value, fileName.length), debugFile) && debugFile->globalAnchors.TryGet(anchor, globalVariable))
+			uint32 localIndex;
+			DebugFunction* debugFunction = database->functions[function];
+			if(debugFunction->file == file && debugFunction->localAnchors.TryGet(anchor, localIndex))
 			{
-				RuntimeLibrary* library = FRAME->library;
-				Type globalVariablDeclaration = DebugToKernel(library->index, FRAME->map, Type(globalVariable.library, TypeCode::Invalid, globalVariable.index, 0));
-				RuntimeVariable& runtimeVariable = library->kernel->libraryAgency->GetLibrary(globalVariablDeclaration.library)->variables[globalVariablDeclaration.index];
-				variable = RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
+				DebugLocal& local = database->functions[function]->locals[localIndex];
+				variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
 				return true;
 			}
+		}
+		DebugFile* debugFile;
+		DebugGlobal globalVariable;
+		if(database->files.TryGet(file, debugFile) && debugFile->globalAnchors.TryGet(anchor, globalVariable))
+		{
+			RuntimeLibrary* library = FRAME->library;
+			Type globalVariablDeclaration = DebugToKernel(library->index, FRAME->map, Type(globalVariable.library, TypeCode::Invalid, globalVariable.index, 0));
+			RuntimeVariable& runtimeVariable = library->kernel->libraryAgency->GetLibrary(globalVariablDeclaration.library)->variables[globalVariablDeclaration.index];
+			variable = RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
+			return true;
 		}
 	}
 	return false;

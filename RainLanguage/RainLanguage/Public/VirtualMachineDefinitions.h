@@ -87,14 +87,17 @@ enum class RainType : uint8
 	/// </summary>
 	ArrayFlag = 0x10,
 };
+inline RainType operator~(RainType t) { return (RainType)~(uint64)t; }
+inline RainType operator|(RainType a, RainType b) { return (RainType)((uint64)a | (uint64)b); }
+inline RainType operator&(RainType a, RainType b) { return (RainType)((uint64)a & (uint64)b); }
 
 inline bool IsArray(RainType type)
 {
-	return (uint32)type & (uint32)RainType::ArrayFlag;
+	return (type & RainType::ArrayFlag) == RainType::ArrayFlag;
 }
 inline RainType GetElementType(RainType type)
 {
-	if (IsArray(type)) return (RainType)((uint32)type & ~(uint32)RainType::ArrayFlag);
+	if(IsArray(type)) return type & ~RainType::ArrayFlag;
 	else return RainType::Internal;
 }
 

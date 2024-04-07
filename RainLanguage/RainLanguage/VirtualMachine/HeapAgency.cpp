@@ -303,7 +303,7 @@ void HeapAgency::FastGC()
 HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), heap(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), free(NULL), head(NULL), tail(NULL), active(NULL), generation(parameter->heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
 {
 	destructorCallable.parameters.AddElement(TYPE_Handle, 0);
-	heads.Add();
+	new (heads.Add())Head(0, 0, false, 0);
 }
 
 Handle HeapAgency::Alloc(const Type& elementType, integer length)
