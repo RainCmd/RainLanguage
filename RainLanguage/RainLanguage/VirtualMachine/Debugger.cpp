@@ -25,25 +25,22 @@ public:
 #define FRAME ((DebugFrame*)debugFrame)
 static Type GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
 {
-	if(IsHandleType(type) && address) return frame->library->kernel->heapAgency->GetType(*(Handle*)address);
-	else return type;
+	if(IsHandleType(type) && address && *(Handle*)address)
+		return frame->library->kernel->heapAgency->GetType(*(Handle*)address);
+	return type;
 }
 RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), address(NULL), internalType(NULL), type(RainType::Internal) {}
 RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), type(RainType::Internal)
 {
 	if(debugFrame) FRAME->Reference();
-	if(internalType)
-	{
-		Type& variableType = *(Type*)internalType;
-		type = GetRainType(variableType);
-	}
+	if(internalType) type = GetRainType(*(Type*)internalType);
 }
 
-RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(other.name), address(other.address), internalType(other.internalType), type(other.type)
+RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(NULL), address(other.address), internalType(NULL), type(other.type)
 {
 	if(debugFrame) FRAME->Reference();
-	if(name) name = new String(*(String*)name);
-	if(internalType) internalType = new Type(*(Type*)internalType);
+	if(other.name) name = new String(*(String*)other.name);
+	if(other.internalType) internalType = new Type(*(Type*)other.internalType);
 }
 
 bool RainDebuggerVariable::IsValid()
@@ -375,6 +372,20 @@ RainDebuggerSpace RainDebuggerSpace::GetChild(uint32 index)
 	else return RainDebuggerSpace(NULL, 0);
 }
 
+RainDebuggerSpace RainDebuggerSpace::GetChild(const RainString& name)
+{
+	if(IsValid())
+	{
+		RuntimeLibrary* library = FRAME->library;
+		String childName = library->kernel->stringAgency->Add(name.value, name.length);
+		RuntimeSpace& runtimeSpace = library->spaces[space];
+		for(uint32 i = 0; i < runtimeSpace.children.Count(); i++)
+			if(library->spaces[runtimeSpace.children[i]].name == childName.index)
+				return RainDebuggerSpace(debugFrame, runtimeSpace.children[i]);
+	}
+	return RainDebuggerSpace(NULL, 0);
+}
+
 uint32 RainDebuggerSpace::VariableCount()
 {
 	if(IsValid()) return FRAME->library->spaces[space].variables.Count();
@@ -386,7 +397,25 @@ RainDebuggerVariable RainDebuggerSpace::GetVariable(uint32 index)
 	if(IsValid())
 	{
 		RuntimeLibrary* library = FRAME->library;
-		return RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(library->variables[index].name)), library->kernel->libraryAgency->data.GetPointer() + library->variables[index].address, new Type(library->variables[index].type));
+		RuntimeVariable& variable = library->variables[library->spaces[space].variables[index]];
+		return RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(variable.name)), library->kernel->libraryAgency->data.GetPointer() + variable.address, new Type(variable.type));
+	}
+	return RainDebuggerVariable();
+}
+
+RainDebuggerVariable RainDebuggerSpace::GetVariable(const RainString& name)
+{
+	if(IsValid())
+	{
+		RuntimeLibrary* library = FRAME->library;
+		String variableName = library->kernel->stringAgency->Add(name.value, name.length);
+		RuntimeSpace& runtimeSpace = library->spaces[space];
+		for(uint32 i = 0; i < runtimeSpace.variables.Count(); i++)
+		{
+			RuntimeVariable& variable = library->variables[runtimeSpace.variables[i]];
+			if(variable.name == variableName.index)
+				return RainDebuggerVariable(debugFrame, new String(variableName), library->kernel->libraryAgency->data.GetPointer() + variable.address, new Type(variable.type));
+		}
 	}
 	return RainDebuggerVariable();
 }
@@ -439,12 +468,12 @@ uint32 RainTrace::LocalCount()
 	return 0;
 }
 
-static Declaration DebugToKernel(uint32 index, MAP* map, const Declaration& declaration)
+static Type DebugToKernel(uint32 index, MAP* map, const Type& type)
 {
-	if(declaration.library == LIBRARY_KERNEL) return declaration;
-	else if(declaration.library == LIBRARY_SELF) return Declaration(index, declaration.code, declaration.index);
+	if(type.library == LIBRARY_KERNEL) return type;
+	else if(type.library == LIBRARY_SELF) return Type(index, type.code, type.index, type.dimension);
 	Declaration result;
-	if(map->TryGet(declaration, result)) return result;
+	if(map->TryGet(type, result)) return Type(result, type.dimension);
 	EXCEPTION("映射逻辑可能有BUG");
 }
 
@@ -454,7 +483,7 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
 		DebugLocal& local = database->functions[function]->locals[index];
-		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type), local.type.dimension));
+		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
 	}
 	return RainDebuggerVariable();
 }
@@ -468,25 +497,22 @@ bool RainTrace::TryGetVariable(const RainString& fileName, uint32 lineNumber, ui
 		uint32 localIndex;
 		if(function != INVALID && database->functions[function]->localAnchors.TryGet(anchor, localIndex))
 		{
+			//todo 局部变量没用到fileName，可能有问题
 			DebugLocal& local = database->functions[function]->locals[localIndex];
-			Type localType;
-			if(FRAME->map->TryGet(local.type, localType)) variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(localType));
-			else EXCEPTION("映射逻辑可能有BUG");
+			variable = RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
+			return true;
 		}
 		else
 		{
 			DebugFile* debugFile;
-			DebugGlobal globalVariable = DebugGlobal();
+			DebugGlobal globalVariable;
 			if(database->files.TryGet(database->agency->Add(fileName.value, fileName.length), debugFile) && debugFile->globalAnchors.TryGet(anchor, globalVariable))
 			{
-				Declaration declaration;
-				if(FRAME->map->TryGet(Declaration(globalVariable.library, TypeCode::Invalid, globalVariable.index), declaration))
-				{
-					Kernel* kernel = FRAME->library->kernel;
-					RuntimeVariable& runtimeVariable = kernel->libraryAgency->GetLibrary(declaration.library)->variables[declaration.index];
-					variable = RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(runtimeVariable.name)), kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
-				}
-				else EXCEPTION("映射逻辑可能有BUG");
+				RuntimeLibrary* library = FRAME->library;
+				Type globalVariablDeclaration = DebugToKernel(library->index, FRAME->map, Type(globalVariable.library, TypeCode::Invalid, globalVariable.index, 0));
+				RuntimeVariable& runtimeVariable = library->kernel->libraryAgency->GetLibrary(globalVariablDeclaration.library)->variables[globalVariablDeclaration.index];
+				variable = RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
+				return true;
 			}
 		}
 	}

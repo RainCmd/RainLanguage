@@ -13,5 +13,5 @@ protected:
 public:
 	Debugger(const std::wstring& path, const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 };
-std::wstring S2WS(std::string src);
+
 Debugger* CreateDebugger(const char* path, const char* name);

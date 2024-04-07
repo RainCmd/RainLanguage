@@ -163,14 +163,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DebuggerAdaptor.h" />
+    <ClInclude Include="Detector.h" />
+    <ClInclude Include="Encoding.h" />
     <ClInclude Include="ExternC.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Package.h" />
+    <ClInclude Include="Proto.h" />
+    <ClInclude Include="Queue.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DebuggerAdaptor.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Encoding.cpp" />
     <ClCompile Include="ExternC.cpp" />
     <ClCompile Include="Package.cpp" />
     <ClCompile Include="Server.cpp" />

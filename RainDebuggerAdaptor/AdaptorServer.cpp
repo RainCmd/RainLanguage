@@ -540,6 +540,7 @@ bool OnRecv(Proto proto, DataPackage pkg)
 			}
 			break;
 		case Proto::SEND_SetLocal:
+			break;
 	}
 	return false;
 }

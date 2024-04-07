@@ -30,6 +30,18 @@
     <ClInclude Include="Package.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Detector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Proto.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Encoding.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -45,6 +57,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Package.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Encoding.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

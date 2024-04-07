@@ -34,7 +34,7 @@ private:
 	void* debugFrame;
 	void* name;
 	uint8* address;
-	void* internalType;
+	void* internalType;//变量类型不是值的类型
 public:
 	/// <summary>
 	/// 类型
@@ -113,6 +113,11 @@ public:
 	/// </summary>
 	RainDebuggerSpace GetChild(uint32 index);
 	/// <summary>
+	/// 获取子空间
+	/// </summary>
+	/// <param name="name">子空间名</param>
+	RainDebuggerSpace GetChild(const RainString& name);
+	/// <summary>
 	/// 变量数量
 	/// </summary>
 	/// <returns></returns>
@@ -121,6 +126,11 @@ public:
 	/// 获取变量
 	/// </summary>
 	RainDebuggerVariable GetVariable(uint32 index);
+	/// <summary>
+	/// 获取变量
+	/// </summary>
+	/// <param name="name">变量名</param>
+	RainDebuggerVariable GetVariable(const RainString& name);
 	~RainDebuggerSpace();
 };
 
@@ -154,7 +164,7 @@ public:
 	/// <summary>
 	/// 当前执行的行号
 	/// </summary>
-	inline uint32 GetLine() { return line; }
+	inline uint32 GetLine() const { return line; }
 	/// <summary>
 	/// 局部变量数量
 	/// </summary>
