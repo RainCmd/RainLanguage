@@ -15,6 +15,11 @@ static SOCKET cSocket = INVALID_SOCKET;
 static sockaddr_in addr = {};
 static Debugger* debugger = nullptr;
 
+static RainString WS2RS(const wstring& src)
+{
+	return RainString(src.c_str(), (uint32)src.length());
+}
+
 static void WriteSummary(WritePackage& writer, const RainDebuggerVariable& variable)
 {
 	RainString rs_variableName = variable.GetName();
@@ -42,6 +47,37 @@ static void WriteExpand(WritePackage& writer, const RainDebuggerVariable& variab
 	}
 }
 
+static void WriteTrace(Debugger* dbg, uint64 taskID, WritePackage& writer)
+{
+	writer.WriteUint64(taskID);
+
+	RainTraceIterator iterator = dbg->GetTraceIterator(taskID);
+	uint32& traceCount = writer.WriteUint32(0);
+	while(iterator.Next())
+	{
+		traceCount++;
+		RainTrace trace = iterator.Current();
+		RainString file = trace.FileName();
+		writer.WriteString(wstring(file.value, file.length));
+		writer.WriteUint32(trace.Line());
+	}
+}
+
+static void WriteTasks(Debugger* dbg, WritePackage& writer)
+{
+	uint64 currentTask = 0;
+	uint32& taskCount = writer.WriteUint32(0);
+	RainTaskIterator taskIterator = dbg->GetTaskIterator();
+	while(taskIterator.Next())
+	{
+		taskCount++;
+		RainTraceIterator traceIterator = taskIterator.Current();
+		writer.WriteUint64(traceIterator.TaskID());
+		if(traceIterator.IsActive()) currentTask = traceIterator.TaskID();
+	}
+	WriteTrace(dbg, currentTask, writer);
+}
+
 static bool GetVariable(ReadPackage& reader, WritePackage& writer, RainDebuggerVariable& variable)
 {
 	uint32 count = reader.ReadUint32();
@@ -64,7 +100,7 @@ static bool GetSpace(ReadPackage& reader, WritePackage& writer, RainDebuggerSpac
 	while(count--)
 	{
 		wstring name = reader.ReadString();
-		space = space.GetChild(RainString(name.c_str(), name.length()));
+		space = space.GetChild(WS2RS(name));
 		if(space.IsValid()) writer.WriteString(name);
 		else return false;
 	}
@@ -95,7 +131,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 				if(file.empty()) return;
 				writer.WriteString(file);
 				uint32& count = writer.WriteUint32(0);
-				RainString rs_file(file.c_str(), file.length());
+				RainString rs_file = WS2RS(file);
 				uint32 lineCount = reader.ReadUint32();
 				while(lineCount--)
 				{
@@ -118,7 +154,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			{
 				wstring file = reader.ReadString();
 				if(file.empty()) return;
-				RainString rs_file(file.c_str(), file.length());
+				RainString rs_file = WS2RS(file);
 				uint32 lineCount = reader.ReadUint32();
 				while(lineCount--)
 				{
@@ -131,14 +167,20 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RECV_ClearBreaks:
 			debugger->ClearBreakpoints();
 			break;
+		case Proto::RECV_Pause:
+			debugger->Pause();
+			break;
+		case Proto::RECV_Continue:
+			debugger->Continue();
+			break;
 		case Proto::RECV_Step:
 		{
 			uint32 step = reader.ReadUint32();
 			debugger->Step((StepType)step);
 		}
 		break;
-		case Proto::SEND_OnBreak: break;
 		case Proto::SEND_OnException: break;
+		case Proto::SEND_OnBreak: break;
 		case Proto::RECV_Space:
 		{
 			if(!debugger->IsBreaking()) return;
@@ -174,7 +216,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			if(!GetSpace(reader, writer, space)) return;
 
 			wstring variableName = reader.ReadString();
-			RainDebuggerVariable variable = space.GetVariable(RainString(variableName.c_str(), variableName.length()));
+			RainDebuggerVariable variable = space.GetVariable(WS2RS(variableName));
 			if(!variable.IsValid()) return;
 			writer.WriteString(variableName);
 
@@ -196,14 +238,14 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			if(!GetSpace(reader, writer, space)) return;
 
 			wstring variableName = reader.ReadString();
-			RainDebuggerVariable variable = space.GetVariable(RainString(variableName.c_str(), variableName.length()));
+			RainDebuggerVariable variable = space.GetVariable(WS2RS(variableName));
 			if(!variable.IsValid()) return;
 			writer.WriteString(variableName);
 
 			if(!GetVariable(reader, writer, variable)) return;
 
 			wstring variableValue = reader.ReadString();
-			variable.SetValue(RainString(variableValue.c_str(), variableValue.length()));
+			variable.SetValue(WS2RS(variableValue));
 			RainString rs_variableValue = variable.GetValue();
 			variableValue.assign(rs_variableValue.value, rs_variableValue.length);
 			writer.WriteString(variableValue);
@@ -212,7 +254,40 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		}
 		break;
 		case Proto::SEND_SetGlobal: break;
+		case Proto::RECV_Task:
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::SEND_Task);
+			WriteTrace(debugger, reader.ReadUint64(), writer);
+			Send(socket, writer);
+		}
+		break;
 		case Proto::SEND_Task: break;
+		case Proto::RECV_Trace:
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::SEND_Task);
+
+			uint64 taskId = reader.ReadUint64();
+			uint32 deep = reader.ReadUint32();
+			RainTraceIterator iterator = debugger->GetTraceIterator(taskId);
+			if(iterator.IsValid()) return;
+			writer.WriteUint64(taskId);
+			writer.WriteUint32(deep);
+			while(deep--) if(!iterator.Next()) return;
+
+			RainTrace trace = iterator.Current();
+			uint32 variableCount = trace.LocalCount();
+			writer.WriteUint32(variableCount);
+			for(uint32 i = 0; i < variableCount; i++)
+				WriteSummary(writer, trace.GetLocal(i));
+
+			Send(socket, writer);
+		}
+		break;
+		case Proto::SEND_Trace: break;
 		case Proto::RECV_Local:
 		{
 			if(!debugger->IsBreaking()) return;
@@ -230,7 +305,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 
 			RainTrace trace = iterator.Current();
 			wstring localName = reader.ReadString();
-			RainDebuggerVariable variable = trace.GetLocal(RainString(localName.c_str(), localName.length()));
+			RainDebuggerVariable variable = trace.GetLocal(WS2RS(localName));
 			if(!variable.IsValid()) return;
 			writer.WriteString(localName);
 
@@ -259,14 +334,14 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 
 			RainTrace trace = iterator.Current();
 			wstring localName = reader.ReadString();
-			RainDebuggerVariable variable = trace.GetLocal(RainString(localName.c_str(), localName.length()));
+			RainDebuggerVariable variable = trace.GetLocal(WS2RS(localName));
 			if(!variable.IsValid()) return;
 			writer.WriteString(localName);
 
 			if(!GetVariable(reader, writer, variable)) return;
 
 			wstring variableValue = reader.ReadString();
-			variable.SetValue(RainString(variableValue.c_str(), variableValue.length()));
+			variable.SetValue(WS2RS(variableValue));
 			RainString rs_variableValue = variable.GetValue();
 			variableValue.assign(rs_variableValue.value, rs_variableValue.length);
 			writer.WriteString(variableValue);
@@ -294,7 +369,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			wstring file = reader.ReadString();
 			uint32 line = reader.ReadUint32();
 			uint32 character = reader.ReadUint32();
-			RainDebuggerVariable variable = trace.GetVariable(RainString(file.c_str(), file.length()), line, character);
+			RainDebuggerVariable variable = trace.GetVariable(WS2RS(file), line, character);
 			if(variable.IsValid())
 			{
 				writer.WriteBool(true);
@@ -348,6 +423,31 @@ static void AcceptClient()
 
 		if(socket != INVALID_SOCKET) closesocket(socket);
 	}
+}
+
+void OnHitBreakpoint(uint64 task)
+{
+	Debugger* dbg = debugger;
+	if(!dbg) return;
+	SOCKET socket = cSocket;
+	if(socket == INVALID_SOCKET) return;
+	WritePackage writer;
+	writer.WriteProto(Proto::SEND_OnBreak);
+	WriteTasks(dbg, writer);
+	Send(socket, writer);
+}
+
+void OnTaskExit(uint64 task, const RainString& msg)
+{
+	Debugger* dbg = debugger;
+	if(!dbg) return;
+	SOCKET socket = cSocket;
+	if(socket == INVALID_SOCKET) return;
+	WritePackage writer;
+	writer.WriteProto(Proto::SEND_OnException);
+	WriteTasks(dbg, writer);
+	writer.WriteString(wstring(msg.value, msg.length));
+	Send(socket, writer);
 }
 
 bool InitServer(const char* path, const char* name, unsigned short& port)

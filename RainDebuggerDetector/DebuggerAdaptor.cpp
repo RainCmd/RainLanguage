@@ -1,23 +1,31 @@
 #include "DebuggerAdaptor.h"
 #include "Builder.h"
 #include "Encoding.h"
+#include <thread>
+#include "Server.h"
 using namespace std;
 
 void Debugger::OnHitBreakpoint(uint64 task)
 {
+	::OnHitBreakpoint(task);
+	pause = true;
+	while(pause) this_thread::sleep_for(chrono::milliseconds(100));
 }
 
 void Debugger::OnTaskExit(uint64 task, const RainString& message)
 {
+	::OnTaskExit(task, message);
+	pause = true;
+	while(pause) this_thread::sleep_for(chrono::milliseconds(100));
 }
 
 void Debugger::OnContinue()
 {
-
+	pause = false;
 }
 
 Debugger::Debugger(const wstring& path, const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
-	:path(path), RainDebugger(name, kernel, loader, unloader)
+	:pause(false), path(path), RainDebugger(name, kernel, loader, unloader)
 {
 }
 

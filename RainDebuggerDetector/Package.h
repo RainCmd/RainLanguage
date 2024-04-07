@@ -12,7 +12,7 @@ private:
 	template<typename T>
 	T& Read(uint size)
 	{
-		if(this.size < size + position) throw "数组越界";
+		if(this->size < size + position) throw "数组越界";
 		T* result = (T*)(buffer + position);
 		position += size;
 		return *result;
@@ -58,7 +58,7 @@ public:
 	{
 		return Write<ulong>(value, 8);
 	}
-	inline void WriteString(std::wstring value);
+	void WriteString(std::wstring value);
 	const char* GetSendBuffer(uint& length) const;
 	~WritePackage();
 };

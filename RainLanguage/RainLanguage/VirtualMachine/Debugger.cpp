@@ -512,16 +512,16 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 	return RainDebuggerVariable();
 }
 
-RainDebuggerVariable RainTrace::GetLocal(const RainString& name)
+RainDebuggerVariable RainTrace::GetLocal(const RainString& localName)
 {
 	if(IsValid() && function != INVALID)
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
-		String localName = database->agency->Add(name.value, name.length);
+		String local_name = database->agency->Add(localName.value, localName.length);
 		for(uint32 i = 0; i < database->functions[function]->locals.Count(); i++)
 		{
 			DebugLocal& local = database->functions[function]->locals[i];
-			if(local.name == localName)
+			if(local.name == local_name)
 				return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
 		}
 	}
@@ -936,7 +936,7 @@ void RainDebugger::Continue()
 
 void RainDebugger::Step(StepType stepType)
 {
-	if(IsBreaking())
+	if(IsBreaking() && stepType != StepType::Pause)
 	{
 		type = stepType;
 		OnContinue();
@@ -948,7 +948,7 @@ void RainDebugger::OnBreak(uint64 task, uint32 deep)
 	switch(type)
 	{
 		case StepType::None:
-		case StepType::Pause:
+		case StepType::Pause: 
 			break;
 		case StepType::Over:
 			if(task != currentTask) return;

@@ -164,7 +164,7 @@ public:
 	/// <summary>
 	/// 当前执行的行号
 	/// </summary>
-	inline uint32 GetLine() const { return line; }
+	inline uint32 Line() const { return line; }
 	/// <summary>
 	/// 局部变量数量
 	/// </summary>
@@ -176,7 +176,7 @@ public:
 	/// <summary>
 	/// 获取局部变量
 	/// </summary>
-	RainDebuggerVariable GetLocal(const RainString& name);
+	RainDebuggerVariable GetLocal(const RainString& localName);
 	/// <summary>
 	/// 当前栈上下文中文本对应的变量数据
 	/// </summary>

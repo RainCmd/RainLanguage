@@ -46,10 +46,10 @@ WritePackage::~WritePackage()
 	buffer = nullptr;
 }
 
-inline void WritePackage::WriteString(wstring value)
+void WritePackage::WriteString(wstring value)
 {
 	string str = UTF_16To8(value);
-	uint length = str.length();
+	uint length = (uint)str.length();
 	WriteUint32(length);
 	Grow(length);
 	const char* src = str.c_str();

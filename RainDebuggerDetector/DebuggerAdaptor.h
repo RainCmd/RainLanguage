@@ -5,6 +5,7 @@
 class Debugger : public RainDebugger
 {
 private:
+	bool pause;
 	std::wstring path;
 protected:
 	void OnHitBreakpoint(uint64 task);

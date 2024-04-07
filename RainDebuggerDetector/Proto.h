@@ -21,14 +21,26 @@ enum class Proto : uint
 	RECV_RemoveBreaks,
 	RECV_ClearBreaks,
 
+	RECV_Pause,
+	RECV_Continue,
 	//	uint32	StepType
 	RECV_Step,
 
-	SEND_OnBreak,
-	//	string	file
-	//	uint32	line
+	//	uint32	taskCount
+	//		uint64	taskId
+	//	uint64	currentTask
+	//	uint32	traceCount
+	//		string	file
+	//		uint32	line
 	//	string	message
 	SEND_OnException,
+	//	uint32	taskCount
+	//		uint64	taskId
+	//	uint64	currentTask
+	//	uint32	traceCount
+	//		string	file
+	//		uint32	line
+	SEND_OnBreak,
 
 	//	uint32	nameCount
 	//		string	name
@@ -74,13 +86,23 @@ enum class Proto : uint
 	//	string	value
 	SEND_SetGlobal,
 
-	//	uint32	taskCount
-	//		uint64		taskId
-	//		bool		isActive
-	//		uint32		traceCount
-	//			string		functionName
-	//			uint32		line
+	//	uint64	taskId
+	RECV_Task,
+	//	uint64	taskId
+	//	uint32	traceCount
+	//		string	file
+	//		uint32	line
 	SEND_Task,
+	//	uint64	taskId
+	//	uint32	deep
+	RECV_Trace,
+	//	uint64	taskId
+	//	uint32	deep
+	//	uint32	variableCount
+	//		string	variableName
+	//		uint16	RainType
+	//		string	variableValue
+	SEND_Trace,
 	//	uint64	taskId
 	//	uint32	traceDeep
 	//	string	localName
