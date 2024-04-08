@@ -42,6 +42,6 @@ Test
 RainLanguageSO/RainLanguage
 
 RainLanguagePlugin/.vscode/
-RainLanguagePlugin/dist/
+#RainLanguagePlugin/out/
 RainLanguagePlugin/node_modules/
 */*.vsix

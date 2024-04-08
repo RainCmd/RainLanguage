@@ -9,7 +9,7 @@
 #include <vector>
 #include <thread>
 
-bool EndWidth(wstring src, wstring suffix)
+static bool EndWidth(wstring src, wstring suffix)
 {
 	if(src.size() < suffix.size()) return false;
 	auto sidx = src.size() - suffix.size();
@@ -67,12 +67,12 @@ public:
 };
 
 
-void Print(RainKernel&, CallerWrapper& caller)
+static void Print(RainKernel&, CallerWrapper& caller)
 {
 	wcout << caller.GetStringParameter(0).value;
 }
-void NativeHelper(RainKernel&, CallerWrapper&) {}
-OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, const RainType* parameterTypes, uint32 parameterCount)
+static void NativeHelper(RainKernel&, CallerWrapper&) {}
+static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, const RainType* parameterTypes, uint32 parameterCount)
 {
 	uint32 s = fullName.length;
 	while(--s > 0)
@@ -84,11 +84,11 @@ OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, const RainT
 	wstring fn(fullName.value + s, fullName.length - s);
 	if(fn == L"Print") return Print;
 
-	wcout << "\n本地函数绑定失败：" << fullName.value << endl;
+	wcout << "本地函数绑定失败：" << fullName.value << endl;
 	return NativeHelper;
 }
 
-void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frameCount, const RainString msg)
+static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frameCount, const RainString msg)
 {
 	wcout << L"异常信息:" << msg.value << L"\n";
 	for(size_t i = 0; i < frameCount; i++)
@@ -97,8 +97,6 @@ void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frame
 int main(int cnt, char** args)
 {
 	Args _args = Parse(cnt, args);
-	_args.path = L"D:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\";
-label_restart:
 	CodeLoadHelper helper(_args.path);
 	BuildParameter parameter(RainString(_args.name.c_str(), (uint32)_args.name.size()), false, &helper, nullptr, nullptr, ErrorLevel::LoggerLevel4);
 	auto product = Build(parameter);
@@ -134,10 +132,4 @@ label_restart:
 		else wcout << "entry:" << _args.entry << " not found" << endl;
 	}
 	delete product;
-	cout << "\n再次编译？";
-	char c[20];
-	cin >> c;
-	cout << endl;
-	if((*c | 0x20) == 'y')
-		goto label_restart;
 }

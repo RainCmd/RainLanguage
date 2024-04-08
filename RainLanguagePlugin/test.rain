@@ -7,6 +7,7 @@ main()
     a = +as + d
     
     a = +"qwe+'.'+qwe +" + 2
+    qwer
     
     i++ + ++d
     
