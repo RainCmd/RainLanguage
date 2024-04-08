@@ -1,0 +1,41 @@
+{
+	"for循环": {
+		"prefix": "for",
+		"body": [
+			"for var i = 0; i < $1; i++",
+			"\t$2"
+		],
+		"description": "for 循环"
+	},
+	"try语句": {
+		"prefix": "try",
+		"body": [
+			"try",
+			"\t$1",
+			"cache $2",
+			"\t$3",
+			"finally",
+			"\t$4"
+		],
+		"description": "try catch finally"
+	},
+	"tryf语句": {
+		"prefix": "tryf",
+		"body": [
+			"try",
+			"\t$1",
+			"finally",
+			"\t$2"
+		],
+		"description": "try finally"
+	},
+	"region": {
+		"prefix": "region",
+		"body": [
+			"//region $1",
+			"$2",
+			"//endregion"
+		],
+		"description": "region 折叠区域"
+	}
+}

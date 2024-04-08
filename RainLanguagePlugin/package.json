@@ -1,0 +1,114 @@
+{
+    "name": "rain-language",
+    "displayName": "雨言",
+    "description": "对雨言提供关键字高亮，代码片段完成，代码格式化和远程调试等功能",
+    "version": "2.0.0",
+    "publisher": "渴望蓝天",
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "license": "MIT",
+    "icon": "images/kq.png",
+    "categories": [
+        "Programming Languages",
+        "Formatters",
+        "Debuggers"
+    ],
+    "activationEvents": [
+        "onDebug"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/RainCmd/RainLanguage.git"
+    },
+    "main": "./out/extension.js",
+    "scripts": {
+        "编译": "tsc -b",
+        "安装依赖": "npm install",
+        "打包": "vsce package"
+    },
+    "devDependencies": {
+        "@types/node": "^14.18.29",
+        "@types/vscode": "^1.28.0",
+        "typescript": "^4.8.4"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "id": "雨言",
+                "extensions": [
+                    ".rain",
+                    ".雨"
+                ],
+                "aliases": [
+                    "RainLanguage",
+                    "雨言"
+                ],
+                "icon": {
+                    "dark": "./images/kq-mini.png",
+                    "light": "./images/kq-mini.png"
+                },
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "menus": {
+            "editor/title/run": [
+                {
+                    "command": "cmd.雨言远程调试",
+                    "when": "resourceLangId == 雨言"
+                }
+            ]
+        },
+        "commands":[
+            {
+                "command": "cmd.雨言远程调试",
+                "title": "远程调试",
+                "enablement": "!inDebugMode",
+                "icon": "$(debug-alt)"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "雨言",
+                "path": "./snippets.json"
+            }
+        ],
+        "breakpoints": [
+            {
+                "language": "雨言"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "雨言附加到进程",
+                "label": "附加到其他进程，对进程中运行的雨言进行调试",
+                "program": "",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "attach": {
+                        "required":[
+                            "libraryName"
+                        ],
+                        "properties":{
+                            "libraryName":{
+                                "type":"string",
+                                "description": "当前程序集名",
+                                "default": "TestLibrary"
+                            }
+                        }
+                    }
+                }   
+            }
+        ],
+        "grammars": [
+            {
+                "language": "雨言",
+                "scopeName": "source.雨言",
+                "path" : "./rain.tmLanguage.json"
+            }
+        ]
+    },
+    "dependencies": {
+        "vsce": "^2.15.0"
+    }
+}
