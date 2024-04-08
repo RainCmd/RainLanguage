@@ -125,7 +125,7 @@ int main(int cnt, char** args)
 			invoker.Start(true, false);
 			while(kernel->GetState().taskCount)
 			{
-				this_thread::sleep_for(chrono::milliseconds(1000 / _args.fps));
+				this_thread::sleep_for(chrono::milliseconds(_args.timestep));
 				kernel->Update();
 			}
 		}

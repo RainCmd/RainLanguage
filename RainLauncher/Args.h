@@ -6,7 +6,7 @@ struct Args
 	wstring name;
 	wstring path;
 	wstring entry;
-	int fps;
-	Args(const wstring& name, const wstring& path, const wstring& entry, int fps) : name(name), path(path), entry(entry), fps(fps) {}
+	int timestep;//ms
+	Args(const wstring& name, const wstring& path, const wstring& entry, int timestep) : name(name), path(path), entry(entry), timestep(timestep) {}
 };
 Args Parse(int cnt, char** args);

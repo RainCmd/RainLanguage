@@ -3,7 +3,8 @@
 import * as vscode from "vscode";
 import FormatProvider from './formatterProvider'
 import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
-import { RainDebugConfigurationProvider } from "./DebugConfigurationProvider";
+import { RainAttachDebugConfigurationProvider } from "./AttachDebugConfigurationProvider";
+import { RainLaunchDebugConfigurationProvider } from "./LaunchDebugConfigurationProvider";
 
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -13,12 +14,19 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, new FormatProvider()),
         vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n'),
-        vscode.debug.registerDebugConfigurationProvider("雨言附加到进程", new RainDebugConfigurationProvider(context)),
+
+        vscode.debug.registerDebugConfigurationProvider("雨言调试运行", new RainLaunchDebugConfigurationProvider(context)),
+        vscode.debug.registerDebugAdapterDescriptorFactory("雨言调试运行", new InlineDebugAdapterFactory()),
+        vscode.commands.registerCommand("cmd.雨言调试", () => {
+            vscode.window.showInformationMessage("该功能还在开发中")
+        }),
+
+        vscode.debug.registerDebugConfigurationProvider("雨言附加到进程", new RainAttachDebugConfigurationProvider(context)),
         vscode.debug.registerDebugAdapterDescriptorFactory("雨言附加到进程", new InlineDebugAdapterFactory()),
-        vscode.commands.registerCommand('cmd.雨言远程调试', () => {
+        vscode.commands.registerCommand('cmd.附加到进程', () => {
             vscode.debug.startDebugging(undefined, {
                 type: "雨言附加到进程",
-                name: "雨言远程调试",
+                name: "附加到进程",
                 request: "attach",
                 projectName: ""
             })

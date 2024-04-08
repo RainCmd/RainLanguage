@@ -41,8 +41,7 @@
             {
                 "id": "雨言",
                 "extensions": [
-                    ".rain",
-                    ".雨"
+                    ".rain"
                 ],
                 "aliases": [
                     "RainLanguage",
@@ -58,18 +57,27 @@
         "menus": {
             "editor/title/run": [
                 {
-                    "command": "cmd.雨言远程调试",
-                    "when": "resourceLangId == 雨言",
-                    "group": "navigation"
+                    "command": "cmd.雨言调试",
+                    "when": "resourceLangId == 雨言"
+                },
+                {
+                    "command": "cmd.附加到进程",
+                    "when": "resourceLangId == 雨言"
                 }
             ]
         },
         "commands": [
             {
-                "command": "cmd.雨言远程调试",
-                "title": "远程调试",
+                "command": "cmd.雨言调试",
+                "title": "调试",
                 "enablement": "!inDebugMode",
                 "icon": "$(debug-alt)"
+            },
+            {
+                "command": "cmd.附加到进程",
+                "title": "附加到进程",
+                "enablement": "!inDebugMode",
+                "icon": "$(sort-precedence)"
             }
         ],
         "snippets": [
@@ -85,6 +93,30 @@
         ],
         "debuggers": [
             {
+                "type": "雨言调试运行",
+                "label": "直接运行并调试",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "EntryPoint",
+                            "Timesnap"
+                        ],
+                        "properties": {
+                            "EntryPoint": {
+                                "type": "string",
+                                "description": "入口函数",
+                                "default": "Main"
+                            },
+                            "Timesnap": {
+                                "type": "number",
+                                "description": "一帧的时长(毫秒)",
+                                "default": "100"
+                            }
+                        }
+                    }
+                }
+            },
+            {
                 "type": "雨言附加到进程",
                 "label": "附加到其他进程，对进程中运行的雨言进行调试",
                 "configurationAttributes": {
@@ -97,24 +129,6 @@
                                 "type": "string",
                                 "description": "程序集名",
                                 "default": "RainTest"
-                            }
-                        }
-                    }
-                }
-            },
-            {
-                "type": "雨言调试运行",
-                "label": "直接运行并调试",
-                "configurationAttributes": {
-                    "launch": {
-                        "required": [
-                            "EntryPoint"
-                        ],
-                        "properties": {
-                            "EntryPoint": {
-                                "type": "string",
-                                "description": "入口函数",
-                                "default": "Main"
                             }
                         }
                     }
