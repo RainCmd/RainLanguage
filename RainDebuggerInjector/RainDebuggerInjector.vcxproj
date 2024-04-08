@@ -123,6 +123,10 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -139,6 +143,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="RainDebuggerInjector.cpp" />

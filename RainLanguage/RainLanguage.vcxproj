@@ -245,6 +245,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|Win32'">
     <ClCompile>
@@ -260,6 +263,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -279,6 +285,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DotNet|Win32'">
     <ClCompile>
@@ -298,6 +307,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|Win32'">
     <ClCompile>
@@ -317,6 +329,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DotNetFixed|Win32'">
     <ClCompile>
@@ -337,6 +352,9 @@
       <EnableUAC>false</EnableUAC>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -354,8 +372,8 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
@@ -374,8 +392,8 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -399,8 +417,8 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DotNet|x64'">
@@ -424,8 +442,8 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
@@ -450,8 +468,8 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -479,8 +497,8 @@
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
