@@ -18,7 +18,11 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.debug.registerDebugConfigurationProvider("雨言调试运行", new RainLaunchDebugConfigurationProvider(context)),
         vscode.debug.registerDebugAdapterDescriptorFactory("雨言调试运行", new InlineDebugAdapterFactory()),
         vscode.commands.registerCommand("cmd.雨言调试", () => {
-            vscode.window.showInformationMessage("该功能还在开发中")
+            vscode.debug.startDebugging(undefined, {
+                type: "雨言调试运行",
+                name: "调试",
+                request: "launch"
+            })
         }),
 
         vscode.debug.registerDebugConfigurationProvider("雨言附加到进程", new RainAttachDebugConfigurationProvider(context)),
@@ -27,8 +31,7 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.debug.startDebugging(undefined, {
                 type: "雨言附加到进程",
                 name: "附加到进程",
-                request: "attach",
-                projectName: ""
+                request: "attach"
             })
     }));
 }

@@ -27,7 +27,7 @@ static bool CheckCmd(const char* left, const char* right)
 }
 Args Parse(int cnt, char** args)
 {
-	Args result = Args(L"”Í—‘≤‚ ‘π§≥Ã", L".\\", L"Main", 10);
+	Args result = Args(L"”Í—‘≤‚ ‘π§≥Ã", L".\\", L"Main", 100, false);
 	for(size_t i = 0; i < cnt; i++)
 	{
 		char* arg = args[i];
@@ -53,6 +53,7 @@ Args Parse(int cnt, char** args)
 			if(++i >= cnt) break;
 			result.timestep = atoi(args[i]);
 		}
+		else if(CheckCmd(arg, "debug")) result.debug = true;
 	}
 	return result;
 }

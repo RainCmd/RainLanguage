@@ -1,6 +1,7 @@
 ﻿#include "Args.h"
 #include <Builder.h>
 #include <VirtualMachine.h>
+#include <Debugger.h>
 
 #include <iostream>
 #include <string>
@@ -94,12 +95,14 @@ static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint3
 	for(size_t i = 0; i < frameCount; i++)
 		wcout << frames[i].libraryName.value << L"." << frames[i].functionName.value << "\t" << frames[i].address << endl;
 }
-int main(int cnt, char** args)
+
+static RainProduct* product;
+int main(int cnt, char** _args)
 {
-	Args _args = Parse(cnt, args);
-	CodeLoadHelper helper(_args.path);
-	BuildParameter parameter(RainString(_args.name.c_str(), (uint32)_args.name.size()), false, &helper, nullptr, nullptr, ErrorLevel::LoggerLevel4);
-	auto product = Build(parameter);
+	Args args = Parse(cnt, _args);
+	CodeLoadHelper helper(args.path);
+	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, ErrorLevel::LoggerLevel4);
+	product = Build(parameter);
 	for(uint32 i = 0; i <= (uint32)ErrorLevel::LoggerLevel4; i++)
 	{
 		ErrorLevel lvl = (ErrorLevel)i;
@@ -116,20 +119,25 @@ int main(int cnt, char** args)
 	else
 	{
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(&library, 1, nullptr, nullptr, nullptr, nullptr, NativeLoader, OnExceptionExitFunc);
+		StartupParameter parameter(&library, 1, nullptr, nullptr, [](const RainString& name) { return product->GetLibrary(); }, nullptr, NativeLoader, OnExceptionExitFunc);
 		RainKernel* kernel = CreateKernel(parameter);
-		RainFunction entry = kernel->FindFunction(_args.entry.c_str(), true);
+		if(args.debug)
+		{
+			RegistDebugger(kernel, [](const RainString& name) { return product->GetRainProgramDatabase(); }, nullptr);
+			this_thread::sleep_for(chrono::milliseconds(args.timestep));
+		}
+		RainFunction entry = kernel->FindFunction(args.entry.c_str(), true);
 		if(entry.IsValid())
 		{
 			InvokerWrapper invoker = entry.CreateInvoker();
 			invoker.Start(true, false);
 			while(kernel->GetState().taskCount)
 			{
-				this_thread::sleep_for(chrono::milliseconds(_args.timestep));
+				this_thread::sleep_for(chrono::milliseconds(args.timestep));
 				kernel->Update();
 			}
 		}
-		else wcout << "entry:" << _args.entry << " not found" << endl;
+		else wcout << "entry:" << args.entry << " not found" << endl;
 	}
 	delete product;
 }
