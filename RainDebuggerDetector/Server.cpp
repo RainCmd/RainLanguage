@@ -119,10 +119,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 	if(!reader.IsValid()) return;
 	switch(reader.ReadProto())
 	{
-		case Proto::RECV_AddBreadks:
+		case Proto::RRECV_AddBreadks:
 		{
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_AddBreadks);
+			writer.WriteProto(Proto::RSEND_AddBreadks);
+			writer.WriteUint32(reader.ReadUint32());
 			uint32 fileCount = reader.ReadUint32();
 			writer.WriteUint32(fileCount);
 			while(fileCount--)
@@ -146,7 +147,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_AddBreadks: break;
+		case Proto::RSEND_AddBreadks: break;
 		case Proto::RECV_RemoveBreaks:
 		{
 			uint32 fileCount = reader.ReadUint32();
@@ -181,11 +182,12 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		break;
 		case Proto::SEND_OnException: break;
 		case Proto::SEND_OnBreak: break;
-		case Proto::RECV_Space:
+		case Proto::RRECV_Space:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_Space);
+			writer.WriteProto(Proto::RSEND_Space);
+			writer.WriteUint32(reader.ReadUint32());
 
 			RainDebuggerSpace space = debugger->GetSpace();
 			if(!GetSpace(reader, writer, space)) return;
@@ -205,12 +207,13 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Space: break;
-		case Proto::RECV_Global:
+		case Proto::RSEND_Space: break;
+		case Proto::RRECV_Global:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_Global);
+			writer.WriteProto(Proto::RSEND_Global);
+			writer.WriteUint32(reader.ReadUint32());
 
 			RainDebuggerSpace space = debugger->GetSpace();
 			if(!GetSpace(reader, writer, space)) return;
@@ -227,12 +230,13 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Global: break;
-		case Proto::RECV_SetGlobal:
+		case Proto::RSEND_Global: break;
+		case Proto::RRECV_SetGlobal:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_SetGlobal);
+			writer.WriteProto(Proto::RSEND_SetGlobal);
+			writer.WriteUint32(reader.ReadUint32());
 
 			RainDebuggerSpace space = debugger->GetSpace();
 			if(!GetSpace(reader, writer, space)) return;
@@ -253,22 +257,24 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_SetGlobal: break;
-		case Proto::RECV_Task:
+		case Proto::RSEND_SetGlobal: break;
+		case Proto::RRECV_Task:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_Task);
+			writer.WriteProto(Proto::RSEND_Task);
+			writer.WriteUint32(reader.ReadUint32());
 			WriteTrace(debugger, reader.ReadUint64(), writer);
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Task: break;
-		case Proto::RECV_Trace:
+		case Proto::RSEND_Task: break;
+		case Proto::RRECV_Trace:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_Task);
+			writer.WriteProto(Proto::RSEND_Trace);
+			writer.WriteUint32(reader.ReadUint32());
 
 			uint64 taskId = reader.ReadUint64();
 			uint32 deep = reader.ReadUint32();
@@ -287,12 +293,13 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Trace: break;
-		case Proto::RECV_Local:
+		case Proto::RSEND_Trace: break;
+		case Proto::RRECV_Local:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_Local);
+			writer.WriteProto(Proto::RSEND_Local);
+			writer.WriteUint32(reader.ReadUint32());
 
 			uint64 taskID = reader.ReadUint64();
 			RainTraceIterator iterator = debugger->GetTraceIterator(taskID);
@@ -316,12 +323,13 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Local: break;
-		case Proto::RECV_SetLocal:
+		case Proto::RSEND_Local: break;
+		case Proto::RRECV_SetLocal:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_SetLocal);
+			writer.WriteProto(Proto::RSEND_SetLocal);
+			writer.WriteUint32(reader.ReadUint32());
 
 			uint64 taskID = reader.ReadUint64();
 			RainTraceIterator iterator = debugger->GetTraceIterator(taskID);
@@ -349,12 +357,13 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_SetLocal: break;
-		case Proto::RECV_Eual:
+		case Proto::RSEND_SetLocal: break;
+		case Proto::RRECV_Eual:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
-			writer.WriteProto(Proto::SEND_Eual);
+			writer.WriteProto(Proto::RSEND_Eual);
+			writer.WriteUint32(reader.ReadUint32());
 
 			uint64 taskID = reader.ReadUint64();
 			RainTraceIterator iterator = debugger->GetTraceIterator(taskID);
@@ -382,7 +391,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			Send(socket, writer);
 		}
 		break;
-		case Proto::SEND_Eual: break;
+		case Proto::RSEND_Eual: break;
 		default:
 			break;
 	}

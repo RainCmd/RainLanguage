@@ -3,17 +3,18 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as cp from 'child_process'
 import * as iconv from 'iconv-lite';
-import { receiveMessageOnPort } from 'worker_threads';
+import * as net from 'net'
 
 interface ProcessInfoItem extends vscode.QuickPickItem {
     pid: number;
 }
 
 export interface RainAttachDebugConfiguration extends vscode.DebugConfiguration{
-    detectorPath: string,
-    detectorName: string,
-    projectPath: string,
+    detectorPath: string
+    detectorName: string
+    projectPath: string
     projectName: string
+    socket: net.Socket
 }
 
 function IsNUllOrEmpty(value: string): boolean{
@@ -59,6 +60,7 @@ async function pickPID(injector: string) {
                 } else if (element.startsWith("title")) {
                     cur.description = element.substring(5)
                 } else if (element.startsWith("name")) {
+                    // 这里的name大多时候和cur.label相同，所以就不加了
                     // if (IsNUllOrEmpty(cur.description)) {
                     //     cur.description = element.substring(4);
                     // }
@@ -87,6 +89,31 @@ async function pickPID(injector: string) {
     })
 }
 
+async function GetDetectorPort(injector: string, pid: number, detectorPath: string, detectorName: string, projectPath: string, projectName: string) {
+    return new Promise<number>((resolve, reject) => {
+        cp.exec(`${injector} ${pid} ${detectorPath} ${detectorName} ${projectPath} ${projectName}`, { encoding: "buffer" }, (error, stdout, stderr) => {
+            const port = Number(iconv.decode(stdout, "cp936").trim())
+            if (port > 0) {
+                resolve(port)
+            } else {
+                reject(port)
+            }
+        }).on('error', error => reject)
+    })
+}
+
+async function Connect(port:number) {
+    return new Promise<net.Socket>((resolve, reject) => {
+        const client = net.connect({
+            port: port,
+            host: "localhost",
+            family: 4
+        })
+        client.on('connect', () => resolve(client));
+        client.on('error', reject)
+    })
+}
+
 export class RainAttachDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
     constructor(protected context: vscode.ExtensionContext) { }
     async resolveDebugConfiguration(folder: vscode.WorkspaceFolder, configuration: RainAttachDebugConfiguration): Promise<vscode.DebugConfiguration> {
@@ -101,7 +128,8 @@ export class RainAttachDebugConfigurationProvider implements vscode.DebugConfigu
         configuration.detectorName = "RainDebuggerDetector.dll";
         const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
         const pid = await pickPID(injector)
-        //todo 将dector注入目标进程
+        const port = await GetDetectorPort(injector, pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
+        configuration.socket = await Connect(port)
         return configuration
     }
 }

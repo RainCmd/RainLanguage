@@ -2,17 +2,19 @@
 #include "Detector.h"
 enum class Proto : uint
 {
+	//	uint32	requestId
 	//	uint32	fileCount
 	//		string	file
 	//		uint32	lineCount
 	//			uint32	line
-	RECV_AddBreadks,
+	RRECV_AddBreadks,
 	//	发送的都是添加失败的断点
+	//	uint32	requestId
 	//	uint32	fileCount
 	//		string	file
 	//		uint32	lineCount
 	//			uint32	line
-	SEND_AddBreadks,
+	RSEND_AddBreadks,
 
 	//	uint32	fileCount
 	//		string	file
@@ -42,9 +44,11 @@ enum class Proto : uint
 	//		uint32	line
 	SEND_OnBreak,
 
+	//	uint32	requestId
 	//	uint32	nameCount
 	//		string	name
-	RECV_Space,
+	RRECV_Space,
+	//	uint32	requestId
 	//	uint32	nameCount
 	//		string	name
 	//	uint32	spaceCount
@@ -53,14 +57,16 @@ enum class Proto : uint
 	//		string	variableName
 	//		uint16	RainType
 	//		string	variableValue
-	SEND_Space,
+	RSEND_Space,
 
+	//	uint32	requestId
 	//	uint32	nameCount
 	//		string	name
 	//	string	variableName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
-	RECV_Global,
+	RRECV_Global,
+	//	uint32	requestId
 	//	uint32	nameCount
 	//		string	name
 	//	string	variableName
@@ -70,45 +76,53 @@ enum class Proto : uint
 	//		string	variableName
 	//		uint16	RainType
 	//		string	variableValue
-	SEND_Global,
+	RSEND_Global,
+	//	uint32	requestId
 	//	uint32	nameCount
 	//		string	name
 	//	string	variableName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
 	//	string	value
-	RECV_SetGlobal,
+	RRECV_SetGlobal,
+	//	uint32	requestId
 	//	uint32	nameCount
 	//		string	name
 	//	string	variableName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
 	//	string	value
-	SEND_SetGlobal,
+	RSEND_SetGlobal,
 
+	//	uint32	requestId
 	//	uint64	taskId
-	RECV_Task,
+	RRECV_Task,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	traceCount
 	//		string	file
 	//		uint32	line
-	SEND_Task,
+	RSEND_Task,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	deep
-	RECV_Trace,
+	RRECV_Trace,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	deep
 	//	uint32	variableCount
 	//		string	variableName
 	//		uint16	RainType
 	//		string	variableValue
-	SEND_Trace,
+	RSEND_Trace,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	traceDeep
 	//	string	localName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
-	RECV_Local,
+	RRECV_Local,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	traceDeep
 	//	string	localName
@@ -118,29 +132,33 @@ enum class Proto : uint
 	//		string	variableName
 	//		uint16	RainType
 	//		string	variableValue
-	SEND_Local,
+	RSEND_Local,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	traceDeep
 	//	string	localName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
 	//	string	value
-	RECV_SetLocal,
+	RRECV_SetLocal,
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	traceDeep
 	//	string	localName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
 	//	string	value
-	SEND_SetLocal,
+	RSEND_SetLocal,
 
+	//	uint32	requestId
 	//	uint64	taskId
 	//	uint32	traceDeep
 	//	string	file
 	//	uint32	line
 	//	uint32	character
-	RECV_Eual,
+	RRECV_Eual,
+	//	uint32	requestId
 	//	bool	hasResult
 	//		string	value
-	SEND_Eual,
+	RSEND_Eual,
 };
