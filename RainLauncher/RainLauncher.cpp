@@ -22,6 +22,7 @@ static bool EndWidth(wstring src, wstring suffix)
 class CodeLoadHelper : public CodeLoader
 {
 	vector<wstring> files;
+	wstring workspace;
 	wstring path;
 	wstring content;
 	void LoadFiles(wstring dir)
@@ -44,7 +45,11 @@ class CodeLoadHelper : public CodeLoader
 		_findclose(handle);
 	}
 public:
-	CodeLoadHelper(wstring dir) { LoadFiles(dir.append(L"\\")); }
+	CodeLoadHelper(wstring dir) 
+	{
+		workspace = dir.append(L"\\");
+		LoadFiles(workspace);
+	}
 	bool LoadNext()
 	{
 		if(files.empty()) return false;
@@ -52,7 +57,11 @@ public:
 		files.pop_back();
 		return true;
 	}
-	const RainString CurrentPath() { return RainString(path.c_str(), (uint32)path.length()); }
+	const RainString CurrentPath() 
+	{
+		wstring rpath = path.substr(workspace.size());
+		return RainString(rpath.c_str(), (uint32)rpath.length()); 
+	}
 	const RainString CurrentContent()
 	{
 		wfstream file(path);
