@@ -3,8 +3,7 @@
 import * as vscode from "vscode";
 import FormatProvider from './formatterProvider'
 import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
-import { RainAttachDebugConfigurationProvider } from "./AttachDebugConfigurationProvider";
-import { RainLaunchDebugConfigurationProvider } from "./LaunchDebugConfigurationProvider";
+import { RainDebugConfigurationProvider } from "./DebugConfigurationProvider";
 
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -15,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, new FormatProvider()),
         vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n'),
 
-        vscode.debug.registerDebugConfigurationProvider("雨言调试运行", new RainLaunchDebugConfigurationProvider(context)),
+        vscode.debug.registerDebugConfigurationProvider("雨言调试运行", new RainDebugConfigurationProvider(context)),
         vscode.debug.registerDebugAdapterDescriptorFactory("雨言调试运行", new InlineDebugAdapterFactory()),
         vscode.commands.registerCommand("cmd.雨言调试", () => {
             vscode.debug.startDebugging(undefined, {
@@ -25,7 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
             })
         }),
 
-        vscode.debug.registerDebugConfigurationProvider("雨言附加到进程", new RainAttachDebugConfigurationProvider(context)),
+        vscode.debug.registerDebugConfigurationProvider("雨言附加到进程", new RainDebugConfigurationProvider(context)),
         vscode.debug.registerDebugAdapterDescriptorFactory("雨言附加到进程", new InlineDebugAdapterFactory()),
         vscode.commands.registerCommand('cmd.附加到进程', () => {
             vscode.debug.startDebugging(undefined, {

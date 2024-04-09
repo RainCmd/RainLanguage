@@ -21,7 +21,7 @@ wstring UTF_8To16(const string src)
 	if(!len) return L"";
 	wchar_t* pwc = new wchar_t[len];
 	MultiByteToWideChar(CP_ACP, 0, src.c_str(), -1, pwc, len);
-	wstring result = wstring(pwc, len);
+	wstring result = pwc;
 	delete[] pwc;
 	return result;
 }

@@ -8,17 +8,14 @@ static wstring S2WS(string src)
 	if(!len) return L"";
 	wchar_t* pwc = new wchar_t[len];
 	MultiByteToWideChar(CP_ACP, 0, src.c_str(), -1, pwc, len);
-	wstring result = wstring(pwc, len);
+	wstring result = pwc;
 	delete[] pwc;
 	return result;
 	return L"";
 }
 static bool CheckCmd(const char* left, const char* right)
 {
-	if(!*left) return false;
-	if(*left != '-' && *left != '/') return false;
-	left++;
-	while((*left | 0x20) == *right)
+	while(*left == *right)
 	{
 		if(!*left) return true;
 		left++; right++;
@@ -31,7 +28,8 @@ Args Parse(int cnt, char** args)
 	for(size_t i = 0; i < cnt; i++)
 	{
 		char* arg = args[i];
-		if(*arg != '-') continue;
+		if(*arg != '-' && *arg != '/') continue;
+		arg++;
 		for(size_t j = 0; arg[j]; j++) arg[j] |= 0x20;
 		if(CheckCmd(arg, "name"))
 		{

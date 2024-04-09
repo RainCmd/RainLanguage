@@ -3,7 +3,7 @@
 #include <Psapi.h>
 #include <ShlObj.h>
 
-HWND GetProcessWindow(DWORD pid)
+static HWND GetProcessWindow(DWORD pid)
 {
 	HWND hWnd = FindWindowEx(nullptr, nullptr, nullptr, nullptr);
 	while(hWnd != nullptr)

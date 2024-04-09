@@ -44,7 +44,7 @@ class CodeLoadHelper : public CodeLoader
 		_findclose(handle);
 	}
 public:
-	CodeLoadHelper(wstring dir) { LoadFiles(dir); }
+	CodeLoadHelper(wstring dir) { LoadFiles(dir.append(L"\\")); }
 	bool LoadNext()
 	{
 		if(files.empty()) return false;
@@ -71,6 +71,7 @@ public:
 static void Print(RainKernel&, CallerWrapper& caller)
 {
 	wcout << caller.GetStringParameter(0).value;
+	wcout.flush();
 }
 static void NativeHelper(RainKernel&, CallerWrapper&) {}
 static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, const RainType* parameterTypes, uint32 parameterCount)
@@ -121,15 +122,22 @@ int main(int cnt, char** _args)
 		const RainLibrary* library = product->GetLibrary();
 		StartupParameter parameter(&library, 1, nullptr, nullptr, [](const RainString& name) { return product->GetLibrary(); }, nullptr, NativeLoader, OnExceptionExitFunc);
 		RainKernel* kernel = CreateKernel(parameter);
-		if(args.debug)
-		{
-			RegistDebugger(kernel, [](const RainString& name) { return product->GetRainProgramDatabase(); }, nullptr);
-			this_thread::sleep_for(chrono::milliseconds(args.timestep));
-		}
 		RainFunction entry = kernel->FindFunction(args.entry.c_str(), true);
 		if(entry.IsValid())
 		{
 			InvokerWrapper invoker = entry.CreateInvoker();
+			if(args.debug)
+			{
+				RegistDebugger(kernel, [](const RainString& name) { return product->GetRainProgramDatabase(); }, nullptr);
+				char success;
+				cin >> success;
+				if((success | 0x20) != 'y')
+				{
+					wcout << "fail to debug" << endl;
+					delete product;
+					return 0;
+				}
+			}
 			invoker.Start(true, false);
 			while(kernel->GetState().taskCount)
 			{
@@ -140,4 +148,5 @@ int main(int cnt, char** _args)
 		else wcout << "entry:" << args.entry << " not found" << endl;
 	}
 	delete product;
+	return 0;
 }
