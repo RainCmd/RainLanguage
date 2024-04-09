@@ -77,7 +77,8 @@ int main(int cnt, char** args)
 			param.pid = GetCurrentProcessId();
 			unsigned short port = 0;
 			param.port = &port;
-			ExeRemoteFunc(pid, file, "StartDetectorServer", &param, sizeof(DetectorParam));
+			ExeRemoteFunc(pid, dir, file, "StartDetectorServer", &param, sizeof(DetectorParam));
+			if(!port) FreeLibrary(pid, file);
 			wcout << port << endl;
 		}
 	}

@@ -17,7 +17,8 @@ void StartDetectorServer(void* param)
 	HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dp.pid);
 	if(process == nullptr) return;
 	unsigned short port = 38465;
-	if(!InitServer(dp.projectName, dp.projectName, port)) port = 0;
+	int exitcode = InitServer(dp.projectPath, dp.projectName, port);
+	if(exitcode) port = exitcode;
 	SIZE_T num;
 	WriteProcessMemory(process, dp.port, &port, sizeof(unsigned short), &num);
 	CloseHandle(process);

@@ -16,4 +16,6 @@ void GetProcesses(vector<Process>& processes);
 
 bool InjectDll(DWORD pid, LPCSTR dir, LPCSTR file);
 
-bool ExeRemoteFunc(DWORD pid, LPCSTR moduleName, LPCSTR funName, LPVOID param, size_t paramSize);
+void FreeLibrary(DWORD pid, LPCSTR file);
+
+bool ExeRemoteFunc(DWORD pid, LPCSTR modulePath, LPCSTR moduleName, LPCSTR funName, LPVOID param, size_t paramSize);

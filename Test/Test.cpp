@@ -248,7 +248,6 @@ void TestFunc()
 	}
 	delete product;
 	delete test2Lib;
-
 }
 
 int main()

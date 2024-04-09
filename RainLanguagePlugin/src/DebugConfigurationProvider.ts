@@ -4,6 +4,7 @@ import * as path from 'path'
 import * as cp from 'child_process'
 import * as iconv from 'iconv-lite';
 import * as net from 'net'
+import { promisify } from 'util';
 
 interface ProcessInfoItem extends vscode.QuickPickItem {
     pid: number;
@@ -97,12 +98,9 @@ async function pickPID(injector: string, output: vscode.OutputChannel) {
 async function GetDetectorPort(injector: string, pid: number, detectorPath: string, detectorName: string, projectPath: string, projectName: string) {
     return new Promise<number>((resolve, reject) => {
         cp.exec(`${injector} ${pid} ${detectorPath} ${detectorName} ${projectPath} ${projectName}`, { encoding: "buffer" }, (error, stdout, stderr) => {
-            const port = Number(iconv.decode(stdout, "cp936").trim())
-            if (port > 0) {
-                resolve(port)
-            } else {
-                reject(port)
-            }
+            const result = iconv.decode(stdout, "cp936").trim();
+            const port = Number(result)
+            resolve(port)
         }).on('error', error => {
             reject()
         })
@@ -111,19 +109,25 @@ async function GetDetectorPort(injector: string, pid: number, detectorPath: stri
 
 async function Connect(port:number, output: vscode.OutputChannel) {
     return new Promise<net.Socket>((resolve, reject) => {
-        const client = net.connect({
-            port: port,
-            host: "localhost",
-            family: 4
-        })
-        client.on('connect', () => {
-            output.appendLine("调试器链接成功")
-            resolve(client)
-        });
-        client.on('error', error => {
-            output.appendLine("调试器链接失败：" + error.message);
+        if (port == 0) {
             reject()
-        })
+        } else if (port < 1000) {
+            vscode.window.showErrorMessage("调试器链接错误，错误码：" + port)
+            reject()
+        } else {
+            const client = net.connect({
+                port: port,
+                host: "127.0.0.1"
+            })
+            client.on('connect', () => {
+                output.appendLine("调试器链接成功")
+                resolve(client)
+            });
+            client.on('error', error => {
+                output.appendLine("调试器链接失败：" + error.message);
+                reject()
+            })
+        }
     })
 }
 
@@ -179,6 +183,31 @@ function GetOutputChannel(name: string):vscode.OutputChannel {
 }
 
 let childProcess: cp.ChildProcess = null;
+let currentOutputChannel: vscode.OutputChannel = null;
+let rainCompileResolve: (value: unknown) => void = null;
+let rainCompileReject: () => void = null;
+function ListenCPReadyDebug(data: Buffer) {
+    const msg = data.toString()
+    if (msg.includes("<ready to connect debugger>")) {
+        let output = currentOutputChannel
+        output.append(msg.replace("<ready to connect debugger>", ""));
+        childProcess.stdout.removeListener('data', ListenCPReadyDebug)
+        childProcess.removeListener('exit', ListenCPExit);
+        childProcess.stdout.on('data', (data: Buffer) => {
+            output.append(data.toString())
+        });
+        rainCompileResolve(null)
+        rainCompileResolve = null;
+        rainCompileReject = null;
+    } else {
+        currentOutputChannel.append(data.toString());
+    }
+}
+function ListenCPExit() {
+    rainCompileReject()
+    rainCompileResolve = null;
+    rainCompileReject = null;
+}
 export class RainDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
     constructor(protected context: vscode.ExtensionContext) { }
     async resolveDebugConfiguration(folder: vscode.WorkspaceFolder, configuration: RainDebugConfiguration): Promise<vscode.DebugConfiguration> {
@@ -218,22 +247,29 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                     childProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
                         vscode.window.showErrorMessage(error.message)
                     })
-                    childProcess.stdout.on('data', (data: Buffer) => {
-                       outputChannel.append(data.toString())
+                    currentOutputChannel = outputChannel;
+                    childProcess.stdout.addListener('data', ListenCPReadyDebug)
+                    childProcess.addListener('exit', ListenCPExit)
+                    await new Promise((resolve, reject) => {
+                        rainCompileResolve = resolve;
+                        rainCompileReject = reject;
                     });
                     if (childProcess.pid) {
                         const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
                         const port = await GetDetectorPort(injector, childProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
-                        configuration.socket = await Connect(port, outputChannel);
-                        childProcess.stdin.write('y')
-                        childProcess.stdin.end();
-                        return configuration
+                        if (port > 0) {
+                            configuration.socket = await Connect(port, outputChannel);
+                            childProcess.stdin.write('y')
+                            childProcess.stdin.end();
+                            return configuration
+                        }
+                        outputChannel.appendLine("端口获取失败")
                     } else {
                         outputChannel.appendLine("子进程id获取失败")
-                        childProcess.stdin.write('n')
-                        childProcess.stdin.end();
-                        return undefined
                     }
+                    childProcess.stdin.write('n')
+                    childProcess.stdin.end();
+                    return undefined
                 }
                 case "雨言附加到进程": {
                     const outputChannel = GetOutputChannel(configuration.projectName + `[附加到进程]`);

@@ -100,10 +100,14 @@ static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint3
 static RainProduct* product;
 int main(int cnt, char** _args)
 {
+	wcout.imbue(locale("zh_CN.UTF-8"));
 	Args args = Parse(cnt, _args);
 	CodeLoadHelper helper(args.path);
 	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, ErrorLevel::LoggerLevel4);
+	wcout << L"开始编译" << endl;
+	clock_t startTime = clock();
 	product = Build(parameter);
+	wcout << L"编译结束，用时 " << (clock() - startTime) / (CLOCKS_PER_SEC / 1000) << "ms" << endl;
 	for(uint32 i = 0; i <= (uint32)ErrorLevel::LoggerLevel4; i++)
 	{
 		ErrorLevel lvl = (ErrorLevel)i;
@@ -111,12 +115,11 @@ int main(int cnt, char** _args)
 		for(uint32 j = 0; j < errCnt; j++)
 		{
 			auto msg = product->GetErrorMessage(lvl, j);
-			if(msg.message.length)
-				wcout << wstring(msg.message.value, msg.message.length) << "\n";
+			if(msg.message.length) wcout << wstring(msg.message.value, msg.message.length) << "\n";
 			wcout << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]\nERR CODE:" << (uint32)msg.type << endl;
 		}
 	}
-	if(product->GetLevelMessageCount(ErrorLevel::Error)) wcout << L"编译失败！" << endl;
+	if(product->GetLevelMessageCount(ErrorLevel::Error)) wcout << L"编译失败" << endl;
 	else
 	{
 		const RainLibrary* library = product->GetLibrary();
@@ -129,6 +132,8 @@ int main(int cnt, char** _args)
 			if(args.debug)
 			{
 				RegistDebugger(kernel, [](const RainString& name) { return product->GetRainProgramDatabase(); }, nullptr);
+				wcout << L"<ready to connect debugger>";
+				wcout.flush();
 				char success;
 				cin >> success;
 				if((success | 0x20) != 'y')

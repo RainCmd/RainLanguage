@@ -817,7 +817,7 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, RainProgr
 				database = loader(name);
 				if(!database)
 				{
-					agency->libraryUnloader(source);
+					if(agency->libraryUnloader) agency->libraryUnloader(source);
 					return;
 				}
 				if(KERNEL->debugger) KERNEL->debugger->Broken();
@@ -825,7 +825,7 @@ RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, RainProgr
 				share = KERNEL->share;
 				SHARE->Reference();
 				if(!InitMap(KERNEL, (Library*)source, (MAP*)map)) Broken();
-				agency->libraryUnloader(source);
+				if(agency->libraryUnloader) agency->libraryUnloader(source);
 				break;
 			}
 

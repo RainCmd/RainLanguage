@@ -399,11 +399,10 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 
 static void AcceptClient()
 {
-	sockaddr_in addr = {};
-	int addrLen = sizeof(sockaddr_in);
 	while(wsaStartuped)
 	{
-		cSocket = accept(sSocket, (sockaddr*)&addr, &addrLen);
+		int addrLen = sizeof(sockaddr_in);
+		cSocket = accept(sSocket, nullptr, nullptr);
 		if(cSocket == INVALID_SOCKET) break;
 		Debugger* dbg = debugger;
 		SOCKET socket = cSocket;
@@ -459,10 +458,10 @@ void OnTaskExit(uint64 task, const RainString& msg)
 	Send(socket, writer);
 }
 
-bool InitServer(const char* path, const char* name, unsigned short& port)
+int InitServer(const char* path, const char* name, unsigned short& port)
 {
 	Debugger* dbg = CreateDebugger(path, name);
-	if(!dbg) return false;
+	if(!dbg) return 1;
 	if(wsaStartuped)
 	{
 		port = addr.sin_port;
@@ -474,35 +473,35 @@ bool InitServer(const char* path, const char* name, unsigned short& port)
 		}
 		if(debugger) delete debugger;
 		debugger = dbg;
-		return true;
+		return 0;
 	}
 	WSADATA wsaData;
-	addr.sin_family = AF_INET;
-	if(WSAStartup(MAKEWORD(2, 2), &wsaData)) return false;
+	if(WSAStartup(MAKEWORD(2, 2), &wsaData)) return 2;
 	wsaStartuped = true;
 	sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(sSocket == INVALID_SOCKET) goto label_shutdown_wsa;
 label_rebind:
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	addr.sin_port = port;
-	inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr.S_un.S_addr);
 	if(bind(sSocket, (sockaddr*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		port++;
 		if(port) goto label_rebind;
 		goto label_close_server;
 	}
-	if(listen(sSocket, 1) == SOCKET_ERROR) goto label_close_server;
+	if(listen(sSocket, 4) == SOCKET_ERROR) goto label_close_server;
 	if(debugger) delete debugger;
 	debugger = dbg;
 	thread(AcceptClient).detach();
-	return true;
+	return 0;
 label_close_server:
 	closesocket(sSocket);
 	sSocket = INVALID_SOCKET;
 label_shutdown_wsa:
 	WSACleanup();
 	wsaStartuped = false;
-	return false;
+	return 3;
 }
 
 void CloseServer()
