@@ -15,7 +15,7 @@ export interface RainDebugConfiguration extends vscode.DebugConfiguration{
     detectorName: string
     projectPath: string
     projectName: string
-    socket: net.Socket
+    client: net.Socket
     output: vscode.OutputChannel
 }
 
@@ -120,7 +120,7 @@ async function Connect(port:number, output: vscode.OutputChannel) {
                 host: "127.0.0.1"
             })
             client.on('connect', () => {
-                output.appendLine("调试器链接成功")
+                output.clear()
                 resolve(client)
             });
             client.on('error', error => {
@@ -157,7 +157,7 @@ async function GetLaunchParam(configuration: RainDebugConfiguration) {
     let result: string[] = [];
     result.push(exeFile);
     result.push("-path")
-    result.push(configuration.detectorPath)
+    result.push(configuration.projectPath)
     result.push("-name")
     result.push(name)
     result.push("-entry")
@@ -191,6 +191,7 @@ function ListenCPReadyDebug(data: Buffer) {
     if (msg.includes("<ready to connect debugger>")) {
         let output = currentOutputChannel
         output.append(msg.replace("<ready to connect debugger>", ""));
+        
         childProcess.stdout.removeListener('data', ListenCPReadyDebug)
         childProcess.removeListener('exit', ListenCPExit);
         childProcess.stdout.on('data', (data: Buffer) => {
@@ -258,7 +259,7 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                         const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
                         const port = await GetDetectorPort(injector, childProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                         if (port > 0) {
-                            configuration.socket = await Connect(port, outputChannel);
+                            configuration.client = await Connect(port, outputChannel);
                             childProcess.stdin.write('y')
                             childProcess.stdin.end();
                             return configuration
@@ -278,7 +279,7 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                     const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
                     const pid = await pickPID(injector, outputChannel)
                     const port = await GetDetectorPort(injector, pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
-                    configuration.socket = await Connect(port, outputChannel)
+                    configuration.client = await Connect(port, outputChannel)
                     return configuration
                 }
             }

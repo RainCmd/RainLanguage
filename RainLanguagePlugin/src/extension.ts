@@ -5,7 +5,6 @@ import FormatProvider from './formatterProvider'
 import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
 import { RainDebugConfigurationProvider } from "./DebugConfigurationProvider";
 
-
 export async function activate(context: vscode.ExtensionContext) {
     const documentSelector: vscode.DocumentSelector = {
         language: '雨言',
@@ -32,7 +31,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 name: "附加到进程",
                 request: "attach"
             })
-    }));
+        })
+    );
 }
 export async function deactivate() {
 }

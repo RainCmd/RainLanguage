@@ -1,4 +1,4 @@
-#include "windows.h"
+ï»¿#include "windows.h"
 #include <stringapiset.h>
 #include "Args.h"
 
@@ -24,7 +24,7 @@ static bool CheckCmd(const char* left, const char* right)
 }
 Args Parse(int cnt, char** args)
 {
-	Args result = Args(L"ÓêÑÔ²âÊÔ¹¤³Ì", L".\\", L"Main", 100, false);
+	Args result = Args(L"é›¨è¨€æµ‹è¯•å·¥ç¨‹", L".\\", L"Main", 100, false, false);
 	for(size_t i = 0; i < cnt; i++)
 	{
 		char* arg = args[i];
@@ -52,6 +52,7 @@ Args Parse(int cnt, char** args)
 			result.timestep = atoi(args[i]);
 		}
 		else if(CheckCmd(arg, "debug")) result.debug = true;
+		else if(CheckCmd(arg, "silent")) result.silent = true;
 	}
 	return result;
 }

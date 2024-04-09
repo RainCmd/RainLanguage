@@ -82,6 +82,10 @@ int main(int cnt, char** args)
 			wcout << port << endl;
 		}
 	}
+	else
+	{
+		wcout << "args cnt err:" << cnt << endl;
+	}
 	return 0;
 }
 

@@ -161,4 +161,6 @@ enum class Proto : uint
 	//	bool	hasResult
 	//		string	value
 	RSEND_Eual,
+
+	RECV_Close,
 };

@@ -392,6 +392,10 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		}
 		break;
 		case Proto::RSEND_Eual: break;
+		case Proto::RECV_Close:
+			closesocket(cSocket);
+			cSocket = INVALID_SOCKET;
+			break;
 		default:
 			break;
 	}
@@ -405,13 +409,12 @@ static void AcceptClient()
 		cSocket = accept(sSocket, nullptr, nullptr);
 		if(cSocket == INVALID_SOCKET) break;
 		Debugger* dbg = debugger;
-		SOCKET socket = cSocket;
 
 		Queue<char> recvQueue(1024);
 		const int RECV_BUFFER_SIZE = 1024;
 		char buffer[RECV_BUFFER_SIZE];
 
-		while(true)
+		while(cSocket != INVALID_SOCKET)
 		{
 			int len = recv(cSocket, buffer, RECV_BUFFER_SIZE, 0);
 			if(len == 0 || len == SOCKET_ERROR) break;
@@ -423,13 +426,14 @@ static void AcceptClient()
 				{
 					recvQueue.Discard(PACKAGE_HEAD_SIZE);
 					ReadPackage reader(recvQueue.De(size), size);
-					OnRecv(reader, socket, dbg);
+					OnRecv(reader, cSocket, dbg);
 				}
 				else break;
 			}
 		}
 
-		if(socket != INVALID_SOCKET) closesocket(socket);
+		if(cSocket != INVALID_SOCKET) closesocket(cSocket);
+		cSocket = INVALID_SOCKET;
 	}
 }
 
@@ -464,7 +468,7 @@ int InitServer(const char* path, const char* name, unsigned short& port)
 	if(!dbg) return 1;
 	if(wsaStartuped)
 	{
-		port = addr.sin_port;
+		port = htons(addr.sin_port);
 		if(cSocket != INVALID_SOCKET)
 		{
 			SOCKET cs = cSocket;
@@ -483,7 +487,7 @@ int InitServer(const char* path, const char* name, unsigned short& port)
 label_rebind:
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = port;
+	addr.sin_port = htons(port);
 	if(bind(sSocket, (sockaddr*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		port++;

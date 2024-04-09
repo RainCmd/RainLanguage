@@ -24,6 +24,7 @@ class CodeLoadHelper : public CodeLoader
 	vector<wstring> files;
 	wstring workspace;
 	wstring path;
+	wstring rpath;
 	wstring content;
 	void LoadFiles(wstring dir)
 	{
@@ -45,7 +46,7 @@ class CodeLoadHelper : public CodeLoader
 		_findclose(handle);
 	}
 public:
-	CodeLoadHelper(wstring dir) 
+	CodeLoadHelper(wstring dir)
 	{
 		workspace = dir.append(L"\\");
 		LoadFiles(workspace);
@@ -57,10 +58,10 @@ public:
 		files.pop_back();
 		return true;
 	}
-	const RainString CurrentPath() 
+	const RainString CurrentPath()
 	{
-		wstring rpath = path.substr(workspace.size());
-		return RainString(rpath.c_str(), (uint32)rpath.length()); 
+		rpath = path.substr(workspace.size());
+		return RainString(rpath.c_str(), (uint32)rpath.length());
 	}
 	const RainString CurrentContent()
 	{
@@ -113,10 +114,10 @@ int main(int cnt, char** _args)
 	Args args = Parse(cnt, _args);
 	CodeLoadHelper helper(args.path);
 	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, ErrorLevel::LoggerLevel4);
-	wcout << L"开始编译" << endl;
+	if(!args.silent) wcout << L"开始编译" << endl;
 	clock_t startTime = clock();
 	product = Build(parameter);
-	wcout << L"编译结束，用时 " << (clock() - startTime) / (CLOCKS_PER_SEC / 1000) << "ms" << endl;
+	if(!args.silent) wcout << L"编译结束，用时 " << (clock() - startTime) / (CLOCKS_PER_SEC / 1000) << "ms" << endl;
 	for(uint32 i = 0; i <= (uint32)ErrorLevel::LoggerLevel4; i++)
 	{
 		ErrorLevel lvl = (ErrorLevel)i;
@@ -124,8 +125,9 @@ int main(int cnt, char** _args)
 		for(uint32 j = 0; j < errCnt; j++)
 		{
 			auto msg = product->GetErrorMessage(lvl, j);
-			if(msg.message.length) wcout << wstring(msg.message.value, msg.message.length) << "\n";
-			wcout << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]\nERR CODE:" << (uint32)msg.type << endl;
+			if(msg.message.length) wcout << wstring(msg.message.value, msg.message.length) << endl;
+			wcout << "ERR CODE:" << (uint64)msg.type << endl;
+			wcout << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]" << endl;
 		}
 	}
 	if(product->GetLevelMessageCount(ErrorLevel::Error)) wcout << L"编译失败" << endl;
