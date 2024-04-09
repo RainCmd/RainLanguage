@@ -3,6 +3,7 @@
 #include <Psapi.h>
 #include <ShlObj.h>
 
+static bool EndWidth(const char* source, const char* end)
 {
 	int sl = 0;
 	while(*source)
