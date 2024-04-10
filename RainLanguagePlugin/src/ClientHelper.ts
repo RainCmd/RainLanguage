@@ -4,23 +4,20 @@ import { TextDecoder, TextEncoder } from 'util';
 
 export enum Proto{
 	//	uint32	requestId
-	//	uint32	fileCount
-	//		string	file
-	//		uint32	lineCount
-	//			uint32	line
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
 	RRECV_AddBreadks,
 	//	发送的都是添加失败的断点
 	//	uint32	requestId
-	//	uint32	fileCount
-	//		string	file
-	//		uint32	lineCount
-	//			uint32	line
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
 	RSEND_AddBreadks,
 
-	//	uint32	fileCount
-	//		string	file
-	//		uint32	lineCount
-	//			uint32	line
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
 	RECV_RemoveBreaks,
 	RECV_ClearBreaks,
 
@@ -29,20 +26,10 @@ export enum Proto{
 	//	uint32	StepType
 	RECV_Step,
 
-	//	uint32	taskCount
-	//		uint64	taskId
-	//	uint64	currentTask
-	//	uint32	traceCount
-	//		string	file
-	//		uint32	line
+	//	uint64	taskId
 	//	string	message
-    SEND_OnException,
-	//	uint32	taskCount
-	//		uint64	taskId
-	//	uint64	currentTask
-	//	uint32	traceCount
-	//		string	file
-	//		uint32	line
+	SEND_OnException,
+	//	uint64	taskId
 	SEND_OnBreak,
 
 	//	uint32	requestId
@@ -96,10 +83,15 @@ export enum Proto{
 	RSEND_SetGlobal,
 
 	//	uint32	requestId
+	RRECV_Tasks,
+	//	uint32	requestId
+	//	uint32	taskCount
+	//		uint64	taskId
+	RSEND_Tasks,
+	//	uint32	requestId
 	//	uint64	taskId
 	RRECV_Task,
 	//	uint32	requestId
-	//	uint64	taskId
 	//	uint32	traceCount
 	//		string	file
 	//		uint32	line
@@ -224,16 +216,15 @@ class WriterValue {
 export class Writer {
     values: WriterValue[] = []
     size: number = 0
-    constructor() { }
+    constructor(value: Proto) {
+        this.WriteUint(value)
+    }
     public WriteBool(value: boolean) {
         this.values.push({
             type: ValueType.BOOL,
             value: value ? 1 : 0
         })
         this.size++
-    }
-    public WriteProto(value: Proto) {
-        this.WriteUint(value)
     }
     public WriteUint(value: number) {
         this.values.push({
@@ -261,8 +252,8 @@ export class Writer {
     }
     public GetBuffer(): Buffer {
         let result = Buffer.alloc(this.size + 8);
-        result.writeUint32LE(this.size)
-        let index = 0
+        result.writeUint32LE(this.size + 8)
+        let index = 8
         this.values.forEach(element => {
             switch (element.type) {
                 case ValueType.BOOL:
@@ -317,7 +308,7 @@ export class ClientHelper {
             
             if (this.readBuffSize >= 4) {
                 const size = this.readBuffer.readInt32LE()
-                if (size < this.readBuffSize) {
+                if (size <= this.readBuffSize) {
                     const reader = new Reader(this.readBuffer, size)
                     this.readBuffer.copy(this.readBuffer, 0, size, this.readBuffSize)
                     this.readBuffSize -= size
@@ -357,6 +348,10 @@ export class ClientHelper {
             case Proto.RSEND_SetGlobal:
                 this.RecvRequest(reader)
                 break;
+            case Proto.RRECV_Tasks: break;
+            case Proto.RSEND_Tasks:
+                this.RecvRequest(reader)
+                break;
             case Proto.RRECV_Task: break;
             case Proto.RSEND_Task:
                 this.RecvRequest(reader)
@@ -377,9 +372,7 @@ export class ClientHelper {
             case Proto.RSEND_Eual:
                 this.RecvRequest(reader)
                 break;
-            case Proto.RECV_Close:
-                this.RecvEvent(Proto.RECV_Close, reader)
-                break;
+            case Proto.RECV_Close: break;
             default:
                 break;
         }
@@ -394,7 +387,7 @@ export class ClientHelper {
     }
     public async Request(requestId: number, writer: Writer): Promise<Reader> {
         return new Promise((reslove, reject) => {
-            this.requestMap[requestId] = new ClinetRequest(reslove, reject);
+            this.requestMap.set(requestId, new ClinetRequest(reslove, reject))
             this.Send(writer)
         })
     }

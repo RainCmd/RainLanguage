@@ -8,7 +8,9 @@ export class RainDebugSession extends LoggingDebugSession {
 	constructor(protected configuration: RainDebug.RainDebugConfiguration) {
 		super();
 	}
-	
+	private GetRelativePath(value: string): string{
+		return value.substring(this.configuration.projectPath.length).replace(/^[\\/]*/gi, "")
+	}
 	protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request): void {
 		console.log("attach")
 		this.sendResponse(response)
@@ -23,7 +25,9 @@ export class RainDebugSession extends LoggingDebugSession {
 			this.sendEvent(new TerminatedEvent())
 		})
 		this.helper.on(client.Proto.SEND_OnBreak, reader => {
-			this.sendEvent(new StoppedEvent('', 123));
+			this.sendEvent(new StoppedEvent("命中断点", Number(reader.ReadLong())));
+		}).on(client.Proto.SEND_OnException, reader => {
+			this.sendEvent(new StoppedEvent("exception", Number(reader.ReadLong()), reader.ReadString()));
 		})
 		response.body = {
 			//调试适配器支持' configurationDone '请求。
@@ -122,20 +126,47 @@ export class RainDebugSession extends LoggingDebugSession {
 	}
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
+		this.helper.Send(new client.Writer(client.Proto.RECV_Close))
 		RainDebug.client.destroy();
 		if (this.configuration.request == 'launch' && RainDebug.debuggedProcess != null && !RainDebug.debuggedProcess.killed) {
 			RainDebug.debuggedProcess.kill()
 		}
 		this.sendResponse(response)
 	}
-	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): void {
-		response.body = {
-			breakpoints: [
-				{
-					verified: false
-				}
-			]
+	private breakpointMap = new Map<string, number[]>()
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): Promise<void> {
+		const path = this.GetRelativePath(args.source.path)
+		let lines = this.breakpointMap.get(path)
+		if (lines == undefined) {
+			lines = []
 		}
+		const removed = lines.filter(v => !args.lines.includes(v))
+		if (removed.length > 0) {
+			const removeReq = new client.Writer(client.Proto.RECV_RemoveBreaks);
+			removeReq.WriteString(path)
+			removeReq.WriteUint(removed.length)
+			removed.forEach(element => removeReq.WriteUint(element));
+			this.helper.Send(removeReq)
+		}
+		const added = args.lines.filter(v => !lines.includes(v));
+		if (added.length > 0) {
+			const addReq = new client.Writer(client.Proto.RRECV_AddBreadks)
+			addReq.WriteUint(request.seq)
+			addReq.WriteString(path)
+			addReq.WriteUint(added.length)
+			added.forEach(element => addReq.WriteUint(element));
+			const addRes = await this.helper.Request(request.seq, addReq)
+			let cnt = addRes.ReadInt()
+			response.body = { breakpoints: [] }
+			while (cnt-- > 0) {
+				//todo 这里用行不行，必须得跟参数数量一样，按序号算
+				response.body.breakpoints.push({
+					line: addRes.ReadInt(),
+					verified: false
+				})
+			}
+		}
+		this.breakpointMap.set(path, args.lines)
 		this.sendResponse(response)
 	}
 	

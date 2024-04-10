@@ -299,6 +299,10 @@ public:
 	/// </summary>
 	RainDebuggerSpace GetSpace();
 	/// <summary>
+	/// 正在执行的任务id
+	/// </summary>
+	uint64 GetCurrentTaskID();
+	/// <summary>
 	/// 获取任务迭代器
 	/// </summary>
 	RainTaskIterator GetTaskIterator();

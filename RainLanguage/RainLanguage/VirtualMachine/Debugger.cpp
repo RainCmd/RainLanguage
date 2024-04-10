@@ -866,6 +866,16 @@ RainDebuggerSpace RainDebugger::GetSpace()
 	return RainDebuggerSpace(NULL, 0);
 }
 
+uint64 RainDebugger::GetCurrentTaskID()
+{
+	if(IsActive())
+	{
+		Task* task = SHARE->kernel->taskAgency->GetCurrentTask();
+		if(task) return task->instanceID;
+	}
+	return NULL;
+}
+
 RainTaskIterator RainDebugger::GetTaskIterator()
 {
 	if(IsBreaking()) return RainTaskIterator(debugFrame);

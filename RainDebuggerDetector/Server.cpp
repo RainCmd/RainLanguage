@@ -47,37 +47,6 @@ static void WriteExpand(WritePackage& writer, const RainDebuggerVariable& variab
 	}
 }
 
-static void WriteTrace(Debugger* dbg, uint64 taskID, WritePackage& writer)
-{
-	writer.WriteUint64(taskID);
-
-	RainTraceIterator iterator = dbg->GetTraceIterator(taskID);
-	uint32& traceCount = writer.WriteUint32(0);
-	while(iterator.Next())
-	{
-		traceCount++;
-		RainTrace trace = iterator.Current();
-		RainString file = trace.FileName();
-		writer.WriteString(wstring(file.value, file.length));
-		writer.WriteUint32(trace.Line());
-	}
-}
-
-static void WriteTasks(Debugger* dbg, WritePackage& writer)
-{
-	uint64 currentTask = 0;
-	uint32& taskCount = writer.WriteUint32(0);
-	RainTaskIterator taskIterator = dbg->GetTaskIterator();
-	while(taskIterator.Next())
-	{
-		taskCount++;
-		RainTraceIterator traceIterator = taskIterator.Current();
-		writer.WriteUint64(traceIterator.TaskID());
-		if(traceIterator.IsActive()) currentTask = traceIterator.TaskID();
-	}
-	WriteTrace(dbg, currentTask, writer);
-}
-
 static bool GetVariable(ReadPackage& reader, WritePackage& writer, RainDebuggerVariable& variable)
 {
 	uint32 count = reader.ReadUint32();
@@ -124,24 +93,18 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_AddBreadks);
 			writer.WriteUint32(reader.ReadUint32());
-			uint32 fileCount = reader.ReadUint32();
-			writer.WriteUint32(fileCount);
-			while(fileCount--)
+			wstring file = reader.ReadString();
+			if(file.empty()) return;
+			uint32& count = writer.WriteUint32(0);
+			RainString rs_file = WS2RS(file);
+			uint32 lineCount = reader.ReadUint32();
+			while(lineCount--)
 			{
-				wstring file = reader.ReadString();
-				if(file.empty()) return;
-				writer.WriteString(file);
-				uint32& count = writer.WriteUint32(0);
-				RainString rs_file = WS2RS(file);
-				uint32 lineCount = reader.ReadUint32();
-				while(lineCount--)
+				uint32 line = reader.ReadUint32();
+				if(!debugger->AddBreakPoint(rs_file, line))
 				{
-					uint32 line = reader.ReadUint32();
-					if(!debugger->AddBreakPoint(rs_file, line))
-					{
-						count++;
-						writer.WriteUint32(line);
-					}
+					count++;
+					writer.WriteUint32(line);
 				}
 			}
 			Send(socket, writer);
@@ -150,18 +113,14 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_AddBreadks: break;
 		case Proto::RECV_RemoveBreaks:
 		{
-			uint32 fileCount = reader.ReadUint32();
-			while(fileCount--)
+			wstring file = reader.ReadString();
+			if(file.empty()) return;
+			RainString rs_file = WS2RS(file);
+			uint32 lineCount = reader.ReadUint32();
+			while(lineCount--)
 			{
-				wstring file = reader.ReadString();
-				if(file.empty()) return;
-				RainString rs_file = WS2RS(file);
-				uint32 lineCount = reader.ReadUint32();
-				while(lineCount--)
-				{
-					uint32 line = reader.ReadUint32();
-					debugger->RemoveBreakPoint(rs_file, line);
-				}
+				uint32 line = reader.ReadUint32();
+				debugger->RemoveBreakPoint(rs_file, line);
 			}
 		}
 		break;
@@ -258,13 +217,41 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		}
 		break;
 		case Proto::RSEND_SetGlobal: break;
+		case Proto::RRECV_Tasks:
+		{
+			if(!debugger->IsBreaking()) return;
+			WritePackage writer;
+			writer.WriteProto(Proto::RSEND_Tasks);
+			writer.WriteUint32(reader.ReadUint32());
+
+			uint32& taskCount = writer.WriteUint32(0);
+			RainTaskIterator taskIterator = debugger->GetTaskIterator();
+			while(taskIterator.Next())
+			{
+				taskCount++;
+				writer.WriteUint64(taskIterator.Current().TaskID());
+			}
+			Send(socket, writer);
+		}
+		break;
+		case Proto::RSEND_Tasks: break;
 		case Proto::RRECV_Task:
 		{
 			if(!debugger->IsBreaking()) return;
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Task);
 			writer.WriteUint32(reader.ReadUint32());
-			WriteTrace(debugger, reader.ReadUint64(), writer);
+
+			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
+			uint32& traceCount = writer.WriteUint32(0);
+			while(iterator.Next())
+			{
+				traceCount++;
+				RainTrace trace = iterator.Current();
+				RainString file = trace.FileName();
+				writer.WriteString(wstring(file.value, file.length));
+				writer.WriteUint32(trace.Line());
+			}
 			Send(socket, writer);
 		}
 		break;
@@ -405,7 +392,6 @@ static void AcceptClient()
 {
 	while(wsaStartuped)
 	{
-		int addrLen = sizeof(sockaddr_in);
 		cSocket = accept(sSocket, nullptr, nullptr);
 		if(cSocket == INVALID_SOCKET) break;
 		Debugger* dbg = debugger;
@@ -422,7 +408,8 @@ static void AcceptClient()
 			while(recvQueue.Count() >= PACKAGE_HEAD_SIZE)
 			{
 				PackageHead size = *(PackageHead*)recvQueue.Peek(PACKAGE_HEAD_SIZE);
-				if(recvQueue.Count() >= size + PACKAGE_HEAD_SIZE)
+				if(size < 8) goto label_exit;
+				if(recvQueue.Count() >= size)
 				{
 					recvQueue.Discard(PACKAGE_HEAD_SIZE); size -= PACKAGE_HEAD_SIZE;
 					ReadPackage reader(recvQueue.De(size), size);
@@ -431,7 +418,7 @@ static void AcceptClient()
 				else break;
 			}
 		}
-
+	label_exit:
 		if(cSocket != INVALID_SOCKET) closesocket(cSocket);
 		cSocket = INVALID_SOCKET;
 	}
@@ -445,7 +432,7 @@ void OnHitBreakpoint(uint64 task)
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_OnBreak);
-	WriteTasks(dbg, writer);
+	writer.WriteUint64(dbg->GetCurrentTaskID());
 	Send(socket, writer);
 }
 
@@ -457,7 +444,7 @@ void OnTaskExit(uint64 task, const RainString& msg)
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_OnException);
-	WriteTasks(dbg, writer);
+	writer.WriteUint64(dbg->GetCurrentTaskID());
 	writer.WriteString(wstring(msg.value, msg.length));
 	Send(socket, writer);
 }

@@ -3,23 +3,19 @@
 enum class Proto : uint
 {
 	//	uint32	requestId
-	//	uint32	fileCount
-	//		string	file
-	//		uint32	lineCount
-	//			uint32	line
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
 	RRECV_AddBreadks,
 	//	发送的都是添加失败的断点
 	//	uint32	requestId
-	//	uint32	fileCount
-	//		string	file
-	//		uint32	lineCount
-	//			uint32	line
+	//	uint32	lineCount
+	//		uint32	line
 	RSEND_AddBreadks,
 
-	//	uint32	fileCount
-	//		string	file
-	//		uint32	lineCount
-	//			uint32	line
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
 	RECV_RemoveBreaks,
 	RECV_ClearBreaks,
 
@@ -28,20 +24,10 @@ enum class Proto : uint
 	//	uint32	StepType
 	RECV_Step,
 
-	//	uint32	taskCount
-	//		uint64	taskId
-	//	uint64	currentTask
-	//	uint32	traceCount
-	//		string	file
-	//		uint32	line
+	//	uint64	taskId
 	//	string	message
 	SEND_OnException,
-	//	uint32	taskCount
-	//		uint64	taskId
-	//	uint64	currentTask
-	//	uint32	traceCount
-	//		string	file
-	//		uint32	line
+	//	uint64	taskId
 	SEND_OnBreak,
 
 	//	uint32	requestId
@@ -95,10 +81,15 @@ enum class Proto : uint
 	RSEND_SetGlobal,
 
 	//	uint32	requestId
+	RRECV_Tasks,
+	//	uint32	requestId
+	//	uint32	taskCount
+	//		uint64	taskId
+	RSEND_Tasks,
+	//	uint32	requestId
 	//	uint64	taskId
 	RRECV_Task,
 	//	uint32	requestId
-	//	uint64	taskId
 	//	uint32	traceCount
 	//		string	file
 	//		uint32	line

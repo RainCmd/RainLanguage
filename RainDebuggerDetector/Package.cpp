@@ -8,7 +8,7 @@ ReadPackage::ReadPackage(char* buffer, uint size) :buffer(buffer), size(size), p
 	else
 	{
 		uint number = *(uint*)buffer;
-		for(uint i = 0; i < size; i++) number -= (byte)buffer[i];
+		for(uint i = 4; i < size; i++) number -= (byte)buffer[i];
 		valid = number == MAGIC_NUMBER;
 	}
 }
