@@ -111,7 +111,7 @@ static void Send(SOCKET socket, const WritePackage& package)
 {
 	uint length;
 	const char* buffer = package.GetSendBuffer(length);
-	send(socket, buffer, length, 0);
+	if(buffer && length) send(socket, buffer, length, 0);
 }
 
 static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
@@ -424,7 +424,7 @@ static void AcceptClient()
 				PackageHead size = *(PackageHead*)recvQueue.Peek(PACKAGE_HEAD_SIZE);
 				if(recvQueue.Count() >= size + PACKAGE_HEAD_SIZE)
 				{
-					recvQueue.Discard(PACKAGE_HEAD_SIZE);
+					recvQueue.Discard(PACKAGE_HEAD_SIZE); size -= PACKAGE_HEAD_SIZE;
 					ReadPackage reader(recvQueue.De(size), size);
 					OnRecv(reader, cSocket, dbg);
 				}

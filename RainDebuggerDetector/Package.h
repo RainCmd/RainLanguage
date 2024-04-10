@@ -2,6 +2,7 @@
 #include "Proto.h"
 #include <string>
 typedef uint PackageHead;
+typedef unsigned char byte;
 const uint PACKAGE_HEAD_SIZE = sizeof(PackageHead);
 struct ReadPackage
 {
@@ -41,7 +42,7 @@ private:
 		return *(T*)(buffer + position - size);
 	}
 public:
-	WritePackage() :buffer(nullptr), size(4), position(4) {}
+	WritePackage() :buffer(nullptr), size(8), position(8) {}
 	inline bool& WriteBool(bool value)
 	{
 		return Write<bool>(value, 1);

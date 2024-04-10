@@ -296,6 +296,7 @@ void Kernel::Update()
 
 bool Kernel::AddBreakpoint(uint32 address)
 {
+	if(breakpoints.Contains(address)) return true;
 	if (address < libraryAgency->code.Count() && libraryAgency->code[address] == (uint8)Instruct::BREAK)
 	{
 		if (breakpoints.Add(address)) libraryAgency->code[address] = (uint8)Instruct::BREAKPOINT;

@@ -8,7 +8,7 @@ ReadPackage::ReadPackage(char* buffer, uint size) :buffer(buffer), size(size), p
 	else
 	{
 		uint number = *(uint*)buffer;
-		for(uint i = 0; i < size; i++) number -= buffer[i];
+		for(uint i = 0; i < size; i++) number -= (byte)buffer[i];
 		valid = number == MAGIC_NUMBER;
 	}
 }
@@ -25,9 +25,10 @@ wstring ReadPackage::ReadString()
 const char* WritePackage::GetSendBuffer(uint& length) const
 {
 	if(buffer == nullptr) return nullptr;
-	uint& number = *(uint*)buffer;
+	*(uint*)buffer = position;
+	uint& number = *(uint*)(buffer + PACKAGE_HEAD_SIZE);
 	number = MAGIC_NUMBER;
-	for(uint i = 4; i < position; i++) number += buffer[i];
+	for(uint i = 8; i < position; i++) number += (byte)buffer[i];
 	length = position;
 	return buffer;
 }

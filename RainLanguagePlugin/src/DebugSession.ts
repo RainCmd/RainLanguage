@@ -1,8 +1,10 @@
-import { InitializedEvent, LoggingDebugSession, TerminatedEvent } from '@vscode/debugadapter';
+import { BreakpointEvent, InitializedEvent, LoggingDebugSession, StoppedEvent, TerminatedEvent } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as RainDebug from './DebugConfigurationProvider'
+import * as client from './ClientHelper'
 
 export class RainDebugSession extends LoggingDebugSession {
+	private helper = new client.ClientHelper(RainDebug.client)
 	constructor(protected configuration: RainDebug.RainDebugConfiguration) {
 		super();
 	}
@@ -19,6 +21,9 @@ export class RainDebugSession extends LoggingDebugSession {
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 		RainDebug.client.on('close', () => {
 			this.sendEvent(new TerminatedEvent())
+		})
+		this.helper.on(client.Proto.SEND_OnBreak, reader => {
+			this.sendEvent(new StoppedEvent('', 123));
 		})
 		response.body = {
 			//调试适配器支持' configurationDone '请求。
@@ -124,6 +129,13 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): void {
+		response.body = {
+			breakpoints: [
+				{
+					verified: false
+				}
+			]
+		}
 		this.sendResponse(response)
 	}
 	
