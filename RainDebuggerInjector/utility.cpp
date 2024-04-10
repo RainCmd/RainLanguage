@@ -168,7 +168,7 @@ bool InjectDll(DWORD pid, LPCSTR dir, LPCSTR file)
 	VirtualFreeEx(process, remoteDir, 0, MEM_RELEASE);
 	if(!success)
 	{
-		wcout << "exe SetDllDirectoryA fail" << endl;
+		wcout << "execute SetDllDirectoryA fail" << endl;
 		success = false;
 		goto lable_exit_process;
 	}
@@ -178,7 +178,7 @@ bool InjectDll(DWORD pid, LPCSTR dir, LPCSTR file)
 	VirtualFreeEx(process, remoteFile, 0, MEM_RELEASE);
 	if(!success)
 	{
-		wcout << "exe LoadLibraryA fail" << endl;
+		wcout << "execute LoadLibraryA fail" << endl;
 		success = false;
 		goto label_exit_resetDllDir;
 	}

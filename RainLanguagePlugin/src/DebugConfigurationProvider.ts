@@ -4,7 +4,6 @@ import * as path from 'path'
 import * as cp from 'child_process'
 import * as iconv from 'iconv-lite';
 import * as net from 'net'
-import { isNumberObject } from 'util/types';
 
 interface ProcessInfoItem extends vscode.QuickPickItem {
     pid: number;
@@ -15,8 +14,6 @@ export interface RainDebugConfiguration extends vscode.DebugConfiguration{
     detectorName: string
     projectPath: string
     projectName: string
-    client: net.Socket
-    output: vscode.OutputChannel
 }
 
 function IsNUllOrEmpty(value: string): boolean{
@@ -42,7 +39,7 @@ async function GetProjectName(projectPath: string, name: string, type: string): 
     return name
 }
 
-async function pickPID(injector: string, output: vscode.OutputChannel) {
+async function pickPID(injector: string) {
     return new Promise<number>((resolve, reject) => {
         cp.exec(injector, { encoding: "buffer" }, (error, stdout, stderr) => {
             const arr = iconv.decode(stdout, "cp936").split("\r\n");
@@ -115,7 +112,7 @@ async function GetDetectorPort(injector: string, pid: number, detectorPath: stri
     })
 }
 
-async function Connect(port:number, output: vscode.OutputChannel) {
+async function Connect(port:number) {
     return new Promise<net.Socket>((resolve, reject) => {
         if (port < 1000) {
             vscode.window.showErrorMessage("调试器链接错误，错误码：" + port)
@@ -126,7 +123,6 @@ async function Connect(port:number, output: vscode.OutputChannel) {
                 host: "127.0.0.1"
             })
             client.on('connect', () => {
-                output.clear()
                 resolve(client)
             });
             client.on('error', error => {
@@ -139,20 +135,22 @@ async function Connect(port:number, output: vscode.OutputChannel) {
     })
 }
 
-async function GetEntryAndTimestep(projectPath: string, entry: string, timestep: number, type: string): Promise<{ entry: string, timestep: number }> {
+async function CompleteConfiguration(projectPath: string, entry: string, errLvl: number, timestep: number, type: string): Promise<{ entry: string, errLvl: number, timestep: number }> {
     try {
         const data = await fs.promises.readFile(projectPath + "/.vscode/launch.json", 'utf-8')
         const cfgs = JSON.parse(data).configurations
-        cfgs.forEach((element: { type: string; EntryPoint: string, Timesnap: number }) => {
+        cfgs.forEach((element: { type: string; EntryPoint: string, ErrorLevel: number, Timesnap: number }) => {
             if (element.type == type) {
-                entry = element.EntryPoint;
-                timestep = element.Timesnap;
+                entry = element.EntryPoint || entry
+                timestep = element.Timesnap || timestep
+                errLvl = element.ErrorLevel || errLvl
             }
         });
     } catch (error) { }
     return {
         entry: entry,
-        timestep: timestep
+        timestep: timestep,
+        errLvl: errLvl
     }
 }
 
@@ -160,7 +158,7 @@ async function GetEntryAndTimestep(projectPath: string, entry: string, timestep:
 async function GetLaunchParam(configuration: RainDebugConfiguration) {
     const exeFile = configuration.detectorPath + "/RainLauncher.exe";
     const name = configuration.projectName
-    const cfg = await GetEntryAndTimestep(configuration.projectPath, "Main", 100, "雨言调试运行")
+    const cfg = await CompleteConfiguration(configuration.projectPath, "Main", 4, 100, "雨言调试运行")
 
     let result: string[] = [];
     result.push(exeFile);
@@ -168,6 +166,8 @@ async function GetLaunchParam(configuration: RainDebugConfiguration) {
     result.push(configuration.projectPath)
     result.push("-name")
     result.push(name)
+    result.push("-errorlevel")
+    result.push(cfg.errLvl.toString())
     result.push("-entry")
     result.push(cfg.entry)
     result.push("-timestep")
@@ -190,8 +190,12 @@ function GetOutputChannel(name: string):vscode.OutputChannel {
     }
 }
 
-let childProcess: cp.ChildProcess = null;
-let currentOutputChannel: vscode.OutputChannel = null;
+export let debuggedProcess: cp.ChildProcess = null;
+export let currentOutputChannel: vscode.OutputChannel = null;
+export let client: net.Socket = null;
+let statusBarItem: vscode.StatusBarItem = null;
+let intervalId: NodeJS.Timer = null;
+let compileTime: number = 0;
 let rainCompileResolve: (value: unknown) => void = null;
 let rainCompileReject: () => void = null;
 function ListenCPReadyDebug(data: Buffer) {
@@ -200,19 +204,31 @@ function ListenCPReadyDebug(data: Buffer) {
         console.log(msg.replace("<ready to connect debugger>", ""))
         let output = currentOutputChannel
         
-        childProcess.stdout.removeListener('data', ListenCPReadyDebug)
-        childProcess.removeListener('exit', ListenCPExit);
-        childProcess.stdout.on('data', (data: Buffer) => {
+        debuggedProcess.stdout.removeListener('data', ListenCPReadyDebug)
+        debuggedProcess.removeListener('exit', ListenCPExit);
+        debuggedProcess.stdout.on('data', (data: Buffer) => {
             output.append(data.toString())
         });
         rainCompileResolve(null)
         rainCompileResolve = null;
         rainCompileReject = null;
+    } else if (msg.includes("<compilation failure>")) {
+        let output = currentOutputChannel
+        output.append(msg.replace("<compilation failure>", ""))
+        
+        debuggedProcess.stdout.removeListener('data', ListenCPReadyDebug)
+        debuggedProcess.stdout.on('data', (data: Buffer) => {
+            output.append(data.toString())
+        });
     } else {
         console.log(data.toString())
     }
 }
 function ListenCPExit() {
+    statusBarItem.dispose()
+    statusBarItem = null
+    clearInterval(intervalId)
+    intervalId = null
     rainCompileReject()
     rainCompileResolve = null;
     rainCompileReject = null;
@@ -229,9 +245,9 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
         if (configuration.noDebug) {
             configuration.type = "雨言调试运行"
         }
-        if (childProcess != null && !childProcess.killed && childProcess.exitCode == null) {
-            childProcess.kill()
-            childProcess = null
+        if (debuggedProcess != null && !debuggedProcess.killed && debuggedProcess.exitCode == null) {
+            debuggedProcess.kill()
+            debuggedProcess = null
         }
         configuration.projectName = await GetProjectName(configuration.projectPath, configuration.projectName, configuration.type)
         configuration.detectorPath = this.context.extensionUri.fsPath;
@@ -239,10 +255,10 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
         if (configuration.noDebug) {
             const launchParams = await GetLaunchParam(configuration)
             const outputChannel = GetOutputChannel(configuration.projectName + "[雨言]");
-            childProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
+            debuggedProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
                 vscode.window.showErrorMessage(error.message)
             })
-            childProcess.stdout.on('data', (data: Buffer) => {
+            debuggedProcess.stdout.on('data', (data: Buffer) => {
                 outputChannel.append(data.toString())
             });
         } else {
@@ -250,44 +266,61 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                 case "雨言调试运行": {
                     const launchParams = await GetLaunchParam(configuration)
                     launchParams.push("-debug")
-                    const outputChannel = GetOutputChannel(configuration.projectName + "[调试]");
-                    configuration.output = outputChannel
+                    currentOutputChannel = GetOutputChannel(configuration.projectName + "[调试]");
 
-                    childProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
+                    debuggedProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
                         vscode.window.showErrorMessage(error.message)
                     })
-                    currentOutputChannel = outputChannel;
-                    childProcess.stdout.addListener('data', ListenCPReadyDebug)
-                    childProcess.addListener('exit', ListenCPExit)
+                    debuggedProcess.stdout.addListener('data', ListenCPReadyDebug)
+                    debuggedProcess.addListener('exit', ListenCPExit)
+
+                    if (intervalId != null) {
+                        clearInterval(intervalId)
+                    }
+                    if (statusBarItem != null) {
+                        statusBarItem.dispose()
+                    }
+                    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+                    statusBarItem.show()
+                    compileTime = 0;
+                    statusBarItem.text = `${configuration.projectName} 编译中，已用时${compileTime}s`
+                    intervalId = setInterval(() => {
+                        compileTime++
+                        statusBarItem.text = `${configuration.projectName} 编译中，已用时${compileTime}s`
+                    }, 1000);
                     await new Promise((resolve, reject) => {
                         rainCompileResolve = resolve;
                         rainCompileReject = reject;
                     });
-                    if (childProcess.pid) {
+                    clearInterval(intervalId)
+                    intervalId = null
+                    statusBarItem.dispose()
+                    statusBarItem = null
+
+                    if (debuggedProcess.pid) {
                         const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
-                        const port = await GetDetectorPort(injector, childProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
+                        const port = await GetDetectorPort(injector, debuggedProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                         if (port > 0) {
-                            configuration.client = await Connect(port, outputChannel);
-                            childProcess.stdin.write('y')
-                            childProcess.stdin.end();
+                            client = await Connect(port);
+                            debuggedProcess.stdin.write('y')
+                            debuggedProcess.stdin.end();
                             return configuration
                         }
                         console.log("端口获取失败")
                     } else {
                         console.log("子进程id获取失败")
                     }
-                    childProcess.stdin.write('n')
-                    childProcess.stdin.end();
+                    debuggedProcess.stdin.write('n')
+                    debuggedProcess.stdin.end();
                     return undefined
                 }
                 case "雨言附加到进程": {
-                    const outputChannel = GetOutputChannel(configuration.projectName + `[附加到进程]`);
-                    configuration.output = outputChannel
+                    currentOutputChannel = GetOutputChannel(configuration.projectName + `[附加到进程]`);
 
                     const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
-                    const pid = await pickPID(injector, outputChannel)
+                    const pid = await pickPID(injector)
                     const port = await GetDetectorPort(injector, pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
-                    configuration.client = await Connect(port, outputChannel)
+                    client = await Connect(port)
                     return configuration
                 }
             }

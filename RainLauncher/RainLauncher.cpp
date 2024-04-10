@@ -22,7 +22,6 @@ static bool EndWidth(wstring src, wstring suffix)
 class CodeLoadHelper : public CodeLoader
 {
 	vector<wstring> files;
-	wstring workspace;
 	wstring path;
 	wstring rpath;
 	wstring content;
@@ -46,10 +45,13 @@ class CodeLoadHelper : public CodeLoader
 		_findclose(handle);
 	}
 public:
+	wstring workspace;
 	CodeLoadHelper(wstring dir)
 	{
-		workspace = dir.append(L"\\");
-		LoadFiles(workspace);
+		wchar_t lastChar = dir[dir.size() - 1];
+		if(lastChar != '\\' && lastChar != '/') dir = dir.append(L"\\");
+		workspace = dir;
+		LoadFiles(dir);
 	}
 	bool LoadNext()
 	{
@@ -113,11 +115,16 @@ int main(int cnt, char** _args)
 	wcout.imbue(locale("zh_CN.UTF-8"));
 	Args args = Parse(cnt, _args);
 	CodeLoadHelper helper(args.path);
-	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, ErrorLevel::LoggerLevel4);
+	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, (ErrorLevel)args.errorLevel);
 	if(!args.silent) wcout << L"开始编译" << endl;
 	clock_t startTime = clock();
 	product = Build(parameter);
 	if(!args.silent) wcout << L"编译结束，用时 " << (clock() - startTime) / (CLOCKS_PER_SEC / 1000) << "ms" << endl;
+	if(args.debug && product->GetLevelMessageCount(ErrorLevel::Error))
+	{
+		wcout << L"<compilation failure>";
+		wcout.flush();
+	}
 	for(uint32 i = 0; i <= (uint32)ErrorLevel::LoggerLevel4; i++)
 	{
 		ErrorLevel lvl = (ErrorLevel)i;
@@ -127,10 +134,13 @@ int main(int cnt, char** _args)
 			auto msg = product->GetErrorMessage(lvl, j);
 			if(msg.message.length) wcout << wstring(msg.message.value, msg.message.length) << endl;
 			wcout << "ERR CODE:" << (uint64)msg.type << endl;
-			wcout << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]" << endl;
+			wcout << helper.workspace << msg.path.value << " line:" << msg.line << " [" << msg.start << ", " << msg.start + msg.length << "]" << endl;
 		}
 	}
-	if(product->GetLevelMessageCount(ErrorLevel::Error)) wcout << L"编译失败" << endl;
+	if(product->GetLevelMessageCount(ErrorLevel::Error))
+	{
+		if(!args.silent) wcout << L"编译失败" << endl;
+	}
 	else
 	{
 		const RainLibrary* library = product->GetLibrary();

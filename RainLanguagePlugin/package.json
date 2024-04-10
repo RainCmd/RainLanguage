@@ -101,7 +101,8 @@
                         "required": [
                             "ProjectName",
                             "EntryPoint",
-                            "Timesnap"
+                            "Timesnap",
+                            "ErrorLevel"
                         ],
                         "properties": {
                             "ProjectName": {
@@ -117,7 +118,12 @@
                             "Timesnap": {
                                 "type": "number",
                                 "description": "一帧的时长(毫秒)",
-                                "default": "100"
+                                "default": 100
+                            },
+                            "ErrorLevel": {
+                                "type": "number",
+                                "description": "警告等级:[1,4]警告 [5,8]日志",
+                                "default": 4
                             }
                         }
                     }

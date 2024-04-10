@@ -24,7 +24,7 @@ static bool CheckCmd(const char* left, const char* right)
 }
 Args Parse(int cnt, char** args)
 {
-	Args result = Args(L"雨言测试工程", L".\\", L"Main", 100, false, false);
+	Args result = Args(L"雨言测试工程", L".\\", L"Main", 4, 100, false, false);
 	for(size_t i = 0; i < cnt; i++)
 	{
 		char* arg = args[i];
@@ -45,6 +45,13 @@ Args Parse(int cnt, char** args)
 		{
 			if(++i >= cnt) break;
 			result.entry = S2WS(args[i]);
+		}
+		else if(CheckCmd(arg, "errorlevel"))
+		{
+			if(++i >= cnt) break;
+			result.errorLevel = atoi(args[i]);
+			if(result.errorLevel < 0) result.errorLevel = 0;
+			else if(result.errorLevel > 8) result.errorLevel = 8;
 		}
 		else if(CheckCmd(arg, "timestep"))
 		{
