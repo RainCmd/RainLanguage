@@ -78,8 +78,11 @@ int main(int cnt, char** args)
 			unsigned short port = 0;
 			param.port = &port;
 			ExeRemoteFunc(pid, dir, file, "StartDetectorServer", &param, sizeof(DetectorParam));
-			if(!port) FreeLibrary(pid, file);
-			wcout << port << endl;
+			if(port)
+			{
+				if(port < 1000) FreeLibrary(pid, file);
+				wcout << port << endl;
+			}
 		}
 	}
 	else

@@ -2,6 +2,8 @@
 #include <TlHelp32.h>
 #include <Psapi.h>
 #include <ShlObj.h>
+#include <iostream>
+using namespace std;
 
 static bool EndWidth(const char* source, const char* end)
 {
@@ -100,33 +102,47 @@ static LPVOID RemoteDup(HANDLE process, LPVOID source, size_t length)
 		size_t num;
 		WriteProcessMemory(process, remote, source, length, &num);
 	}
+	else wcout << "remote dup fail" << endl;
 	return remote;
 }
 
-static bool ExeRemoteKernelFunc(HANDLE process, LPCSTR funName, LPVOID param, DWORD& exitCode)
+static bool RemoteCall(HANDLE process, FARPROC function, LPVOID param)
 {
-	HMODULE hModule = GetModuleHandleA("Kernel32");
-	if(hModule == nullptr) return false;
-	FARPROC function = GetProcAddress(hModule, funName);
-	if(function == nullptr) return false;
-	DWORD tid;
+	DWORD tid, exitCode;
 	HANDLE thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)function, param, 0, &tid);
 	if(thread != nullptr)
 	{
 		WaitForSingleObject(thread, INFINITE);
 		GetExitCodeThread(thread, &exitCode);
 		CloseHandle(thread);
-		return true;
+		return exitCode != 0;
 	}
+	wcout << "create remote thread fail" << endl;
 	return false;
+}
+
+static bool ExeRemoteKernelFunc(HANDLE process, LPCSTR funName, LPVOID param)
+{
+	HMODULE hModule = GetModuleHandleA("Kernel32");
+	if(hModule == nullptr)
+	{
+		wcout << "get module Kernel32 fail" << endl;
+		return false;
+	}
+	FARPROC function = GetProcAddress(hModule, funName);
+	if(function == nullptr)
+	{
+		wcout << "get function " << funName << " fail" << endl;
+		return false;
+	}
+	return RemoteCall(process, function, param);
 }
 
 static bool Contain(HANDLE process, LPCSTR file)
 {
 	LPVOID remoteFileName = RemoteDup(process, (LPVOID)file, strlen(file) + 1);
 	if(remoteFileName == nullptr) return false;
-	bool result = false; DWORD exitCode;
-	if(ExeRemoteKernelFunc(process, "GetModuleHandleA", remoteFileName, exitCode)) result = exitCode != 0;
+	bool result = ExeRemoteKernelFunc(process, "GetModuleHandleA", remoteFileName);
 	VirtualFreeEx(process, remoteFileName, 0, MEM_RELEASE);
 	return result;
 }
@@ -134,9 +150,13 @@ static bool Contain(HANDLE process, LPCSTR file)
 bool InjectDll(DWORD pid, LPCSTR dir, LPCSTR file)
 {
 	HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	if(process == nullptr) return false;
+	if(process == nullptr)
+	{
+		wcout << "open process fial, pid:" << pid << endl;
+		return false;
+	}
 	bool success = false;
-	DWORD ecitCode; LPVOID remoteDir; LPVOID remoteFile;
+	LPVOID remoteDir; LPVOID remoteFile;
 	if(Contain(process, file))
 	{
 		success = true;
@@ -144,25 +164,27 @@ bool InjectDll(DWORD pid, LPCSTR dir, LPCSTR file)
 	}
 
 	remoteDir = RemoteDup(process, (LPVOID)dir, strlen(dir) + 1);
-	success = ExeRemoteKernelFunc(process, "SetDllDirectoryA", remoteDir, ecitCode);
+	success = ExeRemoteKernelFunc(process, "SetDllDirectoryA", remoteDir);
 	VirtualFreeEx(process, remoteDir, 0, MEM_RELEASE);
-	if(!success || ecitCode == 0)
+	if(!success)
 	{
+		wcout << "exe SetDllDirectoryA fail" << endl;
 		success = false;
 		goto lable_exit_process;
 	}
 
 	remoteFile = RemoteDup(process, (LPVOID)file, strlen(file) + 1);
-	success = ExeRemoteKernelFunc(process, "LoadLibraryA", remoteFile, ecitCode);
+	success = ExeRemoteKernelFunc(process, "LoadLibraryA", remoteFile);
 	VirtualFreeEx(process, remoteFile, 0, MEM_RELEASE);
-	if(!success || ecitCode == 0)
+	if(!success)
 	{
+		wcout << "exe LoadLibraryA fail" << endl;
 		success = false;
 		goto label_exit_resetDllDir;
 	}
 
 label_exit_resetDllDir:
-	ExeRemoteKernelFunc(process, "SetDllDirectoryA", nullptr, ecitCode);
+	ExeRemoteKernelFunc(process, "SetDllDirectoryA", nullptr);
 lable_exit_process:
 	CloseHandle(process);
 
@@ -200,8 +222,7 @@ void FreeLibrary(DWORD pid, LPCSTR file)
 	if(TryGetModuleHanlde(process, file, hMod))
 	{
 		LPVOID param = RemoteDup(process, hMod, sizeof(HMODULE));
-		DWORD ecitCode;
-		ExeRemoteKernelFunc(process, "FreeLibrary", param, ecitCode);
+		ExeRemoteKernelFunc(process, "FreeLibrary", param);
 		VirtualFreeEx(process, param, 0, MEM_RELEASE);
 	}
 
@@ -224,31 +245,36 @@ static intptr_t GetModuleFunctionRelativeAddress(LPCSTR modulePath, LPCSTR modul
 bool ExeRemoteFunc(DWORD pid, LPCSTR modulePath, LPCSTR moduleName, LPCSTR funName, LPVOID param, size_t paramSize)
 {
 	HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	if(process == nullptr) return false;
+	if(process == nullptr)
+	{
+		wcout << "open process fial, pid:" << pid << endl;
+		return false;
+	}
 
 	bool result = false;
-	HMODULE hModule; intptr_t function;
-	DWORD tid; HANDLE thread; LPVOID remoteParam; SIZE_T remoteParamSize;
-	DWORD exitCode;
-	if(!TryGetModuleHanlde(process, moduleName, hModule)) goto label_exit_process;
+	HMODULE hModule; intptr_t function; LPVOID remoteParam;
+	if(!TryGetModuleHanlde(process, moduleName, hModule))
+	{
+		wcout << "get module handle fial, mudule name:" << moduleName << endl;
+		goto label_exit_process;
+	}
 
 	function = GetModuleFunctionRelativeAddress(modulePath, moduleName, funName);
-	if(function == 0) goto label_exit_process;
+	if(function == 0)
+	{
+		wcout << "get function relative address fial, module:" << modulePath << "\\" << moduleName << " funcName:" << funName << endl;
+		goto label_exit_process;
+	}
 
-	remoteParam = VirtualAllocEx(process, nullptr, paramSize, MEM_COMMIT, PAGE_READWRITE);
+	remoteParam = RemoteDup(process, param, paramSize);
 	if(remoteParam == nullptr) goto label_exit_process;
-	WriteProcessMemory(process, remoteParam, param, paramSize, &remoteParamSize);
-	thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)((intptr_t)hModule + function), remoteParam, 0, &tid);
-	if(thread == nullptr) goto label_exit_remoteParam;
 
-	WaitForSingleObject(thread, INFINITE);
-	GetExitCodeThread(thread, &exitCode);
-	result = true;
-	goto label_exit_thread;
+	result = RemoteCall(process, (FARPROC)((intptr_t)hModule + function), remoteParam);
+	if(!result)
+	{
+		wcout << "remote call " << funName << " fail" << endl;
+	}
 
-label_exit_thread:
-	CloseHandle(thread);
-label_exit_remoteParam:
 	VirtualFreeEx(process, remoteParam, 0, MEM_RELEASE);
 label_exit_process:
 	CloseHandle(process);

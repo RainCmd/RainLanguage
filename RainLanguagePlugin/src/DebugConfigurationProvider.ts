@@ -4,7 +4,7 @@ import * as path from 'path'
 import * as cp from 'child_process'
 import * as iconv from 'iconv-lite';
 import * as net from 'net'
-import { promisify } from 'util';
+import { isNumberObject } from 'util/types';
 
 interface ProcessInfoItem extends vscode.QuickPickItem {
     pid: number;
@@ -76,9 +76,10 @@ async function pickPID(injector: string, output: vscode.OutputChannel) {
                     placeHolder: "选择要附加的进程"
                 }).then((item: ProcessInfoItem | undefined) => {
                     if (item) {
-                        output.appendLine("附加到进程：" + item.label);
+                        console.log
+                        console.log("附加到进程：" + item.label);
                         if (item.detail) {
-                            output.appendLine("进程详情:" + item.detail);
+                            console.log("进程详情:" + item.detail);
                         }
                         resolve(item.pid)
                     } else {
@@ -97,10 +98,17 @@ async function pickPID(injector: string, output: vscode.OutputChannel) {
 
 async function GetDetectorPort(injector: string, pid: number, detectorPath: string, detectorName: string, projectPath: string, projectName: string) {
     return new Promise<number>((resolve, reject) => {
-        cp.exec(`${injector} ${pid} ${detectorPath} ${detectorName} ${projectPath} ${projectName}`, { encoding: "buffer" }, (error, stdout, stderr) => {
+        const cmd = `${injector} ${pid} ${detectorPath} ${detectorName} ${projectPath} ${projectName}`
+        cp.exec(cmd, { encoding: "buffer" }, (error, stdout, stderr) => {
             const result = iconv.decode(stdout, "cp936").trim();
-            const port = Number(result)
-            resolve(port)
+            const port = parseInt(result, 10);
+            if (Number.isNaN(port)) {
+                vscode.window.showErrorMessage("调试器dll注入失败:" + result)
+                reject()
+            }
+            else {
+                resolve(port)
+            }
         }).on('error', error => {
             reject()
         })
@@ -109,9 +117,7 @@ async function GetDetectorPort(injector: string, pid: number, detectorPath: stri
 
 async function Connect(port:number, output: vscode.OutputChannel) {
     return new Promise<net.Socket>((resolve, reject) => {
-        if (port == 0) {
-            reject()
-        } else if (port < 1000) {
+        if (port < 1000) {
             vscode.window.showErrorMessage("调试器链接错误，错误码：" + port)
             reject()
         } else {
@@ -124,8 +130,10 @@ async function Connect(port:number, output: vscode.OutputChannel) {
                 resolve(client)
             });
             client.on('error', error => {
-                output.appendLine("调试器链接失败：" + error.message);
+                console.log("调试器链接失败：" + error.message);
                 reject()
+            }).on('close', (hasErr) => {
+                console.log("关闭 client");
             })
         }
     })
@@ -189,8 +197,8 @@ let rainCompileReject: () => void = null;
 function ListenCPReadyDebug(data: Buffer) {
     const msg = data.toString()
     if (msg.includes("<ready to connect debugger>")) {
+        console.log(msg.replace("<ready to connect debugger>", ""))
         let output = currentOutputChannel
-        output.append(msg.replace("<ready to connect debugger>", ""));
         
         childProcess.stdout.removeListener('data', ListenCPReadyDebug)
         childProcess.removeListener('exit', ListenCPExit);
@@ -201,7 +209,7 @@ function ListenCPReadyDebug(data: Buffer) {
         rainCompileResolve = null;
         rainCompileReject = null;
     } else {
-        currentOutputChannel.append(data.toString());
+        console.log(data.toString())
     }
 }
 function ListenCPExit() {
@@ -264,9 +272,9 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                             childProcess.stdin.end();
                             return configuration
                         }
-                        outputChannel.appendLine("端口获取失败")
+                        console.log("端口获取失败")
                     } else {
-                        outputChannel.appendLine("子进程id获取失败")
+                        console.log("子进程id获取失败")
                     }
                     childProcess.stdin.write('n')
                     childProcess.stdin.end();

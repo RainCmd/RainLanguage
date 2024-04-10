@@ -1,13 +1,16 @@
 import { LoggingDebugSession } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { RainDebugConfiguration } from './DebugConfigurationProvider';
-import * as net from 'net'
 
 export class RainDebugSession extends LoggingDebugSession {
 	constructor(protected configuration: RainDebugConfiguration) {
 		super();
 	}
-	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
-		this.configuration.client.end()
+	
+	protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request): void {
+		console.log("attach")
+	}
+	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request): void {
+		console.log("lanuch")
 	}
 }
