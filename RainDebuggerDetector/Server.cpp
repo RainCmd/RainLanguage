@@ -324,7 +324,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			if(iterator.IsValid())
+			if(!iterator.IsValid())
 			{
 				LogMsg(L"trace: invalid task");
 				return;

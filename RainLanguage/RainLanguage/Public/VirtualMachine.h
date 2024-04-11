@@ -996,7 +996,7 @@ public:
 	RainTypes(RainType* types, uint32 count) :types(types), count(count) {}
 	RainTypes(const RainTypes&) = delete;
 	RainTypes(RainTypes& other);
-	RainTypes(RainTypes&& other)noexcept;
+	RainTypes(RainTypes&& other) noexcept;
 	RainTypes& operator=(RainTypes& other);
 	/// <summary>
 	/// 获取类型数量
@@ -1009,6 +1009,7 @@ public:
 	/// <param name="index">下标</param>
 	/// <returns>类型</returns>
 	inline const RainType operator[](uint32 index) const { return types[index]; }
+	~RainTypes();
 };
 
 /// <summary>

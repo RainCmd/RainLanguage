@@ -26,6 +26,10 @@ RainTypes& RainTypes::operator=(RainTypes& other)
 	other.count = 0;
 	return *this;
 }
+RainTypes::~RainTypes()
+{
+	delete types;
+}
 RainFunction::RainFunction() :library(INVALID), index(INVALID), share(NULL) {}
 RainFunction::RainFunction(uint32 library, uint32 index, void* share) : library(library), index(index), share(share)
 {

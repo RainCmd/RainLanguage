@@ -60,6 +60,8 @@ public:
 	RainDebuggerVariable();
 	RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType);
 	RainDebuggerVariable(const RainDebuggerVariable& other);
+	RainDebuggerVariable& operator=(const RainDebuggerVariable& other)noexcept;
+	RainDebuggerVariable& operator=(RainDebuggerVariable&& other)noexcept;
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>
@@ -121,6 +123,8 @@ private:
 public:
 	RainDebuggerSpace(void* debugFrame, uint32 space);
 	RainDebuggerSpace(const RainDebuggerSpace& other);
+	RainDebuggerSpace& operator=(const RainDebuggerSpace& other)noexcept;
+	RainDebuggerSpace& operator=(RainDebuggerSpace&& other)noexcept;
 	/// <summary>
 	/// 是否是有效的迭代器
 	/// </summary>
@@ -174,6 +178,8 @@ private:
 public:
 	RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line);
 	RainTrace(const RainTrace& other);
+	RainTrace& operator=(const RainTrace& other)noexcept;
+	RainTrace& operator=(RainTrace&& other)noexcept;
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
@@ -225,6 +231,8 @@ private:
 public:
 	RainTraceIterator(void* debugFrame, void* task);
 	RainTraceIterator(const RainTraceIterator& other);
+	RainTraceIterator& operator=(const RainTraceIterator& other)noexcept;
+	RainTraceIterator& operator=(RainTraceIterator&& other)noexcept;
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>
@@ -259,6 +267,8 @@ private:
 public:
 	RainTaskIterator(void* debugFrame);
 	RainTaskIterator(const RainTaskIterator& other);
+	RainTaskIterator& operator=(const RainTaskIterator& other)noexcept;
+	RainTaskIterator& operator=(RainTaskIterator&& other)noexcept;
 	/// <summary>
 	/// 是否是有效的
 	/// </summary>

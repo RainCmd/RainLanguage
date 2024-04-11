@@ -283,7 +283,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			let cnt = res.ReadInt()
 			for (let index = 0; index < cnt; index++) {
 				const file = res.ReadString()
-				const frameInfo = new FrameInfo(threadId, index)
+				const frameInfo = new FrameInfo(threadId, index + 1)
 				this.traceMap.set(frameInfo.id, frameInfo)
 				stacks.push({
 					id: frameInfo.id,
@@ -380,7 +380,7 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteUint(trace.index)
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadSpaceVariables(space, variables, res)
-					response.body.variables = variables
+					response.body = { variables: variables }
 					this.sendResponse(response)
 				}).catch(reason => {
 					response.success = false
@@ -406,7 +406,7 @@ export class RainDebugSession extends LoggingDebugSession {
 						})
 					}
 					this.ReadSpaceVariables(space, variables, res)
-					response.body.variables = variables
+					response.body = { variables: variables }
 					this.sendResponse(response)
 				}).catch(reason => {
 					response.success = false
@@ -423,13 +423,13 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteUint(request.seq)
 				req.WriteLong(trace.thread)
 				req.WriteUint(trace.index)
-				req.WriteString(variable.name)
+				req.WriteString(variable.GetRoot().name)
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
 				indies.forEach(value => req.WriteUint(value))
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadVariableMembers(variable, variables, res)
-					response.body.variables = variables
+					response.body = { variables: variables }
 					this.sendResponse(response)
 				}).catch(reason => {
 					response.success = false
@@ -440,7 +440,7 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteUint(request.seq)
 				req.WriteLong(trace.thread)
 				req.WriteUint(trace.index)
-				req.WriteString(variable.name)
+				req.WriteString(variable.GetRoot().name)
 				const names = variable.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
 				names.forEach(value => req.WriteString(value))
@@ -449,7 +449,7 @@ export class RainDebugSession extends LoggingDebugSession {
 				indies.forEach(value => req.WriteUint(value))
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadVariableMembers(variable, variables, res)
-					response.body.variables = variables
+					response.body = { variables: variables }
 					this.sendResponse(response)
 				}).catch(reason => {
 					response.success = false
@@ -463,9 +463,12 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
+				const indies = variable.GetMemberIndies()
+				req.WriteUint(indies.length)
+				indies.forEach(value => req.WriteUint(value))
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadVariableMembers(variable, variables, res)
-					response.body.variables = variables
+					response.body = { variables: variables }
 					this.sendResponse(response)
 				}).catch(reason => {
 					response.success = false

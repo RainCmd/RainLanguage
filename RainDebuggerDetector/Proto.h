@@ -101,7 +101,7 @@ enum class Proto : uint
 	RSEND_Trace,
 	//	uint32	requestId
 	//	uint64	taskId
-	//	uint32	traceDeep
+	//	uint32	deep
 	//	string	localName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
@@ -115,7 +115,7 @@ enum class Proto : uint
 	RSEND_Local,
 	//	uint32	requestId
 	//	uint64	taskId
-	//	uint32	traceDeep
+	//	uint32	deep
 	//	string	localName
 	//	uint32	memberIndexCount
 	//		uint32	memberIndex
@@ -127,7 +127,7 @@ enum class Proto : uint
 
 	//	uint32	requestId
 	//	uint64	taskId
-	//	uint32	traceDeep
+	//	uint32	deep
 	//	string	file
 	//	uint32	line
 	//	uint32	character
@@ -139,7 +139,7 @@ enum class Proto : uint
 	RSEND_Eval,
 	//	uint32	requestId
 	//	uint64	taskId
-	//	uint32	traceDeep
+	//	uint32	deep
 	//	string	file
 	//	uint32	line
 	//	uint32	character

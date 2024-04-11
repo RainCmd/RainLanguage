@@ -36,11 +36,51 @@ RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* 
 	if(internalType) type = ::GetRainType(GetTargetType(*(Type*)internalType, address, FRAME));
 }
 
-RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(NULL), address(other.address), internalType(NULL), type(other.type)
+RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(other.name), address(other.address), internalType(other.internalType), type(other.type)
 {
 	if(debugFrame) FRAME->Reference();
-	if(other.name) name = new String(*(String*)other.name);
-	if(other.internalType) internalType = new Type(*(Type*)other.internalType);
+	if(name) name = new String(*(String*)name);
+	if(internalType) internalType = new Type(*(Type*)internalType);
+}
+
+RainDebuggerVariable& RainDebuggerVariable::operator=(const RainDebuggerVariable& other)noexcept
+{
+	if(debugFrame) FRAME->Release();
+	if(name) delete (String*)name;
+	if(internalType) delete (Type*)internalType;
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	name = other.name;
+	if(name) name = new String(*(String*)name);
+	address = other.address;
+	internalType = other.internalType;
+	if(internalType) internalType = new Type(*(Type*)internalType);
+	type = other.type;
+	return *this;
+}
+
+RainDebuggerVariable& RainDebuggerVariable::operator=(RainDebuggerVariable&& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+	if(name) delete (String*)name;
+	if(internalType) delete (Type*)internalType;
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	name = other.name;
+	if(name) name = new String(*(String*)name);
+	address = other.address;
+	internalType = other.internalType;
+	if(internalType) internalType = new Type(*(Type*)internalType);
+	type = other.type;
+
+	other.debugFrame = NULL;
+	other.name = NULL;
+	other.address = NULL;
+	other.internalType = NULL;
+	other.type = RainType::Internal;
+	return *this;
 }
 
 bool RainDebuggerVariable::IsValid() const
@@ -143,11 +183,14 @@ RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index) const
 		{
 			Kernel* kernel = FRAME->library->kernel;
 			Handle handle = *(Handle*)address;
-			String fragments[3];
-			fragments[0] = kernel->stringAgency->Add(TEXT("["));
-			fragments[1] = ToString(kernel->stringAgency, index);
-			fragments[2] = kernel->stringAgency->Add(TEXT("]"));
-			if(handle) return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Combine(fragments, 3)), kernel->heapAgency->GetArrayPoint(handle, index), new Type(targetType, targetType.dimension - 1));
+			if(handle)
+			{
+				String fragments[3];
+				fragments[0] = kernel->stringAgency->Add(TEXT("["));
+				fragments[1] = ToString(kernel->stringAgency, index);
+				fragments[2] = kernel->stringAgency->Add(TEXT("]"));
+				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Combine(fragments, 3)), kernel->heapAgency->GetArrayPoint(handle, index), new Type(targetType, targetType.dimension - 1));
+			}
 		}
 	}
 	return RainDebuggerVariable();
@@ -390,6 +433,30 @@ RainDebuggerSpace::RainDebuggerSpace(const RainDebuggerSpace& other) : debugFram
 	if(debugFrame) FRAME->Reference();
 }
 
+RainDebuggerSpace& RainDebuggerSpace::operator=(const RainDebuggerSpace& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	space = other.space;
+
+	return *this;
+}
+
+RainDebuggerSpace& RainDebuggerSpace::operator=(RainDebuggerSpace&& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	space = other.space;
+
+	other.debugFrame = NULL;
+	other.space = INVALID;
+	return *this;
+}
+
 bool RainDebuggerSpace::IsValid()
 {
 	return debugFrame && FRAME->library;
@@ -482,6 +549,50 @@ RainTrace::RainTrace(const RainTrace& other) : debugFrame(debugFrame), stack(oth
 	if(debugFrame) FRAME->Reference();
 	if(name) name = new String(*(String*)name);
 	if(file) file = new String(*(String*)file);
+}
+
+RainTrace& RainTrace::operator=(const RainTrace& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+	if(name) delete (String*)name;
+	if(file) delete (String*)file;
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	stack = other.stack;
+	name = other.name;
+	if(name) name = new String(*(String*)name);
+	function = other.function;
+	file = other.file;
+	if(file) file = new String(*(String*)file);
+	line = other.line;
+
+	return *this;
+}
+
+RainTrace& RainTrace::operator=(RainTrace&& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+	if(name) delete (String*)name;
+	if(file) delete (String*)file;
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	stack = other.stack;
+	name = other.name;
+	if(name) name = new String(*(String*)name);
+	function = other.function;
+	file = other.file;
+	if(file) file = new String(*(String*)file);
+	line = other.line;
+
+	other.debugFrame = NULL;
+	other.stack = NULL;
+	other.name = NULL;
+	other.function = INVALID;
+	other.file = NULL;
+	other.line = 0;
+	return *this;
 }
 
 bool RainTrace::IsValid()
@@ -593,6 +704,35 @@ RainTraceIterator::RainTraceIterator(const RainTraceIterator& other) : debugFram
 	if(debugFrame) FRAME->Reference();
 }
 
+RainTraceIterator& RainTraceIterator::operator=(const RainTraceIterator& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	task = other.task;
+	stack = other.stack;
+	pointer = other.pointer;
+	return *this;
+}
+
+RainTraceIterator& RainTraceIterator::operator=(RainTraceIterator&& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	task = other.task;
+	stack = other.stack;
+	pointer = other.pointer;
+
+	other.debugFrame = NULL;
+	other.task = NULL;
+	other.stack = NULL;
+	other.pointer = INVALID;
+	return *this;
+}
+
 bool RainTraceIterator::IsValid()
 {
 	return debugFrame && FRAME->library && task;
@@ -666,6 +806,29 @@ RainTaskIterator::RainTaskIterator(void* debugFrame) : debugFrame(debugFrame), i
 RainTaskIterator::RainTaskIterator(const RainTaskIterator& other) : debugFrame(other.debugFrame), index(other.index)
 {
 	if(debugFrame) FRAME->Reference();
+}
+
+RainTaskIterator& RainTaskIterator::operator=(const RainTaskIterator& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	index = other.index;
+	return *this;
+}
+
+RainTaskIterator& RainTaskIterator::operator=(RainTaskIterator&& other) noexcept
+{
+	if(debugFrame) FRAME->Release();
+
+	debugFrame = other.debugFrame;
+	if(debugFrame) FRAME->Reference();
+	index = other.index;
+
+	other.debugFrame = NULL;
+	other.index = NULL;
+	return *this;
 }
 
 bool RainTaskIterator::IsValid()
