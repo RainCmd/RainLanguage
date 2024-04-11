@@ -33,7 +33,7 @@ RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), add
 RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), type(RainType::Internal)
 {
 	if(debugFrame) FRAME->Reference();
-	if(internalType) type = GetRainType(GetTargetType(*(Type*)internalType, address, FRAME));
+	if(internalType) type = ::GetRainType(GetTargetType(*(Type*)internalType, address, FRAME));
 }
 
 RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(NULL), address(other.address), internalType(NULL), type(other.type)
@@ -46,6 +46,17 @@ RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : 
 bool RainDebuggerVariable::IsValid() const
 {
 	return debugFrame && FRAME->library && internalType;
+}
+
+RainString RainDebuggerVariable::GetTypeName() const
+{
+	if(IsValid())
+	{
+		Kernel* kernel = FRAME->library->kernel;
+		String typeName = kernel->stringAgency->Get(::GetTypeName(kernel, GetTargetType(*(Type*)internalType, address, FRAME)));
+		return RainString(typeName.GetPointer(), typeName.GetLength());
+	}
+	else return RainString(NULL, 0);
 }
 
 RainString RainDebuggerVariable::GetName() const
@@ -130,9 +141,13 @@ RainDebuggerVariable RainDebuggerVariable::GetElement(uint32 index) const
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(targetType.dimension)
 		{
-			HeapAgency* agency = FRAME->library->kernel->heapAgency;
+			Kernel* kernel = FRAME->library->kernel;
 			Handle handle = *(Handle*)address;
-			if(handle) return RainDebuggerVariable(debugFrame, NULL, agency->GetArrayPoint(handle, index), new Type(targetType, targetType.dimension - 1));
+			String fragments[3];
+			fragments[0] = kernel->stringAgency->Add(TEXT("["));
+			fragments[1] = ToString(kernel->stringAgency, index);
+			fragments[2] = kernel->stringAgency->Add(TEXT("]"));
+			if(handle) return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Combine(fragments, 3)), kernel->heapAgency->GetArrayPoint(handle, index), new Type(targetType, targetType.dimension - 1));
 		}
 	}
 	return RainDebuggerVariable();
@@ -208,7 +223,7 @@ RainString RainDebuggerVariable::GetValue() const
 		}
 		else if(targetType == TYPE_Type)
 		{
-			String result = valueAddress ? agency->Get(GetTypeName(FRAME->library->kernel, *(Type*)valueAddress)) : KeyWord_null();
+			String result = valueAddress ? agency->Get(::GetTypeName(FRAME->library->kernel, *(Type*)valueAddress)) : KeyWord_null();
 			return RainString(result.GetPointer(), result.GetLength());
 		}
 		else if(targetType == TYPE_String)
@@ -240,7 +255,7 @@ RainString RainDebuggerVariable::GetValue() const
 			if(valueAddress)
 			{
 				String fragments[4];
-				fragments[0] = agency->Get(GetTypeName(FRAME->library->kernel, Type(targetType, targetType.dimension - 1)));
+				fragments[0] = agency->Get(::GetTypeName(FRAME->library->kernel, Type(targetType, targetType.dimension - 1)));
 				fragments[1] = agency->Add(TEXT("["));
 				fragments[2] = ToString(agency, ArrayLength());
 				fragments[3] = agency->Add(TEXT("]"));
@@ -256,7 +271,7 @@ RainString RainDebuggerVariable::GetValue() const
 		}
 		else
 		{
-			String result = valueAddress ? agency->Get(GetTypeName(FRAME->library->kernel, targetType)) : KeyWord_null();
+			String result = valueAddress ? agency->Get(::GetTypeName(FRAME->library->kernel, targetType)) : KeyWord_null();
 			return RainString(result.GetPointer(), result.GetLength());
 		}
 	}

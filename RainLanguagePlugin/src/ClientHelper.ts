@@ -1,6 +1,7 @@
 
 import * as net from 'net'
 import { TextDecoder, TextEncoder } from 'util';
+import * as vscode from 'vscode'
 
 export enum Proto{
 	//	uint32	requestId
@@ -10,7 +11,6 @@ export enum Proto{
 	RRECV_AddBreadks,
 	//	发送的都是添加失败的断点
 	//	uint32	requestId
-	//	string	file
 	//	uint32	lineCount
 	//		uint32	line
 	RSEND_AddBreadks,
@@ -37,13 +37,11 @@ export enum Proto{
 	//		string	name
 	RRECV_Space,
 	//	uint32	requestId
-	//	uint32	nameCount
-	//		string	name
 	//	uint32	spaceCount
 	//		string	spaceName
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		string	RainType
 	//		string	variableValue
 	RSEND_Space,
 
@@ -55,14 +53,9 @@ export enum Proto{
 	//		uint32	memberIndex
 	RRECV_Global,
 	//	uint32	requestId
-	//	uint32	nameCount
-	//		string	name
-	//	string	variableName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		string	RainType
 	//		string	variableValue
 	RSEND_Global,
 	//	uint32	requestId
@@ -74,11 +67,6 @@ export enum Proto{
 	//	string	value
 	RRECV_SetGlobal,
 	//	uint32	requestId
-	//	uint32	nameCount
-	//		string	name
-	//	string	variableName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	string	value
 	RSEND_SetGlobal,
 
@@ -105,7 +93,7 @@ export enum Proto{
 	//	uint32	deep
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		string	RainType
 	//		string	variableValue
 	RSEND_Trace,
 	//	uint32	requestId
@@ -116,14 +104,9 @@ export enum Proto{
 	//		uint32	memberIndex
 	RRECV_Local,
 	//	uint32	requestId
-	//	uint64	taskId
-	//	uint32	traceDeep
-	//	string	localName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		string	RainType
 	//		string	variableValue
 	RSEND_Local,
 	//	uint32	requestId
@@ -135,11 +118,6 @@ export enum Proto{
 	//	string	value
 	RRECV_SetLocal,
 	//	uint32	requestId
-	//	uint64	taskId
-	//	uint32	traceDeep
-	//	string	localName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	string	value
 	RSEND_SetLocal,
 
@@ -149,11 +127,27 @@ export enum Proto{
 	//	string	file
 	//	uint32	line
 	//	uint32	character
-	RRECV_Eual,
+	RRECV_Eval,
 	//	uint32	requestId
 	//	bool	hasResult
 	//		string	value
-	RSEND_Eual,
+	RSEND_Eval,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	traceDeep
+	//	string	file
+	//	uint32	line
+	//	uint32	character
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	RRECV_Hover,
+	//	uint32	requestId
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Hover,
 
 	RECV_Close,
 }
@@ -368,8 +362,12 @@ export class ClientHelper {
             case Proto.RSEND_SetLocal:
                 this.RecvRequest(reader)
                 break;
-            case Proto.RRECV_Eual: break;
-            case Proto.RSEND_Eual:
+            case Proto.RRECV_Eval: break;
+            case Proto.RSEND_Eval:
+                this.RecvRequest(reader)
+                break;
+            case Proto.RRECV_Hover: break;
+            case Proto.RSEND_Hover:
                 this.RecvRequest(reader)
                 break;
             case Proto.RECV_Close: break;
@@ -388,6 +386,12 @@ export class ClientHelper {
     public async Request(requestId: number, writer: Writer): Promise<Reader> {
         return new Promise((reslove, reject) => {
             this.requestMap.set(requestId, new ClinetRequest(reslove, reject))
+            setTimeout(() => {
+                if (this.requestMap.delete(requestId)) {
+                    vscode.window.showErrorMessage(`请求超时,请求id:${requestId}`)
+                    reject()
+                }
+            }, 2000)
             this.Send(writer)
         })
     }

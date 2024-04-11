@@ -35,13 +35,12 @@ enum class Proto : uint
 	//		string	name
 	RRECV_Space,
 	//	uint32	requestId
-	//	uint32	nameCount
-	//		string	name
 	//	uint32	spaceCount
 	//		string	spaceName
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		bool	structured
+	//		string	Type
 	//		string	variableValue
 	RSEND_Space,
 
@@ -53,14 +52,10 @@ enum class Proto : uint
 	//		uint32	memberIndex
 	RRECV_Global,
 	//	uint32	requestId
-	//	uint32	nameCount
-	//		string	name
-	//	string	variableName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		bool	structured
+	//		string	Type
 	//		string	variableValue
 	RSEND_Global,
 	//	uint32	requestId
@@ -72,11 +67,6 @@ enum class Proto : uint
 	//	string	value
 	RRECV_SetGlobal,
 	//	uint32	requestId
-	//	uint32	nameCount
-	//		string	name
-	//	string	variableName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	string	value
 	RSEND_SetGlobal,
 
@@ -103,7 +93,8 @@ enum class Proto : uint
 	//	uint32	deep
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		bool	structured
+	//		string	Type
 	//		string	variableValue
 	RSEND_Trace,
 	//	uint32	requestId
@@ -114,14 +105,10 @@ enum class Proto : uint
 	//		uint32	memberIndex
 	RRECV_Local,
 	//	uint32	requestId
-	//	uint64	taskId
-	//	uint32	traceDeep
-	//	string	localName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	uint32	variableCount
 	//		string	variableName
-	//		uint16	RainType
+	//		bool	structured
+	//		string	Type
 	//		string	variableValue
 	RSEND_Local,
 	//	uint32	requestId
@@ -133,11 +120,6 @@ enum class Proto : uint
 	//	string	value
 	RRECV_SetLocal,
 	//	uint32	requestId
-	//	uint64	taskId
-	//	uint32	traceDeep
-	//	string	localName
-	//	uint32	memberIndexCount
-	//		uint32	memberIndex
 	//	string	value
 	RSEND_SetLocal,
 
@@ -147,11 +129,28 @@ enum class Proto : uint
 	//	string	file
 	//	uint32	line
 	//	uint32	character
-	RRECV_Eual,
+	RRECV_Eval,
 	//	uint32	requestId
 	//	bool	hasResult
+	//		bool	structured
 	//		string	value
-	RSEND_Eual,
+	RSEND_Eval,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	traceDeep
+	//	string	file
+	//	uint32	line
+	//	uint32	character
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	RRECV_Hover,
+	//	uint32	requestId
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Hover,
 
 	RECV_Close,
 };

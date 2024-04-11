@@ -25,6 +25,23 @@ enum class StepType
 	Out,
 };
 
+RAINLANGUAGE inline bool IsStructured(RainType type)
+{
+	switch(type)
+	{
+		case RainType::Bool:
+		case RainType::Byte:
+		case RainType::Character:
+		case RainType::Integer:
+		case RainType::Real:
+		case RainType::Enum:
+		case RainType::String:
+		case RainType::Entity:
+			return false;
+	}
+	return true;
+}
+
 /// <summary>
 /// 全局变量迭代器
 /// </summary>
@@ -35,11 +52,11 @@ private:
 	void* name;
 	uint8* address;
 	void* internalType;//变量类型不是值的类型
-public:
 	/// <summary>
 	/// 类型
 	/// </summary>
 	RainType type;
+public:
 	RainDebuggerVariable();
 	RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType);
 	RainDebuggerVariable(const RainDebuggerVariable& other);
@@ -47,6 +64,14 @@ public:
 	/// 是否是有效的迭代器
 	/// </summary>
 	bool IsValid() const;
+	/// <summary>
+	/// 当前变量申明类型的交互枚举
+	/// </summary>
+	inline RainType GetRainType() const { return type; }
+	/// <summary>
+	/// 如果变量值有效则返回值类型，否则返回变量的申明类型
+	/// </summary>
+	RainString GetTypeName() const;
 	/// <summary>
 	/// 获取变量名
 	/// </summary>
