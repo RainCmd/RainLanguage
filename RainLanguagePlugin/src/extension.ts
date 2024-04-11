@@ -13,7 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerEvaluatableExpressionProvider({ language: "雨言" }, {
             provideEvaluatableExpression(document, position, token) {
                 return new vscode.EvaluatableExpression(new vscode.Range(position, position),
-                    document.fileName + " " + position.line.toString() + " " + position.character)
+                    document.fileName + " " + (position.line + 1) + " " + position.character)
             },
         }),
 

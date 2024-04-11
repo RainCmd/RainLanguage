@@ -45,12 +45,12 @@ class VariableNode {
 		}
 		return index
 	}
-	public GetMemberIndies() {
-		const indies: number[] = []
+	public GetMemberIndices() {
+		const indices: number[] = []
 		for (let index: VariableNode = this; index.parent; index = index.parent){
-			indies.push(index.index)
+			indices.push(index.index)
 		}
-		return indies.reverse()
+		return indices.reverse()
 	}
 }
 class FrameInfo {
@@ -413,6 +413,7 @@ export class RainDebugSession extends LoggingDebugSession {
 					this.sendResponse(response)
 				})
 			}
+			return
 		}
 
 		const variable = this.variableMap.get(args.variablesReference)
@@ -424,9 +425,9 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteLong(trace.thread)
 				req.WriteUint(trace.index)
 				req.WriteString(variable.GetRoot().name)
-				const indies = variable.GetMemberIndies()
-				req.WriteUint(indies.length)
-				indies.forEach(value => req.WriteUint(value))
+				const indices = variable.GetMemberIndices()
+				req.WriteUint(indices.length)
+				indices.forEach(value => req.WriteUint(value))
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadVariableMembers(variable, variables, res)
 					response.body = { variables: variables }
@@ -444,9 +445,9 @@ export class RainDebugSession extends LoggingDebugSession {
 				const names = variable.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
 				names.forEach(value => req.WriteString(value))
-				const indies = variable.GetMemberIndies()
-				req.WriteUint(indies.length)
-				indies.forEach(value => req.WriteUint(value))
+				const indices = variable.GetMemberIndices()
+				req.WriteUint(indices.length)
+				indices.forEach(value => req.WriteUint(value))
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadVariableMembers(variable, variables, res)
 					response.body = { variables: variables }
@@ -463,9 +464,9 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
-				const indies = variable.GetMemberIndies()
-				req.WriteUint(indies.length)
-				indies.forEach(value => req.WriteUint(value))
+				const indices = variable.GetMemberIndices()
+				req.WriteUint(indices.length)
+				indices.forEach(value => req.WriteUint(value))
 				this.helper.Request(request.seq, req).then(res => {
 					this.ReadVariableMembers(variable, variables, res)
 					response.body = { variables: variables }
@@ -475,8 +476,99 @@ export class RainDebugSession extends LoggingDebugSession {
 					this.sendResponse(response)
 				})
 			}
+			return
+		}
+		response.success = false
+		this.sendResponse(response)
+	}
+	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments, request?: DebugProtocol.Request): void {
+		const space = this.spaceMap.get(args.variablesReference)
+		if (space) {
+			const trace = this.traceMap.get(space.frameId)
+			const variable = space.variables.find(value => value.name == args.name);
+			if (space == trace.locals) {
+				const req = new client.Writer(client.Proto.RRECV_SetLocal)
+				req.WriteUint(request.seq)
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
+				req.WriteString(variable.name)
+				req.WriteUint(0)
+				req.WriteString(args.value)
+				this.helper.Request(request.seq, req).then(res => {
+					response.body = {
+						value: res.ReadString()
+					}
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false;
+					this.sendResponse(response)
+				})
+			} else {
+				const req = new client.Writer(client.Proto.RRECV_SetGlobal)
+				req.WriteUint(request.seq)
+				req.WriteUint(0)
+				req.WriteString(variable.name)
+				req.WriteUint(0)
+				req.WriteString(args.value)
+				this.helper.Request(request.seq, req).then(res => {
+					response.body = {
+						value: res.ReadString()
+					}
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false;
+					this.sendResponse(response)
+				})
+			}
+		} else {
+			const variable = this.variableMap.get(args.variablesReference)
+			const trace = this.traceMap.get(variable.frameId)
+			if (trace.locals.has(variable)) {
+				const req = new client.Writer(client.Proto.RRECV_SetLocal)
+				req.WriteUint(request.seq)
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
+				req.WriteString(variable.GetRoot().name)
+				const indices = variable.members.find(value => value.name == args.name).GetMemberIndices()
+				req.WriteUint(indices.length)
+				indices.forEach(value => req.WriteUint(value))
+				this.helper.Request(request.seq, req).then(res => {
+					response.body = {
+						value: res.ReadString()
+					}
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false;
+					this.sendResponse(response)
+				})
+			} else if (trace.globals.has(variable)) {
+				const req = new client.Writer(client.Proto.RRECV_SetGlobal)
+				req.WriteUint(request.seq)
+				const names = variable.GetRoot().space.GetNames()
+				req.WriteUint(names.length)
+				names.forEach(value => req.WriteString(value))
+				req.WriteString(variable.GetRoot().name)
+				const indices = variable.members.find(value => value.name == args.name).GetMemberIndices()
+				req.WriteUint(indices.length)
+				indices.forEach(value => req.WriteUint(value))
+				req.WriteString(args.value)
+				this.helper.Request(request.seq, req).then(res => {
+					response.body = {
+						value: res.ReadString()
+					}
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false;
+					this.sendResponse(response)
+				})
+			}
+			else {
+				response.success = false
+				this.sendResponse(response)
+			}
 		}
 	}
+
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request): void {
 		this.helper.Send(new client.Writer(client.Proto.RECV_Pause))
 		this.sendResponse(response)
