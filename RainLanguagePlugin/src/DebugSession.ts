@@ -76,9 +76,17 @@ export class RainDebugSession extends LoggingDebugSession {
 			this.sendEvent(new TerminatedEvent())
 		})
 		this.helper.on(client.Proto.SEND_OnBreak, reader => {
+			let taskCount = reader.ReadInt()
+			while (taskCount-- > 0) {
+				this.sendEvent(new StoppedEvent("", Number(reader.ReadLong())))
+			}
 			const threadId = Number(reader.ReadLong())
 			this.sendEvent(new StoppedEvent("命中断点", threadId));
 		}).on(client.Proto.SEND_OnException, reader => {
+			let taskCount = reader.ReadInt()
+			while (taskCount-- > 0) {
+				this.sendEvent(new StoppedEvent("", Number(reader.ReadLong())))
+			}
 			const threadId = Number(reader.ReadLong())
 			this.sendEvent(new StoppedEvent("exception", threadId, reader.ReadString()));
 		}).on(client.Proto.SEND_Message, reader => {

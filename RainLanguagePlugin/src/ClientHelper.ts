@@ -26,10 +26,14 @@ export enum Proto {
     //	uint32	StepType
     RECV_Step,
 
-    //	uint64	taskId
+	//	uint32	taskCount
+	//		uint64	taskId
+	//	uint64	currentTask
     //	string	message
     SEND_OnException,
-    //	uint64	taskId
+	//	uint32	taskCount
+	//		uint64	taskId
+	//	uint64	currentTask
     SEND_OnBreak,
 
     //	uint32	requestId
@@ -396,7 +400,6 @@ export class ClientHelper {
             this.requestMap.set(requestId, new ClinetRequest(reslove, reject))
             setTimeout(() => {
                 if (this.requestMap.delete(requestId)) {
-                    vscode.window.showErrorMessage(`请求超时,请求id:${requestId}`)
                     reject()
                 }
             }, 2000)

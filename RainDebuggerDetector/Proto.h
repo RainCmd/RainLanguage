@@ -24,10 +24,14 @@ enum class Proto : uint
 	//	uint32	StepType
 	RECV_Step,
 
-	//	uint64	taskId
+	//	uint32	taskCount
+	//		uint64	taskId
+	//	uint64	currentTask
 	//	string	message
 	SEND_OnException,
-	//	uint64	taskId
+	//	uint32	taskCount
+	//		uint64	taskId
+	//	uint64	currentTask
 	SEND_OnBreak,
 
 	//	uint32	requestId
