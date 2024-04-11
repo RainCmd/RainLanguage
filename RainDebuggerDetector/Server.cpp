@@ -250,12 +250,9 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			writer.WriteProto(Proto::RSEND_Trace);
 			writer.WriteUint32(reader.ReadUint32());
 
-			uint64 taskId = reader.ReadUint64();
-			uint32 deep = reader.ReadUint32();
-			RainTraceIterator iterator = debugger->GetTraceIterator(taskId);
+			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
 			if(iterator.IsValid()) return;
-			writer.WriteUint64(taskId);
-			writer.WriteUint32(deep);
+			uint32 deep = reader.ReadUint32();
 			while(deep--) if(!iterator.Next()) return;
 
 			RainTrace trace = iterator.Current();

@@ -89,8 +89,6 @@ enum class Proto : uint
 	//	uint32	deep
 	RRECV_Trace,
 	//	uint32	requestId
-	//	uint64	taskId
-	//	uint32	deep
 	//	uint32	variableCount
 	//		string	variableName
 	//		bool	structured

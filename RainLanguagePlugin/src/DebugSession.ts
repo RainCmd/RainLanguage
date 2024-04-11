@@ -235,14 +235,16 @@ export class RainDebugSession extends LoggingDebugSession {
 		let cnt = res.ReadInt()
 		response.body = { threads: [] }
 		while (cnt-- > 0) {
-			let id = res.ReadInt()
+			let id = res.ReadLong()
 			response.body.threads.push({
-				id: id,
+				id: Number(id),
 				name: "TaskID:" + id.toString()
 			})
 		}
 		this.sendResponse(response);
 	}
+	private threadId: bigint
+	private traceDeep: number
 	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): Promise<void> {
 		let req = new client.Writer(client.Proto.RRECV_Task)
 		req.WriteUint(request.seq)
@@ -266,6 +268,8 @@ export class RainDebugSession extends LoggingDebugSession {
 			stackFrames: stacks,
 			totalFrames: stacks.length
 		}
+		this.threadId = BigInt(args.threadId)
+		this.traceDeep = stacks.length - args.startFrame - 1;
 		this.sendResponse(response)
 	}
 
@@ -301,7 +305,7 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 
-	private ReadVariable(src: VariableNode, variables: Variable[], reader: client.Reader) {
+	private ReadVariableMembers(src: VariableNode, variables: Variable[], reader: client.Reader) {
 		let count = reader.ReadInt()
 		src.members = []
 		while (count-- > 0) {
@@ -316,10 +320,31 @@ export class RainDebugSession extends LoggingDebugSession {
 			})
 		}
 	}
+	private ReadSpaceVariables(space: SpaceNode, variables: Variable[], reader: client.Reader) {
+		space.variables = []
+		let count = reader.ReadInt()
+		while (count-- > 0) {
+			const node = this.CreateVariable(reader.ReadString(), reader.ReadBool(), reader.ReadString(), reader.ReadString())
+			node.space = space
+			space.variables.push(node)
+			variables.push({
+				name: node.name,
+				variablesReference: node.id,
+				value: node.value
+			})
+		}
+	}
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 		const variables: Variable[] = []
 		const space = this.spaceMap.get(args.variablesReference)
-		if (space) {
+		if (space == this.localVariable) {
+			const req = new client.Writer(client.Proto.RRECV_Trace)
+			req.WriteUint(request.seq)
+			req.WriteLong(this.threadId)//threadId
+			req.WriteUint(this.traceDeep)//traceDeep
+			const res = await this.helper.Request(request.seq, req)
+			this.ReadSpaceVariables(space, variables, res)
+		} else if (space) {
 			const req = new client.Writer(client.Proto.RRECV_Space)
 			req.WriteUint(request.seq)
 			const names = space.GetNames()
@@ -338,37 +363,26 @@ export class RainDebugSession extends LoggingDebugSession {
 					value: ""
 				})
 			}
-			space.variables = []
-			count = res.ReadInt()
-			while (count-- > 0) {
-				const node = this.CreateVariable(res.ReadString(), res.ReadBool(), res.ReadString(), res.ReadString())
-				node.space = space
-				space.variables.push(node)
-				variables.push({
-					name: node.name,
-					variablesReference: node.id,
-					value: node.value
-				})
-			}
+			this.ReadSpaceVariables(space, variables, res)
 		}
 		const variable = this.variableMap.get(args.variablesReference)
 		if (variable) {
 			if (this.localVariable.has(variable)) {
 				const req = new client.Writer(client.Proto.RRECV_Local)
 				req.WriteUint(request.seq)
-				req.WriteUint(0)//threadId
-				req.WriteUint(0)//traceDeep
+				req.WriteLong(this.threadId)//threadId
+				req.WriteUint(this.traceDeep)//traceDeep
 				req.WriteString(variable.name)
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
 				indies.forEach(req.WriteUint)
 				const res = await this.helper.Request(request.seq, req)
-				this.ReadVariable(variable, variables, res)
+				this.ReadVariableMembers(variable, variables, res)
 			} else if(this.globalVariable.has(variable)) {
 				const req = new client.Writer(client.Proto.RRECV_Global)
 				req.WriteUint(request.seq)
-				req.WriteUint(0)//threadId
-				req.WriteUint(0)//traceDeep
+				req.WriteLong(this.threadId)//threadId
+				req.WriteUint(this.traceDeep)//traceDeep
 				req.WriteString(variable.name)
 				const names = variable.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
@@ -377,17 +391,17 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteUint(indies.length)
 				indies.forEach(req.WriteUint)
 				const res = await this.helper.Request(request.seq, req)
-				this.ReadVariable(variable, variables, res)
+				this.ReadVariableMembers(variable, variables, res)
 			} else {
 				const req = new client.Writer(client.Proto.RRECV_Hover)
 				req.WriteUint(request.seq)
-				req.WriteUint(0)//taskId
-				req.WriteUint(0)//traceDeep
+				req.WriteLong(this.threadId)//taskId
+				req.WriteUint(this.traceDeep)//traceDeep
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
 				const res = await this.helper.Request(request.seq, req)
-				this.ReadVariable(variable, variables, res)
+				this.ReadVariableMembers(variable, variables, res)
 			}
 		}
 		response.body.variables = variables
@@ -428,8 +442,8 @@ export class RainDebugSession extends LoggingDebugSession {
 			if (array.length == 3) {
 				const req = new client.Writer(client.Proto.RRECV_Eval)
 				req.WriteUint(request.seq)
-				req.WriteUint(0)//taskId
-				req.WriteUint(0)//traceDeep
+				req.WriteLong(this.threadId)//taskId
+				req.WriteUint(this.traceDeep)//traceDeep
 				this.hoverFile = array[0]
 				this.hoverLine = Number(array[1])
 				this.hoverChar = Number(array[2])
