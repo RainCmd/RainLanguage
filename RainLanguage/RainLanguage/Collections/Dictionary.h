@@ -242,6 +242,7 @@ public:
 				}
 		top = 0;
 		free = INVALID;
+		if(count) version++;
 		count = 0;
 	}
 	uint32 Count() { return count; }

@@ -148,7 +148,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			removed.forEach(element => removeReq.WriteUint(element));
 			this.helper.Send(removeReq)
 		}
-		const added = args.lines.filter(v => !lines.includes(v));
+		const added = args.lines
 		if (added.length > 0) {
 			const addReq = new client.Writer(client.Proto.RRECV_AddBreadks)
 			addReq.WriteUint(request.seq)
@@ -157,14 +157,16 @@ export class RainDebugSession extends LoggingDebugSession {
 			added.forEach(element => addReq.WriteUint(element));
 			const addRes = await this.helper.Request(request.seq, addReq)
 			let cnt = addRes.ReadInt()
-			response.body = { breakpoints: [] }
+			let invalidLines: number[] = []
 			while (cnt-- > 0) {
-				//todo 这里用行不行，必须得跟参数数量一样，按序号算
-				response.body.breakpoints.push({
-					line: addRes.ReadInt(),
-					verified: false
-				})
+				invalidLines.push(addRes.ReadInt());
 			}
+			response.body = { breakpoints: [] }
+			args.lines.forEach(v => {
+				response.body.breakpoints.push({
+					verified: !invalidLines.includes(v)
+				})
+			});
 		}
 		this.breakpointMap.set(path, args.lines)
 		this.sendResponse(response)

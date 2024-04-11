@@ -95,7 +95,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			writer.WriteUint32(reader.ReadUint32());
 			wstring file = reader.ReadString();
 			if(file.empty()) return;
-			uint32& count = writer.WriteUint32(0);
+			uint countPtr = writer.WriteUint32(0);
 			RainString rs_file = WS2RS(file);
 			uint32 lineCount = reader.ReadUint32();
 			while(lineCount--)
@@ -103,7 +103,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 				uint32 line = reader.ReadUint32();
 				if(!debugger->AddBreakPoint(rs_file, line))
 				{
-					count++;
+					writer.Get<uint32>(countPtr)++;
 					writer.WriteUint32(line);
 				}
 			}
@@ -224,11 +224,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			writer.WriteProto(Proto::RSEND_Tasks);
 			writer.WriteUint32(reader.ReadUint32());
 
-			uint32& taskCount = writer.WriteUint32(0);
+			uint taskCountPtr = writer.WriteUint32(0);
 			RainTaskIterator taskIterator = debugger->GetTaskIterator();
 			while(taskIterator.Next())
 			{
-				taskCount++;
+				writer.Get<uint32>(taskCountPtr)++;
 				writer.WriteUint64(taskIterator.Current().TaskID());
 			}
 			Send(socket, writer);
@@ -243,10 +243,10 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			uint32& traceCount = writer.WriteUint32(0);
+			uint traceCountPtr = writer.WriteUint32(0);
 			while(iterator.Next())
 			{
-				traceCount++;
+				writer.Get<uint32>(traceCountPtr)++;
 				RainTrace trace = iterator.Current();
 				RainString file = trace.FileName();
 				writer.WriteString(wstring(file.value, file.length));

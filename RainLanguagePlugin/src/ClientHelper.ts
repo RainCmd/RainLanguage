@@ -193,8 +193,8 @@ export class Reader {
         return result
     }
     public ReadLong(): bigint{
-        const result = this.buffer.readBigUInt64BE(this.position)
-        this.position += 4
+        const result = this.buffer.readBigUInt64LE(this.position)
+        this.position += 8
         return result
     }
     public ReadString(): string {

@@ -34,30 +34,35 @@ private:
 	uint size, position;
 	void Grow(uint size);
 	template<typename T>
-	T& Write(const T& value, uint size)
+	uint Write(const T& value, uint size)
 	{
 		Grow(size);
 		*(T*)(buffer + position) = value;
 		position += size;
-		return *(T*)(buffer + position - size);
+		return position - size;
 	}
 public:
 	WritePackage() :buffer(nullptr), size(8), position(8) {}
-	inline bool& WriteBool(bool value)
+	inline uint WriteBool(bool value)
 	{
 		return Write<bool>(value, 1);
 	}
-	inline Proto& WriteProto(Proto proto)
+	inline uint WriteProto(Proto proto)
 	{
 		return Write<Proto>(proto, 4);
 	}
-	inline uint& WriteUint32(uint value)
+	inline uint WriteUint32(uint value)
 	{
 		return Write<uint>(value, 4);
 	}
-	inline ulong& WriteUint64(ulong value)
+	inline uint WriteUint64(ulong value)
 	{
 		return Write<ulong>(value, 8);
+	}
+	template<typename T>
+	T& Get(uint position)
+	{
+		return *(T*)(buffer + position);
 	}
 	void WriteString(std::wstring value);
 	const char* GetSendBuffer(uint& length) const;

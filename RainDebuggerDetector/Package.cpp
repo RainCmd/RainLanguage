@@ -22,6 +22,24 @@ wstring ReadPackage::ReadString()
 	return UTF_8To16(result);
 }
 
+void WritePackage::Grow(uint size)
+{
+	if(this->size >= position + size) return;
+	while(this->size < position + size) this->size += this->size >> 1;
+	if(buffer == nullptr) buffer = (char*)malloc(this->size);
+	else buffer = (char*)realloc(buffer, this->size);
+}
+
+void WritePackage::WriteString(wstring value)
+{
+	string str = UTF_16To8(value);
+	uint length = (uint)str.length();
+	WriteUint32(length);
+	Grow(length);
+	const char* src = str.c_str();
+	for(uint i = 0; i < length; i++) buffer[position++] = src[i];
+}
+
 const char* WritePackage::GetSendBuffer(uint& length) const
 {
 	if(buffer == nullptr) return nullptr;
@@ -33,26 +51,8 @@ const char* WritePackage::GetSendBuffer(uint& length) const
 	return buffer;
 }
 
-void WritePackage::Grow(uint size)
-{
-	if(this->size >= position + size) return;
-	while(this->size < position + size) this->size += this->size >> 1;
-	if(buffer == nullptr) buffer = (char*)malloc(this->size);
-	else buffer = (char*)realloc(buffer, this->size);
-}
-
 WritePackage::~WritePackage()
 {
 	if(buffer != nullptr) free(buffer);
 	buffer = nullptr;
-}
-
-void WritePackage::WriteString(wstring value)
-{
-	string str = UTF_16To8(value);
-	uint length = (uint)str.length();
-	WriteUint32(length);
-	Grow(length);
-	const char* src = str.c_str();
-	for(uint i = 0; i < length; i++) buffer[position++] = src[i];
 }
