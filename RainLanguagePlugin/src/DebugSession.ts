@@ -1,4 +1,4 @@
-import { InitializedEvent, LoggingDebugSession, Scope, StoppedEvent, TerminatedEvent, Variable } from '@vscode/debugadapter';
+import { ContinuedEvent, InitializedEvent, LoggingDebugSession, Scope, StoppedEvent, TerminatedEvent, Variable } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as RainDebug from './DebugConfigurationProvider'
 import * as client from './ClientHelper'
@@ -15,7 +15,7 @@ class SpaceNode{
 	public parent: SpaceNode = null
 	public children: SpaceNode[] = null
 	public variables: VariableNode[] = null
-	constructor(public id: number, public name: string) { }
+	constructor(public frameId: number, public id: number, public name: string) { }
 	public has(node: VariableNode) {
 		for (let index = node.GetRoot().space; index; index = index.parent){
 			if (index == this) {
@@ -37,7 +37,7 @@ class VariableNode {
 	public parent: VariableNode = null
 	public index: number
 	public members: VariableNode[] = null
-	constructor(public id: number, public name: string, public type: string, public value: string) { }
+	constructor(public frameId: number, public id: number, public name: string, public type: string, public value: string) { }
 	public GetRoot() {
 		let index: VariableNode = this;
 		while (index.parent) {
@@ -53,7 +53,14 @@ class VariableNode {
 		return indies.reverse()
 	}
 }
-
+class FrameInfo {
+	public id: number
+	public locals: SpaceNode = null
+	public globals: SpaceNode = null
+	constructor(public thread: bigint, public index: number) {
+		this.id = Number(thread) + index
+	}
+}
 export class RainDebugSession extends LoggingDebugSession {
 	private helper = new client.ClientHelper(RainDebug.client)
 	constructor(protected configuration: RainDebug.RainDebugConfiguration) {
@@ -198,7 +205,7 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 	private breakpointMap = new Map<string, number[]>()
-	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): Promise<void> {
+	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): void {
 		const path = this.GetRelativePath(args.source.path)
 		let lines = this.breakpointMap.get(path)
 		if (lines == undefined) {
@@ -243,16 +250,19 @@ export class RainDebugSession extends LoggingDebugSession {
 		//todo 设置异常断点，
 		this.sendResponse(response)
 	}
-	protected async threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): Promise<void> {
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): void {
+		this.traceMap.clear()
+		this.spaceMap.clear()
+		this.variableMap.clear()
 		let req = new client.Writer(client.Proto.RRECV_Tasks)
 		req.WriteUint(request.seq)
 		this.helper.Request(request.seq, req).then(res => {
 			let cnt = res.ReadInt()
 			response.body = { threads: [] }
 			while (cnt-- > 0) {
-				let id = res.ReadLong()
+				let id = Number(res.ReadLong())
 				response.body.threads.push({
-					id: Number(id),
+					id: id,
 					name: "TaskID:" + id.toString()
 				})
 			}
@@ -262,19 +272,21 @@ export class RainDebugSession extends LoggingDebugSession {
 			this.sendResponse(response);
 		})
 	}
-	private threadId: bigint
-	private traceDeep: number
-	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): Promise<void> {
-		let req = new client.Writer(client.Proto.RRECV_Task)
+	private traceMap = new Map<number, FrameInfo>()
+	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {
+		const threadId = BigInt(args.threadId)
+		const req = new client.Writer(client.Proto.RRECV_Task)
 		req.WriteUint(request.seq)
-		req.WriteLong(BigInt(args.threadId))
+		req.WriteLong(threadId)
 		this.helper.Request(request.seq, req).then(res => {
 			const stacks: DebugProtocol.StackFrame[] = []
 			let cnt = res.ReadInt()
 			for (let index = 0; index < cnt; index++) {
 				const file = res.ReadString()
+				const frameInfo = new FrameInfo(threadId, index)
+				this.traceMap.set(frameInfo.id, frameInfo)
 				stacks.push({
-					id: index,
+					id: frameInfo.id,
 					name: file,
 					line: res.ReadInt(),
 					source: {
@@ -287,8 +299,6 @@ export class RainDebugSession extends LoggingDebugSession {
 				stackFrames: stacks,
 				totalFrames: stacks.length
 			}
-			this.threadId = BigInt(args.threadId)
-			this.traceDeep = stacks.length - args.startFrame - 1;
 			this.sendResponse(response)
 		}).catch(reason => {
 			response.success = false
@@ -297,32 +307,33 @@ export class RainDebugSession extends LoggingDebugSession {
 	}
 
 	private referenceIndex = 0
-	private localVariable: SpaceNode = null
-	private globalVariable: SpaceNode = null
 	private spaceMap = new Map<number, SpaceNode>()
 	private variableMap = new Map<number, VariableNode>()
-	private CreateSpaceNode(name: string) {
-		const result = new SpaceNode(this.referenceIndex++, name)
+	private CreateSpaceNode(frameId: number, name: string) {
+		const result = new SpaceNode(frameId, this.referenceIndex++, name)
 		this.spaceMap.set(result.id, result)
 		return result
 	}
-	private CreateVariable(name: string, structured: boolean, type: string, value: string) {
+	private CreateVariable(frameId: number,name: string, structured: boolean, type: string, value: string) {
 		if (structured) {
-			const result = new VariableNode( this.referenceIndex++, name, type, value)
+			const result = new VariableNode(frameId, this.referenceIndex++, name, type, value)
 			this.variableMap.set(result.id, result)
 			return result
 		}
-		return new VariableNode(0, name, type, value)
+		return new VariableNode(frameId, 0, name, type, value)
 	}
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments, request?: DebugProtocol.Request): void {
-		this.spaceMap.clear()
-		this.variableMap.clear()
-		this.localVariable = this.CreateSpaceNode("局部变量")
-		this.globalVariable = this.CreateSpaceNode(this.configuration.projectName)
+		const locals = this.CreateSpaceNode(args.frameId, "局部变量")
+		const globals = this.CreateSpaceNode(args.frameId, this.configuration.projectName)
+		const trace = this.traceMap.get(args.frameId)
+		if (trace) {
+			trace.locals = locals
+			trace.globals = globals
+		}
 		response.body = {
 			scopes: [
-				new Scope(this.localVariable.name, this.localVariable.id, false),
-				new Scope(this.globalVariable.name, this.globalVariable.id, true)
+				new Scope(locals.name, locals.id, false),
+				new Scope(globals.name, globals.id, true)
 			]
 		}
 		this.sendResponse(response)
@@ -332,7 +343,7 @@ export class RainDebugSession extends LoggingDebugSession {
 		let count = reader.ReadInt()
 		src.members = []
 		while (count-- > 0) {
-			const node = this.CreateVariable(reader.ReadString(), reader.ReadBool(), reader.ReadString(), reader.ReadString())
+			const node = this.CreateVariable(src.frameId, reader.ReadString(), reader.ReadBool(), reader.ReadString(), reader.ReadString())
 			node.parent = src
 			node.index = src.members.length
 			src.members.push(node)
@@ -347,7 +358,7 @@ export class RainDebugSession extends LoggingDebugSession {
 		space.variables = []
 		let count = reader.ReadInt()
 		while (count-- > 0) {
-			const node = this.CreateVariable(reader.ReadString(), reader.ReadBool(), reader.ReadString(), reader.ReadString())
+			const node = this.CreateVariable(space.frameId, reader.ReadString(), reader.ReadBool(), reader.ReadString(), reader.ReadString())
 			node.space = space
 			space.variables.push(node)
 			variables.push({
@@ -357,56 +368,61 @@ export class RainDebugSession extends LoggingDebugSession {
 			})
 		}
 	}
-	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
+	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): void {
 		const variables: Variable[] = []
 		const space = this.spaceMap.get(args.variablesReference)
-		if (space == this.localVariable) {
-			const req = new client.Writer(client.Proto.RRECV_Trace)
-			req.WriteUint(request.seq)
-			req.WriteLong(this.threadId)//threadId
-			req.WriteUint(this.traceDeep)//traceDeep
-			this.helper.Request(request.seq, req).then(res => {
-				this.ReadSpaceVariables(space, variables, res)
-				response.body.variables = variables
-				this.sendResponse(response)
-			}).catch(reason => {
-				response.success = false
-				this.sendResponse(response)
-			})
-		} else if (space) {
-			const req = new client.Writer(client.Proto.RRECV_Space)
-			req.WriteUint(request.seq)
-			const names = space.GetNames()
-			req.WriteUint(names.length)
-			names.forEach(value => req.WriteString(value))
-			this.helper.Request(request.seq, req).then(res => {
-				space.children = []
-				let count = res.ReadInt()
-				while (count-- > 0) {
-					const node = this.CreateSpaceNode(res.ReadString())
-					node.parent = space
-					space.children.push(node)
-					variables.push({
-						name: node.name,
-						variablesReference: node.id,
-						value: ""
-					})
-				}
-				this.ReadSpaceVariables(space, variables, res)
-				response.body.variables = variables
-				this.sendResponse(response)
-			}).catch(reason => {
-				response.success = false
-				this.sendResponse(response)
-			})
+		if (space) {
+			const trace = this.traceMap.get(space.frameId)
+			if (space == trace.locals) {
+				const req = new client.Writer(client.Proto.RRECV_Trace)
+				req.WriteUint(request.seq)
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
+				this.helper.Request(request.seq, req).then(res => {
+					this.ReadSpaceVariables(space, variables, res)
+					response.body.variables = variables
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false
+					this.sendResponse(response)
+				})
+			} else {
+				const req = new client.Writer(client.Proto.RRECV_Space)
+				req.WriteUint(request.seq)
+				const names = space.GetNames()
+				req.WriteUint(names.length)
+				names.forEach(value => req.WriteString(value))
+				this.helper.Request(request.seq, req).then(res => {
+					space.children = []
+					let count = res.ReadInt()
+					while (count-- > 0) {
+						const node = this.CreateSpaceNode(trace.id, res.ReadString())
+						node.parent = space
+						space.children.push(node)
+						variables.push({
+							name: node.name,
+							variablesReference: node.id,
+							value: ""
+						})
+					}
+					this.ReadSpaceVariables(space, variables, res)
+					response.body.variables = variables
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false
+					this.sendResponse(response)
+				})
+			}
 		}
+
 		const variable = this.variableMap.get(args.variablesReference)
 		if (variable) {
-			if (this.localVariable.has(variable)) {
+			const trace = this.traceMap.get(variable.frameId)
+			if (trace.locals.has(variable)) {
 				const req = new client.Writer(client.Proto.RRECV_Local)
 				req.WriteUint(request.seq)
-				req.WriteLong(this.threadId)//threadId
-				req.WriteUint(this.traceDeep)//traceDeep
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
 				req.WriteString(variable.name)
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
@@ -419,11 +435,11 @@ export class RainDebugSession extends LoggingDebugSession {
 					response.success = false
 					this.sendResponse(response)
 				})
-			} else if(this.globalVariable.has(variable)) {
+			} else if(trace.globals.has(variable)) {
 				const req = new client.Writer(client.Proto.RRECV_Global)
 				req.WriteUint(request.seq)
-				req.WriteLong(this.threadId)//threadId
-				req.WriteUint(this.traceDeep)//traceDeep
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
 				req.WriteString(variable.name)
 				const names = variable.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
@@ -442,8 +458,8 @@ export class RainDebugSession extends LoggingDebugSession {
 			} else {
 				const req = new client.Writer(client.Proto.RRECV_Hover)
 				req.WriteUint(request.seq)
-				req.WriteLong(this.threadId)//taskId
-				req.WriteUint(this.traceDeep)//traceDeep
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
@@ -463,22 +479,26 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request): void {
+		this.sendEvent(new ContinuedEvent(args.threadId, true))
 		this.helper.Send(new client.Writer(client.Proto.RECV_Continue))
 		this.sendResponse(response)
 	}
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.Request): void {
+		this.sendEvent(new ContinuedEvent(args.threadId, true))
 		const req = new client.Writer(client.Proto.RECV_Step)
 		req.WriteUint(StepType.Over)
 		this.helper.Send(req)
 		this.sendResponse(response)
 	}
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
+		this.sendEvent(new ContinuedEvent(args.threadId, true))
 		const req = new client.Writer(client.Proto.RECV_Step)
 		req.WriteUint(StepType.Into)
 		this.helper.Send(req)
 		this.sendResponse(response)
 	}
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments, request?: DebugProtocol.Request): void {
+		this.sendEvent(new ContinuedEvent(args.threadId, true))
 		const req = new client.Writer(client.Proto.RECV_Step)
 		req.WriteUint(StepType.Out)
 		this.helper.Send(req)
@@ -487,23 +507,36 @@ export class RainDebugSession extends LoggingDebugSession {
 	private hoverFile: string
 	private hoverLine: number
 	private hoverChar: number
-	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request): Promise<void> {
+	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request): void {
 		if (args.context == 'hover') {
-			let array = args.expression.split(' ')
-			if (array.length == 3) {
+			let line: number
+			let character: number
+			let expr = args.expression
+			let lastSpace = expr.lastIndexOf(' ')
+			if (lastSpace > 0) {
+				character = Number(expr.substring(lastSpace).trim())
+				expr = expr.substring(0, lastSpace)
+			}
+			lastSpace = expr.lastIndexOf(' ')
+			if (lastSpace > 0) {
+				line = Number(expr.substring(lastSpace).trim())
+				expr = expr.substring(0, lastSpace)
+			}
+			const trace = this.traceMap.get(args.frameId)
+			if (line && character && trace) {
 				const req = new client.Writer(client.Proto.RRECV_Eval)
 				req.WriteUint(request.seq)
-				req.WriteLong(this.threadId)//taskId
-				req.WriteUint(this.traceDeep)//traceDeep
-				this.hoverFile = array[0]
-				this.hoverLine = Number(array[1])
-				this.hoverChar = Number(array[2])
+				req.WriteLong(trace.thread)
+				req.WriteUint(trace.index)
+				this.hoverFile = this.GetRelativePath(expr)
+				this.hoverLine = Number(line)
+				this.hoverChar = Number(character)
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
 				this.helper.Request(request.seq, req).then(res => {
 					if (res.ReadBool()) {
-						const node = this.CreateVariable("", res.ReadBool(), "", res.ReadString())
+						const node = this.CreateVariable(trace.id, "", res.ReadBool(), "", res.ReadString())
 						response.body = {
 							variablesReference: node.id,
 							result: node.value
@@ -516,6 +549,9 @@ export class RainDebugSession extends LoggingDebugSession {
 					response.success = false
 					this.sendResponse(response)
 				})
+			} else {
+				response.success = false
+				this.sendResponse(response)
 			}
 		}
 	}

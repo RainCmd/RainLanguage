@@ -17,7 +17,7 @@ const uint32 ProgramDatabase::GetStatement(const RainString& file, uint32 line) 
 uint32 ProgramDatabase::GetStatement(uint32 instructAddress) const
 {
 	if(!statements.Count() || instructAddress < statements[0].pointer) return INVALID;
-	uint32 start = 0, end = statements.Count(), result = statements[0].pointer;
+	uint32 start = 0, end = statements.Count(), result = 0;
 	while(start + 1 < end)
 	{
 		uint32 middle = (start + end) >> 1;

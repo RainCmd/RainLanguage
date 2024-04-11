@@ -305,8 +305,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			{
 				writer.Get<uint32>(traceCountPtr)++;
 				RainTrace trace = iterator.Current();
-				RainString file = trace.FileName();
-				writer.WriteString(wstring(file.value, file.length));
+				writer.WriteString(RS2WS(trace.FileName()));
 				writer.WriteUint32(trace.Line());
 			}
 			Send(socket, writer);

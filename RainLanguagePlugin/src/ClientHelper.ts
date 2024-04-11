@@ -309,7 +309,7 @@ export class ClientHelper {
             buffer.copy(this.readBuffer, this.readBuffSize, 0, buffer.length)
             this.readBuffSize += buffer.length
             
-            if (this.readBuffSize >= 4) {
+            while (this.readBuffSize >= 4) {
                 const size = this.readBuffer.readInt32LE()
                 if (size <= this.readBuffSize) {
                     const reader = new Reader(this.readBuffer, size)
@@ -318,6 +318,8 @@ export class ClientHelper {
                     if (reader.IsValid()) {
                         this.OnRecv(reader)
                     }
+                } else {
+                    break;
                 }
             }
         })

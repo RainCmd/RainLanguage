@@ -1,5 +1,3 @@
-'use strict';
-
 import * as vscode from "vscode";
 import FormatProvider from './formatterProvider'
 import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
@@ -12,6 +10,12 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, new FormatProvider()),
         vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n'),
+        vscode.languages.registerEvaluatableExpressionProvider({ language: "雨言" }, {
+            provideEvaluatableExpression(document, position, token) {
+                return new vscode.EvaluatableExpression(new vscode.Range(position, position),
+                    document.fileName + " " + position.line.toString() + " " + position.character)
+            },
+        }),
 
         vscode.debug.registerDebugConfigurationProvider("雨言调试运行", new RainDebugConfigurationProvider(context)),
         vscode.debug.registerDebugAdapterDescriptorFactory("雨言调试运行", new InlineDebugAdapterFactory()),
