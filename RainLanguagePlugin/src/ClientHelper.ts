@@ -198,7 +198,7 @@ export class Reader {
     }
     public ReadString(): string {
         const length = this.ReadInt()
-        const result = new TextDecoder().decode(this.buffer.subarray(this.position, length));
+        const result = new TextDecoder().decode(this.buffer.subarray(this.position, this.position + length))
         this.position += length
         return result
     }

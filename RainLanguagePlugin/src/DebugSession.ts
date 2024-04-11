@@ -206,26 +206,30 @@ export class RainDebugSession extends LoggingDebugSession {
 		}
 		const added = args.lines
 		if (added.length > 0) {
-			const addReq = new client.Writer(client.Proto.RRECV_AddBreadks)
-			addReq.WriteUint(request.seq)
-			addReq.WriteString(path)
-			addReq.WriteUint(added.length)
-			added.forEach(value => addReq.WriteUint(value))
-			const addRes = await this.helper.Request(request.seq, addReq)
-			let cnt = addRes.ReadInt()
-			let invalidLines: number[] = []
-			while (cnt-- > 0) {
-				invalidLines.push(addRes.ReadInt());
-			}
-			response.body = { breakpoints: [] }
-			args.lines.forEach(v => {
-				response.body.breakpoints.push({
-					verified: !invalidLines.includes(v)
+			const req = new client.Writer(client.Proto.RRECV_AddBreadks)
+			req.WriteUint(request.seq)
+			req.WriteString(path)
+			req.WriteUint(added.length)
+			added.forEach(value => req.WriteUint(value))
+			this.helper.Request(request.seq, req).then(res => {
+				let cnt = res.ReadInt()
+				let invalidLines: number[] = []
+				while (cnt-- > 0) {
+					invalidLines.push(res.ReadInt());
+				}
+				response.body = { breakpoints: [] }
+				args.lines.forEach(v => {
+					response.body.breakpoints.push({
+						verified: !invalidLines.includes(v)
+					})
 				})
-			});
+				this.breakpointMap.set(path, args.lines)
+				this.sendResponse(response)
+			}).catch(reason => {
+				response.success = false
+				this.sendResponse(response)
+			})
 		}
-		this.breakpointMap.set(path, args.lines)
-		this.sendResponse(response)
 	}
 	protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments, request?: DebugProtocol.Request): void {
 		//todo 设置异常断点，
@@ -234,46 +238,54 @@ export class RainDebugSession extends LoggingDebugSession {
 	protected async threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): Promise<void> {
 		let req = new client.Writer(client.Proto.RRECV_Tasks)
 		req.WriteUint(request.seq)
-		let res = await this.helper.Request(request.seq, req)
-		let cnt = res.ReadInt()
-		response.body = { threads: [] }
-		while (cnt-- > 0) {
-			let id = res.ReadLong()
-			response.body.threads.push({
-				id: Number(id),
-				name: "TaskID:" + id.toString()
-			})
-		}
-		this.sendResponse(response);
+		this.helper.Request(request.seq, req).then(res => {
+			let cnt = res.ReadInt()
+			response.body = { threads: [] }
+			while (cnt-- > 0) {
+				let id = res.ReadLong()
+				response.body.threads.push({
+					id: Number(id),
+					name: "TaskID:" + id.toString()
+				})
+			}
+			this.sendResponse(response);
+		}).catch(reason => {
+			response.success = false
+			this.sendResponse(response);
+		})
 	}
 	private threadId: bigint
 	private traceDeep: number
 	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): Promise<void> {
 		let req = new client.Writer(client.Proto.RRECV_Task)
 		req.WriteUint(request.seq)
-		req.WriteUint(args.threadId)
-		let res = await this.helper.Request(request.seq, req)
-		const stacks: DebugProtocol.StackFrame[] = []
-		let cnt = res.ReadInt()
-		for (let index = 0; index < cnt; index++) {
-			const file = res.ReadString()
-			stacks.push({
-				id: index,
-				name: file,
-				line: res.ReadInt(),
-				source: {
-					path: this.configuration.projectPath + "\\" + file
-				},
-				column: 0
-			})
-		}
-		response.body = {
-			stackFrames: stacks,
-			totalFrames: stacks.length
-		}
-		this.threadId = BigInt(args.threadId)
-		this.traceDeep = stacks.length - args.startFrame - 1;
-		this.sendResponse(response)
+		req.WriteLong(BigInt(args.threadId))
+		this.helper.Request(request.seq, req).then(res => {
+			const stacks: DebugProtocol.StackFrame[] = []
+			let cnt = res.ReadInt()
+			for (let index = 0; index < cnt; index++) {
+				const file = res.ReadString()
+				stacks.push({
+					id: index,
+					name: file,
+					line: res.ReadInt(),
+					source: {
+						path: this.configuration.projectPath + "\\" + file
+					},
+					column: 0
+				})
+			}
+			response.body = {
+				stackFrames: stacks,
+				totalFrames: stacks.length
+			}
+			this.threadId = BigInt(args.threadId)
+			this.traceDeep = stacks.length - args.startFrame - 1;
+			this.sendResponse(response)
+		}).catch(reason => {
+			response.success = false
+			this.sendResponse(response)
+		})
 	}
 
 	private referenceIndex = 0
@@ -345,28 +357,40 @@ export class RainDebugSession extends LoggingDebugSession {
 			req.WriteUint(request.seq)
 			req.WriteLong(this.threadId)//threadId
 			req.WriteUint(this.traceDeep)//traceDeep
-			const res = await this.helper.Request(request.seq, req)
-			this.ReadSpaceVariables(space, variables, res)
+			this.helper.Request(request.seq, req).then(res => {
+				this.ReadSpaceVariables(space, variables, res)
+				response.body.variables = variables
+				this.sendResponse(response)
+			}).catch(reason => {
+				response.success = false
+				this.sendResponse(response)
+			})
 		} else if (space) {
 			const req = new client.Writer(client.Proto.RRECV_Space)
 			req.WriteUint(request.seq)
 			const names = space.GetNames()
 			req.WriteUint(names.length)
 			names.forEach(value => req.WriteString(value))
-			const res = await this.helper.Request(request.seq, req)
-			space.children = []
-			let count = res.ReadInt()
-			while (count-- > 0) {
-				const node = this.CreateSpaceNode(res.ReadString())
-				node.parent = space
-				space.children.push(node)
-				variables.push({
-					name: node.name,
-					variablesReference: node.id,
-					value: ""
-				})
-			}
-			this.ReadSpaceVariables(space, variables, res)
+			this.helper.Request(request.seq, req).then(res => {
+				space.children = []
+				let count = res.ReadInt()
+				while (count-- > 0) {
+					const node = this.CreateSpaceNode(res.ReadString())
+					node.parent = space
+					space.children.push(node)
+					variables.push({
+						name: node.name,
+						variablesReference: node.id,
+						value: ""
+					})
+				}
+				this.ReadSpaceVariables(space, variables, res)
+				response.body.variables = variables
+				this.sendResponse(response)
+			}).catch(reason => {
+				response.success = false
+				this.sendResponse(response)
+			})
 		}
 		const variable = this.variableMap.get(args.variablesReference)
 		if (variable) {
@@ -379,8 +403,14 @@ export class RainDebugSession extends LoggingDebugSession {
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
 				indies.forEach(value => req.WriteUint(value))
-				const res = await this.helper.Request(request.seq, req)
-				this.ReadVariableMembers(variable, variables, res)
+				this.helper.Request(request.seq, req).then(res => {
+					this.ReadVariableMembers(variable, variables, res)
+					response.body.variables = variables
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false
+					this.sendResponse(response)
+				})
 			} else if(this.globalVariable.has(variable)) {
 				const req = new client.Writer(client.Proto.RRECV_Global)
 				req.WriteUint(request.seq)
@@ -393,8 +423,14 @@ export class RainDebugSession extends LoggingDebugSession {
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
 				indies.forEach(value => req.WriteUint(value))
-				const res = await this.helper.Request(request.seq, req)
-				this.ReadVariableMembers(variable, variables, res)
+				this.helper.Request(request.seq, req).then(res => {
+					this.ReadVariableMembers(variable, variables, res)
+					response.body.variables = variables
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false
+					this.sendResponse(response)
+				})
 			} else {
 				const req = new client.Writer(client.Proto.RRECV_Hover)
 				req.WriteUint(request.seq)
@@ -403,12 +439,16 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
-				const res = await this.helper.Request(request.seq, req)
-				this.ReadVariableMembers(variable, variables, res)
+				this.helper.Request(request.seq, req).then(res => {
+					this.ReadVariableMembers(variable, variables, res)
+					response.body.variables = variables
+					this.sendResponse(response)
+				}).catch(reason => {
+					response.success = false
+					this.sendResponse(response)
+				})
 			}
 		}
-		response.body.variables = variables
-		this.sendResponse(response)
 	}
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request): void {
 		this.helper.Send(new client.Writer(client.Proto.RECV_Pause))
@@ -453,18 +493,22 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(this.hoverFile)
 				req.WriteUint(this.hoverLine)
 				req.WriteUint(this.hoverChar)
-				const res = await this.helper.Request(request.seq, req)
-				if (res.ReadBool()) {
-					const node = this.CreateVariable("", res.ReadBool(), "", res.ReadString())
-					response.body = {
-						variablesReference: node.id,
-						result: node.value
+				this.helper.Request(request.seq, req).then(res => {
+					if (res.ReadBool()) {
+						const node = this.CreateVariable("", res.ReadBool(), "", res.ReadString())
+						response.body = {
+							variablesReference: node.id,
+							result: node.value
+						}
+					} else {
+						response.success = false
 					}
-				} else {
+					this.sendResponse(response)
+				}).catch(reason => {
 					response.success = false
-				}
+					this.sendResponse(response)
+				})
 			}
 		}
-		this.sendResponse(response)
 	}
 }
