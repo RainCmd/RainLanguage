@@ -153,6 +153,8 @@ export enum Proto {
     RSEND_Hover,
 
     RECV_Close,
+	//	string msg
+	SEND_Message,
 }
 const MAGIC_NUMBER: number = 0x4e494152;
 export class Reader {
@@ -374,6 +376,9 @@ export class ClientHelper {
                 this.RecvRequest(reader)
                 break;
             case Proto.RECV_Close: break;
+            case Proto.SEND_Message:
+                this.RecvEvent(Proto.SEND_Message, reader)
+                break;
             default:
                 break;
         }

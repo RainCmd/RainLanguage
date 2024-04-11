@@ -151,4 +151,6 @@ enum class Proto : uint
 	RSEND_Hover,
 
 	RECV_Close,
+	//	string msg
+	SEND_Message,
 };

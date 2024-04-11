@@ -80,9 +80,22 @@ static void Send(SOCKET socket, const WritePackage& package)
 	if(buffer && length) send(socket, buffer, length, 0);
 }
 
+static void LogMsg(const wstring msg)
+{
+	if(cSocket == INVALID_SOCKET) return;
+	WritePackage writer;
+	writer.WriteProto(Proto::SEND_Message);
+	writer.WriteString(msg);
+	Send(cSocket, writer);
+}
+
 static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 {
-	if(!reader.IsValid()) return;
+	if(!reader.IsValid())
+	{
+		LogMsg(L"invalid msg");
+		return;
+	}
 	switch(reader.ReadProto())
 	{
 		case Proto::RRECV_AddBreadks:
@@ -91,7 +104,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			writer.WriteProto(Proto::RSEND_AddBreadks);
 			writer.WriteUint32(reader.ReadUint32());
 			wstring file = reader.ReadString();
-			if(file.empty()) return;
+			if(file.empty())
+			{
+				LogMsg(L"add breakpoints: file is empty");
+				return;
+			}
 			uint countPtr = writer.WriteUint32(0);
 			RainString rs_file = WS2RS(file);
 			uint32 lineCount = reader.ReadUint32();
@@ -111,7 +128,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RECV_RemoveBreaks:
 		{
 			wstring file = reader.ReadString();
-			if(file.empty()) return;
+			if(file.empty())
+			{
+				LogMsg(L"remove breakpoints: file is empty");
+				return;
+			}
 			RainString rs_file = WS2RS(file);
 			uint32 lineCount = reader.ReadUint32();
 			while(lineCount--)
@@ -137,13 +158,21 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::SEND_OnBreak: break;
 		case Proto::RRECV_Space:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"space: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Space);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainDebuggerSpace space = debugger->GetSpace();
-			if(!GetSpace(reader, space)) return;
+			if(!GetSpace(reader, space))
+			{
+				LogMsg(L"space: get space fial");
+				return;
+			}
 
 			uint32 childCount = space.ChildCount();
 			writer.WriteUint32(childCount);
@@ -163,18 +192,34 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Space: break;
 		case Proto::RRECV_Global:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"global: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Global);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainDebuggerSpace space = debugger->GetSpace();
-			if(!GetSpace(reader, space)) return;
+			if(!GetSpace(reader, space))
+			{
+				LogMsg(L"global: get space fial");
+				return;
+			}
 
 			RainDebuggerVariable variable = space.GetVariable(WS2RS(reader.ReadString()));
-			if(!variable.IsValid()) return;
+			if(!variable.IsValid())
+			{
+				LogMsg(L"global: invalid variable");
+				return;
+			}
 
-			if(!GetVariable(reader, variable)) return;
+			if(!GetVariable(reader, variable))
+			{
+				LogMsg(L"global: get variable fial");
+				return;
+			}
 
 			WriteExpand(writer, variable);
 
@@ -184,18 +229,34 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Global: break;
 		case Proto::RRECV_SetGlobal:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"set global: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_SetGlobal);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainDebuggerSpace space = debugger->GetSpace();
-			if(!GetSpace(reader, space)) return;
+			if(!GetSpace(reader, space))
+			{
+				LogMsg(L"set global: get space fial");
+				return;
+			}
 
 			RainDebuggerVariable variable = space.GetVariable(WS2RS(reader.ReadString()));
-			if(!variable.IsValid()) return;
+			if(!variable.IsValid())
+			{
+				LogMsg(L"set global: invalid variable");
+				return;
+			}
 
-			if(!GetVariable(reader, variable)) return;
+			if(!GetVariable(reader, variable))
+			{
+				LogMsg(L"set global: get variable fial");
+				return;
+			}
 
 			variable.SetValue(WS2RS(reader.ReadString()));
 			writer.WriteString(RS2WS(variable.GetValue()));
@@ -206,7 +267,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_SetGlobal: break;
 		case Proto::RRECV_Tasks:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"tasks: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Tasks);
 			writer.WriteUint32(reader.ReadUint32());
@@ -224,7 +289,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Tasks: break;
 		case Proto::RRECV_Task:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"task: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Task);
 			writer.WriteUint32(reader.ReadUint32());
@@ -245,15 +314,27 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Task: break;
 		case Proto::RRECV_Trace:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"trace: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Trace);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			if(iterator.IsValid()) return;
+			if(iterator.IsValid())
+			{
+				LogMsg(L"trace: invalid task");
+				return;
+			}
 			uint32 deep = reader.ReadUint32();
-			while(deep--) if(!iterator.Next()) return;
+			while(deep--) if(!iterator.Next())
+			{
+				LogMsg(L"trace: trace too deep");
+				return;
+			}
 
 			RainTrace trace = iterator.Current();
 			uint32 variableCount = trace.LocalCount();
@@ -267,22 +348,42 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Trace: break;
 		case Proto::RRECV_Local:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"local: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Local);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			if(!iterator.IsValid()) return;
+			if(!iterator.IsValid())
+			{
+				LogMsg(L"local: invalid task");
+				return;
+			}
 
 			uint32 deep = reader.ReadUint32();
-			while(deep--) if(!iterator.Next()) return;
+			while(deep--) if(!iterator.Next())
+			{
+				LogMsg(L"local: trace too deep");
+				return;
+			}
 
 			RainTrace trace = iterator.Current();
 			RainDebuggerVariable variable = trace.GetLocal(WS2RS(reader.ReadString()));
-			if(!variable.IsValid()) return;
+			if(!variable.IsValid())
+			{
+				LogMsg(L"local: invalid variable");
+				return;
+			}
 
-			if(!GetVariable(reader, variable)) return;
+			if(!GetVariable(reader, variable))
+			{
+				LogMsg(L"local: get variable fail");
+				return;
+			}
 
 			WriteExpand(writer, variable);
 
@@ -292,22 +393,42 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Local: break;
 		case Proto::RRECV_SetLocal:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"set local: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_SetLocal);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			if(!iterator.IsValid()) return;
+			if(!iterator.IsValid())
+			{
+				LogMsg(L"set local: invalid task");
+				return;
+			}
 
 			uint32 deep = reader.ReadUint32();
-			while(deep--) if(!iterator.Next()) return;
+			while(deep--) if(!iterator.Next())
+			{
+				LogMsg(L"set local: trace too deep");
+				return;
+			}
 
 			RainTrace trace = iterator.Current();
 			RainDebuggerVariable variable = trace.GetLocal(WS2RS(reader.ReadString()));
-			if(!variable.IsValid()) return;
+			if(!variable.IsValid())
+			{
+				LogMsg(L"set local: invalid variable");
+				return;
+			}
 
-			if(!GetVariable(reader, variable)) return;
+			if(!GetVariable(reader, variable))
+			{
+				LogMsg(L"local: get variable fail");
+				return;
+			}
 
 			variable.SetValue(WS2RS(reader.ReadString()));
 			writer.WriteString(RS2WS(variable.GetValue()));
@@ -318,16 +439,28 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_SetLocal: break;
 		case Proto::RRECV_Eval:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"eval: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Eval);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			if(!iterator.IsValid()) return;
+			if(!iterator.IsValid())
+			{
+				LogMsg(L"eval: invalid task");
+				return;
+			}
 
 			uint32 deep = reader.ReadUint32();
-			while(deep--) if(!iterator.Next()) return;
+			while(deep--) if(!iterator.Next())
+			{
+				LogMsg(L"eval: trace too deep");
+				return;
+			}
 
 			RainTrace trace = iterator.Current();
 			wstring file = reader.ReadString();
@@ -348,24 +481,45 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_Eval: break;
 		case Proto::RRECV_Hover:
 		{
-			if(!debugger->IsBreaking()) return;
+			if(!debugger->IsBreaking())
+			{
+				LogMsg(L"hover: is not breaking");
+				return;
+			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Hover);
 			writer.WriteUint32(reader.ReadUint32());
 
 			RainTraceIterator iterator = debugger->GetTraceIterator(reader.ReadUint64());
-			if(!iterator.IsValid()) return;
+			if(!iterator.IsValid())
+			{
+				LogMsg(L"hover: invalid task");
+				return;
+			}
 
 			uint32 deep = reader.ReadUint32();
-			while(deep--) if(!iterator.Next()) return;
+			while(deep--) if(!iterator.Next())
+			{
+				LogMsg(L"hover: trace too deep");
+				return;
+			}
 
 			RainTrace trace = iterator.Current();
 			wstring file = reader.ReadString();
 			uint32 line = reader.ReadUint32();
 			uint32 character = reader.ReadUint32();
 			RainDebuggerVariable variable = trace.GetVariable(WS2RS(file), line, character);
+			if(!variable.IsValid())
+			{
+				LogMsg(L"hover: invalid variable");
+				return;
+			}
 
-			if(!GetVariable(reader, variable)) return;
+			if(!GetVariable(reader, variable))
+			{
+				LogMsg(L"hover: get variable fail");
+				return;
+			}
 
 			WriteExpand(writer, variable);
 
@@ -377,6 +531,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			closesocket(cSocket);
 			cSocket = INVALID_SOCKET;
 			break;
+		case Proto::SEND_Message: break;
 		default:
 			break;
 	}

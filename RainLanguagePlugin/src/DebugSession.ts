@@ -81,6 +81,9 @@ export class RainDebugSession extends LoggingDebugSession {
 		}).on(client.Proto.SEND_OnException, reader => {
 			const threadId = Number(reader.ReadLong())
 			this.sendEvent(new StoppedEvent("exception", threadId, reader.ReadString()));
+		}).on(client.Proto.SEND_Message, reader => {
+			const msg = reader.ReadString()
+			console.log(msg)
 		})
 		response.body = {
 			//调试适配器支持' configurationDone '请求。
@@ -198,7 +201,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			const removeReq = new client.Writer(client.Proto.RECV_RemoveBreaks);
 			removeReq.WriteString(path)
 			removeReq.WriteUint(removed.length)
-			removed.forEach(removeReq.WriteUint);
+			removed.forEach(value => removeReq.WriteUint(value))
 			this.helper.Send(removeReq)
 		}
 		const added = args.lines
@@ -207,7 +210,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			addReq.WriteUint(request.seq)
 			addReq.WriteString(path)
 			addReq.WriteUint(added.length)
-			added.forEach(addReq.WriteUint);
+			added.forEach(value => addReq.WriteUint(value))
 			const addRes = await this.helper.Request(request.seq, addReq)
 			let cnt = addRes.ReadInt()
 			let invalidLines: number[] = []
@@ -349,7 +352,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			req.WriteUint(request.seq)
 			const names = space.GetNames()
 			req.WriteUint(names.length)
-			names.forEach(req.WriteString)
+			names.forEach(value => req.WriteString(value))
 			const res = await this.helper.Request(request.seq, req)
 			space.children = []
 			let count = res.ReadInt()
@@ -375,7 +378,7 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(variable.name)
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
-				indies.forEach(req.WriteUint)
+				indies.forEach(value => req.WriteUint(value))
 				const res = await this.helper.Request(request.seq, req)
 				this.ReadVariableMembers(variable, variables, res)
 			} else if(this.globalVariable.has(variable)) {
@@ -386,10 +389,10 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(variable.name)
 				const names = variable.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
-				names.forEach(req.WriteString)
+				names.forEach(value => req.WriteString(value))
 				const indies = variable.GetMemberIndies()
 				req.WriteUint(indies.length)
-				indies.forEach(req.WriteUint)
+				indies.forEach(value => req.WriteUint(value))
 				const res = await this.helper.Request(request.seq, req)
 				this.ReadVariableMembers(variable, variables, res)
 			} else {
