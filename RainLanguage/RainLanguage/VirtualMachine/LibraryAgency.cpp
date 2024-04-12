@@ -14,6 +14,8 @@ void LibraryAgency::Init(const Library** initialLibraries, uint32 count)
 	kernelLibrary = new RuntimeLibrary(kernel, LIBRARY_KERNEL, GetKernelLibrary());
 	kernelLibrary->kernel = kernel;
 	kernelLibrary->InitRuntimeData(GetKernelLibrary(), LIBRARY_KERNEL);
+	kernelLibrary->structs[KERNEL_TYPE_INDEX::KERNEL_TYPE_STRUCT_INDEX_String].stringFields.Add(0);
+	kernelLibrary->structs[KERNEL_TYPE_INDEX::KERNEL_TYPE_STRUCT_INDEX_Entity].entityFields.Add(0);
 	kernel->taskAgency->CreateInvoker(kernelLibrary->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	for(uint32 i = 0; i < count; i++) Load(initialLibraries[i]);
 }
@@ -339,6 +341,7 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 	}
 	Caller caller(kernel, info, stack, top);
 	info->caller(*kernel, caller);
+	caller.ReleaseParameters();
 	if(caller.GetException()) return kernel->stringAgency->Get(caller.GetException());
 	else return String();
 }

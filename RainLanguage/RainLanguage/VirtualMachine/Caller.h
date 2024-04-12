@@ -23,6 +23,7 @@ public:
 	~Caller();
 	Caller(const Caller&) = delete;
 	Caller(const Caller&&) = delete;
+	void ReleaseParameters();
 
 	bool GetBoolParameter(uint32 index) const;
 	uint8 GetByteParameter(uint32 index) const;

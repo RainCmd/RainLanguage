@@ -59,11 +59,11 @@
             "editor/title/run": [
                 {
                     "command": "cmd.雨言调试",
-                    "when": "resourceLangId == 雨言"
+                    "when": "resourceLangId == 雨言 && !inDebugMode"
                 },
                 {
                     "command": "cmd.附加到进程",
-                    "when": "resourceLangId == 雨言"
+                    "when": "resourceLangId == 雨言 && !inDebugMode"
                 }
             ],
             "view/title": [

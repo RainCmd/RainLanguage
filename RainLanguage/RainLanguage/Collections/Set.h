@@ -180,7 +180,7 @@ public:
 			if(buckets[bidx] == sidx)buckets[bidx] = slot->next;
 			else
 			{
-				Slot* index = slots + bidx;
+				Slot* index = slots + buckets[bidx];
 				while(index->next != sidx)
 				{
 					if(index->next == INVALID)return false;
