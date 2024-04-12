@@ -283,6 +283,7 @@ void UnboxExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
 	parameter.generator->WriteCode(sourcetParameter.results[0]);
 	parameter.generator->WriteCodeGlobalReference(returns[0]);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
 UnboxExpression::~UnboxExpression()

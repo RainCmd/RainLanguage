@@ -116,6 +116,20 @@ export class RainDebugSession extends LoggingDebugSession {
 				heap: reader.ReadInt()
 			})
 		})
+		const writer = new client.Writer(client.Proto.RECV_Diagnose)
+		writer.WriteUint(1)
+		this.helper.Send(writer)
+		kernelStateViewProvider.Show()
+		kernelStateViewProvider.on("ChangeVisibility", visiable => {
+			const writer = new client.Writer(client.Proto.RECV_Diagnose)
+			if (visiable) {
+				writer.WriteUint(1)
+			} else {
+				writer.WriteUint(0)
+			}
+			this.helper.Send(writer)
+		})
+		
 		response.body = {
 			//调试适配器支持' configurationDone '请求。
 			supportsConfigurationDoneRequest: false,
@@ -208,12 +222,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			//客户端可以将此数组中的第一个适用模式作为设置断点的手势中的“默认”模式。
 			breakpointModes: []
 		}
-		kernelStateViewProvider.Hide()
-		kernelStateViewProvider.once("show", () => {
-			const writer = new client.Writer(client.Proto.RECV_Diagnose)
-			writer.WriteUint(1)
-			this.helper.Send(writer)
-		})
+
 		this.sendResponse(response)
 		this.sendEvent(new InitializedEvent())
 	}
@@ -224,7 +233,7 @@ export class RainDebugSession extends LoggingDebugSession {
 		if (this.configuration.request == 'launch' && RainDebug.debuggedProcess != null && !RainDebug.debuggedProcess.killed) {
 			RainDebug.debuggedProcess.kill()
 		}
-		kernelStateViewProvider.removeAllListeners("show")
+		kernelStateViewProvider.removeAllListeners()
 		this.sendResponse(response)
 	}
 	

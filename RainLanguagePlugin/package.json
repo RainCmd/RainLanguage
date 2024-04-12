@@ -65,13 +65,6 @@
                     "command": "cmd.附加到进程",
                     "when": "resourceLangId == 雨言 && !inDebugMode"
                 }
-            ],
-            "view/title": [
-                {
-                    "command": "cmd.虚拟机状态信息",
-					"group": "navigation",
-                    "when": "view == RainKernelState && inDebugMode && resourceLangId == 雨言"
-                }
             ]
         },
         "commands": [
@@ -86,11 +79,6 @@
                 "title": "附加到进程",
                 "enablement": "!inDebugMode",
                 "icon": "$(sort-precedence)"
-            },
-            {
-                "command": "cmd.虚拟机状态信息",
-                "title": "显示虚拟机状态信息",
-                "icon": "$(disassembly-editor-label-icon)"
             }
         ],
         "snippets": [

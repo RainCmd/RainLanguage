@@ -38,6 +38,9 @@ void TaskAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 	}
 	else task = new Task(kernel, executeStackCapacity);
 	task->Initialize(invoker, ignoreWait);
+
+	task->next = head;
+	head = task;
 	if (immediately)
 	{
 		Task* prev = current;
@@ -45,13 +48,9 @@ void TaskAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 		task->Update();
 		current = prev;
 	}
-	if (task->IsRunning())
+	if (!task->IsRunning())
 	{
-		task->next = head;
-		head = task;
-	}
-	else
-	{
+		head = head->next;
 		Recycle(task);
 		if (!invoker->hold) invoker->Recycle();
 	}

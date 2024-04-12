@@ -13,7 +13,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 borderColor: "rgb(255, 0, 0)",
                 borderWidth: 1,
                 tension: 0,
-                pointRadius: 0
+                pointRadius: 1
             },
             {
                 label: "string",
@@ -22,7 +22,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 borderColor: "rgb(0, 255, 0)",
                 borderWidth: 1,
                 tension: 0,
-                pointRadius: 0
+                pointRadius: 1
             },
             {
                 label: "entity",
@@ -31,7 +31,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 borderColor: "rgb(0, 0, 255)",
                 borderWidth: 1,
                 tension: 0,
-                pointRadius: 0
+                pointRadius: 1
             },
             {
                 label: "handle",
@@ -40,7 +40,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 borderColor: "rgb(0, 255, 255)",
                 borderWidth: 1,
                 tension: 0,
-                pointRadius: 0
+                pointRadius: 1
             },
             {
                 label: "heap",
@@ -49,7 +49,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 borderColor: "rgb(255, 255, 0)",
                 borderWidth: 1,
                 tension: 0,
-                pointRadius: 0
+                pointRadius: 1
             }
         ]
     },
@@ -60,23 +60,19 @@ const stateChart = new Chart(document.getElementById('container'), {
 
 window.addEventListener('message', event => {
     const msg = event.data
+    const datasets = stateChart.data.datasets
     switch (msg.type) {
-        case 'hide': {
-            stateChart.update('hide')
-            break
-        }
         case 'show': {
             stateChart.data.labels = []
-            for (let index = 0; index < stateChart.data.datasets.length; index++) {
-                const element = stateChart.data.datasets[index];
+            for (let index = 0; index < datasets.length; index++) {
+                const element = datasets[index];
                 element.data = []
             }
             stateChart.update('show')
             break
         }
         case 'data': {
-            const datasets = stateChart.data.datasets
-            if (stateChart.data.labels.length == 30) {
+            if (stateChart.data.labels.length == 60) {
                 for (let index = 0; index < datasets.length; index++) {
                     const element = datasets[index];
                     element.data.shift()

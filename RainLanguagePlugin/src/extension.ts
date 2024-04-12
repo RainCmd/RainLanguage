@@ -41,10 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
             })
         }),
 
-        vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider),
-        vscode.commands.registerCommand("cmd.虚拟机状态信息", () => {
-            kernelStateViewProvider.Show()
-        })
+        vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider)
     );
 }
 export async function deactivate() {

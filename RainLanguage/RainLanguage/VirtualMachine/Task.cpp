@@ -1143,7 +1143,7 @@ label_next_instruct:
 			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
 			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
 			String error = StrongUnbox(kernel, INSTRUCT_VALUE(Type, 9), VARIABLE(Handle, sourceValue), &VARIABLE(uint8, resultValue));
-			if(error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Unbox, error);
+			if(!error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Unbox, error);
 			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Unbox);
 		}
 		goto label_next_instruct;

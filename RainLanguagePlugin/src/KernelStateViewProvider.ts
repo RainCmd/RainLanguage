@@ -9,7 +9,6 @@ export interface KernelStateMsg{
     heap: number
 }
 export class KernelStateViewProvider extends EventEmitter implements vscode.WebviewViewProvider {
-    private 
     private view: vscode.WebviewView
     constructor(private extensionUri: vscode.Uri) {
         super()
@@ -20,6 +19,10 @@ export class KernelStateViewProvider extends EventEmitter implements vscode.Webv
             enableScripts: true,
             localResourceRoots: [this.extensionUri]
         }
+
+        this.view.onDidChangeVisibility(() => { 
+            this.emit('ChangeVisibility', this.view.visible)
+        })
         const viewScriptUrl = this.view.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'KernelStateView.js'))
         webviewView.webview.html = `
             <html>
@@ -38,21 +41,13 @@ export class KernelStateViewProvider extends EventEmitter implements vscode.Webv
             </html>
         `
     }
-    public Hide() {
-        if (this.view) {
-            this.view.webview.postMessage({
-                type: 'hide'
-            })
-        }
-        this.emit("hide")
-    }
     public Show() {
         if (this.view) {
             this.view.webview.postMessage({
                 type: 'show'
             })
+            this.view.show()
         }
-        this.emit("show")
     }
     public RecvData(data: KernelStateMsg) {
         if (this.view) {
