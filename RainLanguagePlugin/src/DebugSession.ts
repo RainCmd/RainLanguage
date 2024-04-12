@@ -226,7 +226,6 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 		this.sendEvent(new InitializedEvent())
 	}
-
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
 		this.helper.Send(new client.Writer(client.Proto.RECV_Close))
 		RainDebug.client.destroy();
@@ -350,13 +349,13 @@ export class RainDebugSession extends LoggingDebugSession {
 	private spaceMap = new Map<number, SpaceNode>()
 	private variableMap = new Map<number, VariableNode>()
 	private CreateSpaceNode(frameId: number, name: string) {
-		const result = new SpaceNode(frameId, this.referenceIndex++, name)
+		const result = new SpaceNode(frameId, ++this.referenceIndex, name)
 		this.spaceMap.set(result.id, result)
 		return result
 	}
 	private CreateVariable(frameId: number,name: string, structured: boolean, type: string, value: string) {
 		if (structured) {
-			const result = new VariableNode(frameId, this.referenceIndex++, name, type, value)
+			const result = new VariableNode(frameId, ++this.referenceIndex, name, type, value)
 			this.variableMap.set(result.id, result)
 			return result
 		}
