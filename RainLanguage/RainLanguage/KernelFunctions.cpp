@@ -1376,7 +1376,9 @@ String enum_ToString(KernelInvokerParameter parameter)//string enum.() Declarati
 	const Declaration& declaration = PARAMETER_VALUE(1, Declaration, SIZE(integer));
 	string result = parameter.kernel->libraryAgency->GetEnum(Type(declaration, 0))->ToString(value, parameter.kernel->stringAgency).index;
 	parameter.kernel->stringAgency->Reference(result);
-	RETURN_VALUE(string, 0) = result;
+	string& returnValue = RETURN_VALUE(string, 0);
+	parameter.kernel->stringAgency->Release(returnValue);
+	returnValue = result;
 	return String();
 }
 

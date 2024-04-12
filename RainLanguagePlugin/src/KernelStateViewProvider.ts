@@ -20,9 +20,6 @@ export class KernelStateViewProvider extends EventEmitter implements vscode.Webv
             localResourceRoots: [this.extensionUri]
         }
 
-        this.view.onDidChangeVisibility(() => { 
-            this.emit('ChangeVisibility', this.view.visible)
-        })
         const viewScriptUrl = this.view.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'KernelStateView.js'))
         webviewView.webview.html = `
             <html>
@@ -40,6 +37,11 @@ export class KernelStateViewProvider extends EventEmitter implements vscode.Webv
             </body>
             </html>
         `
+        const emit = () => {
+            this.emit('ChangeVisibility', this.view.visible)
+        }
+        this.view.onDidChangeVisibility(emit)
+        emit()
     }
     public Show() {
         if (this.view) {
