@@ -30,6 +30,22 @@ void WritePackage::Grow(uint size)
 	else buffer = (char*)realloc(buffer, this->size);
 }
 
+WritePackage& WritePackage::operator=(const WritePackage& other)
+{
+	if(this->size < other.position)
+	{
+		buffer = (char*)realloc(buffer, other.position);
+		this->size = other.position;
+	}
+	position = 0;
+	while(position < other.position)
+	{
+		buffer[position] = other.buffer[position];
+		position++;
+	}
+	return *this;
+}
+
 void WritePackage::WriteString(wstring value)
 {
 	string str = UTF_16To8(value);

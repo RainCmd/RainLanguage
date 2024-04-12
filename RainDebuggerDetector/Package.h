@@ -43,6 +43,7 @@ private:
 	}
 public:
 	WritePackage() :buffer(nullptr), size(8), position(8) {}
+	WritePackage& operator=(const WritePackage& other);
 	inline uint WriteBool(bool value)
 	{
 		return Write<bool>(value, 1);

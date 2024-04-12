@@ -8,7 +8,7 @@
         "vscode": "^1.28.0"
     },
     "license": "MIT",
-    "icon": "images/kq.png",
+    "icon": "images/rain.png",
     "categories": [
         "Programming Languages",
         "Formatters",
@@ -49,8 +49,8 @@
                     "雨言"
                 ],
                 "icon": {
-                    "dark": "./images/kq-mini.png",
-                    "light": "./images/kq-mini.png"
+                    "dark": "./images/rain-dark.png",
+                    "light": "./images/rain-light.png"
                 },
                 "configuration": "./language-configuration.json"
             }
@@ -64,6 +64,13 @@
                 {
                     "command": "cmd.附加到进程",
                     "when": "resourceLangId == 雨言"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "cmd.虚拟机状态信息",
+					"group": "navigation",
+                    "when": "view == RainKernelState && inDebugMode && resourceLangId == 雨言"
                 }
             ]
         },
@@ -79,6 +86,11 @@
                 "title": "附加到进程",
                 "enablement": "!inDebugMode",
                 "icon": "$(sort-precedence)"
+            },
+            {
+                "command": "cmd.虚拟机状态信息",
+                "title": "显示虚拟机状态信息",
+                "icon": "$(disassembly-editor-label-icon)"
             }
         ],
         "snippets": [
@@ -154,6 +166,15 @@
                 "scopeName": "source.雨言",
                 "path": "./rain.tmLanguage.json"
             }
-        ]
+        ],
+        "views": {
+            "debug":[
+                {
+                    "id": "RainKernelState",
+                    "name": "虚拟机状态视图",
+                    "type": "webview"
+                }
+            ]
+        }
     }
 }

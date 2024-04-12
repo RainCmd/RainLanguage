@@ -2,6 +2,7 @@ import { ContinuedEvent, InitializedEvent, LoggingDebugSession, Scope, StoppedEv
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as RainDebug from './DebugConfigurationProvider'
 import * as client from './ClientHelper'
+import { kernelStateViewProvider } from './extension'
 
 enum StepType {
 	// 逐过程
@@ -90,15 +91,30 @@ export class RainDebugSession extends LoggingDebugSession {
 			const threadId = Number(reader.ReadLong())
 			this.sendEvent(new StoppedEvent("命中断点", threadId));
 		}).on(client.Proto.SEND_OnException, reader => {
-			let taskCount = reader.ReadInt()
-			while (taskCount-- > 0) {
-				this.sendEvent(new StoppedEvent("", Number(reader.ReadLong())))
+			const msg = reader.ReadString()
+			if (this.exitBreakCondition == null || this.exitBreakCondition.test(msg)) {
+				let taskCount = reader.ReadInt()
+				while (taskCount-- > 0) {
+					this.sendEvent(new StoppedEvent("", Number(reader.ReadLong())))
+				}
+				const threadId = Number(reader.ReadLong())
+				this.sendEvent(new StoppedEvent("exception", threadId, msg));
+			} else {
+				const writer = new client.Writer(client.Proto.RECV_Continue)
+				writer.WriteBool(false)
+				this.helper.Send(writer)
 			}
-			const threadId = Number(reader.ReadLong())
-			this.sendEvent(new StoppedEvent("exception", threadId, reader.ReadString()));
 		}).on(client.Proto.SEND_Message, reader => {
 			const msg = reader.ReadString()
 			console.log(msg)
+		}).on(client.Proto.SEND_Diagnose, reader => {
+			kernelStateViewProvider.RecvData({
+				task: reader.ReadInt(),
+				string: reader.ReadInt(),
+				entity: reader.ReadInt(),
+				handle: reader.ReadInt(),
+				heap: reader.ReadInt()
+			})
 		})
 		response.body = {
 			//调试适配器支持' configurationDone '请求。
@@ -114,12 +130,12 @@ export class RainDebugSession extends LoggingDebugSession {
 			//' setExceptionBreakpoints '请求的可用异常过滤器选项。
 			exceptionBreakpointFilters: [
 				{
-					filter: '异常信息',
-					label: "推出信息需要包含的字符串",
-					description: `只有当推出信息包含输入的字符串时时才会引发断点`,
+					filter: '退出断点条件',
+					label: "退出断点条件",
+					description: `只有当退出信息包含输入的字符串时时才会引发断点`,
 					default: true,
 					supportsCondition: true,
-					conditionDescription: `输入退出信息`
+					conditionDescription: `输入退出信息需要包含的字符串`
 				}
 			],
 			//调试适配器支持通过' stepBack '和' reverseconcontinue '请求后退。
@@ -161,7 +177,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			//调试适配器通过解释' SourceBreakpoint '的' logMessage '属性来支持日志点。
 			supportsLogPoints: false,
 			//调试适配器支持' terminateThreads '请求。
-			supportsTerminateThreadsRequest: true,
+			supportsTerminateThreadsRequest: false,
 			//调试适配器支持' setExpression '请求。
 			supportsSetExpression: false,
 			//调试适配器支持“终止”请求。
@@ -169,7 +185,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			//调试适配器支持数据断点。
 			supportsDataBreakpoints: false,
 			//调试适配器支持' readMemory '请求。
-			supportsReadMemoryRequest: true,
+			supportsReadMemoryRequest: false,
 			//调试适配器支持' writemmemory '请求。
 			supportsWriteMemoryRequest: false,
 			//调试适配器支持“反汇编”请求。
@@ -187,11 +203,16 @@ export class RainDebugSession extends LoggingDebugSession {
 			//调试适配器支持' filterOptions '作为' setExceptionBreakpoints '请求的参数。
 			supportsExceptionFilterOptions: true,
 			//调试适配器在执行请求(' continue '， ' next '， ' stepIn '， ' stepOut '， ' reverseContinue '， ' stepBack ')上支持' singleThread '属性。
-			supportsSingleThreadExecutionRequests: true,
+			supportsSingleThreadExecutionRequests: false,
 			//调试适配器支持的断点模式，如“硬件”或“软件”。如果存在，客户端可能允许用户选择一种模式，并将其包含在其' setBreakpoints '请求中。
 			//客户端可以将此数组中的第一个适用模式作为设置断点的手势中的“默认”模式。
 			breakpointModes: []
 		}
+		kernelStateViewProvider.once("show", () => {
+			const writer = new client.Writer(client.Proto.RECV_Diagnose)
+			writer.WriteUint(1)
+			this.helper.Send(writer)
+		})
 		this.sendResponse(response)
 		this.sendEvent(new InitializedEvent())
 	}
@@ -202,8 +223,11 @@ export class RainDebugSession extends LoggingDebugSession {
 		if (this.configuration.request == 'launch' && RainDebug.debuggedProcess != null && !RainDebug.debuggedProcess.killed) {
 			RainDebug.debuggedProcess.kill()
 		}
+		kernelStateViewProvider.removeAllListeners("show")
+		kernelStateViewProvider.Hidle()
 		this.sendResponse(response)
 	}
+	
 	private breakpointMap = new Map<string, number[]>()
 	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): void {
 		const path = this.GetRelativePath(args.source.path)
@@ -246,8 +270,15 @@ export class RainDebugSession extends LoggingDebugSession {
 			})
 		}
 	}
+	private exitBreakCondition: RegExp = null;
 	protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments, request?: DebugProtocol.Request): void {
-		//todo 设置异常断点，
+		const option = args.filterOptions.find(value => value.filterId == "退出断点条件")
+		if (option && option.condition && option.condition != "") {
+			this.exitBreakCondition = new RegExp(option.condition)
+		} else {
+			this.exitBreakCondition = null
+			response.success = false
+		}
 		this.sendResponse(response)
 	}
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): void {
@@ -575,7 +606,9 @@ export class RainDebugSession extends LoggingDebugSession {
 	}
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request): void {
 		this.sendEvent(new ContinuedEvent(args.threadId, true))
-		this.helper.Send(new client.Writer(client.Proto.RECV_Continue))
+		const writer = new client.Writer(client.Proto.RECV_Continue)
+		writer.WriteBool(true)
+		this.helper.Send(writer)
 		this.sendResponse(response)
 	}
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.Request): void {

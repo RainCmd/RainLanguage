@@ -156,6 +156,15 @@ export enum Proto {
     //		string	variableValue
     RSEND_Hover,
 
+	//	uint32	frame
+	RECV_Diagnose,
+	//	uint32	task
+	//	uint32	string
+	//	uint32	entity
+	//	uint32	handle
+	//	uint32	heap
+	SEND_Diagnose,
+
     RECV_Close,
 	//	string msg
 	SEND_Message,
@@ -380,6 +389,10 @@ export class ClientHelper {
             case Proto.RRECV_Hover: break;
             case Proto.RSEND_Hover:
                 this.RecvRequest(reader)
+                break;
+            case Proto.RECV_Diagnose: break;
+            case Proto.SEND_Diagnose:
+                this.RecvEvent(Proto.SEND_Diagnose, reader)
                 break;
             case Proto.RECV_Close: break;
             case Proto.SEND_Message:

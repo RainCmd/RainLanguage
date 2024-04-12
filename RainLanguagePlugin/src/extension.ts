@@ -2,15 +2,19 @@ import * as vscode from "vscode";
 import FormatProvider from './formatterProvider'
 import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
 import { RainDebugConfigurationProvider } from "./DebugConfigurationProvider";
+import { KernelStateViewProvider } from "./KernelStateViewProvider";
+
+export let kernelStateViewProvider: KernelStateViewProvider;
 
 export async function activate(context: vscode.ExtensionContext) {
     const documentSelector: vscode.DocumentSelector = {
         language: '雨言',
     };
+    kernelStateViewProvider = new KernelStateViewProvider(context.extensionUri)
     context.subscriptions.push(
         vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, new FormatProvider()),
         vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n'),
-        vscode.languages.registerEvaluatableExpressionProvider({ language: "雨言" }, {
+        vscode.languages.registerEvaluatableExpressionProvider(documentSelector, {
             provideEvaluatableExpression(document, position, token) {
                 return new vscode.EvaluatableExpression(new vscode.Range(position, position),
                     document.fileName + " " + (position.line + 1) + " " + position.character)
@@ -35,6 +39,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 name: "附加到进程",
                 request: "attach"
             })
+        }),
+
+        vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider),
+        vscode.commands.registerCommand("cmd.虚拟机状态信息", () => {
+            kernelStateViewProvider.Show()
         })
     );
 }

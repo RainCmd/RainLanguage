@@ -297,6 +297,7 @@ private:
 	uint64 currentTask;
 	uint32 currentTraceDeep;
 	RainProgramDatabaseUnloader unloader;
+	StepType type;
 protected:
 	/// <summary>
 	/// 触发断点
@@ -314,8 +315,9 @@ protected:
 	/// </summary>
 	virtual void OnContinue() = 0;
 public:
-	StepType type;
 	const RainProgramDatabase* database;
+	inline StepType GetStepType() const { return type; }
+	RainKernel* GetKernel();
 	/// <summary>
 	/// 创建调试器
 	/// </summary>
@@ -378,12 +380,18 @@ public:
 	/// <summary>
 	/// 继续执行
 	/// </summary>
-	void Continue();
+	/// <param name="igonreStep">忽略单步</param>
+	void Continue(bool igonreStep);
 	/// <summary>
 	/// 单步
 	/// </summary>
 	/// <param name="stepType">单步类型</param>
 	void Step(StepType stepType);
+
+	/// <summary>
+	/// 虚拟机内部帧开始前调用
+	/// </summary>
+	virtual void OnUpdate();
 	/// <summary>
 	/// 虚拟机内部用于触发断点的接口
 	/// </summary>

@@ -20,14 +20,15 @@ enum class Proto : uint
 	RECV_ClearBreaks,
 
 	RECV_Pause,
+	//	bool	igonreStep
 	RECV_Continue,
 	//	uint32	StepType
 	RECV_Step,
 
+	//	string	message
 	//	uint32	taskCount
 	//		uint64	taskId
 	//	uint64	currentTask
-	//	string	message
 	SEND_OnException,
 	//	uint32	taskCount
 	//		uint64	taskId
@@ -153,6 +154,15 @@ enum class Proto : uint
 	//		string	Type
 	//		string	variableValue
 	RSEND_Hover,
+
+	//	uint32	frame
+	RECV_Diagnose,
+	//	uint32	task
+	//	uint32	string
+	//	uint32	entity
+	//	uint32	handle
+	//	uint32	heap
+	SEND_Diagnose,
 
 	RECV_Close,
 	//	string msg

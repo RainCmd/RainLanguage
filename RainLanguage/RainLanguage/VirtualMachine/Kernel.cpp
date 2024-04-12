@@ -1,4 +1,5 @@
 #include "Kernel.h"
+#include "../Public/Debugger.h"
 #include "../String.h"
 #include "../Instruct.h"
 #include "EntityAgency.h"
@@ -295,6 +296,7 @@ uint32 Kernel::GC(bool full)
 
 void Kernel::Update()
 {
+	if(debugger) debugger->OnUpdate();
 	taskAgency->Update();
 }
 

@@ -2588,7 +2588,7 @@ label_next_instruct:
 			}
 			goto label_next_instruct;
 		case Instruct::BREAK: instruct++;
-			if(kernel->debugger && kernel->debugger->type != StepType::None) goto label_breakpoint;
+			if(kernel->debugger && kernel->debugger->GetStepType() != StepType::None) goto label_breakpoint;
 			goto label_next_instruct;
 		case Instruct::NoOperation: instruct++;
 			goto label_next_instruct;

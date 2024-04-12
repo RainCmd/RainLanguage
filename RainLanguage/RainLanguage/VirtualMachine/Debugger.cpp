@@ -980,6 +980,11 @@ static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
+RainKernel* RainDebugger::GetKernel()
+{
+	if(IsActive()) return LIBRARY->kernel;
+	return NULL;
+}
 RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(unloader), type(StepType::None), database(nullptr)
 {
 	if(kernel)
@@ -1110,12 +1115,15 @@ void RainDebugger::Pause()
 	if(IsActive() && !debugFrame) type = StepType::Pause;
 }
 
-void RainDebugger::Continue()
+void RainDebugger::Continue(bool igonreStep)
 {
 	if(IsBreaking())
 	{
-		currentTask = 0;
-		currentTraceDeep = INVALID;
+		if(igonreStep)
+		{
+			currentTask = 0;
+			currentTraceDeep = INVALID;
+		}
 		OnContinue();
 	}
 }
@@ -1128,6 +1136,8 @@ void RainDebugger::Step(StepType stepType)
 		OnContinue();
 	}
 }
+
+void RainDebugger::OnUpdate() {}
 
 void RainDebugger::OnBreak(uint64 task, uint32 deep)
 {

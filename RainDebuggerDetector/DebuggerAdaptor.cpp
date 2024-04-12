@@ -25,8 +25,26 @@ void Debugger::OnContinue()
 }
 
 Debugger::Debugger(const wstring& path, const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
-	:pause(false), path(path), RainDebugger(name, kernel, loader, unloader)
+	:pause(false), path(path), frameCount(0), diagnoseInterval(0), RainDebugger(name, kernel, loader, unloader)
 {
+}
+
+void Debugger::SetDiagnose(uint32 frame)
+{
+	diagnoseInterval = frame;
+	frameCount = 0;
+}
+
+void Debugger::OnUpdate()
+{
+	if(diagnoseInterval)
+	{
+		if(!frameCount--)
+		{
+			frameCount = diagnoseInterval;
+			OnDiagnose();
+		}
+	}
 }
 
 Debugger* CreateDebugger(const char* path, const char* name)
