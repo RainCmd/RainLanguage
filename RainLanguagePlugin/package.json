@@ -172,7 +172,8 @@
                 {
                     "id": "RainKernelState",
                     "name": "虚拟机状态视图",
-                    "type": "webview"
+                    "type": "webview",
+                    "when": "resourceLangId == 雨言"
                 }
             ]
         }

@@ -38,7 +38,7 @@ export class KernelStateViewProvider extends EventEmitter implements vscode.Webv
             </html>
         `
     }
-    public Hidle() {
+    public Hide() {
         if (this.view) {
             this.view.webview.postMessage({
                 type: 'hide'

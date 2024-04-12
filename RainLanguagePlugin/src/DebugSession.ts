@@ -208,6 +208,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			//客户端可以将此数组中的第一个适用模式作为设置断点的手势中的“默认”模式。
 			breakpointModes: []
 		}
+		kernelStateViewProvider.Hide()
 		kernelStateViewProvider.once("show", () => {
 			const writer = new client.Writer(client.Proto.RECV_Diagnose)
 			writer.WriteUint(1)
@@ -224,7 +225,6 @@ export class RainDebugSession extends LoggingDebugSession {
 			RainDebug.debuggedProcess.kill()
 		}
 		kernelStateViewProvider.removeAllListeners("show")
-		kernelStateViewProvider.Hidle()
 		this.sendResponse(response)
 	}
 	

@@ -11,6 +11,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 data: [],
                 fill: false,
                 borderColor: "rgb(255, 0, 0)",
+                borderWidth: 1,
                 tension: 0,
                 pointRadius: 0
             },
@@ -19,6 +20,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 data: [],
                 fill: false,
                 borderColor: "rgb(0, 255, 0)",
+                borderWidth: 1,
                 tension: 0,
                 pointRadius: 0
             },
@@ -27,6 +29,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 data: [],
                 fill: false,
                 borderColor: "rgb(0, 0, 255)",
+                borderWidth: 1,
                 tension: 0,
                 pointRadius: 0
             },
@@ -35,6 +38,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 data: [],
                 fill: false,
                 borderColor: "rgb(0, 255, 255)",
+                borderWidth: 1,
                 tension: 0,
                 pointRadius: 0
             },
@@ -43,6 +47,7 @@ const stateChart = new Chart(document.getElementById('container'), {
                 data: [],
                 fill: false,
                 borderColor: "rgb(255, 255, 0)",
+                borderWidth: 1,
                 tension: 0,
                 pointRadius: 0
             }
