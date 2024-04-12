@@ -64,6 +64,10 @@
                 {
                     "command": "cmd.附加到进程",
                     "when": "resourceLangId == 雨言 && !inDebugMode"
+                },
+                {
+                    "command": "cmd.核心库定义",
+                    "when": "resourceLangId == 雨言"
                 }
             ]
         },
@@ -71,14 +75,17 @@
             {
                 "command": "cmd.雨言调试",
                 "title": "调试",
-                "enablement": "!inDebugMode",
                 "icon": "$(debug-alt)"
             },
             {
                 "command": "cmd.附加到进程",
                 "title": "附加到进程",
-                "enablement": "!inDebugMode",
                 "icon": "$(sort-precedence)"
+            },
+            {
+                "command": "cmd.核心库定义",
+                "title": "核心库定义",
+                "icon": "$(remote-explorer-documentation)"
             }
         ],
         "snippets": [

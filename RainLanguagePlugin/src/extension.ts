@@ -3,6 +3,7 @@ import FormatProvider from './formatterProvider'
 import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
 import { RainDebugConfigurationProvider } from "./DebugConfigurationProvider";
 import { KernelStateViewProvider } from "./KernelStateViewProvider";
+import { readFile } from "fs";
 
 export let kernelStateViewProvider: KernelStateViewProvider;
 
@@ -41,7 +42,26 @@ export async function activate(context: vscode.ExtensionContext) {
             })
         }),
 
-        vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider)
+        vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider),
+        vscode.commands.registerCommand('cmd.核心库定义', async () => {
+            const uri = vscode.Uri.parse("rain-language:kernel.rain")
+            const doc = await vscode.workspace.openTextDocument(uri)
+            vscode.window.showTextDocument(doc, { preview: true })
+        }),
+        vscode.workspace.registerTextDocumentContentProvider("rain-language", {
+            provideTextDocumentContent: function (uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
+                return new Promise<string>((resolve, reject) => {
+                    const path = context.extensionPath + "/" + uri.path;
+                    readFile(path, (error, data) => {
+                        if (error) {
+                            reject(error)
+                        } else {
+                            resolve(data.toString())
+                        }
+                    })
+                })
+            }
+        })
     );
 }
 export async function deactivate() {
