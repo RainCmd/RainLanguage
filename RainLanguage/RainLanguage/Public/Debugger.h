@@ -307,7 +307,8 @@ private:
 	uint64 currentTask;
 	uint32 currentTraceDeep;
 	RainProgramDatabaseUnloader unloader;
-	StepType type;
+	StepType stepType;
+	void SetStepType(StepType type);
 protected:
 	/// <summary>
 	/// 触发断点
@@ -326,7 +327,7 @@ protected:
 	virtual void OnContinue() = 0;
 public:
 	const RainProgramDatabase* database;
-	inline StepType GetStepType() const { return type; }
+	inline StepType GetStepType() const { return stepType; }
 	RainKernel* GetKernel();
 	/// <summary>
 	/// 创建调试器
@@ -397,7 +398,7 @@ public:
 	/// 单步
 	/// </summary>
 	/// <param name="stepType">单步类型</param>
-	void Step(StepType stepType);
+	void Step(StepType type);
 
 	/// <summary>
 	/// 虚拟机内部帧开始前调用

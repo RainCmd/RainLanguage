@@ -988,11 +988,24 @@ static RuntimeLibrary* GetLibrary(const Kernel* kernel, const RainString& librar
 			return agency->libraries[i];
 	return NULL;
 }
+void RainDebugger::SetStepType(StepType type)
+{
+	if(stepType != type)
+	{
+		if(IsActive())
+		{
+			Kernel* kernel = SHARE->kernel;
+			if(stepType == StepType::None) kernel->libraryAgency->debuggerBreakCount++;
+			else if(type == StepType::None) kernel->libraryAgency->debuggerBreakCount--;
+		}
+		stepType = type;
+	}
+}
 RainKernel* RainDebugger::GetKernel()
 {
 	return SHARE->kernel;
 }
-RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& parameter) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(parameter.unloader), type(StepType::None), database(NULL), breakpoints(NULL)
+RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& parameter) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(parameter.unloader), stepType(StepType::None), database(NULL), breakpoints(NULL)
 {
 	Kernel* kernel = ((Kernel*)parameter.kernel);
 	library = GetLibrary(kernel, name);
@@ -1027,6 +1040,7 @@ void RainDebugger::Broken()
 	}
 	if(share)
 	{
+		SetStepType(StepType::None);
 		currentTask = 0;
 		currentTraceDeep = INVALID;
 		ClearBreakpoints();
@@ -1080,7 +1094,7 @@ bool RainDebugger::IsBreaking()
 
 bool RainDebugger::IsActive()
 {
-	return share && SHARE->kernel && library;
+	return share && SHARE->kernel && library && LIBRARY->debugger == this;
 }
 
 bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
@@ -1128,7 +1142,7 @@ void RainDebugger::ClearBreakpoints()
 
 void RainDebugger::Pause()
 {
-	if(IsActive() && !debugFrame) type = StepType::Pause;
+	SetStepType(StepType::Pause);
 }
 
 void RainDebugger::Continue(bool igonreStep)
@@ -1144,11 +1158,11 @@ void RainDebugger::Continue(bool igonreStep)
 	}
 }
 
-void RainDebugger::Step(StepType stepType)
+void RainDebugger::Step(StepType type)
 {
 	if(IsBreaking() && stepType != StepType::Pause)
 	{
-		type = stepType;
+		SetStepType(type);
 		OnContinue();
 	}
 }
@@ -1157,7 +1171,7 @@ void RainDebugger::OnUpdate() {}
 
 void RainDebugger::OnBreak(uint64 task, uint32 deep, bool hit)
 {
-	if(!hit) switch(type)
+	if(!hit) switch(stepType)
 	{
 		case StepType::None:
 		case StepType::Pause:
@@ -1176,7 +1190,7 @@ void RainDebugger::OnBreak(uint64 task, uint32 deep, bool hit)
 	}
 	if(IsActive() && !debugFrame)
 	{
-		type = StepType::None;
+		SetStepType(StepType::None);
 		currentTask = task;
 		currentTraceDeep = deep;
 		DebugFrame* frame = new DebugFrame(this, LIBRARY, (MAP*)map);
@@ -1205,6 +1219,7 @@ void RainDebugger::OnException(uint64 task, const character* message, uint32 len
 
 RainDebugger::~RainDebugger()
 {
+	SetStepType(StepType::None);
 	delete (MAP*)map;
 	map = NULL;
 	delete BREAKPOINTS;
