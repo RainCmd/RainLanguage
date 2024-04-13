@@ -47,12 +47,19 @@ void TaskAgency::Start(Invoker* invoker, bool immediately, bool ignoreWait)
 		current = task;
 		task->Update();
 		current = prev;
-	}
-	if (!task->IsRunning())
-	{
-		head = head->next;
-		Recycle(task);
-		if (!invoker->hold) invoker->Recycle();
+		if(!task->IsRunning())
+		{
+			if(head == task) head = task->next;
+			else
+			{
+				Task* index = head;
+				while(index->next != task) index = index->next;
+				index->next = task->next;
+			}
+			if(!task->exitMessage.IsEmpty()) task->Abort();
+			Recycle(task);
+			if(!invoker->hold) invoker->Recycle();
+		}
 	}
 }
 

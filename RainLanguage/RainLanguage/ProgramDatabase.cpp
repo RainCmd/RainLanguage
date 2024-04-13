@@ -21,7 +21,7 @@ uint32 ProgramDatabase::GetStatement(uint32 instructAddress) const
 	while(start + 1 < end)
 	{
 		uint32 middle = (start + end) >> 1;
-		if(instructAddress < statements[middle].pointer) end = middle;
+		if(instructAddress <= statements[middle].pointer) end = middle;
 		else result = start = middle;
 	}
 	return result;

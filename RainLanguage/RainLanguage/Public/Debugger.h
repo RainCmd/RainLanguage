@@ -395,7 +395,7 @@ public:
 	/// <summary>
 	/// 虚拟机内部用于触发断点的接口
 	/// </summary>
-	void OnBreak(uint64, uint32);
+	void OnBreak(uint64, uint32, bool);
 	/// <summary>
 	/// 虚拟机内部用于触发异常的接口
 	/// </summary>

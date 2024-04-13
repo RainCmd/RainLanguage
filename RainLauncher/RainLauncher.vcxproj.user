@@ -12,6 +12,10 @@
     <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
+    <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DotNet|x64'">
     <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

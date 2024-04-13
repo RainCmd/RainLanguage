@@ -770,6 +770,7 @@ label_next_instruct:
 			{
 				Invoker* targetInvoker = kernel->taskAgency->GetInvoker(task);
 				ASSERT_DEBUG(targetInvoker, "调用为空，编译器可能算法有问题");
+				pointer = POINTER;
 				targetInvoker->Start(true, ignoreWait);
 			}
 			else EXCEPTION_EXIT(BASE_TaskStart, EXCEPTION_NULL_REFERENCE);
@@ -2584,7 +2585,7 @@ label_next_instruct:
 				pointer = POINTER;
 				uint32 deep = 1;
 				for(Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) deep++;
-				kernel->debugger->OnBreak(instanceID, deep);
+				kernel->debugger->OnBreak(instanceID, deep, instruct[-1] == (uint8)Instruct::BREAKPOINT);
 			}
 			goto label_next_instruct;
 		case Instruct::BREAK: instruct++;

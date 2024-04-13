@@ -842,9 +842,8 @@ bool RainTaskIterator::Next()
 	{
 		if(index) index = ((Task*)index)->next;
 		else index = FRAME->library->kernel->taskAgency->GetHeadTask();
-		if(index) return true;
 	}
-	return false;
+	return index;
 }
 
 RainTraceIterator RainTaskIterator::Current()
@@ -1139,9 +1138,9 @@ void RainDebugger::Step(StepType stepType)
 
 void RainDebugger::OnUpdate() {}
 
-void RainDebugger::OnBreak(uint64 task, uint32 deep)
+void RainDebugger::OnBreak(uint64 task, uint32 deep, bool hit)
 {
-	switch(type)
+	if(!hit) switch(type)
 	{
 		case StepType::None:
 		case StepType::Pause:
