@@ -2,7 +2,12 @@
 #include "Detector.h"
 enum class Proto : uint
 {
-	SEND_Initialized,
+	//	uint32	requestId
+	RRECV_Initialized,
+	//	uint32	requestId
+	RSEND_Initialized,
+	SEND_Attached,
+	RECV_Confirm,
 
 	//	uint32	requestId
 	//	string	file

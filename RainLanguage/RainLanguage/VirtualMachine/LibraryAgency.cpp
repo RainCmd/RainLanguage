@@ -207,7 +207,6 @@ RuntimeLibrary* LibraryAgency::Load(string name, bool assert)
 	else if(!library) return NULL;
 	RuntimeLibrary* result = Load(library);
 	if(libraryUnloader) libraryUnloader(library);
-	OnLoadLibrary(kernel, result);
 	return result;
 }
 
@@ -224,6 +223,7 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 	}
 	result->kernel = kernel;
 	result->InitRuntimeData(library, LIBRARY_SELF);
+	OnLoadLibrary(kernel, result);
 	kernel->taskAgency->CreateInvoker(result->codeOffset, &CallableInfo_EMPTY)->Start(true, true);
 	return result;
 }

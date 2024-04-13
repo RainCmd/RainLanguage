@@ -4,7 +4,12 @@ import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode'
 
 export enum Proto {
-	SEND_Initialized,
+	//	uint32	requestId
+	RRECV_Initialized,
+	//	uint32	requestId
+	RSEND_Initialized,
+	SEND_Attached,
+    RECV_Confirm,
 
 	//	uint32	requestId
 	//	string	file
@@ -336,9 +341,14 @@ export class ClientHelper {
     }
     private OnRecv(reader: Reader) {
         switch (reader.ReadProto()) {
-            case Proto.SEND_Initialized:
-                this.RecvEvent(Proto.SEND_Initialized, reader)
+            case Proto.RRECV_Initialized: break;
+            case Proto.RSEND_Initialized:
+                this.RecvRequest(reader)
                 break;
+            case Proto.SEND_Attached:
+                this.RecvEvent(Proto.SEND_Attached, reader)
+                break;
+            case Proto.RECV_Confirm: break;
             case Proto.RRECV_AddBreadks: break;
             case Proto.RSEND_AddBreadks:
                 this.RecvRequest(reader)

@@ -302,8 +302,6 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                         const port = await GetDetectorPort(injector, debuggedProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                         if (port > 0) {
                             client = await Connect(port);
-                            debuggedProcess.stdin.write('y')
-                            debuggedProcess.stdin.end();
                             return configuration
                         }
                         console.log("端口获取失败")

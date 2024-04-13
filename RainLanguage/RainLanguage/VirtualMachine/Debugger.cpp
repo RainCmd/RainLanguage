@@ -1305,8 +1305,11 @@ void OnLoadLibrary(Kernel* kernel, RuntimeLibrary* library)
 		DebuggerSlot& slot = debuggerSlots[slotIndex];
 		if(slot.share->kernel == kernel)
 		{
+			//这里name的地址最终要传回虚拟机，因为虚拟机内部字符串的GC可能会导致地址内容改变，所以要复制一份
 			const String name = kernel->stringAgency->Get(library->spaces[0].name);
-			const RainString rainName = RainString(name.GetPointer(), name.GetLength());
+			character buffer[256];
+			Mcopy(name.GetPointer(), buffer, name.GetLength());
+			const RainString rainName = RainString(buffer, name.GetLength());
 			for(uint32 createrIndex = 0; createrIndex < debuggerCreaters.Count(); createrIndex++)
 			{
 				DebuggerCreater& creater = debuggerCreaters[createrIndex];

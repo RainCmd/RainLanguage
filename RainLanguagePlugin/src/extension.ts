@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
     kernelStateViewProvider = new KernelStateViewProvider(context.extensionUri)
     context.subscriptions.push(
         vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, new FormatProvider()),
-        vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n'),
+        vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n', ';'),
         vscode.languages.registerEvaluatableExpressionProvider(documentSelector, {
             provideEvaluatableExpression(document, position, token) {
                 return new vscode.EvaluatableExpression(new vscode.Range(position, position),

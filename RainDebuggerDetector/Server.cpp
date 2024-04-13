@@ -17,6 +17,7 @@ static SOCKET cSocket = INVALID_SOCKET;
 static sockaddr_in addr = {};
 static wstring projectName;
 static Debugger* debugger = nullptr;
+static bool confirm = false;
 
 static RainString WS2RS(const wstring& src)
 {
@@ -92,6 +93,19 @@ static void LogMsg(const wstring msg)
 	Send(cSocket, writer);
 }
 
+static bool OnCreateDebugger(const RainString& name, const RainDebuggerParameter& parameter)
+{
+	if(cSocket == INVALID_SOCKET) return false;
+	debugger = new Debugger(name, parameter);
+	WritePackage writer;
+	writer.WriteProto(Proto::SEND_Attached);
+	Send(cSocket, writer);
+	confirm = false;
+	Debugger* dbg = debugger;
+	while(!confirm && dbg && dbg == debugger) this_thread::sleep_for(chrono::milliseconds(10));
+	return true;
+}
+
 static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 {
 	if(!reader.IsValid())
@@ -101,11 +115,25 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 	}
 	if(!debugger)
 	{
-		LogMsg(L"no debugger");
+		if(reader.ReadProto() == Proto::RRECV_Initialized)
+		{
+			CreateDebugger(WS2RS(projectName), OnCreateDebugger);
+			WritePackage writer;
+			writer.WriteProto(Proto::RSEND_Initialized);
+			writer.WriteUint32(reader.ReadUint32());
+			Send(socket, writer);
+		}
+		else LogMsg(L"no debugger");
 		return;
 	}
 	switch(reader.ReadProto())
 	{
+		case Proto::RRECV_Initialized: break;
+		case Proto::RSEND_Initialized: break;
+		case Proto::SEND_Attached: break;
+		case Proto::RECV_Confirm: 
+			confirm = true;
+		break;
 		case Proto::RRECV_AddBreadks:
 		{
 			WritePackage writer;
@@ -630,23 +658,12 @@ void OnDiagnose(Debugger* debugger)
 	Send(socket, writer);
 }
 
-static bool OnCreateDebugger(const RainString& name, const RainDebuggerParameter& parameter)
-{
-	if(cSocket == INVALID_SOCKET) return false;
-	debugger = new Debugger(name, parameter);
-	WritePackage writer;
-	writer.WriteProto(Proto::SEND_Initialized);
-	Send(cSocket, writer);
-	return true;
-}
-
 ServerExitCode InitServer(const char* path, const char* name, unsigned short& port)
 {
 	if(debugger) delete debugger;
 	debugger = nullptr;
 	if(!projectName.empty()) CancelCreateDebugger(WS2RS(projectName));
 	projectName = UTF_8To16(name);
-	CreateDebugger(WS2RS(projectName), OnCreateDebugger);
 
 	if(wsaStartuped)
 	{

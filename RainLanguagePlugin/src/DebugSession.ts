@@ -79,12 +79,26 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 
-	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-		RainDebug.client.on('close', () => {
-			this.sendEvent(new TerminatedEvent())
+	private InitStateView() {
+		const writer = new client.Writer(client.Proto.RECV_Diagnose)
+		writer.WriteUint(1)
+		this.helper.Send(writer)
+		kernelStateViewProvider.Show()
+		kernelStateViewProvider.on("ChangeVisibility", visiable => {
+			const writer = new client.Writer(client.Proto.RECV_Diagnose)
+			if (visiable) {
+				writer.WriteUint(1)
+			} else {
+				writer.WriteUint(0)
+			}
+			this.helper.Send(writer)
 		})
-		this.helper.on(client.Proto.SEND_Initialized, reader => {
+	}
+
+	private RegistDebuggerEvent() {
+		this.helper.on(client.Proto.SEND_Attached, reader => {
 			this.sendEvent(new InitializedEvent())
+			this.InitStateView()
 		}).on(client.Proto.SEND_OnBreak, reader => {
 			let taskCount = reader.ReadInt()
 			while (taskCount-- > 0) {
@@ -118,23 +132,17 @@ export class RainDebugSession extends LoggingDebugSession {
 				heap: reader.ReadInt()
 			})
 		})
-		const writer = new client.Writer(client.Proto.RECV_Diagnose)
-		writer.WriteUint(1)
-		this.helper.Send(writer)
-		kernelStateViewProvider.Show()
-		kernelStateViewProvider.on("ChangeVisibility", visiable => {
-			const writer = new client.Writer(client.Proto.RECV_Diagnose)
-			if (visiable) {
-				writer.WriteUint(1)
-			} else {
-				writer.WriteUint(0)
-			}
-			this.helper.Send(writer)
+	}
+
+	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
+		RainDebug.client.on('close', () => {
+			this.sendEvent(new TerminatedEvent())
 		})
+		this.RegistDebuggerEvent()
 		
 		response.body = {
 			//调试适配器支持' configurationDone '请求。
-			supportsConfigurationDoneRequest: false,
+			supportsConfigurationDoneRequest: true,
 			//调试适配器支持函数断点。
 			supportsFunctionBreakpoints: false,
 			//调试适配器支持条件断点。
@@ -224,7 +232,22 @@ export class RainDebugSession extends LoggingDebugSession {
 			//客户端可以将此数组中的第一个适用模式作为设置断点的手势中的“默认”模式。
 			breakpointModes: []
 		}
-
+		
+		const req = new client.Writer(client.Proto.RRECV_Initialized)
+		req.WriteUint(114514)
+		this.helper.Request(114514, req).then(res => {
+			if (this.configuration.type == "雨言调试运行") {
+				RainDebug.debuggedProcess.stdin.write('y')
+				RainDebug.debuggedProcess.stdin.end();
+			}
+			this.sendResponse(response)
+		}).catch(reason => {
+			response.success = false;
+			this.sendResponse(response)
+		})
+	}
+	protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments, request?: DebugProtocol.Request): void {
+		this.helper.Send(new client.Writer(client.Proto.RECV_Confirm))
 		this.sendResponse(response)
 	}
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
