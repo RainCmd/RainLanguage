@@ -29,9 +29,10 @@ public:
 	TaskAgency* taskAgency;
 	HeapAgency* heapAgency;
 	Random random;
-	RainDebugger* debugger;
-	Set<uint32, true> breakpoints;
 	Kernel(const StartupParameter& parameter);
+	Kernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
+	bool LoadLibrary(const RainString& name);
+	bool LoadLibrary(const character* name);
 	const RainFunction FindFunction(const RainString& name, bool allowNoPublic);
 	const RainFunction FindFunction(const character* name, bool allowNoPublic);
 	RainFunctions FindFunctions(const RainString& name, bool allowNoPublic);
@@ -39,10 +40,6 @@ public:
 	const RainKernelState GetState();
 	uint32 GC(bool full);
 	void Update();
-
-	bool AddBreakpoint(uint32 address);
-	void RemoveBreakpoint(uint32 address);
-	void ClearBreakpoints();
 
 	~Kernel();
 	Kernel(Kernel&) = delete;

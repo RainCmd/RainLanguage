@@ -2,8 +2,8 @@
 #include "../Language.h"
 
 #ifdef FIXED_REAL
-constexpr integer ONE = 1LL << DECIMAL;
-constexpr integer MASK_DECIMAL = (1LL << DECIMAL) - 1LL;
+constexpr integer ONE = 1LL << DECIMAL_POINT;
+constexpr integer MASK_DECIMAL = (1LL << DECIMAL_POINT) - 1LL;
 #define PI real::CreateReal(205887)
 #define HALF_PI real::CreateReal(205887>>1)
 #define DOUBLE_PI real::CreateReal(205887<<1)
@@ -16,19 +16,19 @@ public:
 	static integer inline Sign(const real& value) { return value.value > 0 ? 1 : value.value < 0 ? -1 : 0; }
 	static integer inline Round(const real& value)
 	{
-		const integer HALF = 1LL << (DECIMAL - 1);
-		if (value.value > 0) return (value.value + HALF) >> DECIMAL;
-		else return ((value.value - HALF - 1) >> DECIMAL) + 1;
+		const integer HALF = 1LL << (DECIMAL_POINT - 1);
+		if (value.value > 0) return (value.value + HALF) >> DECIMAL_POINT;
+		else return ((value.value - HALF - 1) >> DECIMAL_POINT) + 1;
 	}
 	static integer inline Ceil(const real& value)
 	{
-		if (value.value > 0)return ((value.value - 1) >> DECIMAL) + 1;
-		else return (value.value + MASK_DECIMAL) >> DECIMAL;
+		if (value.value > 0)return ((value.value - 1) >> DECIMAL_POINT) + 1;
+		else return (value.value + MASK_DECIMAL) >> DECIMAL_POINT;
 	}
 	static integer inline Floor(const real& value)
 	{
-		if (value.value > 0)return value.value >> DECIMAL;
-		else return ((value.value - MASK_DECIMAL) >> DECIMAL) + 1;
+		if (value.value > 0)return value.value >> DECIMAL_POINT;
+		else return ((value.value - MASK_DECIMAL) >> DECIMAL_POINT) + 1;
 	}
 	static real inline Abs(const real& value) { return value.value < 0 ? -value : value; }
 	static real inline Lerp(const real& a, const real& b, const real& l) { return a + (b - a) * l; }

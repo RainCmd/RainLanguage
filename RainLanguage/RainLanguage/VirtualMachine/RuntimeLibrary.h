@@ -3,10 +3,12 @@
 #include "RuntimeInfo.h"
 
 class Kernel;
+class RainDebugger;
 class RuntimeLibrary
 {
 public:
 	Kernel* kernel;
+	RainDebugger* debugger;
 	uint32 index;
 	uint32 codeOffset;
 	uint32 dataOffset;

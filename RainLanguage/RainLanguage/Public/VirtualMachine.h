@@ -1088,6 +1088,18 @@ public:
 	virtual ~RainKernel() {};
 
 	/// <summary>
+	/// 加载库
+	/// </summary>
+	/// <param name="name">库名</param>
+	/// <returns>加载成功则返回true</returns>
+	virtual bool LoadLibrary(const RainString& name) = 0;
+	/// <summary>
+	/// 加载库
+	/// </summary>
+	/// <param name="name">库名</param>
+	/// <returns>加载成功则返回true</returns>
+	virtual bool LoadLibrary(const character* name) = 0;
+	/// <summary>
 	/// 查找函数，只能查找全局的公开函数，使用'.'分隔库名、空间名和函数名，没有'.'分隔则会遍历所有已加载库的公开全局函数，匹配第一个名称相等的函数
 	/// 查找失败会返回一个无效的句柄
 	/// </summary>
@@ -1139,5 +1151,14 @@ public:
 
 
 RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter);
+
+/// <summary>
+/// 创建可调试虚拟机
+/// </summary>
+/// <param name="parameter">启动参数</param>
+/// <param name="loader">符号表加载器</param>
+/// <param name="unloader">符号表卸载器</param>
+/// <returns></returns>
+RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 
 RAINLANGUAGE void Delete(RainKernel*& kernel);

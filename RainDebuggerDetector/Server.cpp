@@ -6,6 +6,8 @@
 #include "Queue.h"
 #include "Package.h"
 #include "Proto.h"
+#include "Encoding.h"
+#include "Debugger.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 using namespace std;
@@ -13,6 +15,7 @@ static bool wsaStartuped = false;
 static SOCKET sSocket = INVALID_SOCKET;
 static SOCKET cSocket = INVALID_SOCKET;
 static sockaddr_in addr = {};
+static wstring projectName;
 static Debugger* debugger = nullptr;
 
 static RainString WS2RS(const wstring& src)
@@ -96,6 +99,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		LogMsg(L"invalid msg");
 		return;
 	}
+	if(!debugger)
+	{
+		LogMsg(L"no debugger");
+		return;
+	}
 	switch(reader.ReadProto())
 	{
 		case Proto::RRECV_AddBreadks:
@@ -146,7 +154,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			debugger->ClearBreakpoints();
 			break;
 		case Proto::RECV_Pause:
-			if(debugger->IsBreaking()) OnHitBreakpoint(debugger->GetCurrentTaskID());
+			if(debugger->IsBreaking()) OnHitBreakpoint(debugger, debugger->GetCurrentTaskID());
 			else debugger->Pause();
 			break;
 		case Proto::RECV_Continue:
@@ -531,10 +539,6 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			debugger->SetDiagnose(reader.ReadUint32());
 			break;
 		case Proto::SEND_Diagnose: break;
-		case Proto::RECV_Close:
-			closesocket(cSocket);
-			cSocket = INVALID_SOCKET;
-			break;
 		case Proto::SEND_Message: break;
 		default:
 			break;
@@ -543,15 +547,14 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 
 static void AcceptClient()
 {
+	Queue<char> recvQueue(1024);
+	const int RECV_BUFFER_SIZE = 1024;
+	char buffer[RECV_BUFFER_SIZE];
 	while(wsaStartuped)
 	{
 		cSocket = accept(sSocket, nullptr, nullptr);
 		if(cSocket == INVALID_SOCKET) break;
-		Debugger* dbg = debugger;
-
-		Queue<char> recvQueue(1024);
-		const int RECV_BUFFER_SIZE = 1024;
-		char buffer[RECV_BUFFER_SIZE];
+		recvQueue.Clear();
 
 		while(cSocket != INVALID_SOCKET)
 		{
@@ -566,7 +569,7 @@ static void AcceptClient()
 				{
 					recvQueue.Discard(PACKAGE_HEAD_SIZE); size -= PACKAGE_HEAD_SIZE;
 					ReadPackage reader(recvQueue.De(size), size);
-					OnRecv(reader, cSocket, dbg);
+					OnRecv(reader, cSocket, debugger);
 				}
 				else break;
 			}
@@ -577,50 +580,44 @@ static void AcceptClient()
 	}
 }
 
-void OnHitBreakpoint(uint64 task)
+void OnHitBreakpoint(Debugger* debugger, uint64 task)
 {
-	Debugger* dbg = debugger;
-	if(!dbg) return;
 	SOCKET socket = cSocket;
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_OnBreak);
-	RainTaskIterator iterator = dbg->GetTaskIterator();
+	RainTaskIterator iterator = debugger->GetTaskIterator();
 	uint taskCountPtr = writer.WriteUint32(0);
 	while(iterator.Next())
 	{
 		writer.Get<uint32>(taskCountPtr)++;
 		writer.WriteUint64(iterator.Current().TaskID());
 	}
-	writer.WriteUint64(dbg->GetCurrentTaskID());
+	writer.WriteUint64(debugger->GetCurrentTaskID());
 	Send(socket, writer);
 }
 
-void OnTaskExit(uint64 task, const RainString& msg)
+void OnTaskExit(Debugger* debugger, uint64 task, const RainString& msg)
 {
-	Debugger* dbg = debugger;
-	if(!dbg) return;
 	SOCKET socket = cSocket;
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_OnException);
 	writer.WriteString(RS2WS(msg));
-	RainTaskIterator iterator = dbg->GetTaskIterator();
+	RainTaskIterator iterator = debugger->GetTaskIterator();
 	uint taskCountPtr = writer.WriteUint32(0);
 	while(iterator.Next())
 	{
 		writer.Get<uint32>(taskCountPtr)++;
 		writer.WriteUint64(iterator.Current().TaskID());
 	}
-	writer.WriteUint64(dbg->GetCurrentTaskID());
+	writer.WriteUint64(debugger->GetCurrentTaskID());
 	Send(socket, writer);
 }
 
-void OnDiagnose()
+void OnDiagnose(Debugger* debugger)
 {
-	Debugger* dbg = debugger;
-	if(!dbg || !dbg->GetKernel()) return;
-	RainKernelState state = dbg->GetKernel()->GetState();
+	RainKernelState state = debugger->GetKernel()->GetState();
 	SOCKET socket = cSocket;
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
@@ -633,10 +630,24 @@ void OnDiagnose()
 	Send(socket, writer);
 }
 
-int InitServer(const char* path, const char* name, unsigned short& port)
+static bool OnCreateDebugger(const RainString& name, const RainDebuggerParameter& parameter)
 {
-	Debugger* dbg = CreateDebugger(path, name);
-	if(!dbg) return 1;
+	if(cSocket == INVALID_SOCKET) return false;
+	debugger = new Debugger(name, parameter);
+	WritePackage writer;
+	writer.WriteProto(Proto::SEND_Initialized);
+	Send(cSocket, writer);
+	return true;
+}
+
+ServerExitCode InitServer(const char* path, const char* name, unsigned short& port)
+{
+	if(debugger) delete debugger;
+	debugger = nullptr;
+	if(!projectName.empty()) CancelCreateDebugger(WS2RS(projectName));
+	projectName = UTF_8To16(name);
+	CreateDebugger(WS2RS(projectName), OnCreateDebugger);
+
 	if(wsaStartuped)
 	{
 		port = htons(addr.sin_port);
@@ -646,15 +657,17 @@ int InitServer(const char* path, const char* name, unsigned short& port)
 			cSocket = INVALID_SOCKET;
 			closesocket(cs);
 		}
-		if(debugger) delete debugger;
-		debugger = dbg;
-		return 0;
+		return ServerExitCode::Success;
 	}
-	WSADATA wsaData;
-	if(WSAStartup(MAKEWORD(2, 2), &wsaData)) return 2;
+	WSADATA wsaData; ServerExitCode exitcode = ServerExitCode::Success;
+	if(WSAStartup(MAKEWORD(2, 2), &wsaData)) return ServerExitCode::WSA_StartFail;
 	wsaStartuped = true;
 	sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if(sSocket == INVALID_SOCKET) goto label_shutdown_wsa;
+	if(sSocket == INVALID_SOCKET)
+	{
+		exitcode = ServerExitCode::ServerSocketCreateFail;
+		goto label_shutdown_wsa;
+	}
 label_rebind:
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -663,20 +676,23 @@ label_rebind:
 	{
 		port++;
 		if(port) goto label_rebind;
+		exitcode = ServerExitCode::ServerSocketBindFail;
 		goto label_close_server;
 	}
-	if(listen(sSocket, 4) == SOCKET_ERROR) goto label_close_server;
-	if(debugger) delete debugger;
-	debugger = dbg;
+	if(listen(sSocket, 4) == SOCKET_ERROR)
+	{
+		exitcode = ServerExitCode::ServerSocketListenFail;
+		goto label_close_server;
+	}
 	thread(AcceptClient).detach();
-	return 0;
+	return ServerExitCode::Success;
 label_close_server:
 	closesocket(sSocket);
 	sSocket = INVALID_SOCKET;
 label_shutdown_wsa:
 	WSACleanup();
 	wsaStartuped = false;
-	return 3;
+	return exitcode;
 }
 
 void CloseServer()

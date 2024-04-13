@@ -110,10 +110,29 @@ static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint3
 }
 
 static RainProduct* product;
+static wstring name;
+static bool IsName(const RainString& name)
+{
+	if(name.length != ::name.size()) return false;
+	for(uint32 i = 0; i < name.length; i++)
+		if(name.value[i] != ::name.c_str()[i])return false;
+	return true;
+}
+static const RainLibrary* LibraryLoader(const RainString& name)
+{
+	if(IsName(name)) return product->GetLibrary();
+	return nullptr;
+}
+static const RainProgramDatabase* ProgramDatabaseLoader(const RainString& name)
+{
+	if(IsName(name)) return product->GetRainProgramDatabase();
+	return nullptr;
+}
 int main(int cnt, char** _args)
 {
 	wcout.imbue(locale("zh_CN.UTF-8"));
 	Args args = Parse(cnt, _args);
+	name = args.name;
 	CodeLoadHelper helper(args.path);
 	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, (ErrorLevel)args.errorLevel);
 	if(!args.silent) wcout << L"开始编译" << endl;
@@ -143,27 +162,26 @@ int main(int cnt, char** _args)
 	}
 	else
 	{
+		if(args.debug)
+		{
+			wcout << L"<ready to connect debugger>";
+			wcout.flush();
+			char success;
+			cin >> success;
+			if((success | 0x20) != 'y')
+			{
+				wcout << "fail to debug" << endl;
+				delete product;
+				return 0;
+			}
+		}
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(&library, 1, nullptr, nullptr, [](const RainString& name) { return product->GetLibrary(); }, nullptr, NativeLoader, OnExceptionExitFunc);
-		RainKernel* kernel = CreateKernel(parameter);
+		StartupParameter parameter(&library, 1, nullptr, nullptr, LibraryLoader, nullptr, NativeLoader, OnExceptionExitFunc);
+		RainKernel* kernel = CreateKernel(parameter, ProgramDatabaseLoader, nullptr);
 		RainFunction entry = kernel->FindFunction(args.entry.c_str(), true);
 		if(entry.IsValid())
 		{
 			InvokerWrapper invoker = entry.CreateInvoker();
-			if(args.debug)
-			{
-				RegistDebugger(kernel, [](const RainString& name) { return product->GetRainProgramDatabase(); }, nullptr);
-				wcout << L"<ready to connect debugger>";
-				wcout.flush();
-				char success;
-				cin >> success;
-				if((success | 0x20) != 'y')
-				{
-					wcout << "fail to debug" << endl;
-					delete product;
-					return 0;
-				}
-			}
 			invoker.Start(true, false);
 			while(kernel->GetState().taskCount)
 			{
@@ -172,6 +190,7 @@ int main(int cnt, char** _args)
 			}
 		}
 		else wcout << "entry:" << args.entry << " not found" << endl;
+		Delete(kernel);
 	}
 	delete product;
 	return 0;

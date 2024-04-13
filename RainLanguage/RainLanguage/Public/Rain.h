@@ -23,7 +23,7 @@ typedef long long integer;
 /// <summary>
 /// 定点数小数位
 /// </summary>
-constexpr integer DECIMAL = 16;
+constexpr integer DECIMAL_POINT = 16;
 /// <summary>
 /// 定点数
 /// </summary>

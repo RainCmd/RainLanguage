@@ -71,6 +71,7 @@ extern "C"
 	RAINLANGUAGE void Extern_DeleteRainString(RainString* value);
 
 	RAINLANGUAGE RainKernel* Extern_CreateKernel(StartupParameter parameter);
+	RAINLANGUAGE RainKernel* Extern_CreateKernel2(StartupParameter parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 	RAINLANGUAGE void Extern_DeleteKernel(RainKernel* kernel);
 
 	RAINLANGUAGE RainFunction* Extern_KernelFindFunction(RainKernel* kernel, character* name, bool allowNoPublic);

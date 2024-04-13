@@ -284,6 +284,15 @@ public:
 	~RainTaskIterator();
 };
 
+struct RAINLANGUAGE RainDebuggerParameter
+{
+	RainKernel* kernel;
+	RainProgramDatabaseLoader loader;
+	RainProgramDatabaseUnloader unloader;
+
+	RainDebuggerParameter(RainKernel* kernel, const RainProgramDatabaseLoader& loader, const RainProgramDatabaseUnloader& unloader) : kernel(kernel), loader(loader), unloader(unloader) {}
+};
+
 /// <summary>
 /// 调试器
 /// </summary>
@@ -294,6 +303,7 @@ private:
 	void* library;
 	void* debugFrame;
 	void* map;
+	void* breakpoints;
 	uint64 currentTask;
 	uint32 currentTraceDeep;
 	RainProgramDatabaseUnloader unloader;
@@ -322,9 +332,10 @@ public:
 	/// 创建调试器
 	/// </summary>
 	/// <param name="name">调试目标库名</param>
-	/// <param name="kernel">调试目标虚拟机</param>
-	/// <param name="database">符号表</param>
-	RainDebugger(const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
+	/// <param name="kernel">虚拟机</param>
+	/// <param name="loader">符号表加载器</param>
+	/// <param name="database">符号表卸载器</param>
+	RainDebugger(const RainString& name, const RainDebuggerParameter& parameter);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
 	/// <summary>
@@ -409,26 +420,17 @@ public:
 /// <param name="kernel">虚拟机</param>
 /// <param name="loader">符号表加载器</param>
 /// <param name="unloader">符号表卸载器</param>
-RAINLANGUAGE void RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
+RAINLANGUAGE void RegistDebugger(const RainDebuggerParameter& parameter);
 
+typedef bool (*CreateDebuggerCallback)(const RainString& name, const RainDebuggerParameter& parameter);
 /// <summary>
-/// 获取可调试虚拟机列表数量
+/// 创建调试器
 /// </summary>
-/// <returns>列表数量</returns>
-RAINLANGUAGE uint32 GetDebuggableCount();
-
+/// <param name="name">目标库名</param>
+/// <param name="callback">如果有虚拟机加载符合名称的库，则触发回调，回调返回true表示创建成功，将不会再触发回调</param>
+RAINLANGUAGE void CreateDebugger(const RainString& name, CreateDebuggerCallback callback);
 /// <summary>
-/// 获取可调试虚拟机
+/// 取消创建调试器
 /// </summary>
-/// <param name="index">列表索引</param>
-/// <param name="kernel">虚拟机</param>
-/// <param name="loader">符号表加载器</param>
-/// <param name="unloader">符号表卸载器</param>
-RAINLANGUAGE void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader);
-
-/// <summary>
-/// 检查虚拟机是否加载了库
-/// </summary>
-/// <param name="kernel">虚拟机</param>
-/// <param name="libraryName">库名</param>
-RAINLANGUAGE bool IsRainKernelContainLibrary(const RainKernel* kernel, const RainString& libraryName);
+/// <param name="name">目标库名</param>
+RAINLANGUAGE void CancelCreateDebugger(const RainString& name);

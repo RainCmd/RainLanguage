@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DotNetFixed|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
     <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
@@ -13,10 +13,6 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
-    <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DotNet|x64'">
     <LocalDebuggerCommandArguments>-path $(SolutionDir)\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>

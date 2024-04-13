@@ -787,7 +787,7 @@ RainTrace RainTraceIterator::Current()
 				return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), debugStatement.function, new String(database->functions[debugStatement.function]->file), debugStatement.line);
 			}
 		}
-		return RainTrace(debugFrame, NULL, new String(library->functions[function].GetFullName(library->kernel, library->index)), INVALID, NULL, 0);
+		return RainTrace(debugFrame, stack, new String(library->functions[function].GetFullName(library->kernel, library->index)), INVALID, NULL, 0);
 	}
 	return RainTrace(NULL, NULL, NULL, INVALID, NULL, 0);
 }
@@ -879,7 +879,7 @@ static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 	for(uint32 importIndex = 0; importIndex < library->imports.Count(); importIndex++)
 	{
 		ImportLibrary& importLibrary = library->imports[importIndex];
-		RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(TO_KERNEL_STRING(importLibrary.spaces[0].name).index);
+		RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(TO_KERNEL_STRING(importLibrary.spaces[0].name).index, true);
 		for(uint32 x = 0; x < importLibrary.variables.Count(); x++)
 		{
 			String name = TO_KERNEL_STRING(importLibrary.variables[x].name);
@@ -975,43 +975,44 @@ static bool InitMap(Kernel* kernel, Library* library, MAP* map)
 	return true;
 }
 
-#define KERNEL ((Kernel*)kernel)
 #define SHARE ((KernelShare*)share)
 #define DATABASE ((ProgramDatabase*)database)
 #define LIBRARY ((RuntimeLibrary*)library)
-RainKernel* RainDebugger::GetKernel()
+#define BREAKPOINTS ((Set<uint32,true>*)breakpoints)
+static RuntimeLibrary* GetLibrary(const Kernel* kernel, const RainString& libraryName)
 {
-	if(IsActive()) return LIBRARY->kernel;
+	String name = kernel->stringAgency->Add(libraryName.value, libraryName.length);
+	LibraryAgency* agency = kernel->libraryAgency;
+	for(uint32 i = 0; i < agency->libraries.Count(); i++)
+		if(agency->libraries[i]->spaces[0].name == name.index)
+			return agency->libraries[i];
 	return NULL;
 }
-RainDebugger::RainDebugger(const RainString& name, RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(unloader), type(StepType::None), database(nullptr)
+RainKernel* RainDebugger::GetKernel()
 {
-	if(kernel)
+	return SHARE->kernel;
+}
+RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& parameter) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(parameter.unloader), type(StepType::None), database(NULL), breakpoints(NULL)
+{
+	Kernel* kernel = ((Kernel*)parameter.kernel);
+	library = GetLibrary(kernel, name);
+	if(!library) return;
+	LibraryAgency* agency = kernel->libraryAgency;
+	const RainLibrary* source = agency->libraryLoader(name);
+	if(!source) return;
+	database = parameter.loader(name);
+	if(!database)
 	{
-		String targetName = KERNEL->stringAgency->Add(name.value, name.length);
-		LibraryAgency* agency = KERNEL->libraryAgency;
-		for(uint32 i = 0; i < agency->libraries.Count(); i++)
-			if(agency->libraries[i]->spaces[0].name == targetName.index)
-			{
-				library = agency->libraries[i];
-				const RainLibrary* source = agency->libraryLoader(name);
-				if(!source) return;
-				database = loader(name);
-				if(!database)
-				{
-					if(agency->libraryUnloader) agency->libraryUnloader(source);
-					return;
-				}
-				if(KERNEL->debugger) KERNEL->debugger->Broken();
-				KERNEL->debugger = this;
-				share = KERNEL->share;
-				SHARE->Reference();
-				if(!InitMap(KERNEL, (Library*)source, (MAP*)map)) Broken();
-				if(agency->libraryUnloader) agency->libraryUnloader(source);
-				break;
-			}
-
+		if(agency->libraryUnloader) agency->libraryUnloader(source);
+		return;
 	}
+	breakpoints = new Set<uint32, true>(0);
+	if(LIBRARY->debugger) LIBRARY->debugger->Broken();
+	LIBRARY->debugger = this;
+	share = kernel->share;
+	SHARE->Reference();
+	if(!InitMap(kernel, (Library*)source, (MAP*)map)) Broken();
+	if(agency->libraryUnloader) agency->libraryUnloader(source);
 }
 
 void RainDebugger::Broken()
@@ -1028,12 +1029,9 @@ void RainDebugger::Broken()
 	{
 		currentTask = 0;
 		currentTraceDeep = INVALID;
-		if(SHARE->kernel)
-		{
-			SHARE->kernel->ClearBreakpoints();
-			SHARE->kernel->debugger = NULL;
-			((MAP*)map)->Clear();
-		}
+		ClearBreakpoints();
+		((MAP*)map)->Clear();
+		if(LIBRARY) LIBRARY->debugger = NULL;
 		SHARE->Release();
 		share = NULL;
 		library = NULL;
@@ -1090,7 +1088,15 @@ bool RainDebugger::AddBreakPoint(const RainString& file, uint32 line)
 	if(IsActive())
 	{
 		const uint32 statement = DATABASE->GetStatement(file, line);
-		return statement != INVALID && SHARE->kernel->AddBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statement].pointer);
+		if(statement != INVALID)
+		{
+			uint32 address = LIBRARY->codeOffset + DATABASE->statements[statement].pointer;
+			if(address < SHARE->kernel->libraryAgency->code.Count() && SHARE->kernel->libraryAgency->AddBreakpoint(address))
+			{
+				BREAKPOINTS->Add(address);
+				return true;
+			}
+		}
 	}
 	return false;
 }
@@ -1100,13 +1106,24 @@ void RainDebugger::RemoveBreakPoint(const RainString& file, uint32 line)
 	if(IsActive())
 	{
 		const uint32 statement = DATABASE->GetStatement(file, line);
-		if(statement != INVALID) SHARE->kernel->RemoveBreakpoint(LIBRARY->codeOffset + DATABASE->statements[statement].pointer);
+		if(statement != INVALID)
+		{
+			Set<uint32, true>* set = BREAKPOINTS;
+			uint32 address = LIBRARY->codeOffset + DATABASE->statements[statement].pointer;
+			if(set->Remove(address)) SHARE->kernel->libraryAgency->RemoveBreakpoint(address);
+		}
 	}
 }
 
 void RainDebugger::ClearBreakpoints()
 {
-	if(IsActive()) SHARE->kernel->ClearBreakpoints();
+	if(IsActive())
+	{
+		Kernel* kernel = SHARE->kernel;
+		Set<uint32, true>::Iterator iterator = BREAKPOINTS->GetIterator();
+		while(iterator.Next()) kernel->libraryAgency->RemoveBreakpoint(iterator.Current());
+		BREAKPOINTS->Clear();
+	}
 }
 
 void RainDebugger::Pause()
@@ -1190,6 +1207,8 @@ RainDebugger::~RainDebugger()
 {
 	delete (MAP*)map;
 	map = NULL;
+	delete BREAKPOINTS;
+	breakpoints = NULL;
 	Broken();
 }
 
@@ -1199,49 +1218,105 @@ struct DebuggerSlot
 	RainProgramDatabaseLoader loader;
 	RainProgramDatabaseUnloader unloader;
 
-	DebuggerSlot(KernelShare* share, const RainProgramDatabaseLoader& loader, const RainProgramDatabaseUnloader& unloader)
-		: share(share), loader(loader), unloader(unloader)
-	{
-	}
+	DebuggerSlot(KernelShare* share, const RainProgramDatabaseLoader& loader, const RainProgramDatabaseUnloader& unloader) : share(share), loader(loader), unloader(unloader) {}
 };
 static List<DebuggerSlot, true> debuggerSlots = List<DebuggerSlot, true>(0);
+struct DebuggerCreater
+{
+	character* name;
+	uint32 length;
+	CreateDebuggerCallback callback;
+	bool IsEquals(const RainString& other) const
+	{
+		if(length != other.length) return false;
+		for(uint32 i = 0; i < length; i++)
+			if(name[i] != other.value[i])
+				return false;
+		return true;
+	}
+
+	DebuggerCreater(const RainString& name, const CreateDebuggerCallback& callback) : name(NULL), length(name.length), callback(callback)
+	{
+		this->name = Malloc<character>(length);
+		Mcopy(name.value, this->name, length);
+	}
+};
+static List<DebuggerCreater, true> debuggerCreaters = List<DebuggerCreater, true>(0);
+
 static bool InvalidDebugger(DebuggerSlot& slot)
 {
-	return slot.share->kernel;
+	return !slot.share->kernel;
 }
 
-void RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
+void RegistDebugger(const RainDebuggerParameter& parameter)
 {
 	debuggerSlots.RemoveAll(InvalidDebugger);
-	if(kernel)
+	if(parameter.kernel)
 	{
-		KernelShare* share = ((Kernel*)kernel)->share;
+		for(uint32 i = 0; i < debuggerSlots.Count(); i++)
+		{
+			DebuggerSlot& slot = debuggerSlots[i];
+			if(slot.share->kernel == parameter.kernel)
+			{
+				slot.loader = parameter.loader;
+				slot.unloader = parameter.unloader;
+				return;
+			}
+		}
+		KernelShare* share = ((Kernel*)parameter.kernel)->share;
 		share->Reference();
-		debuggerSlots.Add(DebuggerSlot(share, loader, unloader));
+		debuggerSlots.Add(DebuggerSlot(share, parameter.loader, parameter.unloader));
 	}
 }
 
-uint32 GetDebuggableCount()
+void CreateDebugger(const RainString& name, CreateDebuggerCallback callback)
 {
-	return debuggerSlots.Count();
-}
-
-void GetDebuggable(uint32 index, RainKernel*& kernel, RainProgramDatabaseLoader& loader, RainProgramDatabaseUnloader& unloader)
-{
-	kernel = debuggerSlots[index].share->kernel;
-	loader = debuggerSlots[index].loader;
-	unloader = debuggerSlots[index].unloader;
-}
-
-bool IsRainKernelContainLibrary(const RainKernel* kernel, const RainString& libraryName)
-{
-	if(kernel)
+	CancelCreateDebugger(name);
+	for(uint32 i = 0; i < debuggerSlots.Count(); i++)
 	{
-		String name = KERNEL->stringAgency->Add(libraryName.value, libraryName.length);
-		LibraryAgency* agency = KERNEL->libraryAgency;
-		for(uint32 i = 0; i < agency->libraries.Count(); i++)
-			if(agency->libraries[i]->spaces[0].name == name.index)
-				return true;
+		DebuggerSlot& slot = debuggerSlots[i];
+		if(!InvalidDebugger(slot) && GetLibrary(slot.share->kernel, name))
+		{
+			if(callback(name, RainDebuggerParameter(slot.share->kernel, slot.loader, slot.unloader)))
+				return;
+		}
 	}
-	return false;
+	debuggerCreaters.Add(DebuggerCreater(name, callback));
+}
+
+void CancelCreateDebugger(const RainString& name)
+{
+	for(uint32 i = 0; i < debuggerCreaters.Count(); i++)
+	{
+		DebuggerCreater& creater = debuggerCreaters[i];
+		if(creater.IsEquals(name))
+		{
+			Free(creater.name);
+			debuggerCreaters.RemoveAt(i);
+			return;
+		}
+	}
+}
+
+void OnLoadLibrary(Kernel* kernel, RuntimeLibrary* library)
+{
+	for(uint32 slotIndex = 0; slotIndex < debuggerSlots.Count(); slotIndex++)
+	{
+		DebuggerSlot& slot = debuggerSlots[slotIndex];
+		if(slot.share->kernel == kernel)
+		{
+			const String name = kernel->stringAgency->Get(library->spaces[0].name);
+			const RainString rainName = RainString(name.GetPointer(), name.GetLength());
+			for(uint32 createrIndex = 0; createrIndex < debuggerCreaters.Count(); createrIndex++)
+			{
+				DebuggerCreater& creater = debuggerCreaters[createrIndex];
+				if(creater.IsEquals(rainName) && creater.callback(rainName, RainDebuggerParameter(kernel, slot.loader, slot.unloader)))
+				{
+					CancelCreateDebugger(rainName);
+					return;
+				}
+			}
+			return;
+		}
+	}
 }

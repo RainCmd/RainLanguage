@@ -2,12 +2,19 @@
 #include "../KernelLibraryInfo.h"
 #include "../KernelDeclarations.h"
 #include "../Public/VirtualMachine.h"
+#include "../Public/Debugger.h"
 #include "Kernel.h"
 #include "HeapAgency.h"
 #include "TaskAgency.h"
 #include "Caller.h"
+#include "../Instruct.h"
 
 LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), libraryUnloader(parameter->libraryUnloader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
+
+void LibraryAgency::RegistDebugger(RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
+{
+	::RegistDebugger(RainDebuggerParameter(kernel, loader, unloader));
+}
 
 void LibraryAgency::Init(const Library** initialLibraries, uint32 count)
 {
@@ -200,6 +207,7 @@ RuntimeLibrary* LibraryAgency::Load(string name, bool assert)
 	else if(!library) return NULL;
 	RuntimeLibrary* result = Load(library);
 	if(libraryUnloader) libraryUnloader(library);
+	OnLoadLibrary(kernel, result);
 	return result;
 }
 
@@ -211,7 +219,7 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 	libraries.Add(result);
 	for(uint32 i = 0; i < library->imports.Count(); i++)
 	{
-		RuntimeLibrary* rely = Load(kernel->stringAgency->Add(library->stringAgency->Get(library->imports[i].spaces[0].name)).index);
+		RuntimeLibrary* rely = Load(kernel->stringAgency->Add(library->stringAgency->Get(library->imports[i].spaces[0].name)).index, true);
 		ASSERT(rely->kernel, "Library可能存在循环依赖");
 	}
 	result->kernel = kernel;
@@ -346,12 +354,17 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 	else return String();
 }
 
-void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library, uint32& function)
+void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library)
 {
 	library = kernelLibrary;
 	for(uint32 i = 0; i < libraries.Count(); i++)
 		if(pointer < libraries[i]->codeOffset) break;
 		else library = libraries[i];
+}
+
+void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library, uint32& function)
+{
+	GetInstructPosition(pointer, library);
 	function = INVALID;
 	uint32 start = 0, end = library->functions.Count();
 	while(start + 1 < end)
@@ -360,6 +373,45 @@ void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library
 		if(library->functions[middle].entry > pointer) end = middle;
 		else function = start = middle;
 	}
+}
+
+bool LibraryAgency::AddBreakpoint(uint32 address)
+{
+	if(address < code.Count())
+	{
+		if(code[address] == (uint8)Instruct::BREAK) code[address] = (uint8)Instruct::BREAKPOINT;
+		else if(code[address] != (uint8)Instruct::BREAKPOINT) return false;
+		return true;
+	}
+	return false;
+}
+
+void LibraryAgency::RemoveBreakpoint(uint32 address)
+{
+	if(code[address] == (uint8)Instruct::BREAKPOINT) code[address] = (uint8)Instruct::BREAK;
+}
+
+void LibraryAgency::OnBreakpoint(uint64 taskId, uint32 deep, uint32 address)
+{
+	RuntimeLibrary* library;
+	GetInstructPosition(address, library);
+	bool hit = code[address] == (uint8)Instruct::BREAKPOINT;
+	if(library->debugger) library->debugger->OnBreak(taskId, deep, hit);
+	else if(hit) code[address] = (uint8)Instruct::BREAK;
+}
+
+void LibraryAgency::OnException(uint64 taskId, const String& message)
+{
+	for(uint32 i = 0; i < libraries.Count(); i++)
+		if(libraries[i]->debugger)
+			libraries[i]->debugger->OnException(taskId, message.GetPointer(), message.GetLength());
+}
+
+void LibraryAgency::Update()
+{
+	for(uint32 i = 0; i < libraries.Count(); i++)
+		if(libraries[i]->debugger)
+			libraries[i]->debugger->OnUpdate();
 }
 
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo)

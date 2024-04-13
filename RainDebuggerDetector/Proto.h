@@ -2,6 +2,8 @@
 #include "Detector.h"
 enum class Proto : uint
 {
+	SEND_Initialized,
+
 	//	uint32	requestId
 	//	string	file
 	//	uint32	lineCount
@@ -12,7 +14,6 @@ enum class Proto : uint
 	//	uint32	lineCount
 	//		uint32	line
 	RSEND_AddBreadks,
-
 	//	string	file
 	//	uint32	lineCount
 	//		uint32	line
@@ -164,7 +165,6 @@ enum class Proto : uint
 	//	uint32	heap
 	SEND_Diagnose,
 
-	RECV_Close,
 	//	string msg
 	SEND_Message,
 };

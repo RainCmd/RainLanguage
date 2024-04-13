@@ -44,19 +44,6 @@ public:
 		for(uint i = 0; i < length; i++)
 			values[tail++ % size] = elements[i];
 	}
-	inline T* De(uint count)
-	{
-		if(Count() < count) throw "数组越界";
-		if(deCount < count)
-		{
-			if(des != nullptr) free(des);
-			des = (T*)malloc(count * sizeof(T));
-			deCount = count;
-		}
-		for(uint i = 0; i < count; i++)
-			des[i] = values[head++ % size];
-		return des;
-	}
 	inline T* Peek(uint count)
 	{
 		if(Count() < count) throw "数组越界";
@@ -70,11 +57,18 @@ public:
 			des[i] = values[(head + i) % size];
 		return des;
 	}
+	inline T* De(uint count)
+	{
+		Peek(count);
+		head += count;
+		return des;
+	}
 	inline void Discard(uint count)
 	{
 		if(Count() < count) throw "数组越界";
 		head += count;
 	}
+	inline void Clear() { head = tail = 0; }
 	inline const T& operator[](uint index) const
 	{
 		uint count = Count();

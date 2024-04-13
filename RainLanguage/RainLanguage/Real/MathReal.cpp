@@ -26,16 +26,16 @@ real MathReal::Sqrt(const real& value)
 	if (value.value > 0)
 	{
 		int i = Log2(value.value);
-		i -= DECIMAL;
+		i -= DECIMAL_POINT;
 		bool b = i < 0;
 		if (b) i = -i;
 		i >>= 1;
 		if (b) i = -i;
-		i += DECIMAL;
+		i += DECIMAL_POINT;
 		integer tmp = 1LL << i;
 		while (i > 0)
 		{
-			integer sqr = (tmp * tmp) >> DECIMAL;
+			integer sqr = (tmp * tmp) >> DECIMAL_POINT;
 			if (sqr == value.value) return real::CreateReal(tmp);
 			else
 			{

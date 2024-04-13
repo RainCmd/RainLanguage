@@ -4,157 +4,159 @@ import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode'
 
 export enum Proto {
-    //	uint32	requestId
-    //	string	file
-    //	uint32	lineCount
-    //		uint32	line
-    RRECV_AddBreadks,
-    //	发送的都是添加失败的断点
-    //	uint32	requestId
-    //	uint32	lineCount
-    //		uint32	line
-    RSEND_AddBreadks,
+	SEND_Initialized,
 
-    //	string	file
-    //	uint32	lineCount
-    //		uint32	line
-    RECV_RemoveBreaks,
-    RECV_ClearBreaks,
+	//	uint32	requestId
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
+	RRECV_AddBreadks,
+	//	发送的都是添加失败的断点
+	//	uint32	requestId
+	//	uint32	lineCount
+	//		uint32	line
+	RSEND_AddBreadks,
+	//	string	file
+	//	uint32	lineCount
+	//		uint32	line
+	RECV_RemoveBreaks,
+	RECV_ClearBreaks,
 
-    RECV_Pause,
-    RECV_Continue,
-    //	uint32	StepType
-    RECV_Step,
+	RECV_Pause,
+	//	bool	igonreStep
+	RECV_Continue,
+	//	uint32	StepType
+	RECV_Step,
 
+	//	string	message
 	//	uint32	taskCount
 	//		uint64	taskId
 	//	uint64	currentTask
-    //	string	message
-    SEND_OnException,
+	SEND_OnException,
 	//	uint32	taskCount
 	//		uint64	taskId
 	//	uint64	currentTask
-    SEND_OnBreak,
+	SEND_OnBreak,
 
-    //	uint32	requestId
-    //	uint32	nameCount
-    //		string	name
-    RRECV_Space,
-    //	uint32	requestId
-    //	uint32	spaceCount
-    //		string	spaceName
-    //	uint32	variableCount
-    //		string	variableName
-    //		bool	structured
-    //		string	Type
-    //		string	variableValue
-    RSEND_Space,
+	//	uint32	requestId
+	//	uint32	nameCount
+	//		string	name
+	RRECV_Space,
+	//	uint32	requestId
+	//	uint32	spaceCount
+	//		string	spaceName
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Space,
 
-    //	uint32	requestId
-    //	uint32	nameCount
-    //		string	name
-    //	string	variableName
-    //	uint32	memberIndexCount
-    //		uint32	memberIndex
-    RRECV_Global,
-    //	uint32	requestId
-    //	uint32	variableCount
-    //		string	variableName
-    //		bool	structured
-    //		string	Type
-    //		string	variableValue
-    RSEND_Global,
-    //	uint32	requestId
-    //	uint32	nameCount
-    //		string	name
-    //	string	variableName
-    //	uint32	memberIndexCount
-    //		uint32	memberIndex
-    //	string	value
-    RRECV_SetGlobal,
-    //	uint32	requestId
-    //	string	value
-    RSEND_SetGlobal,
+	//	uint32	requestId
+	//	uint32	nameCount
+	//		string	name
+	//	string	variableName
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	RRECV_Global,
+	//	uint32	requestId
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Global,
+	//	uint32	requestId
+	//	uint32	nameCount
+	//		string	name
+	//	string	variableName
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	//	string	value
+	RRECV_SetGlobal,
+	//	uint32	requestId
+	//	string	value
+	RSEND_SetGlobal,
 
-    //	uint32	requestId
-    RRECV_Tasks,
-    //	uint32	requestId
-    //	uint32	taskCount
-    //		uint64	taskId
-    RSEND_Tasks,
-    //	uint32	requestId
-    //	uint64	taskId
-    RRECV_Task,
-    //	uint32	requestId
-    //	uint32	traceCount
-    //		string	file
-    //		uint32	line
-    RSEND_Task,
-    //	uint32	requestId
-    //	uint64	taskId
-    //	uint32	deep
-    RRECV_Trace,
-    //	uint32	requestId
-    //	uint32	variableCount
-    //		string	variableName
-    //		bool	structured
-    //		string	Type
-    //		string	variableValue
-    RSEND_Trace,
-    //	uint32	requestId
-    //	uint64	taskId
-    //	uint32	traceDeep
-    //	string	localName
-    //	uint32	memberIndexCount
-    //		uint32	memberIndex
-    RRECV_Local,
-    //	uint32	requestId
-    //	uint32	variableCount
-    //		string	variableName
-    //		bool	structured
-    //		string	Type
-    //		string	variableValue
-    RSEND_Local,
-    //	uint32	requestId
-    //	uint64	taskId
-    //	uint32	traceDeep
-    //	string	localName
-    //	uint32	memberIndexCount
-    //		uint32	memberIndex
-    //	string	value
-    RRECV_SetLocal,
-    //	uint32	requestId
-    //	string	value
-    RSEND_SetLocal,
+	//	uint32	requestId
+	RRECV_Tasks,
+	//	uint32	requestId
+	//	uint32	taskCount
+	//		uint64	taskId
+	RSEND_Tasks,
+	//	uint32	requestId
+	//	uint64	taskId
+	RRECV_Task,
+	//	uint32	requestId
+	//	uint32	traceCount
+	//		string	file
+	//		uint32	line
+	RSEND_Task,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	deep
+	RRECV_Trace,
+	//	uint32	requestId
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Trace,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	deep
+	//	string	localName
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	RRECV_Local,
+	//	uint32	requestId
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Local,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	deep
+	//	string	localName
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	//	string	value
+	RRECV_SetLocal,
+	//	uint32	requestId
+	//	string	value
+	RSEND_SetLocal,
 
-    //	uint32	requestId
-    //	uint64	taskId
-    //	uint32	traceDeep
-    //	string	file
-    //	uint32	line
-    //	uint32	character
-    RRECV_Eval,
-    //	uint32	requestId
-    //	bool	hasResult
-    //		bool	structured
-    //		string	value
-    RSEND_Eval,
-    //	uint32	requestId
-    //	uint64	taskId
-    //	uint32	traceDeep
-    //	string	file
-    //	uint32	line
-    //	uint32	character
-    //	uint32	memberIndexCount
-    //		uint32	memberIndex
-    RRECV_Hover,
-    //	uint32	requestId
-    //	uint32	variableCount
-    //		string	variableName
-    //		bool	structured
-    //		string	Type
-    //		string	variableValue
-    RSEND_Hover,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	deep
+	//	string	file
+	//	uint32	line
+	//	uint32	character
+	RRECV_Eval,
+	//	uint32	requestId
+	//	bool	hasResult
+	//		bool	structured
+	//		string	value
+	RSEND_Eval,
+	//	uint32	requestId
+	//	uint64	taskId
+	//	uint32	deep
+	//	string	file
+	//	uint32	line
+	//	uint32	character
+	//	uint32	memberIndexCount
+	//		uint32	memberIndex
+	RRECV_Hover,
+	//	uint32	requestId
+	//	uint32	variableCount
+	//		string	variableName
+	//		bool	structured
+	//		string	Type
+	//		string	variableValue
+	RSEND_Hover,
 
 	//	uint32	frame
 	RECV_Diagnose,
@@ -165,7 +167,6 @@ export enum Proto {
 	//	uint32	heap
 	SEND_Diagnose,
 
-    RECV_Close,
 	//	string msg
 	SEND_Message,
 }
@@ -335,6 +336,9 @@ export class ClientHelper {
     }
     private OnRecv(reader: Reader) {
         switch (reader.ReadProto()) {
+            case Proto.SEND_Initialized:
+                this.RecvEvent(Proto.SEND_Initialized, reader)
+                break;
             case Proto.RRECV_AddBreadks: break;
             case Proto.RSEND_AddBreadks:
                 this.RecvRequest(reader)
@@ -394,7 +398,6 @@ export class ClientHelper {
             case Proto.SEND_Diagnose:
                 this.RecvEvent(Proto.SEND_Diagnose, reader)
                 break;
-            case Proto.RECV_Close: break;
             case Proto.SEND_Message:
                 this.RecvEvent(Proto.SEND_Message, reader)
                 break;

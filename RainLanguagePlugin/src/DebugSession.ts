@@ -83,7 +83,9 @@ export class RainDebugSession extends LoggingDebugSession {
 		RainDebug.client.on('close', () => {
 			this.sendEvent(new TerminatedEvent())
 		})
-		this.helper.on(client.Proto.SEND_OnBreak, reader => {
+		this.helper.on(client.Proto.SEND_Initialized, reader => {
+			this.sendEvent(new InitializedEvent())
+		}).on(client.Proto.SEND_OnBreak, reader => {
 			let taskCount = reader.ReadInt()
 			while (taskCount-- > 0) {
 				this.sendEvent(new StoppedEvent("", Number(reader.ReadLong())))
@@ -224,10 +226,8 @@ export class RainDebugSession extends LoggingDebugSession {
 		}
 
 		this.sendResponse(response)
-		this.sendEvent(new InitializedEvent())
 	}
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
-		this.helper.Send(new client.Writer(client.Proto.RECV_Close))
 		RainDebug.client.destroy();
 		if (this.configuration.request == 'launch' && RainDebug.debuggedProcess != null && !RainDebug.debuggedProcess.killed) {
 			RainDebug.debuggedProcess.kill()

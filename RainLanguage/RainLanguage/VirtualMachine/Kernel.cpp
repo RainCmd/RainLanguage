@@ -1,7 +1,5 @@
 #include "Kernel.h"
-#include "../Public/Debugger.h"
 #include "../String.h"
-#include "../Instruct.h"
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
@@ -34,25 +32,25 @@ RainTypes::~RainTypes()
 RainFunction::RainFunction() :library(INVALID), index(INVALID), share(NULL) {}
 RainFunction::RainFunction(uint32 library, uint32 index, void* share) : library(library), index(index), share(share)
 {
-	if (share) ((KernelShare*)share)->Reference();
+	if(share) ((KernelShare*)share)->Reference();
 }
 RainFunction::~RainFunction()
 {
-	if (share) ((KernelShare*)share)->Release();
+	if(share) ((KernelShare*)share)->Release();
 	share = NULL;
 }
 RainFunction& RainFunction::operator=(const RainFunction& other)
 {
-	if (share) ((KernelShare*)share)->Release();
+	if(share) ((KernelShare*)share)->Release();
 	library = other.library;
 	index = other.index;
 	share = other.share;
-	if (share) ((KernelShare*)share)->Reference();
+	if(share) ((KernelShare*)share)->Reference();
 	return *this;
 }
 bool RainFunction::IsValid() const
 {
-	if (library == INVALID || index == INVALID) return false;
+	if(library == INVALID || index == INVALID) return false;
 	return share && ((KernelShare*)share)->kernel;
 }
 InvokerWrapper RainFunction::CreateInvoker() const
@@ -65,7 +63,7 @@ RainTypes RainFunction::GetParameters() const
 	ASSERT(IsValid(), "无效的函数");
 	RuntimeFunction* info = ((KernelShare*)share)->kernel->libraryAgency->GetFunction(Function(library, index));
 	RainType* types = Malloc<RainType>(info->parameters.Count());
-	for (uint32 i = 0; i < info->parameters.Count(); i++) types[i] = GetRainType(info->parameters.GetType(i));
+	for(uint32 i = 0; i < info->parameters.Count(); i++) types[i] = GetRainType(info->parameters.GetType(i));
 	return RainTypes(types, info->parameters.Count());
 }
 RainTypes RainFunction::GetReturns() const
@@ -73,7 +71,7 @@ RainTypes RainFunction::GetReturns() const
 	ASSERT(IsValid(), "无效的函数");
 	RuntimeFunction* info = ((KernelShare*)share)->kernel->libraryAgency->GetFunction(Function(library, index));
 	RainType* types = Malloc<RainType>(info->returns.Count());
-	for (uint32 i = 0; i < info->returns.Count(); i++) types[i] = GetRainType(info->returns.GetType(i));
+	for(uint32 i = 0; i < info->returns.Count(); i++) types[i] = GetRainType(info->returns.GetType(i));
 	return RainTypes(types, info->returns.Count());
 }
 RainFunctions::RainFunctions(RainFunctions& other) :functions(other.functions), count(other.count)
@@ -88,7 +86,7 @@ RainFunctions::RainFunctions(RainFunctions&& other) noexcept : functions(other.f
 }
 RainFunctions& RainFunctions::operator=(RainFunctions& other)
 {
-	if (functions)
+	if(functions)
 	{
 		Destruct(functions, count);
 		delete functions;
@@ -101,7 +99,7 @@ RainFunctions& RainFunctions::operator=(RainFunctions& other)
 }
 RainFunctions::~RainFunctions()
 {
-	if (functions)
+	if(functions)
 	{
 		Destruct(functions, count);
 		delete functions;
@@ -115,12 +113,17 @@ RainKernel* CreateKernel(const StartupParameter& parameter)
 	return new Kernel(parameter);
 }
 
+RainKernel* CreateKernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
+{
+	return new Kernel(parameter, loader, unloader);
+}
+
 void Delete(RainKernel*& kernel)
 {
 	delete kernel; kernel = NULL;
 }
 
-Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed), debugger(NULL), breakpoints(0)
+Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(parameter.seed)
 {
 	share = new KernelShare(this);
 	stringAgency = new StringAgency(parameter.stringCapacity);
@@ -131,13 +134,37 @@ Kernel::Kernel(const StartupParameter& parameter) : share(NULL), random(paramete
 	libraryAgency->Init((const Library**)parameter.libraries, parameter.libraryCount);
 }
 
+Kernel::Kernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader) : share(NULL), random(parameter.seed)
+{
+	share = new KernelShare(this);
+	stringAgency = new StringAgency(parameter.stringCapacity);
+	entityAgency = new EntityAgency(this, &parameter);
+	libraryAgency = new LibraryAgency(this, &parameter);
+	taskAgency = new TaskAgency(this, &parameter);
+	heapAgency = new HeapAgency(this, &parameter);
+	libraryAgency->RegistDebugger(loader, unloader);
+	libraryAgency->Init((const Library**)parameter.libraries, parameter.libraryCount);
+}
+
+bool Kernel::LoadLibrary(const RainString& name)
+{
+	return libraryAgency->Load(stringAgency->Add(name.value, name.length).index, false);
+}
+
+bool Kernel::LoadLibrary(const character* name)
+{
+	uint32 length = 0;
+	while(name[length]) length++;
+	return LoadLibrary(RainString(name, length));
+}
+
 Function FindFunction(Kernel* kernel, RuntimeLibrary* library, RuntimeSpace* space, const character* name, uint32 nameLength, bool allowNoPublic)
 {
 	String functionName = kernel->stringAgency->Add(name, nameLength);
-	for (uint32 i = 0; i < space->functions.Count(); i++)
+	for(uint32 i = 0; i < space->functions.Count(); i++)
 	{
 		RuntimeFunction* function = &library->functions[space->functions[i]];
-		if ((allowNoPublic || function->isPublic) && functionName.index == function->name)
+		if((allowNoPublic || function->isPublic) && functionName.index == function->name)
 			return Function(library->index, space->functions[i]);
 	}
 	return Function();
@@ -147,14 +174,14 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* 
 {
 	RuntimeSpace* space = &library->spaces[0];
 	uint32 start = 0;
-	for (uint32 x = 0; x < nameLength; x++)
-		if (x == '.')
+	for(uint32 x = 0; x < nameLength; x++)
+		if(x == '.')
 		{
-			if (x == start) return Function();
+			if(x == start) return Function();
 			String spaceName = kernel->stringAgency->Add(name + start, x - start);
 			start = x + 1;
-			for (uint32 y = 0; y < space->children.Count(); y++)
-				if (spaceName.index == library->spaces[space->children[y]].name)
+			for(uint32 y = 0; y < space->children.Count(); y++)
+				if(spaceName.index == library->spaces[space->children[y]].name)
 				{
 					space = &library->spaces[space->children[y]];
 					goto label_next;
@@ -162,32 +189,32 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* 
 			return Function();
 		label_next:;
 		}
-	if (start == 0)
+	if(start == 0)
 	{
-		for (uint32 i = 0; i < library->spaces.Count(); i++)
+		for(uint32 i = 0; i < library->spaces.Count(); i++)
 		{
 			Function result = FindFunction(kernel, library, &library->spaces[i], name, nameLength, allowNoPublic);
-			if (result.library != INVALID)return result;
+			if(result.library != INVALID)return result;
 		}
 	}
-	else if (start < nameLength) return FindFunction(kernel, library, space, name + start, nameLength - start, allowNoPublic);
+	else if(start < nameLength) return FindFunction(kernel, library, space, name + start, nameLength - start, allowNoPublic);
 	return Function();
 }
 
 const RainFunction Kernel::FindFunction(const RainString& name, bool allowNoPublic)
 {
 	Function result;
-	for (uint32 x = 0; x < name.length; x++)
-		if (name.value[x] == '.')
+	for(uint32 x = 0; x < name.length; x++)
+		if(name.value[x] == '.')
 		{
 			String libraryName = stringAgency->Add(name.value, x);
-			if (libraryName.index == libraryAgency->kernelLibrary->spaces[0].name)
+			if(libraryName.index == libraryAgency->kernelLibrary->spaces[0].name)
 			{
 				result = ::FindFunction(this, libraryAgency->kernelLibrary, name.value + x + 1, name.length - x - 1, allowNoPublic);
 				return RainFunction(result.library, result.function, share);
 			}
-			for (uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
-				if (libraryName.index == libraryAgency->libraries[y]->spaces[0].name)
+			for(uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
+				if(libraryName.index == libraryAgency->libraries[y]->spaces[0].name)
 				{
 					result = ::FindFunction(this, libraryAgency->libraries[y], name.value + x + 1, name.length - x - 1, allowNoPublic);
 					return RainFunction(result.library, result.function, share);
@@ -195,11 +222,11 @@ const RainFunction Kernel::FindFunction(const RainString& name, bool allowNoPubl
 			return RainFunction();
 		}
 	result = ::FindFunction(this, libraryAgency->kernelLibrary, name.value, name.length, allowNoPublic);
-	if (result.library != INVALID) return RainFunction(result.library, result.function, share);
-	for (uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
+	if(result.library != INVALID) return RainFunction(result.library, result.function, share);
+	for(uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
 	{
 		result = ::FindFunction(this, libraryAgency->libraries[i], name.value, name.length, allowNoPublic);
-		if (result.library != INVALID) return RainFunction(result.library, result.function, share);
+		if(result.library != INVALID) return RainFunction(result.library, result.function, share);
 	}
 	return RainFunction();
 }
@@ -207,17 +234,17 @@ const RainFunction Kernel::FindFunction(const RainString& name, bool allowNoPubl
 const RainFunction Kernel::FindFunction(const character* name, bool allowNoPublic)
 {
 	uint32 length = 0;
-	while (name[length]) length++;
+	while(name[length]) length++;
 	return FindFunction(RainString(name, length), allowNoPublic);
 }
 
 void FindFunctions(Kernel* kernel, RuntimeLibrary* library, RuntimeSpace* space, const character* name, uint32 nameLength, List<Function, true>& results, bool allowNoPublic)
 {
 	String functionName = kernel->stringAgency->Add(name, nameLength);
-	for (uint32 i = 0; i < space->functions.Count(); i++)
+	for(uint32 i = 0; i < space->functions.Count(); i++)
 	{
 		RuntimeFunction* function = &library->functions[space->functions[i]];
-		if ((allowNoPublic || function->isPublic) && functionName.index == function->name)
+		if((allowNoPublic || function->isPublic) && functionName.index == function->name)
 			results.Add(Function(library->index, space->functions[i]));
 	}
 }
@@ -226,14 +253,14 @@ void FindFunctions(Kernel* kernel, RuntimeLibrary* library, const character* nam
 {
 	RuntimeSpace* space = &library->spaces[0];
 	uint32 start = 0;
-	for (uint32 x = 0; x < nameLength; x++)
-		if (x == '.')
+	for(uint32 x = 0; x < nameLength; x++)
+		if(x == '.')
 		{
-			if (x == start) return;
+			if(x == start) return;
 			String spaceName = kernel->stringAgency->Add(name + start, x - start);
 			start = x + 1;
-			for (uint32 y = 0; y < space->children.Count(); y++)
-				if (spaceName.index == library->spaces[space->children[y]].name)
+			for(uint32 y = 0; y < space->children.Count(); y++)
+				if(spaceName.index == library->spaces[space->children[y]].name)
 				{
 					space = &library->spaces[space->children[y]];
 					goto label_next;
@@ -241,24 +268,24 @@ void FindFunctions(Kernel* kernel, RuntimeLibrary* library, const character* nam
 			return;
 		label_next:;
 		}
-	if (start == 0) for (uint32 i = 0; i < library->spaces.Count(); i++) FindFunctions(kernel, library, &library->spaces[i], name, nameLength, results, allowNoPublic);
-	else if (start < nameLength) FindFunctions(kernel, library, space, name + start, nameLength - start, results, allowNoPublic);
+	if(start == 0) for(uint32 i = 0; i < library->spaces.Count(); i++) FindFunctions(kernel, library, &library->spaces[i], name, nameLength, results, allowNoPublic);
+	else if(start < nameLength) FindFunctions(kernel, library, space, name + start, nameLength - start, results, allowNoPublic);
 }
 
 RainFunctions Kernel::FindFunctions(const RainString& name, bool allowNoPublic)
 {
 	List<Function, true> results(0);
-	for (uint32 x = 0; x < name.length; x++)
-		if (name.value[x] == '.')
+	for(uint32 x = 0; x < name.length; x++)
+		if(name.value[x] == '.')
 		{
 			String libraryName = stringAgency->Add(name.value, x);
-			if (libraryName.index == libraryAgency->kernelLibrary->spaces[0].name)
+			if(libraryName.index == libraryAgency->kernelLibrary->spaces[0].name)
 			{
 				::FindFunctions(this, libraryAgency->kernelLibrary, name.value + x + 1, name.length - x - 1, results, allowNoPublic);
 				goto label_return;
 			}
-			for (uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
-				if (libraryName.index == libraryAgency->libraries[y]->spaces[0].name)
+			for(uint32 y = 0; y < libraryAgency->libraries.Count(); y++)
+				if(libraryName.index == libraryAgency->libraries[y]->spaces[0].name)
 				{
 					::FindFunctions(this, libraryAgency->libraries[y], name.value + x + 1, name.length - x - 1, results, allowNoPublic);
 					break;
@@ -266,11 +293,11 @@ RainFunctions Kernel::FindFunctions(const RainString& name, bool allowNoPublic)
 			goto label_return;
 		}
 	::FindFunctions(this, libraryAgency->kernelLibrary, name.value, name.length, results, allowNoPublic);
-	for (uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
+	for(uint32 i = 0; i < libraryAgency->libraries.Count(); i++)
 		::FindFunctions(this, libraryAgency->libraries[i], name.value, name.length, results, allowNoPublic);
 label_return:
 	RainFunction* functions = Malloc<RainFunction>(results.Count());
-	for (uint32 i = 0; i < results.Count(); i++)
+	for(uint32 i = 0; i < results.Count(); i++)
 		new (functions + i)RainFunction(results[i].library, results[i].function, share);
 	return RainFunctions(functions, results.Count());
 }
@@ -278,7 +305,7 @@ label_return:
 RainFunctions Kernel::FindFunctions(const character* name, bool allowNoPublic)
 {
 	uint32 length = 0;
-	while (name[length]) length++;
+	while(name[length]) length++;
 	return FindFunctions(RainString(name, length), allowNoPublic);
 }
 
@@ -296,36 +323,13 @@ uint32 Kernel::GC(bool full)
 
 void Kernel::Update()
 {
-	if(debugger) debugger->OnUpdate();
+	libraryAgency->Update();
 	taskAgency->Update();
-}
-
-bool Kernel::AddBreakpoint(uint32 address)
-{
-	if(breakpoints.Contains(address)) return true;
-	if (address < libraryAgency->code.Count() && libraryAgency->code[address] == (uint8)Instruct::BREAK)
-	{
-		if (breakpoints.Add(address)) libraryAgency->code[address] = (uint8)Instruct::BREAKPOINT;
-		return true;
-	}
-	return false;
-}
-
-void Kernel::RemoveBreakpoint(uint32 address)
-{
-	if (breakpoints.Remove(address)) libraryAgency->code[address] = (uint8)Instruct::BREAK;
-}
-
-void Kernel::ClearBreakpoints()
-{
-	Set<uint32, true>::Iterator iterator = breakpoints.GetIterator();
-	while (iterator.Next()) libraryAgency->code[iterator.Current()] = (uint8)Instruct::BREAK;
-	breakpoints.Clear();
 }
 
 Kernel::~Kernel()
 {
-	for (Task* index = taskAgency->GetHeadTask(); index; index = index->next) index->exitMessage = stringAgency->Add(EXCEPTION_KERNEL_EXIT);
+	for(Task* index = taskAgency->GetHeadTask(); index; index = index->next) index->exitMessage = stringAgency->Add(EXCEPTION_KERNEL_EXIT);
 	taskAgency->Update();
 	share->kernel = NULL;
 	share->Release();
@@ -341,22 +345,22 @@ integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementN
 {
 	string name = kernel->stringAgency->Add(elementName, elementNameLength).index;
 	const RuntimeEnum* info = kernel->libraryAgency->GetEnum(type);
-	for (uint32 i = 0; i < info->values.Count(); i++)
-		if (info->values[i].name == name) return info->values[i].value;
+	for(uint32 i = 0; i < info->values.Count(); i++)
+		if(info->values[i].name == name) return info->values[i].value;
 	return 0;
 }
 
 string GetTypeName(Kernel* kernel, const Type& type)
 {
-	if (type.dimension)
+	if(type.dimension)
 	{
 		String result = kernel->stringAgency->Get(kernel->libraryAgency->GetRuntimeInfo(Type(type, 0))->name);
 		String dimension = kernel->stringAgency->Add(TEXT("[]"));
-		for (uint32 i = 0; i < type.dimension; i++)
+		for(uint32 i = 0; i < type.dimension; i++)
 			result = result + dimension;
 		return result.index;
 	}
-	else switch (type.code)
+	else switch(type.code)
 	{
 		case TypeCode::Invalid: return kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE).index;
 		case TypeCode::Struct:

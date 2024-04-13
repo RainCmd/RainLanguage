@@ -115,7 +115,8 @@ label_next_instruct:
 			if(exitMessage.IsEmpty()) instruct += 5;
 			else
 			{
-				if(kernel->debugger) kernel->debugger->OnException(instanceID, exitMessage.GetPointer(), exitMessage.GetLength());
+				pointer = POINTER;
+				kernel->libraryAgency->OnException(instanceID, exitMessage);
 				instruct += INSTRUCT_VALUE(uint32, 1);
 			}
 			goto label_next_instruct;
@@ -2580,16 +2581,15 @@ label_next_instruct:
 #pragma endregion Casting
 		case Instruct::BREAKPOINT: instruct++;
 		label_breakpoint:
-			if(kernel->debugger)
-			{
-				pointer = POINTER;
-				uint32 deep = 1;
-				for(Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) deep++;
-				kernel->debugger->OnBreak(instanceID, deep, instruct[-1] == (uint8)Instruct::BREAKPOINT);
-			}
-			goto label_next_instruct;
+		{
+			pointer = POINTER;
+			uint32 deep = 1;
+			for(Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) deep++;
+			kernel->libraryAgency->OnBreakpoint(instanceID, deep, pointer - 1);
+		}
+		goto label_next_instruct;
 		case Instruct::BREAK: instruct++;
-			if(kernel->debugger && kernel->debugger->GetStepType() != StepType::None) goto label_breakpoint;
+			if(kernel->libraryAgency->debuggerBreakCount) goto label_breakpoint;
 			goto label_next_instruct;
 		case Instruct::NoOperation: instruct++;
 			goto label_next_instruct;

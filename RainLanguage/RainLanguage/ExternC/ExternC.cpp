@@ -124,6 +124,11 @@ RainKernel* Extern_CreateKernel(StartupParameter parameter)
 	return CreateKernel(parameter);
 }
 
+RainKernel* Extern_CreateKernel2(StartupParameter parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
+{
+	return CreateKernel(parameter, loader, unloader);
+}
+
 void Extern_DeleteKernel(RainKernel* kernel)
 {
 	Delete(kernel);
@@ -889,7 +894,7 @@ void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database)
 
 void Extern_RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader)
 {
-	RegistDebugger(kernel, loader, unloader);
+	RegistDebugger(RainDebuggerParameter(kernel, loader, unloader));
 }
 
 void Extern_SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc rainRealloc)
