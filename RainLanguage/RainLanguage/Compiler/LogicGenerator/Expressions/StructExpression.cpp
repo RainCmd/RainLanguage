@@ -84,8 +84,8 @@ void VectorMemberExpression::Generator(LogicGenerateParameter& parameter)
 	else
 	{
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
-		parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
-		parameter.generator->WriteCode(targetParameter.results[0]);
+		parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
+		parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 		uint32 flag = 0;
 		for (uint32 i = 0; i < indices.Count(); i++)
 		{
@@ -103,8 +103,8 @@ void VectorMemberExpression::GeneratorAssignment(LogicGenerateParameter& paramet
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
-		parameter.generator->WriteCode(targetParameter.results[0]);
-		parameter.generator->WriteCode(parameter.results[0]);
+		parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Write);
+		parameter.generator->WriteCode(parameter.results[0], VariableAccessType::Read);
 		uint32 flag = 0;
 		for (uint32 i = 0; i < indices.Count(); i++)
 		{
@@ -119,8 +119,8 @@ void VectorMemberExpression::GeneratorAssignment(LogicGenerateParameter& paramet
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
-		parameter.generator->WriteCode(LogicVariable(targetParameter.results[0], returns[0], indices[0] * SIZE(real)));
-		parameter.generator->WriteCode(parameter.results[0]);
+		parameter.generator->WriteCode(LogicVariable(targetParameter.results[0], returns[0], indices[0] * SIZE(real)), VariableAccessType::Write);
+		parameter.generator->WriteCode(parameter.results[0], VariableAccessType::Read);
 		if (IsReferenceMember()) target->GeneratorAssignment(targetParameter);
 	}
 }
@@ -150,15 +150,15 @@ void VectorConstructorExpression::Generator(LogicGenerateParameter& parameter)
 		if (parameters->returns[i] == TYPE_Real)
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
-			parameter.generator->WriteCode(LogicVariable(result, TYPE_Real, memberIndex * SIZE(real)));
-			parameter.generator->WriteCode(parametersParameter.results[i]);
+			parameter.generator->WriteCode(LogicVariable(result, TYPE_Real, memberIndex * SIZE(real)), VariableAccessType::Write);
+			parameter.generator->WriteCode(parametersParameter.results[i], VariableAccessType::Read);
 			memberIndex++;
 		}
 		else
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Vector);
-			parameter.generator->WriteCode(result);
-			parameter.generator->WriteCode(parametersParameter.results[i]);
+			parameter.generator->WriteCode(result, VariableAccessType::Write);
+			parameter.generator->WriteCode(parametersParameter.results[i], VariableAccessType::Read);
 			if (parameters->returns[i] == TYPE_Real2)
 			{
 				parameter.generator->WriteCode(VECTOR_FLAG(memberIndex, 0) | (VECTOR_FLAG(memberIndex + 1, 1) << 5));

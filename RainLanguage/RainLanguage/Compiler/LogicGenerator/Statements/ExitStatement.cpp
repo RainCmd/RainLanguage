@@ -9,7 +9,7 @@ void ExitStatement::Generator(StatementGeneratorParameter& parameter)
 	LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 	expression->Generator(logicParameter);
 	parameter.generator->WriteCode(Instruct::BASE_Exit);
-	parameter.generator->WriteCode(logicParameter.results[0]);
+	parameter.generator->WriteCode(logicParameter.results[0], VariableAccessType::Read);
 	block.Finish();
 	parameter.generator->WriteCode(Instruct::BASE_ExitJump);
 	parameter.generator->WriteCode(parameter.finallyAddress);

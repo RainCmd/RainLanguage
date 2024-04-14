@@ -17,7 +17,13 @@ struct GeneratorStringAddresses
 	List<uint32, true>addresses;
 	inline GeneratorStringAddresses(const String& value) :value(value), addresses(1) {}
 };
-
+enum class VariableAccessType
+{
+	None,
+	Read,
+	Write,
+	ReadWrite
+};
 struct Generator
 {
 private:
@@ -36,15 +42,15 @@ public:
 	}
 	inline uint32 GetPointer()
 	{
-		if (insertAddress == INVALID)return code.Count();
+		if(insertAddress == INVALID)return code.Count();
 		else return insertAddress + insert.Count();
 	}
 	inline uint32 AddCodeReference(uint32 address)
 	{
-		if (insertAddress == INVALID)
+		if(insertAddress == INVALID)
 		{
-			for (uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
-				if (codeReferenceAddresses[i] == address)
+			for(uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
+				if(codeReferenceAddresses[i] == address)
 					return i;
 			codeReferenceAddresses.Add(address);
 			return codeReferenceAddresses.Count() - 1;
@@ -52,8 +58,8 @@ public:
 		else
 		{
 			Set<uint32, true>::Iterator iterator = insertCodeReferenceAddresses.GetIterator();
-			while (iterator.Next())
-				if (codeReferenceAddresses[iterator.Current()] == address)
+			while(iterator.Next())
+				if(codeReferenceAddresses[iterator.Current()] == address)
 					return iterator.Current();
 			uint32 index = codeReferenceAddresses.Count();
 			insertCodeReferenceAddresses.Add(index);
@@ -74,7 +80,7 @@ public:
 	template<typename T>
 	uint32 WriteCode(const T& value)
 	{
-		if (insertAddress == INVALID)
+		if(insertAddress == INVALID)
 		{
 			uint32 address = code.Count();
 			code.SetCount(address + SIZE(T));
@@ -97,11 +103,11 @@ public:
 	template<typename T>
 	void WriteCode(CodeValueReference<T>* reference)
 	{
-		if (reference->assigned)WriteCode(reference->value);
+		if(reference->assigned)WriteCode(reference->value);
 		else
 		{
 			reference->references.Add(AddCodeReference(GetPointer()));
-			if (insertAddress == INVALID)code.SetCount(code.Count() + SIZE(T));
+			if(insertAddress == INVALID)code.SetCount(code.Count() + SIZE(T));
 			else insert.SetCount(insert.Count() + SIZE(T));
 		}
 	}
@@ -112,7 +118,7 @@ public:
 		ASSERT_DEBUG(!reference->assigned, "对引用地址重复赋值");
 		reference->assigned = true;
 		reference->value = value;
-		for (uint32 i = 0; i < reference->references.Count(); i++)
+		for(uint32 i = 0; i < reference->references.Count(); i++)
 			WriteCode(reference->references[i], value);
 	}
 	inline void WriteCode(CodeLocalAddressReference* reference) { reference->AddReference(this, instructAddress); }
@@ -121,28 +127,28 @@ public:
 	inline void WriteCodeGlobalReference(const CompilingDeclaration& declaration, uint32 address) { globalReference->AddReference(declaration, address); }
 	inline void WriteCodeGlobalReference(const Declaration& declaration, uint32 address)
 	{
-		switch (declaration.code)
+		switch(declaration.code)
 		{
-		case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
-		case TypeCode::Struct:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Struct, declaration.index, NULL), address);
-			break;
-		case TypeCode::Enum:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Enum, declaration.index, NULL), address);
-			break;
-		case TypeCode::Handle:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.index, NULL), address);
-			break;
-		case TypeCode::Interface:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Interface, declaration.index, NULL), address);
-			break;
-		case TypeCode::Delegate:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Delegate, declaration.index, NULL), address);
-			break;
-		case TypeCode::Task:
-			globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Task, declaration.index, NULL), address);
-			break;
-		default: EXCEPTION("无效的TypeCode");
+			case TypeCode::Invalid: EXCEPTION("无效的TypeCode");
+			case TypeCode::Struct:
+				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Struct, declaration.index, NULL), address);
+				break;
+			case TypeCode::Enum:
+				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Enum, declaration.index, NULL), address);
+				break;
+			case TypeCode::Handle:
+				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Class, declaration.index, NULL), address);
+				break;
+			case TypeCode::Interface:
+				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Interface, declaration.index, NULL), address);
+				break;
+			case TypeCode::Delegate:
+				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Delegate, declaration.index, NULL), address);
+				break;
+			case TypeCode::Task:
+				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Task, declaration.index, NULL), address);
+				break;
+			default: EXCEPTION("无效的TypeCode");
 		}
 	}
 	inline void WriteCodeGlobalReference(const Declaration& declaration)
@@ -158,10 +164,26 @@ public:
 	inline void WriteCodeGlobalAddressReference(const CompilingDeclaration& declaration) { globalReference->AddAddressReference(declaration); }
 	inline void WriteCodeGlobalVariableReference(const CompilingDeclaration& declaration, uint32 offset) { globalReference->AddVariableReference(declaration, offset); }
 	inline void WriteCodeEnumElementReference(const CompilingDeclaration& declaration) { globalReference->AddEnumElementReference(declaration); }
-	inline void WriteCode(const LogicVariable& variable)
+	inline void WriteCode(const LogicVariable& variable, VariableAccessType accessType)
 	{
-		if (variable.declaration.category == DeclarationCategory::LocalVariable) WriteCode(variable.reference, variable.offset);
-		else if (variable.declaration.category == DeclarationCategory::Variable) WriteCodeGlobalVariableReference(variable.declaration, variable.offset);
+		switch(accessType)
+		{
+			case VariableAccessType::None: break;
+			case VariableAccessType::Read:
+				variable.reference->OnRead();
+				break;
+			case VariableAccessType::Write:
+				variable.reference->OnWrite();
+				break;
+			case VariableAccessType::ReadWrite:
+				variable.reference->OnRead();
+				variable.reference->OnWrite();
+				break;
+			default:
+				break;
+		}
+		if(variable.declaration.category == DeclarationCategory::LocalVariable) WriteCode(variable.reference, variable.offset);
+		else if(variable.declaration.category == DeclarationCategory::Variable) WriteCodeGlobalVariableReference(variable.declaration, variable.offset);
 		else EXCEPTION("无效的变量");
 	}
 	void BeginInsert(uint32 address);

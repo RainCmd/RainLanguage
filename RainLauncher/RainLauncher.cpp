@@ -135,6 +135,7 @@ int main(int cnt, char** _args)
 {
 	wcout.imbue(locale("zh_CN.UTF-8"));
 	Args args = Parse(cnt, _args);
+
 	name = args.name;
 	CodeLoadHelper helper(args.path);
 	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, (ErrorLevel)args.errorLevel);

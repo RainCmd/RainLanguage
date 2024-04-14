@@ -26,7 +26,7 @@ void ReturnStatement::Generator(StatementGeneratorParameter& parameter)
 				uint8 aglignment;
 				parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Bitwise);
 				parameter.generator->WriteCode(returnPoint);
-				parameter.generator->WriteCode(variable);
+				parameter.generator->WriteCode(variable, VariableAccessType::Read);
 				parameter.generator->WriteCode(parameter.manager->GetStackSize(variable.type, aglignment));
 				continue;
 			}
@@ -34,12 +34,12 @@ void ReturnStatement::Generator(StatementGeneratorParameter& parameter)
 			{
 				parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Struct);
 				parameter.generator->WriteCode(returnPoint);
-				parameter.generator->WriteCode(variable);
+				parameter.generator->WriteCode(variable, VariableAccessType::Read);
 				parameter.generator->WriteCodeGlobalReference((Declaration)variable.type);
 				continue;
 			}
 			parameter.generator->WriteCode(returnPoint);
-			parameter.generator->WriteCode(variable);
+			parameter.generator->WriteCode(variable, VariableAccessType::Read);
 		}
 		block.Finish();
 	}

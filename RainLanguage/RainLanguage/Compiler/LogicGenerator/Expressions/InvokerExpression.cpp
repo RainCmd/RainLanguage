@@ -13,7 +13,7 @@ void GeneratePushReturnPoint(LogicGenerateParameter& parameter, TupleInfo& retur
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushReturnPoint);
 		parameter.generator->WriteCode(point);
-		parameter.generator->WriteCode(parameter.GetResult(i, returns.GetType(i)));
+		parameter.generator->WriteCode(parameter.GetResult(i, returns.GetType(i)), VariableAccessType::Write);
 	}
 }
 
@@ -23,50 +23,50 @@ void GenerateInvokerParameter(LogicGenerateParameter& parameter, uint32 paramete
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_Handle);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 	}
 	else if (type == TYPE_Bool || type == TYPE_Byte)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_1);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 	}
 	else if (type == TYPE_Char)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_2);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 	}
 	else if (type == TYPE_Integer || type == TYPE_Real)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_8);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 	}
 	else if (type == TYPE_String)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_String);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 	}
 	else if (type == TYPE_Entity)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_Entity);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 	}
 	else if (parameter.manager->IsBitwise(type))
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_Bitwise);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 		parameter.generator->WriteCode(parameter.manager->GetLibrary(type.library)->structs[type.index]->size);
 	}
 	else
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_PushParameter_Struct);
 		parameter.generator->WriteCode(parameterPoint);
-		parameter.generator->WriteCode(variable);
+		parameter.generator->WriteCode(variable, VariableAccessType::Read);
 		parameter.generator->WriteCodeGlobalReference((Declaration)type);
 	}
 }
@@ -95,13 +95,13 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 	{
 		CodeLocalAddressReference invokAddress = CodeLocalAddressReference();
 		parameter.generator->WriteCode(Instruct::BASE_NullJump);
-		parameter.generator->WriteCode(invokerParameter.results[0]);
+		parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(&clearResultsAddress);
 	}
 	else
 	{
 		parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-		parameter.generator->WriteCode(invokerParameter.results[0]);
+		parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
@@ -113,13 +113,13 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	GeneratePushReturnPoint(parameter, abstractDelegate->returns);
 	parameter.generator->WriteCode(Instruct::FUNCTION_CustomCallPretreater);
-	parameter.generator->WriteCode(invokerParameter.results[0]);
+	parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(parameterPoint);
 	parameter.generator->WriteCode(abstractDelegate->parameters.size);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	GenerateInvokerParameters(parametersParameter, parameterPoint, abstractDelegate->parameters);
 	parameter.generator->WriteCode(Instruct::FUNCTION_CustomCall);
-	parameter.generator->WriteCode(invokerParameter.results[0]);
+	parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&returnAddress);
@@ -182,13 +182,13 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 		if (question)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_NullJump);
-			parameter.generator->WriteCode(targetParameter.results[0]);
+			parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(&clearResultsAddress);
 		}
 		else
 		{
 			parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-			parameter.generator->WriteCode(targetParameter.results[0]);
+			parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
@@ -236,13 +236,13 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	if (question)
 	{
 		parameter.generator->WriteCode(Instruct::BASE_NullJump);
-		parameter.generator->WriteCode(targetParameter.results[0]);
+		parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(&clearResultsAddress);
 	}
 	else
 	{
 		parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-		parameter.generator->WriteCode(targetParameter.results[0]);
+		parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
@@ -255,7 +255,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	GeneratePushReturnPoint(parameter, abstractFunction->returns);
 	GenerateInvokerParameters(parametersParameter, parameterPoint, targetParameter.results[0], abstractFunction->parameters);
 	parameter.generator->WriteCode(Instruct::FUNCTION_VirtualCall);
-	parameter.generator->WriteCode(targetParameter.results[0]);
+	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
@@ -274,7 +274,7 @@ InvokerVirtualMemberExpression::~InvokerVirtualMemberExpression()
 void InvokerConstructorExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());

@@ -29,7 +29,7 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
 	for (uint32 i = 0; i < statements.Count(); i++) statements[i]->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator), MEMORY_ALIGNMENT_MAX));
+	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator, localContext->GetLocalAnchors()), MEMORY_ALIGNMENT_MAX));
 	uint32 holdSize = variableGenerator.GetHoldMemory() - localPoint;
 	if (holdSize)
 	{
@@ -45,6 +45,7 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 
 LambdaGenerator::~LambdaGenerator()
 {
+	delete localContext;
 	for (uint32 i = 0; i < statements.Count(); i++) delete statements[i];
 	statements.Clear();
 }

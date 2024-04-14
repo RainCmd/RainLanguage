@@ -12,7 +12,7 @@ void JumpStatement::Generator(StatementGeneratorParameter& parameter)
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 		condition->Generator(logicParameter);
 		parameter.generator->WriteCode(Instruct::BASE_Flag);
-		parameter.generator->WriteCode(logicParameter.results[0]);
+		parameter.generator->WriteCode(logicParameter.results[0], VariableAccessType::Read);
 		block.Finish();
 		parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 	}

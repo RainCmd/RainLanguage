@@ -95,7 +95,7 @@ async function pickPID(injector: string) {
 
 async function GetDetectorPort(injector: string, pid: number, detectorPath: string, detectorName: string, projectPath: string, projectName: string) {
     return new Promise<number>((resolve, reject) => {
-        const cmd = `${injector} ${pid} ${detectorPath} ${detectorName} ${projectPath} ${projectName}`
+        const cmd = `"${injector}" ${pid} "${detectorPath}" "${detectorName}" "${projectPath}" "${projectName}"`
         cp.exec(cmd, { encoding: "buffer" }, (error, stdout, stderr) => {
             const result = iconv.decode(stdout, "cp936").trim();
             const port = parseInt(result, 10);
@@ -266,18 +266,9 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                 outputChannel.append(data.toString())
             });
         } else {
+            const injector = `${configuration.detectorPath}/RainDebuggerInjector.exe`
             switch (configuration.type) {
                 case "雨言调试运行": {
-                    const launchParams = await GetLaunchParam(configuration)
-                    launchParams.push("-debug")
-                    currentOutputChannel = GetOutputChannel(configuration.projectName + "[调试]");
-
-                    debuggedProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
-                        vscode.window.showErrorMessage(error.message)
-                    })
-                    debuggedProcess.stdout.addListener('data', ListenCPReadyDebug)
-                    debuggedProcess.addListener('exit', ListenCPExit)
-
                     if (intervalId != null) {
                         clearInterval(intervalId)
                     }
@@ -292,6 +283,17 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                         compileTime++
                         statusBarItem.text = `${configuration.projectName} 编译中，已用时${compileTime}s`
                     }, 1000);
+                    
+                    const launchParams = await GetLaunchParam(configuration)
+                    launchParams.push("-debug")
+                    currentOutputChannel = GetOutputChannel(configuration.projectName + "[调试]");
+
+                    debuggedProcess = cp.execFile(launchParams[0], launchParams.slice(1)).on('error', error => {
+                        vscode.window.showErrorMessage(error.message)
+                    })
+                    debuggedProcess.stdout.addListener('data', ListenCPReadyDebug)
+                    debuggedProcess.addListener('exit', ListenCPExit)
+
                     await new Promise((resolve, reject) => {
                         rainCompileResolve = resolve;
                         rainCompileReject = reject;
@@ -302,7 +304,6 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                     statusBarItem = null
 
                     if (debuggedProcess.pid) {
-                        const injector = configuration.detectorPath + "/RainDebuggerInjector.exe"
                         const port = await GetDetectorPort(injector, debuggedProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                         if (port > 0) {
                             client = await Connect(port);
@@ -319,7 +320,6 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                 case "雨言附加到进程": {
                     currentOutputChannel = GetOutputChannel(configuration.projectName + `[附加到进程]`);
 
-                    const injector = configuration.detectorPath + "/RainDebuggerInjector.exe"
                     const pid = await pickPID(injector)
                     const port = await GetDetectorPort(injector, pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                     client = await Connect(port)

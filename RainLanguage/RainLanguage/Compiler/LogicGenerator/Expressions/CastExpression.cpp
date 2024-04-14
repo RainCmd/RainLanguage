@@ -69,8 +69,8 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	expression->Generator(targetParameter);
 	parameter.generator->WriteCode(Instruct::CASTING_IS);
-	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Bool));
-	parameter.generator->WriteCode(targetParameter.results[0]);
+	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Bool), VariableAccessType::Write);
+	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(targetType);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	if (local)
@@ -87,14 +87,14 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 		if (IsHandleType(targetType))
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Handle);
-			parameter.generator->WriteCode(localParameter.results[0]);
-			parameter.generator->WriteCode(targetParameter.results[0]);
+			parameter.generator->WriteCode(localParameter.results[0], VariableAccessType::Write);
+			parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 		}
 		else
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Unbox);
-			parameter.generator->WriteCode(localParameter.results[0]);
-			parameter.generator->WriteCode(targetParameter.results[0]);
+			parameter.generator->WriteCode(localParameter.results[0], VariableAccessType::Write);
+			parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCodeGlobalReference(targetType);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
@@ -112,8 +112,8 @@ void AsCastExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	expression->Generator(targetParameter);
 	parameter.generator->WriteCode(Instruct::CASTING_AS);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
-	parameter.generator->WriteCode(targetParameter.results[0]);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
+	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(returns[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }
@@ -128,8 +128,8 @@ void HandleCastExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	expression->Generator(targetParameter);
 	parameter.generator->WriteCode(Instruct::CASTING);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
-	parameter.generator->WriteCode(targetParameter.results[0]);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
+	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(returns[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }
@@ -173,8 +173,8 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 		{
 			ASSERT_DEBUG(source->returns[i] == TYPE_Byte, "未知的转换类型");
 			parameter.generator->WriteCode(Instruct::CASTING_B2C);
-			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-			parameter.generator->WriteCode(sourceParameter.results[i]);
+			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 		}
 		else if (returns[i] == TYPE_Integer)
 		{
@@ -182,16 +182,16 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			else if (source->returns[i] == TYPE_Char) parameter.generator->WriteCode(Instruct::CASTING_C2I);
 			else if (!source->returns[i].dimension && source->returns[i].code == TypeCode::Enum) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
 			else EXCEPTION("未知的转换类型");
-			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-			parameter.generator->WriteCode(sourceParameter.results[i]);
+			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 		}
 		else if (returns[i] == TYPE_Real)
 		{
 			if (source->returns[i] == TYPE_Integer)
 			{
 				parameter.generator->WriteCode(Instruct::CASTING_I2R);
-				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-				parameter.generator->WriteCode(sourceParameter.results[i]);
+				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 			}
 			else
 			{
@@ -199,19 +199,19 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 				if (source->returns[i] == TYPE_Byte) parameter.generator->WriteCode(Instruct::CASTING_B2I);
 				else if (source->returns[i] == TYPE_Char) parameter.generator->WriteCode(Instruct::CASTING_C2I);
 				else EXCEPTION("未知的转换类型");
-				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-				parameter.generator->WriteCode(temporary);
+				parameter.generator->WriteCode(temporary, VariableAccessType::Write);
+				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(Instruct::CASTING_I2R);
-				parameter.generator->WriteCode(temporary);
-				parameter.generator->WriteCode(sourceParameter.results[i]);
+				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+				parameter.generator->WriteCode(temporary, VariableAccessType::Read);
 			}
 		}
 		else if (returns[i] == TYPE_Real2)
 		{
 			ASSERT_DEBUG(source->returns[i] == TYPE_Real3 || source->returns[i] == TYPE_Real4, "未知的转换类型");
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
-			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-			parameter.generator->WriteCode(sourceParameter.results[i]);
+			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 			parameter.generator->WriteCode(SIZE(Real2));
 		}
 		else if (returns[i] == TYPE_Real3)
@@ -219,18 +219,18 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			if (source->returns[i] == TYPE_Real2)
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
-				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-				parameter.generator->WriteCode(sourceParameter.results[i]);
+				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(SIZE(Real2));
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_8);
-				parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real3, z)));
+				parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real3, z)), VariableAccessType::Write);
 				parameter.generator->WriteCode((real)0);
 			}
 			else if (source->returns[i] == TYPE_Real4)
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
-				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-				parameter.generator->WriteCode(sourceParameter.results[i]);
+				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(SIZE(Real3));
 			}
 			else EXCEPTION("未知的转换类型");
@@ -240,31 +240,31 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			if (source->returns[i] == TYPE_Real2)
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
-				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-				parameter.generator->WriteCode(sourceParameter.results[i]);
+				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(SIZE(Real2));
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_8);
-				parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real4, z)));
+				parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real4, z)), VariableAccessType::Write);
 				parameter.generator->WriteCode((real)0);
 			}
 			else if (source->returns[i] == TYPE_Real3)
 			{
 				parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
-				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-				parameter.generator->WriteCode(sourceParameter.results[i]);
+				parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(SIZE(Real3));
 			}
 			else EXCEPTION("未知的转换类型");
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_8);
-			parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real4, w)));
+			parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real4, w)), VariableAccessType::Write);
 			parameter.generator->WriteCode((real)0);
 		}
 		else if (parameter.manager->IsInherit(returns[i], source->returns[i])) parameter.results[i] = sourceParameter.results[i];
 		else if (returns[i] == TYPE_Handle)
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Box);
-			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]));
-			parameter.generator->WriteCode(sourceParameter.results[i]);
+			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
+			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 			parameter.generator->WriteCodeGlobalReference(source->returns[i]);
 		}
 		else EXCEPTION("未知的转换类型");
@@ -280,8 +280,8 @@ void UnboxExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter sourcetParameter = LogicGenerateParameter(parameter, 1);
 	expression->Generator(sourcetParameter);
 	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Unbox);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
-	parameter.generator->WriteCode(sourcetParameter.results[0]);
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
+	parameter.generator->WriteCode(sourcetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(returns[0]);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }

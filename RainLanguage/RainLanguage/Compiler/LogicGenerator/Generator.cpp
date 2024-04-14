@@ -6,7 +6,7 @@
 void Generator::WriteCode(const String& value)
 {
 	GeneratorStringAddresses* addresses;
-	if (!codeStrings.TryGet(value, addresses))
+	if(!codeStrings.TryGet(value, addresses))
 	{
 		addresses = new GeneratorStringAddresses(value);
 		codeStrings.Set(value, addresses);
@@ -23,8 +23,8 @@ void Generator::BeginInsert(uint32 address)
 void Generator::EndInsert()
 {
 	ASSERT_DEBUG(insertAddress != INVALID, "²»ÔÚ²åÈë×´Ì¬");
-	for (uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
-		if (insertAddress <= codeReferenceAddresses[i] && !insertCodeReferenceAddresses.Contains(i))
+	for(uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
+		if(insertAddress <= codeReferenceAddresses[i] && !insertCodeReferenceAddresses.Contains(i))
 			codeReferenceAddresses[i] += insert.Count();
 	code.Insert(insertAddress, insert.GetPointer(), insert.Count());
 	insert.Clear();
@@ -35,7 +35,7 @@ void Generator::EndInsert()
 void Generator::WriteDataString(String& value, uint32 address)
 {
 	GeneratorStringAddresses* addresses;
-	if (!dataStrings.TryGet(value, addresses))
+	if(!dataStrings.TryGet(value, addresses))
 	{
 		addresses = new GeneratorStringAddresses(value);
 		dataStrings.Set(value, addresses);
@@ -47,27 +47,33 @@ void Generator::WriteDataString(String& value, uint32 address)
 void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
 	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
+	parameter.localContext = new LocalContext(parameter.manager->messages);
 	FunctionGenerator(parameter).Generator(parameter);
+	delete parameter.localContext; parameter.localContext = NULL;
 	codeStartReference = codeReferenceAddresses.Count();
-	for (uint32 i = 0; i < parameter.manager->compilingLibrary.classes.Count(); i++)
+	for(uint32 i = 0; i < parameter.manager->compilingLibrary.classes.Count(); i++)
 	{
 		CompilingClass* compiling = parameter.manager->compilingLibrary.classes[i];
-		if (compiling->destructor.Count())
+		if(compiling->destructor.Count())
 		{
 			compiling->destructorEntry = GetPointer();
+			parameter.localContext = new LocalContext(parameter.manager->messages);
 			FunctionGenerator(compiling->declaration, parameter).Generator(parameter);
+			delete parameter.localContext; parameter.localContext = NULL;
 			codeStartReference = codeReferenceAddresses.Count();
 		}
 	}
-	for (uint32 i = 0; i < functionCount; i++)
+	for(uint32 i = 0; i < functionCount; i++)
 	{
 		CompilingFunction* compiling = parameter.manager->compilingLibrary.functions[i];
 		parameter.databaseGenerator->AddFunction(compiling->name.source);
 		compiling->entry = GetPointer();
+		parameter.localContext = new LocalContext(parameter.manager->messages);
 		FunctionGenerator(compiling, parameter).Generator(parameter);
+		delete parameter.localContext; parameter.localContext = NULL;
 		codeStartReference = codeReferenceAddresses.Count();
 	}
-	for (uint32 i = 0; i < parameter.manager->lambdaGenerators.Count(); i++)
+	for(uint32 i = 0; i < parameter.manager->lambdaGenerators.Count(); i++)
 	{
 		parameter.databaseGenerator->AddFunction(parameter.manager->lambdaGenerators[i]->anchor.source);
 		parameter.manager->compilingLibrary.functions[functionCount + i]->entry = GetPointer();
@@ -80,9 +86,9 @@ Generator::~Generator()
 {
 	delete globalReference;
 	Dictionary<String, GeneratorStringAddresses*>::Iterator codeStringIterator = codeStrings.GetIterator();
-	while (codeStringIterator.Next()) delete codeStringIterator.CurrentValue();
+	while(codeStringIterator.Next()) delete codeStringIterator.CurrentValue();
 	codeStrings.Clear();
 	Dictionary<String, GeneratorStringAddresses*>::Iterator dataStringIterator = dataStrings.GetIterator();
-	while (dataStringIterator.Next()) delete dataStringIterator.CurrentValue();
+	while(dataStringIterator.Next()) delete dataStringIterator.CurrentValue();
 	dataStrings.Clear();
 }

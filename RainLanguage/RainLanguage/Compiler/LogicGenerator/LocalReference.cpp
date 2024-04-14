@@ -50,6 +50,6 @@ void CodeLocalVariableReference::SetAddress(Generator* generator, uint32 target)
 
 void CodeLocalVariableReference::AddReference(Generator* generator, uint32 offset)
 {
-	if (assigned)generator->WriteCode(LOCAL(address + offset));
-	else new (references.Add())VariableReference(generator->AddCodeReference(generator->WriteCode((uint32)NULL)), offset);
+	if (assigned) generator->WriteCode(LOCAL(address + offset));
+	else new (references.Add()) VariableReference(generator->AddCodeReference(generator->WriteCode((uint32)NULL)), offset);
 }

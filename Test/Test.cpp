@@ -206,7 +206,7 @@ void TestFunc()
 
 	TestCodeLoader loader(L".\\RainScripts\\");
 	//TestCodeLoader loader(L"E:\\Projects\\Unity\\RLDemo\\Assets\\Scripts\\Logic\\RainScripts\\");
-	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, nullptr, ErrorLevel::WarringLevel4);
+	BuildParameter parameter(RainString::Create(L"TestLib"), false, &loader, OnLibraryLoader, nullptr, ErrorLevel::LoggerLevel3);
 	RainProduct* product = Build(parameter);
 	for(uint32 i = 0; i <= 8; i++)
 	{

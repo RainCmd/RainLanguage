@@ -18,7 +18,7 @@ struct LogicVariable
 	inline LogicVariable(const CompilingDeclaration& declaration, const Type& type, uint32 offset) : declaration(declaration), reference(NULL), address(INVALID), type(type), offset(offset) {}
 	inline LogicVariable(const LogicVariable& variable, const Type& type, uint32 offset) : declaration(variable.declaration), reference(variable.reference), address(variable.address), type(type), offset(variable.offset + offset) {}
 	void ClearVariable(DeclarationManager* manager, Generator* generator) const;
-	inline bool IsInvalid() { return declaration.category == DeclarationCategory::Invalid; }
+	inline bool IsInvalid() const { return declaration.category == DeclarationCategory::Invalid; }
 	inline bool operator ==(const LogicVariable& other)const
 	{
 		return declaration == other.declaration && reference == other.reference && address == other.address && type == other.type && offset == other.offset;

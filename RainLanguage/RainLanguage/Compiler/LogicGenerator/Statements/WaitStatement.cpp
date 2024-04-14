@@ -14,7 +14,7 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 			uint32 address = parameter.generator->GetPointer();
 			expression->Generator(logicParamter);
 			parameter.generator->WriteCode(Instruct::BASE_Flag);
-			parameter.generator->WriteCode(logicParamter.results[0]);
+			parameter.generator->WriteCode(logicParamter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 			parameter.generator->WriteCode(address - parameter.generator->GetPointer());
 		}
@@ -22,13 +22,13 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 		{
 			expression->Generator(logicParamter);
 			parameter.generator->WriteCode(Instruct::BASE_WaitFrame);
-			parameter.generator->WriteCode(logicParamter.results[0]);
+			parameter.generator->WriteCode(logicParamter.results[0], VariableAccessType::Read);
 		}
 		else
 		{
 			expression->Generator(logicParamter);
 			parameter.generator->WriteCode(Instruct::BASE_WaitTask);
-			parameter.generator->WriteCode(logicParamter.results[0]);
+			parameter.generator->WriteCode(logicParamter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		block.Finish();

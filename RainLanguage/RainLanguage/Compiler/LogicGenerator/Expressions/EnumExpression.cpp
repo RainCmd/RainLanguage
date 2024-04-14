@@ -3,7 +3,7 @@
 void EnumElementExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_8);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	if (element.library == LIBRARY_SELF)
 	{
 		CompilingEnum::Element* compiling = parameter.manager->compilingLibrary.enums[element.definition]->elements[element.index];

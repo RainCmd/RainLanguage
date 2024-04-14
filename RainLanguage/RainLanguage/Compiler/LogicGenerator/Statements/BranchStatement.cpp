@@ -11,7 +11,7 @@ void BranchStatement::Generator(StatementGeneratorParameter& parameter)
 	LogicGenerateParameter conditionParameter = LogicGenerateParameter(parameter, 1);
 	condition->Generator(conditionParameter);
 	parameter.generator->WriteCode(Instruct::BASE_Flag);
-	parameter.generator->WriteCode(conditionParameter.results[0]);
+	parameter.generator->WriteCode(conditionParameter.results[0], VariableAccessType::Read);
 	block.Finish();
 
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();

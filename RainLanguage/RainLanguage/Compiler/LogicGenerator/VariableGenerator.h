@@ -2,6 +2,7 @@
 #include "../../Collections/List.h"
 #include "../../Collections/Dictionary.h"
 #include "../../Type.h"
+#include "../Anchor.h"
 #include "LogicVariable.h"
 
 struct Generator;
@@ -31,6 +32,6 @@ public:
 	LogicVariable DecareTemporary(DeclarationManager* manager, const Type& type);
 	void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address, CodeLocalAddressReference* finallyAddress);
 	inline uint32 GetHoldMemory() { return localAddress; }
-	uint32 Generate(DeclarationManager* manager, Generator* generator);
+	uint32 Generate(DeclarationManager* manager, Generator* generator, const Dictionary<uint32, Anchor>* localAnchors);
 	~VariableGenerator();
 };

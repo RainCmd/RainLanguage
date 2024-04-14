@@ -6,7 +6,7 @@ void LogicAndExpression::Generator(LogicGenerateParameter& parameter)
 	CodeLocalAddressReference rightAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::BASE_Flag);
-	parameter.generator->WriteCode(parameter.GetResult(0,TYPE_Bool));
+	parameter.generator->WriteCode(parameter.GetResult(0,TYPE_Bool), VariableAccessType::Read);
 	parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 	parameter.generator->WriteCode(&rightAddress);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
@@ -27,7 +27,7 @@ void LogicOrExpression::Generator(LogicGenerateParameter& parameter)
 	left->Generator(parameter);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::BASE_Flag);
-	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Bool));
+	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Bool), VariableAccessType::Read);
 	parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 	parameter.generator->WriteCode(&endAddress);
 	right->Generator(parameter);

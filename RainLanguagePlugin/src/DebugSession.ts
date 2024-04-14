@@ -401,7 +401,7 @@ export class RainDebugSession extends LoggingDebugSession {
 		this.sendResponse(response)
 	}
 
-	private ReadVariableMembers(src: VariableNode, variables: Variable[], reader: client.Reader) {
+	private ReadVariableMembers(src: VariableNode, variables: DebugProtocol.Variable[], reader: client.Reader) {
 		let count = reader.ReadInt()
 		src.members = []
 		while (count-- > 0) {
@@ -411,12 +411,13 @@ export class RainDebugSession extends LoggingDebugSession {
 			src.members.push(node)
 			variables.push({
 				name: node.name,
+				value: node.value,
 				variablesReference: node.id,
-				value: node.value
+				type: node.type
 			})
 		}
 	}
-	private ReadSpaceVariables(space: SpaceNode, variables: Variable[], reader: client.Reader) {
+	private ReadSpaceVariables(space: SpaceNode, variables: DebugProtocol.Variable[], reader: client.Reader) {
 		space.variables = []
 		let count = reader.ReadInt()
 		while (count-- > 0) {
@@ -425,13 +426,14 @@ export class RainDebugSession extends LoggingDebugSession {
 			space.variables.push(node)
 			variables.push({
 				name: node.name,
+				value: node.value,
 				variablesReference: node.id,
-				value: node.value
+				type: node.type
 			})
 		}
 	}
 	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): void {
-		const variables: Variable[] = []
+		const variables: DebugProtocol.Variable[] = []
 		const space = this.spaceMap.get(args.variablesReference)
 		if (space) {
 			const trace = this.traceMap.get(space.frameId)

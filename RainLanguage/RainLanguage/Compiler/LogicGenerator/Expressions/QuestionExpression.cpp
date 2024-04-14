@@ -9,7 +9,7 @@ void QuestionExpression::Generator(LogicGenerateParameter& parameter)
 	CodeLocalAddressReference leftAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::BASE_Flag);
-	parameter.generator->WriteCode(conditionParameter.results[0]);
+	parameter.generator->WriteCode(conditionParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 	parameter.generator->WriteCode(&leftAddress);
 	if (right)right->Generator(parameter);

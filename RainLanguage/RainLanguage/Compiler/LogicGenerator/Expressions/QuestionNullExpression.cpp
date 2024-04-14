@@ -9,7 +9,7 @@ void QuestionNullExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter leftParameter = LogicGenerateParameter(parameter, 1);
 	left->Generator(leftParameter);
 	parameter.generator->WriteCode(Instruct::BASE_NullJump);
-	parameter.generator->WriteCode(leftParameter.results[0]);
+	parameter.generator->WriteCode(leftParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(&rightAddress);
 	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), leftParameter.results[0]);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);

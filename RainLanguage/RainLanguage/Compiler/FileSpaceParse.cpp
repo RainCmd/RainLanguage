@@ -11,7 +11,7 @@
 #define CHECK_VISIABLE(line,defaultVisiable)\
 	if (visibility == Visibility::None)\
 	{\
-		MESSAGE2(parameter->messages, line, MessageType::LOGGER_LEVEL4_MISSING_VISIBILITY);\
+		MESSAGE2(parameter->messages, line, MessageType::LOGGER_LEVEL3_MISSING_VISIBILITY);\
 		visibility = Visibility::defaultVisiable;\
 	}
 

@@ -206,7 +206,7 @@ void ResetLocal(DeclarationManager* manager, Generator* generator, uint32 addres
 	}
 }
 
-uint32 VariableGenerator::Generate(DeclarationManager* manager, Generator* generator)
+uint32 VariableGenerator::Generate(DeclarationManager* manager, Generator* generator, const Dictionary<uint32, Anchor>* localAnchors)
 {
 	uint8 alignment;
 	uint32 size = manager->GetStackSize(TYPE_String, alignment);
@@ -227,7 +227,20 @@ uint32 VariableGenerator::Generate(DeclarationManager* manager, Generator* gener
 	localAddress = MemoryAlignment(localAddress, maxTemporaryAlignment);
 	for (uint32 i = 0; i < temporaries.Count(); i++) temporaries[i]->SetAddress(generator, localAddress);
 	Dictionary<uint32, Variable*, true>::Iterator localIterator = locals.GetIterator();
-	while (localIterator.Next())ResetLocal(manager, generator, localIterator.CurrentValue()->address, localIterator.CurrentValue()->type);
+	while(localIterator.Next())
+	{
+		if(!localIterator.CurrentValue()->reference->GetReadCount())
+		{
+			Anchor anchor;
+			if(localAnchors->TryGet(localIterator.CurrentKey(), anchor)) MESSAGE2(manager->messages, anchor, MessageType::LOGGER_LEVEL2_UNUSED_VARIABLE);
+		}
+		else if(!localIterator.CurrentValue()->reference->GetWriteCount())
+		{
+			Anchor anchor;
+			if(localAnchors->TryGet(localIterator.CurrentKey(), anchor)) MESSAGE2(manager->messages, anchor, MessageType::LOGGER_LEVEL2_UNINITIALIZED_VARIABLE);
+		}
+		ResetLocal(manager, generator, localIterator.CurrentValue()->address, localIterator.CurrentValue()->type);
+	}
 	for (uint32 i = 0; i < stringTemporaries.Count(); i++) ::ResetTemporary(manager, generator, 0, stringTemporaries[i]->reference, TYPE_String);
 	for (uint32 i = 0; i < entityTemporaries.Count(); i++) ::ResetTemporary(manager, generator, 0, entityTemporaries[i]->reference, TYPE_Entity);
 	for (uint32 i = 0; i < handleTemporaries.Count(); i++) ::ResetTemporary(manager, generator, 0, handleTemporaries[i]->reference, TYPE_Handle);

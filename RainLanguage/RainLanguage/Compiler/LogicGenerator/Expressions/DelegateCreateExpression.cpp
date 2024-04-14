@@ -5,7 +5,7 @@
 void FunctionDelegateCreateExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	if (declaration.category == DeclarationCategory::Function)
 	{
@@ -32,8 +32,8 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 		ASSERT_DEBUG(!question, "前面语义解析逻辑可能有bug");
 		sourceVariable = parameter.variableGenerator->DecareTemporary(parameter.manager, TYPE_Handle);
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Box);
-		parameter.generator->WriteCode(sourceVariable);
-		parameter.generator->WriteCode(sourceParameter.results[0]);
+		parameter.generator->WriteCode(sourceVariable, VariableAccessType::Write);
+		parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCodeGlobalReference(source->returns[0]);
 	}
 	else if (declaration.category == DeclarationCategory::ClassFunction)
@@ -41,18 +41,18 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 		if (question)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_NullJump);
-			parameter.generator->WriteCode(sourceParameter.results[0]);
+			parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(&endAddress);
 		}
 		sourceVariable = sourceParameter.results[0];
 	}
 	else EXCEPTION("其他定义类型不应该走到这");
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	if (declaration.category == DeclarationCategory::StructFunction) parameter.generator->WriteCode((uint8)FunctionType::Box);
 	else if (declaration.category == DeclarationCategory::ClassFunction) parameter.generator->WriteCode((uint8)FunctionType::Reality);
-	parameter.generator->WriteCode(sourceVariable);
+	parameter.generator->WriteCode(sourceVariable, VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
@@ -72,23 +72,23 @@ void VirtualFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& 
 	if (question)
 	{
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
-		parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+		parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 		parameter.generator->WriteCode(Instruct::BASE_NullJump);
-		parameter.generator->WriteCode(sourceParameter.results[0]);
+		parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(&endAddress);
 	}
 	else
 	{
 		parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
-		parameter.generator->WriteCode(sourceParameter.results[0]);
+		parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	if (declaration.category == DeclarationCategory::ClassFunction) parameter.generator->WriteCode((uint8)FunctionType::Virtual);
 	else if (declaration.category == DeclarationCategory::InterfaceFunction) parameter.generator->WriteCode((uint8)FunctionType::Abstract);
-	parameter.generator->WriteCode(sourceParameter.results[0]);
+	parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
@@ -123,16 +123,16 @@ void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& pa
 {
 	LogicVariable closureVariable = parameter.variableGenerator->DecareTemporary(parameter.manager, Type(LIBRARY_SELF, TypeCode::Handle, closure.index, 0));
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
-	parameter.generator->WriteCode(closureVariable);
+	parameter.generator->WriteCode(closureVariable, VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference(Declaration(LIBRARY_SELF, TypeCode::Handle, closure.index));
 	AbstractClass* abstractClass = parameter.manager->selfLibaray->classes[closure.index];
 	for (uint32 i = 0; i < abstractClass->variables.Count(); i++)
 		LogicVariabelAssignment(parameter.manager, parameter.generator, closureVariable, abstractClass->variables[i]->declaration, 0, GetVariable(parameter, sourceVariables[i], abstractClass->variables[i]->type), parameter.finallyAddress);
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	parameter.generator->WriteCode((uint8)FunctionType::Reality);
-	parameter.generator->WriteCode(closureVariable);
+	parameter.generator->WriteCode(closureVariable, VariableAccessType::Read);
 	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Function, parameter.manager->selfLibaray->classes[closure.index]->functions[0], NULL);
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
@@ -142,7 +142,7 @@ void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& pa
 void LambdaDelegateCreateExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
-	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]));
+	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	parameter.generator->WriteCode((uint8)FunctionType::Global);
 	parameter.generator->WriteCodeGlobalAddressReference(CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Function, lambda.index, NULL));
