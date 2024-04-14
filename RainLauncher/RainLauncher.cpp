@@ -88,15 +88,18 @@ static void Print(RainKernel&, CallerWrapper& caller)
 static void NativeHelper(RainKernel&, CallerWrapper&) {}
 static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, const RainType* parameterTypes, uint32 parameterCount)
 {
-	uint32 s = fullName.length;
-	while(--s > 0)
-		if(fullName.value[s] == '.')
-		{
-			s++;
-			break;
-		}
-	wstring fn(fullName.value + s, fullName.length - s);
-	if(fn == L"Print") return Print;
+	if(parameterCount == 1 && *parameterTypes == RainType::String)
+	{
+		uint32 s = fullName.length;
+		while(--s > 0)
+			if(fullName.value[s] == '.')
+			{
+				s++;
+				break;
+			}
+		wstring fn(fullName.value + s, fullName.length - s);
+		if(fn == L"Print") return Print;
+	}
 
 	wcout << "本地函数绑定失败：" << fullName.value << endl;
 	return NativeHelper;

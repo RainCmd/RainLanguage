@@ -252,7 +252,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileName)</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -272,7 +272,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileName)</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -297,7 +297,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileName)</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -323,7 +323,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileName)</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>

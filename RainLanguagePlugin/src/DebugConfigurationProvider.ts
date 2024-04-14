@@ -250,7 +250,11 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
             debuggedProcess = null
         }
         configuration.projectName = await GetProjectName(configuration.projectPath, configuration.projectName, configuration.type)
-        configuration.detectorPath = this.context.extensionUri.fsPath;
+        if (configuration.Fixed) {
+            configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/fixed/";
+        } else {
+            configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/float/";
+        }
         configuration.detectorName = "RainDebuggerDetector.dll";
         if (configuration.noDebug) {
             const launchParams = await GetLaunchParam(configuration)
@@ -298,7 +302,7 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                     statusBarItem = null
 
                     if (debuggedProcess.pid) {
-                        const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
+                        const injector = configuration.detectorPath + "/RainDebuggerInjector.exe"
                         const port = await GetDetectorPort(injector, debuggedProcess.pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                         if (port > 0) {
                             client = await Connect(port);
@@ -315,7 +319,7 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
                 case "雨言附加到进程": {
                     currentOutputChannel = GetOutputChannel(configuration.projectName + `[附加到进程]`);
 
-                    const injector = this.context.extensionUri.fsPath + "/RainDebuggerInjector.exe"
+                    const injector = configuration.detectorPath + "/RainDebuggerInjector.exe"
                     const pid = await pickPID(injector)
                     const port = await GetDetectorPort(injector, pid, configuration.detectorPath, configuration.detectorName, configuration.projectPath, configuration.projectName)
                     client = await Connect(port)

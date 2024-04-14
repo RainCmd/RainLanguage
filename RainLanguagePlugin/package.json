@@ -109,7 +109,8 @@
                             "ProjectName",
                             "EntryPoint",
                             "Timesnap",
-                            "ErrorLevel"
+                            "ErrorLevel",
+                            "Fixed"
                         ],
                         "properties": {
                             "ProjectName": {
@@ -129,8 +130,13 @@
                             },
                             "ErrorLevel": {
                                 "type": "number",
-                                "description": "警告等级:[1,4]警告 [5,8]日志",
+                                "description": "警告日志输出等级，最高8级",
                                 "default": 4
+                            },
+                            "Fixed":{
+                                "type": "boolean",
+                                "description": "使用定点数计算",
+                                "default": false
                             }
                         }
                     }
@@ -142,13 +148,19 @@
                 "configurationAttributes": {
                     "attach": {
                         "required": [
-                            "ProjectName"
+                            "ProjectName",
+                            "Fixed"
                         ],
                         "properties": {
                             "ProjectName": {
                                 "type": "string",
                                 "description": "程序集名",
                                 "default": "RainTest"
+                            },
+                            "Fixed":{
+                                "type": "boolean",
+                                "description": "使用定点数计算",
+                                "default": false
                             }
                         }
                     }

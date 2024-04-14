@@ -231,7 +231,7 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
@@ -249,7 +249,7 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Comman
     </Link>
     <PostBuildEvent>
       <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -270,7 +270,7 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Comman
     </Link>
     <PostBuildEvent>
       <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
@@ -291,7 +291,7 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Comman
     </Link>
     <PostBuildEvent>
       <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -300,9 +300,6 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Comman
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Args.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TestScripts\Test.rain" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
