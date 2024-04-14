@@ -16,7 +16,7 @@ public:
 	~TaskCreateExpression();
 };
 
-void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration);
+void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration);
 
 class TaskEvaluationExpression :public Expression
 {

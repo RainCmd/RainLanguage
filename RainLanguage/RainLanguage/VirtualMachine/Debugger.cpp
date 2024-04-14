@@ -1001,10 +1001,41 @@ void RainDebugger::SetStepType(StepType type)
 		stepType = type;
 	}
 }
+void RainDebugger::Broken()
+{
+	if(debugFrame)
+	{
+		DebugFrame* frame = FRAME;
+		frame->debugger = NULL;
+		frame->library = NULL;
+		frame->Release();
+		debugFrame = NULL;
+	}
+	if(share)
+	{
+		SetStepType(StepType::None);
+		currentTask = 0;
+		currentTraceDeep = INVALID;
+		ClearBreakpoints();
+		((MAP*)map)->Clear();
+		if(LIBRARY)
+		{
+			OnBroken();
+			LIBRARY->debugger = NULL;
+		}
+		SHARE->Release();
+		share = NULL;
+		library = NULL;
+		if(unloader && database) unloader(database);
+		database = NULL;
+	}
+}
+
 RainKernel* RainDebugger::GetKernel()
 {
 	return SHARE->kernel;
 }
+
 RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& parameter) : share(NULL), library(NULL), debugFrame(NULL), map(new MAP(0)), currentTask(), currentTraceDeep(INVALID), unloader(parameter.unloader), stepType(StepType::None), database(NULL), breakpoints(NULL)
 {
 	Kernel* kernel = ((Kernel*)parameter.kernel);
@@ -1026,32 +1057,6 @@ RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& 
 	SHARE->Reference();
 	if(!InitMap(kernel, (Library*)source, (MAP*)map)) Broken();
 	if(agency->libraryUnloader) agency->libraryUnloader(source);
-}
-
-void RainDebugger::Broken()
-{
-	if(debugFrame)
-	{
-		DebugFrame* frame = FRAME;
-		frame->debugger = NULL;
-		frame->library = NULL;
-		frame->Release();
-		debugFrame = NULL;
-	}
-	if(share)
-	{
-		SetStepType(StepType::None);
-		currentTask = 0;
-		currentTraceDeep = INVALID;
-		ClearBreakpoints();
-		((MAP*)map)->Clear();
-		if(LIBRARY) LIBRARY->debugger = NULL;
-		SHARE->Release();
-		share = NULL;
-		library = NULL;
-		if(unloader && database) unloader(database);
-		database = NULL;
-	}
 }
 
 RainDebuggerSpace RainDebugger::GetSpace()

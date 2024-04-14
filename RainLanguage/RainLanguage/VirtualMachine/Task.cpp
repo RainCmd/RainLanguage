@@ -389,6 +389,7 @@ label_next_instruct:
 						newInvoker->SetHandleParameter(0, target);
 						newInvoker->Reference();
 						task = newInvoker->instanceID;
+						flag = true;
 					}
 					else EXCEPTION_EXIT(BASE_CreateTask, EXCEPTION_NULL_REFERENCE);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask);
@@ -533,7 +534,7 @@ label_next_instruct:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle handle = VARIABLE(Handle, handleValue);
-			uint32 start = flag ? 1u : 0u;
+			uint32 start = flag;
 			uint32 count = INSTRUCT_VALUE(uint32, 5) + start;
 			uint8* task;
 			Invoker* targetInvoker;

@@ -72,7 +72,7 @@ window.addEventListener('message', event => {
             break
         }
         case 'data': {
-            if (stateChart.data.labels.length == 60) {
+            if (stateChart.data.labels.length == 100) {
                 for (let index = 0; index < datasets.length; index++) {
                     const element = datasets[index];
                     element.data.shift()

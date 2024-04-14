@@ -4,6 +4,7 @@ class Debugger;
 void OnHitBreakpoint(Debugger* debugger, uint64 task);
 void OnTaskExit(Debugger* debugger, uint64 task, const RainString& msg);
 void OnDiagnose(Debugger* debugger);
+void OnBroken(Debugger* debugger);
 
 enum ServerExitCode
 {

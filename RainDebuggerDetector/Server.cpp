@@ -658,6 +658,15 @@ void OnDiagnose(Debugger* debugger)
 	Send(socket, writer);
 }
 
+void OnBroken(Debugger* debugger)
+{
+	if(debugger == ::debugger && cSocket != INVALID_SOCKET)
+	{
+		if(cSocket != INVALID_SOCKET) closesocket(cSocket);
+		cSocket = INVALID_SOCKET;
+	}
+}
+
 ServerExitCode InitServer(const char* path, const char* name, unsigned short& port)
 {
 	if(debugger) delete debugger;

@@ -34,7 +34,7 @@ MethodVirtualExpression::~MethodVirtualExpression()
 
 void BlurryTaskExpression::Generator(LogicGenerateParameter& parameter)
 {
-	GeneratTaskParameter(parameter, invoker, start, TYPE_Task);
+	GenerateTaskParameter(parameter, invoker, start, TYPE_Task);
 }
 
 BlurryTaskExpression::~BlurryTaskExpression()

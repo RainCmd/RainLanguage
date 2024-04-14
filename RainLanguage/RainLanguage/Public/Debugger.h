@@ -309,6 +309,7 @@ private:
 	RainProgramDatabaseUnloader unloader;
 	StepType stepType;
 	void SetStepType(StepType type);
+	void Broken();
 protected:
 	/// <summary>
 	/// 触发断点
@@ -325,6 +326,10 @@ protected:
 	/// 继续执行
 	/// </summary>
 	virtual void OnContinue() = 0;
+	/// <summary>
+	/// 断开与虚拟机的链接
+	/// </summary>
+	virtual void OnBroken() = 0;
 public:
 	const RainProgramDatabase* database;
 	inline StepType GetStepType() const { return stepType; }
@@ -339,10 +344,6 @@ public:
 	RainDebugger(const RainString& name, const RainDebuggerParameter& parameter);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
-	/// <summary>
-	/// 断开与虚拟机的链接
-	/// </summary>
-	void Broken();
 	/// <summary>
 	/// 获取空间迭代器
 	/// </summary>

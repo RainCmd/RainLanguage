@@ -4,7 +4,7 @@
 
 void TaskCreateExpression::Generator(LogicGenerateParameter& parameter)
 {
-	GeneratTaskParameter(parameter, source, start, returns[0]);
+	GenerateTaskParameter(parameter, source, start, returns[0]);
 }
 
 TaskCreateExpression::~TaskCreateExpression()
@@ -12,7 +12,7 @@ TaskCreateExpression::~TaskCreateExpression()
 	delete source; source = NULL;
 }
 
-void GeneratTaskParameter(LogicGenerateParameter& parameter, Expression* parametersExpression)
+void GenerateTaskParameter(LogicGenerateParameter& parameter, Expression* parametersExpression)
 {
 	if (parametersExpression->returns.Count())
 	{
@@ -105,7 +105,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, Expression* paramet
 	}
 }
 
-void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration)
+void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration)
 {
 	LogicVariable result = parameter.GetResult(0, Type(declaration, 0));
 	if (ContainAny(invoker->type, ExpressionType::InvokerDelegateExpression))
@@ -125,7 +125,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode(invokerParameter.results[0]);
 		parameter.generator->WriteCode(parameter.finallyAddress);
-		GeneratTaskParameter(parameter, invokerExpression->parameters);
+		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
@@ -145,7 +145,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 		else EXCEPTION("这个申明类型不应该会走到这里");
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 		parameter.generator->WriteCode(invokerExpression->declaration.DefineFunction());
-		GeneratTaskParameter(parameter, invokerExpression->parameters);
+		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
@@ -178,7 +178,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
 		else EXCEPTION("这个申明类型不应该会走到这里");
-		GeneratTaskParameter(parameter, invokerExpression->parameters);
+		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
@@ -227,7 +227,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
 		else EXCEPTION("这个申明类型不应该会走到这里");
-		GeneratTaskParameter(parameter, invokerExpression->parameters);
+		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_TaskStart);
@@ -252,7 +252,7 @@ void GeneratTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* 
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 		parameter.generator->WriteCode(invokerExpression->declaration.DefineMemberFunction());
 		parameter.generator->WriteCodeGlobalReference(thisVariable.type);
-		GeneratTaskParameter(parameter, invokerExpression->parameters);
+		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
 			parameter.generator->WriteCode(Instruct::BASE_TaskStart);

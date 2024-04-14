@@ -23,6 +23,12 @@ void Debugger::OnContinue()
 	pause = false;
 }
 
+void Debugger::OnBroken()
+{
+	::OnBroken(this);
+}
+
+
 Debugger::Debugger(const RainString& name, const RainDebuggerParameter& parameter) :RainDebugger(name, parameter), pause(false), frameCount(0), diagnoseInterval(0), name(name.value, name.length) {}
 
 void Debugger::SetDiagnose(uint32 frame)
