@@ -166,7 +166,7 @@ public:
 	inline void WriteCodeEnumElementReference(const CompilingDeclaration& declaration) { globalReference->AddEnumElementReference(declaration); }
 	inline void WriteCode(const LogicVariable& variable, VariableAccessType accessType)
 	{
-		switch(accessType)
+		if(variable.reference) switch(accessType)
 		{
 			case VariableAccessType::None: break;
 			case VariableAccessType::Read:

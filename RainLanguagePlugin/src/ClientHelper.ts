@@ -1,7 +1,6 @@
 
 import * as net from 'net'
 import { TextDecoder, TextEncoder } from 'util';
-import * as vscode from 'vscode'
 
 export enum Proto {
 	//	uint32	requestId

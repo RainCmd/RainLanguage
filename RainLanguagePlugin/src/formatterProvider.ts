@@ -1,6 +1,22 @@
 
 import { DocumentRangeFormattingEditProvider, OnTypeFormattingEditProvider, FormattingOptions, CancellationToken, TextEdit, TextDocument, Range, Position, ProviderResult } from 'vscode';
 
+export function MatchPairingCharacter(line: string, start: number, char?: string): number{
+    if (char == null) {
+        let ss = line.indexOf("\'", start)
+        let ds = line.indexOf("\"", start)
+        if (ss < 0) return ds
+        else if (ds < 0) return ss
+        else if (ss < ds) return ss
+        else return ds
+    } else {
+        let pos = line.indexOf(char, start)
+        if (pos < 0) return line.length
+        if (pos > 0 && line[pos - 1] == '\\') return this.MatchPairingCharacter(line, pos + 1, char)
+        return pos
+    }
+}
+
 export default class FormatProvider implements DocumentRangeFormattingEditProvider, OnTypeFormattingEditProvider {
     public async provideDocumentRangeFormattingEdits(document: TextDocument, range: Range, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[]> {
         let results: TextEdit[] = [];
@@ -25,34 +41,19 @@ export default class FormatProvider implements DocumentRangeFormattingEditProvid
             return [];
         }
     }
-    private MatchPairingCharacter(line: string, start: number, char?: string): number{
-        if (char == null) {
-            let ss = line.indexOf("\'", start)
-            let ds = line.indexOf("\"", start)
-            if (ss < 0) return ds
-            else if (ds < 0) return ss
-            else if (ss < ds) return ss
-            else return ds
-        } else {
-            let pos = line.indexOf(char, start)
-            if (pos < 0) return line.length
-            if (pos > 0 && line[pos - 1] == '\\') return this.MatchPairingCharacter(line, pos + 1, char)
-            return pos
-        }
-    }
     private FormatLine(line: string): string {
         let result = ""
         let start = 0
-        let pos = this.MatchPairingCharacter(line, 0)
-        while (pos > 0) {
+        let pos = MatchPairingCharacter(line, 0)
+        while (pos >= 0) {
             let char = line[pos]
             pos += 1
             result += this.FormatFragment(line.substring(start, pos))
             start = pos
-            pos = this.MatchPairingCharacter(line, start, char)
+            pos = MatchPairingCharacter(line, start, char)
             result += line.substring(start, pos)
             start = pos
-            pos = this.MatchPairingCharacter(line, start + 1)
+            pos = MatchPairingCharacter(line, start + 1)
         }
         if (start < line.length) {
             result += this.FormatFragment(line.substring(start))

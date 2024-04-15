@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
 import FormatProvider from './formatterProvider'
-import { InlineDebugAdapterFactory } from "./DebugAdapterFactory";
-import { RainDebugConfigurationProvider } from "./DebugConfigurationProvider";
+import { InlineDebugAdapterFactory } from "./debugger/DebugAdapterFactory";
+import { RainDebugConfigurationProvider } from "./debugger/DebugConfigurationProvider";
 import { KernelStateViewProvider } from "./KernelStateViewProvider";
 import { readFile } from "fs";
+import * as rainLanguageClient from "./LanguageClinet";
+import { RainEvaluatableExpressionProvider } from "./EvaluatableExpressionProvider";
 
 export let kernelStateViewProvider: KernelStateViewProvider;
 
@@ -15,12 +17,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, new FormatProvider()),
         vscode.languages.registerOnTypeFormattingEditProvider(documentSelector, new FormatProvider(), '\n', ';'),
-        vscode.languages.registerEvaluatableExpressionProvider(documentSelector, {
-            provideEvaluatableExpression(document, position, token) {
-                return new vscode.EvaluatableExpression(new vscode.Range(position, position),
-                    document.fileName + " " + (position.line + 1) + " " + position.character)
-            },
-        }),
+        vscode.languages.registerEvaluatableExpressionProvider(documentSelector, new RainEvaluatableExpressionProvider()),
 
         vscode.debug.registerDebugConfigurationProvider("雨言调试运行", new RainDebugConfigurationProvider(context)),
         vscode.debug.registerDebugAdapterDescriptorFactory("雨言调试运行", new InlineDebugAdapterFactory()),
@@ -43,6 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }),
 
         vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider),
+
         vscode.commands.registerCommand('cmd.核心库定义', async () => {
             const uri = vscode.Uri.parse("rain-language:kernel.rain")
             const doc = await vscode.workspace.openTextDocument(uri)
@@ -63,6 +61,8 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
+    rainLanguageClient.StartServer();
 }
 export async function deactivate() {
+    rainLanguageClient.StopServer();
 }

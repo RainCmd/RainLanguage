@@ -1,8 +1,8 @@
 import { ContinuedEvent, InitializedEvent, LoggingDebugSession, Scope, StoppedEvent, TerminatedEvent, Variable } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as RainDebug from './DebugConfigurationProvider'
-import * as client from './ClientHelper'
-import { kernelStateViewProvider } from './extension'
+import * as client from '../ClientHelper'
+import { kernelStateViewProvider } from '../extension'
 
 enum StepType {
 	// 逐过程
@@ -560,7 +560,9 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(args.value)
 				this.helper.Request(request.seq, req).then(res => {
 					response.body = {
-						value: res.ReadString()
+						value: res.ReadString(),
+						variablesReference: variable.id,
+						type: variable.type,
 					}
 					this.sendResponse(response)
 				}).catch(reason => {
@@ -576,7 +578,9 @@ export class RainDebugSession extends LoggingDebugSession {
 				req.WriteString(args.value)
 				this.helper.Request(request.seq, req).then(res => {
 					response.body = {
-						value: res.ReadString()
+						value: res.ReadString(),
+						variablesReference: variable.id,
+						type: variable.type,
 					}
 					this.sendResponse(response)
 				}).catch(reason => {
@@ -585,40 +589,47 @@ export class RainDebugSession extends LoggingDebugSession {
 				})
 			}
 		} else {
-			const variable = this.variableMap.get(args.variablesReference)
-			const trace = this.traceMap.get(variable.frameId)
-			if (trace.locals.has(variable)) {
+			const parent = this.variableMap.get(args.variablesReference)
+			const trace = this.traceMap.get(parent.frameId)
+			if (trace.locals.has(parent)) {
 				const req = new client.Writer(client.Proto.RRECV_SetLocal)
 				req.WriteUint(request.seq)
 				req.WriteLong(trace.thread)
 				req.WriteUint(trace.index)
-				req.WriteString(variable.GetRoot().name)
-				const indices = variable.members.find(value => value.name == args.name).GetMemberIndices()
+				req.WriteString(parent.GetRoot().name)
+				const variable = parent.members.find(value => value.name == args.name)
+				const indices = variable.GetMemberIndices()
 				req.WriteUint(indices.length)
 				indices.forEach(value => req.WriteUint(value))
+				req.WriteString(args.value)
 				this.helper.Request(request.seq, req).then(res => {
 					response.body = {
-						value: res.ReadString()
+						value: res.ReadString(),
+						variablesReference: variable.id,
+						type: variable.type,
 					}
 					this.sendResponse(response)
 				}).catch(reason => {
 					response.success = false;
 					this.sendResponse(response)
 				})
-			} else if (trace.globals.has(variable)) {
+			} else if (trace.globals.has(parent)) {
 				const req = new client.Writer(client.Proto.RRECV_SetGlobal)
 				req.WriteUint(request.seq)
-				const names = variable.GetRoot().space.GetNames()
+				const names = parent.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
 				names.forEach(value => req.WriteString(value))
-				req.WriteString(variable.GetRoot().name)
-				const indices = variable.members.find(value => value.name == args.name).GetMemberIndices()
+				req.WriteString(parent.GetRoot().name)
+				const variable = parent.members.find(value => value.name == args.name)
+				const indices = variable.GetMemberIndices()
 				req.WriteUint(indices.length)
 				indices.forEach(value => req.WriteUint(value))
 				req.WriteString(args.value)
 				this.helper.Request(request.seq, req).then(res => {
 					response.body = {
-						value: res.ReadString()
+						value: res.ReadString(),
+						variablesReference: variable.id,
+						type: variable.type,
 					}
 					this.sendResponse(response)
 				}).catch(reason => {

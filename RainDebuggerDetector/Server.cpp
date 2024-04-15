@@ -507,6 +507,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			if(variable.IsValid())
 			{
 				writer.WriteBool(true);
+				writer.WriteBool(IsStructured(variable.GetRainType()));
 				writer.WriteString(RS2WS(variable.GetValue()));
 			}
 			else writer.WriteBool(false);

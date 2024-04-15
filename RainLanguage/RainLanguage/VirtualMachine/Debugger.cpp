@@ -122,7 +122,7 @@ uint8* RainDebuggerVariable::GetAddress() const
 
 uint32 RainDebuggerVariable::MemberCount() const
 {
-	if(type == RainType::Internal && IsValid())
+	if(IsStructured(type) && IsValid())
 	{
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(!targetType.dimension)
@@ -138,7 +138,7 @@ uint32 RainDebuggerVariable::MemberCount() const
 RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 {
 	uint8* variableAddress = GetAddress();
-	if(variableAddress && type == RainType::Internal && IsValid())
+	if(variableAddress && IsStructured(type) && IsValid())
 	{
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(!targetType.dimension)
