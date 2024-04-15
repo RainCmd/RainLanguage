@@ -230,8 +230,8 @@
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileName)</Command>
+      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
@@ -248,8 +248,8 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileNam
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileName)</Command>
+      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -269,8 +269,8 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileNam
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileName)</Command>
+      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
@@ -290,8 +290,8 @@ copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\$(TargetFileNam
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)RainLanguage.dll
-copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\$(TargetFileName)</Command>
+      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

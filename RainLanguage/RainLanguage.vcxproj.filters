@@ -638,4 +638,7 @@
     <None Include="cpp.hint" />
     <None Include="RainLanguage\ExternC\RainLanguageAdapter.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Rain.natvis" />
+  </ItemGroup>
 </Project>
