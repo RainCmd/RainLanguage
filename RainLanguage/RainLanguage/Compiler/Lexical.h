@@ -45,7 +45,7 @@ enum class LexicalType
 	MulAssignment,          // *=
 	Div,                    // /
 	DivAssignment,          // /=
-	Annotation,             // ×¢ÊÍ
+	Annotation,             // æ³¨é‡Š
 	Mod,                    // %
 	ModAssignment,          // %=
 	Not,                    // !
@@ -59,15 +59,15 @@ enum class LexicalType
 	QuestionIndex,          // ?[
 	QuestionNull,           // ??
 	Colon,                  // :
-	ConstReal,              // Êı×Ö(ÊµÊı)
-	ConstNumber,            // Êı×Ö(ÕûÊı)
-	ConstBinary,            // Êı×Ö(¶ş½øÖÆ)
-	ConstHexadecimal,       // Êı×Ö(Ê®Áù½øÖÆ)
-	ConstChars,             // Êı×Ö(µ¥ÒıºÅ×Ö·û´®)
-	ConstString,            // ×Ö·û´®
-	TemplateString,         // Ä£°å×Ö·û´®
-	Word,                   // µ¥´Ê
-	Backslash,              // ·´Ğ±¸Ü
+	ConstReal,              // æ•°å­—(å®æ•°)
+	ConstNumber,            // æ•°å­—(æ•´æ•°)
+	ConstBinary,            // æ•°å­—(äºŒè¿›åˆ¶)
+	ConstHexadecimal,       // æ•°å­—(åå…­è¿›åˆ¶)
+	ConstChars,             // æ•°å­—(å•å¼•å·å­—ç¬¦ä¸²)
+	ConstString,            // å­—ç¬¦ä¸²
+	TemplateString,         // æ¨¡æ¿å­—ç¬¦ä¸²
+	Word,                   // å•è¯
+	Backslash,              // åæ–œæ 
 };
 const struct Lexical
 {
@@ -79,8 +79,8 @@ const struct Lexical
 bool IsReloadable(LexicalType type);
 bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageCollector* messages);
 bool TryAnalysis(const Line& line, uint32 index, Lexical& lexical, MessageCollector* messages);
-bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical& lexical);//½öÓÃÀ´Æ¥Åä¿ÉÄÜÓĞ³åÍ»µÄ·ûºÅ
-bool TryMatchNext(const Line& line, uint32 index, LexicalType type, Lexical& lexical);//½öÓÃÀ´Æ¥Åä¿ÉÄÜÓĞ³åÍ»µÄ·ûºÅ
+bool TryMatchNext(const Anchor& segment, uint32 index, LexicalType type, Lexical& lexical);//ä»…ç”¨æ¥åŒ¹é…å¯èƒ½æœ‰å†²çªçš„ç¬¦å·
+bool TryMatchNext(const Line& line, uint32 index, LexicalType type, Lexical& lexical);//ä»…ç”¨æ¥åŒ¹é…å¯èƒ½æœ‰å†²çªçš„ç¬¦å·
 Anchor MatchStringTemplateBlock(const Anchor& segment, uint32 index, MessageCollector* message);
 bool TryExtractName(const Anchor& segment, uint32 start, uint32& index, List<Anchor>* name, MessageCollector* messages);
 bool TryExtractName(const Line& line, uint32 start, uint32& index, List<Anchor>* name, MessageCollector* messages);

@@ -24,7 +24,7 @@ static bool CheckCmd(const char* left, const char* right)
 }
 Args Parse(int cnt, char** args)
 {
-	Args result = Args(L"雨言测试工程", L".\\", L"Main", 4, 100, false, false);
+	Args result = Args(L"雨言测试工程", L".\\", L"Main", 4, 0, false, false);
 	for(size_t i = 0; i < cnt; i++)
 	{
 		char* arg = args[i];

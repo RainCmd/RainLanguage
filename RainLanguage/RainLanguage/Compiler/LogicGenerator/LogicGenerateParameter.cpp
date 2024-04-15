@@ -9,7 +9,7 @@ LogicVariable LogicGenerateParameter::GetResult(uint32 index, const Type& type)
 
 void LogicGenerateParameter::ClearVariables(const List<Type, true>& types)
 {
-	ASSERT_DEBUG(types.Count() == results.Count(), "Ìá¹©µÄÀàĞÍÊıÁ¿Óë±äÁ¿ÊıÁ¿²»Ò»ÖÂ");
+	ASSERT_DEBUG(types.Count() == results.Count(), "æä¾›çš„ç±»å‹æ•°é‡ä¸å˜é‡æ•°é‡ä¸ä¸€è‡´");
 	for(uint32 i = 0; i < types.Count(); i++)
 		GetResult(i, types[i]).ClearVariable(manager, generator);
 }

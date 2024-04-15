@@ -159,7 +159,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		CompilingVariable* variable = parameter.manager->compilingLibrary.variables[i];
 		if(variable->constant)
 		{
-			ASSERT_DEBUG(!variable->expression.content.IsEmpty(), "³£Á¿Ã»ÓÐ¸³Öµ±í´ïÊ½£¬Õâ¸öÓ¦¸ÃÔÚ¶¨Òå½âÎöÊ±¹ýÂË");
+			ASSERT_DEBUG(!variable->expression.content.IsEmpty(), "å¸¸é‡æ²¡æœ‰èµ‹å€¼è¡¨è¾¾å¼ï¼Œè¿™ä¸ªåº”è¯¥åœ¨å®šä¹‰è§£æžæ—¶è¿‡æ»¤");
 			Context context = Context(variable->space, variable->relies);
 			parameter.localContext->PushBlock();
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
@@ -361,7 +361,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 		if(!compilingConstructor->expression.content.IsEmpty())
 		{
 			Lexical lexical;
-			if(!TryAnalysis(compilingConstructor->expression, compilingConstructor->expression.position, lexical, parameter.manager->messages))EXCEPTION("µÚÒ»¸ö´Ê±Ø¶¨ÊÇthis»òbase£¬·ñÔò¿Ï¶¨ÊÇÇ°ÃæÎÄ¼þ½âÎö³ö´íÁË");
+			if(!TryAnalysis(compilingConstructor->expression, compilingConstructor->expression.position, lexical, parameter.manager->messages))EXCEPTION("ç¬¬ä¸€ä¸ªè¯å¿…å®šæ˜¯thisæˆ–baseï¼Œå¦åˆ™è‚¯å®šæ˜¯å‰é¢æ–‡ä»¶è§£æžå‡ºé”™äº†");
 			List<CompilingDeclaration, true> constructorInvokerDeclarations(1);
 			if(lexical.anchor == KeyWord_this())
 			{
@@ -383,7 +383,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 				}
 				ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), constructorInvokerDeclarations, &thisValue);
 			}
-			else EXCEPTION("ÎÞÐ§µÄ´Ê»ã");
+			else EXCEPTION("æ— æ•ˆçš„è¯æ±‡");
 		}
 		else if(compilingClass->parent != TYPE_Handle)
 		{
@@ -427,7 +427,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
 		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);
 	}
-	else EXCEPTION("ÎÞÐ§µÄº¯ÊýÀàÐÍ");
+	else EXCEPTION("æ— æ•ˆçš„å‡½æ•°ç±»åž‹");
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
 	if(function->declaration.category != DeclarationCategory::Constructor && returns.Count() && !CheckFunctionReturn(parameter.manager->messages, statements)) MESSAGE2(parameter.manager->messages, function->name, MessageType::ERROR_MISSING_RETURN);
 }
@@ -497,24 +497,24 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 					Statement* statement = blockStack.Peek()->statements.Peek();
 					if(ContainAll(statement->type, StatementType::Branch))
 					{
-						ASSERT_DEBUG(!((BranchStatement*)statement)->trueBranch, "Ëõ½øÅÐ¶ÏÂß¼­¿ÉÄÜÓÐbug");
+						ASSERT_DEBUG(!((BranchStatement*)statement)->trueBranch, "ç¼©è¿›åˆ¤æ–­é€»è¾‘å¯èƒ½æœ‰bug");
 						newBlock = ((BranchStatement*)statement)->trueBranch = new BlockStatement(lineAnchor);
 					}
 					else if(ContainAll(statement->type, StatementType::Loop))
 					{
-						ASSERT_DEBUG(!((LoopStatement*)statement)->loopBlock, "Ëõ½øÅÐ¶ÏÂß¼­¿ÉÄÜÓÐbug");
+						ASSERT_DEBUG(!((LoopStatement*)statement)->loopBlock, "ç¼©è¿›åˆ¤æ–­é€»è¾‘å¯èƒ½æœ‰bug");
 						newBlock = ((LoopStatement*)statement)->loopBlock = new BlockStatement(lineAnchor);
 					}
 					else if(ContainAll(statement->type, StatementType::Sub))
 					{
-						ASSERT_DEBUG(!*((SubStatement*)statement)->statements, "Ëõ½øÅÐ¶ÏÂß¼­¿ÉÄÜÓÐbug");
+						ASSERT_DEBUG(!*((SubStatement*)statement)->statements, "ç¼©è¿›åˆ¤æ–­é€»è¾‘å¯èƒ½æœ‰bug");
 						newBlock = *((SubStatement*)statement)->statements = new BlockStatement(lineAnchor);
 						delete blockStack.Peek()->statements.Pop();
 					}
 					else if(ContainAll(statement->type, StatementType::Try))
 					{
 						TryStatement* tryStatement = (TryStatement*)statement;
-						ASSERT_DEBUG(!tryStatement->finallyBlock, "Ëõ½øÅÐ¶ÏÂß¼­¿ÉÄÜÓÐbug");
+						ASSERT_DEBUG(!tryStatement->finallyBlock, "ç¼©è¿›åˆ¤æ–­é€»è¾‘å¯èƒ½æœ‰bug");
 						if(tryStatement->catchBlocks.Count()) newBlock = tryStatement->catchBlocks.Peek().catchBlock;
 						else
 						{
@@ -565,7 +565,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 						if(ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Branch))
 						{
 							BranchStatement* statement = (BranchStatement*)blockStack.Peek()->statements.Peek();
-							ASSERT_DEBUG(!statement->falseBranch, "Ëõ½øÅÐ¶ÏÂß¼­¿ÉÄÜÓÐbug");
+							ASSERT_DEBUG(!statement->falseBranch, "ç¼©è¿›åˆ¤æ–­é€»è¾‘å¯èƒ½æœ‰bug");
 							statement->falseBranch = new BlockStatement(lexical.anchor);
 							statement->falseBranch->indent = line.indent;
 							blockStack.Add(statement->falseBranch);
@@ -575,7 +575,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 						else if(ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
 						{
 							LoopStatement* statement = (LoopStatement*)blockStack.Peek()->statements.Peek();
-							ASSERT_DEBUG(!statement->elseBlock, "Ëõ½øÅÐ¶ÏÂß¼­¿ÉÄÜÓÐbug");
+							ASSERT_DEBUG(!statement->elseBlock, "ç¼©è¿›åˆ¤æ–­é€»è¾‘å¯èƒ½æœ‰bug");
 							statement->elseBlock = new BlockStatement(lexical.anchor);
 							statement->elseBlock->indent = line.indent;
 							blockStack.Add(statement->elseBlock);

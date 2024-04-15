@@ -2,88 +2,88 @@
 #include "Rain.h"
 
 /// <summary>
-/// µ÷ÓÃ×´Ì¬
+/// è°ƒç”¨çŠ¶æ€
 /// </summary>
 enum class InvokerState :uint8
 {
 	/// <summary>
-	/// Î´¿ªÊ¼
+	/// æœªå¼€å§‹
 	/// </summary>
 	Unstart,
 	/// <summary>
-	/// ÔËĞĞÖĞ
+	/// è¿è¡Œä¸­
 	/// </summary>
 	Running,
 	/// <summary>
-	/// ÒÑÍê³É
+	/// å·²å®Œæˆ
 	/// </summary>
 	Completed,
 	/// <summary>
-	/// ÕıÔÚÒì³£ÍË³ö
+	/// æ­£åœ¨å¼‚å¸¸é€€å‡º
 	/// </summary>
 	Aborted,
 	/// <summary>
-	/// ÎŞĞ§
+	/// æ— æ•ˆ
 	/// </summary>
 	Invalid,
 };
 
 /// <summary>
-/// ÀàĞÍ
+/// ç±»å‹
 /// </summary>
 enum class RainType : uint8
 {
 	/// <summary>
-	/// ÄÚ²¿ÀàĞÍ
+	/// å†…éƒ¨ç±»å‹
 	/// </summary>
 	Internal,
 	/// <summary>
-	/// ²¼¶ûÀàĞÍ
+	/// å¸ƒå°”ç±»å‹
 	/// </summary>
 	Bool,
 	/// <summary>
-	/// ×Ö½ÚÀàĞÍ
+	/// å­—èŠ‚ç±»å‹
 	/// </summary>
 	Byte,
 	/// <summary>
-	/// ×Ö·ûÀàĞÍ
+	/// å­—ç¬¦ç±»å‹
 	/// </summary>
 	Character,
 	/// <summary>
-	/// ÕûÊıÀàĞÍ
+	/// æ•´æ•°ç±»å‹
 	/// </summary>
 	Integer,
 	/// <summary>
-	/// ÊµÊıÀàĞÍ
+	/// å®æ•°ç±»å‹
 	/// </summary>
 	Real,
 	/// <summary>
-	/// ¶şÎ¬ÏòÁ¿
+	/// äºŒç»´å‘é‡
 	/// </summary>
 	Real2,
 	/// <summary>
-	/// ÈıÎ¬ÏòÁ¿
+	/// ä¸‰ç»´å‘é‡
 	/// </summary>
 	Real3,
 	/// <summary>
-	/// ËÄÎ¬ÏòÁ¿
+	/// å››ç»´å‘é‡
 	/// </summary>
 	Real4,
 	/// <summary>
-	/// Ã¶¾ÙÀàĞÍ
+	/// æšä¸¾ç±»å‹
 	/// </summary>
 	Enum,
 	/// <summary>
-	/// ×Ö·û´®ÀàĞÍ
+	/// å­—ç¬¦ä¸²ç±»å‹
 	/// </summary>
 	String,
 	/// <summary>
-	/// ÊµÌåÀàĞÍ
+	/// å®ä½“ç±»å‹
 	/// </summary>
 	Entity,
 
 	/// <summary>
-	/// Êı×é±êÊ¶
+	/// æ•°ç»„æ ‡è¯†
 	/// </summary>
 	ArrayFlag = 0x10,
 };

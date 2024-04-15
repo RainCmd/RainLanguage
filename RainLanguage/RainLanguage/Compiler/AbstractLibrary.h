@@ -51,7 +51,7 @@ struct AbstractEnum :AbstractDeclaration
 struct AbstractStruct :AbstractDeclaration
 {
 	List<AbstractVariable*, true> variables;
-	List<uint32, true> functions;//参数包含this
+	List<uint32, true> functions;//鍙傛暟鍖呭惈this
 	uint32 size;
 	uint8 alignment;
 	inline AbstractStruct(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const List<AbstractVariable*, true>& variables, const List<uint32, true> functions, uint32 size, uint8 alignment) :AbstractDeclaration(name, declaration, attributes, space), variables(variables), functions(functions), size(size), alignment(alignment) {}
@@ -61,9 +61,9 @@ struct AbstractClass :AbstractDeclaration
 {
 	Type parent;
 	List<Type, true> inherits;
-	List<uint32, true> constructors;//参数包含this
+	List<uint32, true> constructors;//鍙傛暟鍖呭惈this
 	List<AbstractVariable*, true> variables;
-	List<uint32, true> functions;//参数包含this
+	List<uint32, true> functions;//鍙傛暟鍖呭惈this
 	uint32 size;
 	uint8 alignment;
 	inline AbstractClass(const String& name, const CompilingDeclaration& declaration, const List<String>& attributes, AbstractSpace* space, const Type& parent, const List<Type, true>& inherits, const List<uint32, true>& constructors, const List<AbstractVariable*, true>& variables, const List<uint32, true> functions, uint32 size, uint8 alignment) :AbstractDeclaration(name, declaration, attributes, space), parent(parent), inherits(inherits), constructors(constructors), variables(variables), functions(functions), size(size), alignment(alignment) {}

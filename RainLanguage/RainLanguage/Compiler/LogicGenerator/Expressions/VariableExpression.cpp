@@ -189,7 +189,7 @@ void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint
 		else parameter.results[0] = LogicVariable(GetTargetVariable(parameter), targetType, offset);
 	}
 	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, targetType), GetTargetVariable(parameter), declaration, offset, parameter.finallyAddress);
-	else EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+	else EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 }
 
 void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset)
@@ -203,7 +203,7 @@ void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& param
 		else LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(GetTargetVariable(parameter), parameter.results[0].type, offset), parameter.results[0]);
 	}
 	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) LogicVariabelAssignment(parameter.manager, parameter.generator, GetTargetVariable(parameter), declaration, offset, parameter.results[0], parameter.finallyAddress);
-	else EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+	else EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 }
 
 void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& targetType)
@@ -245,7 +245,7 @@ VariableMemberExpression::~VariableMemberExpression()
 
 void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
-	ASSERT_DEBUG(IsHandleType(target->returns[0]), "ÓïÒå½âÎö¿ÉÄÜÓÐbug");
+	ASSERT_DEBUG(IsHandleType(target->returns[0]), "è¯­ä¹‰è§£æžå¯èƒ½æœ‰bug");
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 	target->Generator(targetParameter);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();

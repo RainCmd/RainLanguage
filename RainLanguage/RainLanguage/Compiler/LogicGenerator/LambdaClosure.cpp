@@ -46,7 +46,7 @@ List<CompilingDeclaration, true> LambdaClosure::GetClosureVariables(uint32 funct
 
 Type LambdaClosure::GetVariableType(const CompilingDeclaration& declaration)
 {
-	ASSERT_DEBUG(declaration.definition == closure->declaration.index, "不是该闭包的定义");
+	ASSERT_DEBUG(declaration.definition == closure->declaration.index, "涓嶆槸璇ラ棴鍖呯殑瀹氫箟");
 	return closure->variables[declaration.index]->type;
 }
 

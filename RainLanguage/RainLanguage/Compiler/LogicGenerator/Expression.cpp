@@ -4,7 +4,7 @@ void Expression::Generator(LogicGenerateParameter&) {}
 
 void Expression::GeneratorAssignment(LogicGenerateParameter&)
 {
-    EXCEPTION("Ö´ĞĞ³éÏóÀàĞÍµÄº¯Êı");
+    EXCEPTION("æ‰§è¡ŒæŠ½è±¡ç±»å‹çš„å‡½æ•°");
 }
 
 void Expression::FillResultVariable(LogicGenerateParameter&, uint32) {}

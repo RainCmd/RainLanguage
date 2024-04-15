@@ -171,7 +171,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 		if (source->returns[i] == returns[i]) parameter.results[i] = sourceParameter.results[i];
 		else if (returns[i] == TYPE_Char)
 		{
-			ASSERT_DEBUG(source->returns[i] == TYPE_Byte, "Î´ÖªµÄ×ª»»ÀàĞÍ");
+			ASSERT_DEBUG(source->returns[i] == TYPE_Byte, "æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 			parameter.generator->WriteCode(Instruct::CASTING_B2C);
 			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
 			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
@@ -181,7 +181,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			if (source->returns[i] == TYPE_Byte) parameter.generator->WriteCode(Instruct::CASTING_B2I);
 			else if (source->returns[i] == TYPE_Char) parameter.generator->WriteCode(Instruct::CASTING_C2I);
 			else if (!source->returns[i].dimension && source->returns[i].code == TypeCode::Enum) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_8);
-			else EXCEPTION("Î´ÖªµÄ×ª»»ÀàĞÍ");
+			else EXCEPTION("æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
 			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 		}
@@ -198,7 +198,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 				LogicVariable temporary = parameter.variableGenerator->DecareTemporary(parameter.manager, TYPE_Integer);
 				if (source->returns[i] == TYPE_Byte) parameter.generator->WriteCode(Instruct::CASTING_B2I);
 				else if (source->returns[i] == TYPE_Char) parameter.generator->WriteCode(Instruct::CASTING_C2I);
-				else EXCEPTION("Î´ÖªµÄ×ª»»ÀàĞÍ");
+				else EXCEPTION("æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 				parameter.generator->WriteCode(temporary, VariableAccessType::Write);
 				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(Instruct::CASTING_I2R);
@@ -208,7 +208,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 		}
 		else if (returns[i] == TYPE_Real2)
 		{
-			ASSERT_DEBUG(source->returns[i] == TYPE_Real3 || source->returns[i] == TYPE_Real4, "Î´ÖªµÄ×ª»»ÀàĞÍ");
+			ASSERT_DEBUG(source->returns[i] == TYPE_Real3 || source->returns[i] == TYPE_Real4, "æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Bitwise);
 			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
 			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
@@ -233,7 +233,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(SIZE(Real3));
 			}
-			else EXCEPTION("Î´ÖªµÄ×ª»»ÀàĞÍ");
+			else EXCEPTION("æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 		}
 		else if (returns[i] == TYPE_Real4)
 		{
@@ -254,7 +254,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 				parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode(SIZE(Real3));
 			}
-			else EXCEPTION("Î´ÖªµÄ×ª»»ÀàĞÍ");
+			else EXCEPTION("æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_8);
 			parameter.generator->WriteCode(LogicVariable(parameter.GetResult(i, returns[i]), TYPE_Real, GET_FIELD_OFFSET(Real4, w)), VariableAccessType::Write);
 			parameter.generator->WriteCode((real)0);
@@ -267,7 +267,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 			parameter.generator->WriteCodeGlobalReference(source->returns[i]);
 		}
-		else EXCEPTION("Î´ÖªµÄ×ª»»ÀàĞÍ");
+		else EXCEPTION("æœªçŸ¥çš„è½¬æ¢ç±»å‹");
 }
 
 TupleCastExpression::~TupleCastExpression()

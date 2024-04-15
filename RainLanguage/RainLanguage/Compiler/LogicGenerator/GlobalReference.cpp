@@ -80,7 +80,7 @@ CompilingDeclaration GetGlobalReferenceCompilingDeclaration(const Declaration& d
 		case TypeCode::Task:return CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Task, declaration.index, NULL);
 		default: break;
 	}
-	EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 }
 
 void GlobalReference::AddVariableReference(const CompilingDeclaration& declaration, uint32 offset)
@@ -109,7 +109,7 @@ void GlobalReference::AddVariableReference(const CompilingDeclaration& declarati
 			}
 			new (references->Add())VariableReference(reference, offset);
 		}
-		else EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+		else EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 	}
 	else if (declaration.category == DeclarationCategory::Variable)
 	{
@@ -121,12 +121,12 @@ void GlobalReference::AddVariableReference(const CompilingDeclaration& declarati
 		CompilingDeclaration relyDeclaration = AddReference(declaration);
 		new (libraries[relyDeclaration.library]->classes[relyDeclaration.definition]->variables[relyDeclaration.index]->addressReferences.Add())VariableReference(reference, offset);
 	}
-	else EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+	else EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 }
 
 void GlobalReference::AddEnumElementReference(const CompilingDeclaration& declaration)
 {
-	ASSERT_DEBUG(declaration.category == DeclarationCategory::EnumElement, "ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+	ASSERT_DEBUG(declaration.category == DeclarationCategory::EnumElement, "æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 	uint32 reference = generator->AddCodeReference(generator->WriteCode((integer)NULL));
 	CompilingDeclaration relyDeclaration = AddReference(declaration);
 	libraries[relyDeclaration.library]->enums[relyDeclaration.definition]->elements[relyDeclaration.index]->addressReferences.Add(reference);
@@ -142,7 +142,7 @@ void GlobalReference::AddAddressReference(const CompilingDeclaration& declaratio
 		else if (declaration.category == DeclarationCategory::StructFunction) function = manager->selfLibaray->structs[declaration.definition]->functions[declaration.index];
 		else if (declaration.category == DeclarationCategory::Constructor) function = manager->selfLibaray->classes[declaration.definition]->constructors[declaration.index];
 		else if (declaration.category == DeclarationCategory::ClassFunction) function = manager->selfLibaray->classes[declaration.definition]->functions[declaration.index];
-		else EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+		else EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 		List<uint32, true>* references = NULL;
 		if (!addressReferences.TryGet(function, references))
 		{
@@ -171,7 +171,7 @@ void GlobalReference::AddAddressReference(const CompilingDeclaration& declaratio
 		CompilingDeclaration relyDeclaration = AddReference(declaration);
 		libraries[relyDeclaration.library]->classes[relyDeclaration.definition]->functions[relyDeclaration.index]->addressReferences.Add(reference);
 	}
-	else EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+	else EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 }
 
 CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& declaration)
@@ -181,7 +181,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 	if (declarationMap.TryGet(declaration, result)) return result;
 	switch (declaration.category)
 	{
-		case DeclarationCategory::Invalid: EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+		case DeclarationCategory::Invalid: EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 		case DeclarationCategory::Variable:
 		{
 			uint32 libraryIndex = GetGlobalReferenceListIndex(declaration.library, libraries);
@@ -325,7 +325,7 @@ CompilingDeclaration GlobalReference::AddReference(const CompilingDeclaration& d
 		case DeclarationCategory::Lambda:
 		case DeclarationCategory::LambdaClosureValue:
 		case DeclarationCategory::LocalVariable:
-		default: EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+		default: EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 	}
 }
 
@@ -340,7 +340,7 @@ Declaration GlobalReference::AddReference(const Declaration& declaration)
 		case TypeCode::Interface: ADD_DECLARATION_REFERENCE(DeclarationCategory::Interface, TypeCode::Interface);
 		case TypeCode::Delegate: ADD_DECLARATION_REFERENCE(DeclarationCategory::Delegate, TypeCode::Delegate);
 		case TypeCode::Task: ADD_DECLARATION_REFERENCE(DeclarationCategory::Task, TypeCode::Task);
-		default: EXCEPTION("ÎÞÐ§µÄTypeCode");
+		default: EXCEPTION("æ— æ•ˆçš„TypeCode");
 	}
 }
 
@@ -358,7 +358,7 @@ void GlobalReference::AddReference(const CompilingDeclaration& declaration, uint
 		CompilingDeclaration relyDeclaration = AddReference(declaration);
 		switch (declaration.category)
 		{
-			case DeclarationCategory::Invalid: EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+			case DeclarationCategory::Invalid: EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 			case DeclarationCategory::Variable:
 				libraries[relyDeclaration.library]->variables[relyDeclaration.index]->references.Add(reference);
 				break;
@@ -368,7 +368,7 @@ void GlobalReference::AddReference(const CompilingDeclaration& declaration, uint
 			case DeclarationCategory::Enum:
 				libraries[relyDeclaration.library]->enums[relyDeclaration.index]->references.Add(reference);
 				break;
-			case DeclarationCategory::EnumElement:EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+			case DeclarationCategory::EnumElement:EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 			case DeclarationCategory::Struct:
 				libraries[relyDeclaration.library]->structs[relyDeclaration.index]->references.Add(reference);
 				break;
@@ -408,7 +408,7 @@ void GlobalReference::AddReference(const CompilingDeclaration& declaration, uint
 			case DeclarationCategory::Lambda:
 			case DeclarationCategory::LambdaClosureValue:
 			case DeclarationCategory::LocalVariable:
-			default: EXCEPTION("ÎÞÐ§µÄÉùÃ÷ÀàÐÍ");
+			default: EXCEPTION("æ— æ•ˆçš„å£°æ˜Žç±»åž‹");
 		}
 	}
 }

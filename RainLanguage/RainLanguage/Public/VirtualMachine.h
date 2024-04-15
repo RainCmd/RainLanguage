@@ -4,20 +4,20 @@
 #include "RainLibrary.h"
 
 /// <summary>
-/// ¶ÑÕ»Êý¾Ý
+/// å †æ ˆæ•°æ®
 /// </summary>
 struct RAINLANGUAGE RainStackFrame
 {
 	/// <summary>
-	/// ¿âÃû
+	/// åº“å
 	/// </summary>
 	const RainString libraryName;
 	/// <summary>
-	/// º¯ÊýÃû
+	/// å‡½æ•°å
 	/// </summary>
 	const RainString functionName;
 	/// <summary>
-	/// ¿â±¾µØ´úÂë¶ÎµØÖ·
+	/// åº“æœ¬åœ°ä»£ç æ®µåœ°å€
 	/// </summary>
 	uint32 address;
 
@@ -25,7 +25,7 @@ struct RAINLANGUAGE RainStackFrame
 };
 
 /// <summary>
-/// c++µ÷ÓÃÓêÑÔ
+/// c++è°ƒç”¨é›¨è¨€
 /// </summary>
 class RAINLANGUAGE InvokerWrapper
 {
@@ -42,451 +42,451 @@ public:
 	InvokerWrapper& operator=(const InvokerWrapper& other);
 
 	/// <summary>
-	/// »ñÈ¡ËùÊôÐéÄâ»ú
+	/// èŽ·å–æ‰€å±žè™šæ‹Ÿæœº
 	/// </summary>
 	/// <returns></returns>
 	RainKernel* GetKernel();
 	/// <summary>
-	/// »ñÈ¡µ÷ÓÃÊµÀýID
+	/// èŽ·å–è°ƒç”¨å®žä¾‹ID
 	/// </summary>
-	/// <returns>µ÷ÓÃµÄÊµÀýID</returns>
+	/// <returns>è°ƒç”¨çš„å®žä¾‹ID</returns>
 	uint64 GetInstanceID() const;
 	/// <summary>
-	/// ÅÐ¶ÏÊÇ·ñÊÇÒ»¸öÓÐÐ§µÄµ÷ÓÃ
+	/// åˆ¤æ–­æ˜¯å¦æ˜¯ä¸€ä¸ªæœ‰æ•ˆçš„è°ƒç”¨
 	/// </summary>
-	/// <returns>ÊÇÓÐÐ§µÄµ÷ÓÃ</returns>
+	/// <returns>æ˜¯æœ‰æ•ˆçš„è°ƒç”¨</returns>
 	bool IsValid() const;
 	/// <summary>
-	/// »ñÈ¡µ±Ç°µ÷ÓÃ×´Ì¬
+	/// èŽ·å–å½“å‰è°ƒç”¨çŠ¶æ€
 	/// </summary>
-	/// <returns>µ±Ç°µ÷ÓÃ×´Ì¬</returns>
+	/// <returns>å½“å‰è°ƒç”¨çŠ¶æ€</returns>
 	InvokerState GetState() const;
 	/// <summary>
-	/// »ñÈ¡Òì³£ÍË³öÊ±µÄÍË³öÐÅÏ¢
+	/// èŽ·å–å¼‚å¸¸é€€å‡ºæ—¶çš„é€€å‡ºä¿¡æ¯
 	/// </summary>
-	/// <returns>ÐÅÏ¢</returns>
-	/// <exception>Èç¹ûµ÷ÓÃÊÇÎÞÐ§×´Ì¬»áÅ×Òì³£</exception>
+	/// <returns>ä¿¡æ¯</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨æ˜¯æ— æ•ˆçŠ¶æ€ä¼šæŠ›å¼‚å¸¸</exception>
 	const RainString GetExitMessage() const;
 	/// <summary>
-	/// ¿ªÊ¼Ö´ÐÐÈÎÎñ
+	/// å¼€å§‹æ‰§è¡Œä»»åŠ¡
 	/// </summary>
-	/// <param name="immediately">true:Á¢¼´Ö´ÐÐ false:ÏÂ´ÎUpdateÖ´ÐÐ</param>
-	/// <param name="ignoreWait">ºöÂÔÓöµ½µÄwait¹Ø¼ü×Ö</param>
+	/// <param name="immediately">true:ç«‹å³æ‰§è¡Œ false:ä¸‹æ¬¡Updateæ‰§è¡Œ</param>
+	/// <param name="ignoreWait">å¿½ç•¥é‡åˆ°çš„waitå…³é”®å­—</param>
 	void Start(bool immediately, bool ignoreWait) const;
 	/// <summary>
-	/// ÅÐ¶Ïµ±Ç°µ÷ÓÃÊÇ·ñÊÇÔÝÍ£×´Ì¬
+	/// åˆ¤æ–­å½“å‰è°ƒç”¨æ˜¯å¦æ˜¯æš‚åœçŠ¶æ€
 	/// </summary>
-	/// <returns>ÊÇÔÝÍ£×´Ì¬</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÔËÐÐ×´Ì¬»áÅ×Òì³£</exception>
+	/// <returns>æ˜¯æš‚åœçŠ¶æ€</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯è¿è¡ŒçŠ¶æ€ä¼šæŠ›å¼‚å¸¸</exception>
 	bool IsPause() const;
 	/// <summary>
-	/// ÔÝÍ£µ±Ç°µ÷ÓÃ
+	/// æš‚åœå½“å‰è°ƒç”¨
 	/// </summary>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÔËÐÐ×´Ì¬»áÅ×Òì³£</exception>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯è¿è¡ŒçŠ¶æ€ä¼šæŠ›å¼‚å¸¸</exception>
 	void Pause() const;
 	/// <summary>
-	/// »Ö¸´µ±Ç°µ÷ÓÃ
+	/// æ¢å¤å½“å‰è°ƒç”¨
 	/// </summary>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÔËÐÐ×´Ì¬»áÅ×Òì³£</exception>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯è¿è¡ŒçŠ¶æ€ä¼šæŠ›å¼‚å¸¸</exception>
 	void Resume() const;
 	/// <summary>
-	/// ´¥·¢Òì³£
+	/// è§¦å‘å¼‚å¸¸
 	/// </summary>
-	/// <param name="error">Òì³£ÐÅÏ¢</param>
+	/// <param name="error">å¼‚å¸¸ä¿¡æ¯</param>
 	void Abort(const RainString& error) const;
 
 	/// <summary>
-	/// »ñÈ¡²¼¶ûÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å¸ƒå°”ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	bool GetBoolReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡×Ö½ÚÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å­—èŠ‚ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	uint8 GetByteReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡×Ö·ûÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å­—ç¬¦ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	character GetCharReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡ÕûÊýÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–æ•´æ•°ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	integer GetIntegerReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡ÊµÊýÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å®žæ•°ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	real GetRealReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡¶þÎ¬ÏòÁ¿ÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–äºŒç»´å‘é‡ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	Real2 GetReal2ReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡ÈýÎ¬ÏòÁ¿ÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–ä¸‰ç»´å‘é‡ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	Real3 GetReal3ReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡ËÄÎ¬ÏòÁ¿ÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å››ç»´å‘é‡ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	Real4 GetReal4ReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾ÙÀàÐÍµÄÕûÊýÖµ
+	/// èŽ·å–æžšä¸¾ç±»åž‹çš„æ•´æ•°å€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>Ã¶¾ÙÀàÐÍµÄÕûÊýÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>æžšä¸¾ç±»åž‹çš„æ•´æ•°å€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	integer GetEnumValueReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾ÙÀàÐÍ¶ÔÓ¦µÄÔªËØÃû³Æ
+	/// èŽ·å–æžšä¸¾ç±»åž‹å¯¹åº”çš„å…ƒç´ åç§°
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>Ã¶¾ÙÀàÐÍ¶ÔÓ¦µÄÔªËØÃû³Æ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>æžšä¸¾ç±»åž‹å¯¹åº”çš„å…ƒç´ åç§°</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	const RainString GetEnumNameReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡×Ö·û´®ÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å­—ç¬¦ä¸²ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>×Ö·û´®</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>å­—ç¬¦ä¸²</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	const RainString GetStringReturnValue(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡ÊµÌåÀàÐÍµÄ·µ»ØÖµ
+	/// èŽ·å–å®žä½“ç±»åž‹çš„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	uint64 GetEntityReturnValue(uint32 index) const;
 
 	/// <summary>
-	/// »ñÈ¡Êý×é·µ»ØÖµ³¤¶È
+	/// èŽ·å–æ•°ç»„è¿”å›žå€¼é•¿åº¦
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <returns>·µ»ØÖµ³¤¶È</returns>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <returns>è¿”å›žå€¼é•¿åº¦</returns>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	uint32 GetArrayReturnValueLength(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡²¼¶ûÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å¸ƒå°”ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetBoolArrayReturnValue(uint32 index, bool*& result) const;
 	/// <summary>
-	/// »ñÈ¡×Ö½ÚÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å­—èŠ‚ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetByteArrayReturnValue(uint32 index, uint8*& result) const;
 	/// <summary>
-	/// »ñÈ¡×Ö·ûÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å­—ç¬¦ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetCharArrayReturnValue(uint32 index, character*& result) const;
 	/// <summary>
-	/// »ñÈ¡ÕûÊýÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–æ•´æ•°ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetIntegerArrayReturnValue(uint32 index, integer*& result) const;
 	/// <summary>
-	/// »ñÈ¡ÊµÊýÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å®žæ•°ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetRealArrayReturnValue(uint32 index, real*& result) const;
 	/// <summary>
-	/// »ñÈ¡¶þÎ¬ÏòÁ¿ÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–äºŒç»´å‘é‡ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetReal2ArrayReturnValue(uint32 index, Real2*& result) const;
 	/// <summary>
-	/// »ñÈ¡ÈýÎ¬ÏòÁ¿ÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–ä¸‰ç»´å‘é‡ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetReal3ArrayReturnValue(uint32 index, Real3*& result) const;
 	/// <summary>
-	/// »ñÈ¡ËÄÎ¬ÏòÁ¿ÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å››ç»´å‘é‡ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetReal4ArrayReturnValue(uint32 index, Real4*& result) const;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾ÙÀàÐÍÖµÊý×é·µ»ØÖµ
+	/// èŽ·å–æžšä¸¾ç±»åž‹å€¼æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetEnumValueArrayReturnValue(uint32 index, integer*& result) const;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾ÙÀàÐÍÃû³ÆÊý×é·µ»ØÖµ
+	/// èŽ·å–æžšä¸¾ç±»åž‹åç§°æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetEnumNameArrayReturnValue(uint32 index, RainString*& result) const;
 	/// <summary>
-	/// »ñÈ¡×Ö·û´®ÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å­—ç¬¦ä¸²ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetStringArrayReturnValue(uint32 index, RainString*& result) const;
 	/// <summary>
-	/// »ñÈ¡ÊµÌåÀàÐÍÊý×é·µ»ØÖµ
+	/// èŽ·å–å®žä½“ç±»åž‹æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÒÑÍê³É×´Ì¬»ò·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯å·²å®ŒæˆçŠ¶æ€æˆ–è¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void GetEntityArrayReturnValue(uint32 index, uint64*& result) const;
 
 	/// <summary>
-	/// ÉèÖÃ²¼¶ûÀàÐÍ²ÎÊý
+	/// è®¾ç½®å¸ƒå°”ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, bool value) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö½ÚÀàÐÍ²ÎÊý
+	/// è®¾ç½®å­—èŠ‚ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, uint8 value) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö·ûÀàÐÍ²ÎÊý
+	/// è®¾ç½®å­—ç¬¦ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, character value) const;
 	/// <summary>
-	/// ÉèÖÃÕûÊýÀàÐÍ²ÎÊý
+	/// è®¾ç½®æ•´æ•°ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, integer value) const;
 	/// <summary>
-	/// ÉèÖÃÊµÊýÀàÐÍ²ÎÊý
+	/// è®¾ç½®å®žæ•°ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, real value) const;
 	/// <summary>
-	/// ÉèÖÃ¶þÎ¬ÏòÁ¿ÀàÐÍ²ÎÊý
+	/// è®¾ç½®äºŒç»´å‘é‡ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, Real2 value) const;
 	/// <summary>
-	/// ÉèÖÃÈýÎ¬ÏòÁ¿ÀàÐÍ²ÎÊý
+	/// è®¾ç½®ä¸‰ç»´å‘é‡ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, Real3 value) const;
 	/// <summary>
-	/// ÉèÖÃËÄÎ¬ÏòÁ¿ÀàÐÍ²ÎÊý
+	/// è®¾ç½®å››ç»´å‘é‡ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, Real4 value) const;
 	/// <summary>
-	/// ÉèÖÃ°´Ã¶¾ÙÔªËØÃûÉèÖÃÃ¶¾ÙÖµ£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// è®¾ç½®æŒ‰æžšä¸¾å…ƒç´ åè®¾ç½®æžšä¸¾å€¼ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="elementName">Ãû³Æ×Ö·û´®</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="elementName">åç§°å­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEnumNameParameter(uint32 index, const RainString& elementName) const;
 	/// <summary>
-	/// ÉèÖÃ°´Ã¶¾ÙÔªËØÃûÉèÖÃÃ¶¾ÙÖµ£¬Ãû³ÆÐèÒªÒÔ\0½áÎ²£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// è®¾ç½®æŒ‰æžšä¸¾å…ƒç´ åè®¾ç½®æžšä¸¾å€¼ï¼Œåç§°éœ€è¦ä»¥\0ç»“å°¾ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="elementName">Ãû³Æ×Ö·û´®</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="elementName">åç§°å­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEnumNameParameter(uint32 index, const character* elementName) const;
 	/// <summary>
-	/// ÒÔÃ¶¾ÙÕûÊýÖµÉèÖÃ²ÎÊý
+	/// ä»¥æžšä¸¾æ•´æ•°å€¼è®¾ç½®å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEnumValueParameter(uint32 index, integer value) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û´®ÀàÐÍ²ÎÊý
+	/// è®¾ç½®å­—ç¬¦ä¸²ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">×Ö·û´®</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const RainString& value) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û´®ÀàÐÍ²ÎÊý£¬×Ö·û´®ÐèÒªÒÔ\0½áÎ²
+	/// è®¾ç½®å­—ç¬¦ä¸²ç±»åž‹å‚æ•°ï¼Œå­—ç¬¦ä¸²éœ€è¦ä»¥\0ç»“å°¾
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">×Ö·û´®</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const character* value) const;
 	/// <summary>
-	/// ÉèÖÃÊµÌåÀàÐÍ²ÎÊý
+	/// è®¾ç½®å®žä½“ç±»åž‹å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="value">²ÎÊýÖµ</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="value">å‚æ•°å€¼</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEntityParameter(uint32 index, uint64 value) const;
 
 	/// <summary>
-	/// ÉèÖÃ²¼¶ûÊý×é²ÎÊý
+	/// è®¾ç½®å¸ƒå°”æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const bool* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö½ÚÊý×é²ÎÊý
+	/// è®¾ç½®å­—èŠ‚æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const uint8* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö·ûÊý×é²ÎÊý
+	/// è®¾ç½®å­—ç¬¦æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const character* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÕûÊýÊý×é²ÎÊý
+	/// è®¾ç½®æ•´æ•°æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const integer* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÊµÊýÊý×é²ÎÊý
+	/// è®¾ç½®å®žæ•°æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const real* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃ¶þÎ¬ÏòÁ¿Êý×é²ÎÊý
+	/// è®¾ç½®äºŒç»´å‘é‡æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const Real2* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÈýÎ¬ÏòÁ¿Êý×é²ÎÊý
+	/// è®¾ç½®ä¸‰ç»´å‘é‡æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const Real3* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃËÄÎ¬ÏòÁ¿Êý×é²ÎÊý
+	/// è®¾ç½®å››ç»´å‘é‡æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const Real4* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÃ¶¾ÙÖµÊý×é²ÎÊý
+	/// è®¾ç½®æžšä¸¾å€¼æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEnumValueParameter(uint32 index, const integer* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÃ¶¾ÙÃûÊý×é²ÎÊý£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// è®¾ç½®æžšä¸¾åæ•°ç»„å‚æ•°ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEnumNameParameter(uint32 index, const RainString* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÃ¶¾ÙÃûÊý×é²ÎÊý£¬Ãû³ÆÐèÒªÒÔ\0½áÎ²£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// è®¾ç½®æžšä¸¾åæ•°ç»„å‚æ•°ï¼Œåç§°éœ€è¦ä»¥\0ç»“å°¾ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEnumNameParameter(uint32 index, const character** values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û´®Êý×é²ÎÊý
+	/// è®¾ç½®å­—ç¬¦ä¸²æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const RainString* values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û´®Êý×é²ÎÊý
+	/// è®¾ç½®å­—ç¬¦ä¸²æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetParameter(uint32 index, const character** values, uint32 length) const;
 	/// <summary>
-	/// ÉèÖÃÊµÌåÊý×é²ÎÊý
+	/// è®¾ç½®å®žä½“æ•°ç»„å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="values">²ÎÊýÊý×é</param>
-	/// <param name="length">²ÎÊýÊý×é³¤¶È</param>
-	/// <exception>Èç¹ûµ÷ÓÃ²»ÊÇÎ´µ÷ÓÃ×´Ì¬»ò²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="values">å‚æ•°æ•°ç»„</param>
+	/// <param name="length">å‚æ•°æ•°ç»„é•¿åº¦</param>
+	/// <exception>å¦‚æžœè°ƒç”¨ä¸æ˜¯æœªè°ƒç”¨çŠ¶æ€æˆ–å‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	void SetEntityParameter(uint32 index, const uint64* values, uint32 length) const;
 };
 
 /// <summary>
-/// ÓêÑÔ¶Ôc++µÄµ÷ÓÃ
+/// é›¨è¨€å¯¹c++çš„è°ƒç”¨
 /// </summary>
 class RAINLANGUAGE CallerWrapper
 {
@@ -495,456 +495,456 @@ public:
 	virtual ~CallerWrapper() {}
 
 	/// <summary>
-	/// »ñÈ¡²¼¶û²ÎÊýÖµ
+	/// èŽ·å–å¸ƒå°”å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual bool GetBoolParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡×Ö½Ú²ÎÊýÖµ
+	/// èŽ·å–å­—èŠ‚å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual uint8 GetByteParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡×Ö·û²ÎÊýÖµ
+	/// èŽ·å–å­—ç¬¦å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual character GetCharParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÕûÊý²ÎÊýÖµ
+	/// èŽ·å–æ•´æ•°å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual integer GetIntegerParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÊµÊý²ÎÊýÖµ
+	/// èŽ·å–å®žæ•°å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual real GetRealParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡¶þÎ¬ÏòÁ¿²ÎÊýÖµ
+	/// èŽ·å–äºŒç»´å‘é‡å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual Real2 GetReal2Parameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÈýÎ¬ÏòÁ¿²ÎÊýÖµ
+	/// èŽ·å–ä¸‰ç»´å‘é‡å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual Real3 GetReal3Parameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡ËÄÎ¬ÏòÁ¿²ÎÊýÖµ
+	/// èŽ·å–å››ç»´å‘é‡å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual Real4 GetReal4Parameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾Ù²ÎÊýÃû
+	/// èŽ·å–æžšä¸¾å‚æ•°å
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>Ã¶¾Ù²ÎÊýÃû</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>æžšä¸¾å‚æ•°å</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual const RainString GetEnumNameParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾Ù²ÎÊýÕûÊýÖµ
+	/// èŽ·å–æžšä¸¾å‚æ•°æ•´æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual integer GetEnumValueParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡×Ö·û´®²ÎÊýÖµ
+	/// èŽ·å–å­—ç¬¦ä¸²å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>×Ö·û´®</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å­—ç¬¦ä¸²</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual const RainString GetStringParameter(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÊµÌå²ÎÊý
+	/// èŽ·å–å®žä½“å‚æ•°
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>²ÎÊýÖµ</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>å‚æ•°å€¼</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual uint64 GetEntityParameter(uint32 index) const = 0;
 
 	/// <summary>
-	/// »ñÈ¡²ÎÊýÊý×é³¤¶È
+	/// èŽ·å–å‚æ•°æ•°ç»„é•¿åº¦
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <returns>Êý×é³¤¶È</returns>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <returns>æ•°ç»„é•¿åº¦</returns>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual uint32 GetArrayParameterLength(uint32 index) const = 0;
 	/// <summary>
-	/// »ñÈ¡²¼¶ûÊý×é²ÎÊýÖµ
+	/// èŽ·å–å¸ƒå°”æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetBoolArrayParameter(uint32 index, bool*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡×Ö½ÚÊý×é²ÎÊýÖµ
+	/// èŽ·å–å­—èŠ‚æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetByteArrayParameter(uint32 index, uint8*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡×Ö·ûÊý×é²ÎÊýÖµ
+	/// èŽ·å–å­—ç¬¦æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetCharArrayParameter(uint32 index, character*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÕûÊýÊý×é²ÎÊýÖµ
+	/// èŽ·å–æ•´æ•°æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetIntegerArrayParameter(uint32 index, integer*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÊµÊýÊý×é²ÎÊýÖµ
+	/// èŽ·å–å®žæ•°æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetRealArrayParameter(uint32 index, real*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡¶þÎ¬ÏòÁ¿Êý×é²ÎÊýÖµ
+	/// èŽ·å–äºŒç»´å‘é‡æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetReal2ArrayParameter(uint32 index, Real2*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÈýÎ¬ÏòÁ¿Êý×é²ÎÊýÖµ
+	/// èŽ·å–ä¸‰ç»´å‘é‡æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetReal3ArrayParameter(uint32 index, Real3*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡ËÄÎ¬ÏòÁ¿Êý×é²ÎÊýÖµ
+	/// èŽ·å–å››ç»´å‘é‡æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetReal4ArrayParameter(uint32 index, Real4*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾ÙÖµÊý×é²ÎÊýÖµ
+	/// èŽ·å–æžšä¸¾å€¼æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetEnumArrayValueParameter(uint32 index, integer*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡Ã¶¾ÙÃûÊý×é²ÎÊýÖµ
+	/// èŽ·å–æžšä¸¾åæ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetEnumArrayNameParameter(uint32 index, RainString*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡×Ö·û´®Êý×é²ÎÊýÖµ
+	/// èŽ·å–å­—ç¬¦ä¸²æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetStringArrayParameter(uint32 index, RainString*& result) const = 0;
 	/// <summary>
-	/// »ñÈ¡ÊµÌåÊý×é²ÎÊýÖµ
+	/// èŽ·å–å®žä½“æ•°ç»„å‚æ•°å€¼
 	/// </summary>
-	/// <param name="index">²ÎÊýË÷Òý</param>
-	/// <param name="result">ÓÃÓÚÌî³ä·µ»ØÖµÊý×éµÄµØÖ·</param>
-	/// <exception>Èç¹û²ÎÊýÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">å‚æ•°ç´¢å¼•</param>
+	/// <param name="result">ç”¨äºŽå¡«å……è¿”å›žå€¼æ•°ç»„çš„åœ°å€</param>
+	/// <exception>å¦‚æžœå‚æ•°ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void GetEntityArrayParameter(uint32 index, uint64*& result) const = 0;
 
 	/// <summary>
-	/// ÉèÖÃ²¼¶û·µ»ØÖµ
+	/// è®¾ç½®å¸ƒå°”è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, bool value) = 0;
 	/// <summary>
-	/// ÉèÖÃ×Ö½Ú·µ»ØÖµ
+	/// è®¾ç½®å­—èŠ‚è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, uint8 value) = 0;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û·µ»ØÖµ
+	/// è®¾ç½®å­—ç¬¦è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, character value) = 0;
 	/// <summary>
-	/// ÉèÖÃÕûÊý·µ»ØÖµ
+	/// è®¾ç½®æ•´æ•°è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, integer value) = 0;
 	/// <summary>
-	/// ÉèÖÃÊµÊý·µ»ØÖµ
+	/// è®¾ç½®å®žæ•°è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, real value) = 0;
 	/// <summary>
-	/// ÉèÖÃ¶þÎ¬ÏòÁ¿·µ»ØÖµ
+	/// è®¾ç½®äºŒç»´å‘é‡è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, Real2 value) = 0;
 	/// <summary>
-	/// ÉèÖÃÈýÎ¬ÏòÁ¿·µ»ØÖµ
+	/// è®¾ç½®ä¸‰ç»´å‘é‡è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, Real3 value) = 0;
 	/// <summary>
-	/// ÉèÖÃËÄÎ¬ÏòÁ¿·µ»ØÖµ
+	/// è®¾ç½®å››ç»´å‘é‡è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, Real4 value) = 0;
 	/// <summary>
-	/// ÒÔÃ¶¾ÙÔªËØÃûÉèÖÃ·µ»ØÖµ£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// ä»¥æžšä¸¾å…ƒç´ åè®¾ç½®è¿”å›žå€¼ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="elementName">Ã¶¾ÙÔªËØÃû×Ö·û´®</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="elementName">æžšä¸¾å…ƒç´ åå­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, const RainString& elementName) = 0;
 	/// <summary>
-	/// ÒÔÃ¶¾ÙÔªËØÃûÉèÖÃ·µ»ØÖµ£¬Ãû³ÆÐèÒªÒÔ\0½áÎ²£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// ä»¥æžšä¸¾å…ƒç´ åè®¾ç½®è¿”å›žå€¼ï¼Œåç§°éœ€è¦ä»¥\0ç»“å°¾ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="elementName">Ã¶¾ÙÔªËØÃû×Ö·û´®</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="elementName">æžšä¸¾å…ƒç´ åå­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, const character* elementName) = 0;
 	/// <summary>
-	/// ÉèÖÃÃ¶¾Ù·µ»ØÖµ
+	/// è®¾ç½®æžšä¸¾è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEnumValueReturnValue(uint32 index, integer value) = 0;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û´®·µ»ØÖµ
+	/// è®¾ç½®å­—ç¬¦ä¸²è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">×Ö·û´®</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">å­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, const RainString& value) = 0;
 	/// <summary>
-	/// ÉèÖÃ×Ö·û´®·µ»ØÖµ£¬×Ö·û´®ÐèÒªÒÔ\0½áÎ²
+	/// è®¾ç½®å­—ç¬¦ä¸²è¿”å›žå€¼ï¼Œå­—ç¬¦ä¸²éœ€è¦ä»¥\0ç»“å°¾
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">×Ö·û´®</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">å­—ç¬¦ä¸²</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, const character* value) = 0;
 	/// <summary>
-	/// ÉèÖÃÊµÌå·µ»ØÖµ
+	/// è®¾ç½®å®žä½“è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="value">·µ»ØÖµ</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="value">è¿”å›žå€¼</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEntityReturnValue(uint32 index, uint64 value) = 0;
 
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, bool* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, uint8* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, character* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, integer* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, real* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, Real2* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, Real3* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, Real4* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ£¬Ãû³ÆÐèÒªÒÔ\0½áÎ²£¬Ãû³ÆÎ´ÕÒµ½»á¸³ÖµÎª0
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼ï¼Œåç§°éœ€è¦ä»¥\0ç»“å°¾ï¼Œåç§°æœªæ‰¾åˆ°ä¼šèµ‹å€¼ä¸º0
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEnumNameReturnValue(uint32 index, character** values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEnumValueReturnValue(uint32 index, integer* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, RainString* values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetReturnValue(uint32 index, character** values, uint32 length) = 0;
 	/// <summary>
-	/// ÉèÖÃÊý×é·µ»ØÖµ
+	/// è®¾ç½®æ•°ç»„è¿”å›žå€¼
 	/// </summary>
-	/// <param name="index">·µ»ØÖµË÷Òý</param>
-	/// <param name="values">·µ»ØÖµÊ×µØÖ·</param>
-	/// <param name="length">·µ»ØÖµÊýÁ¿</param>
-	/// <exception>Èç¹û·µ»ØÖµÀàÐÍ²»ÕýÈ·»áÅ×Òì³£</exception>
+	/// <param name="index">è¿”å›žå€¼ç´¢å¼•</param>
+	/// <param name="values">è¿”å›žå€¼é¦–åœ°å€</param>
+	/// <param name="length">è¿”å›žå€¼æ•°é‡</param>
+	/// <exception>å¦‚æžœè¿”å›žå€¼ç±»åž‹ä¸æ­£ç¡®ä¼šæŠ›å¼‚å¸¸</exception>
 	virtual void SetEntityReturnValue(uint32 index, uint64* values, uint32 length) = 0;
 
 	/// <summary>
-	/// ÉèÖÃÒì³£ÐÅÏ¢
+	/// è®¾ç½®å¼‚å¸¸ä¿¡æ¯
 	/// </summary>
-	/// <param name="error">Òì³£ÐÅÏ¢×Ö·û´® </param>
+	/// <param name="error">å¼‚å¸¸ä¿¡æ¯å­—ç¬¦ä¸² </param>
 	virtual void SetException(const RainString& error) = 0;
 };
 
 /// <summary>
-/// ÐéÄâ»úÆô¶¯²ÎÊý
+/// è™šæ‹Ÿæœºå¯åŠ¨å‚æ•°
 /// </summary>
 struct RAINLANGUAGE StartupParameter
 {
 	/// <summary>
-	/// Æô¶¯¼ÓÔØµÄ¿âÁÐ±í
+	/// å¯åŠ¨åŠ è½½çš„åº“åˆ—è¡¨
 	/// </summary>
 	const RainLibrary** libraries;
 	/// <summary>
-	/// Æô¶¯¼ÓÔØµÄ¿âÊýÁ¿
+	/// å¯åŠ¨åŠ è½½çš„åº“æ•°é‡
 	/// </summary>
 	uint32 libraryCount;
 	/// <summary>
-	/// Ëæ»úÖÖ×Ó
+	/// éšæœºç§å­
 	/// </summary>
 	integer seed;
 	/// <summary>
-	/// ×Ö·û´®´úÀí³õÊ¼ÈÝ»ý
+	/// å­—ç¬¦ä¸²ä»£ç†åˆå§‹å®¹ç§¯
 	/// </summary>
 	uint32 stringCapacity;
 	/// <summary>
-	/// ÊµÌå´úÀí³õÊ¼ÈÝ»ý
+	/// å®žä½“ä»£ç†åˆå§‹å®¹ç§¯
 	/// </summary>
 	uint32 entityCapacity;
 	/// <summary>
-	/// ÐéÄâ»úÒýÓÃºÍÊÍ·ÅÊµÌåÊ±µÄ»Øµ÷º¯Êý
+	/// è™šæ‹Ÿæœºå¼•ç”¨å’Œé‡Šæ”¾å®žä½“æ—¶çš„å›žè°ƒå‡½æ•°
 	/// </summary>
 	EntityAction onReferenceEntity, onReleaseEntity;
 	/// <summary>
-	/// ¿â¼ÓÔØÆ÷
+	/// åº“åŠ è½½å™¨
 	/// </summary>
 	RainLibraryLoader libraryLoader;
 	/// <summary>
-	/// ¿âÐ¶ÔØÆ÷
+	/// åº“å¸è½½å™¨
 	/// </summary>
 	RainLibraryUnloader libraryUnloader;
 	/// <summary>
-	/// ±¾µØµ÷ÓÃµÄ¼ÓÔØÆ÷
+	/// æœ¬åœ°è°ƒç”¨çš„åŠ è½½å™¨
 	/// </summary>
 	NativeCallerLoader nativeCallerLoader;
 	/// <summary>
-	/// ÍÐ¹Ü¶Ñ³õÊ¼ÈÝ»ýºÍÄêÇá´ú×î´óÄêÁä
+	/// æ‰˜ç®¡å †åˆå§‹å®¹ç§¯å’Œå¹´è½»ä»£æœ€å¤§å¹´é¾„
 	/// </summary>
 	uint32 heapCapacity, heapGeneration;
 	/// <summary>
-	/// ÈÎÎñ³õÊ¼ÈÝ»ý
+	/// ä»»åŠ¡åˆå§‹å®¹ç§¯
 	/// </summary>
 	uint32 taskCapacity;
 	/// <summary>
-	/// Ö´ÐÐÕ»³õÊ¼ÈÝ»ý
+	/// æ‰§è¡Œæ ˆåˆå§‹å®¹ç§¯
 	/// </summary>
 	uint32 executeStackCapacity;
 	/// <summary>
-	/// ÈÎÎñÒì³£µÄ»Øµ÷º¯Êý
+	/// ä»»åŠ¡å¼‚å¸¸çš„å›žè°ƒå‡½æ•°
 	/// </summary>
 	OnExceptionExit onExceptionExit;
 
@@ -956,28 +956,28 @@ struct RAINLANGUAGE StartupParameter
 };
 
 /// <summary>
-/// ÐéÄâ»ú×´Ì¬
+/// è™šæ‹ŸæœºçŠ¶æ€
 /// </summary>
 struct RAINLANGUAGE RainKernelState
 {
 	/// <summary>
-	/// µ±Ç°ÈÎÎñÊýÁ¿
+	/// å½“å‰ä»»åŠ¡æ•°é‡
 	/// </summary>
 	uint32 taskCount;
 	/// <summary>
-	/// µ±Ç°×Ö·û´®ÊýÁ¿
+	/// å½“å‰å­—ç¬¦ä¸²æ•°é‡
 	/// </summary>
 	uint32 stringCount;
 	/// <summary>
-	/// µ±Ç°ÊµÌåÊýÁ¿
+	/// å½“å‰å®žä½“æ•°é‡
 	/// </summary>
 	uint32 entityCount;
 	/// <summary>
-	/// µ±Ç°ÍÐ¹Ü¶ÔÏóÊýÁ¿
+	/// å½“å‰æ‰˜ç®¡å¯¹è±¡æ•°é‡
 	/// </summary>
 	uint32 handleCount;
 	/// <summary>
-	/// µ±Ç°ÍÐ¹Ü¶Ñ´óÐ¡
+	/// å½“å‰æ‰˜ç®¡å †å¤§å°
 	/// </summary>
 	uint32 heapSize;
 
@@ -985,7 +985,7 @@ struct RAINLANGUAGE RainKernelState
 };
 
 /// <summary>
-/// ÀàÐÍÁÐ±í
+/// ç±»åž‹åˆ—è¡¨
 /// </summary>
 struct RAINLANGUAGE RainTypes
 {
@@ -999,21 +999,21 @@ public:
 	RainTypes(RainTypes&& other) noexcept;
 	RainTypes& operator=(RainTypes& other);
 	/// <summary>
-	/// »ñÈ¡ÀàÐÍÊýÁ¿
+	/// èŽ·å–ç±»åž‹æ•°é‡
 	/// </summary>
-	/// <returns>ÀàÐÍÊýÁ¿</returns>
+	/// <returns>ç±»åž‹æ•°é‡</returns>
 	inline uint32 Count() const { return count; }
 	/// <summary>
-	/// »ñÈ¡ÀàÐÍ
+	/// èŽ·å–ç±»åž‹
 	/// </summary>
-	/// <param name="index">ÏÂ±ê</param>
-	/// <returns>ÀàÐÍ</returns>
+	/// <param name="index">ä¸‹æ ‡</param>
+	/// <returns>ç±»åž‹</returns>
 	inline const RainType operator[](uint32 index) const { return types[index]; }
 	~RainTypes();
 };
 
 /// <summary>
-/// ÓêÑÔµÄº¯Êý¾ä±ú
+/// é›¨è¨€çš„å‡½æ•°å¥æŸ„
 /// </summary>
 class RAINLANGUAGE RainFunction
 {
@@ -1028,30 +1028,30 @@ public:
 	RainFunction& operator=(const RainFunction& other);
 
 	/// <summary>
-	/// ÅÐ¶ÏÊÇ·ñÊÇ¸öÓÐÐ§µÄ¾ä±ú
+	/// åˆ¤æ–­æ˜¯å¦æ˜¯ä¸ªæœ‰æ•ˆçš„å¥æŸ„
 	/// </summary>
-	/// <returns>ÊÇ¸öÓÐÐ§µÄ¾ä±ú</returns>
+	/// <returns>æ˜¯ä¸ªæœ‰æ•ˆçš„å¥æŸ„</returns>
 	bool IsValid() const;
 	/// <summary>
-	/// ´´½¨Ò»¸öº¯ÊýµÄµ÷ÓÃ
+	/// åˆ›å»ºä¸€ä¸ªå‡½æ•°çš„è°ƒç”¨
 	/// </summary>
-	/// <returns>º¯ÊýµÄµ÷ÓÃ</returns>
+	/// <returns>å‡½æ•°çš„è°ƒç”¨</returns>
 	InvokerWrapper CreateInvoker() const;
 	/// <summary>
-	/// »ñÈ¡¸Ãº¯ÊýµÄ²ÎÊýÁÐ±í
+	/// èŽ·å–è¯¥å‡½æ•°çš„å‚æ•°åˆ—è¡¨
 	/// </summary>
-	/// <returns>ÀàÐÍÁÐ±í</returns>
+	/// <returns>ç±»åž‹åˆ—è¡¨</returns>
 	RainTypes GetParameters() const;
 	/// <summary>
-	/// »ñÈ¡º¯ÊýµÄ·µ»ØÖµÁÐ±í
+	/// èŽ·å–å‡½æ•°çš„è¿”å›žå€¼åˆ—è¡¨
 	/// </summary>
-	/// <returns>ÀàÐÍÁÐ±í</returns>
+	/// <returns>ç±»åž‹åˆ—è¡¨</returns>
 	RainTypes GetReturns() const;
 
 };
 
 /// <summary>
-/// º¯Êý¾ä±úÁÐ±í
+/// å‡½æ•°å¥æŸ„åˆ—è¡¨
 /// </summary>
 struct RAINLANGUAGE RainFunctions
 {
@@ -1065,21 +1065,21 @@ public:
 	RainFunctions(RainFunctions&& other) noexcept;
 	RainFunctions& operator=(RainFunctions& other);
 	/// <summary>
-	/// »ñÈ¡¾ä±úÊýÁ¿
+	/// èŽ·å–å¥æŸ„æ•°é‡
 	/// </summary>
-	/// <returns>¾ä±úÊýÁ¿</returns>
+	/// <returns>å¥æŸ„æ•°é‡</returns>
 	inline uint32 Count() const { return count; }
 	/// <summary>
-	/// »ñÈ¡º¯Êý¾ä±ú
+	/// èŽ·å–å‡½æ•°å¥æŸ„
 	/// </summary>
-	/// <param name="index">ÏÂ±ê</param>
-	/// <returns>º¯Êý¾ä±ú</returns>
+	/// <param name="index">ä¸‹æ ‡</param>
+	/// <returns>å‡½æ•°å¥æŸ„</returns>
 	inline const RainFunction operator[](uint32 index) const { return functions[index]; }
 	~RainFunctions();
 };
 
 /// <summary>
-/// ÓêÑÔÐéÄâ»ú
+/// é›¨è¨€è™šæ‹Ÿæœº
 /// </summary>
 class RAINLANGUAGE RainKernel
 {
@@ -1088,63 +1088,63 @@ public:
 	virtual ~RainKernel() {};
 
 	/// <summary>
-	/// ¼ÓÔØ¿â
+	/// åŠ è½½åº“
 	/// </summary>
-	/// <param name="name">¿âÃû</param>
-	/// <returns>¼ÓÔØ³É¹¦Ôò·µ»Øtrue</returns>
+	/// <param name="name">åº“å</param>
+	/// <returns>åŠ è½½æˆåŠŸåˆ™è¿”å›žtrue</returns>
 	virtual bool LoadLibrary(const RainString& name) = 0;
 	/// <summary>
-	/// ¼ÓÔØ¿â
+	/// åŠ è½½åº“
 	/// </summary>
-	/// <param name="name">¿âÃû</param>
-	/// <returns>¼ÓÔØ³É¹¦Ôò·µ»Øtrue</returns>
+	/// <param name="name">åº“å</param>
+	/// <returns>åŠ è½½æˆåŠŸåˆ™è¿”å›žtrue</returns>
 	virtual bool LoadLibrary(const character* name) = 0;
 	/// <summary>
-	/// ²éÕÒº¯Êý£¬Ö»ÄÜ²éÕÒÈ«¾ÖµÄ¹«¿ªº¯Êý£¬Ê¹ÓÃ'.'·Ö¸ô¿âÃû¡¢¿Õ¼äÃûºÍº¯ÊýÃû£¬Ã»ÓÐ'.'·Ö¸ôÔò»á±éÀúËùÓÐÒÑ¼ÓÔØ¿âµÄ¹«¿ªÈ«¾Öº¯Êý£¬Æ¥ÅäµÚÒ»¸öÃû³ÆÏàµÈµÄº¯Êý
-	/// ²éÕÒÊ§°Ü»á·µ»ØÒ»¸öÎÞÐ§µÄ¾ä±ú
+	/// æŸ¥æ‰¾å‡½æ•°ï¼Œåªèƒ½æŸ¥æ‰¾å…¨å±€çš„å…¬å¼€å‡½æ•°ï¼Œä½¿ç”¨'.'åˆ†éš”åº“åã€ç©ºé—´åå’Œå‡½æ•°åï¼Œæ²¡æœ‰'.'åˆ†éš”åˆ™ä¼šéåŽ†æ‰€æœ‰å·²åŠ è½½åº“çš„å…¬å¼€å…¨å±€å‡½æ•°ï¼ŒåŒ¹é…ç¬¬ä¸€ä¸ªåç§°ç›¸ç­‰çš„å‡½æ•°
+	/// æŸ¥æ‰¾å¤±è´¥ä¼šè¿”å›žä¸€ä¸ªæ— æ•ˆçš„å¥æŸ„
 	/// </summary>
-	/// <param name="name">º¯ÊýÃû</param>
-	/// <param name="allowNoPublic">ÔÊÐí²éÕÒË½ÓÐº¯Êý</param>
-	/// <returns>º¯Êý¾ä±ú</returns>
+	/// <param name="name">å‡½æ•°å</param>
+	/// <param name="allowNoPublic">å…è®¸æŸ¥æ‰¾ç§æœ‰å‡½æ•°</param>
+	/// <returns>å‡½æ•°å¥æŸ„</returns>
 	virtual const RainFunction FindFunction(const RainString& name, bool allowNoPublic) = 0;
 	/// <summary>
-	/// ²éÕÒº¯Êý£¬Ö»ÄÜ²éÕÒÈ«¾ÖµÄ¹«¿ªº¯Êý£¬Ê¹ÓÃ'.'·Ö¸ô¿âÃû¡¢¿Õ¼äÃûºÍº¯ÊýÃû£¬Ã»ÓÐ'.'·Ö¸ôÔò»á±éÀúËùÓÐÒÑ¼ÓÔØ¿âµÄ¹«¿ªÈ«¾Öº¯Êý£¬Æ¥ÅäµÚÒ»¸öÃû³ÆÏàµÈµÄº¯Êý
-	/// ²éÕÒÊ§°Ü»á·µ»ØÒ»¸öÎÞÐ§µÄ¾ä±ú
+	/// æŸ¥æ‰¾å‡½æ•°ï¼Œåªèƒ½æŸ¥æ‰¾å…¨å±€çš„å…¬å¼€å‡½æ•°ï¼Œä½¿ç”¨'.'åˆ†éš”åº“åã€ç©ºé—´åå’Œå‡½æ•°åï¼Œæ²¡æœ‰'.'åˆ†éš”åˆ™ä¼šéåŽ†æ‰€æœ‰å·²åŠ è½½åº“çš„å…¬å¼€å…¨å±€å‡½æ•°ï¼ŒåŒ¹é…ç¬¬ä¸€ä¸ªåç§°ç›¸ç­‰çš„å‡½æ•°
+	/// æŸ¥æ‰¾å¤±è´¥ä¼šè¿”å›žä¸€ä¸ªæ— æ•ˆçš„å¥æŸ„
 	/// </summary>
-	/// <param name="name">º¯ÊýÃû</param>
-	/// <param name="allowNoPublic">ÔÊÐí²éÕÒË½ÓÐº¯Êý</param>
-	/// <returns>º¯Êý¾ä±ú</returns>
+	/// <param name="name">å‡½æ•°å</param>
+	/// <param name="allowNoPublic">å…è®¸æŸ¥æ‰¾ç§æœ‰å‡½æ•°</param>
+	/// <returns>å‡½æ•°å¥æŸ„</returns>
 	virtual const RainFunction FindFunction(const character* name, bool allowNoPublic) = 0;
 	/// <summary>
-	/// ²éÕÒº¯Êý£¬Ö»ÄÜ²éÕÒÈ«¾ÖµÄ¹«¿ªº¯Êý£¬Ê¹ÓÃ'.'·Ö¸ô¿âÃû¡¢¿Õ¼äÃûºÍº¯ÊýÃû£¬Ã»ÓÐ'.'·Ö¸ôÔò»á±éÀúËùÓÐÒÑ¼ÓÔØ¿âµÄ¹«¿ªÈ«¾Öº¯Êý£¬Æ¥ÅäËùÓÐÃû³ÆÏàµÈµÄº¯Êý
-	/// ²éÕÒÊ§°Ü»á·µ»ØÒ»¸öÎÞÐ§µÄ¾ä±ú
+	/// æŸ¥æ‰¾å‡½æ•°ï¼Œåªèƒ½æŸ¥æ‰¾å…¨å±€çš„å…¬å¼€å‡½æ•°ï¼Œä½¿ç”¨'.'åˆ†éš”åº“åã€ç©ºé—´åå’Œå‡½æ•°åï¼Œæ²¡æœ‰'.'åˆ†éš”åˆ™ä¼šéåŽ†æ‰€æœ‰å·²åŠ è½½åº“çš„å…¬å¼€å…¨å±€å‡½æ•°ï¼ŒåŒ¹é…æ‰€æœ‰åç§°ç›¸ç­‰çš„å‡½æ•°
+	/// æŸ¥æ‰¾å¤±è´¥ä¼šè¿”å›žä¸€ä¸ªæ— æ•ˆçš„å¥æŸ„
 	/// </summary>
-	/// <param name="name">º¯ÊýÃû</param>
-	/// <param name="allowNoPublic">ÔÊÐí²éÕÒË½ÓÐº¯Êý</param>
-	/// <returns>º¯Êý¾ä±ú</returns>
+	/// <param name="name">å‡½æ•°å</param>
+	/// <param name="allowNoPublic">å…è®¸æŸ¥æ‰¾ç§æœ‰å‡½æ•°</param>
+	/// <returns>å‡½æ•°å¥æŸ„</returns>
 	virtual RainFunctions FindFunctions(const RainString& name, bool allowNoPublic) = 0;
 	/// <summary>
-	/// ²éÕÒº¯Êý£¬Ö»ÄÜ²éÕÒÈ«¾ÖµÄ¹«¿ªº¯Êý£¬Ê¹ÓÃ'.'·Ö¸ô¿âÃû¡¢¿Õ¼äÃûºÍº¯ÊýÃû£¬Ã»ÓÐ'.'·Ö¸ôÔò»á±éÀúËùÓÐÒÑ¼ÓÔØ¿âµÄ¹«¿ªÈ«¾Öº¯Êý£¬Æ¥ÅäËùÓÐÃû³ÆÏàµÈµÄº¯Êý
-	/// ²éÕÒÊ§°Ü»á·µ»ØÒ»¸öÎÞÐ§µÄ¾ä±ú
+	/// æŸ¥æ‰¾å‡½æ•°ï¼Œåªèƒ½æŸ¥æ‰¾å…¨å±€çš„å…¬å¼€å‡½æ•°ï¼Œä½¿ç”¨'.'åˆ†éš”åº“åã€ç©ºé—´åå’Œå‡½æ•°åï¼Œæ²¡æœ‰'.'åˆ†éš”åˆ™ä¼šéåŽ†æ‰€æœ‰å·²åŠ è½½åº“çš„å…¬å¼€å…¨å±€å‡½æ•°ï¼ŒåŒ¹é…æ‰€æœ‰åç§°ç›¸ç­‰çš„å‡½æ•°
+	/// æŸ¥æ‰¾å¤±è´¥ä¼šè¿”å›žä¸€ä¸ªæ— æ•ˆçš„å¥æŸ„
 	/// </summary>
-	/// <param name="name">º¯ÊýÃû</param>
-	/// <param name="allowNoPublic">ÔÊÐí²éÕÒË½ÓÐº¯Êý</param>
-	/// <returns>º¯Êý¾ä±ú</returns>
+	/// <param name="name">å‡½æ•°å</param>
+	/// <param name="allowNoPublic">å…è®¸æŸ¥æ‰¾ç§æœ‰å‡½æ•°</param>
+	/// <returns>å‡½æ•°å¥æŸ„</returns>
 	virtual RainFunctions FindFunctions(const character* name, bool allowNoPublic) = 0;
 	/// <summary>
-	/// »ñÈ¡µ±Ç°×´Ì¬Êý¾Ý
+	/// èŽ·å–å½“å‰çŠ¶æ€æ•°æ®
 	/// </summary>
-	/// <returns>×´Ì¬Êý¾Ý</returns>
+	/// <returns>çŠ¶æ€æ•°æ®</returns>
 	virtual const RainKernelState GetState() = 0;
 	/// <summary>
-	/// ´¥·¢ÍÐ¹Ü¶ÑÀ¬»ø»ØÊÕ
+	/// è§¦å‘æ‰˜ç®¡å †åžƒåœ¾å›žæ”¶
 	/// </summary>
-	/// <param name="full">½øÐÐÍêÕûµÄÀ¬»ø»ØÊÕ</param>
-	/// <returns>±¾´ÎÀ¬»ø»ØÊÕÊÍ·ÅµÄÍÐ¹Ü¶Ñ´óÐ¡</returns>
+	/// <param name="full">è¿›è¡Œå®Œæ•´çš„åžƒåœ¾å›žæ”¶</param>
+	/// <returns>æœ¬æ¬¡åžƒåœ¾å›žæ”¶é‡Šæ”¾çš„æ‰˜ç®¡å †å¤§å°</returns>
 	virtual uint32 GC(bool full) = 0;
 
 	/// <summary>
-	/// ¸üÐÂÐéÄâ»ú
+	/// æ›´æ–°è™šæ‹Ÿæœº
 	/// </summary>
 	virtual void Update() = 0;
 };
@@ -1153,11 +1153,11 @@ public:
 RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter);
 
 /// <summary>
-/// ´´½¨¿Éµ÷ÊÔÐéÄâ»ú
+/// åˆ›å»ºå¯è°ƒè¯•è™šæ‹Ÿæœº
 /// </summary>
-/// <param name="parameter">Æô¶¯²ÎÊý</param>
-/// <param name="loader">·ûºÅ±í¼ÓÔØÆ÷</param>
-/// <param name="unloader">·ûºÅ±íÐ¶ÔØÆ÷</param>
+/// <param name="parameter">å¯åŠ¨å‚æ•°</param>
+/// <param name="loader">ç¬¦å·è¡¨åŠ è½½å™¨</param>
+/// <param name="unloader">ç¬¦å·è¡¨å¸è½½å™¨</param>
 /// <returns></returns>
 RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 

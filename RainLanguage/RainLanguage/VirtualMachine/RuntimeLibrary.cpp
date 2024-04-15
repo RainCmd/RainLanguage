@@ -15,7 +15,7 @@
 
 #define SET_DECLARATION_SPACE(declaration) for (uint32 i = 0; i < space->declaration.Count(); i++) library->declaration[space->declaration[i]].space = index;
 
-#define CHECK_DECLARATION_SPACE(declarations) for (uint32 i = 0; i < declarations.Count(); i++) ASSERT(declarations[i].space,"¶¨ÒåËùÊôÃüÃû¿Õ¼ä³õÊ¼»¯Ê§°Ü");
+#define CHECK_DECLARATION_SPACE(declarations) for (uint32 i = 0; i < declarations.Count(); i++) ASSERT(declarations[i].space,"å®šä¹‰æ‰€å±å‘½åç©ºé—´åˆå§‹åŒ–å¤±è´¥");
 
 struct LocalToGlobalMap
 {
@@ -45,14 +45,14 @@ Declaration LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, cons
 	const LocalToGlobalMap& map = maps[declaration.library];
 	switch(declaration.code)
 	{
-		case TypeCode::Invalid:EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		case TypeCode::Invalid:EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 		case TypeCode::Struct: return Declaration(map.library->index, TypeCode::Struct, map.structs[declaration.index]);
 		case TypeCode::Enum: return Declaration(map.library->index, TypeCode::Enum, map.enums[declaration.index]);
 		case TypeCode::Handle: return Declaration(map.library->index, TypeCode::Handle, map.classes[declaration.index]);
 		case TypeCode::Interface: return Declaration(map.library->index, TypeCode::Interface, map.interfaces[declaration.index]);
 		case TypeCode::Delegate: return Declaration(map.library->index, TypeCode::Delegate, map.delegates[declaration.index]);
 		case TypeCode::Task: return Declaration(map.library->index, TypeCode::Task, map.tasks[declaration.index]);
-		default:EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		default:EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 }
 Type LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, const Type& type)
@@ -77,7 +77,7 @@ MemberFunction LocalToGlobal(uint32 index, const List<LocalToGlobalMap>& maps, c
 		default:
 			break;
 	}
-	EXCEPTION("ÎŞĞ§µÄTypeCode");
+	EXCEPTION("æ— æ•ˆçš„TypeCode");
 }
 
 void CollectInherits(Set<Declaration, true>& inherits, const Declaration& interfaceDeclaration, RuntimeLibrary* runtimeLibrary, List<LocalToGlobalMap>& maps, const Library* library)
@@ -187,7 +187,7 @@ uint32 GetSpace(Kernel* kernel, const List<RuntimeSpace>& spaces, uint32 index, 
 				return space->children[i];
 	}
 	else if(spaces[0].name == name) return 0;
-	EXCEPTION("ÃüÃû¿Õ¼ä²éÕÒÊ§°Ü");
+	EXCEPTION("å‘½åç©ºé—´æŸ¥æ‰¾å¤±è´¥");
 }
 
 void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* library, uint32 index)
@@ -210,7 +210,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 				goto next_enum;
 			}
 		}
-		EXCEPTION("Ã¶¾Ù²éÕÒÊ§°Ü");
+		EXCEPTION("æšä¸¾æŸ¥æ‰¾å¤±è´¥");
 	next_enum:
 		kernel->stringAgency->Release(name);
 	}
@@ -228,7 +228,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 				goto next_struct;
 			}
 		}
-		EXCEPTION("½á¹¹Ìå²éÕÒÊ§°Ü");
+		EXCEPTION("ç»“æ„ä½“æŸ¥æ‰¾å¤±è´¥");
 	next_struct:
 		kernel->stringAgency->Release(name);
 	}
@@ -246,7 +246,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 				goto next_class;
 			}
 		}
-		EXCEPTION("ÍĞ¹ÜÀàĞÍ²éÕÒÊ§°Ü");
+		EXCEPTION("æ‰˜ç®¡ç±»å‹æŸ¥æ‰¾å¤±è´¥");
 	next_class:
 		kernel->stringAgency->Release(name);
 	}
@@ -264,7 +264,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 				goto next_interface;
 			}
 		}
-		EXCEPTION("½Ó¿Ú²éÕÒÊ§°Ü");
+		EXCEPTION("æ¥å£æŸ¥æ‰¾å¤±è´¥");
 	next_interface:
 		kernel->stringAgency->Release(name);
 	}
@@ -282,7 +282,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 				goto next_delegate;
 			}
 		}
-		EXCEPTION("Î¯ÍĞ²éÕÒÊ§°Ü");
+		EXCEPTION("å§”æ‰˜æŸ¥æ‰¾å¤±è´¥");
 	next_delegate:
 		kernel->stringAgency->Release(name);
 	}
@@ -300,7 +300,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 				goto next_task;
 			}
 		}
-		EXCEPTION("ÈÎÎñ²éÕÒÊ§°Ü");
+		EXCEPTION("ä»»åŠ¡æŸ¥æ‰¾å¤±è´¥");
 	next_task:
 		kernel->stringAgency->Release(name);
 	}
@@ -334,7 +334,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 			RuntimeVariable* runtimeVariable = &runtimeLibrary->variables[space->variables[y]];
 			if(name == runtimeVariable->name)
 			{
-				if(importVariableType != runtimeVariable->type) EXCEPTION("±äÁ¿ÀàĞÍ²»Æ¥Åä");
+				if(importVariableType != runtimeVariable->type) EXCEPTION("å˜é‡ç±»å‹ä¸åŒ¹é…");
 				for(uint32 z = 0; z < importVariable->addressReferences.Count(); z++)
 					*(uint32*)(agency->code.GetPointer() + self->codeOffset + importVariable->addressReferences[z].reference) = runtimeVariable->address + importVariable->addressReferences[z].offset;
 				Variable reflection = Variable(runtimeLibrary->index, space->variables[y]);
@@ -343,7 +343,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				goto next_variable;
 			}
 		}
-		EXCEPTION("±äÁ¿²éÕÒÊ§°Ü");
+		EXCEPTION("å˜é‡æŸ¥æ‰¾å¤±è´¥");
 	next_variable:
 		kernel->stringAgency->Release(name);
 	}
@@ -366,7 +366,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 						*(integer*)(agency->code.GetPointer() + self->codeOffset + references[w]) = value;
 					goto next_enum_value;
 				}
-			EXCEPTION("Ã¶¾ÙÖµ²éÕÒÊ§°Ü");
+			EXCEPTION("æšä¸¾å€¼æŸ¥æ‰¾å¤±è´¥");
 		next_enum_value:
 			kernel->stringAgency->Release(name);
 		}
@@ -379,11 +379,11 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Struct, x));
 		for(uint32 y = 0; y < importStruct->references.Count(); y++)
 			*(Declaration*)(agency->code.GetPointer() + self->codeOffset + importStruct->references[y]) = declaration;
-		ASSERT(importStruct->variables.Count() == runtimeStruct->variables.Count(), "½á¹¹Ìå×Ö¶ÎÊıÁ¿²»Æ¥Åä");
+		ASSERT(importStruct->variables.Count() == runtimeStruct->variables.Count(), "ç»“æ„ä½“å­—æ®µæ•°é‡ä¸åŒ¹é…");
 		for(uint32 y = 0; y < importStruct->variables.Count(); y++)
 		{
 			const ImportStruct::Variable* importVariable = &importStruct->variables[y];
-			ASSERT(LocalToGlobal(self->index, maps, importVariable->type) == runtimeStruct->variables[y].type, "½á¹¹Ìå×Ö¶ÎÀàĞÍ²»Æ¥Åä");
+			ASSERT(LocalToGlobal(self->index, maps, importVariable->type) == runtimeStruct->variables[y].type, "ç»“æ„ä½“å­—æ®µç±»å‹ä¸åŒ¹é…");
 			for(uint32 z = 0; z < importVariable->references.Count(); z++)
 				*(MemberVariable*)(agency->code.GetPointer() + self->codeOffset + importVariable->references[z]) = MemberVariable(declaration, y);
 		}
@@ -403,7 +403,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				const RuntimeFunction* runtimeFunction = &runtimeLibrary->functions[runtimeStruct->functions[z]];
 				if(name == runtimeFunction->name && IsEquals(parameters, runtimeFunction->parameters))
 				{
-					ASSERT(IsEquals(returns, runtimeFunction->returns), "½á¹¹Ìå³ÉÔ±º¯Êı·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+					ASSERT(IsEquals(returns, runtimeFunction->returns), "ç»“æ„ä½“æˆå‘˜å‡½æ•°è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 					for(uint32 i = 0; i < importFunction->references.Count(); i++)
 						*(MemberFunction*)(agency->code.GetPointer() + self->codeOffset + importFunction->references[i]) = MemberFunction(declaration, z);
 					for(uint32 i = 0; i < importFunction->addressReferences.Count(); i++)
@@ -412,7 +412,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 					goto next_struct_function;
 				}
 			}
-			EXCEPTION("½á¹¹Ìå³ÉÔ±º¯Êı²éÕÒÊ§°Ü");
+			EXCEPTION("ç»“æ„ä½“æˆå‘˜å‡½æ•°æŸ¥æ‰¾å¤±è´¥");
 		next_struct_function:
 			kernel->stringAgency->Release(name);
 		}
@@ -421,10 +421,10 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 	{
 		const ImportClass* importClass = &importLibrary->classes[x];
 		const RuntimeClass* runtimeClass = &runtimeLibrary->classes[maps[importIndex].classes[x]];
-		if(importClass->parent.IsValid()) { ASSERT(LocalToGlobal(self->index, maps, importClass->parent) == runtimeClass->parents.Peek(), "¸¸ÀàÀàĞÍ²»Æ¥Åä"); }
-		else ASSERT(runtimeLibrary->index == LIBRARY_KERNEL && maps[importIndex].classes[x] == TYPE_Handle.index, "ÎŞĞ§µÄÀàĞÍ");
+		if(importClass->parent.IsValid()) { ASSERT(LocalToGlobal(self->index, maps, importClass->parent) == runtimeClass->parents.Peek(), "çˆ¶ç±»ç±»å‹ä¸åŒ¹é…"); }
+		else ASSERT(runtimeLibrary->index == LIBRARY_KERNEL && maps[importIndex].classes[x] == TYPE_Handle.index, "æ— æ•ˆçš„ç±»å‹");
 		for(uint32 i = 0; i < importClass->inherits.Count(); i++)
-			ASSERT(runtimeClass->inherits.Contains(LocalToGlobal(self->index, maps, importClass->inherits[i])), "È±ÉÙ¼Ì³ĞÀàĞÍ");
+			ASSERT(runtimeClass->inherits.Contains(LocalToGlobal(self->index, maps, importClass->inherits[i])), "ç¼ºå°‘ç»§æ‰¿ç±»å‹");
 		List<uint32, true>* memberFunctions = new (maps[importIndex].classMemberFunctions.Add())List<uint32, true>(importClass->functions.Count());
 		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Handle, x));
 		for(uint32 y = 0; y < importClass->references.Count(); y++)
@@ -436,7 +436,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 			for(uint32 z = 0; z < runtimeClass->variables.Count(); z++)
 				if(name == runtimeClass->variables[z].name)
 				{
-					ASSERT(LocalToGlobal(self->index, maps, importVariable->type) == runtimeClass->variables[z].type, "×Ö¶ÎÀàĞÍ²»Æ¥Åä");
+					ASSERT(LocalToGlobal(self->index, maps, importVariable->type) == runtimeClass->variables[z].type, "å­—æ®µç±»å‹ä¸åŒ¹é…");
 					uint32 offset = runtimeClass->variables[z].address;
 					for(uint32 i = 0; i < importVariable->references.Count(); i++)
 						*(MemberVariable*)(agency->code.GetPointer() + self->codeOffset + importVariable->references[i]) = MemberVariable(declaration, z);
@@ -444,7 +444,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 						*(uint32*)(agency->code.GetPointer() + self->codeOffset + importVariable->addressReferences[i].reference) = offset + importVariable->addressReferences[i].offset;
 					goto next_class_field;
 				}
-			EXCEPTION("³ÉÔ±×Ö¶Î²éÕÒÊ§°Ü");
+			EXCEPTION("æˆå‘˜å­—æ®µæŸ¥æ‰¾å¤±è´¥");
 		next_class_field:
 			kernel->stringAgency->Release(name);
 		}
@@ -467,7 +467,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 					goto next_class_constructor;
 				}
 			}
-			EXCEPTION("¹¹Ôìº¯Êı²éÕÒÊ§°Ü");
+			EXCEPTION("æ„é€ å‡½æ•°æŸ¥æ‰¾å¤±è´¥");
 		next_class_constructor:;
 		}
 		for(uint32 y = 0; y < importClass->functions.Count(); y++)
@@ -486,7 +486,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				const RuntimeFunction* runtimeFunction = &runtimeLibrary->functions[runtimeClass->functions[z].index];
 				if(name == runtimeFunction->name && IsEquals(parameters, runtimeFunction->parameters))
 				{
-					ASSERT(IsEquals(returns, runtimeFunction->returns), "ÍĞ¹ÜÀà³ÉÔ±º¯Êı·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+					ASSERT(IsEquals(returns, runtimeFunction->returns), "æ‰˜ç®¡ç±»æˆå‘˜å‡½æ•°è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 					for(uint32 i = 0; i < importFunction->references.Count(); i++)
 						*(MemberFunction*)(agency->code.GetPointer() + self->codeOffset + importFunction->references[i]) = MemberFunction(declaration, z);
 					for(uint32 i = 0; i < importFunction->addressReferences.Count(); i++)
@@ -495,7 +495,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 					goto next_class_function;
 				}
 			}
-			EXCEPTION("³ÉÔ±º¯Êı²éÕÒÊ§°Ü");
+			EXCEPTION("æˆå‘˜å‡½æ•°æŸ¥æ‰¾å¤±è´¥");
 		next_class_function:
 			kernel->stringAgency->Release(name);
 		}
@@ -524,14 +524,14 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				const RuntimeInterface::FunctionInfo* runtimeFunction = &runtimeInterface->functions[z];
 				if(name == runtimeFunction->name && IsEquals(parameters, runtimeFunction->parameters))
 				{
-					ASSERT(IsEquals(returns, runtimeFunction->returns), "½Ó¿Úº¯Êı·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+					ASSERT(IsEquals(returns, runtimeFunction->returns), "æ¥å£å‡½æ•°è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 					for(uint32 i = 0; i < importFunction->references.Count(); i++)
 						*(MemberFunction*)(agency->code.GetPointer() + self->codeOffset + importFunction->references[i]) = MemberFunction(declaration, z);
 					memberFunctions->Add(z);
 					goto next_interface_function;
 				}
 			}
-			EXCEPTION("½Ó¿Úº¯Êı²éÕÒÊ§°Ü");
+			EXCEPTION("æ¥å£å‡½æ•°æŸ¥æ‰¾å¤±è´¥");
 		next_interface_function:
 			kernel->stringAgency->Release(name);
 		}
@@ -543,11 +543,11 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		parameters.Clear();
 		for(uint32 y = 0; y < importDelegate->parameters.Count(); y++)
 			parameters.Add(LocalToGlobal(self->index, maps, importDelegate->parameters[y]));
-		ASSERT(IsEquals(parameters, runtimeDelegate->parameters), "Î¯ÍĞ²ÎÊıÀàĞÍ²»Æ¥Åä");
+		ASSERT(IsEquals(parameters, runtimeDelegate->parameters), "å§”æ‰˜å‚æ•°ç±»å‹ä¸åŒ¹é…");
 		returns.Clear();
 		for(uint32 y = 0; y < importDelegate->returns.Count(); y++)
 			returns.Add(LocalToGlobal(self->index, maps, importDelegate->returns[y]));
-		ASSERT(IsEquals(returns, runtimeDelegate->returns), "Î¯ÍĞ·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+		ASSERT(IsEquals(returns, runtimeDelegate->returns), "å§”æ‰˜è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 
 		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Delegate, x));
 		for(uint32 y = 0; y < importDelegate->references.Count(); y++)
@@ -560,7 +560,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 		returns.Clear();
 		for(uint32 y = 0; y < importTask->returns.Count(); y++)
 			returns.Add(LocalToGlobal(self->index, maps, importTask->returns[y]));
-		ASSERT(IsEquals(returns, runtimeTask->returns), "ÈÎÎñ·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+		ASSERT(IsEquals(returns, runtimeTask->returns), "ä»»åŠ¡è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 
 		Declaration declaration = LocalToGlobal(self->index, maps, Declaration(importIndex, TypeCode::Task, x));
 		for(uint32 y = 0; y < importTask->references.Count(); y++)
@@ -583,7 +583,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 			const RuntimeFunction* runtimeFunction = &runtimeLibrary->functions[space->functions[y]];
 			if(name == runtimeFunction->name && IsEquals(parameters, runtimeFunction->parameters))
 			{
-				ASSERT(IsEquals(returns, runtimeFunction->returns), "º¯Êı·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+				ASSERT(IsEquals(returns, runtimeFunction->returns), "å‡½æ•°è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 				Function reflection = Function(runtimeLibrary->index, space->functions[y]);
 				for(uint32 z = 0; z < importFunction->references.Count(); z++)
 					*(Function*)(agency->code.GetPointer() + self->codeOffset + importFunction->references[z]) = reflection;
@@ -592,7 +592,7 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 				goto next_function;
 			}
 		}
-		EXCEPTION("º¯Êı²éÕÒÊ§°Ü");
+		EXCEPTION("å‡½æ•°æŸ¥æ‰¾å¤±è´¥");
 	next_function:
 		kernel->stringAgency->Release(name);
 	}
@@ -613,14 +613,14 @@ void InitImportData(Kernel* kernel, uint32 importIndex, const Library* library, 
 			const RuntimeNative* runtimeNative = &runtimeLibrary->natives[space->natives[y]];
 			if(name == runtimeNative->name && IsEquals(parameters, runtimeNative->parameters))
 			{
-				ASSERT(IsEquals(returns, runtimeNative->returns), "º¯Êı·µ»ØÖµÀàĞÍ²»Æ¥Åä");
+				ASSERT(IsEquals(returns, runtimeNative->returns), "å‡½æ•°è¿”å›å€¼ç±»å‹ä¸åŒ¹é…");
 				Native reflection = Native(runtimeLibrary->index, space->natives[y]);
 				for(uint32 z = 0; z < importNative->references.Count(); z++)
 					*(Native*)(agency->code.GetPointer() + self->codeOffset + importNative->references[z]) = reflection;
 				goto next_native;
 			}
 		}
-		EXCEPTION("±¾µØº¯Êı²éÕÒÊ§°Ü");
+		EXCEPTION("æœ¬åœ°å‡½æ•°æŸ¥æ‰¾å¤±è´¥");
 	next_native:
 		kernel->stringAgency->Release(name);
 	}
@@ -783,7 +783,7 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 			indices.RemoveAtSwap(x--);
 		next_struct:;
 		}
-		ASSERT_DEBUG(count > indices.Count(), "½á¹¹Ìå´æÔÚÑ­»·°üº¬");
+		ASSERT_DEBUG(count > indices.Count(), "ç»“æ„ä½“å­˜åœ¨å¾ªç¯åŒ…å«");
 	}
 
 	indices.Clear();
@@ -809,7 +809,7 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 			x--;
 		next_interface:;
 		}
-		ASSERT_DEBUG(count > indices.Count(), "½Ó¿Ú´æÔÚÑ­»·¼Ì³Ğ");
+		ASSERT_DEBUG(count > indices.Count(), "æ¥å£å­˜åœ¨å¾ªç¯ç»§æ‰¿");
 	}
 
 	indices.Clear();
@@ -861,6 +861,6 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 				x--;
 			}
 		}
-		ASSERT_DEBUG(count > indices.Count(), "ÍĞ¹ÜÀà´æÔÚÑ­»·¼Ì³Ğ");
+		ASSERT_DEBUG(count > indices.Count(), "æ‰˜ç®¡ç±»å­˜åœ¨å¾ªç¯ç»§æ‰¿");
 	}
 }

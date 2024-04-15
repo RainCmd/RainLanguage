@@ -18,7 +18,7 @@ struct TupleInfo
 {
 private:
 	List<Type, true> types;
-	List<uint32, true> offsets;//Õ»¿Õ¼ä
+	List<uint32, true> offsets;//æ ˆç©ºé—´
 public:
 	inline Type& GetType(uint32 index) { return types[index]; }
 	inline const Type& GetType(uint32 index) const { return types[index]; }
@@ -29,8 +29,8 @@ public:
 	inline const uint32& GetOffset(uint32 index) const { return offsets[index]; }
 	inline List<uint32, true>& GetOffsets() { return offsets; }
 	inline const List<uint32, true>& GetOffsets() const { return offsets; }
-	uint32 size;//Õ»¿Õ¼ä
-	inline TupleInfo(List<Type, true>& types, List<uint32, true>& offsets, uint32 size) :types(types), offsets(offsets), size(size) { ASSERT_DEBUG(types.Count() == offsets.Count(), "ÀàĞÍÊıÁ¿ÓëÆ«ÒÆÖµÊıÁ¿²»Ò»ÖÂ"); }
+	uint32 size;//æ ˆç©ºé—´
+	inline TupleInfo(List<Type, true>& types, List<uint32, true>& offsets, uint32 size) :types(types), offsets(offsets), size(size) { ASSERT_DEBUG(types.Count() == offsets.Count(), "ç±»å‹æ•°é‡ä¸åç§»å€¼æ•°é‡ä¸ä¸€è‡´"); }
 	inline TupleInfo(uint32 count, uint32 size) : types(count), offsets(count), size(size) {}
 	inline explicit TupleInfo(uint32 count) :types(count), offsets(count), size(0) {}
 	inline void AddElement(const Type& type, uint32 offset)
@@ -118,13 +118,13 @@ struct StructDeclarationInfo :DeclarationInfo
 struct ClassDeclarationInfo :DeclarationInfo
 {
 	Declaration parent;
-	List<Declaration, true> inherits;//²»°üº¬¸¸Àà¼Ì³ĞµÄ½Ó¿Ú
-	uint32 size;//²»°üº¬¸¸Àà
+	List<Declaration, true> inherits;//ä¸åŒ…å«çˆ¶ç±»ç»§æ‰¿çš„æ¥å£
+	uint32 size;//ä¸åŒ…å«çˆ¶ç±»
 	uint8 alignment;
-	List<uint32, true> constructors;//¹¹Ôìº¯ÊıÓĞÒ»¸ö·µ»ØÖµ£¬·µ»Øthis¶ÔÏó
-	List<ReferenceVariableDeclarationInfo> variables;//±äÁ¿µØÖ·²»Ëã¸¸ÀàµÄsize
+	List<uint32, true> constructors;//æ„é€ å‡½æ•°æœ‰ä¸€ä¸ªè¿”å›å€¼ï¼Œè¿”å›thiså¯¹è±¡
+	List<ReferenceVariableDeclarationInfo> variables;//å˜é‡åœ°å€ä¸ç®—çˆ¶ç±»çš„size
 	List<uint32, true> functions;
-	uint32 destructor;//Îö¹¹º¯ÊıµØÖ·£¬INVALID ±íÊ¾Ã»ÓĞÎö¹¹º¯Êı
+	uint32 destructor;//ææ„å‡½æ•°åœ°å€ï¼ŒINVALID è¡¨ç¤ºæ²¡æœ‰ææ„å‡½æ•°
 	List<Relocation, true> relocations;
 	inline ClassDeclarationInfo(bool isPublic, const List<string, true>& attributes, string name, const Declaration& parent, const List<Declaration, true>& inherits, uint32 size, uint8 alignment, const List<uint32, true>& constructors, const List<ReferenceVariableDeclarationInfo>& variables, const List<uint32, true>& functions, uint32 destructor, const List<Relocation, true>& relocations)
 		:DeclarationInfo(isPublic, attributes, name), parent(parent), inherits(inherits), size(size), alignment(alignment), variables(variables), constructors(constructors), functions(functions), destructor(destructor), relocations(relocations)
@@ -138,8 +138,8 @@ struct InterfaceDeclarationInfo :DeclarationInfo
 	{
 		inline FunctionInfo(const List<string, true>& attributes, string name, const TupleInfo& returns, const TupleInfo& parameters) :DeclarationInfo(true, attributes, name), CallableInfo(returns, parameters) {}
 	};
-	List<Declaration, true> inherits;//²»°üº¬¸¸½Ó¿Ú¼Ì³ĞµÄ½Ó¿Ú
-	List<FunctionInfo> functions;//²ÎÊıÁĞ±í²»°üº¬Òşº¬µÄthis
+	List<Declaration, true> inherits;//ä¸åŒ…å«çˆ¶æ¥å£ç»§æ‰¿çš„æ¥å£
+	List<FunctionInfo> functions;//å‚æ•°åˆ—è¡¨ä¸åŒ…å«éšå«çš„this
 	List<Relocation, true> relocations;
 	inline InterfaceDeclarationInfo(bool isPublic, const List<string, true>& attributes, string name, const List<Declaration, true>& inherits, const List<FunctionInfo>& functions, const List<Relocation, true>& relocations) :DeclarationInfo(isPublic, attributes, name), inherits(inherits), functions(functions), relocations(relocations) {}
 };

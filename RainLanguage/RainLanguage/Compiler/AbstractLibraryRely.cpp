@@ -89,9 +89,9 @@ CompilingDeclaration GetImportDeclaration(AbstractLibrary* library, const Librar
 	if (space && space->declarations.TryGet(name, declarations))
 	{
 		if (declarations->Count() == 1)return (*declarations)[0];
-		MESSAGE6(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_AMBIGUITY, 0, 0, 0, TEXT("ÒıÓÃÉùÃ÷²»Ã÷È·"));
+		MESSAGE6(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_AMBIGUITY, 0, 0, 0, TEXT("å¼•ç”¨å£°æ˜ä¸æ˜ç¡®"));
 	}
-	else MESSAGE6(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_LOAD_FAIL, 0, 0, 0, TEXT("ÒıÓÃÉùÃ÷²éÕÒÊ§°Ü"));
+	else MESSAGE6(parameter.messages, name, MessageType::ERROR_RELY_DECLARATION_LOAD_FAIL, 0, 0, 0, TEXT("å¼•ç”¨å£°æ˜æŸ¥æ‰¾å¤±è´¥"));
 	return CompilingDeclaration();
 }
 void InitImports(const Library* source, uint32 importIndex, AbstractDeclarationMap* map, const AbstractParameter& parameter)
@@ -174,7 +174,7 @@ void InitImports(const Library* source, uint32 importIndex, AbstractDeclarationM
 			}
 		}
 	}
-	else MESSAGE6(parameter.messages, libraryName, MessageType::ERROR_LIBRARY_LOAD_FAIL, 0, 0, 0, TEXT("ÒıÓÃ³ÌĞò¼¯¼ÓÔØÊ§°Ü"));
+	else MESSAGE6(parameter.messages, libraryName, MessageType::ERROR_LIBRARY_LOAD_FAIL, 0, 0, 0, TEXT("å¼•ç”¨ç¨‹åºé›†åŠ è½½å¤±è´¥"));
 }
 void CreateAbstractSpace(AbstractLibrary* library, AbstractSpace* space, const Library* source, uint32 spaceIndex, AbstractDeclarationMap* map, const AbstractParameter& parameter)
 {

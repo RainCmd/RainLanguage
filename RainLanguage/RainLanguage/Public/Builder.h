@@ -3,56 +3,56 @@
 #include "RainLibrary.h"
 
 /// <summary>
-/// ´úÂë¼ÓÔØÆ÷
+/// ä»£ç åŠ è½½å™¨
 /// </summary>
 class RAINLANGUAGE CodeLoader
 {
 public:
 	/// <summary>
-	/// ¼ÓÔØÏÂÒ»¸ö´úÂëÎÄ¼ş
+	/// åŠ è½½ä¸‹ä¸€ä¸ªä»£ç æ–‡ä»¶
 	/// </summary>
-	/// <returns>true:¼ÌĞø¼ÓÔØ´úÂë£¬false:ÒÑÈ«²¿¼ÓÔØÍê³É</returns>
+	/// <returns>true:ç»§ç»­åŠ è½½ä»£ç ï¼Œfalse:å·²å…¨éƒ¨åŠ è½½å®Œæˆ</returns>
 	virtual bool LoadNext() = 0;
 	/// <summary>
-	/// »ñÈ¡µ±Ç°´úÂëÎÄ¼şÂ·¾¶
+	/// è·å–å½“å‰ä»£ç æ–‡ä»¶è·¯å¾„
 	/// </summary>
-	/// <returns>´úÂëÎÄ¼şÂ·¾¶</returns>
+	/// <returns>ä»£ç æ–‡ä»¶è·¯å¾„</returns>
 	virtual const RainString CurrentPath() = 0;
 	/// <summary>
-	/// »ñÈ¡µ±Ç°´úÂë
+	/// è·å–å½“å‰ä»£ç 
 	/// </summary>
-	/// <returns>µ±Ç°´úÂë</returns>
+	/// <returns>å½“å‰ä»£ç </returns>
 	virtual const RainString CurrentContent() = 0;
 	virtual ~CodeLoader() {}
 };
 
 /// <summary>
-/// ±àÒë²ÎÊı 
+/// ç¼–è¯‘å‚æ•° 
 /// </summary>
 const struct RAINLANGUAGE BuildParameter
 {
 	/// <summary>
-	/// ¿âÃû
+	/// åº“å
 	/// </summary>
 	const RainString name;
 	/// <summary>
-	/// Éú³Éµ÷ÊÔĞÅÏ¢
+	/// ç”Ÿæˆè°ƒè¯•ä¿¡æ¯
 	/// </summary>
 	bool debug;
 	/// <summary>
-	/// ´úÂë¼ÓÔØÆ÷
+	/// ä»£ç åŠ è½½å™¨
 	/// </summary>
 	CodeLoader* codeLoader;
 	/// <summary>
-	/// ÒıÓÃ¿â¼ÓÔØÆ÷
+	/// å¼•ç”¨åº“åŠ è½½å™¨
 	/// </summary>
 	RainLibraryLoader libraryLoader;
 	/// <summary>
-	/// ÒıÓÃ¿âĞ¶ÔØÆ÷
+	/// å¼•ç”¨åº“å¸è½½å™¨
 	/// </summary>
 	RainLibraryUnloader libraryUnloader;
 	/// <summary>
-	/// ±àÒëĞÅÏ¢µÈ¼¶
+	/// ç¼–è¯‘ä¿¡æ¯ç­‰çº§
 	/// </summary>
 	ErrorLevel messageLevel;
 
@@ -60,24 +60,24 @@ const struct RAINLANGUAGE BuildParameter
 };
 
 /// <summary>
-/// ´íÎóĞÅÏ¢
+/// é”™è¯¯ä¿¡æ¯
 /// </summary>
 const struct RAINLANGUAGE RainErrorMessage
 {
 	/// <summary>
-	/// ´íÎóĞÅÏ¢ËùÊôÔ´ÎÄ¼şÏà¶ÔÂ·¾¶
+	/// é”™è¯¯ä¿¡æ¯æ‰€å±æºæ–‡ä»¶ç›¸å¯¹è·¯å¾„
 	/// </summary>
 	const RainString path;
 	/// <summary>
-	/// ´íÎóÀàĞÍ
+	/// é”™è¯¯ç±»å‹
 	/// </summary>
 	MessageType type;
 	/// <summary>
-	/// ´íÎóÎ»ÖÃĞÅÏ¢
+	/// é”™è¯¯ä½ç½®ä¿¡æ¯
 	/// </summary>
 	uint32 line, start, length;
 	/// <summary>
-	/// ´íÎó¶îÍâĞÅÏ¢
+	/// é”™è¯¯é¢å¤–ä¿¡æ¯
 	/// </summary>
 	const RainString message;
 
@@ -85,7 +85,7 @@ const struct RAINLANGUAGE RainErrorMessage
 };
 
 /// <summary>
-/// ±àÒë²úÎï
+/// ç¼–è¯‘äº§ç‰©
 /// </summary>
 const class RAINLANGUAGE RainProduct
 {
@@ -94,40 +94,40 @@ public:
 	virtual ~RainProduct() {}
 
 	/// <summary>
-	/// »ñÈ¡µ±Ç°´íÎóµÈ¼¶
+	/// è·å–å½“å‰é”™è¯¯ç­‰çº§
 	/// </summary>
 	/// <returns></returns>
 	virtual ErrorLevel GetLevel() = 0;
 	/// <summary>
-	/// »ñÈ¡´íÎóµÈ¼¶ÖĞĞÅÏ¢ÊıÁ¿
+	/// è·å–é”™è¯¯ç­‰çº§ä¸­ä¿¡æ¯æ•°é‡
 	/// </summary>
-	/// <param name="level">´íÎóµÈ¼¶</param>
-	/// <returns>ĞÅÏ¢ÊıÁ¿</returns>
+	/// <param name="level">é”™è¯¯ç­‰çº§</param>
+	/// <returns>ä¿¡æ¯æ•°é‡</returns>
 	virtual uint32 GetLevelMessageCount(ErrorLevel level) = 0;
 	/// <summary>
-	/// »ñÈ¡´íÎóĞÅÏ¢
+	/// è·å–é”™è¯¯ä¿¡æ¯
 	/// </summary>
-	/// <param name="level">´íÎóµÈ¼¶</param>
-	/// <param name="index">ĞÅÏ¢Ë÷Òı</param>
-	/// <returns>´íÎóĞÅÏ¢</returns>
+	/// <param name="level">é”™è¯¯ç­‰çº§</param>
+	/// <param name="index">ä¿¡æ¯ç´¢å¼•</param>
+	/// <returns>é”™è¯¯ä¿¡æ¯</returns>
 	virtual const RainErrorMessage GetErrorMessage(ErrorLevel level, uint32 index) = 0;
 	/// <summary>
-	/// »ñÈ¡±àÒë½á¹û
+	/// è·å–ç¼–è¯‘ç»“æœ
 	/// </summary>
-	/// <returns>±àÒëÀ´µÄ¿â </returns>
+	/// <returns>ç¼–è¯‘æ¥çš„åº“ </returns>
 	virtual const RainLibrary* GetLibrary() = 0;
 	/// <summary>
-	/// »ñÈ¡µ÷ÊÔĞÅÏ¢
+	/// è·å–è°ƒè¯•ä¿¡æ¯
 	/// </summary>
-	/// <returns>µ÷ÊÔĞÅÏ¢</returns>
+	/// <returns>è°ƒè¯•ä¿¡æ¯</returns>
 	virtual const RainProgramDatabase* GetRainProgramDatabase() = 0;
 };
 
 /// <summary>
-/// ±àÒë
+/// ç¼–è¯‘
 /// </summary>
-/// <param name="parameter">±àÒë²ÎÊı</param>
-/// <returns>±àÒë½á¹û</returns>
+/// <param name="parameter">ç¼–è¯‘å‚æ•°</param>
+/// <returns>ç¼–è¯‘ç»“æœ</returns>
 RAINLANGUAGE RainProduct* Build(const BuildParameter& parameter);
 
 RAINLANGUAGE void Delete(RainProduct*& product);

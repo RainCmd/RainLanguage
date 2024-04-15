@@ -8,25 +8,25 @@ enum class DeclarationCategory
 {
 	//                    library			index               definition
 	Invalid,              //INVALID			INVALID             INVALID
-	Variable,			  //¿â				±äÁ¿Ë÷Òı            NULL
-	Function,			  //¿â				·½·¨ÁĞ±íË÷Òı        NULL
-	Enum,				  //¿â				Ã¶¾ÙË÷Òı	        NULL
-	EnumElement,		  //¿â				Ã¶¾ÙÔªËØË÷Òı        Ã¶¾ÙË÷Òı
-	Struct,				  //¿â				·½·¨ÁĞ±íË÷Òı        NULL
-	StructVariable,		  //¿â				³ÉÔ±±äÁ¿Ë÷Òı        ½á¹¹ÌåË÷Òı
-	StructFunction,		  //¿â				³ÉÔ±·½·¨Ë÷Òı        ½á¹¹ÌåË÷Òı
-	Class,				  //¿â				¶¨ÒåË÷Òı            NULL
-	Constructor,		  //¿â				¹¹Ôì·½·¨ÁĞ±íË÷Òı    ËùÊôÍĞ¹ÜÀàË÷Òı
-	ClassVariable,		  //¿â				³ÉÔ±±äÁ¿Ë÷Òı        ËùÊôÍĞ¹ÜÀàË÷Òı
-	ClassFunction,		  //¿â				³ÉÔ±·½·¨Ë÷Òı        ËùÊôÍĞ¹ÜÀàË÷Òı
-	Interface,            //¿â				½Ó¿ÚË÷Òı            NULL
-	InterfaceFunction,    //¿â				½Ó¿Ú·½·¨Ë÷Òı        ËùÊô½Ó¿ÚË÷Òı     
-	Delegate,             //¿â				Î¯ÍĞÀàĞÍË÷Òı        NULL
-	Task,				  //¿â				ÈÎÎñÀàĞÍË÷Òı        NULL
-	Native,				  //¿â				ÄÚ²¿·½·¨Ë÷Òı        NULL
-	Lambda,               //LIBRARY_SELF	·½·¨ÁĞ±íË÷Òı        ÄäÃûº¯ÊıË÷Òı
-	LambdaClosureValue,   //LIBRARY_SELF	³ÉÔ±±äÁ¿Ë÷Òı        ËùÊôÍĞ¹ÜÀàË÷Òı
-	LocalVariable,        //LIBRARY_SELF	¾Ö²¿±äÁ¿id          NULL
+	Variable,			  //åº“				å˜é‡ç´¢å¼•            NULL
+	Function,			  //åº“				æ–¹æ³•åˆ—è¡¨ç´¢å¼•        NULL
+	Enum,				  //åº“				æšä¸¾ç´¢å¼•	        NULL
+	EnumElement,		  //åº“				æšä¸¾å…ƒç´ ç´¢å¼•        æšä¸¾ç´¢å¼•
+	Struct,				  //åº“				æ–¹æ³•åˆ—è¡¨ç´¢å¼•        NULL
+	StructVariable,		  //åº“				æˆå‘˜å˜é‡ç´¢å¼•        ç»“æ„ä½“ç´¢å¼•
+	StructFunction,		  //åº“				æˆå‘˜æ–¹æ³•ç´¢å¼•        ç»“æ„ä½“ç´¢å¼•
+	Class,				  //åº“				å®šä¹‰ç´¢å¼•            NULL
+	Constructor,		  //åº“				æ„é€ æ–¹æ³•åˆ—è¡¨ç´¢å¼•    æ‰€å±æ‰˜ç®¡ç±»ç´¢å¼•
+	ClassVariable,		  //åº“				æˆå‘˜å˜é‡ç´¢å¼•        æ‰€å±æ‰˜ç®¡ç±»ç´¢å¼•
+	ClassFunction,		  //åº“				æˆå‘˜æ–¹æ³•ç´¢å¼•        æ‰€å±æ‰˜ç®¡ç±»ç´¢å¼•
+	Interface,            //åº“				æ¥å£ç´¢å¼•            NULL
+	InterfaceFunction,    //åº“				æ¥å£æ–¹æ³•ç´¢å¼•        æ‰€å±æ¥å£ç´¢å¼•     
+	Delegate,             //åº“				å§”æ‰˜ç±»å‹ç´¢å¼•        NULL
+	Task,				  //åº“				ä»»åŠ¡ç±»å‹ç´¢å¼•        NULL
+	Native,				  //åº“				å†…éƒ¨æ–¹æ³•ç´¢å¼•        NULL
+	Lambda,               //LIBRARY_SELF	æ–¹æ³•åˆ—è¡¨ç´¢å¼•        åŒ¿åå‡½æ•°ç´¢å¼•
+	LambdaClosureValue,   //LIBRARY_SELF	æˆå‘˜å˜é‡ç´¢å¼•        æ‰€å±æ‰˜ç®¡ç±»ç´¢å¼•
+	LocalVariable,        //LIBRARY_SELF	å±€éƒ¨å˜é‡id          NULL
 };
 
 struct CompilingDeclaration
@@ -67,19 +67,19 @@ struct CompilingDeclaration
 	{
 		Declaration declaration;
 		if (TryGetDeclaration(declaration)) return Type(declaration, 0);
-		EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 	inline Function DefineFunction() const
 	{
 		if (category == DeclarationCategory::Function || category == DeclarationCategory::Native) return Function(library, index);
-		EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 	inline MemberFunction DefineMemberFunction() const
 	{
 		if (category == DeclarationCategory::StructFunction) return MemberFunction(library, TypeCode::Struct, definition, index);
 		else if (category == DeclarationCategory::ClassFunction) return MemberFunction(library, TypeCode::Handle, definition, index);
 		else if (category == DeclarationCategory::InterfaceFunction) return MemberFunction(library, TypeCode::Interface, definition, index);
-		EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 	inline bool operator==(const CompilingDeclaration& other)const
 	{

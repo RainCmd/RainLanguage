@@ -10,7 +10,7 @@ void Serialize(Serializer* serializer, const  TupleInfo& info)
 
 Serializer* Serialize(const Library* library)
 {
-	ASSERT(library, "libraryΪ��");
+	ASSERT(library, "libraryÎª¿Õ");
 	Serializer* serializer = new Serializer(0x100);
 	serializer->SerializeStringAgency(library->stringAgency);
 	serializer->Serialize(library->spaces.Count());

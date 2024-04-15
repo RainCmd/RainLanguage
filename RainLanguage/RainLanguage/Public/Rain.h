@@ -21,11 +21,11 @@ typedef unsigned long long uint64;
 typedef long long integer;
 #ifdef FIXED_REAL
 /// <summary>
-/// ¶¨µãÊıĞ¡ÊıÎ»
+/// å®šç‚¹æ•°å°æ•°ä½
 /// </summary>
 constexpr integer DECIMAL_POINT = 16;
 /// <summary>
-/// ¶¨µãÊı
+/// å®šç‚¹æ•°
 /// </summary>
 struct RAINLANGUAGE Real
 {
@@ -35,9 +35,9 @@ private:
 public:
 	Real();
 	/// <summary>
-	/// ÕûÊı×ª¶¨µãÊı
+	/// æ•´æ•°è½¬å®šç‚¹æ•°
 	/// </summary>
-	/// <param name="value">ÕûÊıÖµ</param>
+	/// <param name="value">æ•´æ•°å€¼</param>
 	Real(integer value);
 	Real operator + () const;
 	Real operator ++ ();
@@ -62,14 +62,14 @@ public:
 	bool operator < (const Real& other) const;
 	bool operator <= (const Real& other) const;
 	/// <summary>
-	/// ¶¨µãÊı×ªÕûÊı
+	/// å®šç‚¹æ•°è½¬æ•´æ•°
 	/// </summary>
 	explicit operator integer();
 	/// <summary>
-	/// Ö±½Ó×ª»»Ö¸ÕëÀàĞÍ
+	/// ç›´æ¥è½¬æ¢æŒ‡é’ˆç±»å‹
 	/// </summary>
-	/// <param name="value">ÕûÊı</param>
-	/// <returns>ÓëÕûÊıÄÚ´æÏàÍ¬µÄ¶¨µãÊı</returns>
+	/// <param name="value">æ•´æ•°</param>
+	/// <returns>ä¸æ•´æ•°å†…å­˜ç›¸åŒçš„å®šç‚¹æ•°</returns>
 	static Real CreateReal(integer value);
 };
 typedef Real real;
@@ -81,17 +81,17 @@ typedef int int32;
 typedef wchar_t character;
 
 /// <summary>
-/// ĞéÄâ»úÓëÍâ½ç½»»¥µÄ×Ö·û´®
+/// è™šæ‹Ÿæœºä¸å¤–ç•Œäº¤äº’çš„å­—ç¬¦ä¸²
 /// </summary>
 struct RAINLANGUAGE RainString
 {
 	/// <summary>
-	/// ×Ö·ûÊ×µØÖ·
-	/// ×¢Òâ£ºÈç¹ûÕâ¸öÖ¸ÕëÊÇ´ÓĞéÄâ»úÖĞ´«³öÀ´µÄ£¬ÄÇÃ´±¾µØÈç¹ûÒª±£´æÔò¸´ÖÆÒ»·İÄÚ´æ£¬²¢ÇÒ²»Òª½«¸ÃÖ¸Õë´«»ØĞéÄâ»ú
+	/// å­—ç¬¦é¦–åœ°å€
+	/// æ³¨æ„ï¼šå¦‚æœè¿™ä¸ªæŒ‡é’ˆæ˜¯ä»è™šæ‹Ÿæœºä¸­ä¼ å‡ºæ¥çš„ï¼Œé‚£ä¹ˆæœ¬åœ°å¦‚æœè¦ä¿å­˜åˆ™å¤åˆ¶ä¸€ä»½å†…å­˜ï¼Œå¹¶ä¸”ä¸è¦å°†è¯¥æŒ‡é’ˆä¼ å›è™šæ‹Ÿæœº
 	/// </summary>
 	const character* value;
 	/// <summary>
-	/// ×Ö·û´®³¤¶È
+	/// å­—ç¬¦ä¸²é•¿åº¦
 	/// </summary>
 	uint32 length;
 	inline RainString(const character* value, uint32 length) : value(value), length(length) {}
@@ -103,10 +103,10 @@ struct RAINLANGUAGE RainString
 		return *this;
 	}
 	/// <summary>
-	/// ´´½¨×Ö·û´®
+	/// åˆ›å»ºå­—ç¬¦ä¸²
 	/// </summary>
-	/// <param name="value">×Ö·û´®£¬\0½áÎ²</param>
-	/// <returns>½»»¥ÓÃµÄ×Ö·û´®</returns>
+	/// <param name="value">å­—ç¬¦ä¸²ï¼Œ\0ç»“å°¾</param>
+	/// <returns>äº¤äº’ç”¨çš„å­—ç¬¦ä¸²</returns>
 	inline static RainString Create(const character* value)
 	{
 		uint32 length = 0;
@@ -115,7 +115,7 @@ struct RAINLANGUAGE RainString
 	}
 };
 /// <summary>
-/// ÇåÀí±àÒëºÍÔËĞĞÊ±»º´æµÄ¾²Ì¬±äÁ¿
+/// æ¸…ç†ç¼–è¯‘å’Œè¿è¡Œæ—¶ç¼“å­˜çš„é™æ€å˜é‡
 /// </summary>
 /// <returns></returns>
 RAINLANGUAGE void ClearStaticCache();

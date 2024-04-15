@@ -50,7 +50,7 @@ inline void Mmove(const T* src, T* trg, uint32 length) { return InternalMmove((v
 template<typename T>
 inline void Destruct(T* elements, uint32 count)
 {
-	// ÕâÀïÎÒÃÇĞèÒªÒ»¸öÀàĞÍ¶¨Òå£¬ÒòÎªÈç¹ûElementType±¾ÉíÓĞÒ»¸öÃûÎªElementTypeµÄ³ÉÔ±£¬VC½«²»»á±àÒëÏÂÃæµÄÎö¹¹º¯Êıµ÷ÓÃ£¨ue5: MemoryOps.h 94£©
+	// è¿™é‡Œæˆ‘ä»¬éœ€è¦ä¸€ä¸ªç±»å‹å®šä¹‰ï¼Œå› ä¸ºå¦‚æœElementTypeæœ¬èº«æœ‰ä¸€ä¸ªåä¸ºElementTypeçš„æˆå‘˜ï¼ŒVCå°†ä¸ä¼šç¼–è¯‘ä¸‹é¢çš„ææ„å‡½æ•°è°ƒç”¨ï¼ˆue5: MemoryOps.h 94ï¼‰
 	typedef T DestructItemsElementTypeTypedef;
 	while (count--)
 	{

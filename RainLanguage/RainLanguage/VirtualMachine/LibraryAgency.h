@@ -50,7 +50,7 @@ public:
 	{
 		if(function.declaration.code == TypeCode::Interface) return GetLibrary(function.declaration.library)->interfaces[function.declaration.index].functions[function.function].characteristic;
 		else if(function.declaration.code == TypeCode::Handle) return GetLibrary(function.declaration.library)->classes[function.declaration.index].functions[function.function].characteristic;
-		EXCEPTION("类型错误");
+		EXCEPTION("绫诲瀷閿欒");
 	}
 	bool IsAssignable(const Type& variableType, const Type& objectType);
 	bool IsAssignable(const Type& variableType, Handle handle);
@@ -61,14 +61,14 @@ public:
 		RuntimeLibrary* library = GetLibrary(function.declaration.library);
 		if(function.declaration.code == TypeCode::Struct)return library->functions[library->structs[function.declaration.index].functions[function.function]].entry;
 		else if(function.declaration.code == TypeCode::Handle)return library->functions[library->classes[function.declaration.index].functions[function.function].index].entry;
-		EXCEPTION("类型错误");
+		EXCEPTION("绫诲瀷閿欒");
 	}
 	inline uint32 GetFunctionEntry(const ConstructorFunction& function)
 	{
 		RuntimeLibrary* library = GetLibrary(function.declaration.library);
 		if(function.declaration.code == TypeCode::Handle)
 			return library->functions[library->classes[function.declaration.index].constructors[function.function]].entry;
-		EXCEPTION("类型错误");
+		EXCEPTION("绫诲瀷閿欒");
 	}
 	inline uint32 GetFunctionEntry(const Function& function)
 	{

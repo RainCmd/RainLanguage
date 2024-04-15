@@ -99,7 +99,7 @@ void ClearTemporary(DeclarationManager* manager, Generator* generator, uint32 ad
 		case TypeCode::Task: goto label_clear_stack_instruct;
 		default: break;
 	}
-	EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+	EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 label_clear_stack_instruct:
 	generator->WriteCode(Instruct::BASE_Datazero);
 	generator->WriteCode(reference, offset);
@@ -174,7 +174,7 @@ void ResetLocal(DeclarationManager* manager, Generator* generator, uint32 addres
 	}
 	else switch (type.code)
 	{
-		case TypeCode::Invalid: EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 		case TypeCode::Struct:
 			if (type == TYPE_Bool || type == TYPE_Byte || type == TYPE_Char || type == TYPE_Integer || type == TYPE_Real || type == TYPE_Real2 || type == TYPE_Real3 || type == TYPE_Real4 || type == TYPE_Enum || type == TYPE_Type) break;
 			else if (type == TYPE_String)
@@ -202,7 +202,7 @@ void ResetLocal(DeclarationManager* manager, Generator* generator, uint32 addres
 			generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			generator->WriteCode(LOCAL(address));
 			break;
-		default: EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		default: EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 }
 

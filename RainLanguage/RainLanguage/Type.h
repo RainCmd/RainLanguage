@@ -27,12 +27,12 @@ const struct Native
 	inline Native(uint32 library, uint32 function) : library(library), function(function) {}
 };
 // FunctionType			entry		target		native		function
-// Global				¡Ì			-			-			-		
-// Native				-			-			¡Ì			-
-// Box					¡Ì			¡Ì			-			¡Ì
-// Reality				¡Ì			¡Ì			-			¡Ì
-// Virtual				¡Ì			¡Ì			-			¡Ì
-// Abstract				¡Ì			¡Ì			-			¡Ì
+// Global				âˆš			-			-			-		
+// Native				-			-			âˆš			-
+// Box					âˆš			âˆš			-			âˆš
+// Reality				âˆš			âˆš			-			âˆš
+// Virtual				âˆš			âˆš			-			âˆš
+// Abstract				âˆš			âˆš			-			âˆš
 const struct Delegate
 {
 	uint32 entry;
@@ -98,7 +98,7 @@ const struct MemberVariable
 const struct ConstructorFunction
 {
 	Declaration declaration;
-	uint32 function;//³ÉÔ±º¯ÊıË÷Òı£¬²»ÊÇÈ«¾ÖµÄ
+	uint32 function;//æˆå‘˜å‡½æ•°ç´¢å¼•ï¼Œä¸æ˜¯å…¨å±€çš„
 	inline ConstructorFunction() :declaration(), function(INVALID) {}
 	inline ConstructorFunction(const Declaration& declaration, uint32 function) : declaration(declaration), function(function) {}
 	inline ConstructorFunction(uint32 library, TypeCode code, uint32 index, uint32 function) : declaration(library, code, index), function(function) {}
@@ -106,7 +106,7 @@ const struct ConstructorFunction
 const struct MemberFunction
 {
 	Declaration declaration;
-	uint32 function;//³ÉÔ±º¯ÊıË÷Òı£¬²»ÊÇÈ«¾ÖµÄ
+	uint32 function;//æˆå‘˜å‡½æ•°ç´¢å¼•ï¼Œä¸æ˜¯å…¨å±€çš„
 	inline MemberFunction() :declaration(), function(INVALID) {}
 	inline MemberFunction(const Declaration& declaration, uint32 function) : declaration(declaration), function(function) {}
 	inline MemberFunction(uint32 library, TypeCode code, uint32 index, uint32 function) : declaration(library, code, index), function(function) {}

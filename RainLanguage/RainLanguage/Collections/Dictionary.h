@@ -59,7 +59,7 @@ public:
 		Iterator(const Dictionary* dictionary) :index(0), version(dictionary->version), dictionary(dictionary), slot(NULL) {}
 		bool Next()
 		{
-			ASSERT(version == dictionary->version, "µü´úÔ´ÒÑ±»ĞŞ¸Ä");
+			ASSERT(version == dictionary->version, "è¿­ä»£æºå·²è¢«ä¿®æ”¹");
 			while (index < dictionary->top)
 			{
 				slot = dictionary->slots + index++;
@@ -70,12 +70,12 @@ public:
 		}
 		Key& CurrentKey()
 		{
-			ASSERT(slot, "µ±Ç°ÎŞÖµ");
+			ASSERT(slot, "å½“å‰æ— å€¼");
 			return slot->key;
 		}
 		Value& CurrentValue()
 		{
-			ASSERT(slot, "µ±Ç°ÎŞÖµ");
+			ASSERT(slot, "å½“å‰æ— å€¼");
 			return slot->value;
 		}
 	};

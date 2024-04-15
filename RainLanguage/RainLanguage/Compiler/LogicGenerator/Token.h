@@ -35,13 +35,13 @@ enum class TokenType
 	Mod,				// %
 
 	SymbolicOperationPriority = 0x60,
-	Casting,			// ÀàĞÍ×ª»»
+	Casting,			// ç±»å‹è½¬æ¢
 	Not,				// !
 	Inverse,			// ~
-	Positive,			// ÕıºÅ( + )
-	Negative,			// ¸ººÅ( - )
-	IncrementLeft,		// ×ó×ÔÔö( ++X )
-	DecrementLeft,		// ×ó×Ô¼õ( --X )
+	Positive,			// æ­£å·( + )
+	Negative,			// è´Ÿå·( - )
+	IncrementLeft,		// å·¦è‡ªå¢( ++X )
+	DecrementLeft,		// å·¦è‡ªå‡( --X )
 };
 
 struct Token :Lexical

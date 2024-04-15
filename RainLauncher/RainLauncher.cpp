@@ -189,7 +189,7 @@ int main(int cnt, char** _args)
 			invoker.Start(true, false);
 			while(kernel->GetState().taskCount)
 			{
-				this_thread::sleep_for(chrono::milliseconds(args.timestep));
+				if(args.timestep > 0) this_thread::sleep_for(chrono::milliseconds(args.timestep));
 				kernel->Update();
 			}
 		}

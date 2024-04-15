@@ -3,3 +3,4 @@
 // 有关详细信息，请参见 https://go.microsoft.com/fwlink/?linkid=865984
 #define RAINLANGUAGE _declspec(dllexport)
 #define RAINLANGUAGE _declspec(dllimport)
+#define KEY_WORLD(name) String KeyWord_##name() { if (!KeyWordPool)KeyWordPool = new StringAgency(0xff); return KeyWordPool->Add(TEXT(#name)); }

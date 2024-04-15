@@ -11,7 +11,7 @@
 
 bool TryEvaluation(Expression* parameter, bool& leftValue, bool& rightValue, LogicGenerateParameter& evaluationParameter)
 {
-	ASSERT_DEBUG(parameter->returns.Count() == 2, "±í´ïÊ½·µ»ØÖµÊýÁ¿²»¶Ô");
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "è¡¨è¾¾å¼è¿”å›žå€¼æ•°é‡ä¸å¯¹");
 	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
@@ -22,7 +22,7 @@ bool TryEvaluation(Expression* parameter, bool& leftValue, bool& rightValue, Log
 
 bool TryEvaluation(Expression* parameter, integer& leftValue, integer& rightValue, LogicGenerateParameter& evaluationParameter)
 {
-	ASSERT_DEBUG(parameter->returns.Count() == 2, "±í´ïÊ½·µ»ØÖµÊýÁ¿²»¶Ô");
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "è¡¨è¾¾å¼è¿”å›žå€¼æ•°é‡ä¸å¯¹");
 	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
@@ -33,7 +33,7 @@ bool TryEvaluation(Expression* parameter, integer& leftValue, integer& rightValu
 
 bool TryEvaluation(Expression* parameter, real& leftValue, real& rightValue, LogicGenerateParameter& evaluationParameter)
 {
-	ASSERT_DEBUG(parameter->returns.Count() == 2, "±í´ïÊ½·µ»ØÖµÊýÁ¿²»¶Ô");
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "è¡¨è¾¾å¼è¿”å›žå€¼æ•°é‡ä¸å¯¹");
 	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
@@ -44,7 +44,7 @@ bool TryEvaluation(Expression* parameter, real& leftValue, real& rightValue, Log
 
 bool TryEvaluation(Expression* parameter, String& leftValue, String& rightValue, LogicGenerateParameter& evaluationParameter)
 {
-	ASSERT_DEBUG(parameter->returns.Count() == 2, "±í´ïÊ½·µ»ØÖµÊýÁ¿²»¶Ô");
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "è¡¨è¾¾å¼è¿”å›žå€¼æ•°é‡ä¸å¯¹");
 	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
@@ -55,7 +55,7 @@ bool TryEvaluation(Expression* parameter, String& leftValue, String& rightValue,
 
 void CheckSecondZero(Expression* parameter, ExpressionParser* parser)
 {
-	ASSERT_DEBUG(parameter->returns.Count() == 2, "±í´ïÊ½·µ»ØÖµÊýÁ¿²»¶Ô");
+	ASSERT_DEBUG(parameter->returns.Count() == 2, "è¡¨è¾¾å¼è¿”å›žå€¼æ•°é‡ä¸å¯¹");
 	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
@@ -631,7 +631,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, E
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);
 				}
-				//×Ö·û´®ÑÜÉú²Ù×÷£¨ÑÜÉúÀà²Ù×÷Ã»ÓÐÏàÓ¦µÄÖ¸ÁîÓÅ»¯£¬Ö±½Ó×ß³£¹æº¯Êýµ÷ÓÃ£©
+				//å­—ç¬¦ä¸²è¡ç”Ÿæ“ä½œï¼ˆè¡ç”Ÿç±»æ“ä½œæ²¡æœ‰ç›¸åº”çš„æŒ‡ä»¤ä¼˜åŒ–ï¼Œç›´æŽ¥èµ°å¸¸è§„å‡½æ•°è°ƒç”¨ï¼‰
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);

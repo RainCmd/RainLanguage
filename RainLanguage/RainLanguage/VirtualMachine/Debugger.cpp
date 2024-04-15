@@ -624,7 +624,7 @@ static Type DebugToKernel(uint32 index, MAP* map, const Type& type)
 	else if(type.library == LIBRARY_SELF) return Type(index, type.code, type.index, type.dimension);
 	Declaration result;
 	if(map->TryGet(type, result)) return Type(result, type.dimension);
-	EXCEPTION("Ó³ÉäÂß¼­¿ÉÄÜÓÐBUG");
+	EXCEPTION("æ˜ å°„é€»è¾‘å¯èƒ½æœ‰BUG");
 }
 
 RainDebuggerVariable RainTrace::GetLocal(uint32 index)
@@ -1325,7 +1325,7 @@ void OnLoadLibrary(Kernel* kernel, RuntimeLibrary* library)
 		DebuggerSlot& slot = debuggerSlots[slotIndex];
 		if(slot.share->kernel == kernel)
 		{
-			//ÕâÀïnameµÄµØÖ·×îÖÕÒª´«»ØÐéÄâ»ú£¬ÒòÎªÐéÄâ»úÄÚ²¿×Ö·û´®µÄGC¿ÉÄÜ»áµ¼ÖÂµØÖ·ÄÚÈÝ¸Ä±ä£¬ËùÒÔÒª¸´ÖÆÒ»·Ý
+			//è¿™é‡Œnameçš„åœ°å€æœ€ç»ˆè¦ä¼ å›žè™šæ‹Ÿæœºï¼Œå› ä¸ºè™šæ‹Ÿæœºå†…éƒ¨å­—ç¬¦ä¸²çš„GCå¯èƒ½ä¼šå¯¼è‡´åœ°å€å†…å®¹æ”¹å˜ï¼Œæ‰€ä»¥è¦å¤åˆ¶ä¸€ä»½
 			const String name = kernel->stringAgency->Get(library->spaces[0].name);
 			character buffer[256];
 			Mcopy(name.GetPointer(), buffer, name.GetLength());

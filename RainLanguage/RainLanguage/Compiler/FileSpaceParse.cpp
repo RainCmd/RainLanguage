@@ -374,7 +374,7 @@ void FileSpace::ParseChild(const Line& line, List<Anchor>& attributeCollector, u
 	else MESSAGE2(parameter->messages, line, MessageType::ERROR_MISSING_NAME);
 }
 
-//Èç¹ûÔ¤¶ÁÁËÏÂÒ»ĞĞ´úÂëÔò·µ»Øtrue
+//å¦‚æœé¢„è¯»äº†ä¸‹ä¸€è¡Œä»£ç åˆ™è¿”å›true
 bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributeCollector, ParseParameter* parameter)
 {
 	uint32 index;
@@ -575,7 +575,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 		}
 		else if (TryAnalysis(current, index, lexical, parameter->messages))
 		{
-			if (lexical.type == LexicalType::Negate)//Îö¹¹º¯Êı
+			if (lexical.type == LexicalType::Negate)//ææ„å‡½æ•°
 			{
 				if (visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 				if (attributeCollector.Count())
@@ -599,7 +599,7 @@ void FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 					{
 						if (name.content == fileClass->name.content)
 						{
-							if (returns.Count()) MESSAGE3(parameter->messages, name, MessageType::ERROR, TEXT("¹¹Ôìº¯Êı²»ÄÜÓĞ·µ»ØÖµ"));
+							if (returns.Count()) MESSAGE3(parameter->messages, name, MessageType::ERROR, TEXT("æ„é€ å‡½æ•°ä¸èƒ½æœ‰è¿”å›å€¼"));
 							expression = Anchor();
 							if (TryAnalysis(current, index, lexical, parameter->messages))
 							{

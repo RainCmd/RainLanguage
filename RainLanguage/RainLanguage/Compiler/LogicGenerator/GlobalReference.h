@@ -145,7 +145,7 @@ struct GlobalReference
 	List<GlobalReferenceLibrary*, true> libraries;
 	List<uint32, true> libraryReferences;
 	Dictionary<uint32, List<VariableReference, true>*, true> variableReferences;
-	Dictionary<MemberVariable, List<VariableReference, true>*, true> memberVariableReferences;//class成员字段引用
+	Dictionary<MemberVariable, List<VariableReference, true>*, true> memberVariableReferences;//class鎴愬憳瀛楁寮曠敤
 	Dictionary<uint32, List<uint32, true>*, true> addressReferences;
 	Dictionary<CompilingDeclaration, CompilingDeclaration, true> declarationMap;
 	inline GlobalReference(Generator* generator, DeclarationManager* manager) :generator(generator), manager(manager), libraries(0), libraryReferences(0), variableReferences(0), memberVariableReferences(0), addressReferences(0), declarationMap(0) {}
@@ -156,7 +156,7 @@ struct GlobalReference
 	CompilingDeclaration AddReference(const CompilingDeclaration& declaration);
 	Declaration AddReference(const Declaration& declaration);
 	Type AddReference(const Type& declaration);
-	void AddReference(const CompilingDeclaration& declaration, uint32 address);//address 是存放定义索引的地址，当定义在当前library中时，address是索引中library索引的地址
+	void AddReference(const CompilingDeclaration& declaration, uint32 address);//address 鏄瓨鏀惧畾涔夌储寮曠殑鍦板潃锛屽綋瀹氫箟鍦ㄥ綋鍓峫ibrary涓椂锛宎ddress鏄储寮曚腑library绱㈠紩鐨勫湴鍧�
 	~GlobalReference();
 };
 

@@ -15,7 +15,7 @@ uint32 GetHash(const character* value, uint32 length)
 
 void StringAgency::GC(const character* pointer)
 {
-	ASSERT(pointer < characters.GetPointer() || pointer >= characters.GetPointer() + characters.Count(), "ÒıÓÃµÄÄÚ´æÔÚÍĞ¹Ü¶ÑÄÚ£¬GCºóÄÚ´æÄÚÈİ¿ÉÄÜ»á·¢Éú±ä»¯£¬µ¼ÖÂÂß¼­´íÎó");
+	ASSERT(pointer < characters.GetPointer() || pointer >= characters.GetPointer() + characters.Count(), "å¼•ç”¨çš„å†…å­˜åœ¨æ‰˜ç®¡å †å†…ï¼ŒGCåå†…å­˜å†…å®¹å¯èƒ½ä¼šå‘ç”Ÿå˜åŒ–ï¼Œå¯¼è‡´é€»è¾‘é”™è¯¯");
 	uint32 position = 0;
 	uint32 index = head;
 	head = tail = NULL;
@@ -141,7 +141,7 @@ bool StringAgency::TryGetIdx(const character* value, uint32 length, uint32& hash
 
 string StringAgency::InternalAdd(const character* value, uint32 length)
 {
-	ASSERT_DEBUG(value < characters.GetPointer() || value >= characters.GetPointer() + characters.Count(), "Ô­ÔòÉÏ²»ÔÊĞíÒıÓÃµÄÄÚ´æÔÚÍĞ¹Ü¶ÑÄÚ£¬Èç¹û·¢ÉúGC£¬Õâ¿éÄÚ´æ¿ÉÄÜ»á·¢Éú±ä»¯");
+	ASSERT_DEBUG(value < characters.GetPointer() || value >= characters.GetPointer() + characters.Count(), "åŸåˆ™ä¸Šä¸å…è®¸å¼•ç”¨çš„å†…å­˜åœ¨æ‰˜ç®¡å †å†…ï¼Œå¦‚æœå‘ç”ŸGCï¼Œè¿™å—å†…å­˜å¯èƒ½ä¼šå‘ç”Ÿå˜åŒ–");
 	if(!length)return NULL;
 	uint32 hash, bidx, sidx;
 	if(TryGetIdx(value, length, hash, bidx, sidx))
@@ -293,7 +293,7 @@ StringAgency& StringAgency::operator=(StringAgency&& other)noexcept
 
 String StringAgency::Add(const character* value, uint32 length)
 {
-	ASSERT_DEBUG(!length || *value, "²åÈëµÄ×Ö·û´®ÄÚ°üº¬\\0£¬Õâ¿ÉÄÜ»áÆÆ»µ×Ö·û´®ÏµÍ³");
+	ASSERT_DEBUG(!length || *value, "æ’å…¥çš„å­—ç¬¦ä¸²å†…åŒ…å«\\0ï¼Œè¿™å¯èƒ½ä¼šç ´åå­—ç¬¦ä¸²ç³»ç»Ÿ");
 	String result = String(share, InternalAdd(value, length));
 	slots[result.index].reference--;
 	return result;
@@ -360,7 +360,7 @@ String StringAgency::Sub(const String& source, uint32 start, uint32 length)
 {
 	if(length)
 	{
-		ASSERT(start + length <= source.GetLength(), "×Ö·û´®²Ã¼ôÔ½½ç");
+		ASSERT(start + length <= source.GetLength(), "å­—ç¬¦ä¸²è£å‰ªè¶Šç•Œ");
 		InitHelper();
 		helper->Add(source.GetPointer() + start, length);
 		return Add(helper->GetPointer(), length);
@@ -370,7 +370,7 @@ String StringAgency::Sub(const String& source, uint32 start, uint32 length)
 
 String StringAgency::Replace(const String& source, const String& oldValue, const String& newValue)
 {
-	ASSERT_DEBUG(!source.IsEmpty() && !oldValue.IsEmpty(), "²»ÄÜ¶Ô¿Õ×Ö·û´®½øĞĞ¸Ã²Ù×÷");
+	ASSERT_DEBUG(!source.IsEmpty() && !oldValue.IsEmpty(), "ä¸èƒ½å¯¹ç©ºå­—ç¬¦ä¸²è¿›è¡Œè¯¥æ“ä½œ");
 	if(source.GetLength() < oldValue.GetLength()) return source;
 	InitHelper();
 	uint32 index = source.Find(oldValue, 0), last = 0;
@@ -410,7 +410,7 @@ StringAgency::StringAgency(Deserializer* deserializer) :characters(0), helper(NU
 	{
 		Slot& slot = slots[tail];
 		slot = deserializer->Deserialize<Slot>();
-		ASSERT_DEBUG(slot.length, "Õâ¸ö×Ö·û´®Ó¦¸ÃÔÚĞòÁĞ»¯Ç°¾Í±»gcµôµÄ");
+		ASSERT_DEBUG(slot.length, "è¿™ä¸ªå­—ç¬¦ä¸²åº”è¯¥åœ¨åºåˆ—åŒ–å‰å°±è¢«gcæ‰çš„");
 		uint32 bidx = slot.hash % size;
 		slot.next = buckets[bidx];
 		buckets[bidx] = tail;

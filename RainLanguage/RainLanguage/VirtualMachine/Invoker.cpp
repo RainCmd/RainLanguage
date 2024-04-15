@@ -18,13 +18,13 @@ inline bool TryMatch(const Type& source, const Type& target)
 void Invoker::ReturnTypeAssert(uint32 index, Type type) const
 {
 	StateAssert(InvokerState::Completed);
-	ASSERT(TryMatch(type, info->returns.GetType(index)), "·µ»ØÖµÀàĞÍ´íÎó");
+	ASSERT(TryMatch(type, info->returns.GetType(index)), "è¿”å›å€¼ç±»å‹é”™è¯¯");
 }
 
 void Invoker::ParameterTypeAssert(uint32 index, Type type) const
 {
 	StateAssert(InvokerState::Unstart);
-	ASSERT(TryMatch(type, info->parameters.GetType(index)), "²ÎÊıÀàĞÍ´íÎó");
+	ASSERT(TryMatch(type, info->parameters.GetType(index)), "å‚æ•°ç±»å‹é”™è¯¯");
 }
 
 bool Invoker::IsPause() const
@@ -284,7 +284,7 @@ void Invoker::ClearReturns()
 
 void Invoker::Recycle()
 {
-	ASSERT_DEBUG(instanceID >> 32, "»ØÊÕÂß¼­¿ÉÄÜÓĞÎÊÌâ");
+	ASSERT_DEBUG(instanceID >> 32, "å›æ”¶é€»è¾‘å¯èƒ½æœ‰é—®é¢˜");
 	if (kernel)
 	{
 		switch (state)

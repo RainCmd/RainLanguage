@@ -98,7 +98,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, Expression* parame
 				parameter.generator->WriteCode(parametersParameter.results[i], VariableAccessType::Read);
 				parameter.generator->WriteCode((Declaration)parameterType);
 			}
-			else EXCEPTION("类型错误");
+			else EXCEPTION("绫诲瀷閿欒");
 		}
 		exceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		parameter.finallyAddress->AddReference(parameter.generator, parameter.generator->GetPointer());
@@ -142,7 +142,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression*
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		if (invokerExpression->declaration.category == DeclarationCategory::Function) parameter.generator->WriteCode((uint8)FunctionType::Global);
 		else if (invokerExpression->declaration.category == DeclarationCategory::Native) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK)
-		else EXCEPTION("这个申明类型不应该会走到这里");
+		else EXCEPTION("杩欎釜鐢虫槑绫诲瀷涓嶅簲璇ヤ細璧板埌杩欓噷");
 		parameter.generator->WriteCodeGlobalReference(invokerExpression->declaration);
 		parameter.generator->WriteCode(invokerExpression->declaration.DefineFunction());
 		GenerateTaskParameter(parameter, invokerExpression->parameters);
@@ -177,7 +177,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression*
 			parameter.generator->WriteCodeGlobalReference(invokerExpression->target->returns[0]);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
-		else EXCEPTION("这个申明类型不应该会走到这里");
+		else EXCEPTION("杩欎釜鐢虫槑绫诲瀷涓嶅簲璇ヤ細璧板埌杩欓噷");
 		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
@@ -226,7 +226,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression*
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		else if (invokerExpression->declaration.category == DeclarationCategory::Constructor) MESSAGE2(parameter.manager->messages, invokerExpression->anchor, MessageType::ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION)
-		else EXCEPTION("这个申明类型不应该会走到这里");
+		else EXCEPTION("杩欎釜鐢虫槑绫诲瀷涓嶅簲璇ヤ細璧板埌杩欓噷");
 		GenerateTaskParameter(parameter, invokerExpression->parameters);
 		if (start)
 		{
@@ -361,7 +361,7 @@ void TaskEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 			parameter.generator->WriteCode((uint32)indices[i]);
 			parameter.generator->WriteCodeGlobalReference((Declaration)returnType);
 		}
-		else EXCEPTION("类型错误");
+		else EXCEPTION("绫诲瀷閿欒");
 	}
 	exceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.finallyAddress->AddReference(parameter.generator, parameter.generator->GetPointer());

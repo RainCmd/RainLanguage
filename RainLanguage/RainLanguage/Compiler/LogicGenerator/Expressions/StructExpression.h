@@ -62,7 +62,7 @@ public:
 		if (dimension == 2)returns.Add(TYPE_Real2);
 		else if (dimension == 3)returns.Add(TYPE_Real3);
 		else if (dimension == 4)returns.Add(TYPE_Real4);
-		else EXCEPTION("目前只支持real2,real3,real4");
+		else EXCEPTION("鐩墠鍙敮鎸乺eal2,real3,real4");
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~VectorConstructorExpression();

@@ -4,7 +4,7 @@
 #include "Message.h"
 #include "../Collections/Set.h"
 
-//¸÷ÀàÉêÃ÷¶¨ÒåÃû³ÆÖØ¸´£¬Ãû³ÆÊÇ·ñÊÇ¹Ø¼ü×ÖµÄ¼ì²é£¬ÀàĞÍÑ­»·¼Ì³Ğ£¬½á¹¹ÌåÑ­»·°üº¬
+//å„ç±»ç”³æ˜å®šä¹‰åç§°é‡å¤ï¼Œåç§°æ˜¯å¦æ˜¯å…³é”®å­—çš„æ£€æŸ¥ï¼Œç±»å‹å¾ªç¯ç»§æ‰¿ï¼Œç»“æ„ä½“å¾ªç¯åŒ…å«
 bool IsFunctions(List<CompilingDeclaration, true>* declarations)
 {
 	for (uint32 i = 0; i < declarations->Count(); i++)
@@ -56,7 +56,7 @@ Anchor GetName(DeclarationManager* manager, const CompilingDeclaration& declarat
 		case DeclarationCategory::LocalVariable:
 		default: break;
 	}
-	EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+	EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 }
 
 bool IsEquals(const List<CompilingFunctionDeclaration::Parameter>& sources, const List<CompilingFunctionDeclaration::Parameter>& targets)
@@ -72,7 +72,7 @@ List<CompilingFunctionDeclaration::Parameter>& GetParameters(DeclarationManager*
 {
 	if (declaration.category == DeclarationCategory::Function)return manager->compilingLibrary.functions[declaration.index]->parameters;
 	else if (declaration.category == DeclarationCategory::Native)return manager->compilingLibrary.natives[declaration.index]->parameters;
-	else EXCEPTION("ÀàĞÍ´íÎó");
+	else EXCEPTION("ç±»å‹é”™è¯¯");
 }
 
 void DuplicationNameCheck(DeclarationManager* manager, CompilingSpace* space, Set<CompilingDeclaration>& declarationSet)
@@ -375,7 +375,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 	}
 }
 
-//½Ó¿ÚÊµÏÖºÍ¸¸Ààº¯Êıoverride¼ì²é
+//æ¥å£å®ç°å’Œçˆ¶ç±»å‡½æ•°overrideæ£€æŸ¥
 void CollectInherits(DeclarationManager* manager, const List<Type, true>& inherits, Set<Type, true>& set)
 {
 	for (uint32 i = 0; i < inherits.Count(); i++)

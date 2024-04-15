@@ -80,7 +80,7 @@ void CalculatedTupleInfo(DeclarationManager* manager)
 			structs.RemoveAtSwap(x--);
 		label_next_struct2:;
 		}
-		ASSERT(structs.Count() < count, "Ó¦¸ÃÊÇ½á¹¹ÌåÀàÐÍÑ­»·°üº¬ÁË£¬Ç°ÃæµÄ¼ì²éËã·¨¿ÉÄÜÓÐÎó");
+		ASSERT(structs.Count() < count, "åº”è¯¥æ˜¯ç»“æž„ä½“ç±»åž‹å¾ªçŽ¯åŒ…å«äº†ï¼Œå‰é¢çš„æ£€æŸ¥ç®—æ³•å¯èƒ½æœ‰è¯¯");
 	}
 	for(uint32 x = 0; x < library->classes.Count(); x++)
 	{

@@ -78,7 +78,7 @@ void LogicVariable::ClearVariable(DeclarationManager* manager, Generator* genera
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right)
 {
-	ASSERT_DEBUG(manager->IsInherit(left.type, right.type), "±í´ïÊ½ÀàĞÍ²»Ò»ÖÂ");
+	ASSERT_DEBUG(manager->IsInherit(left.type, right.type), "è¡¨è¾¾å¼ç±»å‹ä¸ä¸€è‡´");
 	const Type& type = left.type;
 	if (IsHandleType(type))
 	{
@@ -134,7 +134,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const LogicVariable& right, const CompilingDeclaration& rightMember, uint32 offset, CodeLocalAddressReference* finallyAddress)
 {
-	ASSERT_DEBUG(rightMember.category == DeclarationCategory::ClassVariable || rightMember.category == DeclarationCategory::LambdaClosureValue, "ÀàĞÍ´íÎó");
+	ASSERT_DEBUG(rightMember.category == DeclarationCategory::ClassVariable || rightMember.category == DeclarationCategory::LambdaClosureValue, "ç±»å‹é”™è¯¯");
 	const Type& type = left.type;
 	if (IsHandleType(type))
 	{
@@ -199,7 +199,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 
 void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, const LogicVariable& left, const CompilingDeclaration& leftMember, uint32 offset, const LogicVariable& right, CodeLocalAddressReference* finallyAddress)
 {
-	ASSERT_DEBUG(leftMember.category == DeclarationCategory::ClassVariable || leftMember.category == DeclarationCategory::LambdaClosureValue, "ÀàĞÍ´íÎó");
+	ASSERT_DEBUG(leftMember.category == DeclarationCategory::ClassVariable || leftMember.category == DeclarationCategory::LambdaClosureValue, "ç±»å‹é”™è¯¯");
 	const Type& type = right.type;
 	if (IsHandleType(type))
 	{

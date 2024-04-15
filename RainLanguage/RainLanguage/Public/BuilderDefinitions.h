@@ -2,7 +2,7 @@
 #include "Rain.h"
 
 /// <summary>
-/// ´íÎóµÈ¼¶
+/// é”™è¯¯ç­‰çº§
 /// </summary>
 enum class  ErrorLevel :uint32
 {
@@ -18,90 +18,90 @@ enum class  ErrorLevel :uint32
 };
 
 /// <summary>
-/// ´íÎóĞÅÏ¢
+/// é”™è¯¯ä¿¡æ¯
 /// </summary>
 enum class MessageType :uint32
 {
 	ERROR = ((uint32)ErrorLevel::Error) << 24,
-	ERROR_MISSING_PAIRED_SYMBOL,			//È±ÉÙÅä¶ÔµÄ·ûºÅ
-	ERROR_UNKNOWN_SYMBOL,					//Î´ÖªµÄ·ûºÅ
-	ERROR_INDENT,							//Ëõ½øÎÊÌâ
-	ERROR_INPUT_STRINGL,					//ÊäÈë×Ö·û´®
-	ERROR_INPUT_COMMA_OR_SEMICOLON,			//ÊäÈë¶ººÅ»ò·ÖºÅ
-	ERROR_UNEXPECTED_LEXCAL,				//ÒâÍâµÄ´ÊÌõ
-	ERROR_ATTRIBUTE_INVALID,				//ÊôĞÔÎŞĞ§
-	ERROR_MISSING_NAME,						//È±ÉÙÃû³Æ
-	ERROR_MISSING_TYPE,						//È±ÉÙÀàĞÍ
-	ERROR_UNEXPECTED_LINE_END,				//ÒâÍâµÄĞĞÎ²
-	ERROR_CONSTANT_NOT_ASSIGNMENT,			//³£Á¿Î´¸³Öµ
-	ERROR_MISSING_ASSIGNMENT_EXPRESSION,	//È±ÉÙ¸³Öµ±í´ïÊ½
-	ERROR_MISSING_IDENTIFIER,				//È±ÉÙ±êÊ¶·û
-	ERROR_MISSING_EXPRESSION,				//È±ÉÙ±í´ïÊ½
-	ERROR_INVALID_IDENTIFIER,				//ÎŞĞ§µÄ±êÊ¶·û
-	ERROR_INVALID_VISIBILITY,				//ÎŞĞ§µÄ¿É·ÃÎÊĞÔĞŞÊÎ·û
-	ERROR_NOT_VARIABLE_DECLARATION,			//²»ÊÇ±äÁ¿ÉùÃ÷
-	ERROR_INVALID_INITIALIZER,				//ÎŞĞ§µÄ³õÊ¼»¯
-	ERROR_LIBRARY_LOAD_FAIL,				//³ÌĞò¼¯¼ÓÔØÊ§°Ü
-	ERROR_RELY_DECLARATION_LOAD_FAIL,		//ÒÀÀµµÄÉùÃ÷¼ÓÔØÊ§°Ü
-	ERROR_RELY_DECLARATION_AMBIGUITY,		//ÒÀÀµµÄÉùÃ÷²»Ã÷È·
-	ERROR_RELY_DECLARATION_MISMATCHING,		//ÒÀÀµµÄÉùÃ÷ÓëÊµ¼ÊÀàĞÍ²»Æ¥Åä
-	ERROR_IMPORT_SELF,						//²»ÄÜµ¼ÈëÕıÔÚ±àÒëµÄ¿â
-	ERROR_IMPORT_NAMESPACE_NOT_FOUND,		//µ¼ÈëµÄÃüÃû¿Õ¼äÎ´ÕÒµ½
-	ERROR_DUPLICATE_DECLARATION,			//ÖØ¸´µÄÉùÃ÷
-	ERROR_RELY_SPACE_EQUIVOCAL,				//ÒÀÀµ¿Õ¼ä²»Ã÷È·
-	ERROR_DECLARATION_EQUIVOCAL,			//²éÕÒÉêÃ÷²»Ã÷È·
-	ERROR_EXPRESSION_EQUIVOCAL,				//±í´ïÊ½ÒâÒå²»Ã÷È·
-	ERROR_TYPE_EQUIVOCAL,					//ÀàĞÍ²»Ã÷È·
-	ERROR_DECLARATION_NOT_FOUND,			//ÉêÃ÷Î´ÕÒµ½
-	ERROR_ENUM_ELEMENT_NOT_FOUND,			//Ã¶¾ÙÔªËØÎ´ÕÒµ½
-	ERROR_NOT_TYPE_DECLARATION,				//²»ÊÇÀàĞÍÉêÃ÷
-	ERROR_NAME_IS_KEY_WORD,					//Ãû×ÖÊÇ¹Ø¼ü×Ö
-	ERROR_DUPLICATION_NAME,					//ÖØÃû
-	ERROR_NAME_SAME_AS_NAMESPACE,			//ÓëÃüÃû¿Õ¼äÍ¬Ãû
-	ERROR_INVALID_OVERLOAD,					//ÎŞĞ§µÄÖØÔØ
-	ERROR_INVALID_OVERRIDE,					//ÎŞĞ§µÄÖØĞ´
-	ERROR_STRUCT_NO_CONSTRUCTOR,			//½á¹¹Ìå²»ÔÊĞíÓĞ¹¹Ôìº¯Êı
-	ERROR_STRUCT_CYCLIC_INCLUSION,			//½á¹¹ÌåÑ­»·°üº¬
-	ERROR_CIRCULAR_INHERITANCE,				//Ñ­»·¼Ì³Ğ
-	ERROR_DUPLICATE_INHERITANCE,			//ÖØ¸´¼Ì³Ğ
-	ERROR_INTERFACE_NOT_IMPLEMENTED,		//½Ó¿ÚÎ´ÊµÏÖ
-	ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT,		//ÊµÏÖµÄ½Ó¿Úº¯Êı·µ»ØÖµÀàĞÍ²»Ò»ÖÂ
-	ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT,			//ÖØĞ´µÄ¸¸Ààº¯Êı·µ»ØÖµÀàĞÍ²»Ò»ÖÂ
-	ERROR_TASK_RETURN_TYPES_INCONSISTENT,						//ÈÎÎñº¯Êı·µ»ØÖµÀàĞÍ²»Ò»ÖÂ
-	ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT,				//Î¯ÍĞ²ÎÊıÀàĞÍ²»Ò»ÖÂ
-	ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT,					//Î¯ÍĞ·µ»ØÖµÀàĞÍ²»Ò»ÖÂ
-	ERROR_INVALID_OPERATOR,					//ÎŞĞ§µÄ²Ù×÷
-	ERROR_TYPE_MISMATCH,					//ÀàĞÍ²»Æ¥Åä
-	ERROR_NOT_HANDLE_TYPE,					//²»ÊÇ¾ä±úÀàĞÍ
-	ERROR_NOT_DELEGATE_TYPE,				//²»ÊÇÎ¯ÍĞÀàĞÍ
-	ERROR_WRONG_NUMBER_OF_INDICES,			//Ë÷ÒıÊı´íÎó
-	ERROR_NOT_MEMBER_METHOD,				//²»ÔÚ³ÉÔ±º¯ÊıÖĞ
-	ERROR_METHOD_NOT_FOUND,					//º¯ÊıÎ´ÕÒµ½
-	ERROR_OPERATOR_NOT_FOUND,				//²Ù×÷Î´ÕÒµ½
-	ERROR_CONSTRUCTOR_NOT_FOUND,			//¹¹Ôìº¯ÊıÎ´ÕÒµ½
-	ERROR_NUMBER_OF_PARAMETERS,				//²ÎÊıÊıÁ¿´íÎó
-	ERROR_DESTRUCTOR_ALLOC,					//Îö¹¹º¯ÊıÖĞÉêÇëÍĞ¹ÜÄÚ´æ
-	ERROR_TUPLE_INDEX_NOT_CONSTANT,			//Ôª×éË÷Òı²»ÊÇ³£Á¿
-	ERROR_INDEX_OUT_OF_RANGE,				//Ë÷ÒıÔ½½ç
-	ERROR_EXPRESSION_NOT_VALUE,				//±í´ïÊ½²»ÊÇ¸öÖµ
-	ERROR_TYPE_CANNOT_BE_NULL,				//ÀàĞÍ²»¿ÉÎª¿Õ
-	ERROR_EXPRESSION_UNASSIGNABLE,			//±í´ïÊ½²»¿É¸³Öµ
-	ERROR_DIVISION_BY_ZERO,					//³ıÁã
-	ERROR_GENERATOR_CONSTANT_EVALUATION_FAIL,					//³£Á¿Öµ¼ÆËãÊ§°Ü
-	ERROR_UNSUPPORTED_CONSTANT_TYPES,		//²»Ö§³ÖµÄ³£Á¿ÀàĞÍ
-	ERROR_CONSTRUCTOR_CALL_ITSELF,			//¹¹Ôìº¯Êıµ÷ÓÃ×ÔÉí
-	ERROR_MISSING_RETURN,					//È±ÉÙ·µ»ØÖµ
-	ERROR_TYPE_NUMBER_ERROR,				//ÀàĞÍÊıÁ¿´íÎó
-	ERROR_ONLY_BE_USED_IN_LOOP,				//Ö»ÄÜÔÚÑ­»·ÖĞÊ¹ÓÃ
-	ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,				//²»ÔÚÑ­»·ÖĞ
-	ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,					//²»Ö§³ÖÓÃ±¾µØº¯Êı´´½¨ÈÎÎñ
-	ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//²»Ö§³ÖµÄÌØÊâº¯Êı
+	ERROR_MISSING_PAIRED_SYMBOL,			//ç¼ºå°‘é…å¯¹çš„ç¬¦å·
+	ERROR_UNKNOWN_SYMBOL,					//æœªçŸ¥çš„ç¬¦å·
+	ERROR_INDENT,							//ç¼©è¿›é—®é¢˜
+	ERROR_INPUT_STRINGL,					//è¾“å…¥å­—ç¬¦ä¸²
+	ERROR_INPUT_COMMA_OR_SEMICOLON,			//è¾“å…¥é€—å·æˆ–åˆ†å·
+	ERROR_UNEXPECTED_LEXCAL,				//æ„å¤–çš„è¯æ¡
+	ERROR_ATTRIBUTE_INVALID,				//å±æ€§æ— æ•ˆ
+	ERROR_MISSING_NAME,						//ç¼ºå°‘åç§°
+	ERROR_MISSING_TYPE,						//ç¼ºå°‘ç±»å‹
+	ERROR_UNEXPECTED_LINE_END,				//æ„å¤–çš„è¡Œå°¾
+	ERROR_CONSTANT_NOT_ASSIGNMENT,			//å¸¸é‡æœªèµ‹å€¼
+	ERROR_MISSING_ASSIGNMENT_EXPRESSION,	//ç¼ºå°‘èµ‹å€¼è¡¨è¾¾å¼
+	ERROR_MISSING_IDENTIFIER,				//ç¼ºå°‘æ ‡è¯†ç¬¦
+	ERROR_MISSING_EXPRESSION,				//ç¼ºå°‘è¡¨è¾¾å¼
+	ERROR_INVALID_IDENTIFIER,				//æ— æ•ˆçš„æ ‡è¯†ç¬¦
+	ERROR_INVALID_VISIBILITY,				//æ— æ•ˆçš„å¯è®¿é—®æ€§ä¿®é¥°ç¬¦
+	ERROR_NOT_VARIABLE_DECLARATION,			//ä¸æ˜¯å˜é‡å£°æ˜
+	ERROR_INVALID_INITIALIZER,				//æ— æ•ˆçš„åˆå§‹åŒ–
+	ERROR_LIBRARY_LOAD_FAIL,				//ç¨‹åºé›†åŠ è½½å¤±è´¥
+	ERROR_RELY_DECLARATION_LOAD_FAIL,		//ä¾èµ–çš„å£°æ˜åŠ è½½å¤±è´¥
+	ERROR_RELY_DECLARATION_AMBIGUITY,		//ä¾èµ–çš„å£°æ˜ä¸æ˜ç¡®
+	ERROR_RELY_DECLARATION_MISMATCHING,		//ä¾èµ–çš„å£°æ˜ä¸å®é™…ç±»å‹ä¸åŒ¹é…
+	ERROR_IMPORT_SELF,						//ä¸èƒ½å¯¼å…¥æ­£åœ¨ç¼–è¯‘çš„åº“
+	ERROR_IMPORT_NAMESPACE_NOT_FOUND,		//å¯¼å…¥çš„å‘½åç©ºé—´æœªæ‰¾åˆ°
+	ERROR_DUPLICATE_DECLARATION,			//é‡å¤çš„å£°æ˜
+	ERROR_RELY_SPACE_EQUIVOCAL,				//ä¾èµ–ç©ºé—´ä¸æ˜ç¡®
+	ERROR_DECLARATION_EQUIVOCAL,			//æŸ¥æ‰¾ç”³æ˜ä¸æ˜ç¡®
+	ERROR_EXPRESSION_EQUIVOCAL,				//è¡¨è¾¾å¼æ„ä¹‰ä¸æ˜ç¡®
+	ERROR_TYPE_EQUIVOCAL,					//ç±»å‹ä¸æ˜ç¡®
+	ERROR_DECLARATION_NOT_FOUND,			//ç”³æ˜æœªæ‰¾åˆ°
+	ERROR_ENUM_ELEMENT_NOT_FOUND,			//æšä¸¾å…ƒç´ æœªæ‰¾åˆ°
+	ERROR_NOT_TYPE_DECLARATION,				//ä¸æ˜¯ç±»å‹ç”³æ˜
+	ERROR_NAME_IS_KEY_WORD,					//åå­—æ˜¯å…³é”®å­—
+	ERROR_DUPLICATION_NAME,					//é‡å
+	ERROR_NAME_SAME_AS_NAMESPACE,			//ä¸å‘½åç©ºé—´åŒå
+	ERROR_INVALID_OVERLOAD,					//æ— æ•ˆçš„é‡è½½
+	ERROR_INVALID_OVERRIDE,					//æ— æ•ˆçš„é‡å†™
+	ERROR_STRUCT_NO_CONSTRUCTOR,			//ç»“æ„ä½“ä¸å…è®¸æœ‰æ„é€ å‡½æ•°
+	ERROR_STRUCT_CYCLIC_INCLUSION,			//ç»“æ„ä½“å¾ªç¯åŒ…å«
+	ERROR_CIRCULAR_INHERITANCE,				//å¾ªç¯ç»§æ‰¿
+	ERROR_DUPLICATE_INHERITANCE,			//é‡å¤ç»§æ‰¿
+	ERROR_INTERFACE_NOT_IMPLEMENTED,		//æ¥å£æœªå®ç°
+	ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT,		//å®ç°çš„æ¥å£å‡½æ•°è¿”å›å€¼ç±»å‹ä¸ä¸€è‡´
+	ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT,			//é‡å†™çš„çˆ¶ç±»å‡½æ•°è¿”å›å€¼ç±»å‹ä¸ä¸€è‡´
+	ERROR_TASK_RETURN_TYPES_INCONSISTENT,						//ä»»åŠ¡å‡½æ•°è¿”å›å€¼ç±»å‹ä¸ä¸€è‡´
+	ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT,				//å§”æ‰˜å‚æ•°ç±»å‹ä¸ä¸€è‡´
+	ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT,					//å§”æ‰˜è¿”å›å€¼ç±»å‹ä¸ä¸€è‡´
+	ERROR_INVALID_OPERATOR,					//æ— æ•ˆçš„æ“ä½œ
+	ERROR_TYPE_MISMATCH,					//ç±»å‹ä¸åŒ¹é…
+	ERROR_NOT_HANDLE_TYPE,					//ä¸æ˜¯å¥æŸ„ç±»å‹
+	ERROR_NOT_DELEGATE_TYPE,				//ä¸æ˜¯å§”æ‰˜ç±»å‹
+	ERROR_WRONG_NUMBER_OF_INDICES,			//ç´¢å¼•æ•°é”™è¯¯
+	ERROR_NOT_MEMBER_METHOD,				//ä¸åœ¨æˆå‘˜å‡½æ•°ä¸­
+	ERROR_METHOD_NOT_FOUND,					//å‡½æ•°æœªæ‰¾åˆ°
+	ERROR_OPERATOR_NOT_FOUND,				//æ“ä½œæœªæ‰¾åˆ°
+	ERROR_CONSTRUCTOR_NOT_FOUND,			//æ„é€ å‡½æ•°æœªæ‰¾åˆ°
+	ERROR_NUMBER_OF_PARAMETERS,				//å‚æ•°æ•°é‡é”™è¯¯
+	ERROR_DESTRUCTOR_ALLOC,					//ææ„å‡½æ•°ä¸­ç”³è¯·æ‰˜ç®¡å†…å­˜
+	ERROR_TUPLE_INDEX_NOT_CONSTANT,			//å…ƒç»„ç´¢å¼•ä¸æ˜¯å¸¸é‡
+	ERROR_INDEX_OUT_OF_RANGE,				//ç´¢å¼•è¶Šç•Œ
+	ERROR_EXPRESSION_NOT_VALUE,				//è¡¨è¾¾å¼ä¸æ˜¯ä¸ªå€¼
+	ERROR_TYPE_CANNOT_BE_NULL,				//ç±»å‹ä¸å¯ä¸ºç©º
+	ERROR_EXPRESSION_UNASSIGNABLE,			//è¡¨è¾¾å¼ä¸å¯èµ‹å€¼
+	ERROR_DIVISION_BY_ZERO,					//é™¤é›¶
+	ERROR_GENERATOR_CONSTANT_EVALUATION_FAIL,					//å¸¸é‡å€¼è®¡ç®—å¤±è´¥
+	ERROR_UNSUPPORTED_CONSTANT_TYPES,		//ä¸æ”¯æŒçš„å¸¸é‡ç±»å‹
+	ERROR_CONSTRUCTOR_CALL_ITSELF,			//æ„é€ å‡½æ•°è°ƒç”¨è‡ªèº«
+	ERROR_MISSING_RETURN,					//ç¼ºå°‘è¿”å›å€¼
+	ERROR_TYPE_NUMBER_ERROR,				//ç±»å‹æ•°é‡é”™è¯¯
+	ERROR_ONLY_BE_USED_IN_LOOP,				//åªèƒ½åœ¨å¾ªç¯ä¸­ä½¿ç”¨
+	ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,				//ä¸åœ¨å¾ªç¯ä¸­
+	ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,					//ä¸æ”¯æŒç”¨æœ¬åœ°å‡½æ•°åˆ›å»ºä»»åŠ¡
+	ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//ä¸æ”¯æŒçš„ç‰¹æ®Šå‡½æ•°
 
 	WARRING_LEVEL1 = ((uint32)ErrorLevel::WarringLevel1) << 24,
-	WARRING_LEVEL1_REPEATED_VISIBILITY,		//ÖØ¸´µÄ¿É·ÃÎÊĞÔĞŞÊÎ
-	WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,	//Îö¹¹º¯ÊıÊôĞÔ½«±»¶ªÆú
-	WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,	//Îö¹¹º¯ÊıµÄ¿É·ÃÎÊĞÔĞŞÊÎ»á±»ºöÂÔ
-	WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//µ¥¶ÀµÄÀàĞÍ±í´ïÊ½
+	WARRING_LEVEL1_REPEATED_VISIBILITY,		//é‡å¤çš„å¯è®¿é—®æ€§ä¿®é¥°
+	WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,	//ææ„å‡½æ•°å±æ€§å°†è¢«ä¸¢å¼ƒ
+	WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,	//ææ„å‡½æ•°çš„å¯è®¿é—®æ€§ä¿®é¥°ä¼šè¢«å¿½ç•¥
+	WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//å•ç‹¬çš„ç±»å‹è¡¨è¾¾å¼
 
 	WARRING_LEVEL2 = ((uint32)ErrorLevel::WarringLevel2) << 24,
 
@@ -110,21 +110,21 @@ enum class MessageType :uint32
 	WARRING_LEVEL4 = ((uint32)ErrorLevel::WarringLevel4) << 24,
 
 	LOGGER_LEVEL1 = ((uint32)ErrorLevel::LoggerLevel1) << 24,
-	LOGGER_LEVEL1_DISCARD_ATTRIBUTE,		//±»¶ªÆúµÄÊôĞÔ
-	LOGGER_LEVEL1_REPEATED_ATTRIBUTE,		//ÖØ¸´µÄÊôĞÔ
+	LOGGER_LEVEL1_DISCARD_ATTRIBUTE,		//è¢«ä¸¢å¼ƒçš„å±æ€§
+	LOGGER_LEVEL1_REPEATED_ATTRIBUTE,		//é‡å¤çš„å±æ€§
 
 	LOGGER_LEVEL2 = ((uint32)ErrorLevel::LoggerLevel2) << 24,
-	LOGGER_LEVEL2_DISCARDED_EXPRESSION,		//¶ªÆúµÄ±í´ïÊ½
-	LOGGER_LEVEL2_INACCESSIBLE_STATEMENT,	//ÎŞ·¨·ÃÎÊµÄÓï¾ä
-	LOGGER_LEVEL2_UNUSED_VARIABLE,			//Î´Ê¹ÓÃµÄ±äÁ¿
-	LOGGER_LEVEL2_UNINITIALIZED_VARIABLE,	//Î´³õÊ¼»¯µÄ±äÁ¿
+	LOGGER_LEVEL2_DISCARDED_EXPRESSION,		//ä¸¢å¼ƒçš„è¡¨è¾¾å¼
+	LOGGER_LEVEL2_INACCESSIBLE_STATEMENT,	//æ— æ³•è®¿é—®çš„è¯­å¥
+	LOGGER_LEVEL2_UNUSED_VARIABLE,			//æœªä½¿ç”¨çš„å˜é‡
+	LOGGER_LEVEL2_UNINITIALIZED_VARIABLE,	//æœªåˆå§‹åŒ–çš„å˜é‡
 
 	LOGGER_LEVEL3 = ((uint32)ErrorLevel::LoggerLevel3) << 24,
-	LOGGER_LEVEL3_HIDES_PREVIOUS_IDENTIFIER,//ÉùÃ÷µÄ¾Ö²¿±äÁ¿Òş²ØÁËÖ®Ç°µÄ¾Ö²¿±äÁ¿
-	LOGGER_LEVEL3_MISSING_VISIBILITY,		//¿É·ÃÎÊĞÔĞŞÊÎÈ±Ê§£¬½«Ê¹ÓÃÄ¬ÈÏ¿É·ÃÎÊĞÔĞŞÊÎ
+	LOGGER_LEVEL3_HIDES_PREVIOUS_IDENTIFIER,//å£°æ˜çš„å±€éƒ¨å˜é‡éšè—äº†ä¹‹å‰çš„å±€éƒ¨å˜é‡
+	LOGGER_LEVEL3_MISSING_VISIBILITY,		//å¯è®¿é—®æ€§ä¿®é¥°ç¼ºå¤±ï¼Œå°†ä½¿ç”¨é»˜è®¤å¯è®¿é—®æ€§ä¿®é¥°
 
 	LOGGER_LEVEL4 = ((uint32)ErrorLevel::LoggerLevel4) << 24,
-	LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION,			//Î´´¦ÀíµÄºËĞÄÌØÊâº¯Êı
+	LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION,			//æœªå¤„ç†çš„æ ¸å¿ƒç‰¹æ®Šå‡½æ•°
 
 	INVALID = 0xFFFFFFFF
 };

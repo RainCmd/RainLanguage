@@ -69,7 +69,7 @@ public:
 	}
 	inline uint32 GetReferenceAddress(uint32 index)
 	{
-		ASSERT_DEBUG(insertAddress == INVALID, "²åÈëÖ¸ÁîÊ±ÓÃµ½ÁË´úÂëÒıÓÃ¹¦ÄÜ£¬¼ì²éÊÇ·ñÓĞ±ØÒªÖ§³Ö²åÈëÖ¸ÁîÊ±Ê¹ÓÃ¸Ã¹¦ÄÜ");
+		ASSERT_DEBUG(insertAddress == INVALID, "æ’å…¥æŒ‡ä»¤æ—¶ç”¨åˆ°äº†ä»£ç å¼•ç”¨åŠŸèƒ½ï¼Œæ£€æŸ¥æ˜¯å¦æœ‰å¿…è¦æ”¯æŒæ’å…¥æŒ‡ä»¤æ—¶ä½¿ç”¨è¯¥åŠŸèƒ½");
 		return codeReferenceAddresses[index];
 	}
 	template<typename T>
@@ -115,7 +115,7 @@ public:
 	template<typename T>
 	void SetValue(CodeValueReference<T>* reference, const T& value)
 	{
-		ASSERT_DEBUG(!reference->assigned, "¶ÔÒıÓÃµØÖ·ÖØ¸´¸³Öµ");
+		ASSERT_DEBUG(!reference->assigned, "å¯¹å¼•ç”¨åœ°å€é‡å¤èµ‹å€¼");
 		reference->assigned = true;
 		reference->value = value;
 		for(uint32 i = 0; i < reference->references.Count(); i++)
@@ -129,7 +129,7 @@ public:
 	{
 		switch(declaration.code)
 		{
-			case TypeCode::Invalid: EXCEPTION("ÎŞĞ§µÄTypeCode");
+			case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„TypeCode");
 			case TypeCode::Struct:
 				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Struct, declaration.index, NULL), address);
 				break;
@@ -148,7 +148,7 @@ public:
 			case TypeCode::Task:
 				globalReference->AddReference(CompilingDeclaration(declaration.library, Visibility::None, DeclarationCategory::Task, declaration.index, NULL), address);
 				break;
-			default: EXCEPTION("ÎŞĞ§µÄTypeCode");
+			default: EXCEPTION("æ— æ•ˆçš„TypeCode");
 		}
 	}
 	inline void WriteCodeGlobalReference(const Declaration& declaration)
@@ -184,7 +184,7 @@ public:
 		}
 		if(variable.declaration.category == DeclarationCategory::LocalVariable) WriteCode(variable.reference, variable.offset);
 		else if(variable.declaration.category == DeclarationCategory::Variable) WriteCodeGlobalVariableReference(variable.declaration, variable.offset);
-		else EXCEPTION("ÎŞĞ§µÄ±äÁ¿");
+		else EXCEPTION("æ— æ•ˆçš„å˜é‡");
 	}
 	void BeginInsert(uint32 address);
 	void EndInsert();

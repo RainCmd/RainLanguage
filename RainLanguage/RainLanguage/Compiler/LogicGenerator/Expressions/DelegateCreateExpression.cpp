@@ -18,7 +18,7 @@ void FunctionDelegateCreateExpression::Generator(LogicGenerateParameter& paramet
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode(Native(declaration.library, declaration.index));
 	}
-	else EXCEPTION("其他定义类型不应该走到这");
+	else EXCEPTION("鍏朵粬瀹氫箟绫诲瀷涓嶅簲璇ヨ蛋鍒拌繖");
 }
 
 void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& parameter)
@@ -29,7 +29,7 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 	LogicVariable sourceVariable;
 	if (declaration.category == DeclarationCategory::StructFunction)
 	{
-		ASSERT_DEBUG(!question, "前面语义解析逻辑可能有bug");
+		ASSERT_DEBUG(!question, "鍓嶉潰璇箟瑙ｆ瀽閫昏緫鍙兘鏈塨ug");
 		sourceVariable = parameter.variableGenerator->DecareTemporary(parameter.manager, TYPE_Handle);
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Box);
 		parameter.generator->WriteCode(sourceVariable, VariableAccessType::Write);
@@ -46,7 +46,7 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 		}
 		sourceVariable = sourceParameter.results[0];
 	}
-	else EXCEPTION("其他定义类型不应该走到这");
+	else EXCEPTION("鍏朵粬瀹氫箟绫诲瀷涓嶅簲璇ヨ蛋鍒拌繖");
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
@@ -116,7 +116,7 @@ LogicVariable GetVariable(LogicGenerateParameter& parameter, const CompilingDecl
 		LogicVariabelAssignment(parameter.manager, parameter.generator, result, closure, parameter.manager->selfLibaray->classes[declaration.definition]->variables[declaration.index]->declaration, 0, parameter.finallyAddress);
 		return result;
 	}
-	EXCEPTION("语义解析逻辑有bug");
+	EXCEPTION("璇箟瑙ｆ瀽閫昏緫鏈塨ug");
 }
 
 void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& parameter)

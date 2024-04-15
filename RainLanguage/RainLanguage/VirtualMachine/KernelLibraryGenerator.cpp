@@ -46,7 +46,7 @@ void ClearVariable(CodeGenerator& generator, Type type, uint32 pointer)
 	if (type.dimension)type = TYPE_Handle;
 	switch (type.code)
 	{
-		case TypeCode::Invalid: EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 		case TypeCode::Struct:
 			if (type == TYPE_String)
 			{
@@ -74,7 +74,7 @@ void ClearVariable(CodeGenerator& generator, Type type, uint32 pointer)
 			generator.WriteInstruct(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			generator.Write(LOCAL(pointer));
 			break;
-		default: EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+		default: EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 }
 
@@ -100,7 +100,7 @@ void CollectInherits(const KernelLibraryInfo* library, const Declaration& declar
 			CollectInherits(library, source->inherits[i], inherits);
 		}
 	}
-	else EXCEPTION("²»¸Ã³öÏÖµÄÀàĞÍ");
+	else EXCEPTION("ä¸è¯¥å‡ºç°çš„ç±»å‹");
 }
 void CollectRelocation(const KernelLibraryInfo* library, List<Relocation, true>& relocations, const MemberFunction& realize, const String& name, const CallableInfo& info, const Declaration& declaration)
 {
@@ -112,7 +112,7 @@ void CollectRelocation(const KernelLibraryInfo* library, List<Relocation, true>&
 			const KernelLibraryInfo::Function* function = &library->functions[source->functions[i]];
 			if (function->name == name && IsEquals(function->parameters.GetTypes(), 1, info.parameters.GetTypes(), 1))
 			{
-				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), info.returns.GetTypes()), "overrideµÄº¯Êı·µ»ØÖµÀàĞÍ±ØĞëÒ»ÖÂ");
+				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), info.returns.GetTypes()), "overrideçš„å‡½æ•°è¿”å›å€¼ç±»å‹å¿…é¡»ä¸€è‡´");
 				new (relocations.Add())Relocation(MemberFunction(LIBRARY_KERNEL, TypeCode::Handle, declaration.index, i), realize);
 			}
 		}
@@ -125,12 +125,12 @@ void CollectRelocation(const KernelLibraryInfo* library, List<Relocation, true>&
 			const KernelLibraryInfo::Interface::Function* function = &source->functions[i];
 			if (function->name == name && IsEquals(function->parameters.GetTypes(), 1, info.parameters.GetTypes(), 1))
 			{
-				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), info.returns.GetTypes()), "overrideµÄº¯Êı·µ»ØÖµÀàĞÍ±ØĞëÒ»ÖÂ");
+				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), info.returns.GetTypes()), "overrideçš„å‡½æ•°è¿”å›å€¼ç±»å‹å¿…é¡»ä¸€è‡´");
 				new (relocations.Add())Relocation(MemberFunction(LIBRARY_KERNEL, TypeCode::Interface, declaration.index, i), realize);
 			}
 		}
 	}
-	else EXCEPTION("²»¸Ã³öÏÖµÄÀàĞÍ");
+	else EXCEPTION("ä¸è¯¥å‡ºç°çš„ç±»å‹");
 }
 
 Library* GetKernelLibrary()
@@ -232,7 +232,7 @@ Library* GetKernelLibrary()
 			generator.WriteInstruct(Instruct::FUNCTION_Entrance);
 			generator.Write<uint32>(0);
 			generator.Write<uint32>(0);
-			//ºËĞÄ¿â¹¹Ôìº¯Êı£¬ĞèÒª³õÊ¼»¯µÄ±äÁ¿·ÅÕâÀï
+			//æ ¸å¿ƒåº“æ„é€ å‡½æ•°ï¼Œéœ€è¦åˆå§‹åŒ–çš„å˜é‡æ”¾è¿™é‡Œ
 			generator.WriteInstruct(Instruct::FUNCTION_Return);
 		}
 

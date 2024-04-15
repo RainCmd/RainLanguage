@@ -1,4 +1,4 @@
-﻿#include "ExpressionParser.h"
+#include "ExpressionParser.h"
 #include "../../KeyWords.h"
 #include "Expression.h"
 #include "Expressions/TupleExpression.h"

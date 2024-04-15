@@ -8,7 +8,7 @@
 
 void ValidAssert(const InvokerWrapper& wrapper)
 {
-	ASSERT(wrapper.IsValid(), "ÎÞÐ§µÄµ÷ÓÃ");
+	ASSERT(wrapper.IsValid(), "æ— æ•ˆçš„è°ƒç”¨");
 }
 
 #define INVOKER ((Invoker*)invoker)
@@ -155,7 +155,7 @@ integer InvokerWrapper::GetEnumValueReturnValue(uint32 index) const
 {
 	ValidAssert(*this);
 	const Type& type = INVOKER->info->returns.GetType(index);
-	ASSERT(type.code == TypeCode::Enum, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type.code == TypeCode::Enum, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	return INVOKER->GetEnumReturnValue(index, type);
 }
 
@@ -163,7 +163,7 @@ const RainString InvokerWrapper::GetEnumNameReturnValue(uint32 index) const
 {
 	ValidAssert(*this);
 	const Type& type = INVOKER->info->returns.GetType(index);
-	ASSERT(type.code == TypeCode::Enum, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type.code == TypeCode::Enum, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	String result = INVOKER->kernel->libraryAgency->GetEnum(type)->ToString(INVOKER->GetEnumReturnValue(index, type), INVOKER->kernel->stringAgency);
 	return RainString(result.GetPointer(), result.GetLength());
 }
@@ -186,7 +186,7 @@ uint32 InvokerWrapper::GetArrayReturnValueLength(uint32 index) const
 	ValidAssert(*this);
 	Invoker* source = INVOKER;
 	source->StateAssert(InvokerState::Completed);
-	ASSERT(source->info->returns.GetType(index).dimension, "²»ÊÇÊý×é");
+	ASSERT(source->info->returns.GetType(index).dimension, "ä¸æ˜¯æ•°ç»„");
 	Handle handle = *(Handle*)(source->data.GetPointer() + source->info->returns.GetOffset(index));
 	if (handle) return source->kernel->heapAgency->GetArrayLength(handle);
 	else return 0;
@@ -197,7 +197,7 @@ Handle GetArrayReturnValue(const InvokerWrapper& wrapper, const Invoker* invoker
 	ValidAssert(wrapper);
 	invoker->StateAssert(InvokerState::Completed);
 	Type type = invoker->info->returns.GetType(index);
-	ASSERT(type == Type(declaration, 1), "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type == Type(declaration, 1), "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	return *(Handle*)(invoker->data.GetPointer() + invoker->info->returns.GetOffset(index));
 }
 
@@ -306,7 +306,7 @@ void InvokerWrapper::GetEnumNameArrayReturnValue(uint32 index, RainString*& resu
 	Invoker* source = INVOKER;
 	source->StateAssert(InvokerState::Completed);
 	Type type = source->info->returns.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	Handle handle = *(Handle*)(source->data.GetPointer() + source->info->returns.GetOffset(index));
 	if (handle)
 	{
@@ -399,7 +399,7 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString& elemen
 	ValidAssert(*this);
 	INVOKER->StateAssert(InvokerState::Unstart);
 	const Type& type = INVOKER->info->parameters.GetType(index);
-	ASSERT(type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	INVOKER->SetParameter(index, GetEnumValue(INVOKER->kernel, type, elementName.value, elementName.length));
 }
 
@@ -415,7 +415,7 @@ void InvokerWrapper::SetEnumValueParameter(uint32 index, integer value) const
 	ValidAssert(*this);
 	INVOKER->StateAssert(InvokerState::Unstart);
 	const Type& type = INVOKER->info->parameters.GetType(index);
-	ASSERT(type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	INVOKER->SetParameter(index, value, type);
 }
 
@@ -444,7 +444,7 @@ Handle& GetArrayParameter(const InvokerWrapper& wrapper, const Invoker* invoker,
 	ValidAssert(wrapper);
 	invoker->StateAssert(InvokerState::Unstart);
 	Type type = invoker->info->parameters.GetType(index);
-	ASSERT(type == Type(declaration, 1), "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type == Type(declaration, 1), "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	Handle& handle = *(Handle*)(invoker->data.GetPointer() + invoker->info->parameters.GetOffset(index));
 	invoker->kernel->heapAgency->StrongRelease(handle);
 	handle = invoker->kernel->heapAgency->Alloc(Type(declaration, 0), length);
@@ -514,7 +514,7 @@ void InvokerWrapper::SetEnumValueParameter(uint32 index, const integer* values, 
 	ValidAssert(*this);
 	source->StateAssert(InvokerState::Unstart);
 	Type type = source->info->parameters.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
 	source->kernel->heapAgency->StrongRelease(handle);
 	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length);
@@ -529,7 +529,7 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString* values
 	ValidAssert(*this);
 	source->StateAssert(InvokerState::Unstart);
 	Type type = source->info->parameters.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
 	source->kernel->heapAgency->StrongRelease(handle);
 	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length);
@@ -544,7 +544,7 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const character** values
 	ValidAssert(*this);
 	source->StateAssert(InvokerState::Unstart);
 	Type type = source->info->parameters.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
 	source->kernel->heapAgency->StrongRelease(handle);
 	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length);

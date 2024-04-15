@@ -2,7 +2,7 @@
 #include "Rain.h"
 
 /// <summary>
-/// ¶şÎ¬ÏòÁ¿
+/// äºŒç»´å‘é‡
 /// </summary>
 struct RAINLANGUAGE Real2
 {
@@ -13,13 +13,13 @@ struct RAINLANGUAGE Real2
 	Real2 operator + (const Real2& other) const;
 	Real2 operator - (const Real2& other) const;
 	/// <summary>
-	/// ¸÷·ÖÁ¿Ïà³Ë
+	/// å„åˆ†é‡ç›¸ä¹˜
 	/// </summary>
 	Real2 operator * (const Real2& other) const;
 	Real2 operator * (const real& other) const;
 	friend Real2 operator * (const real& value, const Real2& vector);
 	/// <summary>
-	/// ¸÷·ÖÁ¿Ïà³ı
+	/// å„åˆ†é‡ç›¸é™¤
 	/// </summary>
 	Real2 operator / (const Real2& other) const;
 	Real2 operator / (const real& other) const;
@@ -36,13 +36,13 @@ struct RAINLANGUAGE Real3
 	Real3 operator + (const Real3& other) const;
 	Real3 operator - (const Real3& other) const;
 	/// <summary>
-	/// ¸÷·ÖÁ¿Ïà³Ë
+	/// å„åˆ†é‡ç›¸ä¹˜
 	/// </summary>
 	Real3 operator * (const Real3& other) const;
 	Real3 operator * (const real& other) const;
 	friend Real3 operator * (const real& value, const Real3& vector);
 	/// <summary>
-	/// ¸÷·ÖÁ¿Ïà³ı
+	/// å„åˆ†é‡ç›¸é™¤
 	/// </summary>
 	Real3 operator / (const Real3& other) const;
 	Real3 operator / (const real& other) const;
@@ -59,13 +59,13 @@ struct RAINLANGUAGE Real4
 	Real4 operator + (const Real4& other) const;
 	Real4 operator - (const Real4& other) const;
 	/// <summary>
-	/// ¸÷·ÖÁ¿Ïà³Ë
+	/// å„åˆ†é‡ç›¸ä¹˜
 	/// </summary>
 	Real4 operator * (const Real4& other) const;
 	Real4 operator * (const real& other) const;
 	friend Real4 operator * (const real& value, const Real4& vector);
 	/// <summary>
-	/// ¸÷·ÖÁ¿Ïà³ı
+	/// å„åˆ†é‡ç›¸é™¤
 	/// </summary>
 	Real4 operator / (const Real4& other) const;
 	Real4 operator / (const real& other) const;

@@ -2,25 +2,25 @@
 #include "VirtualMachine.h"
 
 /// <summary>
-/// µ¥²½ÀàĞÍ
+/// å•æ­¥ç±»å‹
 /// </summary>
 enum class StepType
 {
 	None,
 	/// <summary>
-	/// ÔİÍ£
+	/// æš‚åœ
 	/// </summary>
 	Pause,
 	/// <summary>
-	/// Öğ¹ı³Ì
+	/// é€è¿‡ç¨‹
 	/// </summary>
 	Over,
 	/// <summary>
-	/// µ¥²½
+	/// å•æ­¥
 	/// </summary>
 	Into,
 	/// <summary>
-	/// Ìø³ö
+	/// è·³å‡º
 	/// </summary>
 	Out,
 };
@@ -43,7 +43,7 @@ RAINLANGUAGE inline bool IsStructured(RainType type)
 }
 
 /// <summary>
-/// È«¾Ö±äÁ¿µü´úÆ÷
+/// å…¨å±€å˜é‡è¿­ä»£å™¨
 /// </summary>
 struct RAINLANGUAGE RainDebuggerVariable
 {
@@ -51,9 +51,9 @@ private:
 	void* debugFrame;
 	void* name;
 	uint8* address;
-	void* internalType;//±äÁ¿ÀàĞÍ²»ÊÇÖµµÄÀàĞÍ
+	void* internalType;//å˜é‡ç±»å‹ä¸æ˜¯å€¼çš„ç±»å‹
 	/// <summary>
-	/// ÀàĞÍ
+	/// ç±»å‹
 	/// </summary>
 	RainType type;
 public:
@@ -63,49 +63,49 @@ public:
 	RainDebuggerVariable& operator=(const RainDebuggerVariable& other)noexcept;
 	RainDebuggerVariable& operator=(RainDebuggerVariable&& other)noexcept;
 	/// <summary>
-	/// ÊÇ·ñÊÇÓĞĞ§µÄµü´úÆ÷
+	/// æ˜¯å¦æ˜¯æœ‰æ•ˆçš„è¿­ä»£å™¨
 	/// </summary>
 	bool IsValid() const;
 	/// <summary>
-	/// µ±Ç°±äÁ¿ÉêÃ÷ÀàĞÍµÄ½»»¥Ã¶¾Ù
+	/// å½“å‰å˜é‡ç”³æ˜ç±»å‹çš„äº¤äº’æšä¸¾
 	/// </summary>
 	inline RainType GetRainType() const { return type; }
 	/// <summary>
-	/// Èç¹û±äÁ¿ÖµÓĞĞ§Ôò·µ»ØÖµÀàĞÍ£¬·ñÔò·µ»Ø±äÁ¿µÄÉêÃ÷ÀàĞÍ
+	/// å¦‚æœå˜é‡å€¼æœ‰æ•ˆåˆ™è¿”å›å€¼ç±»å‹ï¼Œå¦åˆ™è¿”å›å˜é‡çš„ç”³æ˜ç±»å‹
 	/// </summary>
 	RainString GetTypeName() const;
 	/// <summary>
-	/// »ñÈ¡±äÁ¿Ãû
+	/// è·å–å˜é‡å
 	/// </summary>
 	RainString GetName() const;
 	/// <summary>
-	/// »ñÈ¡±äÁ¿µØÖ·
+	/// è·å–å˜é‡åœ°å€
 	/// </summary>
 	/// <returns></returns>
 	uint8* GetAddress() const;
 	/// <summary>
-	/// »ñÈ¡³ÉÔ±ÊıÁ¿
+	/// è·å–æˆå‘˜æ•°é‡
 	/// </summary>
 	uint32 MemberCount() const;
 	/// <summary>
-	/// »ñÈ¡³ÉÔ±±äÁ¿
+	/// è·å–æˆå‘˜å˜é‡
 	/// </summary>
 	RainDebuggerVariable GetMember(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡Êı×é³¤¶È
+	/// è·å–æ•°ç»„é•¿åº¦
 	/// </summary>
 	uint32 ArrayLength() const;
 	/// <summary>
-	/// »ñÈ¡Êı×éÔªËØ
+	/// è·å–æ•°ç»„å…ƒç´ 
 	/// </summary>
 	RainDebuggerVariable GetElement(uint32 index) const;
 	/// <summary>
-	/// »ñÈ¡±äÁ¿Öµ
+	/// è·å–å˜é‡å€¼
 	/// </summary>
 	/// <returns></returns>
 	RainString GetValue() const;
 	/// <summary>
-	/// ÉèÖÃ±äÁ¿Öµ
+	/// è®¾ç½®å˜é‡å€¼
 	/// </summary>
 	/// <param name="value"></param>
 	void SetValue(const RainString& value);
@@ -113,7 +113,7 @@ public:
 };
 
 /// <summary>
-/// ÃüÃû¿Õ¼ä
+/// å‘½åç©ºé—´
 /// </summary>
 struct RAINLANGUAGE RainDebuggerSpace
 {
@@ -126,45 +126,45 @@ public:
 	RainDebuggerSpace& operator=(const RainDebuggerSpace& other)noexcept;
 	RainDebuggerSpace& operator=(RainDebuggerSpace&& other)noexcept;
 	/// <summary>
-	/// ÊÇ·ñÊÇÓĞĞ§µÄµü´úÆ÷
+	/// æ˜¯å¦æ˜¯æœ‰æ•ˆçš„è¿­ä»£å™¨
 	/// </summary>
 	bool IsValid();
 	/// <summary>
-	/// »ñÈ¡¿Õ¼äÃû³Æ
+	/// è·å–ç©ºé—´åç§°
 	/// </summary>
 	RainString GetName();
 	/// <summary>
-	/// ×Ó¿Õ¼äÊıÁ¿
+	/// å­ç©ºé—´æ•°é‡
 	/// </summary>
 	uint32 ChildCount();
 	/// <summary>
-	/// »ñÈ¡×Ó¿Õ¼ä
+	/// è·å–å­ç©ºé—´
 	/// </summary>
 	RainDebuggerSpace GetChild(uint32 index);
 	/// <summary>
-	/// »ñÈ¡×Ó¿Õ¼ä
+	/// è·å–å­ç©ºé—´
 	/// </summary>
-	/// <param name="name">×Ó¿Õ¼äÃû</param>
+	/// <param name="name">å­ç©ºé—´å</param>
 	RainDebuggerSpace GetChild(const RainString& name);
 	/// <summary>
-	/// ±äÁ¿ÊıÁ¿
+	/// å˜é‡æ•°é‡
 	/// </summary>
 	/// <returns></returns>
 	uint32 VariableCount();
 	/// <summary>
-	/// »ñÈ¡±äÁ¿
+	/// è·å–å˜é‡
 	/// </summary>
 	RainDebuggerVariable GetVariable(uint32 index);
 	/// <summary>
-	/// »ñÈ¡±äÁ¿
+	/// è·å–å˜é‡
 	/// </summary>
-	/// <param name="name">±äÁ¿Ãû</param>
+	/// <param name="name">å˜é‡å</param>
 	RainDebuggerVariable GetVariable(const RainString& name);
 	~RainDebuggerSpace();
 };
 
 /// <summary>
-/// µ÷ÓÃÕ»×·×Ù
+/// è°ƒç”¨æ ˆè¿½è¸ª
 /// </summary>
 struct RAINLANGUAGE RainTrace
 {
@@ -181,45 +181,45 @@ public:
 	RainTrace& operator=(const RainTrace& other)noexcept;
 	RainTrace& operator=(RainTrace&& other)noexcept;
 	/// <summary>
-	/// ÊÇ·ñÊÇÓĞĞ§µÄ
+	/// æ˜¯å¦æ˜¯æœ‰æ•ˆçš„
 	/// </summary>
 	bool IsValid();
 	/// <summary>
-	/// º¯ÊıÃû
+	/// å‡½æ•°å
 	/// </summary>
 	RainString FunctionName();
 	/// <summary>
-	/// ÎÄ¼şÃû
+	/// æ–‡ä»¶å
 	/// </summary>
 	RainString FileName();
 	/// <summary>
-	/// µ±Ç°Ö´ĞĞµÄĞĞºÅ
+	/// å½“å‰æ‰§è¡Œçš„è¡Œå·
 	/// </summary>
 	inline uint32 Line() const { return line; }
 	/// <summary>
-	/// ¾Ö²¿±äÁ¿ÊıÁ¿
+	/// å±€éƒ¨å˜é‡æ•°é‡
 	/// </summary>
 	uint32 LocalCount();
 	/// <summary>
-	/// »ñÈ¡¾Ö²¿±äÁ¿
+	/// è·å–å±€éƒ¨å˜é‡
 	/// </summary>
 	RainDebuggerVariable GetLocal(uint32 index);
 	/// <summary>
-	/// »ñÈ¡¾Ö²¿±äÁ¿
+	/// è·å–å±€éƒ¨å˜é‡
 	/// </summary>
 	RainDebuggerVariable GetLocal(const RainString& localName);
 	/// <summary>
-	/// µ±Ç°Õ»ÉÏÏÂÎÄÖĞÎÄ±¾¶ÔÓ¦µÄ±äÁ¿Êı¾İ
+	/// å½“å‰æ ˆä¸Šä¸‹æ–‡ä¸­æ–‡æœ¬å¯¹åº”çš„å˜é‡æ•°æ®
 	/// </summary>
-	/// <param name="fileName">ÎÄ¼şÃû</param>
-	/// <param name="lineNumber">ĞĞºÅ</param>
-	/// <param name="characterIndex">µ¥´ÊÊ××Ö·ûË÷Òı</param>
+	/// <param name="fileName">æ–‡ä»¶å</param>
+	/// <param name="lineNumber">è¡Œå·</param>
+	/// <param name="characterIndex">å•è¯é¦–å­—ç¬¦ç´¢å¼•</param>
 	RainDebuggerVariable GetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex);
 	~RainTrace();
 };
 
 /// <summary>
-/// µ÷ÓÃÕ»×·×Ùµü´úÆ÷
+/// è°ƒç”¨æ ˆè¿½è¸ªè¿­ä»£å™¨
 /// </summary>
 struct RAINLANGUAGE RainTraceIterator
 {
@@ -234,30 +234,30 @@ public:
 	RainTraceIterator& operator=(const RainTraceIterator& other)noexcept;
 	RainTraceIterator& operator=(RainTraceIterator&& other)noexcept;
 	/// <summary>
-	/// ÊÇ·ñÊÇÓĞĞ§µÄ
+	/// æ˜¯å¦æ˜¯æœ‰æ•ˆçš„
 	/// </summary>
 	bool IsValid();
 	/// <summary>
-	/// µ±Ö´ĞĞÖĞµÄÈÎÎñ
+	/// å½“æ‰§è¡Œä¸­çš„ä»»åŠ¡
 	/// </summary>
 	bool IsActive();
 	/// <summary>
-	/// µ±Ç°µ÷ÓÃµÄÊµÀıID
+	/// å½“å‰è°ƒç”¨çš„å®ä¾‹ID
 	/// </summary>
 	uint64 TaskID();
 	/// <summary>
-	/// µü´úÏÂÒ»¸öµ÷ÓÃÕ»×·×Ù
+	/// è¿­ä»£ä¸‹ä¸€ä¸ªè°ƒç”¨æ ˆè¿½è¸ª
 	/// </summary>
 	bool Next();
 	/// <summary>
-	/// µ±Ç°µ÷ÓÃÕ»×·×Ù
+	/// å½“å‰è°ƒç”¨æ ˆè¿½è¸ª
 	/// </summary>
 	RainTrace Current();
 	~RainTraceIterator();
 };
 
 /// <summary>
-/// ÈÎÎñµü´úÆ÷
+/// ä»»åŠ¡è¿­ä»£å™¨
 /// </summary>
 struct RAINLANGUAGE RainTaskIterator
 {
@@ -270,15 +270,15 @@ public:
 	RainTaskIterator& operator=(const RainTaskIterator& other)noexcept;
 	RainTaskIterator& operator=(RainTaskIterator&& other)noexcept;
 	/// <summary>
-	/// ÊÇ·ñÊÇÓĞĞ§µÄ
+	/// æ˜¯å¦æ˜¯æœ‰æ•ˆçš„
 	/// </summary>
 	bool IsValid();
 	/// <summary>
-	/// ÏÂÒ»¸öÈÎÎñµ÷ÓÃÕ»×·×Ùµü´úÆ÷
+	/// ä¸‹ä¸€ä¸ªä»»åŠ¡è°ƒç”¨æ ˆè¿½è¸ªè¿­ä»£å™¨
 	/// </summary>
 	bool Next();
 	/// <summary>
-	/// µ±Ç°ÈÎÎñµ÷ÓÃÕ»×·×Ùµü´úÆ÷
+	/// å½“å‰ä»»åŠ¡è°ƒç”¨æ ˆè¿½è¸ªè¿­ä»£å™¨
 	/// </summary>
 	RainTraceIterator Current();
 	~RainTaskIterator();
@@ -294,7 +294,7 @@ struct RAINLANGUAGE RainDebuggerParameter
 };
 
 /// <summary>
-/// µ÷ÊÔÆ÷
+/// è°ƒè¯•å™¨
 /// </summary>
 class RAINLANGUAGE RainDebugger
 {
@@ -312,22 +312,22 @@ private:
 	void Broken();
 protected:
 	/// <summary>
-	/// ´¥·¢¶Ïµã
+	/// è§¦å‘æ–­ç‚¹
 	/// </summary>
-	/// <param name="task">ÈÎÎñÎ¨Ò»id</param>
+	/// <param name="task">ä»»åŠ¡å”¯ä¸€id</param>
 	virtual void OnHitBreakpoint(uint64 task) = 0;
 	/// <summary>
-	/// ´¥·¢Òì³£
+	/// è§¦å‘å¼‚å¸¸
 	/// </summary>
-	/// <param name="task">ÈÎÎñÎ¨Ò»id</param>
-	/// <param name="message">Òì³£ĞÅÏ¢</param>
+	/// <param name="task">ä»»åŠ¡å”¯ä¸€id</param>
+	/// <param name="message">å¼‚å¸¸ä¿¡æ¯</param>
 	virtual void OnTaskExit(uint64 task, const RainString& message) = 0;
 	/// <summary>
-	/// ¼ÌĞøÖ´ĞĞ
+	/// ç»§ç»­æ‰§è¡Œ
 	/// </summary>
 	virtual void OnContinue() = 0;
 	/// <summary>
-	/// ¶Ï¿ªÓëĞéÄâ»úµÄÁ´½Ó
+	/// æ–­å¼€ä¸è™šæ‹Ÿæœºçš„é“¾æ¥
 	/// </summary>
 	virtual void OnBroken() = 0;
 public:
@@ -335,104 +335,104 @@ public:
 	inline StepType GetStepType() const { return stepType; }
 	RainKernel* GetKernel();
 	/// <summary>
-	/// ´´½¨µ÷ÊÔÆ÷
+	/// åˆ›å»ºè°ƒè¯•å™¨
 	/// </summary>
-	/// <param name="name">µ÷ÊÔÄ¿±ê¿âÃû</param>
-	/// <param name="kernel">ĞéÄâ»ú</param>
-	/// <param name="loader">·ûºÅ±í¼ÓÔØÆ÷</param>
-	/// <param name="database">·ûºÅ±íĞ¶ÔØÆ÷</param>
+	/// <param name="name">è°ƒè¯•ç›®æ ‡åº“å</param>
+	/// <param name="kernel">è™šæ‹Ÿæœº</param>
+	/// <param name="loader">ç¬¦å·è¡¨åŠ è½½å™¨</param>
+	/// <param name="database">ç¬¦å·è¡¨å¸è½½å™¨</param>
 	RainDebugger(const RainString& name, const RainDebuggerParameter& parameter);
 	RainDebugger(const RainDebugger&) = delete;
 	RainDebugger(RainDebugger&&) = delete;
 	/// <summary>
-	/// »ñÈ¡¿Õ¼äµü´úÆ÷
+	/// è·å–ç©ºé—´è¿­ä»£å™¨
 	/// </summary>
 	RainDebuggerSpace GetSpace();
 	/// <summary>
-	/// ÕıÔÚÖ´ĞĞµÄÈÎÎñid
+	/// æ­£åœ¨æ‰§è¡Œçš„ä»»åŠ¡id
 	/// </summary>
 	uint64 GetCurrentTaskID();
 	/// <summary>
-	/// »ñÈ¡ÈÎÎñµü´úÆ÷
+	/// è·å–ä»»åŠ¡è¿­ä»£å™¨
 	/// </summary>
 	RainTaskIterator GetTaskIterator();
 	/// <summary>
-	/// »ñÈ¡µ÷ÓÃÕ»×·×Ùµü´úÆ÷
+	/// è·å–è°ƒç”¨æ ˆè¿½è¸ªè¿­ä»£å™¨
 	/// </summary>
 	RainTraceIterator GetTraceIterator(uint64 taskID);
 	/// <summary>
-	/// ÊÇ·ñÊÇ¶Ïµã×´Ì¬
+	/// æ˜¯å¦æ˜¯æ–­ç‚¹çŠ¶æ€
 	/// </summary>
 	bool IsBreaking();
 	/// <summary>
-	/// »îÔ¾×´Ì¬
+	/// æ´»è·ƒçŠ¶æ€
 	/// </summary>
-	/// <returns>»îÔ¾×´Ì¬Ôò·µ»Øtrue,·ñÔò·µ»Øfalse</returns>
+	/// <returns>æ´»è·ƒçŠ¶æ€åˆ™è¿”å›true,å¦åˆ™è¿”å›false</returns>
 	bool IsActive();
 	/// <summary>
-	/// Ìí¼ÓÒ»¸ö¶Ïµã
+	/// æ·»åŠ ä¸€ä¸ªæ–­ç‚¹
 	/// </summary>
-	/// <param name="file">ÎÄ¼şÃû</param>
-	/// <param name="line">ĞĞÊı</param>
-	/// <returns>Ìí¼Ó³É¹¦Ôò·µ»Øtrue,·ñÔò·µ»Øfalse</returns>
+	/// <param name="file">æ–‡ä»¶å</param>
+	/// <param name="line">è¡Œæ•°</param>
+	/// <returns>æ·»åŠ æˆåŠŸåˆ™è¿”å›true,å¦åˆ™è¿”å›false</returns>
 	bool AddBreakPoint(const RainString& file, uint32 line);
 	/// <summary>
-	/// ÒÆ³ıÒ»¸ö¶Ïµã
+	/// ç§»é™¤ä¸€ä¸ªæ–­ç‚¹
 	/// </summary>
-	/// <param name="file">ÎÄ¼şÃû</param>
-	/// <param name="line">ĞĞÊı</param>
+	/// <param name="file">æ–‡ä»¶å</param>
+	/// <param name="line">è¡Œæ•°</param>
 	void RemoveBreakPoint(const RainString& file, uint32 line);
 	/// <summary>
-	/// Çå³ıËùÓĞ¶Ïµã
+	/// æ¸…é™¤æ‰€æœ‰æ–­ç‚¹
 	/// </summary>
 	void ClearBreakpoints();
 	/// <summary>
-	/// ÔİÍ£
+	/// æš‚åœ
 	/// </summary>
 	void Pause();
 	/// <summary>
-	/// ¼ÌĞøÖ´ĞĞ
+	/// ç»§ç»­æ‰§è¡Œ
 	/// </summary>
-	/// <param name="igonreStep">ºöÂÔµ¥²½</param>
+	/// <param name="igonreStep">å¿½ç•¥å•æ­¥</param>
 	void Continue(bool igonreStep);
 	/// <summary>
-	/// µ¥²½
+	/// å•æ­¥
 	/// </summary>
-	/// <param name="stepType">µ¥²½ÀàĞÍ</param>
+	/// <param name="stepType">å•æ­¥ç±»å‹</param>
 	void Step(StepType type);
 
 	/// <summary>
-	/// ĞéÄâ»úÄÚ²¿Ö¡¿ªÊ¼Ç°µ÷ÓÃ
+	/// è™šæ‹Ÿæœºå†…éƒ¨å¸§å¼€å§‹å‰è°ƒç”¨
 	/// </summary>
 	virtual void OnUpdate();
 	/// <summary>
-	/// ĞéÄâ»úÄÚ²¿ÓÃÓÚ´¥·¢¶ÏµãµÄ½Ó¿Ú
+	/// è™šæ‹Ÿæœºå†…éƒ¨ç”¨äºè§¦å‘æ–­ç‚¹çš„æ¥å£
 	/// </summary>
 	void OnBreak(uint64, uint32, bool);
 	/// <summary>
-	/// ĞéÄâ»úÄÚ²¿ÓÃÓÚ´¥·¢Òì³£µÄ½Ó¿Ú
+	/// è™šæ‹Ÿæœºå†…éƒ¨ç”¨äºè§¦å‘å¼‚å¸¸çš„æ¥å£
 	/// </summary>
 	void OnException(uint64, const character*, uint32);
 	virtual ~RainDebugger();
 };
 
 /// <summary>
-/// ½«ĞéÄâ»ú×¢²áµ½¿Éµ÷ÊÔÁĞ±íÖĞ
+/// å°†è™šæ‹Ÿæœºæ³¨å†Œåˆ°å¯è°ƒè¯•åˆ—è¡¨ä¸­
 /// </summary>
-/// <param name="kernel">ĞéÄâ»ú</param>
-/// <param name="loader">·ûºÅ±í¼ÓÔØÆ÷</param>
-/// <param name="unloader">·ûºÅ±íĞ¶ÔØÆ÷</param>
+/// <param name="kernel">è™šæ‹Ÿæœº</param>
+/// <param name="loader">ç¬¦å·è¡¨åŠ è½½å™¨</param>
+/// <param name="unloader">ç¬¦å·è¡¨å¸è½½å™¨</param>
 RAINLANGUAGE void RegistDebugger(const RainDebuggerParameter& parameter);
 
 typedef bool (*CreateDebuggerCallback)(const RainString& name, const RainDebuggerParameter& parameter);
 /// <summary>
-/// ´´½¨µ÷ÊÔÆ÷
+/// åˆ›å»ºè°ƒè¯•å™¨
 /// </summary>
-/// <param name="name">Ä¿±ê¿âÃû</param>
-/// <param name="callback">Èç¹ûÓĞĞéÄâ»ú¼ÓÔØ·ûºÏÃû³ÆµÄ¿â£¬Ôò´¥·¢»Øµ÷£¬»Øµ÷·µ»Øtrue±íÊ¾´´½¨³É¹¦£¬½«²»»áÔÙ´¥·¢»Øµ÷</param>
+/// <param name="name">ç›®æ ‡åº“å</param>
+/// <param name="callback">å¦‚æœæœ‰è™šæ‹ŸæœºåŠ è½½ç¬¦åˆåç§°çš„åº“ï¼Œåˆ™è§¦å‘å›è°ƒï¼Œå›è°ƒè¿”å›trueè¡¨ç¤ºåˆ›å»ºæˆåŠŸï¼Œå°†ä¸ä¼šå†è§¦å‘å›è°ƒ</param>
 RAINLANGUAGE void CreateDebugger(const RainString& name, CreateDebuggerCallback callback);
 /// <summary>
-/// È¡Ïû´´½¨µ÷ÊÔÆ÷
+/// å–æ¶ˆåˆ›å»ºè°ƒè¯•å™¨
 /// </summary>
-/// <param name="name">Ä¿±ê¿âÃû</param>
+/// <param name="name">ç›®æ ‡åº“å</param>
 RAINLANGUAGE void CancelCreateDebugger(const RainString& name);

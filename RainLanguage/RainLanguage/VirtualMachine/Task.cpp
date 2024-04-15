@@ -72,7 +72,7 @@ void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 	ignoreWait = isIgnoreWait;
 	this->pointer = invoker->entry;
 	bottom = top = invoker->info->returns.size;
-	if(EnsureStackSize(top + SIZE(Frame) + invoker->info->returns.Count() * 4 + invoker->info->parameters.size)) EXCEPTION("Õ»Òç³ö");
+	if(EnsureStackSize(top + SIZE(Frame) + invoker->info->returns.Count() * 4 + invoker->info->parameters.size)) EXCEPTION("æ ˆæº¢å‡º");
 	Mzero(stack, bottom);
 	*(Frame*)(stack + bottom) = Frame();
 	uint32* returnAddress = (uint32*)(stack + bottom + SIZE(Frame));
@@ -146,7 +146,7 @@ label_next_instruct:
 			Invoker* waitingInvoker;
 			if(!kernel->heapAgency->TryGetPoint(handle, task)) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_NULL_REFERENCE);
 			waitingInvoker = kernel->taskAgency->GetInvoker(*(uint64*)task);
-			ASSERT_DEBUG(waitingInvoker, "ÈÎÎñµÄÒıÓÃ¼ÆÊıÂß¼­¿ÉÄÜÓĞbug");
+			ASSERT_DEBUG(waitingInvoker, "ä»»åŠ¡çš„å¼•ç”¨è®¡æ•°é€»è¾‘å¯èƒ½æœ‰bug");
 			if(waitingInvoker->state < InvokerState::Running) goto label_next_instruct;
 			else if(ignoreWait) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED);
 			EXCEPTION_JUMP(4, BASE_WaitTask);
@@ -206,24 +206,24 @@ label_next_instruct:
 		case Instruct::BASE_CreateDelegate:
 		{
 			//Handle&		result
-			//Declaration	Î¯ÍĞÀàĞÍÉùÃ÷
-			//FunctionType	º¯ÊıÀàĞÍ
+			//Declaration	å§”æ‰˜ç±»å‹å£°æ˜
+			//FunctionType	å‡½æ•°ç±»å‹
 			//		Global:
-			//			uint32			º¯ÊıÈë¿Ú
+			//			uint32			å‡½æ•°å…¥å£
 			//		Native:
-			//			Native			±¾µØº¯ÊıË÷Òı
+			//			Native			æœ¬åœ°å‡½æ•°ç´¢å¼•
 			//		Box:
-			//			Handle&			×°ÏäºóµÄ¶ÔÏó
-			//			MemberFunction	³ÉÔ±º¯ÊıË÷Òı
+			//			Handle&			è£…ç®±åçš„å¯¹è±¡
+			//			MemberFunction	æˆå‘˜å‡½æ•°ç´¢å¼•
 			//		Reality:
-			//			Handle&			µ÷ÓÃÄ¿±ê¶ÔÏó
-			//			MemberFunction	³ÉÔ±º¯ÊıË÷Òı
+			//			Handle&			è°ƒç”¨ç›®æ ‡å¯¹è±¡
+			//			MemberFunction	æˆå‘˜å‡½æ•°ç´¢å¼•
 			//		Virtual:
-			//			Handle&			µ÷ÓÃÄ¿±ê¶ÔÏó
-			//			MemberFunction	³ÉÔ±º¯ÊıË÷Òı
+			//			Handle&			è°ƒç”¨ç›®æ ‡å¯¹è±¡
+			//			MemberFunction	æˆå‘˜å‡½æ•°ç´¢å¼•
 			//		Abstract:
-			//			Handle&			µ÷ÓÃÄ¿±ê¶ÔÏó
-			//			MemberFunction  ½Ó¿Ú³ÉÔ±º¯ÊıË÷Òı
+			//			Handle&			è°ƒç”¨ç›®æ ‡å¯¹è±¡
+			//			MemberFunction  æ¥å£æˆå‘˜å‡½æ•°ç´¢å¼•
 			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& result = VARIABLE(Handle, reaultValue);
 			kernel->heapAgency->StrongRelease(result);
@@ -298,30 +298,30 @@ label_next_instruct:
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Abstract);
 				}
 				goto label_next_instruct;
-				default: EXCEPTION("ÎŞĞ§µÄº¯ÊıÀàĞÍ");
+				default: EXCEPTION("æ— æ•ˆçš„å‡½æ•°ç±»å‹");
 			}
 		}
 		case Instruct::BASE_CreateTask:
 		{
 			//Handle&		result
-			//Declaration	ÈÎÎñ¶¨Òå
-			//FunctionType	º¯ÊıÀàĞÍ
-			// º¯ÊıÀàĞÍ:
+			//Declaration	ä»»åŠ¡å®šä¹‰
+			//FunctionType	å‡½æ•°ç±»å‹
+			// å‡½æ•°ç±»å‹:
 			//		Global:
-			//			Function		È«¾Öº¯ÊıË÷Òı
+			//			Function		å…¨å±€å‡½æ•°ç´¢å¼•
 			//		Native:
-			//			±¾µØº¯Êı²»ÄÜÖ±½Ó´´½İÈÎÎñ
+			//			æœ¬åœ°å‡½æ•°ä¸èƒ½ç›´æ¥åˆ›æ·ä»»åŠ¡
 			//		Box:
-			//			Handle&			±»µ÷ÓÃµÄ½á¹¹Ìå×°ÏäºóµÄ¶ÔÏó
-			//			MemberFunction	³ÉÔ±º¯ÊıË÷Òı
+			//			Handle&			è¢«è°ƒç”¨çš„ç»“æ„ä½“è£…ç®±åçš„å¯¹è±¡
+			//			MemberFunction	æˆå‘˜å‡½æ•°ç´¢å¼•
 			//		Reality:
-			//			Handle&			±»µ÷ÓÃµÄ¶ÔÏó
-			//			MemberFunction	³ÉÔ±º¯ÊıË÷Òı
-			//			Type			±»µ÷ÓÃµÄ¶ÔÏóÀàĞÍ
+			//			Handle&			è¢«è°ƒç”¨çš„å¯¹è±¡
+			//			MemberFunction	æˆå‘˜å‡½æ•°ç´¢å¼•
+			//			Type			è¢«è°ƒç”¨çš„å¯¹è±¡ç±»å‹
 			//		Virtual:
 			//		Abstract:
-			//			Handle&			±»µ÷ÓÃ¶ÔÏó
-			//			MemberFunction	³ÉÔ±º¯ÊıË÷Òı
+			//			Handle&			è¢«è°ƒç”¨å¯¹è±¡
+			//			MemberFunction	æˆå‘˜å‡½æ•°ç´¢å¼•
 			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& result = VARIABLE(Handle, reaultValue);
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
@@ -341,7 +341,7 @@ label_next_instruct:
 					instruct += 6 + SIZE(Declaration) + SIZE(Function);
 				}
 				goto label_next_instruct;
-				case FunctionType::Native: EXCEPTION("ÎŞĞ§µÄº¯ÊıÀàĞÍ");
+				case FunctionType::Native: EXCEPTION("æ— æ•ˆçš„å‡½æ•°ç±»å‹");
 				case FunctionType::Box:
 				{
 					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
@@ -350,7 +350,7 @@ label_next_instruct:
 					if(kernel->heapAgency->TryGetType(target, targetType))
 					{
 						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-						ASSERT_DEBUG((Declaration)targetType == member.declaration, "¶ÔÏóÀàĞÍÓëµ÷ÓÃÀàĞÍ²»Ò»ÖÂ£¡");
+						ASSERT_DEBUG((Declaration)targetType == member.declaration, "å¯¹è±¡ç±»å‹ä¸è°ƒç”¨ç±»å‹ä¸ä¸€è‡´ï¼");
 						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
 						newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
 						newInvoker->Reference();
@@ -395,14 +395,14 @@ label_next_instruct:
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask);
 				}
 				goto label_next_instruct;
-				default: EXCEPTION("ÎŞĞ§µÄº¯ÊıÀàĞÍ");
+				default: EXCEPTION("æ— æ•ˆçš„å‡½æ•°ç±»å‹");
 			}
 		}
 		case Instruct::BASE_CreateDelegateTask:
 		{
 			//Handle&		result
-			//Declaration	ÈÎÎñ¶¨Òå
-			//Handle&		Î¯ÍĞ¶ÔÏó
+			//Declaration	ä»»åŠ¡å®šä¹‰
+			//Handle&		å§”æ‰˜å¯¹è±¡
 			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& result = VARIABLE(Handle, reaultValue);
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
@@ -494,7 +494,7 @@ label_next_instruct:
 					}
 				else switch(type.code)
 				{
-					case TypeCode::Invalid: EXCEPTION("ÎŞĞ§µÄTypeCode");
+					case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„TypeCode");
 					case TypeCode::Struct:
 					{
 						RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(type);
@@ -524,7 +524,7 @@ label_next_instruct:
 					case TypeCode::Interface:
 					case TypeCode::Delegate:
 					case TypeCode::Task:
-					default: EXCEPTION("ÎŞĞ§µÄTypeCode");
+					default: EXCEPTION("æ— æ•ˆçš„TypeCode");
 				}
 			}
 			EXCEPTION_JUMP(8 + count * 4, BASE_ArrayInit);
@@ -544,7 +544,7 @@ label_next_instruct:
 				EXCEPTION_EXIT(BASE_SetTaskParameter, EXCEPTION_NULL_REFERENCE);
 			}
 			targetInvoker = kernel->taskAgency->GetInvoker(*(uint64*)task);
-			ASSERT_DEBUG(targetInvoker, "ÈÎÎñµÄÒıÓÃ¼ÆÊıÂß¼­¿ÉÄÜÓĞbug");
+			ASSERT_DEBUG(targetInvoker, "ä»»åŠ¡çš„å¼•ç”¨è®¡æ•°é€»è¾‘å¯èƒ½æœ‰bug");
 			instruct += 13;
 			for(uint32 i = start; i < count; i++, instruct += 5)
 				switch(INSTRUCT_VALUE(BaseType, 0))
@@ -635,7 +635,7 @@ label_next_instruct:
 						targetInvoker->SetEntityParameter(i, VARIABLE(Entity, address));
 					}
 					break;
-					default: EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+					default: EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 				}
 			EXCEPTION_JUMP(-1, BASE_SetTaskParameter);
 		}
@@ -653,7 +653,7 @@ label_next_instruct:
 				EXCEPTION_EXIT(BASE_GetTaskResult, EXCEPTION_NULL_REFERENCE);
 			}
 			targetInvoker = kernel->taskAgency->GetInvoker(task);
-			ASSERT_DEBUG(targetInvoker, "µ÷ÓÃÎª¿Õ£¬±àÒëÆ÷¿ÉÄÜËã·¨ÓĞÎÊÌâ");
+			ASSERT_DEBUG(targetInvoker, "è°ƒç”¨ä¸ºç©ºï¼Œç¼–è¯‘å™¨å¯èƒ½ç®—æ³•æœ‰é—®é¢˜");
 			if(targetInvoker->state != InvokerState::Completed)
 			{
 				instruct += INSTRUCT_VALUE(uint32, 9);
@@ -758,7 +758,7 @@ label_next_instruct:
 						kernel->entityAgency->Reference(address);
 					}
 					break;
-					default: EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+					default: EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 				}
 			EXCEPTION_JUMP(-1, BASE_GetTaskResult);
 		}
@@ -771,7 +771,7 @@ label_next_instruct:
 			if(kernel->heapAgency->TryGetValue(handle, task))
 			{
 				Invoker* targetInvoker = kernel->taskAgency->GetInvoker(task);
-				ASSERT_DEBUG(targetInvoker, "µ÷ÓÃÎª¿Õ£¬±àÒëÆ÷¿ÉÄÜËã·¨ÓĞÎÊÌâ");
+				ASSERT_DEBUG(targetInvoker, "è°ƒç”¨ä¸ºç©ºï¼Œç¼–è¯‘å™¨å¯èƒ½ç®—æ³•æœ‰é—®é¢˜");
 				pointer = POINTER;
 				targetInvoker->Start(true, ignoreWait);
 			}
@@ -780,26 +780,26 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 #pragma endregion Base
-#pragma region º¯Êı
-		case Instruct::FUNCTION_Entrance://º¯ÊıµÄµÚÒ»ÌõÖ¸Áî£¬ÓÃÓÚÈ·±£º¯ÊıÖ´ĞĞËùĞèµÄÕ»¿Õ¼ä´óĞ¡
+#pragma region å‡½æ•°
+		case Instruct::FUNCTION_Entrance://å‡½æ•°çš„ç¬¬ä¸€æ¡æŒ‡ä»¤ï¼Œç”¨äºç¡®ä¿å‡½æ•°æ‰§è¡Œæ‰€éœ€çš„æ ˆç©ºé—´å¤§å°
 		{
-			top += INSTRUCT_VALUE(uint32, 1);//º¯ÊıÖ´ĞĞ¿Õ¼ä´óĞ¡
+			top += INSTRUCT_VALUE(uint32, 1);//å‡½æ•°æ‰§è¡Œç©ºé—´å¤§å°
 			if(EnsureStackSize(top)) EXCEPTION_EXIT(FUNCTION_Entrance, EXCEPTION_STACK_OVERFLOW);
 			EXCEPTION_JUMP(4, FUNCTION_Entrance);
 		}
 		goto label_next_instruct;
 		case Instruct::FUNCTION_Ensure:
 		{
-			if(EnsureStackSize(top + INSTRUCT_VALUE(uint32, 1))) EXCEPTION_EXIT(FUNCTION_Ensure, EXCEPTION_STACK_OVERFLOW);//SIZE(Frame)+·µ»ØÖµ¿Õ¼ä´óĞ¡+²ÎÊı¿Õ¼ä´óĞ¡
+			if(EnsureStackSize(top + INSTRUCT_VALUE(uint32, 1))) EXCEPTION_EXIT(FUNCTION_Ensure, EXCEPTION_STACK_OVERFLOW);//SIZE(Frame)+è¿”å›å€¼ç©ºé—´å¤§å°+å‚æ•°ç©ºé—´å¤§å°
 			*(Frame*)(stack + top) = Frame(bottom, POINTER + INSTRUCT_VALUE(uint32, 5));
 			EXCEPTION_JUMP(8, FUNCTION_Ensure);
 		}
 		goto label_next_instruct;
 		case Instruct::FUNCTION_CustomCallPretreater:
 		{
-			//Handle&		Î¯ÍĞ¶ÔÏó
-			//uint32		²ÎÊıÆğÊ¼µØÖ·
-			//uint32		²ÎÊı¿Õ¼ä´óĞ¡
+			//Handle&		å§”æ‰˜å¯¹è±¡
+			//uint32		å‚æ•°èµ·å§‹åœ°å€
+			//uint32		å‚æ•°ç©ºé—´å¤§å°
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle handle = VARIABLE(Handle, handleValue);
 			Delegate delegateInfo;
@@ -814,7 +814,7 @@ label_next_instruct:
 					{
 						uint32 parameterStart = INSTRUCT_VALUE(uint32, 5);
 						uint32 parameterSize = INSTRUCT_VALUE(uint32, 9);
-						ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo.target), "ÎŞĞ§µÄ×°Ïä¶ÔÏó");
+						ASSERT_DEBUG(kernel->heapAgency->IsValid(delegateInfo.target), "æ— æ•ˆçš„è£…ç®±å¯¹è±¡");
 						Type targetType = kernel->heapAgency->GetType(delegateInfo.target);
 						if(targetType.code == TypeCode::Enum) targetType = TYPE_Enum;
 						const RuntimeStruct* info = kernel->libraryAgency->GetStruct(targetType);
@@ -851,7 +851,7 @@ label_next_instruct:
 			instruct += 9;
 		}
 		goto label_next_instruct;
-#pragma region ²ÎÊıÈëÕ»
+#pragma region å‚æ•°å…¥æ ˆ
 		case Instruct::FUNCTION_PushParameter_1:
 		{
 			uint32 address = INSTRUCT_VALUE(uint32, 5);
@@ -930,8 +930,8 @@ label_next_instruct:
 			instruct += 5 + SIZE(Declaration);
 		}
 		goto label_next_instruct;
-#pragma endregion ²ÎÊıÈëÕ»
-#pragma region ·µ»ØÖµ
+#pragma endregion å‚æ•°å…¥æ ˆ
+#pragma region è¿”å›å€¼
 		case Instruct::FUNCTION_ReturnPoint_1:
 		{
 			uint32 address = INSTRUCT_VALUE(uint32, 5);
@@ -1008,7 +1008,7 @@ label_next_instruct:
 			instruct += 9;
 		}
 		goto label_next_instruct;
-#pragma endregion ·µ»ØÖµ
+#pragma endregion è¿”å›å€¼
 		case Instruct::FUNCTION_Return:
 		{
 			Frame* frame = (Frame*)cacheData[1];
@@ -1085,7 +1085,7 @@ label_next_instruct:
 							cacheData[1] = stack + bottom;
 							instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						}
-						else EXCEPTION("ÎŞĞ§µÄ×°Ïä¶ÔÏó");
+						else EXCEPTION("æ— æ•ˆçš„è£…ç®±å¯¹è±¡");
 						goto label_next_instruct;
 					}
 					case FunctionType::Reality:
@@ -1096,7 +1096,7 @@ label_next_instruct:
 						cacheData[1] = stack + bottom;
 						instruct = kernel->libraryAgency->code.GetPointer() + delegateInfo.entry;
 						goto label_next_instruct;
-					default: EXCEPTION("ÎŞĞ§µÄº¯ÊıÀàĞÍ");
+					default: EXCEPTION("æ— æ•ˆçš„å‡½æ•°ç±»å‹");
 				}
 			}
 			else EXCEPTION_EXIT(FUNCTION_CustomCall, EXCEPTION_NULL_REFERENCE);
@@ -1131,8 +1131,8 @@ label_next_instruct:
 			instruct += 5;
 		}
 		goto label_next_instruct;
-#pragma endregion º¯Êı
-#pragma region ¸³Öµ
+#pragma endregion å‡½æ•°
+#pragma region èµ‹å€¼
 		case Instruct::ASSIGNMENT_Box:
 		{
 			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
@@ -1228,7 +1228,7 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 #pragma endregion C2V
-#pragma region V2V(¶ÔÓÚÓĞÒıÓÃ¼ÆÊıµÄÀàĞÍ£¬ÏÈÒıÓÃÔÙÊÍ·ÅÊÇ·ÀÖ¹³öÏÖ°Ñ±äÁ¿¸³Öµ¸ø×Ô¼ºÊ±£¬Èç¹ûÒıÓÃ¼ÆÊıÎª1Ôò¿ÉÄÜ»áÔÚ¸³Öµ¹ı³ÌÖĞµ¼ÖÂÒıÓÃ¼ÆÊıÎª0¶øÏú»Ù)
+#pragma region V2V(å¯¹äºæœ‰å¼•ç”¨è®¡æ•°çš„ç±»å‹ï¼Œå…ˆå¼•ç”¨å†é‡Šæ”¾æ˜¯é˜²æ­¢å‡ºç°æŠŠå˜é‡èµ‹å€¼ç»™è‡ªå·±æ—¶ï¼Œå¦‚æœå¼•ç”¨è®¡æ•°ä¸º1åˆ™å¯èƒ½ä¼šåœ¨èµ‹å€¼è¿‡ç¨‹ä¸­å¯¼è‡´å¼•ç”¨è®¡æ•°ä¸º0è€Œé”€æ¯)
 		case Instruct::ASSIGNMENT_Variable2Variable_1:
 		{
 			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
@@ -1789,7 +1789,7 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 #pragma endregion A2V
-#pragma endregion ¸³Öµ
+#pragma endregion èµ‹å€¼
 #pragma region Bool
 		case Instruct::BOOL_Not:
 		{
@@ -2594,7 +2594,7 @@ label_next_instruct:
 			goto label_next_instruct;
 		case Instruct::NoOperation: instruct++;
 			goto label_next_instruct;
-		default: EXCEPTION("´úÂëÅÜ·ÉÁË");
+		default: EXCEPTION("ä»£ç è·‘é£äº†");
 	}
 label_exit:
 	pointer = POINTER;
@@ -2612,7 +2612,7 @@ void Task::Abort()
 			pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 5);
 			Run();
 			break;
-		default: EXCEPTION("¸Ãº¯ÊıÖ»ÓĞÔÚwaitÊ±invokerµÄabort±»µ÷ÓÃºó²Å»á´¥·¢");
+		default: EXCEPTION("è¯¥å‡½æ•°åªæœ‰åœ¨waitæ—¶invokerçš„abortè¢«è°ƒç”¨åæ‰ä¼šè§¦å‘");
 	}
 }
 

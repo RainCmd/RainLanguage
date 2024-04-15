@@ -2,26 +2,26 @@
 #include "Rain.h"
 
 /// <summary>
-/// Êı¾İ»º´æ
+/// æ•°æ®ç¼“å­˜
 /// </summary>
 template<typename T>
 class RAINLANGUAGE RainBuffer
 {
 public:
 	/// <summary>
-	/// Êı¾İ
+	/// æ•°æ®
 	/// </summary>
-	/// <returns>Êı¾İ×Ö½ÚÂë</returns>
+	/// <returns>æ•°æ®å­—èŠ‚ç </returns>
 	virtual const T* Data() const = 0;
 	/// <summary>
-	/// Êı¾İ³¤¶È
+	/// æ•°æ®é•¿åº¦
 	/// </summary>
 	/// <returns></returns>
 	virtual uint32 Count() const = 0;
 	virtual ~RainBuffer() {}
 };
 /// <summary>
-/// ¿â
+/// åº“
 /// </summary>
 class RAINLANGUAGE RainLibrary
 {
@@ -30,59 +30,59 @@ public:
 	virtual ~RainLibrary() {};
 };
 /// <summary>
-/// ¿â¼ÓÔØÆ÷
+/// åº“åŠ è½½å™¨
 /// </summary>
-/// <param name="name">¿âÃû</param>
+/// <param name="name">åº“å</param>
 typedef const RainLibrary* (*RainLibraryLoader)(const RainString& name);
 /// <summary>
-/// ¿âĞ¶ÔØÆ÷
+/// åº“å¸è½½å™¨
 /// </summary>
 typedef void (*RainLibraryUnloader)(const RainLibrary* library);
 /// <summary>
-/// ĞòÁĞ»¯¿â
+/// åºåˆ—åŒ–åº“
 /// </summary>
-/// <param name="library">¿â</param>
-/// <returns>ĞòÁĞ»¯ºóµÄÊı¾İ</returns>
+/// <param name="library">åº“</param>
+/// <returns>åºåˆ—åŒ–åçš„æ•°æ®</returns>
 RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary& library);
 /// <summary>
-/// ·´ĞòÁĞ»¯¿â
+/// ååºåˆ—åŒ–åº“
 /// </summary>
-/// <param name="data">×Ö½ÚÊı¾İ</param>
-/// <param name="size">×Ö½ÚÊı</param>
-/// <returns>¿â</returns>
+/// <param name="data">å­—èŠ‚æ•°æ®</param>
+/// <param name="size">å­—èŠ‚æ•°</param>
+/// <returns>åº“</returns>
 RAINLANGUAGE const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size);
 
 /// <summary>
-/// µ÷ÊÔÊı¾İ
+/// è°ƒè¯•æ•°æ®
 /// </summary>
 class RAINLANGUAGE RainProgramDatabase
 {
 public:
 	RainProgramDatabase() = default;
 	/// <summary>
-	/// ¸ù¾İÖ¸ÁîµØÖ·»ñÈ¡ËùÔÚµÄÎÄ¼şºÍĞĞÊı
+	/// æ ¹æ®æŒ‡ä»¤åœ°å€è·å–æ‰€åœ¨çš„æ–‡ä»¶å’Œè¡Œæ•°
 	/// </summary>
-	/// <param name="instructAddress">Ö¸ÁîµØÖ·</param>
-	/// <param name="line">ÎÄ¼şÖĞµÄĞĞÊı</param>
-	/// <returns>ÎÄ¼şÃû</returns>
+	/// <param name="instructAddress">æŒ‡ä»¤åœ°å€</param>
+	/// <param name="line">æ–‡ä»¶ä¸­çš„è¡Œæ•°</param>
+	/// <returns>æ–‡ä»¶å</returns>
 	virtual const RainString GetPosition(uint32 instructAddress, uint32& line) const = 0;
 	virtual ~RainProgramDatabase() {}
 };
 /// <summary>
-/// µ÷ÊÔÊı¾İ¼ÓÔØÆ÷
+/// è°ƒè¯•æ•°æ®åŠ è½½å™¨
 /// </summary>
-/// <param name="name">¿âÃû</param>
+/// <param name="name">åº“å</param>
 typedef const RainProgramDatabase* (*RainProgramDatabaseLoader)(const RainString& name);
 /// <summary>
-/// µ÷ÊÔÆ÷Ê¹ÓÃÍê³ÉºóÊÍ·Åµ÷ÊÔÊı¾İµÄ»Øµ÷
+/// è°ƒè¯•å™¨ä½¿ç”¨å®Œæˆåé‡Šæ”¾è°ƒè¯•æ•°æ®çš„å›è°ƒ
 /// </summary>
 typedef void (*RainProgramDatabaseUnloader)(const RainProgramDatabase* database);
 /// <summary>
-/// ĞòÁĞ»¯µ÷ÊÔÊı¾İ
+/// åºåˆ—åŒ–è°ƒè¯•æ•°æ®
 /// </summary>
 RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase& database);
 /// <summary>
-/// ·´ĞòÁĞ»¯µ÷ÊÔÊı¾İ
+/// ååºåˆ—åŒ–è°ƒè¯•æ•°æ®
 /// </summary>
 RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size);
 

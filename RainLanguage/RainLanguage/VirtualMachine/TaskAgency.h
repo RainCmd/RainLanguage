@@ -48,18 +48,18 @@ public:
 		{
 			if (!invoker->hold)
 			{
-				ASSERT_DEBUG(!invokerMap.Contains(invoker->instanceID), "ÒýÓÃµÄµ÷ÓÃÖÐÒÑÓÐ¸ÃÊµÀýid");
+				ASSERT_DEBUG(!invokerMap.Contains(invoker->instanceID), "å¼•ç”¨çš„è°ƒç”¨ä¸­å·²æœ‰è¯¥å®žä¾‹id");
 				invokerMap.Set(invoker->instanceID, invoker);
 			}
 			invoker->hold++;
 		}
-		else EXCEPTION("ÊµÀýidÓÐÎó");
+		else EXCEPTION("å®žä¾‹idæœ‰è¯¯");
 	}
 	inline void Release(Invoker* invoker)
 	{
 		if (invoker && (invoker->instanceID >> 32))
 		{
-			ASSERT_DEBUG(invoker->hold, "µ±Ç°µ÷ÓÃµÄ³ÖÓÐÊýÁ¿Îª0£¡");
+			ASSERT_DEBUG(invoker->hold, "å½“å‰è°ƒç”¨çš„æŒæœ‰æ•°é‡ä¸º0ï¼");
 			invoker->hold--;
 			if (!invoker->hold)
 			{
@@ -67,7 +67,7 @@ public:
 				if (invoker->state != InvokerState::Running) invoker->Recycle();
 			}
 		}
-		else EXCEPTION("ÊµÀýidÓÐÎó");
+		else EXCEPTION("å®žä¾‹idæœ‰è¯¯");
 	}
 	void UpdateGlobalDataCache(uint8* data);
 	inline Task* GetHeadTask() { return head; }

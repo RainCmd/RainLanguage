@@ -168,7 +168,7 @@ String LoadAssembly(KernelInvokerParameter parameter);											//Reflection.As
 String GetAssembles(KernelInvokerParameter parameter);											//Reflection.Assembly[] ()
 String GetCurrentTaskInstantID(KernelInvokerParameter parameter);							//integer ()
 
-//³ÉÔ±º¯Êý
+//Â³Ã‰Ã”Â±ÂºÂ¯ÃŠÃ½
 String bool_ToString(KernelInvokerParameter parameter);											//string bool.()
 String byte_ToString(KernelInvokerParameter parameter);											//string byte.()
 String char_ToString(KernelInvokerParameter parameter);											//string char.()

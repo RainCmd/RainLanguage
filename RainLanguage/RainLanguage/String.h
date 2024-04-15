@@ -56,7 +56,7 @@ public:
 	inline void Reference(string index)
 	{
 		if (!index) return;
-		ASSERT_DEBUG(IsValid(index), "ÒýÓÃÎÞÐ§×Ö·û´®");
+		ASSERT_DEBUG(IsValid(index), "å¼•ç”¨æ— æ•ˆå­—ç¬¦ä¸²");
 		Slot* slot = slots + index;
 		if (!slot->reference)
 		{
@@ -68,7 +68,7 @@ public:
 	inline void Release(string index)
 	{
 		if (!index) return;
-		ASSERT_DEBUG(IsValid(index) && (slots + index)->reference, "ÊÍ·ÅÎÞÒýÓÃ×Ö·û´®£¬Âß¼­¿ÉÄÜÓÐÎÊÌâ");
+		ASSERT_DEBUG(IsValid(index) && (slots + index)->reference, "é‡Šæ”¾æ— å¼•ç”¨å­—ç¬¦ä¸²ï¼Œé€»è¾‘å¯èƒ½æœ‰é—®é¢˜");
 		Slot* slot = slots + index;
 		if (!(--slot->reference))
 		{
@@ -163,14 +163,14 @@ public:
 	}
 	inline String operator+(const character* other) const
 	{
-		if (IsEmpty()) EXCEPTION("»ñÈ¡²»µ½×Ö·û´®´úÀí");
+		if (IsEmpty()) EXCEPTION("èŽ·å–ä¸åˆ°å­—ç¬¦ä¸²ä»£ç†");
 		String array[2] = { *this, share->pool->Add(other) };
 		if (array[1].IsEmpty())return *this;
 		else return share->pool->Combine(array, 2);
 	}
 	inline friend String operator+(const character* text, const String& other)
 	{
-		if (other.IsEmpty()) EXCEPTION("»ñÈ¡²»µ½×Ö·û´®´úÀí");
+		if (other.IsEmpty()) EXCEPTION("èŽ·å–ä¸åˆ°å­—ç¬¦ä¸²ä»£ç†");
 		String array[2] = { other.share->pool->Add(text),other };
 		if (array[0].IsEmpty())return other;
 		else return other.share->pool->Combine(array, 2);
@@ -190,7 +190,7 @@ public:
 	uint32 Find(const String& value, uint32 start) const;
 	inline String Replace(const String& oldValue, const String& newValue) const
 	{
-		ASSERT_DEBUG(!IsEmpty() && !oldValue.IsEmpty(), "²»ÄÜ¶Ô¿Õ×Ö·û´®½øÐÐ¸Ã²Ù×÷");
+		ASSERT_DEBUG(!IsEmpty() && !oldValue.IsEmpty(), "ä¸èƒ½å¯¹ç©ºå­—ç¬¦ä¸²è¿›è¡Œè¯¥æ“ä½œ");
 		return share->pool->Replace(*this, oldValue, newValue);
 	}
 	inline bool IsEmpty()const { return !share || !share->pool || !index; }

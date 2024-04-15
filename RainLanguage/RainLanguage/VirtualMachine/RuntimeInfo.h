@@ -76,7 +76,7 @@ struct RuntimeClass :RuntimeInfo, GCFieldInfo
 public:
 	struct FunctionInfo
 	{
-		uint32 index;//µ±Ç°libraryº¯Êı±íÖĞË÷Òı
+		uint32 index;//å½“å‰libraryå‡½æ•°è¡¨ä¸­ç´¢å¼•
 		uint32 characteristic;
 		inline FunctionInfo(uint32 index) :index(index), characteristic(INVALID) {}
 	};
@@ -85,15 +85,15 @@ public:
 	Handle reflectionFunctions;
 	Handle reflectionVariables;
 	List<Declaration, true> parents;
-	Set<Declaration, true> inherits;//°üº¬¸¸Àà¼Ì³ĞµÄ½Ó¿Ú
+	Set<Declaration, true> inherits;//åŒ…å«çˆ¶ç±»ç»§æ‰¿çš„æ¥å£
 	uint32 offset;
-	uint32 size;//²»°üÀ¨¸¸Àà
+	uint32 size;//ä¸åŒ…æ‹¬çˆ¶ç±»
 	uint8 alignment;
 	List<uint32, true> constructors;
 	List<RuntimeMemberVariable> variables;
 	List<FunctionInfo, true> functions;
-	Dictionary<uint32, MemberFunction, true> relocations;//°üº¬ËùÓĞ¼Ì³ĞÀàµÄ½Ó¿ÚºÍº¯Êı
-	uint32 destructor;//Îö¹¹º¯ÊıµØÖ·£¬INVALID±íÊ¾Ã»ÓĞÎö¹¹º¯Êı
+	Dictionary<uint32, MemberFunction, true> relocations;//åŒ…å«æ‰€æœ‰ç»§æ‰¿ç±»çš„æ¥å£å’Œå‡½æ•°
+	uint32 destructor;//ææ„å‡½æ•°åœ°å€ï¼ŒINVALIDè¡¨ç¤ºæ²¡æœ‰ææ„å‡½æ•°
 	inline RuntimeClass(bool isPublic, const List<string, true>& attributes, string name, uint32 space, List<Declaration, true> parents, Set<Declaration, true> inherits, uint32 size, uint8 alignment, List<uint32, true> constructors, List<RuntimeMemberVariable> variables, List<FunctionInfo, true> functions, uint32 destructor) : RuntimeInfo(isPublic, attributes, name, space), reflectionInherits(NULL), reflectionConstructors(NULL), reflectionFunctions(NULL), reflectionVariables(NULL), parents(parents), inherits(inherits), offset(INVALID), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions), relocations(0), destructor(destructor) {}
 	inline void ColletcGCFields(Kernel* kernel) { GCFieldInfo::ColletcGCFields(kernel, variables); }
 };
@@ -107,7 +107,7 @@ struct RuntimeInterface :RuntimeInfo
 	};
 	Handle reflectionInherits;
 	Handle reflectionFunctions;
-	Set<Declaration, true> inherits;//°üº¬ËùÓĞ¼Ì³ĞµÄ½Ó¿Ú
+	Set<Declaration, true> inherits;//åŒ…å«æ‰€æœ‰ç»§æ‰¿çš„æ¥å£
 	List<FunctionInfo> functions;
 	inline RuntimeInterface(bool isPublic, const List<string, true>& attributes, string name, uint32 space, Set<Declaration, true> inherits, List<FunctionInfo> functions) :RuntimeInfo(isPublic, attributes, name, space), reflectionInherits(NULL), reflectionFunctions(NULL), inherits(inherits), functions(functions) {}
 };

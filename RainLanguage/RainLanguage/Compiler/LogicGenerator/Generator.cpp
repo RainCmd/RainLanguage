@@ -16,13 +16,13 @@ void Generator::WriteCode(const String& value)
 
 void Generator::BeginInsert(uint32 address)
 {
-	ASSERT_DEBUG(insertAddress == INVALID, "ÒÑ¾­ÊÇ²åÈë×´Ì¬");
+	ASSERT_DEBUG(insertAddress == INVALID, "å·²ç»æ˜¯æ’å…¥çŠ¶æ€");
 	insertAddress = address;
 }
 
 void Generator::EndInsert()
 {
-	ASSERT_DEBUG(insertAddress != INVALID, "²»ÔÚ²åÈë×´Ì¬");
+	ASSERT_DEBUG(insertAddress != INVALID, "ä¸åœ¨æ’å…¥çŠ¶æ€");
 	for(uint32 i = codeStartReference; i < codeReferenceAddresses.Count(); i++)
 		if(insertAddress <= codeReferenceAddresses[i] && !insertCodeReferenceAddresses.Contains(i))
 			codeReferenceAddresses[i] += insert.Count();

@@ -5,9 +5,9 @@ typedef void* (*__alloc)(uint32 size);
 typedef void (*__free)(void* pointer);
 typedef void* (*__realloc)(void* pointer, uint32 size);
 /// <summary>
-/// ÉêÇëºÍÊÍ·ÅÄÚ´æÊ¹ÓÃµÄ½Ó¿Ú£¬²»ÉèÖÃÔòÊ¹ÓÃÏµÍ³Ä¬ÈÏ½Ó¿Ú
+/// ç”³è¯·å’Œé‡Šæ”¾å†…å­˜ä½¿ç”¨çš„æ¥å£ï¼Œä¸è®¾ç½®åˆ™ä½¿ç”¨ç³»ç»Ÿé»˜è®¤æ¥å£
 /// </summary>
-/// <param name="rainAlloc">ÉêÇëÄÚ´æ½Ó¿Ú</param>
-/// <param name="rainFree">ÊÍ·ÅÄÚ´æ½Ó¿Ú</param>
-/// <param name="_rainRealloc">ÖØĞÂ·ÖÅäÄÚ´æ½Ó¿Ú</param>
+/// <param name="rainAlloc">ç”³è¯·å†…å­˜æ¥å£</param>
+/// <param name="rainFree">é‡Šæ”¾å†…å­˜æ¥å£</param>
+/// <param name="_rainRealloc">é‡æ–°åˆ†é…å†…å­˜æ¥å£</param>
 RAINLANGUAGE void SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc rainRealloc);

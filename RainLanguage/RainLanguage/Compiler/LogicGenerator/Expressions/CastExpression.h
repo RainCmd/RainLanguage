@@ -2,7 +2,7 @@
 #include "../Expression.h"
 #include "../../../Instruct.h"
 
-class CastExpression :public Expression//Õâ¸ö±í´ïÊ½Ö»ÊÇÎªÁËÂú×ãÓï·¨ÉÏµÄºÏÀíĞÔ£¬ÎŞÊµ¼Ê×÷ÓÃ
+class CastExpression :public Expression//è¿™ä¸ªè¡¨è¾¾å¼åªæ˜¯ä¸ºäº†æ»¡è¶³è¯­æ³•ä¸Šçš„åˆç†æ€§ï¼Œæ— å®é™…ä½œç”¨
 {
 public:
 	Expression* expression;

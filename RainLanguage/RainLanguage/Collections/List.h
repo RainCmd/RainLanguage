@@ -85,7 +85,7 @@ public:
 	{
 		Add(list.GetPointer(), list.Count());
 	}
-	inline T* Add()//自定义初始化逻辑
+	inline T* Add()//鑷畾涔夊垵濮嬪寲閫昏緫
 	{
 		Grow(1);
 		T* result = values + count;
@@ -119,7 +119,7 @@ public:
 	}
 	inline T Pop()
 	{
-		ASSERT(count, "数组越界");
+		ASSERT(count, "鏁扮粍瓒婄晫");
 		count--;
 		if(IsBitwise) return values[count];
 		else
@@ -131,12 +131,12 @@ public:
 	}
 	inline T& Peek()
 	{
-		ASSERT(count, "数组越界");
+		ASSERT(count, "鏁扮粍瓒婄晫");
 		return values[count - 1];
 	}
 	inline const T& Peek() const
 	{
-		ASSERT(count, "数组越界");
+		ASSERT(count, "鏁扮粍瓒婄晫");
 		return values[count - 1];
 	}
 	inline void RemoveAt(uint32 index) { RemoveAt(index, 1); }
@@ -185,7 +185,7 @@ public:
 	}
 	inline void SetCount(uint32 newCount)
 	{
-		ASSERT_DEBUG(IsBitwise, "该操作会导致构造和析构调用次数不成对，不是纯数据类型可能会破坏内存");
+		ASSERT_DEBUG(IsBitwise, "璇ユ搷浣滀細瀵艰嚧鏋勯�犲拰鏋愭瀯璋冪敤娆℃暟涓嶆垚瀵癸紝涓嶆槸绾暟鎹被鍨嬪彲鑳戒細鐮村潖鍐呭瓨");
 		count = newCount;
 		if(count > size) Grow(count - size);
 	}
@@ -203,13 +203,13 @@ public:
 	{
 		if(index > count) index += count;
 		if(index < count) return values[index];
-		else EXCEPTION("数组越界");
+		else EXCEPTION("鏁扮粍瓒婄晫");
 	}
 	inline T& operator[](uint32 index)
 	{
 		if(index > count) index += count;
 		if(index < count) return values[index];
-		else EXCEPTION("数组越界");
+		else EXCEPTION("鏁扮粍瓒婄晫");
 	}
 	inline bool operator==(const List<T, IsBitwise>& other) const
 	{

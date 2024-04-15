@@ -107,7 +107,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			default: break;
 		}
 	}
-	EXCEPTION("ÎŞĞ§µÄ¶¨Òå");
+	EXCEPTION("æ— æ•ˆçš„å®šä¹‰");
 }
 
 bool Context::TryFindSpace(DeclarationManager* manager, const Anchor& name, AbstractSpace*& result)
@@ -203,7 +203,7 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 				if (member->name == name.content && IsVisible(manager, member->declaration))
 				{
 					results.Add(member->declaration);
-					return true;//¶Ô¸¸ÀàÍ¬Ãû×Ö¶ÎµÄ¸²¸Ç¾¯¸æ·ÅÔÚÁ´½Ó½×¶Î
+					return true;//å¯¹çˆ¶ç±»åŒåå­—æ®µçš„è¦†ç›–è­¦å‘Šæ”¾åœ¨é“¾æ¥é˜¶æ®µ
 				}
 			}
 			for (uint32 i = 0; i < abstractClass->functions.Count(); i++)
@@ -439,7 +439,7 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 #ifdef DEBUG
 	for (uint32 i = 0; i < results.Count(); i++)
 		if (results[i].category != DeclarationCategory::Function)
-			EXCEPTION("²Ù×÷ÀàĞÍ±ØĞëÊÇÈ«¾Öº¯Êı");
+			EXCEPTION("æ“ä½œç±»å‹å¿…é¡»æ˜¯å…¨å±€å‡½æ•°");
 #endif // DEBUG
 	}
 

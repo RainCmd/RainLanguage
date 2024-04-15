@@ -2,5 +2,5 @@
 
 void Statement::Generator(StatementGeneratorParameter&)
 {
-	EXCEPTION("¼ì²éÓï¾ä½âÎöÊ±µÄ¼ì²éÂß¼­ÊÇ·ñÓĞÂ©¶´");
+	EXCEPTION("æ£€æŸ¥è¯­å¥è§£ææ—¶çš„æ£€æŸ¥é€»è¾‘æ˜¯å¦æœ‰æ¼æ´");
 }

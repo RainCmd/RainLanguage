@@ -158,7 +158,7 @@ async function CompleteConfiguration(projectPath: string, entry: string, errLvl:
 async function GetLaunchParam(configuration: RainDebugConfiguration) {
     const exeFile = configuration.detectorPath + "/RainLauncher.exe";
     const name = configuration.projectName
-    const cfg = await CompleteConfiguration(configuration.projectPath, "Main", 4, 100, "雨言调试运行")
+    const cfg = await CompleteConfiguration(configuration.projectPath, "Main", 4, 1, "雨言调试运行")
 
     let result: string[] = [];
     result.push(exeFile);

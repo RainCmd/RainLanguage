@@ -25,7 +25,7 @@ void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agenc
 			CompilingDeclaration& declaration = (*declarationsIterator.CurrentValue())[i];
 			switch (declaration.category)
 			{
-				case DeclarationCategory::Invalid: EXCEPTION("Œﬁ–ßµƒ∂®“Â¿‡–Õ");
+				case DeclarationCategory::Invalid: EXCEPTION("Êó†ÊïàÁöÑÂÆö‰πâÁ±ªÂûã");
 				case DeclarationCategory::Variable:
 					space->variables.Add(declaration.index);
 					break;
@@ -35,22 +35,22 @@ void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agenc
 				case DeclarationCategory::Enum:
 					space->enums.Add(declaration.index);
 					break;
-				case DeclarationCategory::EnumElement: EXCEPTION("Œﬁ–ßµƒ∂®“Â¿‡–Õ");
+				case DeclarationCategory::EnumElement: EXCEPTION("Êó†ÊïàÁöÑÂÆö‰πâÁ±ªÂûã");
 				case DeclarationCategory::Struct:
 					space->structs.Add(declaration.index);
 					break;
 				case DeclarationCategory::StructVariable:
-				case DeclarationCategory::StructFunction: EXCEPTION("Œﬁ–ßµƒ∂®“Â¿‡–Õ");
+				case DeclarationCategory::StructFunction: EXCEPTION("Êó†ÊïàÁöÑÂÆö‰πâÁ±ªÂûã");
 				case DeclarationCategory::Class:
 					space->classes.Add(declaration.index);
 					break;
 				case DeclarationCategory::Constructor:
 				case DeclarationCategory::ClassVariable:
-				case DeclarationCategory::ClassFunction: EXCEPTION("Œﬁ–ßµƒ∂®“Â¿‡–Õ");
+				case DeclarationCategory::ClassFunction: EXCEPTION("Êó†ÊïàÁöÑÂÆö‰πâÁ±ªÂûã");
 				case DeclarationCategory::Interface:
 					space->interfaces.Add(declaration.index);
 					break;
-				case DeclarationCategory::InterfaceFunction:  EXCEPTION("Œﬁ–ßµƒ∂®“Â¿‡–Õ");
+				case DeclarationCategory::InterfaceFunction:  EXCEPTION("Êó†ÊïàÁöÑÂÆö‰πâÁ±ªÂûã");
 				case DeclarationCategory::Delegate:
 					space->delegates.Add(declaration.index);
 					break;
@@ -62,7 +62,7 @@ void CollectSpace(AbstractSpace* index, List<Space>& spaces, StringAgency* agenc
 					break;
 				case DeclarationCategory::Lambda:
 				case DeclarationCategory::LambdaClosureValue:
-				case DeclarationCategory::LocalVariable:  EXCEPTION("Œﬁ–ßµƒ∂®“Â¿‡–Õ");
+				case DeclarationCategory::LocalVariable:  EXCEPTION("Êó†ÊïàÁöÑÂÆö‰πâÁ±ªÂûã");
 				default:
 					break;
 			}
@@ -110,7 +110,7 @@ void CollectInherits(DeclarationManager& manager, const Declaration& declaration
 			CollectInherits(manager, (Declaration)abstractInterface->inherits[i], inherits);
 		}
 	}
-	else EXCEPTION("≤ª∏√≥ˆœ÷µƒ¿‡–Õ");
+	else EXCEPTION("‰∏çËØ•Âá∫Áé∞ÁöÑÁ±ªÂûã");
 }
 
 bool CheckVisible(AbstractFunction* sourceFunction, AbstractFunction* parentFunction)
@@ -132,7 +132,7 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 			AbstractFunction* function = library->functions[abstractClass->functions[i]];
 			if (function->name == sourceFunction->name && CheckVisible(sourceFunction, function) && IsEquals(function->parameters.GetTypes(), 1, sourceFunction->parameters.GetTypes(), 1))
 			{
-				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "«∞√ÊºÃ≥–ºÏ≤È¬ﬂº≠ø…ƒ‹”–Bug");
+				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "ÂâçÈù¢ÁªßÊâøÊ£ÄÊü•ÈÄªËæëÂèØËÉΩÊúâBug");
 				CompilingDeclaration functionDeclaration = globalReference->AddReference(function->declaration);
 				new (relocations.Add())Relocation(MemberFunction(functionDeclaration.library, TypeCode::Handle, functionDeclaration.definition, functionDeclaration.index), realize);
 			}
@@ -146,13 +146,13 @@ void CollectRelocation(DeclarationManager& manager, List<Relocation, true>& relo
 			AbstractFunction* function = abstractInterface->functions[i];
 			if (function->name == sourceFunction->name && IsEquals(function->parameters.GetTypes(), 1, sourceFunction->parameters.GetTypes(), 1))
 			{
-				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "«∞√ÊºÃ≥–ºÏ≤È¬ﬂº≠ø…ƒ‹”–Bug");
+				ASSERT_DEBUG(IsEquals(function->returns.GetTypes(), sourceFunction->returns.GetTypes()), "ÂâçÈù¢ÁªßÊâøÊ£ÄÊü•ÈÄªËæëÂèØËÉΩÊúâBug");
 				CompilingDeclaration functionDeclaration = globalReference->AddReference(function->declaration);
 				new (relocations.Add())Relocation(MemberFunction(functionDeclaration.library, TypeCode::Interface, functionDeclaration.definition, functionDeclaration.index), realize);
 			}
 		}
 	}
-	else EXCEPTION("≤ª∏√≥ˆœ÷µƒ¿‡–Õ");
+	else EXCEPTION("‰∏çËØ•Âá∫Áé∞ÁöÑÁ±ªÂûã");
 }
 
 Library* Generator::GeneratorLibrary(DeclarationManager& manager)
@@ -182,7 +182,7 @@ Library* Generator::GeneratorLibrary(DeclarationManager& manager)
 		for (uint32 y = 0; y < abstractEnum->elements.Count(); y++)
 		{
 			CompilingEnum::Element* element = manager.compilingLibrary.enums[x]->elements[y];
-			ASSERT_DEBUG(element->calculated, "libraryππ‘Ï∫Ø ˝…˙≥…¬ﬂº≠”–bug");
+			ASSERT_DEBUG(element->calculated, "libraryÊûÑÈÄ†ÂáΩÊï∞ÁîüÊàêÈÄªËæëÊúâbug");
 			new (elements.Add())EnumDeclarationInfo::Element(result->stringAgency->AddAndRef(element->name.content), element->value);
 		}
 		new (result->enums.Add())EnumDeclarationInfo(DECLARATION_INFO_PARAMETERS(abstractEnum), elements);

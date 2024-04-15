@@ -33,7 +33,7 @@
 
 #define THIS(returnCount,type) (*(type*)parameter.kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
 
-#pragma region ÔËËã·û
+#pragma region è¿ç®—ç¬¦
 String Operation_Less_integer_integer(KernelInvokerParameter parameter)// bool < (integer, integer)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, integer, 0) < PARAMETER_VALUE(1, integer, SIZE(integer));
@@ -350,7 +350,7 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (invoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 			{
@@ -370,7 +370,7 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default:  EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			default:  EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 	else
@@ -385,7 +385,7 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 		invoker->Start(true, parameter.task->ignoreWait);
 		switch (invoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running:
 				parameter.task->kernelInvoker = invoker;
 				return String();
@@ -405,7 +405,7 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default:  EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			default:  EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 }
@@ -462,7 +462,7 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (invoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 			{
@@ -482,7 +482,7 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default:  EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			default:  EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 	else
@@ -497,7 +497,7 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 		invoker->Start(true, parameter.task->ignoreWait);
 		switch (invoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running:
 				parameter.task->kernelInvoker = invoker;
 				return String();
@@ -517,7 +517,7 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default:  EXCEPTION("²»Ó¦¸Ã½øÈëµÄ·ÖÖ§");
+			default:  EXCEPTION("ä¸åº”è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 }
@@ -797,26 +797,26 @@ String Operation_Negative_real4(KernelInvokerParameter parameter)// real4 - (rea
 
 String Operation_Increment_integer(KernelInvokerParameter)// ++ (integer)
 {
-	return String();//Ä¿Ç°²»Ö§³ÖÒıÓÃ´«µİ£¬ËùÒÔ·´Éäµ÷ÓÃÎŞĞ§
+	return String();//ç›®å‰ä¸æ”¯æŒå¼•ç”¨ä¼ é€’ï¼Œæ‰€ä»¥åå°„è°ƒç”¨æ— æ•ˆ
 }
 
 String Operation_Increment_real(KernelInvokerParameter)// ++ (real)
 {
-	return String();//Ä¿Ç°²»Ö§³ÖÒıÓÃ´«µİ£¬ËùÒÔ·´Éäµ÷ÓÃÎŞĞ§
+	return String();//ç›®å‰ä¸æ”¯æŒå¼•ç”¨ä¼ é€’ï¼Œæ‰€ä»¥åå°„è°ƒç”¨æ— æ•ˆ
 }
 
 String Operation_Decrement_integer(KernelInvokerParameter)// -- (integer)
 {
-	return String();//Ä¿Ç°²»Ö§³ÖÒıÓÃ´«µİ£¬ËùÒÔ·´Éäµ÷ÓÃÎŞĞ§
+	return String();//ç›®å‰ä¸æ”¯æŒå¼•ç”¨ä¼ é€’ï¼Œæ‰€ä»¥åå°„è°ƒç”¨æ— æ•ˆ
 }
 
 String Operation_Decrement_real(KernelInvokerParameter)// -- (real)
 {
-	return String();//Ä¿Ç°²»Ö§³ÖÒıÓÃ´«µİ£¬ËùÒÔ·´Éäµ÷ÓÃÎŞĞ§
+	return String();//ç›®å‰ä¸æ”¯æŒå¼•ç”¨ä¼ é€’ï¼Œæ‰€ä»¥åå°„è°ƒç”¨æ— æ•ˆ
 }
-#pragma endregion ÔËËã·û
+#pragma endregion è¿ç®—ç¬¦
 
-#pragma region ×Ö½ÚÂë×ª»»
+#pragma region å­—èŠ‚ç è½¬æ¢
 String BytesConvertInteger(KernelInvokerParameter parameter)//integer (byte, byte, byte, byte, byte, byte, byte, byte)
 {
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0);
@@ -863,9 +863,9 @@ String StringConvertBytes(KernelInvokerParameter parameter)//byte[] (string)
 	Mcopy(value.GetPointer(), pointer, value.GetLength());
 	return String();
 }
-#pragma endregion ×Ö½ÚÂë×ª»»
+#pragma endregion å­—èŠ‚ç è½¬æ¢
 
-#pragma region ÊıÑ§¼ÆËã
+#pragma region æ•°å­¦è®¡ç®—
 String integer_Abs(KernelInvokerParameter parameter)//integer (integer)
 {
 	integer value = PARAMETER_VALUE(1, integer, 0);
@@ -1177,9 +1177,9 @@ String real4_Min(KernelInvokerParameter parameter)//real4 (real4, real4)
 	RETURN_VALUE(Real4, 0) = Min(a, b);
 	return String();
 }
-#pragma endregion ÊıÑ§¼ÆËã
+#pragma endregion æ•°å­¦è®¡ç®—
 
-#pragma region ÏµÍ³º¯Êı
+#pragma region ç³»ç»Ÿå‡½æ•°
 String Collect(KernelInvokerParameter parameter)//integer (bool)
 {
 	uint32 heapTop = parameter.kernel->heapAgency->GetHeapTop();
@@ -1263,9 +1263,9 @@ String GetCurrentTaskInstantID(KernelInvokerParameter parameter)//integer ()
 	RETURN_VALUE(integer, 0) = (integer)parameter.task->instanceID;
 	return String();
 }
-#pragma endregion ÏµÍ³º¯Êı
+#pragma endregion ç³»ç»Ÿå‡½æ•°
 
-#pragma region »ù´¡ÀàĞÍ³ÉÔ±º¯Êı
+#pragma region åŸºç¡€ç±»å‹æˆå‘˜å‡½æ•°
 String bool_ToString(KernelInvokerParameter parameter)//string bool.()
 {
 	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, bool, 0));
@@ -1759,7 +1759,7 @@ String type_GetTypeCode(KernelInvokerParameter parameter)//Reflection.TypeCode t
 			result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Task;
 			break;
 		default:
-			EXCEPTION("ÎŞĞ§µÄÀàĞÍ");
+			EXCEPTION("æ— æ•ˆçš„ç±»å‹");
 	}
 	return String();
 }
@@ -1968,7 +1968,7 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Refl
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Abstract);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else EXCEPTION("ÎŞĞ§µÄ¶¨ÒåÀàĞÍ");
+	else EXCEPTION("æ— æ•ˆçš„å®šä¹‰ç±»å‹");
 	return String();
 }
 
@@ -2239,9 +2239,9 @@ String array_GetLength(KernelInvokerParameter parameter)//integer array.()
 {
 	return parameter.kernel->heapAgency->TryGetArrayLength(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(integer, 0));
 }
-#pragma endregion »ù´¡ÀàĞÍ³ÉÔ±º¯Êı
+#pragma endregion åŸºç¡€ç±»å‹æˆå‘˜å‡½æ•°
 
-#pragma region ·´Éä
+#pragma region åå°„
 String Reflection_ReadonlyValues_GetCount(KernelInvokerParameter parameter)//integer Reflection.ReadonlyValues.()
 {
 	GET_THIS_VALUE(1, ReflectionReadonlyValues);
@@ -2353,7 +2353,7 @@ String Reflection_Variable_SetValue(KernelInvokerParameter parameter)//Reflectio
 String Reflection_MemberConstructor_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
-	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "Ö»ÓĞÍĞ¹ÜÀàĞÍ²ÅÓĞ¹¹Ôìº¯Êı");
+	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "åªæœ‰æ‰˜ç®¡ç±»å‹æ‰æœ‰æ„é€ å‡½æ•°");
 	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue)->isPublic;
 	return String();
 }
@@ -2361,7 +2361,7 @@ String Reflection_MemberConstructor_IsPublic(KernelInvokerParameter parameter)//
 String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
-	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "Ö»ÓĞÍĞ¹ÜÀàĞÍ²ÅÓĞ¹¹Ôìº¯Êı");
+	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "åªæœ‰æ‰˜ç®¡ç±»å‹æ‰æœ‰æ„é€ å‡½æ•°");
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue)->GetReflectionAttributes(parameter.kernel);
@@ -2372,7 +2372,7 @@ String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter paramet
 String Reflection_MemberConstructor_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
-	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "Ö»ÓĞÍĞ¹ÜÀàĞÍ²ÅÓĞ¹¹Ôìº¯Êı");
+	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "åªæœ‰æ‰˜ç®¡ç±»å‹æ‰æœ‰æ„é€ å‡½æ•°");
 	RETURN_VALUE(Type, 0) = Type(thisValue.declaration, 0);
 	return String();
 }
@@ -2380,7 +2380,7 @@ String Reflection_MemberConstructor_GetDeclaringType(KernelInvokerParameter para
 String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberConstructor.()
 {
 	GET_THIS_VALUE(1, ReflectionMemberConstructor);
-	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "Ö»ÓĞÍĞ¹ÜÀàĞÍ²ÅÓĞ¹¹Ôìº¯Êı");
+	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "åªæœ‰æ‰˜ç®¡ç±»å‹æ‰æœ‰æ„é€ å‡½æ•°");
 	if (!thisValue.parameters)
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
@@ -2403,7 +2403,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (parameter.task->kernelInvoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 				parameter.kernel->taskAgency->Release(invoker);
@@ -2417,13 +2417,13 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+			default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 	else
 	{
 		GET_THIS_VALUE(1, ReflectionMemberConstructor);
-		ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "Ö»ÓĞÍĞ¹ÜÀàĞÍ²ÅÓĞ¹¹Ôìº¯Êı");
+		ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "åªæœ‰æ‰˜ç®¡ç±»å‹æ‰æœ‰æ„é€ å‡½æ•°");
 		Handle parameters = PARAMETER_VALUE(1, Handle, 4);
 		RuntimeFunction* constructor = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
 		if (parameter.kernel->heapAgency->IsValid(parameters))
@@ -2453,7 +2453,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
-				case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 				case InvokerState::Running:
 					parameter.task->kernelInvoker = invoker;
 					return String();
@@ -2467,7 +2467,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
-				default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			}
 		}
 		else if (constructor->parameters.Count() == 1)
@@ -2482,7 +2482,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
-				case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 				case InvokerState::Running:
 					parameter.task->kernelInvoker = invoker;
 					return String();
@@ -2496,7 +2496,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
-				default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			}
 		}
 		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
@@ -2651,7 +2651,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (parameter.task->kernelInvoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 				invoker->GetReturns(RETURN_VALUE(Handle, 0));
@@ -2666,7 +2666,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+			default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 	else
@@ -2710,7 +2710,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
-				case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 				case InvokerState::Running:
 					parameter.task->kernelInvoker = invoker;
 					return String();
@@ -2725,7 +2725,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
-				default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			}
 		}
 		else if (runtimeFunction->parameters.Count() == 1)
@@ -2746,7 +2746,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
-				case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 				case InvokerState::Running:
 					parameter.task->kernelInvoker = invoker;
 					return String();
@@ -2761,7 +2761,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
-				default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			}
 		}
 		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
@@ -2849,7 +2849,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 		Invoker* invoker = parameter.task->kernelInvoker;
 		switch (parameter.task->kernelInvoker->state)
 		{
-			case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+			case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			case InvokerState::Running: return String();
 			case InvokerState::Completed:
 				invoker->GetReturns(RETURN_VALUE(Handle, 0));
@@ -2864,7 +2864,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 				return exitMessage;
 			}
 			case InvokerState::Invalid:
-			default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+			default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 		}
 	}
 	else
@@ -2898,7 +2898,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
-				case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 				case InvokerState::Running:
 					parameter.task->kernelInvoker = invoker;
 					return String();
@@ -2913,7 +2913,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
-				default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			}
 		}
 		else if (!runtimeFunction->parameters.Count())
@@ -2927,7 +2927,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 			invoker->Start(true, parameter.task->ignoreWait);
 			switch (invoker->state)
 			{
-				case InvokerState::Unstart: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				case InvokerState::Unstart: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 				case InvokerState::Running:
 					parameter.task->kernelInvoker = invoker;
 					return String();
@@ -2942,7 +2942,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 					return exitMessage;
 				}
 				case InvokerState::Invalid:
-				default: EXCEPTION("²»¸Ã½øÈëµÄ·ÖÖ§");
+				default: EXCEPTION("ä¸è¯¥è¿›å…¥çš„åˆ†æ”¯");
 			}
 		}
 		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
@@ -3027,7 +3027,7 @@ String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Refl
 {
 	GET_THIS_VALUE(1, Native);
 	Handle parameters = PARAMETER_VALUE(1, Handle, 4);
-	uint32 nativeLocal = parameter.top + SIZE(Frame) + 12;//·µ»ØÖµ + ·´Éä¶ÔÏó + ²ÎÊıÊı×é
+	uint32 nativeLocal = parameter.top + SIZE(Frame) + 12;//è¿”å›å€¼ + åå°„å¯¹è±¡ + å‚æ•°æ•°ç»„
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 	if (parameter.kernel->heapAgency->IsValid(parameters))
 	{
@@ -3266,4 +3266,4 @@ String Reflection_Space_GetTypes(KernelInvokerParameter parameter)//ReadonlyType
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
-#pragma endregion ·´Éä
+#pragma endregion åå°„

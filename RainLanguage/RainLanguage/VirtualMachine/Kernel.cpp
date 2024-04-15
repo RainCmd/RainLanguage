@@ -55,12 +55,12 @@ bool RainFunction::IsValid() const
 }
 InvokerWrapper RainFunction::CreateInvoker() const
 {
-	ASSERT(IsValid(), "ÎÞÐ§µÄº¯Êý");
+	ASSERT(IsValid(), "æ— æ•ˆçš„å‡½æ•°");
 	return InvokerWrapper(((KernelShare*)share)->kernel->taskAgency->CreateInvoker(Function(library, index)));
 }
 RainTypes RainFunction::GetParameters() const
 {
-	ASSERT(IsValid(), "ÎÞÐ§µÄº¯Êý");
+	ASSERT(IsValid(), "æ— æ•ˆçš„å‡½æ•°");
 	RuntimeFunction* info = ((KernelShare*)share)->kernel->libraryAgency->GetFunction(Function(library, index));
 	RainType* types = Malloc<RainType>(info->parameters.Count());
 	for(uint32 i = 0; i < info->parameters.Count(); i++) types[i] = GetRainType(info->parameters.GetType(i));
@@ -68,7 +68,7 @@ RainTypes RainFunction::GetParameters() const
 }
 RainTypes RainFunction::GetReturns() const
 {
-	ASSERT(IsValid(), "ÎÞÐ§µÄº¯Êý");
+	ASSERT(IsValid(), "æ— æ•ˆçš„å‡½æ•°");
 	RuntimeFunction* info = ((KernelShare*)share)->kernel->libraryAgency->GetFunction(Function(library, index));
 	RainType* types = Malloc<RainType>(info->returns.Count());
 	for(uint32 i = 0; i < info->returns.Count(); i++) types[i] = GetRainType(info->returns.GetType(i));

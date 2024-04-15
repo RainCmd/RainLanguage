@@ -84,8 +84,8 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 		CompilingStruct* compilingStruct = manager->compilingLibrary.structs[file->index];
 		AbstractStruct* abstractStruct = manager->selfLibaray->structs[file->index];
 		CompilingDeclaration fileDeclaratioin;
-		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("自己的命名空间中找不到自己的定义");
-		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Struct, "定义类型错误");
+		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("鑷繁鐨勫懡鍚嶇┖闂翠腑鎵句笉鍒拌嚜宸辩殑瀹氫箟");
+		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Struct, "瀹氫箟绫诲瀷閿欒");
 		Type fileType = Type(LIBRARY_SELF, TypeCode::Struct, fileDeclaratioin.index, 0);
 		for (uint32 y = 0; y < file->variables.Count(); y++)
 		{
@@ -123,8 +123,8 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 		CompilingClass* compilingClass = manager->compilingLibrary.classes[file->index];
 		AbstractClass* abstractClass = manager->selfLibaray->classes[file->index];
 		CompilingDeclaration fileDeclaratioin;
-		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("自己的命名空间中找不到自己的定义");
-		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Class, "定义类型错误");
+		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("鑷繁鐨勫懡鍚嶇┖闂翠腑鎵句笉鍒拌嚜宸辩殑瀹氫箟");
+		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Class, "瀹氫箟绫诲瀷閿欒");
 		Type fileType = Type(LIBRARY_SELF, TypeCode::Handle, fileDeclaratioin.index, 0);
 		if (file->parent.Count())
 		{
@@ -217,8 +217,8 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 	{
 		FileInterface* file = &interfaces[x];
 		CompilingDeclaration fileDeclaratioin;
-		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("自己的命名空间中找不到自己的定义");
-		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Interface, "定义类型错误");
+		if (!TryGetDeclaration(file->space, file->name, fileDeclaratioin)) EXCEPTION("鑷繁鐨勫懡鍚嶇┖闂翠腑鎵句笉鍒拌嚜宸辩殑瀹氫箟");
+		ASSERT_DEBUG(fileDeclaratioin.category == DeclarationCategory::Interface, "瀹氫箟绫诲瀷閿欒");
 		Type fileType = Type(LIBRARY_SELF, TypeCode::Interface, fileDeclaratioin.index, 0);
 		CompilingInterface* compilingInterface = manager->compilingLibrary.interfaces[file->index];
 		AbstractInterface* abstractInterface = manager->selfLibaray->interfaces[file->index];

@@ -61,7 +61,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 		if(type.dimension) type = TYPE_Array;
 		switch(type.code)
 		{
-			case TypeCode::Invalid: EXCEPTION("ÎÞÐ§µÄTypeCode");
+			case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„TypeCode");
 			case TypeCode::Struct:
 				if(type == TYPE_Bool || type == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_1);
 				else if(type == TYPE_Char) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Array2Variable_2);
@@ -110,7 +110,7 @@ void GeneratorArrayEvaluation(LogicGenerateParameter& parameter, const LogicVari
 				parameter.generator->WriteCode(indexVariable, VariableAccessType::Read);
 				parameter.generator->WriteCode(offset);
 				break;
-			default: EXCEPTION("ÎÞÐ§µÄTypeCode");
+			default: EXCEPTION("æ— æ•ˆçš„TypeCode");
 		}
 	}
 	parameter.generator->WriteCode(parameter.finallyAddress);
@@ -150,7 +150,7 @@ void ArrayEvaluationExpression::Generator(LogicGenerateParameter& parameter)
 
 void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset)
 {
-	ASSERT_DEBUG(arrayExpression->returns[0] != TYPE_String, "×Ö·û´®²»¿É¸³Öµ");
+	ASSERT_DEBUG(arrayExpression->returns[0] != TYPE_String, "å­—ç¬¦ä¸²ä¸å¯èµ‹å€¼");
 	LogicVariable result = parameter.results[0];
 	GetArrayVariable(parameter);
 	GetIndexVariable(parameter);
@@ -158,7 +158,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 	if(resultType.dimension) resultType = TYPE_Array;
 	switch(resultType.code)
 	{
-		case TypeCode::Invalid: EXCEPTION("ÎÞÐ§µÄTypeCode");
+		case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„TypeCode");
 		case TypeCode::Struct:
 			if(resultType == TYPE_Bool || resultType == TYPE_Byte) parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_1);
 			else if(resultType == TYPE_Char)parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Array_2);
@@ -207,7 +207,7 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 			parameter.generator->WriteCode(offset);
 			parameter.generator->WriteCode(result, VariableAccessType::Read);
 			break;
-		default: EXCEPTION("ÎÞÐ§µÄTypeCode");
+		default: EXCEPTION("æ— æ•ˆçš„TypeCode");
 	}
 	parameter.generator->WriteCode(parameter.finallyAddress);
 }

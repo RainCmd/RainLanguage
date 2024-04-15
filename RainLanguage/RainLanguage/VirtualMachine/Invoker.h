@@ -22,7 +22,7 @@ public:
 	uint32 hold;
 	Task* task;
 	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), exitMessage(), hold(0), task(NULL) {}
-	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "ÎŞĞ§µÄ²Ù×÷"); }
+	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "æ— æ•ˆçš„æ“ä½œ"); }
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, Type type) const;
 	bool IsPause() const;

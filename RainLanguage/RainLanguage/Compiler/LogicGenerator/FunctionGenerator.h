@@ -14,9 +14,9 @@ struct FunctionGenerator
 	List<Local> parameters;
 	List<Type, true> returns;
 	BlockStatement* statements;
-	FunctionGenerator(GeneratorParameter& parameter);//library ¹¹Ôìº¯Êı
-	FunctionGenerator(CompilingFunction* function, GeneratorParameter& parameter);//ÆÕÍ¨º¯Êı¡¢¹¹Ôìº¯Êı
-	FunctionGenerator(CompilingDeclaration declaration, GeneratorParameter& parameter);//Îö¹¹º¯Êı
+	FunctionGenerator(GeneratorParameter& parameter);//library æ„é€ å‡½æ•°
+	FunctionGenerator(CompilingFunction* function, GeneratorParameter& parameter);//æ™®é€šå‡½æ•°ã€æ„é€ å‡½æ•°
+	FunctionGenerator(CompilingDeclaration declaration, GeneratorParameter& parameter);//ææ„å‡½æ•°
 	CompilingDeclaration ParseConstructorInvoker(GeneratorParameter& parameter, Context* context, const Anchor& anchor, const Anchor& expression, List<CompilingDeclaration, true>& declarations, Local* thisValue);
 	void ParseBranch(GeneratorParameter& parameter, List<Statement*, true>& block, const Anchor& anchor, Context context, bool destructor);
 	void ParseBody(GeneratorParameter& parameter, Context context, const List<Line>& body, bool destructor);

@@ -17,7 +17,7 @@ inline bool IsTask(const Type& type)
 
 Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 {
-	ASSERT(!gc, "不能在GC时创建新对象");
+	ASSERT(!gc, "涓嶈兘鍦℅C鏃跺垱寤烘柊瀵硅薄");
 	Handle handle;
 	uint8 gcLevel = 0;
 	if(free)
@@ -52,7 +52,7 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 				GC(true);
 				if(heap.Slack() < (heap.Count() >> 3)) heap.Grow(heap.Count() >> 3);
 			}
-			if(heap.Count() + size >= MAX_HEAP_SIZE) EXCEPTION("堆内存超过可用上限！");
+			if(heap.Count() + size >= MAX_HEAP_SIZE) EXCEPTION("鍫嗗唴瀛樿秴杩囧彲鐢ㄤ笂闄愶紒");
 		}
 	}
 	heads[handle] = HeapAgency::Head(heap.Count(), size, flag, alignment);
@@ -327,11 +327,11 @@ Handle HeapAgency::Alloc(const Declaration& declaration)
 
 uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 {
-	ASSERT_DEBUG(heads[handle].type.dimension, "不是个数组，可能编译器算法有问题");
+	ASSERT_DEBUG(heads[handle].type.dimension, "涓嶆槸涓暟缁勶紝鍙兘缂栬瘧鍣ㄧ畻娉曟湁闂");
 	uint8* pointer = heap.GetPointer() + heads[handle].pointer;
 	uint32 length = *(uint32*)pointer;
 	if(index < 0) index += length;
-	if(index < 0 || index >= length) EXCEPTION("数组越界");
+	if(index < 0 || index >= length) EXCEPTION("鏁扮粍瓒婄晫");
 	pointer += 4 + GetElementSize(&heads[handle]) * index;
 	return pointer;
 }
@@ -348,7 +348,7 @@ String HeapAgency::TryGetArrayPoint(Handle handle, integer index, uint8*& pointe
 	if(IsValid(handle))
 	{
 		Type type = heads[handle].type;
-		ASSERT_DEBUG(type.dimension, "不是个数组，可能编译器算法有问题");
+		ASSERT_DEBUG(type.dimension, "涓嶆槸涓暟缁勶紝鍙兘缂栬瘧鍣ㄧ畻娉曟湁闂");
 		pointer = heap.GetPointer() + heads[handle].pointer;
 		uint32 length = *(uint32*)pointer;
 		if(index < 0) index += length;

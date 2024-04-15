@@ -15,22 +15,22 @@
 
 void Caller::ParameterTypeAssert(uint32 index, Type type) const
 {
-	ASSERT(info->parameters.GetType(index) == type, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == type, "å‚æ•°ç±»åž‹é”™è¯¯");
 }
 
 void Caller::ParameterTypeAssert(uint32 index, TypeCode typeCode) const
 {
-	ASSERT(info->parameters.GetType(index).code == typeCode, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index).code == typeCode, "å‚æ•°ç±»åž‹é”™è¯¯");
 }
 
 void Caller::ReturnTypeAssert(uint32 index, Type type) const
 {
-	ASSERT(info->returns.GetType(index) == type, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(info->returns.GetType(index) == type, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 }
 
 void Caller::ReturnTypeAssert(uint32 index, TypeCode typeCode) const
 {
-	ASSERT(info->returns.GetType(index).code == typeCode, "·µ»ØÖµÀàÐÍ´íÎó");
+	ASSERT(info->returns.GetType(index).code == typeCode, "è¿”å›žå€¼ç±»åž‹é”™è¯¯");
 }
 
 Caller::~Caller()
@@ -125,7 +125,7 @@ uint64 Caller::GetEntityParameter(uint32 index) const
 
 uint32 Caller::GetArrayParameterLength(uint32 index) const
 {
-	ASSERT(info->parameters.GetType(index).dimension, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index).dimension, "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle) return kernel->heapAgency->GetArrayLength(handle);
 	return 0;
@@ -133,7 +133,7 @@ uint32 Caller::GetArrayParameterLength(uint32 index) const
 
 void Caller::GetBoolArrayParameter(uint32 index, bool*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Bool, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Bool, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -144,7 +144,7 @@ void Caller::GetBoolArrayParameter(uint32 index, bool*& result) const
 
 void Caller::GetByteArrayParameter(uint32 index, uint8*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Byte, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Byte, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -155,7 +155,7 @@ void Caller::GetByteArrayParameter(uint32 index, uint8*& result) const
 
 void Caller::GetCharArrayParameter(uint32 index, character*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Char, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Char, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -166,7 +166,7 @@ void Caller::GetCharArrayParameter(uint32 index, character*& result) const
 
 void Caller::GetIntegerArrayParameter(uint32 index, integer*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Integer, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Integer, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -177,7 +177,7 @@ void Caller::GetIntegerArrayParameter(uint32 index, integer*& result) const
 
 void Caller::GetRealArrayParameter(uint32 index, real*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -188,7 +188,7 @@ void Caller::GetRealArrayParameter(uint32 index, real*& result) const
 
 void Caller::GetReal2ArrayParameter(uint32 index, Real2*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real2, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real2, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -199,7 +199,7 @@ void Caller::GetReal2ArrayParameter(uint32 index, Real2*& result) const
 
 void Caller::GetReal3ArrayParameter(uint32 index, Real3*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real3, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real3, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -210,7 +210,7 @@ void Caller::GetReal3ArrayParameter(uint32 index, Real3*& result) const
 
 void Caller::GetReal4ArrayParameter(uint32 index, Real4*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real4, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real4, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -222,7 +222,7 @@ void Caller::GetReal4ArrayParameter(uint32 index, Real4*& result) const
 void Caller::GetEnumArrayValueParameter(uint32 index, integer*& result) const
 {
 	Type type = info->parameters.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -234,7 +234,7 @@ void Caller::GetEnumArrayValueParameter(uint32 index, integer*& result) const
 void Caller::GetEnumArrayNameParameter(uint32 index, RainString*& result) const
 {
 	Type type = info->parameters.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -250,7 +250,7 @@ void Caller::GetEnumArrayNameParameter(uint32 index, RainString*& result) const
 
 void Caller::GetStringArrayParameter(uint32 index, RainString*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_String, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_String, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -265,7 +265,7 @@ void Caller::GetStringArrayParameter(uint32 index, RainString*& result) const
 
 void Caller::GetEntityArrayParameter(uint32 index, uint64*& result) const
 {
-	ASSERT(info->parameters.GetType(index) == Type(TYPE_Entity, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->parameters.GetType(index) == Type(TYPE_Entity, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	Handle handle = PARAMETER_VALUE(Handle);
 	if(handle)
 	{
@@ -364,7 +364,7 @@ void Caller::SetEntityReturnValue(uint32 index, uint64 value)
 
 Handle Caller::GetArrayReturnValue(uint32 index, Type elementType, uint32 length)
 {
-	ASSERT(info->returns.GetType(index) == Type(elementType, 1), "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(info->returns.GetType(index) == Type(elementType, 1), "å‚æ•°ç±»åž‹é”™è¯¯");
 	RETURN_VALUE(Handle);
 	kernel->heapAgency->StrongRelease(result);
 	result = kernel->heapAgency->Alloc(elementType, length);
@@ -423,7 +423,7 @@ void Caller::SetReturnValue(uint32 index, Real4* values, uint32 length)
 void Caller::SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length)
 {
 	Type type = info->returns.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	RETURN_VALUE(Handle);
 	kernel->heapAgency->StrongRelease(result);
 	result = kernel->heapAgency->Alloc(Type(type, 0), length);
@@ -435,7 +435,7 @@ void Caller::SetEnumNameReturnValue(uint32 index, RainString* values, uint32 len
 void Caller::SetEnumNameReturnValue(uint32 index, character** values, uint32 length)
 {
 	Type type = info->returns.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	RETURN_VALUE(Handle);
 	kernel->heapAgency->StrongRelease(result);
 	result = kernel->heapAgency->Alloc(Type(type, 0), length);
@@ -452,7 +452,7 @@ void Caller::SetEnumNameReturnValue(uint32 index, character** values, uint32 len
 void Caller::SetEnumValueReturnValue(uint32 index, integer* values, uint32 length)
 {
 	Type type = info->returns.GetType(index);
-	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "²ÎÊýÀàÐÍ´íÎó");
+	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "å‚æ•°ç±»åž‹é”™è¯¯");
 	RETURN_VALUE(Handle);
 	kernel->heapAgency->StrongRelease(result);
 	result = kernel->heapAgency->Alloc(Type(type, 0), length);

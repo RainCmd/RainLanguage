@@ -7,7 +7,7 @@ void EnumElementExpression::Generator(LogicGenerateParameter& parameter)
 	if (element.library == LIBRARY_SELF)
 	{
 		CompilingEnum::Element* compiling = parameter.manager->compilingLibrary.enums[element.definition]->elements[element.index];
-		ASSERT_DEBUG(compiling->calculated, "library构造函数生成逻辑可能有bug");
+		ASSERT_DEBUG(compiling->calculated, "library鏋勯�犲嚱鏁扮敓鎴愰�昏緫鍙兘鏈塨ug");
 		parameter.generator->WriteCode(compiling->value);
 	}
 	else parameter.generator->WriteCodeEnumElementReference(element);

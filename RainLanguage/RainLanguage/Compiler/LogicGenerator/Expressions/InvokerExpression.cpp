@@ -138,7 +138,7 @@ void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 	AbstractCallable* callable;
 	if (declaration.category == DeclarationCategory::Function) callable = parameter.manager->GetLibrary(declaration.library)->functions[declaration.index];
 	else if (declaration.category == DeclarationCategory::Native) callable = parameter.manager->GetLibrary(declaration.library)->natives[declaration.index];
-	else EXCEPTION("其他类型的函数不应该走到这里");
+	else EXCEPTION("鍏朵粬绫诲瀷鐨勫嚱鏁颁笉搴旇璧板埌杩欓噷");
 
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
 	parameters->Generator(parametersParameter);
@@ -162,7 +162,7 @@ void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode(Native(declaration.library, declaration.index));
 	}
-	else EXCEPTION("语言解析逻辑可能有bug");
+	else EXCEPTION("璇█瑙ｆ瀽閫昏緫鍙兘鏈塨ug");
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
@@ -173,7 +173,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	if (declaration.category == DeclarationCategory::StructFunction) abstractFunction = abstractLibrary->functions[abstractLibrary->structs[declaration.definition]->functions[declaration.index]];
 	else if (declaration.category == DeclarationCategory::Constructor) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->constructors[declaration.index]];
 	else if (declaration.category == DeclarationCategory::ClassFunction) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->functions[declaration.index]];
-	else EXCEPTION("语义解析可能有bug");
+	else EXCEPTION("璇箟瑙ｆ瀽鍙兘鏈塨ug");
 	CodeLocalAddressReference clearResultsAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
@@ -228,7 +228,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	if (declaration.category == DeclarationCategory::InterfaceFunction) abstractFunction = abstractLibrary->interfaces[declaration.definition]->functions[declaration.index];
 	else if (declaration.category == DeclarationCategory::Constructor) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->constructors[declaration.index]];
 	else if (declaration.category == DeclarationCategory::ClassFunction) abstractFunction = abstractLibrary->functions[abstractLibrary->classes[declaration.definition]->functions[declaration.index]];
-	else EXCEPTION("语义解析可能有bug");
+	else EXCEPTION("璇箟瑙ｆ瀽鍙兘鏈塨ug");
 	CodeLocalAddressReference clearResultsAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference returnAddress = CodeLocalAddressReference();
 	LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);

@@ -15,7 +15,7 @@ void LocalContext::PopBlock()
 Local LocalContext::AddLocal(const String& name, const Anchor& anchor, const Type& type)
 {
 	Local local = Local(anchor, index++, type);
-	if(!name.IsEmpty())
+	if(!name.IsEmpty() && name != DiscardVariable())
 	{
 		if(name != KeyWord_this()) localAnchors.Set(local.index, anchor);
 		uint32 i = localDeclarations.Count();
@@ -48,7 +48,7 @@ Local LocalContext::GetLocal(uint32 localIndex)
 			if(iterator.CurrentValue().index == localIndex)
 				return iterator.CurrentValue();
 	}
-	EXCEPTION("ÎŞĞ§µÄ¾Ö²¿±äÁ¿Ë÷Òı");
+	EXCEPTION("æ— æ•ˆçš„å±€éƒ¨å˜é‡ç´¢å¼•");
 }
 
 void LocalContext::Reset()

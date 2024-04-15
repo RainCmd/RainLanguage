@@ -45,7 +45,7 @@ ProgramDatabase::~ProgramDatabase()
 
 }
 
-RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) //这里直接序列化String.index会导致反序列化时Agency中的字符串引用计数翻倍，但是不影响正常使用和内存释放
+RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) //杩欓噷鐩存帴搴忓垪鍖朣tring.index浼氬鑷村弽搴忓垪鍖栨椂Agency涓殑瀛楃涓插紩鐢ㄨ鏁扮炕鍊嶏紝浣嗘槸涓嶅奖鍝嶆甯镐娇鐢ㄥ拰鍐呭瓨閲婃斁
 {
 	ProgramDatabase* source = (ProgramDatabase*)&database;
 	Serializer* serializer = new Serializer(0x100);

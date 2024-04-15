@@ -14,7 +14,7 @@ void CodeLocalAddressReference::AddReferences(Generator* generator, List<LocalAd
 
 void CodeLocalAddressReference::SetAddress(Generator* generator, uint32 targetAddress)
 {
-	ASSERT_DEBUG(!assigned, "¶ÔÒıÓÃµØÖ·ÖØ¸´¸³Öµ");
+	ASSERT_DEBUG(!assigned, "å¯¹å¼•ç”¨åœ°å€é‡å¤èµ‹å€¼");
 	assigned = true;
 	address = targetAddress;
 	for (uint32 i = 0; i < references.Count(); i++)
@@ -23,7 +23,7 @@ void CodeLocalAddressReference::SetAddress(Generator* generator, uint32 targetAd
 
 void CodeLocalAddressReference::SetTarget(Generator* generator, CodeLocalAddressReference* targetReference)
 {
-	ASSERT_DEBUG(!assigned, "¶ÔÒıÓÃµØÖ·ÖØ¸´¸³Öµ");
+	ASSERT_DEBUG(!assigned, "å¯¹å¼•ç”¨åœ°å€é‡å¤èµ‹å€¼");
 	assigned = true;
 	target = targetReference;
 	targetReference->AddReferences(generator, references);
@@ -41,7 +41,7 @@ void CodeLocalAddressReference::AddReference(Generator* generator, uint32 instru
 
 void CodeLocalVariableReference::SetAddress(Generator* generator, uint32 target)
 {
-	ASSERT_DEBUG(!assigned, "¶ÔÒıÓÃµØÖ·ÖØ¸´¸³Öµ");
+	ASSERT_DEBUG(!assigned, "å¯¹å¼•ç”¨åœ°å€é‡å¤èµ‹å€¼");
 	assigned = true;
 	address = target;
 	for (uint32 i = 0; i < references.Count(); i++)

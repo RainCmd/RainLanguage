@@ -7,11 +7,11 @@
 
 #define KERNEL_STRING(text) stringAgency.Add(TEXT(text))
 #define REGISIER_ENUM_ELEMENT(name,index,value)\
-		ASSERT_DEBUG(elements.Count() == index, "Ã¶¾ÙÔªËØË÷Òý´íÎó");\
+		ASSERT_DEBUG(elements.Count() == index, "æžšä¸¾å…ƒç´ ç´¢å¼•é”™è¯¯");\
 		new (elements.Add())KernelLibraryInfo::Enum::Element(KERNEL_STRING(name), (integer)value);
 
 #define REGISIER_ENUM(isPublic,space,name,index,elements)\
-		ASSERT_DEBUG(enums.Count() == index, "Ã¶¾ÙË÷Òý´íÎó");\
+		ASSERT_DEBUG(enums.Count() == index, "æžšä¸¾ç´¢å¼•é”™è¯¯");\
 		space->enums.Add(enums.Count());\
 		new (enums.Add())KernelLibraryInfo::Enum(isPublic, KERNEL_STRING(name), elements);
 
@@ -22,12 +22,12 @@
 		new (functions.Add())KernelLibraryInfo::Function(isPublic, KERNEL_STRING(name), returns, parameters, invoker);
 
 #define REGISTER_STRUCT(isPublic,space,name,index,size,alignment,variables,functions)\
-		ASSERT_DEBUG(structs.Count() == index, "½á¹¹ÌåË÷Òý´íÎó");\
+		ASSERT_DEBUG(structs.Count() == index, "ç»“æž„ä½“ç´¢å¼•é”™è¯¯");\
 		space->structs.Add(structs.Count());\
 		new (structs.Add())KernelLibraryInfo::Struct(isPublic, KERNEL_STRING(name), size, alignment, variables, functions);
 
 #define REGISTER_CLASS(isPublic,space,name,index,parent,inherits,size,alignment,constructors,variables,functions)\
-		ASSERT_DEBUG(classes.Count() == index, "ÍÐ¹ÜÀàÐÍË÷Òý´íÎó");\
+		ASSERT_DEBUG(classes.Count() == index, "æ‰˜ç®¡ç±»åž‹ç´¢å¼•é”™è¯¯");\
 		space->classes.Add(classes.Count());\
 		new (classes.Add())KernelLibraryInfo::Class(isPublic, parent, inherits, KERNEL_STRING(name), size, alignment, constructors, variables, functions);
 
@@ -36,7 +36,7 @@
 		new (functions.Add())KernelLibraryInfo::Function(isPublic, KERNEL_STRING(name), returns, parameters, invoker);
 
 #define REGISTER_SPECIAL_FUNCTIONS(isPublic,space,name,index,returns,parameters,invoker)\
-		ASSERT_DEBUG(functions.Count() == index, "ÌØÊâº¯ÊýË÷Òý´íÎó");\
+		ASSERT_DEBUG(functions.Count() == index, "ç‰¹æ®Šå‡½æ•°ç´¢å¼•é”™è¯¯");\
 		REGISTER_FUNCTIONS(isPublic,space,name,returns,parameters,invoker)
 
 #define REGISTER_VARIABLE(isPublic,space,name,type,value)\
@@ -129,7 +129,7 @@ inline void GetStackSize(KernelLibraryInfo& library, Type type, uint32& size, ui
 		default:
 			break;
 	}
-	EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 }
 
 inline void CalculateTupleInfo(KernelLibraryInfo& library, TupleInfo& info)

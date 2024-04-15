@@ -39,7 +39,7 @@ class HeapAgency
 	void FastGC();
 	inline uint32 GetElementSize(Head* value)
 	{
-		ASSERT_DEBUG(value->type.dimension, "²»ÊÇ¸öÊı×é");
+		ASSERT_DEBUG(value->type.dimension, "ä¸æ˜¯ä¸ªæ•°ç»„");
 		uint32 length = *(uint32*)(heap.GetPointer() + value->pointer);
 		return length ? (value->size - 4) / length : 0;
 	}
@@ -58,7 +58,7 @@ public:
 		if (IsValid(handle))
 		{
 			Head& value = heads[handle];
-			ASSERT_DEBUG(value.strong, "µ±Ç°ÒıÓÃ¼ÆÊıÎª0!");
+			ASSERT_DEBUG(value.strong, "å½“å‰å¼•ç”¨è®¡æ•°ä¸º0!");
 			value.strong--;
 		}
 	}
@@ -71,7 +71,7 @@ public:
 		if (IsValid(handle))
 		{
 			Head& value = heads[handle];
-			ASSERT_DEBUG(value.weak, "µ±Ç°ÒıÓÃ¼ÆÊıÎª0!");
+			ASSERT_DEBUG(value.weak, "å½“å‰å¼•ç”¨è®¡æ•°ä¸º0!");
 			value.weak--;
 		}
 	}

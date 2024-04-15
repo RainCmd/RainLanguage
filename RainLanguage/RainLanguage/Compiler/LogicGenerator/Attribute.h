@@ -5,17 +5,17 @@
 enum class Attribute
 {
 	Invalid,
-	None = 0x0001,              //ÎŞ
-	Operator = 0x0002,          //ÔËËã·û
-	Value = 0x004,              //Öµ
-	Constant = 0x000C,          //³£Á¿
-	Assignable = 0x0010,        //¿É¸³Öµ
-	Callable = 0x0020,          //¿Éµ÷ÓÃ
-	Array = 0x0040,             //Êı×é
-	Tuple = 0x0080,             //Ôª×é
-	Task = 0x0100,				//ÈÎÎñ
-	Type = 0x0200,              //ÀàĞÍ
-	Method = 0x0400,            //·½·¨
+	None = 0x0001,              //æ— 
+	Operator = 0x0002,          //è¿ç®—ç¬¦
+	Value = 0x004,              //å€¼
+	Constant = 0x000C,          //å¸¸é‡
+	Assignable = 0x0010,        //å¯èµ‹å€¼
+	Callable = 0x0020,          //å¯è°ƒç”¨
+	Array = 0x0040,             //æ•°ç»„
+	Tuple = 0x0080,             //å…ƒç»„
+	Task = 0x0100,				//ä»»åŠ¡
+	Type = 0x0200,              //ç±»å‹
+	Method = 0x0400,            //æ–¹æ³•
 };
 ENUM_FLAG_OPERATOR(Attribute)
 inline Attribute CombineType(Attribute attribute, const  Type& type)

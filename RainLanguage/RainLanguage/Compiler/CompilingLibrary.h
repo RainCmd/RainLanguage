@@ -78,7 +78,7 @@ struct CompilingStruct :CompilingDeclarationInfo
 		inline Variable(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes) :name(name), declaration(declaration), attributes(attributes), type() {}
 	};
 	List<Variable*, true> variables;
-	List<uint32, true> functions;//参数包含this
+	List<uint32, true> functions;//鍙傛暟鍖呭惈this
 	inline CompilingStruct(const Anchor& name, const CompilingDeclaration& declaration, const List<Anchor>& attributes, CompilingSpace* space, const List<Variable*, true>& variables, const List<uint32, true>& functions) :CompilingDeclarationInfo(name, declaration, attributes, space), variables(variables), functions(functions) {}
 	~CompilingStruct();
 };
@@ -102,9 +102,9 @@ struct CompilingClass :CompilingDeclarationInfo
 	};
 	Type parent;
 	List<Type, true> inherits;
-	List<Constructor*, true> constructors;//参数包含this，有唯一返回值this
+	List<Constructor*, true> constructors;//鍙傛暟鍖呭惈this锛屾湁鍞竴杩斿洖鍊紅his
 	List<Variable*, true> variables;
-	List<uint32, true> functions;//参数包含this
+	List<uint32, true> functions;//鍙傛暟鍖呭惈this
 	List<Line> destructor;
 	uint32 destructorEntry;
 	List<AbstractSpace*, true>* relies;

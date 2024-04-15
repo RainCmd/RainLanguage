@@ -52,10 +52,10 @@ CompilingSpace::~CompilingSpace()
 
 Anchor CompilingLibrary::GetName(const CompilingDeclaration& declaration)
 {
-	ASSERT_DEBUG(declaration.library == LIBRARY_SELF, "¿âid´íÎó");
+	ASSERT_DEBUG(declaration.library == LIBRARY_SELF, "åº“idé”™è¯¯");
 	switch (declaration.category)
 	{
-		case DeclarationCategory::Invalid: EXCEPTION("ÎŞĞ§µÄÉùÃ÷ÀàĞÍ");
+		case DeclarationCategory::Invalid: EXCEPTION("æ— æ•ˆçš„å£°æ˜ç±»å‹");
 		case DeclarationCategory::Variable: return variables[declaration.index]->name;
 		case DeclarationCategory::Function: return functions[declaration.index]->name;
 		case DeclarationCategory::Enum: return enums[declaration.index]->name;
@@ -75,7 +75,7 @@ Anchor CompilingLibrary::GetName(const CompilingDeclaration& declaration)
 		case DeclarationCategory::Lambda:
 		case DeclarationCategory::LambdaClosureValue:
 		case DeclarationCategory::LocalVariable:
-		default: EXCEPTION("Àà±ğ²»¶Ô");
+		default: EXCEPTION("ç±»åˆ«ä¸å¯¹");
 	}
 }
 

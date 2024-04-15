@@ -1,6 +1,6 @@
 #pragma once
 #include "Language.h"
-enum class Instruct                         //¿ÉÄÜ»áÅ×Òì³£µÄÖ¸Áî
+enum class Instruct                         //å¯èƒ½ä¼šæŠ›å¼‚å¸¸çš„æŒ‡ä»¤
 {
     #pragma region base
     BASE_Exit,

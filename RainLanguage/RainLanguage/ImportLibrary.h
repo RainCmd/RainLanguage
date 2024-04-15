@@ -138,7 +138,7 @@ struct ImportNative :ImportInfo
 
 struct ImportLibrary
 {
-	List<ImportSpace, true> spaces;//µÚÒ»¸öÎª¸ù½Úµã
+	List<ImportSpace, true> spaces;//ç¬¬ä¸€ä¸ªä¸ºæ ¹èŠ‚ç‚¹
 	List<ImportVariable> variables;
 	List<ImportEnum> enums;
 	List<ImportStruct> structs;

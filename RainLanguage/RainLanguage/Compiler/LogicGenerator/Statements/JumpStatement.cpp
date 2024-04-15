@@ -4,7 +4,7 @@
 
 void JumpStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	ASSERT_DEBUG(targetAddress, "跳转目标未赋值，前面的语法检查算法可能有问题");
+	ASSERT_DEBUG(targetAddress, "璺宠浆鐩爣鏈祴鍊硷紝鍓嶉潰鐨勮娉曟鏌ョ畻娉曞彲鑳芥湁闂");
 	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	if (condition)
 	{

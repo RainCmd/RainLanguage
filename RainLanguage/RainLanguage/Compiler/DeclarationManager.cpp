@@ -38,7 +38,7 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(const CompilingDeclarati
 		default:
 			break;
 	}
-	EXCEPTION("ÎÞÐ§µÄ¶¨ÒåÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„å®šä¹‰ç±»åž‹");
 }
 
 AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
@@ -46,7 +46,7 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
 	if(type.dimension)type = TYPE_Array;
 	switch(type.code)
 	{
-		case TypeCode::Invalid: EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+		case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 		case TypeCode::Struct:
 			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Struct, type.index, NULL));
 		case TypeCode::Enum:
@@ -59,7 +59,7 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
 			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Delegate, type.index, NULL));
 		case TypeCode::Task:
 			return GetDeclaration(CompilingDeclaration(type.library, Visibility::None, DeclarationCategory::Task, type.index, NULL));
-		default: EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+		default: EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 	}
 }
 
@@ -98,7 +98,7 @@ List<Type, true>& DeclarationManager::GetReturns(const CompilingDeclaration& dec
 		case DeclarationCategory::LocalVariable:
 		default: break;
 	}
-	EXCEPTION("ÎÞÐ§µÄ¶¨ÒåÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„å®šä¹‰ç±»åž‹");
 }
 
 const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclaration& declaration)
@@ -136,12 +136,12 @@ const Span<Type, true> DeclarationManager::GetParameters(const CompilingDeclarat
 		case DeclarationCategory::LocalVariable:
 		default: break;
 	}
-	EXCEPTION("ÎÞÐ§µÄ¶¨ÒåÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„å®šä¹‰ç±»åž‹");
 }
 
 Type DeclarationManager::GetParent(const Type& type)
 {
-	ASSERT_DEBUG(type.code == TypeCode::Handle, "²»ÊÇÍÐ¹ÜÀàÐÍÉùÃ÷");
+	ASSERT_DEBUG(type.code == TypeCode::Handle, "ä¸æ˜¯æ‰˜ç®¡ç±»åž‹å£°æ˜Ž");
 	if(type.dimension) return TYPE_Array;
 	else if(type.library == LIBRARY_KERNEL) return kernelLibaray->classes[type.index]->parent;
 	else if(type.library == LIBRARY_SELF) return compilingLibrary.classes[type.index]->parent;
@@ -175,7 +175,7 @@ uint32 DeclarationManager::GetStackSize(const Type& type, uint8& alignment)
 			return SIZE(Handle);
 		default: break;
 	}
-	EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 }
 
 bool DeclarationManager::IsBitwise(const Type& type)
@@ -202,7 +202,7 @@ bool DeclarationManager::IsBitwise(const Type& type)
 		case TypeCode::Task: return false;
 		default: break;
 	}
-	EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+	EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 }
 
 AbstractLibrary* DeclarationManager::GetLibrary(const String& libraryName)

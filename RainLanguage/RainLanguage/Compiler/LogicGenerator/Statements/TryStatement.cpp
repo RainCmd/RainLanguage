@@ -137,7 +137,7 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(Instruct::BASE_PopExitMessage);
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 	}
-	else EXCEPTION("Óï¾äÂß¼­ÓĞbug");
+	else EXCEPTION("Ã“Ã¯Â¾Ã¤Ã‚ÃŸÂ¼Â­Ã“Ãbug");
 }
 
 TryStatement::~TryStatement()

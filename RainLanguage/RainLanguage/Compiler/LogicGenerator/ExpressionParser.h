@@ -8,7 +8,7 @@
 class Expression;
 class LambdaClosure;
 class LocalContext;
-//ÀàĞÍÍÆµ¼£¨Ö»ÍÆµ¼Ä£ºıÀàĞÍTYPE_Blurry¡¢TYPE_Null£©ÍÆµ¼Ê§°Ü»á´òÓ¡±¨´íĞÅÏ¢
+//ç±»å‹æ¨å¯¼ï¼ˆåªæ¨å¯¼æ¨¡ç³Šç±»å‹TYPE_Blurryã€TYPE_Nullï¼‰æ¨å¯¼å¤±è´¥ä¼šæ‰“å°æŠ¥é”™ä¿¡æ¯
 bool HasBlurryResult(Expression* expression);
 struct ExpressionParser
 {
@@ -36,9 +36,9 @@ struct ExpressionParser
 	bool CheckConvertVectorParameter(Expression*& parameters, uint32 dimension);
 	Attribute PopToken(List<Expression*, true>& expressionStack, const Token& token);
 	bool PushToken(List<Expression*, true>& expressionStack, List<Token>& tokenStack, const Token& token, Attribute attribute);
-	bool TryFindDeclaration(const Anchor& name, List<CompilingDeclaration, true>& result);//²éÕÒÊ§°Ü²»»áÊä³ö´íÎóĞÅÏ¢
-	bool TryFindDeclaration(const Anchor& anchor, uint32& index, Lexical& lexical, AbstractSpace* space, List<CompilingDeclaration, true>& declarations);//²éÕÒÊ§°Ü»áÊä³ö´íÎóĞÅÏ¢
-	bool TryFindDeclaration(const Anchor& anchor, uint32& index, List<CompilingDeclaration, true>& declarations);//²éÕÒÊ§°Ü»áÊä³ö´íÎóĞÅÏ¢
+	bool TryFindDeclaration(const Anchor& name, List<CompilingDeclaration, true>& result);//æŸ¥æ‰¾å¤±è´¥ä¸ä¼šè¾“å‡ºé”™è¯¯ä¿¡æ¯
+	bool TryFindDeclaration(const Anchor& anchor, uint32& index, Lexical& lexical, AbstractSpace* space, List<CompilingDeclaration, true>& declarations);//æŸ¥æ‰¾å¤±è´¥ä¼šè¾“å‡ºé”™è¯¯ä¿¡æ¯
+	bool TryFindDeclaration(const Anchor& anchor, uint32& index, List<CompilingDeclaration, true>& declarations);//æŸ¥æ‰¾å¤±è´¥ä¼šè¾“å‡ºé”™è¯¯ä¿¡æ¯
 	bool TryPushDeclarationsExpression(const Anchor& anchor, uint32& index, List<Expression*, true>& expressionStack, const Lexical& lexical, List<CompilingDeclaration, true>& declarations, Attribute& attribute);
 	bool TryParseBracket(const Anchor& anchor, uint32& index, SplitFlag flag, Expression*& result);
 	bool TryParseLambda(const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result);

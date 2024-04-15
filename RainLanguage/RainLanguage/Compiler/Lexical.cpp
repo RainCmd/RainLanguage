@@ -476,7 +476,7 @@ bool TryMatchNext(const Line& line, uint32 index, LexicalType type, Lexical& lex
 
 Anchor MatchStringTemplateBlock(const Anchor& segment, uint32 index, MessageCollector* message)
 {
-	ASSERT_DEBUG(segment.content[index - segment.position] == '{', "需要保留前后花括号");
+	ASSERT_DEBUG(segment.content[index - segment.position] == '{', "闇�瑕佷繚鐣欏墠鍚庤姳鎷彿");
 	uint32 start = index; index++;
 	Lexical lexical;
 	while (TryAnalysis(segment, index, lexical, message))

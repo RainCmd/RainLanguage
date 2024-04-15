@@ -56,7 +56,7 @@ public:
 		Iterator(const Set* set) :index(0), version(set->version), set(set), slot(NULL) {}
 		bool Next()
 		{
-			ASSERT(version == set->version, "µü´úÔ´ÒÑ±»ĞŞ¸Ä");
+			ASSERT(version == set->version, "è¿­ä»£æºå·²è¢«ä¿®æ”¹");
 			while(index < set->top)
 			{
 				slot = set->slots + index++;
@@ -67,7 +67,7 @@ public:
 		}
 		T& Current()
 		{
-			ASSERT(slot, "µ±Ç°ÎŞÖµ");
+			ASSERT(slot, "å½“å‰æ— å€¼");
 			return slot->value;
 		}
 	};

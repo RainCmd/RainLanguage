@@ -32,11 +32,11 @@ uint32 LibraryAgency::GetTypeStackSize(const Type& type)
 	if(IsHandleType(type)) return SIZE(Handle);
 	else if(type.code == TypeCode::Struct)
 	{
-		if(type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].size;//kernel³õÊ¼»¯µÄÊ±ºòÃ»ÔËÐÐÊ±Êý¾Ý£¬ËùÒÔÒª´ÓÔ­Ê¼Êý¾ÝÖÐÈ¡
+		if(type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].size;//kernelåˆå§‹åŒ–çš„æ—¶å€™æ²¡è¿è¡Œæ—¶æ•°æ®ï¼Œæ‰€ä»¥è¦ä»ŽåŽŸå§‹æ•°æ®ä¸­å–
 		else return GetStruct(type)->size;
 	}
 	else if(type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].size;
-	EXCEPTION("ÎÞÐ§µÄTypeCode");
+	EXCEPTION("æ— æ•ˆçš„TypeCode");
 }
 
 uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
@@ -44,12 +44,12 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 	switch(declaration.code)
 	{
 		case TypeCode::Struct:
-			if(declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[declaration.index].size;//kernel³õÊ¼»¯µÄÊ±ºòÃ»ÔËÐÐÊ±Êý¾Ý£¬ËùÒÔÒª´ÓÔ­Ê¼Êý¾ÝÖÐÈ¡
+			if(declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[declaration.index].size;//kernelåˆå§‹åŒ–çš„æ—¶å€™æ²¡è¿è¡Œæ—¶æ•°æ®ï¼Œæ‰€ä»¥è¦ä»ŽåŽŸå§‹æ•°æ®ä¸­å–
 			else return GetLibrary(declaration.library)->structs[declaration.index].size;
 		case TypeCode::Enum: return SIZE(integer);
 		case TypeCode::Handle:
 		{
-			if(declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->classes[declaration.index].size;//kernel³õÊ¼»¯µÄÊ±ºòÃ»ÔËÐÐÊ±Êý¾Ý£¬ËùÒÔÒª´ÓÔ­Ê¼Êý¾ÝÖÐÈ¡
+			if(declaration.library == LIBRARY_KERNEL) return GetKernelLibrary()->classes[declaration.index].size;//kernelåˆå§‹åŒ–çš„æ—¶å€™æ²¡è¿è¡Œæ—¶æ•°æ®ï¼Œæ‰€ä»¥è¦ä»ŽåŽŸå§‹æ•°æ®ä¸­å–
 			const RuntimeClass* runtimeClass = &GetLibrary(declaration.library)->classes[declaration.index];
 			return runtimeClass->offset + runtimeClass->size;
 		}
@@ -57,7 +57,7 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 		case TypeCode::Delegate: return GetKernelLibrary()->classes[TYPE_Delegate.index].size;
 		case TypeCode::Task: return GetKernelLibrary()->classes[TYPE_Task.index].size;
 	}
-	EXCEPTION("ÎÞÐ§µÄTypeCode");
+	EXCEPTION("æ— æ•ˆçš„TypeCode");
 }
 
 uint8 LibraryAgency::GetTypeAlignment(const Type& type)
@@ -65,17 +65,17 @@ uint8 LibraryAgency::GetTypeAlignment(const Type& type)
 	if(IsHandleType(type)) return GetKernelLibrary()->classes[TYPE_Handle.index].alignment;
 	else if(type.code == TypeCode::Struct)
 	{
-		if(type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].alignment;//kernel³õÊ¼»¯µÄÊ±ºòÃ»ÔËÐÐÊ±Êý¾Ý£¬ËùÒÔÒª´ÓÔ­Ê¼Êý¾ÝÖÐÈ¡
+		if(type.library == LIBRARY_KERNEL) return GetKernelLibrary()->structs[type.index].alignment;//kernelåˆå§‹åŒ–çš„æ—¶å€™æ²¡è¿è¡Œæ—¶æ•°æ®ï¼Œæ‰€ä»¥è¦ä»ŽåŽŸå§‹æ•°æ®ä¸­å–
 		else return GetStruct(type)->alignment;
 	}
 	else if(type.code == TypeCode::Enum) return GetKernelLibrary()->structs[TYPE_Enum.index].alignment;
-	EXCEPTION("ÎÞÐ§µÄTypeCode");
+	EXCEPTION("æ— æ•ˆçš„TypeCode");
 }
 
 RuntimeLibrary* LibraryAgency::GetLibrary(uint32 library)
 {
 	if(library == LIBRARY_KERNEL) return kernelLibrary;
-	ASSERT_DEBUG(library != INVALID && library < libraries.Count(), "ÎÞÐ§µÄ³ÌÐò¼¯ID");
+	ASSERT_DEBUG(library != INVALID && library < libraries.Count(), "æ— æ•ˆçš„ç¨‹åºé›†ID");
 	return libraries[library];
 }
 
@@ -84,54 +84,54 @@ RuntimeInfo* LibraryAgency::GetRuntimeInfo(const Type& type)
 	if(type.dimension) return GetClass(type);
 	switch(type.code)
 	{
-		case TypeCode::Invalid: EXCEPTION("ÎÞÐ§µÄÀàÐÍ");
+		case TypeCode::Invalid: EXCEPTION("æ— æ•ˆçš„ç±»åž‹");
 		case TypeCode::Struct: return GetStruct(type);
 		case TypeCode::Enum: return GetEnum(type);
 		case TypeCode::Handle: return GetClass(type);
 		case TypeCode::Interface: return GetInterface(type);
 		case TypeCode::Delegate: return GetDelegate(type);
 		case TypeCode::Task: return GetTask(type);
-		default: EXCEPTION("ÀàÐÍ´íÎó");
+		default: EXCEPTION("ç±»åž‹é”™è¯¯");
 	}
 }
 
 RuntimeEnum* LibraryAgency::GetEnum(const Type& type)
 {
-	ASSERT_DEBUG(!type.dimension && type.code == TypeCode::Enum, "¶¨ÒåÀàÐÍ¼ì²éÊ§°Ü");
+	ASSERT_DEBUG(!type.dimension && type.code == TypeCode::Enum, "å®šä¹‰ç±»åž‹æ£€æŸ¥å¤±è´¥");
 	return &GetLibrary(type.library)->enums[type.index];
 }
 
 RuntimeStruct* LibraryAgency::GetStruct(const Type& type)
 {
-	ASSERT_DEBUG(!type.dimension && type.code == TypeCode::Struct, "¶¨ÒåÀàÐÍ¼ì²éÊ§°Ü");
+	ASSERT_DEBUG(!type.dimension && type.code == TypeCode::Struct, "å®šä¹‰ç±»åž‹æ£€æŸ¥å¤±è´¥");
 	return &GetLibrary(type.library)->structs[type.index];
 }
 
 RuntimeClass* LibraryAgency::GetClass(const Type& type)
 {
 	if(type.dimension) return &GetLibrary(TYPE_Array.library)->classes[TYPE_Array.index];
-	ASSERT_DEBUG(type.code == TypeCode::Handle, "¶¨ÒåÀàÐÍ¼ì²éÊ§°Ü");
+	ASSERT_DEBUG(type.code == TypeCode::Handle, "å®šä¹‰ç±»åž‹æ£€æŸ¥å¤±è´¥");
 	return &GetLibrary(type.library)->classes[type.index];
 }
 
 RuntimeInterface* LibraryAgency::GetInterface(const Type& type)
 {
 	if(type.dimension) return &GetLibrary(TYPE_Array.library)->interfaces[TYPE_Array.index];
-	ASSERT_DEBUG(type.code == TypeCode::Interface, "¶¨ÒåÀàÐÍ¼ì²éÊ§°Ü");
+	ASSERT_DEBUG(type.code == TypeCode::Interface, "å®šä¹‰ç±»åž‹æ£€æŸ¥å¤±è´¥");
 	return &GetLibrary(type.library)->interfaces[type.index];
 }
 
 RuntimeDelegate* LibraryAgency::GetDelegate(const Type& type)
 {
 	if(type.dimension) return &GetLibrary(TYPE_Array.library)->delegates[TYPE_Array.index];
-	ASSERT_DEBUG(type.code == TypeCode::Delegate, "¶¨ÒåÀàÐÍ¼ì²éÊ§°Ü");
+	ASSERT_DEBUG(type.code == TypeCode::Delegate, "å®šä¹‰ç±»åž‹æ£€æŸ¥å¤±è´¥");
 	return &GetLibrary(type.library)->delegates[type.index];
 }
 
 RuntimeTask* LibraryAgency::GetTask(const Type& type)
 {
 	if(type.dimension) return &GetLibrary(TYPE_Array.library)->tasks[TYPE_Array.index];
-	ASSERT_DEBUG(type.code == TypeCode::Task, "¶¨ÒåÀàÐÍ¼ì²éÊ§°Ü");
+	ASSERT_DEBUG(type.code == TypeCode::Task, "å®šä¹‰ç±»åž‹æ£€æŸ¥å¤±è´¥");
 	return &GetLibrary(type.library)->tasks[type.index];
 }
 
@@ -157,7 +157,7 @@ RuntimeMemberVariable* LibraryAgency::GetMemberVariable(const MemberVariable& va
 		return &runtimeLibrary->structs[variable.declaration.index].variables[variable.variable];
 	else if(variable.declaration.code == TypeCode::Handle)
 		return &runtimeLibrary->classes[variable.declaration.index].variables[variable.variable];
-	EXCEPTION("ÀàÐÍ´íÎó");
+	EXCEPTION("ç±»åž‹é”™è¯¯");
 }
 
 RuntimeFunction* LibraryAgency::GetConstructorFunction(const MemberFunction& function)
@@ -165,7 +165,7 @@ RuntimeFunction* LibraryAgency::GetConstructorFunction(const MemberFunction& fun
 	RuntimeLibrary* runtimeLibrary = GetLibrary(function.declaration.library);
 	if(function.declaration.code == TypeCode::Handle)
 		return&runtimeLibrary->functions[runtimeLibrary->classes[function.declaration.index].constructors[function.function]];
-	EXCEPTION("ÀàÐÍ´íÎó");
+	EXCEPTION("ç±»åž‹é”™è¯¯");
 }
 
 RuntimeFunction* LibraryAgency::GetMemberFunction(const MemberFunction& function)
@@ -175,7 +175,7 @@ RuntimeFunction* LibraryAgency::GetMemberFunction(const MemberFunction& function
 		return&runtimeLibrary->functions[runtimeLibrary->structs[function.declaration.index].functions[function.function]];
 	else if(function.declaration.code == TypeCode::Handle)
 		return&runtimeLibrary->functions[runtimeLibrary->classes[function.declaration.index].functions[function.function].index];
-	EXCEPTION("ÀàÐÍ´íÎó");
+	EXCEPTION("ç±»åž‹é”™è¯¯");
 }
 
 bool LibraryAgency::TryGetSpace(const Type& type, uint32& space)
@@ -203,7 +203,7 @@ RuntimeLibrary* LibraryAgency::Load(string name, bool assert)
 			return libraries[i];
 	String libraryName = kernel->stringAgency->Get(name);
 	Library* library = (Library*)libraryLoader(RainString(libraryName.GetPointer(), libraryName.GetLength()));
-	if(assert) { ASSERT(library, "Library¼ÓÔØÊ§°Ü"); }
+	if(assert) { ASSERT(library, "LibraryåŠ è½½å¤±è´¥"); }
 	else if(!library) return NULL;
 	RuntimeLibrary* result = Load(library);
 	if(libraryUnloader) libraryUnloader(library);
@@ -219,7 +219,7 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 	for(uint32 i = 0; i < library->imports.Count(); i++)
 	{
 		RuntimeLibrary* rely = Load(kernel->stringAgency->Add(library->stringAgency->Get(library->imports[i].spaces[0].name)).index, true);
-		ASSERT(rely->kernel, "Library¿ÉÄÜ´æÔÚÑ­»·ÒÀÀµ");
+		ASSERT(rely->kernel, "Libraryå¯èƒ½å­˜åœ¨å¾ªçŽ¯ä¾èµ–");
 	}
 	result->kernel = kernel;
 	result->InitRuntimeData(library, LIBRARY_SELF);
@@ -297,9 +297,9 @@ Function LibraryAgency::GetFunction(const MemberFunction& function, Type type)
 		uint32 characteristic = GetFunctionCharacteristic(function);
 		MemberFunction result;
 		if(GetClass(type)->relocations.TryGet(characteristic, result)) return GetFunction(result);
-		else EXCEPTION("º¯ÊýÓ³ÉäÊ§°Ü");
+		else EXCEPTION("å‡½æ•°æ˜ å°„å¤±è´¥");
 	}
-	EXCEPTION("ÀàÐÍ´íÎó");
+	EXCEPTION("ç±»åž‹é”™è¯¯");
 }
 
 Function LibraryAgency::GetFunction(const MemberFunction& function)
@@ -314,7 +314,7 @@ Function LibraryAgency::GetFunction(const MemberFunction& function)
 		const RuntimeLibrary* library = GetLibrary(function.declaration.library);
 		return Function(function.declaration.library, library->classes[function.declaration.index].functions[function.function].index);
 	}
-	EXCEPTION("ÀàÐÍ´íÎó");
+	EXCEPTION("ç±»åž‹é”™è¯¯");
 }
 
 const RuntimeFunction* LibraryAgency::GetRuntimeFunction(const Function& function)
@@ -345,7 +345,7 @@ String LibraryAgency::InvokeNative(const Native& native, uint8* stack, uint32 to
 		List<RainType, true> rainTypes(info->parameters.Count());
 		for(uint32 i = 0; i < info->parameters.Count(); i++) rainTypes.Add(GetRainType(info->parameters.GetType(i)));
 		info->caller = kernel->libraryAgency->nativeCallerLoader(*kernel, RainString(fullName.GetPointer(), fullName.Count()), rainTypes.GetPointer(), rainTypes.Count());
-		ASSERT(info->caller, "±¾µØº¯Êý°ó¶¨Ê§°Ü");
+		ASSERT(info->caller, "æœ¬åœ°å‡½æ•°ç»‘å®šå¤±è´¥");
 	}
 	Caller caller(kernel, info, stack, top);
 	info->caller(*kernel, caller);
