@@ -280,7 +280,7 @@ void ArraySubExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, 1);
 	source->Generator(sourceParameter);
-	if(returns[0].dimension)//todo 检查下这边逻辑是否正确
+	if(returns[0].dimension)
 	{
 		parameter.generator->WriteCode(Instruct::HANDLE_CheckNull);
 		parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);

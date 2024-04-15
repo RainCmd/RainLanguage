@@ -12,7 +12,7 @@ inline bool TryMatch(const Type& source, const Type& target)
 	if (source == target) return true;
 	else if (source == TYPE_Array) return (bool)target.dimension;
 	else if (source == TYPE_Handle) return IsHandleType(target);
-	return source.code == TypeCode::Enum && target == TYPE_Integer;
+	return false;
 }
 
 void Invoker::ReturnTypeAssert(uint32 index, Type type) const

@@ -69,7 +69,7 @@ namespace RainLanguage
         ERROR_INTERFACE_NOT_IMPLEMENTED,        //接口未实现
         ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT,       //实现的接口函数返回值类型不一致
         ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT,          //重写的父类函数返回值类型不一致
-        ERROR_TASK_RETURN_TYPES_INCONSISTENT,                   //任务函数返回值类型不一致
+        ERROR_TASK_RETURN_TYPES_INCONSISTENT,                       //任务函数返回值类型不一致
         ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT,                //委托参数类型不一致
         ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT,                   //委托返回值类型不一致
         ERROR_INVALID_OPERATOR,                 //无效的操作
@@ -96,14 +96,14 @@ namespace RainLanguage
         ERROR_TYPE_NUMBER_ERROR,                //类型数量错误
         ERROR_ONLY_BE_USED_IN_LOOP,             //只能在循环中使用
         ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,               //不在循环中
-        ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,               //不支持用本地函数创建任务
+        ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,                   //不支持用本地函数创建任务
         ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,                       //不支持的特殊函数
 
         WARRING_LEVEL1 = RainErrorLevel.WarringLevel1 << 24,
         WARRING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
         WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,   //析构函数属性将被丢弃
         WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,   //析构函数的可访问性修饰会被忽略
-        WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
+        WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,  //单独的类型表达式
 
         WARRING_LEVEL2 = RainErrorLevel.WarringLevel2 << 24,
 
@@ -116,11 +116,14 @@ namespace RainLanguage
         LOGGER_LEVEL1_REPEATED_ATTRIBUTE,       //重复的属性
 
         LOGGER_LEVEL2 = RainErrorLevel.LoggerLevel2 << 24,
-        LOGGER_LEVEL4_DISCARDED_EXPRESSION,     //丢弃的表达式
-        LOGGER_LEVEL4_INACCESSIBLE_STATEMENT,   //无法访问的语句
+        LOGGER_LEVEL2_DISCARDED_EXPRESSION,     //丢弃的表达式
+        LOGGER_LEVEL2_INACCESSIBLE_STATEMENT,   //无法访问的语句
+        LOGGER_LEVEL2_UNUSED_VARIABLE,          //未使用的变量
+        LOGGER_LEVEL2_UNINITIALIZED_VARIABLE,   //未初始化的变量
 
         LOGGER_LEVEL3 = RainErrorLevel.LoggerLevel3 << 24,
-        LOGGER_LEVEL4_MISSING_VISIBILITY,       //可访问性修饰缺失，将使用默认可访问性修饰
+        LOGGER_LEVEL3_HIDES_PREVIOUS_IDENTIFIER,//声明的局部变量隐藏了之前的局部变量
+        LOGGER_LEVEL3_MISSING_VISIBILITY,       //可访问性修饰缺失，将使用默认可访问性修饰
 
         LOGGER_LEVEL4 = RainErrorLevel.LoggerLevel4 << 24,
         LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION,            //未处理的核心特殊函数

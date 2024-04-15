@@ -21,7 +21,7 @@ public:
 	BlockStatement* tryBlock;
 	List<CatchExpressionBlock> catchBlocks;
 	BlockStatement* finallyBlock;
-	uint32 localExitCode, localFinallyTarget;//todo 检查下这两玩意是在哪赋值的，防止误触发变量名重复的日志
+	uint32 localExitCode, localFinallyTarget;
 	CodeLocalAddressReference* breakAddress, * loopAddress;
 	TryStatement(const Anchor& anchor, LocalContext* localContext);
 	inline void SetJumpTarget(CodeLocalAddressReference* targetBreakAddress, CodeLocalAddressReference* targetLoopAddress) { breakAddress = targetBreakAddress; loopAddress = targetLoopAddress; }

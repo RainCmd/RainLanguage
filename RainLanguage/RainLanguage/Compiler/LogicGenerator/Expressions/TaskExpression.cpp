@@ -90,7 +90,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, Expression* parame
 			{
 				parameter.generator->WriteCode((uint8)BaseType::Enum);
 				parameter.generator->WriteCode(parametersParameter.results[i], VariableAccessType::Read);
-				parameter.generator->WriteCode((Declaration)parameterType);//todo 检查下这里是否有必要加这个东西
+				parameter.generator->WriteCode((Declaration)parameterType);
 			}
 			else if (parameterType.code == TypeCode::Struct)
 			{
