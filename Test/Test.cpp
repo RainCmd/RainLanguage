@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <string>
 #include <locale>
 #include <codecvt>
@@ -176,8 +176,8 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 {
 	wstring str;
 	str.assign(message.value, message.length);
-	wcout << L"Òì³£ÐÅÏ¢:" << str << "\n";
-	wcout << L"¶ÑÕ»:\n";
+	wcout << L"å¼‚å¸¸ä¿¡æ¯:" << str << "\n";
+	wcout << L"å †æ ˆ:\n";
 	for(uint32 i = 0; i < stackFrameCount; i++)
 	{
 		str.assign(stackFrames[i].libraryName.value, stackFrames[i].libraryName.length);
@@ -242,7 +242,7 @@ void TestFunc()
 		}
 		else
 		{
-			wcout << "ÎÞÐ§µÄRainFunction\n";
+			wcout << "æ— æ•ˆçš„RainFunction\n";
 		}
 		delete kernel;
 	}
@@ -258,8 +258,8 @@ int main()
 
 	ClearStaticCache();
 
-	cout << "\n\n\nÉêÇëµÄÄÚ´æ×ÜÊý£º" << midx << "\n";
-	cout << "Î´ÊÍ·ÅµÄÄÚ´æË÷ÒýÁÐ±í:\n";
+	cout << "\n\n\nç”³è¯·çš„å†…å­˜æ€»æ•°ï¼š" << midx << "\n";
+	cout << "æœªé‡Šæ”¾çš„å†…å­˜ç´¢å¼•åˆ—è¡¨:\n";
 	for(auto it = mmap.begin(); it != mmap.end(); it++)
 		if(it->second >= 0)
 			cout << it->second << "\n";
