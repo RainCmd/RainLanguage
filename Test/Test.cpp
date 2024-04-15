@@ -253,7 +253,7 @@ void TestFunc()
 int main()
 {
 	SetMemoryAllocator(ALLOC, FREE, REALLOC);
-	wcout.imbue(locale("zh_CN.UTF-8"));
+	wcout.imbue(locale("zh_CN"));
 	TestFunc();
 
 	ClearStaticCache();

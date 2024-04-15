@@ -30,7 +30,6 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 				parameter.databaseGenerator->AddStatement(parameter.generator, catchBlock->exitcode->anchor.line);
 				if (ContainAny(catchBlock->exitcode->attribute, Attribute::Value))
 				{
-					//todo 
 					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);
 					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
 					catchBlock->exitcode->Generator(logicParameter);
@@ -46,7 +45,7 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 					parameter.generator->WriteCode(&nextCatchAddress);
 					catchBlock->catchBlock->Generator(catchBlockParameter);
 					parameter.generator->WriteCode(Instruct::BASE_Jump);
-					parameter.generator->WriteCode(&finallyAddress);
+					parameter.generator->WriteCode(finallyAddress);
 				}
 				else if (ContainAny(catchBlock->exitcode->attribute, Attribute::Assignable))
 				{
@@ -63,7 +62,7 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 			parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 			if (i == catchBlocks.Count() - 1) nextCatchAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 			parameter.generator->WriteCode(Instruct::BASE_Jump);
-			parameter.generator->WriteCode(&finallyAddress);
+			parameter.generator->WriteCode(finallyAddress);
 			if (i < catchBlocks.Count() - 1) nextCatchAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		}
 	}
