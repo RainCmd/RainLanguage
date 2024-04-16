@@ -93,6 +93,7 @@ void Task::Run()
 	cacheData[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:
+	pointer = POINTER;
 	switch((Instruct)*instruct)
 	{
 #pragma region Base
@@ -172,7 +173,7 @@ label_next_instruct:
 		case Instruct::BASE_JumpVariableAddress:
 		{
 			uint32 address = INSTRUCT_VALUE(uint32, 1);
-			instruct += VARIABLE(uint32, address);
+			instruct = kernel->libraryAgency->code.GetPointer() + VARIABLE(uint32, address);
 		}
 		goto label_next_instruct;
 		case Instruct::BASE_ConditionJump:
@@ -1151,6 +1152,13 @@ label_next_instruct:
 		}
 		goto label_next_instruct;
 #pragma region C2V
+		case Instruct::ASSIGNMENT_Address2Variable:
+		{
+			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);
+			VARIABLE(uint32, addressValue) = POINTER + INSTRUCT_VALUE(uint32, 5);
+			instruct += 9;
+		}
+		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Const2Variable_1:
 		{
 			uint32 addressValue = INSTRUCT_VALUE(uint32, 1);

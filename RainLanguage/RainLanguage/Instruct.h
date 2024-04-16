@@ -70,6 +70,7 @@ enum class Instruct                         //可能会抛异常的指令
     #pragma region assignment
     ASSIGNMENT_Box,
     ASSIGNMENT_Unbox,                       //exception
+    ASSIGNMENT_Address2Variable,
     ASSIGNMENT_Const2Variable_1,
     ASSIGNMENT_Const2Variable_2,
     ASSIGNMENT_Const2Variable_4,

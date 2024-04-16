@@ -44,8 +44,6 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 					parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
 					parameter.generator->WriteCode(&nextCatchAddress);
 					catchBlock->catchBlock->Generator(catchBlockParameter);
-					parameter.generator->WriteCode(Instruct::BASE_Jump);
-					parameter.generator->WriteCode(finallyAddress);
 				}
 				else if (ContainAny(catchBlock->exitcode->attribute, Attribute::Assignable))
 				{
@@ -60,10 +58,7 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 			else catchBlock->catchBlock->Generator(catchBlockParameter);
 			parameter.generator->WriteCode(Instruct::STRING_Release);
 			parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
-			if (i == catchBlocks.Count() - 1) nextCatchAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-			parameter.generator->WriteCode(Instruct::BASE_Jump);
-			parameter.generator->WriteCode(finallyAddress);
-			if (i < catchBlocks.Count() - 1) nextCatchAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+			nextCatchAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		}
 	}
 	return exitCode;
@@ -86,36 +81,48 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 		tryBlock->InitJumpTarget(&tryBreakAddress, &tryLoopAddress);
 
 		CodeLocalAddressReference finallyAddress = CodeLocalAddressReference();
+		CodeLocalAddressReference tryBlockExceptionAddress = CodeLocalAddressReference();
 		StatementGeneratorParameter tryBlockParameter = StatementGeneratorParameter(parameter);
-		tryBlockParameter.finallyAddress = new CodeLocalAddressReference();
+		tryBlockParameter.finallyAddress = &tryBlockExceptionAddress;
 		tryBlock->Generator(tryBlockParameter);
-		parameter.generator->WriteCode(Instruct::BASE_Jump);
-		parameter.generator->WriteCode(&finallyAddress);
-
-		LogicVariable exitCode = GeneratorCatchBlocks(parameter, &finallyAddress);
-
 		LogicVariable finallyTarget = parameter.variableGenerator->GetLocal(parameter.manager, localFinallyTarget, TYPE_Integer);
-
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_4);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Address2Variable);
 		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Write);
 		parameter.generator->WriteCode(&tryEndAddress);
 		parameter.generator->WriteCode(Instruct::BASE_Jump);
 		parameter.generator->WriteCode(&finallyAddress);
 		tryBreakAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_4);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Address2Variable);
 		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Write);
 		parameter.generator->WriteCode(this->breakAddress);
 		parameter.generator->WriteCode(Instruct::BASE_Jump);
 		parameter.generator->WriteCode(&finallyAddress);
 		tryLoopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_4);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Address2Variable);
 		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Write);
 		parameter.generator->WriteCode(this->loopAddress);
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&finallyAddress);
+
+		tryBlockExceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+
+		CodeLocalAddressReference catchBlockExceptionAddress = CodeLocalAddressReference();
+		LogicVariable exitCode = GeneratorCatchBlocks(parameter, &catchBlockExceptionAddress);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Address2Variable);
+		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Write);
+		parameter.generator->WriteCode(&tryEndAddress);
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&finallyAddress);
+		catchBlockExceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		parameter.generator->WriteCode(Instruct::BASE_PushExitMessage);
+		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 
 		finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		if (finallyBlock) finallyBlock->Generator(parameter);
 		parameter.generator->WriteCode(Instruct::BASE_PopExitMessage);
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
+		parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+		parameter.generator->WriteCode(parameter.finallyAddress);
 		parameter.generator->WriteCode(Instruct::BASE_JumpVariableAddress);
 		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Read);
 		tryEndAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
@@ -130,14 +137,22 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(&finallyAddress);
 		tryBlockParameter.finallyAddress->SetAddress(parameter.generator, parameter.generator->GetPointer());
 
-		LogicVariable exitCode = GeneratorCatchBlocks(parameter, &finallyAddress);
+		CodeLocalAddressReference catchBlockExceptionAddress = CodeLocalAddressReference();
+		LogicVariable exitCode = GeneratorCatchBlocks(parameter, &catchBlockExceptionAddress);
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&finallyAddress);
+		catchBlockExceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		parameter.generator->WriteCode(Instruct::BASE_PushExitMessage);
+		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 
 		finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		if (finallyBlock) finallyBlock->Generator(parameter);
 		parameter.generator->WriteCode(Instruct::BASE_PopExitMessage);
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
+		parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
-	else EXCEPTION("Óï¾äÂß¼­ÓÐbug");
+	else EXCEPTION("语句逻辑有bug");
 }
 
 TryStatement::~TryStatement()
