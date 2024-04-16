@@ -229,7 +229,7 @@ void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parame
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	CodeLocalAddressReference clearAddress = CodeLocalAddressReference();
-	parameter.generator->WriteCode(Instruct::BASE_NullJump);
+	parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 	parameter.generator->WriteCode(arrayParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(&clearAddress);
 	LogicGenerateParameter indexParameter = LogicGenerateParameter(parameter, 1);
@@ -308,7 +308,7 @@ void ArrayQuestionSubExpression::Generator(LogicGenerateParameter& parameter)
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, 1);
 	source->Generator(sourceParameter);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
-	parameter.generator->WriteCode(Instruct::BASE_NullJump);
+	parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 	parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(&endAddress);
 	LogicGenerateParameter rangeParameter = LogicGenerateParameter(parameter, 2);

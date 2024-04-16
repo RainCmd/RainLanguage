@@ -93,7 +93,6 @@ void Task::Run()
 	cacheData[1] = stack + bottom;
 	uint8* instruct = kernel->libraryAgency->code.GetPointer() + pointer;
 label_next_instruct:
-	pointer = POINTER;
 	switch((Instruct)*instruct)
 	{
 #pragma region Base
@@ -139,6 +138,15 @@ label_next_instruct:
 				}
 			}
 			goto label_next_instruct;
+		case Instruct::BASE_WaitFlag:
+			if(!flag)
+			{
+				if(ignoreWait) EXCEPTION_EXIT(BASE_WaitFlag, EXCEPTION_IGNORE_WAIT_BUT_CONDITION_NOT_VAILD);
+				instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
+				goto label_exit;
+			}
+			EXCEPTION_JUMP(4, BASE_WaitFlag);
+			goto label_next_instruct;
 		case Instruct::BASE_WaitTask:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
@@ -176,11 +184,15 @@ label_next_instruct:
 			instruct = kernel->libraryAgency->code.GetPointer() + VARIABLE(uint32, address);
 		}
 		goto label_next_instruct;
-		case Instruct::BASE_ConditionJump:
+		case Instruct::BASE_JumpFlag:
 			if(flag) instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
 			else instruct += 5;
 			goto label_next_instruct;
-		case Instruct::BASE_NullJump:
+		case Instruct::BASE_JumpNotFlag:
+			if(flag) instruct += 5;
+			else instruct = kernel->libraryAgency->code.GetPointer() + (POINTER + INSTRUCT_VALUE(uint32, 1));
+			goto label_next_instruct;
+		case Instruct::BASE_JumpNull:
 		{
 			uint32 address = INSTRUCT_VALUE(uint32, 1);
 			if(VARIABLE(Handle, address)) instruct += 9;

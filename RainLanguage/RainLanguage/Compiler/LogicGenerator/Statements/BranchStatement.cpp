@@ -15,15 +15,19 @@ void BranchStatement::Generator(StatementGeneratorParameter& parameter)
 	block.Finish();
 
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
-	CodeLocalAddressReference trueAddress = CodeLocalAddressReference();
+	CodeLocalAddressReference elseAddress = CodeLocalAddressReference();
 
-	parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
-	parameter.generator->WriteCode(&trueAddress);
-	if (falseBranch) falseBranch->Generator(parameter);
-	parameter.generator->WriteCode(Instruct::BASE_Jump);
-	parameter.generator->WriteCode(&endAddress);
-	trueAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
+	if(falseBranch) parameter.generator->WriteCode(&elseAddress);
+	else parameter.generator->WriteCode(&endAddress);
 	if(trueBranch) trueBranch->Generator(parameter);
+	if(falseBranch)
+	{
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&endAddress);
+		elseAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		falseBranch->Generator(parameter);
+	}
 	endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 

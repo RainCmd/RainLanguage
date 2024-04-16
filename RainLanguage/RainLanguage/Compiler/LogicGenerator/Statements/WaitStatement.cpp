@@ -11,12 +11,14 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 		LogicGenerateParameter logicParamter = LogicGenerateParameter(parameter, 1);
 		if (expression->returns.Peek() == TYPE_Bool)
 		{
-			uint32 address = parameter.generator->GetPointer();
+			CodeLocalAddressReference loopAddress = CodeLocalAddressReference();
+			loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 			expression->Generator(logicParamter);
 			parameter.generator->WriteCode(Instruct::BASE_Flag);
 			parameter.generator->WriteCode(logicParamter.results[0], VariableAccessType::Read);
-			parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
-			parameter.generator->WriteCode(address - parameter.generator->GetPointer());
+			parameter.generator->WriteCode(Instruct::BASE_WaitFlag);
+			parameter.generator->WriteCode(&loopAddress);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		else if (expression->returns.Peek() == TYPE_Integer)
 		{

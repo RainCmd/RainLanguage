@@ -40,7 +40,7 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 	{
 		if (question)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_NullJump);
+			parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 			parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(&endAddress);
 		}
@@ -73,7 +73,7 @@ void VirtualFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& 
 	{
 		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 		parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
-		parameter.generator->WriteCode(Instruct::BASE_NullJump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 		parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(&endAddress);
 	}

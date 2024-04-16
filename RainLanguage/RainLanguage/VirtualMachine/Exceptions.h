@@ -18,5 +18,6 @@ constexpr auto EXCEPTION_STACK_OVERFLOW = TEXT("栈溢出");
 constexpr auto EXCEPTION_ASSIGNMENT_READONLY_VARIABLE = TEXT("赋值只读变量");
 constexpr auto EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH = TEXT("参数列表不匹配");
 constexpr auto EXCEPTION_RETURN_LIST_DOES_NOT_MATCH = TEXT("返回值列表不匹配");
+constexpr auto EXCEPTION_IGNORE_WAIT_BUT_CONDITION_NOT_VAILD = TEXT("忽略等待的任务中出现了等待一个条件不成立的语句");
 constexpr auto EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED = TEXT("忽略等待的任务中出现了等待一个未完成的任务");
 constexpr auto EXCEPTION_KERNEL_EXIT = TEXT("虚拟机被关闭");

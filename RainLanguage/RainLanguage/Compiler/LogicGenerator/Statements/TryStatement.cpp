@@ -34,14 +34,14 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
 					catchBlock->exitcode->Generator(logicParameter);
 					LogicVariable isCatch = parameter.variableGenerator->DecareTemporary(parameter.manager, TYPE_Bool);
-					parameter.generator->WriteCode(Instruct::STRING_NotEquals);
+					parameter.generator->WriteCode(Instruct::STRING_Equals);
 					parameter.generator->WriteCode(isCatch, VariableAccessType::Write);
 					parameter.generator->WriteCode(exitCode, VariableAccessType::Read);
 					parameter.generator->WriteCode(logicParameter.results[0], VariableAccessType::Read);
 					parameter.generator->WriteCode(Instruct::BASE_Flag);
 					parameter.generator->WriteCode(isCatch, VariableAccessType::Read);
 					block.Finish();
-					parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
+					parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 					parameter.generator->WriteCode(&nextCatchAddress);
 					catchBlock->catchBlock->Generator(catchBlockParameter);
 				}

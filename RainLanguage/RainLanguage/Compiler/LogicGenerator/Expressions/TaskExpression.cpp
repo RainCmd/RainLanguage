@@ -116,7 +116,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression*
 		invokerExpression->invoker->Generator(invokerParameter);
 		if (invokerExpression->question)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_NullJump);
+			parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 			parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(&endAddress);
 		}
@@ -196,7 +196,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression*
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Const2Variable_HandleNull);
 			parameter.generator->WriteCode(result, VariableAccessType::Write);
-			parameter.generator->WriteCode(Instruct::BASE_NullJump);
+			parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 			parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(&endAddress);
 		}

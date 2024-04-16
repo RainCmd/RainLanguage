@@ -250,7 +250,7 @@ void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& paramet
 	target->Generator(targetParameter);
 	CodeLocalAddressReference endAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference nullAddress = CodeLocalAddressReference();
-	parameter.generator->WriteCode(Instruct::BASE_NullJump);
+	parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(&nullAddress);
 	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), targetParameter.results[0], declaration, 0, parameter.finallyAddress);

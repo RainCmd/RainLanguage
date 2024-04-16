@@ -20,18 +20,14 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 	if (condition)
 	{
 		parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line);
-		CodeLocalAddressReference blockAddress = CodeLocalAddressReference();
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 		condition->Generator(logicParameter);
 		parameter.generator->WriteCode(Instruct::BASE_Flag);
 		parameter.generator->WriteCode(logicParameter.results[0], VariableAccessType::Read);
 		block.Finish();
-		parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
-		parameter.generator->WriteCode(&blockAddress);
-		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 		parameter.generator->WriteCode(&elseAddress);
-		blockAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
 	if (loopBlock) loopBlock->Generator(parameter);
 	if (back)

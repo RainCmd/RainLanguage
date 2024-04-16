@@ -9,14 +9,16 @@ enum class Instruct                         //可能会抛异常的指令
     BASE_ExitJump,                          //exception
     BASE_Wait,
     BASE_WaitFrame,
+    BASE_WaitFlag,
     BASE_WaitTask,                          //exception
     BASE_WaitBack,                          //exception
     BASE_Stackzero,
     BASE_Datazero,
     BASE_Jump,
     BASE_JumpVariableAddress,
-    BASE_ConditionJump,
-    BASE_NullJump,
+    BASE_JumpFlag,
+    BASE_JumpNotFlag,
+    BASE_JumpNull,
     BASE_Flag,
 
     BASE_CreateObject,

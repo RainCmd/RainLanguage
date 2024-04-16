@@ -75,13 +75,9 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(parameter.finallyAddress);
 	if (local)
 	{
-		CodeLocalAddressReference assignmentAddress = CodeLocalAddressReference();
 		CodeLocalAddressReference endAddress = CodeLocalAddressReference();
-		parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
-		parameter.generator->WriteCode(&assignmentAddress);
-		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 		parameter.generator->WriteCode(&endAddress);
-		assignmentAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 		LogicGenerateParameter localParameter = LogicGenerateParameter(parameter, 1);
 		local->Generator(localParameter);
 		if (IsHandleType(targetType))

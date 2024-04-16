@@ -94,7 +94,7 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 	if (question)
 	{
 		CodeLocalAddressReference invokAddress = CodeLocalAddressReference();
-		parameter.generator->WriteCode(Instruct::BASE_NullJump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 		parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(&clearResultsAddress);
 	}
@@ -181,7 +181,7 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	if (declaration.category != DeclarationCategory::StructFunction)
 		if (question)
 		{
-			parameter.generator->WriteCode(Instruct::BASE_NullJump);
+			parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 			parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 			parameter.generator->WriteCode(&clearResultsAddress);
 		}
@@ -235,7 +235,7 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	target->Generator(targetParameter);
 	if (question)
 	{
-		parameter.generator->WriteCode(Instruct::BASE_NullJump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpNull);
 		parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCode(&clearResultsAddress);
 	}

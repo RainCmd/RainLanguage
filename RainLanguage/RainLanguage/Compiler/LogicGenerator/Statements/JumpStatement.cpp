@@ -14,7 +14,7 @@ void JumpStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(Instruct::BASE_Flag);
 		parameter.generator->WriteCode(logicParameter.results[0], VariableAccessType::Read);
 		block.Finish();
-		parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpFlag);
 	}
 	else parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(targetAddress);

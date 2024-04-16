@@ -13,18 +13,14 @@ void WhileStatement::Generator(StatementGeneratorParameter& parameter)
 	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	if (condition)
 	{
-		CodeLocalAddressReference loopBlockAddress = CodeLocalAddressReference();
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 		condition->Generator(logicParameter);
 		parameter.generator->WriteCode(Instruct::BASE_Flag);
 		parameter.generator->WriteCode(logicParameter.results[0], VariableAccessType::Read);
 		block.Finish();
-		parameter.generator->WriteCode(Instruct::BASE_ConditionJump);
-		parameter.generator->WriteCode(&loopBlockAddress);
-		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 		parameter.generator->WriteCode(&elseAddress);
-		loopBlockAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
 	if (loopBlock) loopBlock->Generator(parameter);
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
