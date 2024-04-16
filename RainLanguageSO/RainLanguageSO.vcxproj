@@ -578,6 +578,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ArrayExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.cpp" />
@@ -676,6 +677,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ArrayExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\BlurryExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\CastExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ConstantExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\DelegateCreateExpression.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\EnumExpression.h" />

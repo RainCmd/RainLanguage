@@ -1,4 +1,4 @@
-namespace kernel
+﻿namespace kernel
 	public enum TaskState
 		Unstart
 		Running
@@ -61,17 +61,17 @@ namespace kernel
 		public handle StartTask(Reflection.MemberFunction function, handle target, handle[] parameters)		//创建并执行一个任务，返回当前类型的任务对象
 		public integer GetArrayRank()
 		public type GetArrayElementType()
-	public struct string							//GC字段加上自身
+	public struct string
 		public integer GetLength()
 		public integer GetStringID()
 		public bool ToBool()
 		public integer ToInteger()
 		public real ToReal()
-	public struct entity							//GC字段加上自身
+	public struct entity
 		public integer GetEntityID()
 	public class handle
-		public integer GetHandleID()
 		public string ToString()
+		public integer GetHandleID()
 		public type GetType()
 	public class interface handle
 	public class delegate handle
@@ -134,12 +134,12 @@ namespace kernel
 	public string + (string, char)
 	public string + (string, integer)
 	public string + (string, real)
-	public string + (string, handle)		//如果通过反射调用则会对handle的ToString做实调用，这是因为子类的ToString函数中可能有wait操作，而反射逻辑是在c++中执行的，无法保存执行栈来等待ToString返回
+	public string + (string, handle)
 	public string + (bool, string)
 	public string + (char, string)
 	public string + (integer, string)
 	public string + (real, string)
-	public string + (handle, string)		//如果通过反射调用则会对handle的ToString做实调用，这是因为子类的ToString函数中可能有wait操作，而反射逻辑是在c++中执行的，无法保存执行栈来等待ToString返回
+	public string + (handle, string)
 	public integer - (integer, integer)
 	public real - (real, real)
 	public real2 - (real2, real2)
