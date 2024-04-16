@@ -353,7 +353,7 @@ void Invoker::Start(bool immediately, bool ignoreWait)
 void Invoker::Abort(const character* chars, uint32 length)
 {
 	String message = kernel->stringAgency->Add(chars, length);
-	if (message.IsEmpty())return;
+	if (message.IsEmpty()) return;
 	StateAssert(InvokerState::Running);
 	task->exitMessage = message;
 	state = InvokerState::Aborted;

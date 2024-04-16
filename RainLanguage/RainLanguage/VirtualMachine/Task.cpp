@@ -2642,6 +2642,8 @@ void Task::Abort()
 {
 	if(pointer != INVALID) switch(kernel->libraryAgency->code[pointer])
 	{
+		case (uint8)Instruct::BASE_WaitFlag:
+		case (uint8)Instruct::BASE_WaitTask:
 		case (uint8)Instruct::BASE_WaitBack:
 			pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 1);
 			Run();

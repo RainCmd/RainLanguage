@@ -40,7 +40,7 @@ public:
 		if (wait > 0)wait--;
 		else Run();
 	}
-	inline bool IsRunning() { return exitMessage.IsEmpty() && pointer != INVALID; }
+	inline bool IsRunning() const { return exitMessage.IsEmpty() && pointer != INVALID; }
 	void Abort();
 	void Recycle();
 	~Task();

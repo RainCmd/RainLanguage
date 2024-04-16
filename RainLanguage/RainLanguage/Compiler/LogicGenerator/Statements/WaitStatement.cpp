@@ -25,6 +25,8 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 			expression->Generator(logicParamter);
 			parameter.generator->WriteCode(Instruct::BASE_WaitFrame);
 			parameter.generator->WriteCode(logicParamter.results[0], VariableAccessType::Read);
+			parameter.generator->WriteCode(Instruct::BASE_WaitBack);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		else
 		{
@@ -35,9 +37,12 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 		}
 		block.Finish();
 	}
-	else parameter.generator->WriteCode(Instruct::BASE_Wait);
-	parameter.generator->WriteCode(Instruct::BASE_WaitBack);
-	parameter.generator->WriteCode(parameter.finallyAddress);
+	else
+	{
+		parameter.generator->WriteCode(Instruct::BASE_Wait);
+		parameter.generator->WriteCode(Instruct::BASE_WaitBack);
+		parameter.generator->WriteCode(parameter.finallyAddress);
+	}
 }
 
 WaitStatement::~WaitStatement()
