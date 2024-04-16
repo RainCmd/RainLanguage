@@ -75,5 +75,5 @@ public:
 	void GetReturns(const Handle results);
 	void Start(bool immediately, bool ignoreWait);
 	void Abort(const character* chars, uint32 length);
-	inline void Abort(String message) { Abort(message.GetPointer(), message.GetLength()); }
+	void Abort(String message);
 };
