@@ -223,6 +223,7 @@ enum class Instruct                         //可能会抛异常的指令
     STRING_Release,
     STRING_Element,                         //exception
     STRING_Combine,
+    STRING_Complex,
     STRING_Sub,                             //exception
     STRING_Equals,
     STRING_NotEquals,

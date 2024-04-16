@@ -159,7 +159,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter sourceParameter = LogicGenerateParameter(parameter, returns.Count());
 	for (uint32 i = 0; i < returns.Count(); i++)
-		if (!parameter.results[i].IsInvalid() && source->returns[i] == returns[i])sourceParameter.results[i] = parameter.results[i];
+		if (!parameter.results[i].IsInvalid() && source->returns[i] == returns[i]) sourceParameter.results[i] = parameter.results[i];
 		else if (source->returns[i] == TYPE_Null && parameter.results[i].IsInvalid())
 			sourceParameter.results[i] = parameter.results[i] = parameter.variableGenerator->DecareTemporary(parameter.manager, returns[i]);
 	source->Generator(sourceParameter);

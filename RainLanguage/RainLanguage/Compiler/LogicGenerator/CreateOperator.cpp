@@ -12,7 +12,7 @@
 bool TryEvaluation(Expression* parameter, bool& leftValue, bool& rightValue, LogicGenerateParameter& evaluationParameter)
 {
 	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
-	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	if(ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
 		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
@@ -23,7 +23,7 @@ bool TryEvaluation(Expression* parameter, bool& leftValue, bool& rightValue, Log
 bool TryEvaluation(Expression* parameter, integer& leftValue, integer& rightValue, LogicGenerateParameter& evaluationParameter)
 {
 	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
-	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	if(ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
 		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
@@ -34,7 +34,7 @@ bool TryEvaluation(Expression* parameter, integer& leftValue, integer& rightValu
 bool TryEvaluation(Expression* parameter, real& leftValue, real& rightValue, LogicGenerateParameter& evaluationParameter)
 {
 	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
-	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	if(ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
 		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
@@ -45,7 +45,7 @@ bool TryEvaluation(Expression* parameter, real& leftValue, real& rightValue, Log
 bool TryEvaluation(Expression* parameter, String& leftValue, String& rightValue, LogicGenerateParameter& evaluationParameter)
 {
 	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
-	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	if(ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
 		return tuple->expressions.Count() == 2 && tuple->expressions[0]->TryEvaluation(leftValue, evaluationParameter) && tuple->expressions[1]->TryEvaluation(rightValue, evaluationParameter);
@@ -56,22 +56,22 @@ bool TryEvaluation(Expression* parameter, String& leftValue, String& rightValue,
 void CheckSecondZero(Expression* parameter, ExpressionParser* parser)
 {
 	ASSERT_DEBUG(parameter->returns.Count() == 2, "表达式返回值数量不对");
-	if (ContainAny(parameter->type, ExpressionType::TupleExpression))
+	if(ContainAny(parameter->type, ExpressionType::TupleExpression))
 	{
 		TupleExpression* tuple = (TupleExpression*)parameter;
-		for (uint32 i = 0, returnIndex = 0; i < tuple->expressions.Count() && returnIndex < 2; i++)
+		for(uint32 i = 0, returnIndex = 0; i < tuple->expressions.Count() && returnIndex < 2; i++)
 		{
-			if (returnIndex == 1)
+			if(returnIndex == 1)
 			{
-				if (tuple->returns[1] == TYPE_Integer)
+				if(tuple->returns[1] == TYPE_Integer)
 				{
 					integer value;
-					if (tuple->expressions[1]->TryEvaluation(value, parser->evaluationParameter) && value == 0) MESSAGE2(parser->manager->messages, tuple->expressions[i]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					if(tuple->expressions[1]->TryEvaluation(value, parser->evaluationParameter) && value == 0) MESSAGE2(parser->manager->messages, tuple->expressions[i]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 				}
-				else if (tuple->returns[1] == TYPE_Real)
+				else if(tuple->returns[1] == TYPE_Real)
 				{
 					real value;
-					if (tuple->expressions[1]->TryEvaluation(value, parser->evaluationParameter) && value == 0) MESSAGE2(parser->manager->messages, tuple->expressions[i]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
+					if(tuple->expressions[1]->TryEvaluation(value, parser->evaluationParameter) && value == 0) MESSAGE2(parser->manager->messages, tuple->expressions[i]->anchor, MessageType::ERROR_DIVISION_BY_ZERO);
 				}
 				break;
 			}
@@ -86,26 +86,26 @@ Expression* CreateLessOperator(const Anchor& anchor, ExpressionParser* parser, E
 	String name = parser->manager->stringAgency->Add(TEXT("<"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue < rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Less, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue < rightValue);
@@ -128,26 +128,26 @@ Expression* CreateGreaterOperator(const Anchor& anchor, ExpressionParser* parser
 	String name = parser->manager->stringAgency->Add(TEXT(">"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue > rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Grater, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue > rightValue);
@@ -170,26 +170,26 @@ Expression* CreateLessEqualsOperator(const Anchor& anchor, ExpressionParser* par
 	String name = parser->manager->stringAgency->Add(TEXT("<="));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_Equals_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_Equals_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue <= rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_LessThanOrEquals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_Equals_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Less_Equals_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue <= rightValue);
@@ -212,26 +212,26 @@ Expression* CreateGreaterEqualsOperator(const Anchor& anchor, ExpressionParser* 
 	String name = parser->manager->stringAgency->Add(TEXT(">="));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_Equals_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_Equals_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue >= rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_GraterThanOrEquals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_Equals_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Greater_Equals_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue >= rightValue);
@@ -254,63 +254,63 @@ Expression* CreateEqualsOperator(const Anchor& anchor, ExpressionParser* parser,
 	String name = parser->manager->stringAgency->Add(TEXT("=="));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_bool_bool)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_Equals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_integer_integer)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Equals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Equals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_string_string)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Equals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Equals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Equals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_string_string)
 				{
 					String leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue == rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Equals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_handle_handle)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_handle_handle)
 				{
-					if (CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_Equals, parameter);
+					if(CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_Equals, parameter);
 					MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
 					goto lable_equals_error;
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_entity_entity) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::ENTITY_Equals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_delegate_delegate) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::DELEGATE_Equals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_entity_entity) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::ENTITY_Equals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Equals_delegate_delegate) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::DELEGATE_Equals, parameter);
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -328,63 +328,63 @@ Expression* CreateNotEqualsOperator(const Anchor& anchor, ExpressionParser* pars
 	String name = parser->manager->stringAgency->Add(TEXT("!="));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_bool_bool)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_NotEquals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_integer_integer)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_NotEquals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_NotEquals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_string_string)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_NotEquals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_NotEquals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_NotEquals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_string_string)
 				{
 					String leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue != rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_NotEquals, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_handle_handle)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_handle_handle)
 				{
-					if (CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_NotEquals, parameter);
+					if(CheckEquals(parser->manager, parameter->returns[0], parameter->returns[1])) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::HANDLE_NotEquals, parameter);
 					MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_INVALID_OPERATOR);
 					goto lable_not_equals_error;
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_entity_entity) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::ENTITY_NotEquals, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_delegate_delegate) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::DELEGATE_NotEquals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_entity_entity) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::ENTITY_NotEquals, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_Equals_delegate_delegate) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::DELEGATE_NotEquals, parameter);
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -402,26 +402,26 @@ Expression* CreateBitAndOperator(const Anchor& anchor, ExpressionParser* parser,
 	String name = parser->manager->stringAgency->Add(TEXT("&"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_And_bool_bool)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_And_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue & rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_And, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_And_integer_integer)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_And_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue & rightValue);
@@ -444,26 +444,26 @@ Expression* CreateBitOrOperator(const Anchor& anchor, ExpressionParser* parser, 
 	String name = parser->manager->stringAgency->Add(TEXT("|"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Or_bool_bool)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Or_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue | rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_Or, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Or_integer_integer)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Or_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue | rightValue);
@@ -486,26 +486,26 @@ Expression* CreateBitXorOperator(const Anchor& anchor, ExpressionParser* parser,
 	String name = parser->manager->stringAgency->Add(TEXT("^"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Xor_bool_bool)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Xor_bool_bool)
 				{
 					bool leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, leftValue ^ rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::BOOL_Xor, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Xor_integer_integer)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Xor_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue ^ rightValue);
@@ -528,16 +528,16 @@ Expression* CreateShiftLeftOperator(const Anchor& anchor, ExpressionParser* pars
 	String name = parser->manager->stringAgency->Add(TEXT("<<"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Left_Shift_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Left_Shift_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue << rightValue);
@@ -560,16 +560,16 @@ Expression* CreateShiftRightOperator(const Anchor& anchor, ExpressionParser* par
 	String name = parser->manager->stringAgency->Add(TEXT(">>"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Right_Shift_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Right_Shift_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue >> rightValue);
@@ -592,39 +592,39 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, E
 	String name = parser->manager->stringAgency->Add(TEXT("+"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue + rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Plus, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue + rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Plus, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Plus, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Plus, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Plus, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_string_string)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Plus, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Plus, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Plus, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Plus_string_string)
 				{
 					String leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantStringExpression(anchor, leftValue + rightValue);
@@ -637,43 +637,7 @@ Expression* CreatePlusOperator(const Anchor& anchor, ExpressionParser* parser, E
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 		}
 	}
-	else
-	{
-		TupleExpression* tupleExpression = (TupleExpression*)parameter;
-		Expression* left = tupleExpression->expressions[0];
-		Expression* right = tupleExpression->expressions[1];
-		if (left->returns.Peek() == TYPE_String)
-		{
-			if (ContainAll(right->attribute, Attribute::Value))
-			{
-				if (!right->returns.Peek().dimension && right->returns.Peek().code == TypeCode::Enum)
-				{
-					AbstractCallable* enumToString = parser->manager->kernelLibaray->functions[parser->manager->kernelLibaray->structs[MEMBER_FUNCTION_Enum_ToString.declaration.index]->functions[MEMBER_FUNCTION_Enum_ToString.function]];
-					Expression* toStringExpression = new InvokerMemberExpression(right->anchor, enumToString->returns.GetTypes(), GetEmptyTupleExpression(), right, enumToString->declaration, false);
-					tupleExpression->expressions[1] = toStringExpression;
-					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);
-				}
-				MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_OPERATOR_NOT_FOUND);
-			}
-			else MESSAGE2(parser->manager->messages, right->anchor, MessageType::ERROR_INVALID_OPERATOR);
-		}
-		else if (!left->returns.Peek().dimension && left->returns.Peek().code == TypeCode::Enum)
-		{
-			if (ContainAll(right->attribute, Attribute::Value))
-			{
-				if (right->returns.Peek() == TYPE_String)
-				{
-					AbstractCallable* enumToString = parser->manager->kernelLibaray->functions[parser->manager->kernelLibaray->structs[MEMBER_FUNCTION_Enum_ToString.declaration.index]->functions[MEMBER_FUNCTION_Enum_ToString.function]];
-					Expression* toStringExpression = new InvokerMemberExpression(left->anchor, enumToString->returns.GetTypes(), GetEmptyTupleExpression(), left, enumToString->declaration, false);
-					tupleExpression->expressions[0] = toStringExpression;
-					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::STRING_Combine, parameter);
-				}
-				MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_OPERATOR_NOT_FOUND);
-			}
-			else MESSAGE2(parser->manager->messages, right->anchor, MessageType::ERROR_INVALID_OPERATOR);
-		}
-		else MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_OPERATOR_NOT_FOUND);
-	}
+	else MESSAGE2(parser->manager->messages, anchor, MessageType::ERROR_OPERATOR_NOT_FOUND);
 	delete parameter;
 	return NULL;
 }
@@ -684,35 +648,35 @@ Expression* CreateMinusOperator(const Anchor& anchor, ExpressionParser* parser, 
 	String name = parser->manager->stringAgency->Add(TEXT("-"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue - rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Minus, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue - rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Minus, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Minus, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Minus, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Minus, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Minus, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Minus, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Minus_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Minus, parameter);
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -729,41 +693,41 @@ Expression* CreateMulOperator(const Anchor& anchor, ExpressionParser* parser, Ex
 	String name = parser->manager->stringAgency->Add(TEXT("*"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_integer_integer)
 				{
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue * rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Multiply, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real)
 				{
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue * rightValue);
 					}
 					else return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Multiply, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real2_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Multiply_vr, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real3_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Multiply_vr, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real4_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Multiply_vr, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Multiply_rv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Multiply_rv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Multiply_rv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Multiply_vv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Multiply_vv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Multiply_vv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real2_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Multiply_vr, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real3_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Multiply_vr, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real4_real) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Multiply_vr, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Multiply_rv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Multiply_rv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Multiply_rv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Multiply_vv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Multiply_vv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mul_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Multiply_vv, parameter);
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -780,55 +744,55 @@ Expression* CreateDivOperator(const Anchor& anchor, ExpressionParser* parser, Ex
 	String name = parser->manager->stringAgency->Add(TEXT("/"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_integer_integer)
 				{
 					CheckSecondZero(parameter, parser);
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue / rightValue);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Divide, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real)
 				{
 					CheckSecondZero(parameter, parser);
 					real leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, leftValue / rightValue);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Divide, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real2_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real2_real)
 				{
 					CheckSecondZero(parameter, parser);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_vr, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real3_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real3_real)
 				{
 					CheckSecondZero(parameter, parser);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_vr, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real4_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real4_real)
 				{
 					CheckSecondZero(parameter, parser);
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_vr, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_rv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_rv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_rv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_vv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_vv, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_vv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_rv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_rv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_rv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real2_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Divide_vv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real3_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Divide_vv, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Div_real4_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Divide_vv, parameter);
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -845,17 +809,17 @@ Expression* CreateModOperator(const Anchor& anchor, ExpressionParser* parser, Ex
 	String name = parser->manager->stringAgency->Add(TEXT("%"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mod_integer_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Mod_integer_integer)
 				{
 					CheckSecondZero(parameter, parser);
 					integer leftValue, rightValue;
-					if (TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
+					if(TryEvaluation(parameter, leftValue, rightValue, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, leftValue % rightValue);
@@ -878,16 +842,16 @@ Expression* CreateNotOperator(const Anchor& anchor, ExpressionParser* parser, Ex
 	String name = parser->manager->stringAgency->Add(TEXT("!"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_bool)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Not_bool)
 				{
 					bool Value;
-					if (parameter->TryEvaluation(Value, parser->evaluationParameter))
+					if(parameter->TryEvaluation(Value, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantBooleanExpression(anchor, !Value);
@@ -910,16 +874,16 @@ Expression* CreateInverseOperator(const Anchor& anchor, ExpressionParser* parser
 	String name = parser->manager->stringAgency->Add(TEXT("~"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Inverse_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Inverse_integer)
 				{
 					integer Value;
-					if (parameter->TryEvaluation(Value, parser->evaluationParameter))
+					if(parameter->TryEvaluation(Value, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, ~Value);
@@ -942,13 +906,13 @@ Expression* CreatePositiveOperator(const Anchor& anchor, ExpressionParser* parse
 	String name = parser->manager->stringAgency->Add(TEXT("+"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_integer || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real2 || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real3 || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real4) return parameter;
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_integer || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real2 || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real3 || callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Positive_real4) return parameter;
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -965,35 +929,35 @@ Expression* CreateNegativeOperator(const Anchor& anchor, ExpressionParser* parse
 	String name = parser->manager->stringAgency->Add(TEXT("-"));
 	parser->context.FindOperators(parser->manager, name, declarations);
 	AbstractCallable* callable;
-	if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+	if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 	{
-		if (parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
+		if(parser->TryAssignmentConvert(parameter, callable->parameters.GetTypesSpan()))
 		{
-			if (callable->declaration.library == LIBRARY_KERNEL)
+			if(callable->declaration.library == LIBRARY_KERNEL)
 			{
-				if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_integer)
+				if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_integer)
 				{
 					integer Value;
-					if (parameter->TryEvaluation(Value, parser->evaluationParameter))
+					if(parameter->TryEvaluation(Value, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantIntegerExpression(anchor, -Value);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::INTEGER_Negative, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real)
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real)
 				{
 					real Value;
-					if (parameter->TryEvaluation(Value, parser->evaluationParameter))
+					if(parameter->TryEvaluation(Value, parser->evaluationParameter))
 					{
 						delete parameter;
 						return new ConstantRealExpression(anchor, -Value);
 					}
 					return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL_Negative, parameter);
 				}
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Negative, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Negative, parameter);
-				else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Negative, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real2) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL2_Negative, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real3) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL3_Negative, parameter);
+				else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Negative_real4) return new InstructOperationExpression(anchor, callable->returns.GetTypes(), Instruct::REAL4_Negative, parameter);
 				MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 			}
 			return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
@@ -1006,22 +970,22 @@ Expression* CreateNegativeOperator(const Anchor& anchor, ExpressionParser* parse
 
 Expression* CreateIncrementLeftOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
+	if(ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("++"));
 		parser->context.FindOperators(parser->manager, name, declarations);
 		AbstractCallable* callable;
-		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+		if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
+			if(IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
-				if (callable->declaration.library == LIBRARY_KERNEL)
+				if(callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (ContainAny(parameter->attribute, Attribute::Assignable))
+					if(ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer) return new OperationPrevIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Increment);
-						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real) return new OperationPrevIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Increment);
+						if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer) return new OperationPrevIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Increment);
+						else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real) return new OperationPrevIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Increment);
 						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
@@ -1040,22 +1004,22 @@ Expression* CreateIncrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 
 Expression* CreateDecrementLeftOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
+	if(ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("--"));
 		parser->context.FindOperators(parser->manager, name, declarations);
 		AbstractCallable* callable;
-		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+		if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
+			if(IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
-				if (callable->declaration.library == LIBRARY_KERNEL)
+				if(callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (ContainAny(parameter->attribute, Attribute::Assignable))
+					if(ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer) return new OperationPrevIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Decrement);
-						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real) return new OperationPrevIncrementExpression(anchor, TYPE_Real, parameter, Instruct::INTEGER_Decrement);
+						if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer) return new OperationPrevIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Decrement);
+						else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real) return new OperationPrevIncrementExpression(anchor, TYPE_Real, parameter, Instruct::INTEGER_Decrement);
 						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
@@ -1074,22 +1038,22 @@ Expression* CreateDecrementLeftOperator(const Anchor& anchor, ExpressionParser* 
 
 Expression* CreateIncrementRightOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
+	if(ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("++"));
 		parser->context.FindOperators(parser->manager, name, declarations);
 		AbstractCallable* callable;
-		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+		if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
+			if(IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
-				if (callable->declaration.library == LIBRARY_KERNEL)
+				if(callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (ContainAny(parameter->attribute, Attribute::Assignable))
+					if(ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer) return new OperationPostIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Increment);
-						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real) return new OperationPostIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Increment);
+						if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_integer) return new OperationPostIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Increment);
+						else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Increment_real) return new OperationPostIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Increment);
 						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}
@@ -1108,22 +1072,22 @@ Expression* CreateIncrementRightOperator(const Anchor& anchor, ExpressionParser*
 
 Expression* CreateDecrementRightOperator(const Anchor& anchor, ExpressionParser* parser, Expression* parameter)
 {
-	if (ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
+	if(ContainAny(parameter->type, ExpressionType::VariableExpression | ExpressionType::ArrayEvaluationExpression))
 	{
 		List<CompilingDeclaration, true> declarations(0);
 		String name = parser->manager->stringAgency->Add(TEXT("--"));
 		parser->context.FindOperators(parser->manager, name, declarations);
 		AbstractCallable* callable;
-		if (parser->TryGetFunction(anchor, declarations, parameter, callable))
+		if(parser->TryGetFunction(anchor, declarations, parameter, callable))
 		{
-			if (IsEquals(parameter->returns, callable->parameters.GetTypes()))
+			if(IsEquals(parameter->returns, callable->parameters.GetTypes()))
 			{
-				if (callable->declaration.library == LIBRARY_KERNEL)
+				if(callable->declaration.library == LIBRARY_KERNEL)
 				{
-					if (ContainAny(parameter->attribute, Attribute::Assignable))
+					if(ContainAny(parameter->attribute, Attribute::Assignable))
 					{
-						if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer) return new OperationPostIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Decrement);
-						else if (callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real) return new OperationPostIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Decrement);
+						if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_integer) return new OperationPostIncrementExpression(anchor, TYPE_Integer, parameter, Instruct::INTEGER_Decrement);
+						else if(callable->declaration.index == KERNEL_SPECIAL_FUNCTION_Decrement_real) return new OperationPostIncrementExpression(anchor, TYPE_Real, parameter, Instruct::REAL_Decrement);
 						MESSAGE2(parser->manager->messages, anchor, MessageType::LOGGER_LEVEL4_UNTREATED_KERNEL_SPECIAL_FUNCTION);
 						return new InvokerFunctionExpression(anchor, callable->returns.GetTypes(), parameter, callable->declaration);
 					}

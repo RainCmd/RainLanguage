@@ -72,6 +72,7 @@ enum class ExpressionType :uint64
 	QuestionExpression = 1ull << 59,
 	ConstantTypeExpression = 1ull << 60,
 	ExpressionReferenceExpression = 1ull << 61,
+	ComplexStringExpression = 1ull << 62,
 };
 ENUM_FLAG_OPERATOR(ExpressionType)
 

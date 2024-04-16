@@ -2147,12 +2147,6 @@ String entity_GetEntityID(KernelInvokerParameter parameter)//integer entity.()
 	return String();
 }
 
-String handle_GetHandleID(KernelInvokerParameter parameter)//integer handle.()
-{
-	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Handle, 0);
-	return String();
-}
-
 String handle_ToString(KernelInvokerParameter parameter)//string handle.()
 {
 	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, Handle, 0));
@@ -2160,6 +2154,12 @@ String handle_ToString(KernelInvokerParameter parameter)//string handle.()
 	string& returnValue = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(returnValue);
 	returnValue = result.index;
+	return String();
+}
+
+String handle_GetHandleID(KernelInvokerParameter parameter)//integer handle.()
+{
+	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, Handle, 0);
 	return String();
 }
 

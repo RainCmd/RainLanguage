@@ -331,6 +331,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.h" />
     <ClInclude Include="RainLanguage\ClearStaticCache.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="RainLanguage\Collections\Dictionary.h" />
@@ -445,6 +446,7 @@
     <ClInclude Include="RainLanguage\VirtualMachine\StackFrame.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.cpp" />
     <ClCompile Include="RainLanguage\ClearStaticCache.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="RainLanguage\Collections\Hash.cpp" />

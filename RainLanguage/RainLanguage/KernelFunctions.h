@@ -160,15 +160,15 @@ String real4_Min(KernelInvokerParameter parameter);												//real4 (real4, r
 String Collect(KernelInvokerParameter parameter);												//integer (bool)
 String HeapTotalMemory(KernelInvokerParameter parameter);										//integer ()
 String CountHandle(KernelInvokerParameter parameter);											//integer ()
-String CountTask(KernelInvokerParameter parameter);										//integer ()
+String CountTask(KernelInvokerParameter parameter);												//integer ()
 String EntityCount(KernelInvokerParameter parameter);											//integer ()
 String StringCount(KernelInvokerParameter parameter);											//integer ()
 String SetRandomSeed(KernelInvokerParameter parameter);											//(integer)
 String LoadAssembly(KernelInvokerParameter parameter);											//Reflection.Assembly (string)
 String GetAssembles(KernelInvokerParameter parameter);											//Reflection.Assembly[] ()
-String GetCurrentTaskInstantID(KernelInvokerParameter parameter);							//integer ()
+String GetCurrentTaskInstantID(KernelInvokerParameter parameter);								//integer ()
 
-//³ÉÔ±º¯Êý
+//成员函数
 String bool_ToString(KernelInvokerParameter parameter);											//string bool.()
 String byte_ToString(KernelInvokerParameter parameter);											//string byte.()
 String char_ToString(KernelInvokerParameter parameter);											//string char.()
@@ -219,8 +219,8 @@ String string_ToReal(KernelInvokerParameter parameter);											//real string.
 
 String entity_GetEntityID(KernelInvokerParameter parameter);									//integer entity.()
 
-String handle_GetHandleID(KernelInvokerParameter parameter);									//integer handle.()
 String handle_ToString(KernelInvokerParameter parameter);										//string handle.()
+String handle_GetHandleID(KernelInvokerParameter parameter);									//integer handle.()
 String handle_GetType(KernelInvokerParameter parameter);										//type handle.()
 
 String task_Start(KernelInvokerParameter parameter);											//task.(bool, bool)

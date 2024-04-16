@@ -156,7 +156,7 @@ label_next_instruct:
 			if(!kernel->heapAgency->TryGetPoint(handle, task)) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_NULL_REFERENCE);
 			waitingInvoker = kernel->taskAgency->GetInvoker(*(uint64*)task);
 			ASSERT_DEBUG(waitingInvoker, "任务的引用计数逻辑可能有bug");
-			if(waitingInvoker->state < InvokerState::Running) goto label_next_instruct;
+			if(waitingInvoker->state <= InvokerState::Running) goto label_exit;
 			else if(ignoreWait) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED);
 			EXCEPTION_JUMP(4, BASE_WaitTask);
 		}
@@ -2311,6 +2311,24 @@ label_next_instruct:
 			kernel->stringAgency->Release(address);
 			address = result.index;
 			instruct += 13;
+		}
+		goto label_next_instruct;
+		case Instruct::STRING_Complex:
+		{
+			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
+			string& address = VARIABLE(string, resultValue);
+			uint32 count = INSTRUCT_VALUE(uint32, 5);
+			List<String> values(count);
+			for(uint32 i = 0; i < count; i++)
+			{
+				uint32 elementValue = INSTRUCT_VALUE(uint32, 9 + i * 4);
+				values.Add(kernel->stringAgency->Get(VARIABLE(string, elementValue)));
+			}
+			String result = kernel->stringAgency->Combine(values.GetPointer(), values.Count());
+			kernel->stringAgency->Release(address);
+			address = result.index;
+			kernel->stringAgency->Reference(address);
+			instruct += 9 + count * 4;
 		}
 		goto label_next_instruct;
 		case Instruct::STRING_Sub:

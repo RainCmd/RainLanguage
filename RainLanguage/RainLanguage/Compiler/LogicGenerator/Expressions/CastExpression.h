@@ -74,8 +74,7 @@ class TupleCastExpression :public Expression
 {
 public:
 	Expression* source;
-	List<uint32, true> casts;
-	inline TupleCastExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source, const List<uint32, true>& casts) :Expression(ExpressionType::TupleCastExpression, anchor, returns), source(source), casts(casts)
+	inline TupleCastExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source) :Expression(ExpressionType::TupleCastExpression, anchor, returns), source(source)
 	{
 		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns.Peek());
 		else attribute = Attribute::Tuple;

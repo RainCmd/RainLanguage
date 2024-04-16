@@ -25,9 +25,8 @@ public:
 	List<integer, true> indices;
 	inline TaskEvaluationExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source, const List<integer, true>& indices) :Expression(ExpressionType::TaskEvaluationExpression, anchor, returns), source(source), indices(indices)
 	{
-		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns.Peek());
+		if (returns.Count() == 1) attribute = CombineType(Attribute::Value, returns.Peek());
 		else attribute = Attribute::Tuple;
-		attribute |= source->attribute & ~Attribute::Assignable;
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~TaskEvaluationExpression();

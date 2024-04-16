@@ -18,6 +18,7 @@
 #include "Expressions/LogicExpression.h"
 #include "Expressions/EnumExpression.h"
 #include "Expressions/ExpressionReferenceExpression.h"
+#include "Expressions/ComplexStringExpression.h"
 #include "LocalContext.h"
 #include "LambdaClosure.h"
 #include "LambdaGenerator.h"
@@ -283,9 +284,8 @@ bool ExpressionParser::TryAssignmentConvert(Expression*& source, const Type& typ
 			{
 				if(convert)
 				{
-					List<uint32, true> casts(1); casts.Add(0);
 					List<Type, true> returns(1); returns.Add(type);
-					source = new TupleCastExpression(source->anchor, returns, source, casts);
+					source = new TupleCastExpression(source->anchor, returns, source);
 				}
 				return true;
 			}
@@ -307,16 +307,15 @@ bool ExpressionParser::TryAssignmentConvert(Expression*& source, const Span<Type
 	{
 		if(TryInferRightValueType(source, types))
 		{
-			List<uint32, true> casts(0);
-			bool convert; uint32 value;
+			bool convert; uint32 value; bool needConvert = false;
 			for(uint32 i = 0; i < types.Count(); i++)
-				if(TryConvert(manager, source->returns[i], types[i], convert, value)) { if(convert) casts.Add(i); }
+				if(TryConvert(manager, source->returns[i], types[i], convert, value)) needConvert |= convert;
 				else
 				{
 					MESSAGE2(manager->messages, source->anchor, MessageType::ERROR_TYPE_MISMATCH);
 					return false;
 				}
-			if(casts.Count()) source = new TupleCastExpression(source->anchor, types.ToList(), source, casts);
+			if(needConvert) source = new TupleCastExpression(source->anchor, types.ToList(), source);
 			return true;
 		}
 		else return false;
@@ -913,16 +912,11 @@ bool ExpressionParser::CheckConvertVectorParameter(Expression*& parameters, uint
 		if(dimension) MESSAGE2(manager->messages, parameters->anchor, MessageType::ERROR_NUMBER_OF_PARAMETERS)
 		else if(flag)
 		{
-			List<uint32, true> casts(0);
 			List<Type, true> returns(parameters->returns.Count());
 			for(uint32 i = 0; i < parameters->returns.Count(); i++)
-				if(flag & (1 << i))
-				{
-					casts.Add(i);
-					returns.Add(TYPE_Real);
-				}
+				if(flag & (1 << i)) returns.Add(TYPE_Real);
 				else returns.Add(parameters->returns[i]);
-			parameters = new TupleCastExpression(parameters->anchor, returns, parameters, casts);
+			parameters = new TupleCastExpression(parameters->anchor, returns, parameters);
 		}
 		return !dimension;
 	}
@@ -1079,9 +1073,8 @@ Attribute ExpressionParser::PopToken(List<Expression*, true>& expressionStack, c
 				{
 					if(convert)
 					{
-						List<uint32, true> casts(1); casts.Add(0);
 						List<Type, true> types(1); types.Add(targetType);
-						right = new TupleCastExpression(right->anchor, types, right, casts);
+						right = new TupleCastExpression(right->anchor, types, right);
 					}
 					else right = new CastExpression(right->anchor, targetType, right);
 					expressionStack.Add(right);
@@ -2958,16 +2951,21 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					String& content = lexical.anchor.content;
 					List<character, true> stringBuilder(content.GetLength());
 					List<Expression*, true> parameters(2);
-					Expression* stringExpression = NULL;
-					Expression* constStringExpression;
-					for(uint32 i = 2, length = content.GetLength(); i < length; i++)
+					uint32 length = content.GetLength();
+					if(length && content[length - 1] == '\"') length--;
+					for(uint32 i = 2; i < length; i++)
 					{
 						character element = content[i];
-						if(element != '\"')
+						if(element == '{')
 						{
-							if(element == '{')
+							if(i + 1 < content.GetLength())
 							{
-								if(i + 1 < content.GetLength() && content[i + 1] != '{')
+								if(content[i + 1] == '{')
+								{
+									stringBuilder.Add(element);
+									i++;
+								}
+								else
 								{
 									Anchor block = MatchStringTemplateBlock(lexical.anchor, lexical.anchor.position + i, manager->messages);
 									if(block.content[block.content.GetLength() - 1] == '}')
@@ -2975,72 +2973,60 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 										Expression* blockExpression;
 										if(TryParse(block.Sub(block.position + 1, block.content.GetLength() - 2), blockExpression))
 										{
-											constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
-											stringBuilder.Clear();
-											if(stringExpression)
+											if(ContainAny(blockExpression->attribute, Attribute::Value) && blockExpression->returns.Count() == 1)
 											{
-												parameters.Clear();
-												parameters.Add(stringExpression);
-												parameters.Add(constStringExpression);
-												stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
-												if(!stringExpression)
+												if(stringBuilder.Count())
 												{
-													expressionStack.Add(blockExpression);
-													goto label_parse_fail;
+													parameters.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
+													stringBuilder.Clear();
 												}
+												parameters.Add(blockExpression);
 											}
-											else stringExpression = constStringExpression;
-											parameters.Clear();
-											parameters.Add(stringExpression);
-											parameters.Add(blockExpression);
-											stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
-											if(!stringExpression) goto label_parse_fail;
+											else
+											{
+												MESSAGE2(manager->messages, blockExpression->anchor, MessageType::ERROR_INVALID_OPERATOR);
+												expressionStack.Add(parameters);
+												expressionStack.Add(blockExpression);
+												goto label_parse_fail;
+											}
 										}
 										else
 										{
-											if(stringExpression) expressionStack.Add(stringExpression);
+											expressionStack.Add(parameters);
 											goto label_parse_fail;
 										}
 									}
 									else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 									i += block.content.GetLength() - 1;
 								}
-								else
-								{
-									stringBuilder.Add(element);
-									i++;
-								}
 							}
-							else if(element == '}')
-							{
-								if(i + 1 < length && content[i + 1] == '}')
-								{
-									stringBuilder.Add(element);
-									i++;
-								}
-								else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-							}
-							else if(element != '\\') stringBuilder.Add(element);
-							else if(++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+							else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 						}
-					}
-					constStringExpression = new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count()));
-					if(stringExpression)
-					{
-						parameters.Clear();
-						parameters.Add(stringExpression);
-						parameters.Add(constStringExpression);
-						stringExpression = CreatePlusOperator(lexical.anchor, this, Combine(parameters));
-						if(stringExpression)
+						else if(element == '}')
 						{
-							expressionStack.Add(stringExpression);
-							attribute = stringExpression->attribute;
+							if(i + 1 < length && content[i + 1] == '}')
+							{
+								stringBuilder.Add(element);
+								i++;
+							}
+							else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 						}
-						else goto label_parse_fail;
+						else if(element != '\\') stringBuilder.Add(element);
+						else if(++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+					}
+					if(stringBuilder.Count())
+					{
+						parameters.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
+						stringBuilder.Clear();
+					}
+					if(parameters.Count())
+					{
+						expressionStack.Add(new ComplexStringExpression(lexical.anchor, parameters));
+						attribute = Attribute::Value;
 					}
 					else
 					{
-						expressionStack.Add(constStringExpression);
+						expressionStack.Add(new ConstantStringExpression(lexical.anchor, String()));
 						attribute = Attribute::Constant;
 					}
 					break;
