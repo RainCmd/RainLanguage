@@ -24,7 +24,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /y $(TargetDir) $(SolutionDir)RainLanguagePlugin\bin\server\" />
+    <Exec Command="rmdir /s /q $(SolutionDir)RainLanguagePlugin\bin\server\&#xD;&#xA;xcopy /y $(TargetDir) $(SolutionDir)RainLanguagePlugin\bin\server\" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
@@ -32,7 +32,8 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="StreamJsonRpc" Version="2.17.11" />
+    <PackageReference Include="Matarillo.IO" Version="1.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>
