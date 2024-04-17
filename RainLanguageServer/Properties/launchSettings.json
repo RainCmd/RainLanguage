@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RainLanguageServer": {
+      "commandName": "Project",
+      "commandLineArgs": "$(TargetDir)"
+    }
+  }
+}

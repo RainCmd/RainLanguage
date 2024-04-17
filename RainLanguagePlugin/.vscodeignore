@@ -4,3 +4,4 @@ test/
 .gitignore
 out/**/*.map
 tsconfig.json
+*/**/*.log

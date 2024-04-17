@@ -45,3 +45,4 @@ RainLanguagePlugin/.vscode/
 RainLanguagePlugin/out/
 RainLanguagePlugin/node_modules/
 */*.vsix
+*/*.log

@@ -42,13 +42,20 @@ export default class FormatProvider implements DocumentRangeFormattingEditProvid
         }
     }
     private FormatLine(line: string): string {
+        const end = line.search(/\/\//gi)
+        let annotation = ""
+        if (end >= 0) {
+            annotation = line.substring(end)
+            line = line.substring(0, end)
+        }
         let result = ""
         let start = 0
         let pos = MatchPairingCharacter(line, 0)
         while (pos >= 0) {
             let char = line[pos]
             pos += 1
-            result += this.FormatFragment(line.substring(start, pos))
+            const fragment = line.substring(start, pos)
+            result += this.FormatFragment(fragment)
             start = pos
             pos = MatchPairingCharacter(line, start, char)
             result += line.substring(start, pos)
@@ -58,7 +65,11 @@ export default class FormatProvider implements DocumentRangeFormattingEditProvid
         if (start < line.length) {
             result += this.FormatFragment(line.substring(start))
         }
-        return result;
+        if (end < 0) {
+            return result
+        } else {
+            return result + annotation;
+        }
     }
     private FormatFragment(fragment: string): string {
         fragment = fragment.replace(/(?<=[\)\]\}\'\"]|\b)\s*(?=[&|^<>=\+\-*/%!`?:])/gi, " ");

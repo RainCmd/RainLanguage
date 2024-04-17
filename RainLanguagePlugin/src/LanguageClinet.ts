@@ -1,28 +1,15 @@
 
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node'
-import * as vsocde from 'vscode'
-import stream = require('stream');
+import * as vscode from 'vscode'
+import * as cp from 'child_process'
 
 let client: LanguageClient;
 
-class TS extends stream.Duplex{
-    write(chunk: any, encoding?: BufferEncoding, cb?: (error: Error) => void): boolean;
-    write(chunk: any, cb?: (error: Error) => void): boolean;
-    write(chunk: unknown, encoding?: unknown, cb?: unknown): boolean {
-        console.log("收到数据：")
-        console.log(chunk)
-        return true;
-    }
-}
-
-export function StartServer() {
-    const serverOptions: ServerOptions = () => {
-        const dx = new TS()
-        const result: StreamInfo = {
-            writer: dx,
-            reader: dx
-        }
-        return Promise.resolve(result)
+export function StartServer(context: vscode.ExtensionContext) {
+    const binPath = `${context.extension.extensionUri.fsPath}/bin/`
+    const serverOptions: ServerOptions = {
+        command: `${binPath}server/RainLanguageServer.exe`,
+        args: [binPath]
     }
 
     const clientOptions: LanguageClientOptions = {
@@ -30,14 +17,14 @@ export function StartServer() {
             language: "雨言"
         }],
         synchronize: {
-            fileEvents: vsocde.workspace.createFileSystemWatcher("**/*.rain")
+            fileEvents: vscode.workspace.createFileSystemWatcher("**/*.rain")
         }
     }
     client = new LanguageClient("雨言", "雨言服务客户端", serverOptions, clientOptions);
     client.start().then(() => {
         console.log("雨言服务客户端：启动")
-    }).catch(() => {
-        console.log("雨言服务客户端：启动...个屁")
+    }).catch((error) => {
+        console.log("雨言服务客户端：启动失败:" + error)
         client = null
     })
 }

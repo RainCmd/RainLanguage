@@ -5,8 +5,34 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
+    <PublishAot>True</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <PublishTrimmed>True</PublishTrimmed>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <WarningLevel>4</WarningLevel>
+    <IsPublishable>True</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <WarningLevel>4</WarningLevel>
+    <IsPublishable>True</IsPublishable>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /y $(TargetDir) $(SolutionDir)RainLanguagePlugin\bin\server\" />
+  </Target>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="rmdir /s /q $(TargetDir)" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="StreamJsonRpc" Version="2.17.11" />
+  </ItemGroup>
 
 </Project>

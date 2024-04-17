@@ -61,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
-    rainLanguageClient.StartServer();
+    rainLanguageClient.StartServer(context);
 }
 export async function deactivate() {
     rainLanguageClient.StopServer();
