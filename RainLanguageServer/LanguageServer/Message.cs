@@ -4,16 +4,14 @@ namespace LanguageServer
 {
     public static class Message
     {
-        public static Result<T, TError> ToResult<T, TError>(ResponseMessage<T, TError> response)
-            where TError : ResponseError
+        public static Result<T, TError> ToResult<T, TError>(ResponseMessage<T, TError> response) where TError : ResponseError
         {
             return (response.error == null)
                 ? Result<T, TError>.Success(response.result)
                 : Result<T, TError>.Error(response.error);
         }
 
-        public static VoidResult<TError> ToResult<TError>(VoidResponseMessage<TError> response)
-            where TError : ResponseError
+        public static VoidResult<TError> ToResult<TError>(VoidResponseMessage<TError> response) where TError : ResponseError
         {
             return (response.error == null)
                 ? VoidResult<TError>.Success()
@@ -88,14 +86,12 @@ namespace LanguageServer
         public NumberOrString? id;
     }
 
-    public class VoidResponseMessage<TError> : ResponseMessageBase
-        where TError : ResponseError
+    public class VoidResponseMessage<TError> : ResponseMessageBase where TError : ResponseError
     {
         public TError? error;
     }
 
-    public class ResponseMessage<T, TError> : ResponseMessageBase
-        where TError : ResponseError
+    public class ResponseMessage<T, TError> : ResponseMessageBase where TError : ResponseError
     {
         public T? result;
 

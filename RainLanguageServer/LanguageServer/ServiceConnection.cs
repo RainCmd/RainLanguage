@@ -3,6 +3,7 @@ using LanguageServer.Parameters;
 using LanguageServer.Parameters.General;
 using LanguageServer.Parameters.TextDocument;
 using LanguageServer.Parameters.Workspace;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LanguageServer
 {
@@ -11,6 +12,7 @@ namespace LanguageServer
         private readonly Proxy proxy;
         public Proxy Proxy => proxy;
 
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
         protected ServiceConnection(Stream input, Stream output) : base(input, output)
         {
             proxy = new Proxy(this);

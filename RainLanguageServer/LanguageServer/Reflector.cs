@@ -41,6 +41,7 @@ namespace LanguageServer
             var openRetType = retType.GetGenericTypeDefinition();
             return openRetType == typeof(Result<,>) || openRetType == typeof(VoidResult<>);
         }
+
         [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
         internal static Type GetRequestType(MethodInfo method)
         {
@@ -51,6 +52,7 @@ namespace LanguageServer
             }
             throw new ArgumentException($"签名不匹配: {method.Name}");
         }
+
         [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
         internal static Type GetResponseType(MethodInfo method)
         {
@@ -98,7 +100,7 @@ namespace LanguageServer
             };
         }
 
-        [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
+
         private static MethodInfo GetFactoryForRequest3(Type paramsType, Type resultType, Type responseErrorType)
         {
             return method_ForRequest3.MakeGenericMethod(paramsType, resultType, responseErrorType);
@@ -292,7 +294,7 @@ namespace LanguageServer
         }
         #endregion
 
-        internal static ResponseMessageBase CreateErrorResponse(Type responseType, string errorMessage)
+        internal static ResponseMessageBase CreateErrorResponse([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type responseType, string errorMessage)
         {
             var res = Activator.CreateInstance(responseType) as ResponseMessageBase;
             var prop = responseType.GetRuntimeProperty("error");

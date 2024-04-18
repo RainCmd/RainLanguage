@@ -21,11 +21,10 @@
     /// <item><see cref="LanguageServer.Parameters.TextDocument.HoverContents"/></item>
     /// </list>
     /// </remarks>
-    public abstract class Either(object? value, Type? type)
+    public abstract class Either(object value, Type type)
     {
-        public object? Value => value;
-        public Type? Type => type;
-        public Either() : this(null, null) { }
+        public object Value => value;
+        public Type Type => type;
         public T GetValue<T>()
         {
             ArgumentNullException.ThrowIfNull(type);

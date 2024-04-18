@@ -206,19 +206,18 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             switch (token.Type)
             {
                 case JTokenType.Null: return null;
-                case JTokenType.String: return new HoverContents(token.ToObject<string>());
+                case JTokenType.String: return new HoverContents(token.ToObject<string>()!);
                 case JTokenType.Object:
                     var obj = (JObject)token;
-                    if (obj.Property("kind") != null) return new HoverContents(obj.ToObject<MarkupContent>());
-                    else if (obj.Property("language") != null) return new HoverContents(obj.ToObject<MarkedString>());
+                    return new HoverContents(obj.ToObject<MarkupContent>()!);
                     throw new JsonSerializationException();
                 case JTokenType.Array:
                     var array = (JArray)token;
                     if (array.Count == 0) return new HoverContents(Array.Empty<string>());
 
                     var element = (array[0] as JObject) ?? throw new JsonSerializationException();
-                    if (element.Type == JTokenType.String) return new HoverContents(array.ToObject<string[]>());
-                    else if (element.Type == JTokenType.Object) return new HoverContents(array.ToObject<MarkedString[]>());
+                    if (element.Type == JTokenType.String) return new HoverContents(array.ToObject<string[]>()!);
+                    else if (element.Type == JTokenType.Object) return new HoverContents(array.ToObject<MarkupContent[]>()!);
                     throw new JsonSerializationException();
                 default: throw new JsonSerializationException();
             }

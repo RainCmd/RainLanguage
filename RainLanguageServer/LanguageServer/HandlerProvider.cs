@@ -5,7 +5,8 @@ namespace LanguageServer
 {
     internal class HandlerProvider
     {
-        internal static void AddHandlers<T>(RequestHandlerCollection requestHandlers, NotificationHandlerCollection notificationHandlers) where T : Connection
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
+        internal static void AddHandlers<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] T>(RequestHandlerCollection requestHandlers, NotificationHandlerCollection notificationHandlers) where T : Connection
         {
             foreach (var method in typeof(T).GetRuntimeMethods())
             {

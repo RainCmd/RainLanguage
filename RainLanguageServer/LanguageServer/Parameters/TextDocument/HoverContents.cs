@@ -11,7 +11,6 @@ namespace LanguageServer.Parameters.TextDocument
     /// <seealso>Spec 3.3.0</seealso>
     public class HoverContents : Either
     {
-
         /// <summary>
         /// Defines an implicit conversion of a <see cref="string"/> to a <see cref="HoverContents"/>
         /// </summary>
@@ -19,23 +18,10 @@ namespace LanguageServer.Parameters.TextDocument
         public static implicit operator HoverContents(string value) => new(value);
 
         /// <summary>
-        /// Defines an implicit conversion of a <see cref="MarkedString"/> to a <see cref="HoverContents"/>
-        /// </summary>
-        /// <param name="value"></param>
-        [Obsolete]
-        public static implicit operator HoverContents(MarkedString value) => new(value);
-
-        /// <summary>
         /// Defines an implicit conversion of a <see cref="T:System.String[]"/> to a <see cref="HoverContents"/>
         /// </summary>
         /// <param name="value"></param>
         public static implicit operator HoverContents(string[] value) => new(value);
-
-        /// <summary>
-        /// Defines an implicit conversion of a <see cref="T:LanguageServer.Parameters.TextDocument.MarkedString[]"/> to a <see cref="HoverContents"/>
-        /// </summary>
-        /// <param name="value"></param>
-        public static implicit operator HoverContents(MarkedString[] value) => new(value);
 
         /// <summary>
         /// Defines an implicit conversion of a <see cref="MarkupContent"/> to a <see cref="HoverContents"/>
@@ -45,14 +31,16 @@ namespace LanguageServer.Parameters.TextDocument
         public static implicit operator HoverContents(MarkupContent value) => new(value);
 
         /// <summary>
-        /// Initializes a new instance of <c>HoverContents</c> with the specified value.
+        /// Defines an implicit conversion of a <see cref="MarkupContent[]"/> to a <see cref="HoverContents"/>
         /// </summary>
-        public HoverContents(string value) : base(value, typeof(string)) { }
+        /// <param name="value"></param>
+        /// <seealso>Spec 3.3.0</seealso>
+        public static implicit operator HoverContents(MarkupContent[] value) => new(value);
 
         /// <summary>
         /// Initializes a new instance of <c>HoverContents</c> with the specified value.
         /// </summary>
-        public HoverContents(MarkedString value) : base(value, typeof(MarkedString)) { }
+        public HoverContents(string value) : base(value, typeof(string)) { }
 
         /// <summary>
         /// Initializes a new instance of <c>HoverContents</c> with the specified value.
@@ -62,13 +50,14 @@ namespace LanguageServer.Parameters.TextDocument
         /// <summary>
         /// Initializes a new instance of <c>HoverContents</c> with the specified value.
         /// </summary>
-        public HoverContents(MarkedString[] value) : base(value, typeof(MarkedString[])) { }
+        /// <seealso>Spec 3.3.0</seealso>
+        public HoverContents(MarkupContent value) : base(value, typeof(MarkupContent)) { }
 
         /// <summary>
         /// Initializes a new instance of <c>HoverContents</c> with the specified value.
         /// </summary>
         /// <seealso>Spec 3.3.0</seealso>
-        public HoverContents(MarkupContent value) : base(value, typeof(MarkupContent)) { }
+        public HoverContents(MarkupContent[] value) : base(value, typeof(MarkupContent[])) { }
 
         /// <summary>
         /// Returns true if its underlying value is a <see cref="string"/>.
@@ -76,25 +65,16 @@ namespace LanguageServer.Parameters.TextDocument
         public bool IsString => Type == typeof(string);
 
         /// <summary>
-        /// Returns true if its underlying value is a <see cref="MarkedString"/>.
-        /// </summary>
-        public bool IsMarkedString => Type == typeof(MarkedString);
-
-        /// <summary>
         /// Returns true if its underlying value is a <see cref="T:System.String[]"/>.
         /// </summary>
         public bool IsStringArray => Type == typeof(string[]);
-
-        /// <summary>
-        /// Returns true if its underlying value is a <see cref="T:LanguageServer.Parameters.TextDocument.MarkedString[]"/>.
-        /// </summary>
-        public bool IsMarkedStringArray => Type == typeof(MarkedString[]);
 
         /// <summary>
         /// Returns true if its underlying value is a <see cref="MarkupContent"/>.
         /// </summary>
         /// <seealso>Spec 3.3.0</seealso>
         public bool IsMarkupContent => Type == typeof(MarkupContent);
+        public bool IsMarkupContentArray => Type == typeof(MarkupContent[]);
 
         /// <summary>
         /// Gets the value of the current object if its underlying value is a <see cref="string"/>.
@@ -102,24 +82,20 @@ namespace LanguageServer.Parameters.TextDocument
         public string String => GetValue<string>();
 
         /// <summary>
-        /// Gets the value of the current object if its underlying value is a <see cref="MarkedString"/>.
-        /// </summary>
-        public MarkedString MarkedString => GetValue<MarkedString>();
-
-        /// <summary>
         /// Gets the value of the current object if its underlying value is a <see cref="T:System.String[]"/>.
         /// </summary>
         public string[] StringArray => GetValue<string[]>();
-
-        /// <summary>
-        /// Gets the value of the current object if its underlying value is a <see cref="T:LanguageServer.Parameters.TextDocument.MarkedString[]"/>.
-        /// </summary>
-        public MarkedString[] MarkedStringArray => GetValue<MarkedString[]>();
 
         /// <summary>
         /// Gets the value of the current object if its underlying value is a <see cref="MarkupContent"/>.
         /// </summary>
         /// <seealso>Spec 3.3.0</seealso>
         public MarkupContent MarkupContent => GetValue<MarkupContent>();
+
+        /// <summary>
+        /// Gets the value of the current object if its underlying value is a <see cref="MarkupContent[]"/>.
+        /// </summary>
+        /// <seealso>Spec 3.3.0</seealso>
+        public MarkupContent[] MarkupContentArray => GetValue<MarkupContent[]>();
     }
 }

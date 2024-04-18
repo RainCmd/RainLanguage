@@ -53,7 +53,7 @@ namespace LanguageServer
                 {
                     var tokenSource = new CancellationTokenSource();
                     CancellationHandlers.AddCancellationTokenSource(id, tokenSource);
-                    var request = Serializer.Deserialize(handler!.RequestType, json);
+                    var request = Serializer.Deserialize(handler!.RequestType, json)!;
                     var requestResponse = (ResponseMessageBase)handler.Handle(request, this, tokenSource.Token);
                     CancellationHandlers.RemoveCancellationTokenSource(id);
                     requestResponse.id = id;
