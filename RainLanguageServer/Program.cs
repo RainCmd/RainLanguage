@@ -1,9 +1,11 @@
 ﻿using LanguageServer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RainLanguageServer
 {
     internal class Program
     {
+        [RequiresDynamicCode("Calls RainLanguageServer.Server.Server(Stream, Stream)")]
         static void Main(string[] args)
         {
             var recorder = args?.Length > 0 ? File.CreateText(args[0] + "server.log") : null;

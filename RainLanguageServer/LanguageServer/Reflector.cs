@@ -1,4 +1,4 @@
-﻿using System;
+﻿using LanguageServer.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -100,7 +100,7 @@ namespace LanguageServer
             };
         }
 
-
+        [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
         private static MethodInfo GetFactoryForRequest3(Type paramsType, Type resultType, Type responseErrorType)
         {
             return method_ForRequest3.MakeGenericMethod(paramsType, resultType, responseErrorType);
@@ -294,12 +294,15 @@ namespace LanguageServer
         }
         #endregion
 
-        internal static ResponseMessageBase CreateErrorResponse([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type responseType, string errorMessage)
+        [SuppressMessage("Trimming", "IL2067:Target parameter argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The parameter of method does not have matching annotations.", Justification = "<挂起>")]
+        [SuppressMessage("Trimming", "IL2072:Target parameter argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.", Justification = "<挂起>")]
+        internal static ResponseMessageBase CreateErrorResponse(Type responseType, NumberOrString id, string errorMessage)
         {
             var res = Activator.CreateInstance(responseType) as ResponseMessageBase;
+            res!.id = id;
             var prop = responseType.GetRuntimeProperty("error");
-            var err = Activator.CreateInstance(prop.PropertyType) as ResponseError;
-            err.code = ErrorCodes.InternalError;
+            var err = Activator.CreateInstance(prop!.PropertyType) as ResponseError;
+            err!.code = ErrorCodes.InternalError;
             err.message = errorMessage;
             prop.SetValue(res, err);
             return res;

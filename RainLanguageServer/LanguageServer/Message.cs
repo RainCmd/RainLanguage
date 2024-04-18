@@ -38,23 +38,23 @@ namespace LanguageServer
         public static ResponseError<T> ServerError<T>(ErrorCodes code, T data) => new() { code = code, message = "Server error", data = data };
     }
 
-    internal class MessageTest
+    internal class MessageTest(string jsonrpc, NumberOrString id, string method)
     {
-        public string? jsonrpc;
+        public string jsonrpc = jsonrpc;
 
-        public NumberOrString? id;
+        public NumberOrString id = id;
 
-        public string? method;
+        public string method = method;
 
         public bool IsMessage => jsonrpc == "2.0";
 
-        public bool IsRequest => (IsMessage && id != null && method != null);
+        public bool IsRequest => IsMessage && id != null && method != null;
 
-        public bool IsResponse => (IsMessage && id != null && method == null);
+        public bool IsResponse => IsMessage && id != null && method == null;
 
-        public bool IsNotification => (IsMessage && id == null && method != null);
+        public bool IsNotification => IsMessage && id == null && method != null;
 
-        public bool IsCancellation => (IsNotification && method == "$/cancelRequest");
+        public bool IsCancellation => IsNotification && method == "$/cancelRequest";
     }
 
     public abstract class MessageBase

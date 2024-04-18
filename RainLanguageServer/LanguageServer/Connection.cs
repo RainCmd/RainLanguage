@@ -62,7 +62,8 @@ namespace LanguageServer
                 catch (Exception e)
                 {
                     Console.Error.WriteLine(e);
-                    var requestErrorResponse = Reflector.CreateErrorResponse(handler!.ResponseType, e.ToString());
+                    var requestErrorResponse = Reflector.CreateErrorResponse(handler!.ResponseType, id, e.ToString());
+                    requestErrorResponse.id = id;
                     SendMessage(requestErrorResponse);
                 }
             }
@@ -76,8 +77,8 @@ namespace LanguageServer
         {
             if (ResponseHandlers.TryRemoveResponseHandler(id, out var handler))
             {
-                var response = Serializer.Deserialize(handler.ResponseType, json);
-                handler.Handle(response);
+                var response = Serializer.Deserialize(handler!.ResponseType, json);
+                handler.Handle(response!);
             }
             else
             {
@@ -89,7 +90,7 @@ namespace LanguageServer
         private void HandleCancellation(string json)
         {
             var cancellation = Serializer.Deserialize<NotificationMessage<CancelParams>>(json);
-            var id = cancellation.@params.id;
+            var id = cancellation!.@params!.id!;
             if (CancellationHandlers.TryRemoveCancellationTokenSource(id, out var tokenSource))
             {
                 tokenSource!.Cancel();
@@ -105,8 +106,8 @@ namespace LanguageServer
         {
             if (NotificationHandlers.TryGetNotificationHandler(method, out var handler))
             {
-                var notification = Serializer.Deserialize(handler.NotificationType, json);
-                handler.Handle(notification, this);
+                var notification = Serializer.Deserialize(handler!.NotificationType, json);
+                handler.Handle(notification!, this);
             }
             else
             {
@@ -116,7 +117,7 @@ namespace LanguageServer
 
         public void SendRequest<TRequest, TResponse>(TRequest request, Action<TResponse> responseHandler) where TRequest : RequestMessageBase where TResponse : ResponseMessageBase
         {
-            var handler = new ResponseHandler(request.id, typeof(TResponse), response => responseHandler((TResponse)response));
+            var handler = new ResponseHandler(request.id!, typeof(TResponse), response => responseHandler((TResponse)response));
             ResponseHandlers.AddResponseHandler(handler);
             SendMessage(request);
         }

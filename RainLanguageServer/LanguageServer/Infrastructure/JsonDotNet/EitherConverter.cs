@@ -70,7 +70,7 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             {
                 JTokenType.Null => null,
                 JTokenType.Integer => new NumberOrString(token.ToObject<long>()),
-                JTokenType.String => new NumberOrString(token.ToObject<string>()),
+                JTokenType.String => new NumberOrString(token.ToObject<string>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -80,8 +80,8 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             return token.Type switch
             {
                 JTokenType.Null => null,
-                JTokenType.Object => new LocationSingleOrArray(token.ToObject<Location>()),
-                JTokenType.Array => new LocationSingleOrArray(token.ToObject<Location[]>()),
+                JTokenType.Object => new LocationSingleOrArray(token.ToObject<Location>()!),
+                JTokenType.Array => new LocationSingleOrArray(token.ToObject<Location[]>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -92,7 +92,7 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             {
                 JTokenType.Null => null,
                 JTokenType.Boolean => new ChangeNotificationsOptions(token.ToObject<bool>()),
-                JTokenType.String => new ChangeNotificationsOptions(token.ToObject<string>()),
+                JTokenType.String => new ChangeNotificationsOptions(token.ToObject<string>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -103,7 +103,7 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             {
                 JTokenType.Null => null,
                 JTokenType.Boolean => new ColorProviderOptionsOrBoolean(token.ToObject<bool>()),
-                JTokenType.Object => new ColorProviderOptionsOrBoolean(token.ToObject<ColorProviderOptions>()),
+                JTokenType.Object => new ColorProviderOptionsOrBoolean(token.ToObject<ColorProviderOptions>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -114,7 +114,7 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             {
                 JTokenType.Null => null,
                 JTokenType.Boolean => new FoldingRangeProviderOptionsOrBoolean(token.ToObject<bool>()),
-                JTokenType.Object => new FoldingRangeProviderOptionsOrBoolean(token.ToObject<FoldingRangeProviderOptions>()),
+                JTokenType.Object => new FoldingRangeProviderOptionsOrBoolean(token.ToObject<FoldingRangeProviderOptions>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -125,7 +125,7 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             {
                 JTokenType.Null => null,
                 JTokenType.Boolean => new ProviderOptionsOrBoolean(token.ToObject<bool>()),
-                JTokenType.Object => new ProviderOptionsOrBoolean(token.ToObject<ProviderOptions>()),
+                JTokenType.Object => new ProviderOptionsOrBoolean(token.ToObject<ProviderOptions>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -136,7 +136,7 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             {
                 JTokenType.Null => null,
                 JTokenType.Integer => new TextDocumentSync(token.ToObject<TextDocumentSyncKind>()),
-                JTokenType.Object => new TextDocumentSync(token.ToObject<TextDocumentSyncOptions>()),
+                JTokenType.Object => new TextDocumentSync(token.ToObject<TextDocumentSyncOptions>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -151,11 +151,11 @@ namespace LanguageServer.Infrastructure.JsonDotNet
                     if (array.Count == 0) return new CodeActionResult(Array.Empty<Command>());
 
                     var element = (array[0] as JObject) ?? throw new JsonSerializationException();
-                    if (element.Property("edit") != null) return new CodeActionResult(array.ToObject<CodeAction[]>());
+                    if (element.Property("edit") != null) return new CodeActionResult(array.ToObject<CodeAction[]>()!);
 
                     var command = element.Property("command") ?? throw new JsonSerializationException();
-                    if (command.Type == JTokenType.Object) return new CodeActionResult(array.ToObject<CodeAction[]>());
-                    else if (command.Type == JTokenType.String) return new CodeActionResult(array.ToObject<Command[]>());
+                    if (command.Type == JTokenType.Object) return new CodeActionResult(array.ToObject<CodeAction[]>()!);
+                    else if (command.Type == JTokenType.String) return new CodeActionResult(array.ToObject<Command[]>()!);
                     throw new JsonSerializationException();
                 default: throw new JsonSerializationException();
             }
@@ -166,8 +166,8 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             return token.Type switch
             {
                 JTokenType.Null => null,
-                JTokenType.String => new Documentation(token.ToObject<string>()),
-                JTokenType.Object => new Documentation(token.ToObject<MarkupContent>()),
+                JTokenType.String => new Documentation(token.ToObject<string>()!),
+                JTokenType.Object => new Documentation(token.ToObject<MarkupContent>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -177,8 +177,8 @@ namespace LanguageServer.Infrastructure.JsonDotNet
             return token.Type switch
             {
                 JTokenType.Null => null,
-                JTokenType.Array => new CompletionResult(token.ToObject<CompletionItem[]>()),
-                JTokenType.Object => new CompletionResult(token.ToObject<CompletionList>()),
+                JTokenType.Array => new CompletionResult(token.ToObject<CompletionItem[]>()!),
+                JTokenType.Object => new CompletionResult(token.ToObject<CompletionList>()!),
                 _ => throw new JsonSerializationException(),
             };
         }
@@ -193,8 +193,8 @@ namespace LanguageServer.Infrastructure.JsonDotNet
                     if (array.Count == 0) return new DocumentSymbolResult(Array.Empty<DocumentSymbol>());
 
                     var element = (array[0] as JObject) ?? throw new JsonSerializationException();
-                    if (element.Property("range") != null) return new DocumentSymbolResult(array.ToObject<DocumentSymbol[]>());
-                    else if (element.Property("location") != null) return new DocumentSymbolResult(array.ToObject<SymbolInformation[]>());
+                    if (element.Property("range") != null) return new DocumentSymbolResult(array.ToObject<DocumentSymbol[]>()!);
+                    else if (element.Property("location") != null) return new DocumentSymbolResult(array.ToObject<SymbolInformation[]>()!);
                     throw new JsonSerializationException();
                 default: throw new JsonSerializationException();
 

@@ -1,8 +1,10 @@
 ﻿using LanguageServer.Parameters.General;
 using LanguageServer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RainLanguageServer
 {
+    [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
     internal class Server(Stream input, Stream output) : ServiceConnection(input, output)
     {
         #region 生命周期
