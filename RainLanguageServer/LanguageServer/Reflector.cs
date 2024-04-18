@@ -192,9 +192,7 @@ namespace LanguageServer
         [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForRequest2(MethodInfo, Type, Type)")]
         internal static RequestHandlerDelegate CreateRequestHandlerDelegate(MethodInfo method)
         {
-            var parameters = method.GetParameters();
-            if (parameters.Length > 2) throw new ArgumentException($"签名不匹配: {method.Name}");
-            Type? paramsType = (parameters.Length == 1) ? parameters[0].ParameterType : null;
+            if(!TryGetParameterType(method,out var parameterType,out var hasToken)) throw new ArgumentException($"签名不匹配: {method.Name}");
             var returnType = method.ReturnType;
             Type? resultType;
             Type responseErrorType;
@@ -216,10 +214,10 @@ namespace LanguageServer
             else throw new ArgumentException($"签名不匹配: {method.Name}");
 
             var factory =
-                (paramsType != null && resultType != null) ? GetFactoryForRequest3(paramsType, resultType, responseErrorType) :
-                (paramsType == null && resultType != null) ? GetFactoryForRequest2(resultType, responseErrorType) :
+                (parameterType != null && resultType != null) ? GetFactoryForRequest3(parameterType, resultType, responseErrorType) :
+                (parameterType == null && resultType != null) ? GetFactoryForRequest2(resultType, responseErrorType) :
                 GetFactoryForRequest(responseErrorType);
-            return (RequestHandlerDelegate)factory.Invoke(null, [method])!;
+            return (RequestHandlerDelegate)factory.Invoke(null, [method, hasToken])!;
         }
         #endregion
 

@@ -16,7 +16,6 @@ namespace LanguageServer
         protected ServiceConnection(Stream input, Stream output) : base(input, output)
         {
             proxy = new Proxy(this);
-            HandlerProvider.AddHandlers<ServiceConnection>(RequestHandlers, NotificationHandlers);
         }
 
         #region General

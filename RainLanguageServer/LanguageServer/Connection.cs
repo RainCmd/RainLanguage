@@ -1,23 +1,55 @@
 ﻿using LanguageServer.Json;
 using LanguageServer.Parameters.General;
 using Matarillo.IO;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text;
 
 namespace LanguageServer
 {
-    public class Connection(Stream input, Stream output)
+    public class Connection
     {
-        private readonly ProtocolReader input = new(input);
+        private readonly ProtocolReader input;
+        private readonly Stream output;
         private const byte CR = 13;
         private const byte LF = 10;
         private readonly byte[] separator = [CR, LF];
         private readonly object outputLock = new();
 
-        public readonly RequestHandlerCollection RequestHandlers = new();
-        public readonly NotificationHandlerCollection NotificationHandlers = new();
+        private readonly RequestHandlerCollection RequestHandlers = new();
+        private readonly NotificationHandlerCollection NotificationHandlers = new();
         private readonly ResponseHandlerCollection ResponseHandlers = new();
         private readonly CancellationHandlerCollection CancellationHandlers = new();
-
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
+        public Connection(Stream input, Stream output)
+        {
+            this.input = new ProtocolReader(input);
+            this.output = output;
+            foreach (var method in GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+            {
+                var rpcMethod = method.GetCustomAttribute<JsonRpcMethodAttribute>()?.Method;
+                if (rpcMethod != null)
+                {
+                    if (Reflector.IsRequestHandler(method))
+                    {
+                        RequestHandlers.AddRequestHandler(new RequestHandler(
+                            rpcMethod,
+                            Reflector.GetRequestType(method),
+                            Reflector.GetResponseType(method),
+                            Reflector.CreateRequestHandlerDelegate(method)
+                            ));
+                    }
+                    else if (Reflector.IsNotificationHandler(method))
+                    {
+                        NotificationHandlers.AddNotificationHandler(new NotificationHandler(
+                            rpcMethod,
+                            Reflector.GetNotificationType(method),
+                            Reflector.CreateNotificationHandlerDelegate(method)
+                            ));
+                    }
+                }
+            }
+        }
         public async Task Listen()
         {
             while (true)
