@@ -1,81 +1,97 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace LanguageServer
 {
     internal static class Reflector
     {
+        private static bool TryGetParameterType(MethodInfo method, out Type? parameterType, out bool hasToken)
+        {
+            parameterType = null;
+            hasToken = false;
+            var parameters = method.GetParameters();
+            foreach (var param in parameters)
+                if (param.IsIn || param.IsOut)
+                    return false;
+            if (parameters.Length == 0) return true;
+            else if (parameters.Length == 1)
+            {
+                if (parameters[0].ParameterType == typeof(CancellationToken)) hasToken = true;
+                else parameterType = parameters[0].ParameterType;
+                return true;
+            }
+            else if (parameters.Length == 2)
+            {
+                if (parameters[1].ParameterType == typeof(CancellationToken))
+                {
+                    hasToken = true;
+                    parameterType = parameters[0].ParameterType;
+                    return true;
+                }
+            }
+            return false;
+        }
+        #region 请求相关反射
         internal static bool IsRequestHandler(MethodInfo method)
         {
-            var parameters = method.GetParameters();
-            if (parameters.Length > 1) return false;
-            if (parameters.Length == 1 && parameters[0].IsIn) return false;
+            if (!TryGetParameterType(method, out _, out _)) return false;
             var retType = method.ReturnType;
-            if (retType == typeof(void) || !retType.IsGenericType) return false;
+            if (!retType.IsGenericType) return false;
             var openRetType = retType.GetGenericTypeDefinition();
-            return (openRetType == typeof(Result<,>)) || (openRetType == typeof(VoidResult<>));
+            return openRetType == typeof(Result<,>) || openRetType == typeof(VoidResult<>);
         }
-
-        internal static bool IsNotificationHandler(MethodInfo method)
-        {
-            var parameters = method.GetParameters();
-            if (parameters.Length > 1) return false;
-            if (parameters.Length == 1 && parameters[0].IsIn) return false;
-            var retType = method.ReturnType;
-            return (retType == typeof(void));
-        }
-
         [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
-        internal static Type? GetRequestType(MethodInfo method)
+        internal static Type GetRequestType(MethodInfo method)
         {
-            var parameters = method.GetParameters();
-            if (parameters.Length == 0) return typeof(VoidRequestMessage);
-            else if (parameters.Length == 1) return typeof(RequestMessage<>).MakeGenericType(parameters[0].ParameterType);
-            return null;
+            if (TryGetParameterType(method, out var type, out _))
+            {
+                if (type == null) return typeof(VoidRequestMessage);
+                else return typeof(RequestMessage<>).MakeGenericType(type);
+            }
+            throw new ArgumentException($"签名不匹配: {method.Name}");
         }
-
         [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
-        internal static Type? GetResponseType(MethodInfo method)
+        internal static Type GetResponseType(MethodInfo method)
         {
             var retType = method.ReturnType;
+            if (!retType.IsGenericType) throw new ArgumentException($"签名不匹配: {method.Name}");
             var openRetType = retType.GetGenericTypeDefinition();
             if (openRetType == typeof(Result<,>)) return typeof(ResponseMessage<,>).MakeGenericType(retType.GenericTypeArguments[0], retType.GenericTypeArguments[1]);
             else if (openRetType == typeof(VoidResult<>)) return typeof(VoidResponseMessage<>).MakeGenericType(retType.GenericTypeArguments[0]);
-            return null;
+            throw new ArgumentException($"签名不匹配: {method.Name}");
         }
 
-        [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
-        internal static Type? GetNotificationType(MethodInfo method)
+        private static readonly MethodInfo method_ForRequest3 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest3))!;
+        private static RequestHandlerDelegate ForRequest3<TParams, TResult, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new()
         {
-            var parameters = method.GetParameters();
-            if (parameters.Length == 0) return typeof(VoidNotificationMessage);
-            else if (parameters.Length == 1) return typeof(NotificationMessage<>).MakeGenericType(parameters[0].ParameterType);
-            return null;
-        }
-
-        private static RequestHandlerDelegate ForRequest4<T, TParams, TResult, TResponseError>(Type targetType, MethodInfo method, HandlerProvider provider)
-            where TResponseError : ResponseError, new()
-        {
-            var deleType = typeof(Func<T, TParams, Result<TResult, TResponseError>>);
-            var func = (Func<T, TParams, Result<TResult, TResponseError>>)method.CreateDelegate(deleType);
-
-            return (r, c, t) =>
+            Func<Connection, TParams?, CancellationToken, Result<TResult, TResponseError>> func;
+            if (hasToken)
             {
-                var request = (RequestMessage<TParams>)r;
-                var target = provider.CreateTargetObject(targetType, c, t);
+                func = method.CreateDelegate<Func<Connection, TParams?, CancellationToken, Result<TResult, TResponseError>>>();
+            }
+            else
+            {
+                var methodDelegate = method.CreateDelegate<Func<Connection, TParams?, Result<TResult, TResponseError>>>();
+                func = (connection, param, token) => methodDelegate(connection, param);
+            }
+
+            return (request, connection, token) =>
+            {
+                var requestMessage = (RequestMessage<TParams>)request;
                 Result<TResult, TResponseError> result;
                 try
                 {
-                    result = func((T)target, request.@params);
+                    result = func(connection, requestMessage.@params, token);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Console.Error.WriteLine(ex);
+                    Console.Error.WriteLine(e);
                     result = Result<TResult, TResponseError>.Error(Message.InternalError<TResponseError>());
                 }
                 return new ResponseMessage<TResult, TResponseError>
                 {
-                    id = request.id,
+                    id = requestMessage.id,
                     result = result.SuccessValue,
                     error = result.ErrorValue
                 };
@@ -83,34 +99,41 @@ namespace LanguageServer
         }
 
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForRequest4(MethodInfo method, Type declaringType, Type paramsType, Type resultType, Type responseErrorType)
+        private static MethodInfo GetFactoryForRequest3(Type paramsType, Type resultType, Type responseErrorType)
         {
-            return typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest4)).MakeGenericMethod(declaringType, paramsType, resultType, responseErrorType);
+            return method_ForRequest3.MakeGenericMethod(paramsType, resultType, responseErrorType);
         }
 
-        private static RequestHandlerDelegate ForRequest3<T, TResult, TResponseError>(Type targetType, MethodInfo method, HandlerProvider provider)
-            where TResponseError : ResponseError, new()
+        private static readonly MethodInfo method_ForRequest2 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest2))!;
+        private static RequestHandlerDelegate ForRequest2<TResult, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new()
         {
-            var deleType = typeof(Func<T, Result<TResult, TResponseError>>);
-            var func = (Func<T, Result<TResult, TResponseError>>)method.CreateDelegate(deleType);
-
-            return (r, c, t) =>
+            Func<Connection, CancellationToken, Result<TResult, TResponseError>> func;
+            if (hasToken)
             {
-                var request = (VoidRequestMessage)r;
-                var target = provider.CreateTargetObject(targetType, c, t);
+                func = method.CreateDelegate<Func<Connection, CancellationToken, Result<TResult, TResponseError>>>();
+            }
+            else
+            {
+                var methodDelegate = method.CreateDelegate<Func<Connection, Result<TResult, TResponseError>>>();
+                func = (connection, token) => methodDelegate(connection);
+            }
+
+            return (request, connection, token) =>
+            {
+                var voidRequest = (VoidRequestMessage)request;
                 Result<TResult, TResponseError> result;
                 try
                 {
-                    result = func((T)target);
+                    result = func(connection, token);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Console.Error.WriteLine(ex);
+                    Console.Error.WriteLine(e);
                     result = Result<TResult, TResponseError>.Error(Message.InternalError<TResponseError>());
                 }
                 return new ResponseMessage<TResult, TResponseError>
                 {
-                    id = request.id,
+                    id = voidRequest.id,
                     result = result.SuccessValue,
                     error = result.ErrorValue
                 };
@@ -118,152 +141,158 @@ namespace LanguageServer
         }
 
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForRequest3(MethodInfo method, Type declaringType, Type resultType, Type responseErrorType)
+        private static MethodInfo GetFactoryForRequest2(Type resultType, Type responseErrorType)
         {
-            return typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest3)).MakeGenericMethod(declaringType, resultType, responseErrorType);
+            return method_ForRequest2.MakeGenericMethod(resultType, responseErrorType);
         }
 
-        private static RequestHandlerDelegate ForRequest2<T, TResponseError>(Type targetType, MethodInfo method, HandlerProvider provider)
-            where TResponseError : ResponseError, new()
+        private static readonly MethodInfo method_ForRequest = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest))!;
+        private static RequestHandlerDelegate ForRequest<TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new()
         {
-            var deleType = typeof(Func<T, VoidResult<TResponseError>>);
-            var func = (Func<T, VoidResult<TResponseError>>)method.CreateDelegate(deleType);
-
-            return (r, c, t) =>
+            Func<Connection, CancellationToken, VoidResult<TResponseError>> func;
+            if (hasToken)
             {
-                var request = (VoidRequestMessage)r;
-                var target = provider.CreateTargetObject(targetType, c, t);
+                func = method.CreateDelegate<Func<Connection, CancellationToken, VoidResult<TResponseError>>>();
+            }
+            else
+            {
+                var methodDelegate = method.CreateDelegate<Func<Connection, VoidResult<TResponseError>>>();
+                func = (connection, token) => methodDelegate(connection);
+            }
+
+            return (request, connection, token) =>
+            {
+                var voidRequest = (VoidRequestMessage)request;
                 VoidResult<TResponseError> result;
                 try
                 {
-                    result = func((T)target);
+                    result = func(connection, token);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Console.Error.WriteLine(ex);
+                    Console.Error.WriteLine(e);
                     result = VoidResult<TResponseError>.Error(Message.InternalError<TResponseError>());
                 }
                 return new VoidResponseMessage<TResponseError>
                 {
-                    id = request.id,
+                    id = voidRequest.id,
                     error = result.ErrorValue
                 };
             };
         }
 
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForRequest2(MethodInfo method, Type declaringType, Type responseErrorType)
+        private static MethodInfo GetFactoryForRequest(Type responseErrorType)
         {
-            return typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest2)).MakeGenericMethod(declaringType, responseErrorType);
-        }
-
-        private static NotificationHandlerDelegate ForNotification2<T, TParams>(Type targetType, MethodInfo method, HandlerProvider provider)
-        {
-            var deleType = typeof(Action<T, TParams>);
-            var action = (Action<T, TParams>)method.CreateDelegate(deleType);
-
-            return (n, c) =>
-            {
-                var notification = (NotificationMessage<TParams>)n;
-                var target = provider.CreateTargetObject(targetType, c);
-                try
-                {
-                    action((T)target, notification.@params);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine(ex);
-                }
-            };
-        }
-
-        [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForNotification2(MethodInfo method, Type delcaringType, Type paramsType)
-        {
-            return typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForNotification2)).MakeGenericMethod(delcaringType, paramsType);
-        }
-
-        private static NotificationHandlerDelegate ForNotification1<T>(Type targetType, MethodInfo method, HandlerProvider provider)
-        {
-            var deleType = typeof(Action<T>);
-            var action = (Action<T>)method.CreateDelegate(deleType);
-
-            return (n, c) =>
-            {
-                var notification = (VoidNotificationMessage)n;
-                var target = provider.CreateTargetObject(targetType, c);
-                try
-                {
-                    action((T)target);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine(ex);
-                }
-            };
-        }
-
-        [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForNotification1(MethodInfo method, Type declaringType)
-        {
-            return typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForNotification1)).MakeGenericMethod(declaringType);
+            return method_ForRequest.MakeGenericMethod(responseErrorType);
         }
 
         [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForRequest2(MethodInfo, Type, Type)")]
-        internal static RequestHandlerDelegate? CreateRequestHandlerDelegate(Type targetType, MethodInfo method, HandlerProvider provider)
+        internal static RequestHandlerDelegate CreateRequestHandlerDelegate(MethodInfo method)
         {
-            var declaringType = method.DeclaringType;
             var parameters = method.GetParameters();
-            if (parameters.Length > 1)
-            {
-                throw new ArgumentException($"signature mismatch: {method.Name}");
-            }
+            if (parameters.Length > 2) throw new ArgumentException($"签名不匹配: {method.Name}");
             Type? paramsType = (parameters.Length == 1) ? parameters[0].ParameterType : null;
             var returnType = method.ReturnType;
-            var openReturnType = returnType.GetGenericTypeDefinition();
             Type? resultType;
             Type responseErrorType;
-            if (openReturnType == typeof(Result<,>))
+            if (returnType.IsGenericType)
             {
-                resultType = returnType.GenericTypeArguments[0];
-                responseErrorType = returnType.GenericTypeArguments[1];
+                var genericType = returnType.GetGenericTypeDefinition();
+                if (genericType == typeof(Result<,>))
+                {
+                    resultType = returnType.GenericTypeArguments[0];
+                    responseErrorType = returnType.GenericTypeArguments[1];
+                }
+                else if (genericType == typeof(VoidResult<>))
+                {
+                    resultType = null;
+                    responseErrorType = returnType.GenericTypeArguments[0];
+                }
+                else throw new ArgumentException($"签名不匹配: {method.Name}");
             }
-            else if (returnType.GetGenericTypeDefinition() == typeof(VoidResult<>))
-            {
-                resultType = null;
-                responseErrorType = returnType.GenericTypeArguments[0];
-            }
-            else
-            {
-                throw new ArgumentException($"signature mismatch: {method.Name}");
-            }
+            else throw new ArgumentException($"签名不匹配: {method.Name}");
+
             var factory =
-                (paramsType != null && resultType != null) ? GetFactoryForRequest4(method, declaringType, paramsType, resultType, responseErrorType) :
-                (paramsType == null && resultType != null) ? GetFactoryForRequest3(method, declaringType, resultType, responseErrorType) :
-                GetFactoryForRequest2(method, declaringType, responseErrorType);
-            return factory.Invoke(provider, [targetType, method, provider]) as RequestHandlerDelegate;
+                (paramsType != null && resultType != null) ? GetFactoryForRequest3(paramsType, resultType, responseErrorType) :
+                (paramsType == null && resultType != null) ? GetFactoryForRequest2(resultType, responseErrorType) :
+                GetFactoryForRequest(responseErrorType);
+            return (RequestHandlerDelegate)factory.Invoke(null, [method])!;
+        }
+        #endregion
+
+        #region 消息相关反射
+        internal static bool IsNotificationHandler(MethodInfo method)
+        {
+            return TryGetParameterType(method, out _, out var hasToken) && !hasToken && method.ReturnType == typeof(void);
         }
 
-        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForNotification2(MethodInfo, Type, Type)")]
-        internal static NotificationHandlerDelegate? CreateNotificationHandlerDelegate(Type targetType, MethodInfo method, HandlerProvider provider)
+        [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
+        internal static Type GetNotificationType(MethodInfo method)
         {
-            var declaringType = method.DeclaringType;
-            var argTypes = method.GetParameters().Select(x => x.ParameterType).ToArray();
-            if (argTypes.Length > 1)
+            if (TryGetParameterType(method, out var type, out var hasToken) && !hasToken)
             {
-                throw new ArgumentException($"signature mismatch: {method.Name}");
+                if (type == null) return typeof(VoidNotificationMessage);
+                else return typeof(NotificationMessage<>).MakeGenericType(type);
             }
+            throw new ArgumentException($"签名不匹配: {method.Name}");
+        }
+        private static readonly MethodInfo method_ForNotification2 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForNotification2))!;
+        private static NotificationHandlerDelegate ForNotification2<TParams>(MethodInfo method)
+        {
+            var action = method.CreateDelegate<Action<Connection, TParams?>>();
+
+            return (notification, connection) =>
+            {
+                var notificationMessage = (NotificationMessage<TParams>)notification;
+                try
+                {
+                    action(connection, notificationMessage.@params);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
+                }
+            };
+        }
+        [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
+        private static MethodInfo GetFactoryForNotification2(Type paramsType)
+        {
+            return method_ForNotification2.MakeGenericMethod(paramsType);
+        }
+        private static NotificationHandlerDelegate ForNotification(MethodInfo method)
+        {
+            var action = method.CreateDelegate<Action<Connection>>();
+
+            return (notification, connection) =>
+            {
+                try
+                {
+                    action(connection);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
+                }
+            };
+        }
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForNotification2(MethodInfo, Type, Type)")]
+        internal static NotificationHandlerDelegate CreateNotificationHandlerDelegate(MethodInfo method)
+        {
             if (method.ReturnType != typeof(void))
             {
                 throw new ArgumentException($"signature mismatch: {method.Name}");
             }
-            var factory = (argTypes.Length == 1)
-                ? GetFactoryForNotification2(method, declaringType, argTypes[0])
-                : GetFactoryForNotification1(method, declaringType);
-            return factory.Invoke(provider, [targetType, method, provider]) as NotificationHandlerDelegate;
+            if (!TryGetParameterType(method, out var parameterType, out _))
+            {
+                throw new ArgumentException($"signature mismatch: {method.Name}");
+            }
+            if (parameterType == null) return ForNotification(method);
+            else return (NotificationHandlerDelegate)GetFactoryForNotification2(parameterType).Invoke(null, [method])!;
         }
+        #endregion
 
-        internal static ResponseMessageBase? CreateErrorResponse([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type responseType, string errorMessage)
+        internal static ResponseMessageBase CreateErrorResponse(Type responseType, string errorMessage)
         {
             var res = Activator.CreateInstance(responseType) as ResponseMessageBase;
             var prop = responseType.GetRuntimeProperty("error");

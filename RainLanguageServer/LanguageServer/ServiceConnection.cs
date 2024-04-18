@@ -10,24 +10,17 @@ namespace LanguageServer
     {
         private readonly Proxy proxy;
         public Proxy Proxy => proxy;
-        private readonly AsyncLocal<CancellationToken> token = new();
-        public CancellationToken CancellationToken
-        {
-            get => token.Value;
-            internal set => token.Value = value;
-        }
 
         protected ServiceConnection(Stream input, Stream output) : base(input, output)
         {
             proxy = new Proxy(this);
-            var provider = new ConnectionHandlerProvider();
-            provider.AddHandlers(RequestHandlers, NotificationHandlers, GetType());
+            HandlerProvider.AddHandlers<ServiceConnection>(RequestHandlers, NotificationHandlers);
         }
 
         #region General
 
         [JsonRpcMethod("initialize")]
-        protected virtual Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams @params)
+        protected virtual Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -38,7 +31,7 @@ namespace LanguageServer
         }
 
         [JsonRpcMethod("shutdown")]
-        protected virtual VoidResult<ResponseError> Shutdown()
+        protected virtual VoidResult<ResponseError> Shutdown(CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -95,7 +88,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: void
         [JsonRpcMethod("workspace/symbol")]
-        protected virtual Result<SymbolInformation[], ResponseError> Symbol(WorkspaceSymbolParams @params)
+        protected virtual Result<SymbolInformation[], ResponseError> Symbol(WorkspaceSymbolParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -103,7 +96,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: ExecuteCommandRegistrationOptions
         [JsonRpcMethod("workspace/executeCommand")]
-        protected virtual Result<dynamic, ResponseError> ExecuteCommand(ExecuteCommandParams @params)
+        protected virtual Result<dynamic, ResponseError> ExecuteCommand(ExecuteCommandParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -175,13 +168,13 @@ namespace LanguageServer
         /// <seealso cref="LanguageServer.Parameters.General.TextDocumentClientCapabilities"/>
         /// <seealso>Spec 3.3.0</seealso>
         [JsonRpcMethod("textDocument/completion")]
-        protected virtual Result<CompletionResult, ResponseError> Completion(CompletionParams @params)
+        protected virtual Result<CompletionResult, ResponseError> Completion(CompletionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
         [JsonRpcMethod("completionItem/resolve")]
-        protected virtual Result<CompletionItem, ResponseError> ResolveCompletionItem(CompletionItem @params)
+        protected virtual Result<CompletionItem, ResponseError> ResolveCompletionItem(CompletionItem @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -189,7 +182,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: TextDocumentRegistrationOptions
         [JsonRpcMethod("textDocument/hover")]
-        protected virtual Result<Hover, ResponseError> Hover(TextDocumentPositionParams @params)
+        protected virtual Result<Hover, ResponseError> Hover(TextDocumentPositionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -197,7 +190,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: SignatureHelpRegistrationOptions
         [JsonRpcMethod("textDocument/signatureHelp")]
-        protected virtual Result<SignatureHelp, ResponseError> SignatureHelp(TextDocumentPositionParams @params)
+        protected virtual Result<SignatureHelp, ResponseError> SignatureHelp(TextDocumentPositionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -205,7 +198,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: TextDocumentRegistrationOptions
         [JsonRpcMethod("textDocument/references")]
-        protected virtual Result<Location[], ResponseError> FindReferences(ReferenceParams @params)
+        protected virtual Result<Location[], ResponseError> FindReferences(ReferenceParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -213,7 +206,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: TextDocumentRegistrationOptions
         [JsonRpcMethod("textDocument/documentHighlight")]
-        protected virtual Result<DocumentHighlight[], ResponseError> DocumentHighlight(TextDocumentPositionParams @params)
+        protected virtual Result<DocumentHighlight[], ResponseError> DocumentHighlight(TextDocumentPositionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -235,7 +228,7 @@ namespace LanguageServer
         /// <seealso cref="LanguageServer.Parameters.General.TextDocumentClientCapabilities"/>
         /// <seealso>Spec 3.10.0</seealso>
         [JsonRpcMethod("textDocument/documentSymbol")]
-        protected virtual Result<DocumentSymbolResult, ResponseError> DocumentSymbols(DocumentSymbolParams @params)
+        protected virtual Result<DocumentSymbolResult, ResponseError> DocumentSymbols(DocumentSymbolParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -256,7 +249,7 @@ namespace LanguageServer
         /// <returns></returns>
         /// <seealso>Spec 3.6.0</seealso>
         [JsonRpcMethod("textDocument/documentColor")]
-        protected virtual Result<ColorInformation[], ResponseError> DocumentColor(DocumentColorParams @params)
+        protected virtual Result<ColorInformation[], ResponseError> DocumentColor(DocumentColorParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -276,7 +269,7 @@ namespace LanguageServer
         /// <returns></returns>
         /// <seealso>Spec 3.6.0</seealso>
         [JsonRpcMethod("textDocument/colorPresentation")]
-        protected virtual Result<ColorPresentation[], ResponseError> ColorPresentation(ColorPresentationParams @params)
+        protected virtual Result<ColorPresentation[], ResponseError> ColorPresentation(ColorPresentationParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -284,7 +277,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: TextDocumentRegistrationOptions
         [JsonRpcMethod("textDocument/formatting")]
-        protected virtual Result<TextEdit[], ResponseError> DocumentFormatting(DocumentFormattingParams @params)
+        protected virtual Result<TextEdit[], ResponseError> DocumentFormatting(DocumentFormattingParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -292,7 +285,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: TextDocumentRegistrationOptions
         [JsonRpcMethod("textDocument/rangeFormatting")]
-        protected virtual Result<TextEdit[], ResponseError> DocumentRangeFormatting(DocumentRangeFormattingParams @params)
+        protected virtual Result<TextEdit[], ResponseError> DocumentRangeFormatting(DocumentRangeFormattingParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -300,7 +293,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: DocumentOnTypeFormattingRegistrationOptions
         [JsonRpcMethod("textDocument/onTypeFormatting")]
-        protected virtual Result<TextEdit[], ResponseError> DocumentOnTypeFormatting(DocumentOnTypeFormattingParams @params)
+        protected virtual Result<TextEdit[], ResponseError> DocumentOnTypeFormatting(DocumentOnTypeFormattingParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -316,7 +309,7 @@ namespace LanguageServer
         /// <returns></returns>
         /// <seealso cref="LanguageServer.Parameters.General.TextDocumentClientCapabilities"/>
         [JsonRpcMethod("textDocument/definition")]
-        protected virtual Result<LocationSingleOrArray, ResponseError> GotoDefinition(TextDocumentPositionParams @params)
+        protected virtual Result<LocationSingleOrArray, ResponseError> GotoDefinition(TextDocumentPositionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -333,7 +326,7 @@ namespace LanguageServer
         /// <seealso cref="LanguageServer.Parameters.General.TextDocumentClientCapabilities"/>
         /// <seealso>Spec 3.6.0</seealso>
         [JsonRpcMethod("textDocument/typeDefinition")]
-        protected virtual Result<LocationSingleOrArray, ResponseError> GotoTypeDefinition(TextDocumentPositionParams @params)
+        protected virtual Result<LocationSingleOrArray, ResponseError> GotoTypeDefinition(TextDocumentPositionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -350,7 +343,7 @@ namespace LanguageServer
         /// <seealso cref="LanguageServer.Parameters.General.TextDocumentClientCapabilities"/>
         /// <seealso>Spec 3.6.0</seealso>
         [JsonRpcMethod("textDocument/implementation")]
-        protected virtual Result<LocationSingleOrArray, ResponseError> GotoImplementation(TextDocumentPositionParams @params)
+        protected virtual Result<LocationSingleOrArray, ResponseError> GotoImplementation(TextDocumentPositionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -398,7 +391,7 @@ namespace LanguageServer
         /// <seealso cref="LanguageServer.Parameters.General.TextDocumentClientCapabilities"/>
         /// <seealso>Spec 3.8.0</seealso>
         [JsonRpcMethod("textDocument/codeAction")]
-        protected virtual Result<CodeActionResult, ResponseError> CodeAction(CodeActionParams @params)
+        protected virtual Result<CodeActionResult, ResponseError> CodeAction(CodeActionParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -406,13 +399,13 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: CodeLensRegistrationOptions
         [JsonRpcMethod("textDocument/codeLens")]
-        protected virtual Result<CodeLens[], ResponseError> CodeLens(CodeLensParams @params)
+        protected virtual Result<CodeLens[], ResponseError> CodeLens(CodeLensParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
         [JsonRpcMethod("codeLens/resolve")]
-        protected virtual Result<CodeLens, ResponseError> ResolveCodeLens(CodeLens @params)
+        protected virtual Result<CodeLens, ResponseError> ResolveCodeLens(CodeLens @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -420,13 +413,13 @@ namespace LanguageServer
         // dynam0icRegistration?: boolean;
         // Registration Options: DocumentLinkRegistrationOptions
         [JsonRpcMethod("textDocument/documentLink")]
-        protected virtual Result<DocumentLink[], ResponseError> DocumentLink(DocumentLinkParams @params)
+        protected virtual Result<DocumentLink[], ResponseError> DocumentLink(DocumentLinkParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
         [JsonRpcMethod("documentLink/resolve")]
-        protected virtual Result<DocumentLink, ResponseError> ResolveDocumentLink(DocumentLink @params)
+        protected virtual Result<DocumentLink, ResponseError> ResolveDocumentLink(DocumentLink @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -434,7 +427,7 @@ namespace LanguageServer
         // dynamicRegistration?: boolean;
         // Registration Options: TextDocumentRegistrationOptions
         [JsonRpcMethod("textDocument/rename")]
-        protected virtual Result<WorkspaceEdit, ResponseError> Rename(RenameParams @params)
+        protected virtual Result<WorkspaceEdit, ResponseError> Rename(RenameParams @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }
@@ -447,7 +440,7 @@ namespace LanguageServer
         /// <returns></returns>
         /// <seealso>Spec 3.10.0</seealso>
         [JsonRpcMethod("textDocument/foldingRange")]
-        protected virtual Result<FoldingRange[], ResponseError> FoldingRange(FoldingRangeRequestParam @params)
+        protected virtual Result<FoldingRange[], ResponseError> FoldingRange(FoldingRangeRequestParam @params, CancellationToken token)
         {
             throw new NotImplementedException();
         }

@@ -6,7 +6,7 @@ namespace RainLanguageServer
     internal class Server(Stream input, Stream output) : ServiceConnection(input, output)
     {
         #region 生命周期
-        protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams @params)
+        protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams @params, CancellationToken token)
         {
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持

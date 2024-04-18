@@ -36,7 +36,7 @@ namespace LanguageServer
         public async Task<bool> ReadAndHandle()
         {
             var json = await Read();
-            var messageTest = (MessageTest)Serializer.Instance.Deserialize(typeof(MessageTest), json);
+            var messageTest = Serializer.Deserialize<MessageTest>(json);
             if (messageTest == null) return false;
             if (messageTest.IsRequest) HandleRequest(messageTest.method, messageTest.id, json);
             else if (messageTest.IsResponse) HandleResponse(messageTest.id, json);
@@ -53,16 +53,16 @@ namespace LanguageServer
                 {
                     var tokenSource = new CancellationTokenSource();
                     CancellationHandlers.AddCancellationTokenSource(id, tokenSource);
-                    var request = Serializer.Instance.Deserialize(handler.RequestType, json);
+                    var request = Serializer.Deserialize(handler!.RequestType, json);
                     var requestResponse = (ResponseMessageBase)handler.Handle(request, this, tokenSource.Token);
                     CancellationHandlers.RemoveCancellationTokenSource(id);
                     requestResponse.id = id;
                     SendMessage(requestResponse);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Console.Error.WriteLine(ex);
-                    var requestErrorResponse = Reflector.CreateErrorResponse(handler.ResponseType, ex.ToString());
+                    Console.Error.WriteLine(e);
+                    var requestErrorResponse = Reflector.CreateErrorResponse(handler!.ResponseType, e.ToString());
                     SendMessage(requestErrorResponse);
                 }
             }
@@ -76,7 +76,7 @@ namespace LanguageServer
         {
             if (ResponseHandlers.TryRemoveResponseHandler(id, out var handler))
             {
-                var response = Serializer.Instance.Deserialize(handler.ResponseType, json);
+                var response = Serializer.Deserialize(handler.ResponseType, json);
                 handler.Handle(response);
             }
             else
@@ -88,11 +88,11 @@ namespace LanguageServer
 
         private void HandleCancellation(string json)
         {
-            var cancellation = (NotificationMessage<CancelParams>)Serializer.Instance.Deserialize(typeof(NotificationMessage<CancelParams>), json);
+            var cancellation = Serializer.Deserialize<NotificationMessage<CancelParams>>(json);
             var id = cancellation.@params.id;
             if (CancellationHandlers.TryRemoveCancellationTokenSource(id, out var tokenSource))
             {
-                tokenSource.Cancel();
+                tokenSource!.Cancel();
             }
             else
             {
@@ -105,7 +105,7 @@ namespace LanguageServer
         {
             if (NotificationHandlers.TryGetNotificationHandler(method, out var handler))
             {
-                var notification = Serializer.Instance.Deserialize(handler.NotificationType, json);
+                var notification = Serializer.Deserialize(handler.NotificationType, json);
                 handler.Handle(notification, this);
             }
             else
@@ -114,17 +114,14 @@ namespace LanguageServer
             }
         }
 
-        public void SendRequest<TRequest, TResponse>(TRequest request, Action<TResponse> responseHandler)
-            where TRequest : RequestMessageBase
-            where TResponse : ResponseMessageBase
+        public void SendRequest<TRequest, TResponse>(TRequest request, Action<TResponse> responseHandler) where TRequest : RequestMessageBase where TResponse : ResponseMessageBase
         {
-            var handler = new ResponseHandler(request.id, typeof(TResponse), o => responseHandler((TResponse)o));
+            var handler = new ResponseHandler(request.id, typeof(TResponse), response => responseHandler((TResponse)response));
             ResponseHandlers.AddResponseHandler(handler);
             SendMessage(request);
         }
 
-        public void SendNotification<TNotification>(TNotification notification)
-            where TNotification : NotificationMessageBase
+        public void SendNotification<TNotification>(TNotification notification) where TNotification : NotificationMessageBase
         {
             SendMessage(notification);
         }
@@ -137,7 +134,7 @@ namespace LanguageServer
 
         private void SendMessage(MessageBase message)
         {
-            Write(Serializer.Instance.Serialize(typeof(MessageBase), message));
+            Write(Serializer.Serialize(message));
         }
 
         private void Write(string json)

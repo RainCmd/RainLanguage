@@ -8,8 +8,7 @@ namespace RainLanguageServer
         {
             var recorder = args?.Length > 0 ? File.CreateText(args[0] + "server.log") : null;
             var server = new Server(new RecorderStream(Console.OpenStandardInput(), recorder), new RecorderStream(Console.OpenStandardOutput(), recorder));
-            Service.Register(server, server.GetType());
-            server.CancellationToken.WaitHandle.WaitOne();
+            server.Listen().Wait();
             recorder?.Close();
         }
     }

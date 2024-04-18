@@ -77,6 +77,11 @@ window.addEventListener('message', event => {
                     const element = datasets[index];
                     element.data.shift()
                 }
+                stateChart.data.labels.shift()
+            }
+            const label = msg["label"]
+            if (label) {
+                stateChart.data.labels.push(label)
             } else {
                 stateChart.data.labels.push("")
             }

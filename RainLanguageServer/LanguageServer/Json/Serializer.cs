@@ -1,13 +1,27 @@
 ﻿using LanguageServer.Infrastructure.JsonDotNet;
+using Newtonsoft.Json;
 
 namespace LanguageServer.Json
 {
-    public abstract class Serializer
+    public class Serializer
     {
-        public abstract object Deserialize(Type objectType, string json);
+        private static readonly JsonSerializerSettings settings = new()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters = [new EitherConverter()]
+        };
+        public static object Deserialize(Type objectType, string json)
+        {
+            return JsonConvert.DeserializeObject(json, objectType, settings);
+        }
+        public static T Deserialize<T>(string json)
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+        public static string Serialize(object value)
+        {
+            return JsonConvert.SerializeObject(value, settings);
 
-        public abstract string Serialize(Type objectType, object value);
-
-        public static readonly Serializer Instance = new JsonDotNetSerializer();
+        }
     }
 }

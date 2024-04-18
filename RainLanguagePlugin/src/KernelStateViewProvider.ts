@@ -2,6 +2,7 @@ import EventEmitter = require("events")
 import * as vscode from 'vscode'
 
 export interface KernelStateMsg{
+    label: string
     task: number
     string: number
     entity: number

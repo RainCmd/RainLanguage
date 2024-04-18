@@ -163,7 +163,8 @@ export enum Proto {
 	RSEND_Hover,
 
 	//	uint32	frame
-	RECV_Diagnose,
+    RECV_Diagnose,
+    //  string  label
 	//	uint32	task
 	//	uint32	string
 	//	uint32	entity

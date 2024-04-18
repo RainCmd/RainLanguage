@@ -651,6 +651,7 @@ void OnDiagnose(Debugger* debugger)
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_Diagnose);
+	writer.WriteString(L"");
 	writer.WriteUint32(state.taskCount);
 	writer.WriteUint32(state.stringCount);
 	writer.WriteUint32(state.entityCount);

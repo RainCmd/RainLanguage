@@ -94,7 +94,7 @@ export class RainDebugSession extends LoggingDebugSession {
 			this.helper.Send(writer)
 		})
 	}
-
+	
 	private RegistDebuggerEvent() {
 		this.helper.on(client.Proto.SEND_Attached, reader => {
 			this.sendEvent(new InitializedEvent())
@@ -125,11 +125,12 @@ export class RainDebugSession extends LoggingDebugSession {
 			console.log(msg)
 		}).on(client.Proto.SEND_Diagnose, reader => {
 			kernelStateViewProvider.RecvData({
+				label: reader.ReadString(),
 				task: reader.ReadInt(),
 				string: reader.ReadInt(),
 				entity: reader.ReadInt(),
 				handle: reader.ReadInt(),
-				heap: reader.ReadInt()
+				heap: reader.ReadInt(),
 			})
 		})
 	}
