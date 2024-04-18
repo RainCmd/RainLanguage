@@ -64,17 +64,17 @@ namespace LanguageServer
             throw new ArgumentException($"签名不匹配: {method.Name}");
         }
 
-        private static readonly MethodInfo method_ForRequest3 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest3))!;
-        private static RequestHandlerDelegate ForRequest3<TParams, TResult, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new()
+        private static readonly MethodInfo method_ForRequest4 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest4))!;
+        private static RequestHandlerDelegate ForRequest4<T, TParams, TResult, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new() where T : Connection
         {
-            Func<Connection, TParams?, CancellationToken, Result<TResult, TResponseError>> func;
+            Func<T, TParams?, CancellationToken, Result<TResult, TResponseError>> func;
             if (hasToken)
             {
-                func = method.CreateDelegate<Func<Connection, TParams?, CancellationToken, Result<TResult, TResponseError>>>();
+                func = method.CreateDelegate<Func<T, TParams?, CancellationToken, Result<TResult, TResponseError>>>();
             }
             else
             {
-                var methodDelegate = method.CreateDelegate<Func<Connection, TParams?, Result<TResult, TResponseError>>>();
+                var methodDelegate = method.CreateDelegate<Func<T, TParams?, Result<TResult, TResponseError>>>();
                 func = (connection, param, token) => methodDelegate(connection, param);
             }
 
@@ -84,7 +84,7 @@ namespace LanguageServer
                 Result<TResult, TResponseError> result;
                 try
                 {
-                    result = func(connection, requestMessage.@params, token);
+                    result = func((T)connection, requestMessage.@params, token);
                 }
                 catch (Exception e)
                 {
@@ -101,22 +101,22 @@ namespace LanguageServer
         }
 
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForRequest3(Type paramsType, Type resultType, Type responseErrorType)
+        private static MethodInfo GetFactoryForRequest(Type declaringType, Type paramsType, Type resultType, Type responseErrorType)
         {
-            return method_ForRequest3.MakeGenericMethod(paramsType, resultType, responseErrorType);
+            return method_ForRequest4.MakeGenericMethod(declaringType, paramsType, resultType, responseErrorType);
         }
 
-        private static readonly MethodInfo method_ForRequest2 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest2))!;
-        private static RequestHandlerDelegate ForRequest2<TResult, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new()
+        private static readonly MethodInfo method_ForRequest3 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest3))!;
+        private static RequestHandlerDelegate ForRequest3<T, TResult, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new() where T : Connection
         {
-            Func<Connection, CancellationToken, Result<TResult, TResponseError>> func;
+            Func<T, CancellationToken, Result<TResult, TResponseError>> func;
             if (hasToken)
             {
-                func = method.CreateDelegate<Func<Connection, CancellationToken, Result<TResult, TResponseError>>>();
+                func = method.CreateDelegate<Func<T, CancellationToken, Result<TResult, TResponseError>>>();
             }
             else
             {
-                var methodDelegate = method.CreateDelegate<Func<Connection, Result<TResult, TResponseError>>>();
+                var methodDelegate = method.CreateDelegate<Func<T, Result<TResult, TResponseError>>>();
                 func = (connection, token) => methodDelegate(connection);
             }
 
@@ -126,7 +126,7 @@ namespace LanguageServer
                 Result<TResult, TResponseError> result;
                 try
                 {
-                    result = func(connection, token);
+                    result = func((T)connection, token);
                 }
                 catch (Exception e)
                 {
@@ -143,22 +143,22 @@ namespace LanguageServer
         }
 
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForRequest2(Type resultType, Type responseErrorType)
+        private static MethodInfo GetFactoryForRequest(Type declaringType, Type resultType, Type responseErrorType)
         {
-            return method_ForRequest2.MakeGenericMethod(resultType, responseErrorType);
+            return method_ForRequest3.MakeGenericMethod(declaringType, resultType, responseErrorType);
         }
 
-        private static readonly MethodInfo method_ForRequest = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest))!;
-        private static RequestHandlerDelegate ForRequest<TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new()
+        private static readonly MethodInfo method_ForRequest2 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForRequest2))!;
+        private static RequestHandlerDelegate ForRequest2<T, TResponseError>(MethodInfo method, bool hasToken) where TResponseError : ResponseError, new() where T : Connection
         {
-            Func<Connection, CancellationToken, VoidResult<TResponseError>> func;
+            Func<T, CancellationToken, VoidResult<TResponseError>> func;
             if (hasToken)
             {
-                func = method.CreateDelegate<Func<Connection, CancellationToken, VoidResult<TResponseError>>>();
+                func = method.CreateDelegate<Func<T, CancellationToken, VoidResult<TResponseError>>>();
             }
             else
             {
-                var methodDelegate = method.CreateDelegate<Func<Connection, VoidResult<TResponseError>>>();
+                var methodDelegate = method.CreateDelegate<Func<T, VoidResult<TResponseError>>>();
                 func = (connection, token) => methodDelegate(connection);
             }
 
@@ -168,7 +168,7 @@ namespace LanguageServer
                 VoidResult<TResponseError> result;
                 try
                 {
-                    result = func(connection, token);
+                    result = func((T)connection, token);
                 }
                 catch (Exception e)
                 {
@@ -184,15 +184,15 @@ namespace LanguageServer
         }
 
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForRequest(Type responseErrorType)
+        private static MethodInfo GetFactoryForRequest(Type declaringType, Type responseErrorType)
         {
-            return method_ForRequest.MakeGenericMethod(responseErrorType);
+            return method_ForRequest2.MakeGenericMethod(declaringType, responseErrorType);
         }
 
         [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForRequest2(MethodInfo, Type, Type)")]
-        internal static RequestHandlerDelegate CreateRequestHandlerDelegate(MethodInfo method)
+        private static MethodInfo GetFactoryForRequest(MethodInfo method, out bool hasToken)
         {
-            if(!TryGetParameterType(method,out var parameterType,out var hasToken)) throw new ArgumentException($"签名不匹配: {method.Name}");
+            if (!TryGetParameterType(method, out var parameterType, out hasToken)) throw new ArgumentException($"签名不匹配: {method.Name}");
             var returnType = method.ReturnType;
             Type? resultType;
             Type responseErrorType;
@@ -212,11 +212,14 @@ namespace LanguageServer
                 else throw new ArgumentException($"签名不匹配: {method.Name}");
             }
             else throw new ArgumentException($"签名不匹配: {method.Name}");
-
-            var factory =
-                (parameterType != null && resultType != null) ? GetFactoryForRequest3(parameterType, resultType, responseErrorType) :
-                (parameterType == null && resultType != null) ? GetFactoryForRequest2(resultType, responseErrorType) :
-                GetFactoryForRequest(responseErrorType);
+            if (resultType == null) return GetFactoryForRequest(method.DeclaringType!, responseErrorType);
+            else if (parameterType == null) return GetFactoryForRequest(method.DeclaringType!, resultType, responseErrorType);
+            else return GetFactoryForRequest(method.DeclaringType!, parameterType, resultType, responseErrorType);
+        }
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForRequest2(MethodInfo, Type, Type)")]
+        internal static RequestHandlerDelegate CreateRequestHandlerDelegate(MethodInfo method)
+        {
+            var factory = GetFactoryForRequest(method, out var hasToken);
             return (RequestHandlerDelegate)factory.Invoke(null, [method, hasToken])!;
         }
         #endregion
@@ -238,16 +241,16 @@ namespace LanguageServer
             throw new ArgumentException($"签名不匹配: {method.Name}");
         }
         private static readonly MethodInfo method_ForNotification2 = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForNotification2))!;
-        private static NotificationHandlerDelegate ForNotification2<TParams>(MethodInfo method)
+        private static NotificationHandlerDelegate ForNotification2<T, TParams>(MethodInfo method) where T : Connection
         {
-            var action = method.CreateDelegate<Action<Connection, TParams?>>();
+            var action = method.CreateDelegate<Action<T, TParams?>>();
 
             return (notification, connection) =>
             {
                 var notificationMessage = (NotificationMessage<TParams>)notification;
                 try
                 {
-                    action(connection, notificationMessage.@params);
+                    action((T)connection, notificationMessage.@params);
                 }
                 catch (Exception ex)
                 {
@@ -256,19 +259,20 @@ namespace LanguageServer
             };
         }
         [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
-        private static MethodInfo GetFactoryForNotification2(Type paramsType)
+        private static MethodInfo GetFactoryForNotification(Type declaringType, Type paramsType)
         {
-            return method_ForNotification2.MakeGenericMethod(paramsType);
+            return method_ForNotification2.MakeGenericMethod(declaringType, paramsType);
         }
-        private static NotificationHandlerDelegate ForNotification(MethodInfo method)
+        private static readonly MethodInfo method_ForNotification = typeof(Reflector).GetTypeInfo().GetDeclaredMethod(nameof(ForNotification))!;
+        private static NotificationHandlerDelegate ForNotification<T>(MethodInfo method) where T : Connection
         {
-            var action = method.CreateDelegate<Action<Connection>>();
+            var action = method.CreateDelegate<Action<T>>();
 
             return (notification, connection) =>
             {
                 try
                 {
-                    action(connection);
+                    action((T)connection);
                 }
                 catch (Exception ex)
                 {
@@ -276,8 +280,15 @@ namespace LanguageServer
                 }
             };
         }
-        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForNotification2(MethodInfo, Type, Type)")]
-        internal static NotificationHandlerDelegate CreateNotificationHandlerDelegate(MethodInfo method)
+
+        [RequiresDynamicCode("Calls System.Reflection.MethodInfo.MakeGenericMethod(params Type[])")]
+        private static MethodInfo GetFactoryForNotification(Type declaringType)
+        {
+            return method_ForNotification.MakeGenericMethod(declaringType);
+        }
+
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForNotification(Type, Type)")]
+        private static MethodInfo GetFactoryForNotification(MethodInfo method)
         {
             if (method.ReturnType != typeof(void))
             {
@@ -287,8 +298,13 @@ namespace LanguageServer
             {
                 throw new ArgumentException($"signature mismatch: {method.Name}");
             }
-            if (parameterType == null) return ForNotification(method);
-            else return (NotificationHandlerDelegate)GetFactoryForNotification2(parameterType).Invoke(null, [method])!;
+            if (parameterType != null) return GetFactoryForNotification(method.DeclaringType!, parameterType);
+            else return GetFactoryForNotification(method.DeclaringType!);
+        }
+        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetFactoryForNotification2(MethodInfo, Type, Type)")]
+        internal static NotificationHandlerDelegate CreateNotificationHandlerDelegate(MethodInfo method)
+        {
+            return (NotificationHandlerDelegate)GetFactoryForNotification(method).Invoke(null, [method])!;
         }
         #endregion
 

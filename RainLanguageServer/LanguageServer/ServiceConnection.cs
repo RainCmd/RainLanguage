@@ -7,17 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LanguageServer
 {
-    public abstract class ServiceConnection : Connection
+    [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
+    public abstract class ServiceConnection(Stream input, Stream output) : Connection(input, output)
     {
-        private readonly Proxy proxy;
-        public Proxy Proxy => proxy;
-
-        [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
-        protected ServiceConnection(Stream input, Stream output) : base(input, output)
-        {
-            proxy = new Proxy(this);
-        }
-
         #region General
 
         [JsonRpcMethod("initialize")]

@@ -1,4 +1,5 @@
-﻿using LanguageServer.Json;
+﻿using LanguageServer.Client;
+using LanguageServer.Json;
 using LanguageServer.Parameters.General;
 using Matarillo.IO;
 using System.Diagnostics.CodeAnalysis;
@@ -15,6 +16,8 @@ namespace LanguageServer
         private const byte LF = 10;
         private readonly byte[] separator = [CR, LF];
         private readonly object outputLock = new();
+        private readonly Proxy proxy;
+        public Proxy Proxy => proxy;
 
         private readonly RequestHandlerCollection RequestHandlers = new();
         private readonly NotificationHandlerCollection NotificationHandlers = new();
@@ -25,6 +28,7 @@ namespace LanguageServer
         {
             this.input = new ProtocolReader(input);
             this.output = output;
+            proxy = new Proxy(this);
             foreach (var method in GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
             {
                 var rpcMethod = method.GetCustomAttribute<JsonRpcMethodAttribute>()?.Method;
