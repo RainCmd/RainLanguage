@@ -1,6 +1,7 @@
 ﻿using LanguageServer.Parameters.General;
 using LanguageServer;
 using System.Diagnostics.CodeAnalysis;
+using LanguageServer.Parameters.TextDocument;
 
 namespace RainLanguageServer
 {
@@ -57,5 +58,17 @@ namespace RainLanguageServer
         }
 
         #endregion 生命周期
+        protected override void DidOpenTextDocument(DidOpenTextDocumentParams @params)
+        {
+            base.DidOpenTextDocument(@params);
+        }
+        protected override void DidChangeTextDocument(DidChangeTextDocumentParams @params)
+        {
+            base.DidChangeTextDocument(@params);
+        }
+        protected override void DidCloseTextDocument(DidCloseTextDocumentParams @params)
+        {
+            base.DidCloseTextDocument(@params);
+        }
     }
 }
