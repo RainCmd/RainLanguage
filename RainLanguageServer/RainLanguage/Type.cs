@@ -1,0 +1,66 @@
+﻿namespace RainLanguageServer.RainLanguage
+{
+    internal enum TypeCode
+    {
+        Invalid,
+
+        Struct,
+        Enum,
+        Handle,
+        Interface,
+        Delegate,
+        Task,
+    }
+    internal readonly struct Type : IEquatable<Type>
+    {
+        public readonly int library;
+        public readonly TypeCode code;
+        public readonly int index;
+        public readonly int dimension;
+
+        public bool Equals(Type type)
+        {
+            return library == type.library &&
+             code == type.code &&
+             index == type.index &&
+             dimension == type.dimension;
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is Type type && Equals(type);
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(library, code, index, dimension);
+        }
+        public static bool operator ==(Type lhs, Type rhs) => lhs.Equals(rhs);
+        public static bool operator !=(Type lhs, Type rhs) => !lhs.Equals(rhs);
+        public const int LIBRARY_KERNEL = -2;
+        public const int LIBRARY_SELF = -3;
+    }
+    internal readonly struct Tuple : IEquatable<Tuple>
+    {
+        private readonly List<Type> types;
+        public readonly int Count => types.Count;
+        public readonly Type this[int index] => types[index];
+
+        public bool Equals(Tuple tuple)
+        {
+            if (Count != tuple.Count) return false;
+            for (int i = 0; i < Count; i++)
+                if (this[i] != tuple[i])
+                    return false;
+            return true;
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is Tuple tuple && Equals(tuple);
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(types, Count);
+        }
+        public static bool operator ==(Tuple lhs, Tuple rhs) => lhs.Equals(rhs);
+        public static bool operator !=(Tuple lhs, Tuple rhs) => !lhs.Equals(rhs);
+    }
+}
