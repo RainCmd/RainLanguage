@@ -48,24 +48,30 @@
     internal class RInterface : RDeclaration, IInterface
     {
         public readonly List<Type> inherits = [];
-        public readonly List<RFunction> functions = [];
+        public readonly List<RFunction> callables = [];
 
         public int InheritCount => inherits.Count;
         public Type GetInherit(int index) => inherits[index];
-        public int FunctionCount => functions.Count;
-        public IFunction GetFunction(int index) => functions[index];
+        public int CallableCount => callables.Count;
+        public ICallable GetCallable(int index) => callables[index];
     }
-    internal class RClass : RInterface, IClass
+    internal class RClass : RDeclaration, IClass
     {
         public readonly Type parent;
+        public readonly List<Type> inherits = [];
         public readonly List<RFunction> constructors = [];
         public readonly List<RVariable> variables = [];
+        public readonly List<RFunction> functions = [];
 
         public Type Parent => parent;
+        public int InheritCount => inherits.Count;
+        public Type GetInherit(int index) => inherits[index];
         public int ConstructorCount => constructors.Count;
         public IFunction GetConstructor(int index) => constructors[index];
         public int VariableCount => variables.Count;
         public IVariable GetVariable(int index) => variables[index];
+        public int FunctionCount => functions.Count;
+        public IFunction GetFunction(int index) => functions[index];
     }
     internal class RDelegate : RCallable, IDelegate { }
     internal class RTask : RDeclaration, ITask
@@ -75,17 +81,16 @@
         public Tuple Returns => returns;
     }
     internal class RNative : RCallable, INative { }
-    internal class RSpace(int index, RSpace parent, string name) : ISpace
+    internal class RSpace(int index, RSpace? parent, string name) : ISpace
     {
         public readonly int index = index;
-        public readonly RSpace parent = parent;
+        public readonly RSpace? parent = parent;
         public readonly string name = name;
         public readonly List<string> attributes = [];
         public readonly Dictionary<string, RSpace> children = [];
         public readonly Dictionary<string, List<Declaration>> declarations = [];
 
-        public int Index => index;
-        public ISpace Parent => parent;
+        public ISpace? Parent => parent;
         public string Name => name;
         public int AttributeCount => attributes.Count;
         public string GetAttribute(int index) => attributes[index];
@@ -101,9 +106,9 @@
         }
         public bool TryGet(string name, out List<Declaration>? declarations) => this.declarations.TryGetValue(name, out declarations);
     }
-    internal class RLibrary(int index, RSpace parent, string name) : RSpace(index, parent, name), ILibrary
+    internal class RLibrary(int library, RSpace parent, string name) : RSpace(0, parent, name), ILibrary
     {
-        public readonly int library;
+        public readonly int library = library;
         public readonly List<RVariable> variables = [];
         public readonly List<RFunction> functions = [];
         public readonly List<REnum> enums = [];

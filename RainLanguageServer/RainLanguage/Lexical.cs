@@ -257,66 +257,88 @@ namespace RainLanguageServer.RainLanguage
             }
             return false;
         }
+        public static bool TryConvertVisibility(this LexicalType type, out Visibility visibility)
+        {
+            switch (type)
+            {
+                case LexicalType.KeyWord_public:
+                    visibility = Visibility.Public;
+                    return true;
+                case LexicalType.KeyWord_internal:
+                    visibility = Visibility.Internal;
+                    return true;
+                case LexicalType.KeyWord_space:
+                    visibility = Visibility.Space;
+                    return true;
+                case LexicalType.KeyWord_protected:
+                    visibility = Visibility.Protected;
+                    return true;
+                case LexicalType.KeyWord_private:
+                    visibility = Visibility.Private;
+                    return true;
+                default:
+                    visibility = Visibility.None;
+                    return false;
+            }
+        }
         public static LexicalType Parse(string word)
         {
-            switch (word)
+            return word switch
             {
-                case "namespace": return LexicalType.KeyWord_namespace;
-                case "import": return LexicalType.KeyWord_import;
-                case "native": return LexicalType.KeyWord_native;
-                case "public": return LexicalType.KeyWord_public;
-                case "internal": return LexicalType.KeyWord_internal;
-                case "space": return LexicalType.KeyWord_space;
-                case "protected": return LexicalType.KeyWord_protected;
-                case "private": return LexicalType.KeyWord_private;
-                case "enum": return LexicalType.KeyWord_enum;
-                case "struct": return LexicalType.KeyWord_struct;
-                case "class": return LexicalType.KeyWord_class;
-                case "interface": return LexicalType.KeyWord_interface;
-                case "const": return LexicalType.KeyWord_const;
-
-                case "global": return LexicalType.KeyWord_global;
-                case "base": return LexicalType.KeyWord_base;
-                case "this": return LexicalType.KeyWord_this;
-                case "true": return LexicalType.KeyWord_true;
-                case "false": return LexicalType.KeyWord_false;
-                case "null": return LexicalType.KeyWord_null;
-                case "var": return LexicalType.KeyWord_var;
-                case "bool": return LexicalType.KeyWord_bool;
-                case "byte": return LexicalType.KeyWord_byte;
-                case "char": return LexicalType.KeyWord_char;
-                case "integer": return LexicalType.KeyWord_integer;
-                case "real": return LexicalType.KeyWord_real;
-                case "real2": return LexicalType.KeyWord_real2;
-                case "real3": return LexicalType.KeyWord_real3;
-                case "real4": return LexicalType.KeyWord_real4;
-                case "type": return LexicalType.KeyWord_type;
-                case "string": return LexicalType.KeyWord_string;
-                case "handle": return LexicalType.KeyWord_handle;
-                case "entity": return LexicalType.KeyWord_entity;
-                case "delegate": return LexicalType.KeyWord_delegate;
-                case "task": return LexicalType.KeyWord_task;
-                case "array": return LexicalType.KeyWord_array;
-
-                case "if": return LexicalType.KeyWord_if;
-                case "elseif": return LexicalType.KeyWord_elseif;
-                case "else": return LexicalType.KeyWord_else;
-                case "while": return LexicalType.KeyWord_while;
-                case "for": return LexicalType.KeyWord_for;
-                case "break": return LexicalType.KeyWord_break;
-                case "continue": return LexicalType.KeyWord_continue;
-                case "return": return LexicalType.KeyWord_return;
-                case "is": return LexicalType.KeyWord_is;
-                case "as": return LexicalType.KeyWord_as;
-                case "start": return LexicalType.KeyWord_start;
-                case "new": return LexicalType.KeyWord_new;
-                case "wait": return LexicalType.KeyWord_wait;
-                case "exit": return LexicalType.KeyWord_exit;
-                case "try": return LexicalType.KeyWord_try;
-                case "catch": return LexicalType.KeyWord_catch;
-                case "finally": return LexicalType.KeyWord_finally;
-            }
-            return LexicalType.Word;
+                "namespace" => LexicalType.KeyWord_namespace,
+                "import" => LexicalType.KeyWord_import,
+                "native" => LexicalType.KeyWord_native,
+                "public" => LexicalType.KeyWord_public,
+                "internal" => LexicalType.KeyWord_internal,
+                "space" => LexicalType.KeyWord_space,
+                "protected" => LexicalType.KeyWord_protected,
+                "private" => LexicalType.KeyWord_private,
+                "enum" => LexicalType.KeyWord_enum,
+                "struct" => LexicalType.KeyWord_struct,
+                "class" => LexicalType.KeyWord_class,
+                "interface" => LexicalType.KeyWord_interface,
+                "const" => LexicalType.KeyWord_const,
+                "global" => LexicalType.KeyWord_global,
+                "base" => LexicalType.KeyWord_base,
+                "this" => LexicalType.KeyWord_this,
+                "true" => LexicalType.KeyWord_true,
+                "false" => LexicalType.KeyWord_false,
+                "null" => LexicalType.KeyWord_null,
+                "var" => LexicalType.KeyWord_var,
+                "bool" => LexicalType.KeyWord_bool,
+                "byte" => LexicalType.KeyWord_byte,
+                "char" => LexicalType.KeyWord_char,
+                "integer" => LexicalType.KeyWord_integer,
+                "real" => LexicalType.KeyWord_real,
+                "real2" => LexicalType.KeyWord_real2,
+                "real3" => LexicalType.KeyWord_real3,
+                "real4" => LexicalType.KeyWord_real4,
+                "type" => LexicalType.KeyWord_type,
+                "string" => LexicalType.KeyWord_string,
+                "handle" => LexicalType.KeyWord_handle,
+                "entity" => LexicalType.KeyWord_entity,
+                "delegate" => LexicalType.KeyWord_delegate,
+                "task" => LexicalType.KeyWord_task,
+                "array" => LexicalType.KeyWord_array,
+                "if" => LexicalType.KeyWord_if,
+                "elseif" => LexicalType.KeyWord_elseif,
+                "else" => LexicalType.KeyWord_else,
+                "while" => LexicalType.KeyWord_while,
+                "for" => LexicalType.KeyWord_for,
+                "break" => LexicalType.KeyWord_break,
+                "continue" => LexicalType.KeyWord_continue,
+                "return" => LexicalType.KeyWord_return,
+                "is" => LexicalType.KeyWord_is,
+                "as" => LexicalType.KeyWord_as,
+                "start" => LexicalType.KeyWord_start,
+                "new" => LexicalType.KeyWord_new,
+                "wait" => LexicalType.KeyWord_wait,
+                "exit" => LexicalType.KeyWord_exit,
+                "try" => LexicalType.KeyWord_try,
+                "catch" => LexicalType.KeyWord_catch,
+                "finally" => LexicalType.KeyWord_finally,
+                _ => LexicalType.Word,
+            };
         }
     }
     internal readonly struct Lexical(TextRange anchor, LexicalType type)
@@ -329,7 +351,7 @@ namespace RainLanguageServer.RainLanguage
             ch |= 0x20;
             return ch >= 'a' || ch <= 'z';
         }
-        private static TextRange MatchStringTemplateBlock(TextRange segment, MessageCollector collector)
+        private static TextRange MatchStringTemplateBlock(TextRange segment, MessageCollector? collector)
         {
             if (segment[0] != '{') throw new ArgumentException("需要保留前后花括号");
             var index = 1;
@@ -339,10 +361,10 @@ namespace RainLanguageServer.RainLanguage
                 if (lexical.type == LexicalType.BracketRight2)
                     return segment[..index];
             }
-            collector.AddMessage(new CompileMessage(segment, CompileMessageType.Error, "缺少配对的括号"));
+            collector?.Add(segment, CErrorLevel.Error, "缺少配对的括号");
             return segment;
         }
-        public static bool TryAnalysis(TextRange segment, int index, out Lexical lexical, MessageCollector collector)
+        public static bool TryAnalysis(TextRange segment, int index, out Lexical lexical, MessageCollector? collector)
         {
             while (index < segment.Count && char.IsWhiteSpace(segment[index])) index++;
             if (index < segment.Count)
@@ -484,7 +506,7 @@ namespace RainLanguageServer.RainLanguage
                             index++;
                         }
                         lexical = new Lexical(segment[..index], LexicalType.ConstChars);
-                        collector.AddMessage(new CompileMessage(segment[..index], CompileMessageType.Error, "缺少配对的符号"));
+                        collector?.Add(segment[..index], CErrorLevel.Error, "缺少配对的符号");
                         return true;
                     case '\"':
                         index = 1;
@@ -503,7 +525,7 @@ namespace RainLanguageServer.RainLanguage
                             index++;
                         }
                         lexical = new Lexical(segment[..index], LexicalType.ConstString);
-                        collector.AddMessage(new CompileMessage(segment[..index], CompileMessageType.Error, "缺少配对的符号"));
+                        collector?.Add(segment[..index], CErrorLevel.Error, "缺少配对的符号");
                         return true;
                     case '$':
                         if (segment[1] == '\"')
@@ -534,12 +556,12 @@ namespace RainLanguageServer.RainLanguage
                                 else index++;
                             }
                             lexical = new Lexical(segment[..index], LexicalType.TemplateString);
-                            collector.AddMessage(new CompileMessage(segment[..index], CompileMessageType.Error, "缺少配对的符号"));
+                            collector?.Add(segment[..index], CErrorLevel.Error, "缺少配对的符号");
                         }
                         else
                         {
                             lexical = new Lexical(segment[..1], LexicalType.Unknow);
-                            collector.AddMessage(new CompileMessage(segment[..1], CompileMessageType.Error, "未知的符号"));
+                            collector?.Add(segment[..1], CErrorLevel.Error, "未知的符号");
                         }
                         return true;
                     case '\\':
@@ -606,13 +628,59 @@ namespace RainLanguageServer.RainLanguage
                             index = 1;
                             while (!char.IsWhiteSpace(segment[index])) index++;
                             lexical = new Lexical(segment[..index], LexicalType.Unknow);
-                            collector.AddMessage(new CompileMessage(segment[..index], CompileMessageType.Error, "未知的符号"));
+                            collector?.Add(segment[..index], CErrorLevel.Error, "未知的符号");
                             return true;
                         }
                 }
             }
             lexical = default;
             return false;
+        }
+        public static bool TryAnalysis(TextRange segment, TextPosition index, out Lexical lexical, MessageCollector? collector)
+        {
+            return TryAnalysis(segment, index - segment.start, out lexical, collector);
+        }
+
+        public static bool TryExtractName(TextRange segment, int start, out int index, out List<TextRange> names, MessageCollector collector)
+        {
+            index = start;
+            names = [];
+            while (TryAnalysis(segment, index, out var lexical, collector))
+            {
+                if (lexical.type == LexicalType.Word) names.Add(lexical.anchor);
+                else break;
+                index = lexical.anchor.end - segment.start;
+                if (TryAnalysis(segment, index, out lexical, collector) && lexical.type == LexicalType.Dot)
+                    index = lexical.anchor.end - segment.start;
+                else return true;
+            }
+            return names.Count > 0;
+        }
+        public static bool TryExtractName(TextRange segment, TextPosition start, out TextPosition index, out List<TextRange> names, MessageCollector collector)
+        {
+            var ressult = TryExtractName(segment, start - segment.start, out var i, out names, collector);
+            index = segment.start + i;
+            return ressult;
+        }
+
+        public static int ExtractDimension(TextRange segment, ref int position)
+        {
+            var result = 0;
+            while (true)
+            {
+                if (!TryAnalysis(segment, position, out var lexical, null) || lexical.type != LexicalType.BracketLeft1) break;
+                if (!TryAnalysis(segment, lexical.anchor.end, out lexical, null) || lexical.type != LexicalType.BracketRight1) break;
+                position = lexical.anchor.end - segment.start;
+                result++;
+            }
+            return result;
+        }
+        public static int ExtractDimension(TextRange segment, ref TextPosition position)
+        {
+            var index = position - segment.start;
+            var result = ExtractDimension(segment, ref index);
+            position = segment.start + index;
+            return result;
         }
     }
 }

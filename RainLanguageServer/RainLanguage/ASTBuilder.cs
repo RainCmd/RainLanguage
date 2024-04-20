@@ -13,20 +13,21 @@
             private int line = 0;
             public bool TryReadLine(out TextLine line)
             {
-                if (this.line < document.LineCount)
+                if (this.line++ < document.LineCount)
                 {
-                    line = document[this.line++];
+                    line = document[this.line - 1];
                     return true;
                 }
                 line = default;
                 return false;
             }
+            public void Rollback() => line--;
         }
-        public static ASTManager Build(IEnumerable<IFileDocument> files)
+        public static ASTManager Build(string name, IEnumerable<IFileDocument> files)
         {
-            var manager = new ASTManager();
+            var manager = new ASTManager(name);
             foreach (var file in files)
-                manager.fileSpaces.Add(file.Path, new FileSpace(new LineReader(file)));
+                manager.fileSpaces.Add(file.Path, new FileSpace(new LineReader(file), manager.library));
             return manager;
         }
     }

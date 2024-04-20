@@ -34,16 +34,20 @@
     {
         int InheritCount { get; }
         Type GetInherit(int index);
-        int FunctionCount { get; }
-        IFunction GetFunction(int index);
+        int CallableCount { get; }
+        ICallable GetCallable(int index);
     }
-    internal interface IClass : IInterface
+    internal interface IClass : IDeclaration
     {
         Type Parent { get; }
+        int InheritCount { get; }
+        Type GetInherit(int index);
         int ConstructorCount { get; }
         IFunction GetConstructor(int index);
         int VariableCount { get; }
         IVariable GetVariable(int index);
+        int FunctionCount { get; }
+        IFunction GetFunction(int index);
     }
     internal interface IDelegate : ICallable { }
     internal interface ITask : IDeclaration
@@ -53,8 +57,7 @@
     internal interface INative : ICallable { }
     internal interface ISpace
     {
-        int Index { get; }
-        ISpace Parent { get; }
+        ISpace? Parent { get; }
         string Name { get; }
         int AttributeCount { get; }
         string GetAttribute(int index);

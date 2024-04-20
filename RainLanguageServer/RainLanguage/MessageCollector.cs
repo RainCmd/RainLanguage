@@ -1,23 +1,28 @@
 ﻿namespace RainLanguageServer.RainLanguage
 {
-    internal enum CompileMessageType
+    /// <summary>
+    /// 编译错误等级
+    /// </summary>
+    internal enum CErrorLevel
     {
         Error,
         Warning,
         Info,
     }
-    internal readonly struct CompileMessage(TextRange range, CompileMessageType type, string message)
+    internal readonly struct CompileMessage(TextRange range, CErrorLevel level, string message)
     {
         public readonly TextRange range = range;
-        public readonly CompileMessageType type = type;
+        public readonly CErrorLevel level = level;
         public readonly string message = message;
+        public readonly List<TextRange> related = [];
     }
     internal class MessageCollector
     {
         private readonly List<CompileMessage> messages = [];
         public int Count => messages.Count;
         public CompileMessage this[int index] => messages[index];
-        public void AddMessage(CompileMessage message) => messages.Add(message);
+        public void Add(CompileMessage message) => messages.Add(message);
+        public void Add(TextRange range, CErrorLevel level, string message) => Add(new CompileMessage(range, level, message));
         public void Clear() => messages.Clear();
     }
 }

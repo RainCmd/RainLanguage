@@ -12,37 +12,32 @@ namespace RainLanguageServer
         /// <summary>
         /// -1表示空行
         /// </summary>
-        public int Indent
-        {
-            get
-            {
-                var indent = 0;
-                for (var i = start; i < end; i++)
-                {
-                    switch (document.text[i])
-                    {
-                        case ' ': indent++; break;
-                        case '\t': indent += 4; break;
-                        case '\r': return -1;
-                        case '/':
-                            if (i + 1 < end && document.text[i + 1] == '/') return -1;
-                            else return indent;
-                        default: return indent;
-                    }
-                }
-                return -1;
-            }
-        }
+        public readonly int indent = GetIndent(document, start, end);
+        public TextPosition Start => new(document, line, 0);
+        public TextPosition End => new(document, line, Length);
         public int Length => end - start;
         public char this[int index] => document.text[start + index];
-        public override string ToString()
+        public TextRange this[Range range] => ((TextRange)this)[range];
+        public TextRange this[TextPosition start, TextPosition end] => ((TextRange)this)[start, end];
+        public override string ToString() => document.text[start..end];
+        public static implicit operator TextRange(TextLine line) => new(line.Start, line.End);
+        private static int GetIndent(TextDocument document, int start, int end)
         {
-            return document.text[start..end];
-        }
-        public static implicit operator TextRange(TextLine line)
-        {
-            return new TextRange(new TextPosition(line.document, line.line, 0),
-                new TextPosition(line.document, line.line, line.Length));
+            var indent = 0;
+            for (var i = start; i < end; i++)
+            {
+                switch (document.text[i])
+                {
+                    case ' ': indent++; break;
+                    case '\t': indent += 4; break;
+                    case '\r': return -1;
+                    case '/':
+                        if (i + 1 < end && document.text[i + 1] == '/') return -1;
+                        else return indent;
+                    default: return indent;
+                }
+            }
+            return -1;
         }
     }
     internal readonly struct TextPosition(TextDocument document, int line, int charactor) : IEquatable<TextPosition>
@@ -58,11 +53,11 @@ namespace RainLanguageServer
                    charactor == position.charactor;
         }
         public override bool Equals(object? obj) => obj is TextPosition position && Equals(position);
+        public override int GetHashCode() => HashCode.Combine(document.GetHashCode(), line, charactor);
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(document.GetHashCode(), line, charactor);
-        }
+        public static int operator -(TextPosition left, TextPosition right) => left.Position - right.Position;
+        public static TextPosition operator -(TextPosition position, int right) => position.document.GetPosition(position.Position - right);
+        public static TextPosition operator +(TextPosition position, int right) => position.document.GetPosition(position.Position + right);
         public static bool operator ==(TextPosition left, TextPosition right) => left.Equals(right);
         public static bool operator !=(TextPosition left, TextPosition right) => !left.Equals(right);
     }
@@ -81,31 +76,13 @@ namespace RainLanguageServer
         {
             get
             {
-                if (index < Count) return start.document.text[start.Position + index];
+                if (index >= 0 && index < Count) return start.document.text[start.Position + index];
                 else return '\0';
             }
         }
-        public TextRange this[Range range]
-        {
-            get
-            {
-                var document = start.document;
-
-                var startCharactor = start.Position + range.Start.Value;
-                var startLine = document.GetLine(startCharactor);
-                var startPosition = new TextPosition(document, startLine.line, startCharactor - startLine.start);
-
-                var endCharactor = range.End.IsFromEnd ? end.Position : start.Position + range.End.Value;
-                var endLine = document.GetLine(endCharactor);
-                var endPosition = new TextPosition(document, endLine.line, endCharactor - endLine.start);
-                return new TextRange(startPosition, endPosition);
-            }
-        }
-        public override string ToString()
-        {
-            var document = start.document;
-            return document.text.Substring(start.Position, end.Position);
-        }
+        public TextRange this[Range range] => new(start + range.Start.Value, range.End.IsFromEnd ? end : start + range.End.Value);
+        public TextRange this[TextPosition start, TextPosition end] => this[(start - this.start)..(end - this.start)];
+        public override string ToString() => start.document.text[start.Position..end.Position];
     }
     internal class TextDocument(string path, long version, string text)
     {
@@ -130,6 +107,11 @@ namespace RainLanguageServer
                 ParseLines();
                 return lines[line];
             }
+        }
+        public TextPosition GetPosition(int charactor)
+        {
+            var line = GetLine(charactor);
+            return new TextPosition(this, line.line, charactor - line.start);
         }
         public TextLine GetLine(int charactor)
         {

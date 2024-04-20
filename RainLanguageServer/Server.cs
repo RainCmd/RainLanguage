@@ -90,8 +90,8 @@ namespace RainLanguageServer
         }
         protected override void Initialized()
         {
-            manager = ASTBuilder.Build(new DocumentLoader(root, documents));
-            //todo 开始生成本地ast
+            //todo 可能需要名字
+            manager = ASTBuilder.Build("", new DocumentLoader(root, documents));
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
         {
