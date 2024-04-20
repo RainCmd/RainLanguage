@@ -166,12 +166,12 @@ struct FileSpace
 	List<CompilingSpace*, true> relyCompilingSpaces;
 	List<AbstractSpace*, true> relySpaces;
 	FileSpace(CompilingSpace* compiling, uint32 parentIndent, ParseParameter* parameter);
-	void ParseChild(const Line& line, List<Anchor>& attributes, uint32 index, ParseParameter* parameter);
+	bool ParseChild(const Line& line, List<Anchor>& attributes, uint32 index, ParseParameter* parameter);
 	bool ParseDeclaration(const Line& line, List<Anchor>& attributes, ParseParameter* parameter);
-	void ParseEnum(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
-	void ParseStruct(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
-	void ParseClass(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
-	void ParseInterface(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
+	bool ParseEnum(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
+	bool ParseStruct(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
+	bool ParseClass(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
+	bool ParseInterface(const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributes, ParseParameter* parameter);
 
 	void InitRelies(DeclarationManager* manager);
 	void Tidy(DeclarationManager* manager);

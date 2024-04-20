@@ -185,18 +185,9 @@ label_parse_type:
 	names.Clear();
 	if(TryExtractName(line, index, index, &names, messages))
 	{
+		uint32 dimesnion = ExtractDimension(line, index);
 		if(TryAnalysis(line, index, lexical, messages))
 		{
-			uint32 dimesnion = 0;
-			if(lexical.type == LexicalType::BracketLeft1)
-			{
-				dimesnion = ExtractDimension(line, index);
-				if(!TryAnalysis(line, index, lexical, messages))
-				{
-					MESSAGE2(messages, line, MessageType::ERROR_MISSING_NAME);
-					return false;
-				}
-			}
 			if(lexical.type == LexicalType::Word || (operatorReloadable && IsReloadable(lexical.type)))
 			{
 				new (types.Add())FileType(names, dimesnion);
@@ -268,14 +259,18 @@ bool TryParseVariable(const Line& line, uint32 index, Anchor& name, FileType& ty
 	return false;
 }
 
-void ParseFunctionDeclaration(const Line& line, uint32 index, Anchor& name, bool operatorReloadable, List<FileParameter>& parameters, List<FileType>& returns, MessageCollector* messages)
+bool ParseFunctionDeclaration(const Line& line, uint32 index, Anchor& name, bool operatorReloadable, List<FileParameter>& parameters, List<FileType>& returns, MessageCollector* messages)
 {
 	if(TryParseTuple(line, index, name, operatorReloadable, returns, messages))
 	{
 		index = name.GetEnd();
 		if(TryParseParameters(line, index, parameters, messages))
+		{
 			CheckLineEnd(line, index, messages);
+			return true;
+		}
 	}
+	return false;
 }
 
 void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visibility visibility, List<Anchor>& attributeCollector, ParseParameter* parameter)
