@@ -197,18 +197,6 @@
             child = null;
             return false;
         }
-        public bool TryGetDeclarations(string name, out List<Declaration>? declarations)
-        {
-            if (this.declarations.TryGetValue(name, out var value))
-            {
-                declarations = [];
-                foreach (var declaration in value) declarations.Add(declaration.declaration);
-                return true;
-            }
-            declarations = null;
-            return false;
-        }
-
         public bool TryGetDeclarations(string name, out List<IDeclaration> declarations)
         {
             declarations = [];
