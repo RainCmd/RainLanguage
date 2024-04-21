@@ -28,6 +28,8 @@
             var manager = new ASTManager(name);
             foreach (var file in files)
                 manager.fileSpaces.Add(file.Path, new FileSpace(new LineReader(file), manager.library));
+            foreach (var file in manager.fileSpaces)
+                file.Value.Tidy(manager);
             return manager;
         }
     }

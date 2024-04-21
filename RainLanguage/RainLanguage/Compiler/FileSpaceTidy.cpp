@@ -20,7 +20,7 @@ void FileSpace::InitRelies(DeclarationManager* manager)
 			if (index->children.TryGet((*importSpace)[0].content, compilingSpace))
 			{
 				for (uint32 y = 1; y < importSpace->Count(); y++)
-					if (compilingSpace->children.TryGet((*importSpace)[y].content, compilingSpace))
+					if (!compilingSpace->children.TryGet((*importSpace)[y].content, compilingSpace))
 					{
 						MESSAGE2(manager->messages, (*importSpace)[y], MessageType::ERROR_IMPORT_NAMESPACE_NOT_FOUND);
 						break;
