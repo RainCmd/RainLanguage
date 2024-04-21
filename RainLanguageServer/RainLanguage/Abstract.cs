@@ -126,5 +126,13 @@ namespace RainLanguageServer.RainLanguage
                 else target = target.Parent;
             return false;
         }
+        public static ISpace? GetSpace(this ILibrary library, Span<string> name)
+        {
+            ISpace? space = library;
+            foreach (var item in name)
+                if (!space!.TryGetChild(item, out space))
+                    return null;
+            return space;
+        }
     }
 }

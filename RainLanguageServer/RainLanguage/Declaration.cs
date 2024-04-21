@@ -31,7 +31,7 @@
         public readonly DeclarationCategory category = category;
         public readonly string[] name = name;//不包括程序集名
         public readonly Tuple signature = signature;
-
+        public bool Vaild => name != null;
         public Type GetDefineType()
         {
             switch (category)

@@ -92,28 +92,28 @@
                 declarations.Add(compilingEnum);
                 compilingEnum.AddCite(file);
                 manager.library.enums.Add(compilingEnum);
-                var related = new List<TextRange>();
-                for (var x = 0; x < file.elements.Count; x++)
-                {
-                    var element = file.elements[x];
-                    for (var y = 0; y < x; y++)
-                        if (element.name.ToString() == file.elements[y].name.ToString())
-                            related.Add(file.elements[y].name);
-                    if (related.Count > 0)
-                    {
-                        var message = new CompileMessage(element.name, CErrorLevel.Error, "重复的枚举名");
-                        message.related.AddRange(related);
-                        collector.Add(message);
-                        related.Clear();
-                    }
-                    var name = new string[compilingEnum.declaration.name.Length + 1];
-                    Array.Copy(compilingEnum.declaration.name, name, compilingEnum.declaration.name.Length);
-                    name[^1] = element.name.ToString();
-                    declaration = new Declaration(Type.LIBRARY_SELF, Visibility.Public, DeclarationCategory.EnumElement, name, default);
-                    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression);
-                    compilingEnumElement.AddCite(element);
-                    compilingEnum.elements.Add(compilingEnumElement);
-                }
+                //var related = new List<TextRange>();
+                //for (var x = 0; x < file.elements.Count; x++)
+                //{
+                //    var element = file.elements[x];
+                //    for (var y = 0; y < x; y++)
+                //        if (element.name.ToString() == file.elements[y].name.ToString())
+                //            related.Add(file.elements[y].name);
+                //    if (related.Count > 0)
+                //    {
+                //        var message = new CompileMessage(element.name, CErrorLevel.Error, "重复的枚举名");
+                //        message.related.AddRange(related);
+                //        collector.Add(message);
+                //        related.Clear();
+                //    }
+                //    var name = new string[compilingEnum.declaration.name.Length + 1];
+                //    Array.Copy(compilingEnum.declaration.name, name, compilingEnum.declaration.name.Length);
+                //    name[^1] = element.name.ToString();
+                //    declaration = new Declaration(Type.LIBRARY_SELF, Visibility.Public, DeclarationCategory.EnumElement, name, default);
+                //    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression);
+                //    compilingEnumElement.AddCite(element);
+                //    compilingEnum.elements.Add(compilingEnumElement);
+                //}
             }
             foreach (var file in structs)
             {
@@ -137,7 +137,7 @@
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
-                var compilingClass = new CompilingClass(file.name, declaration, compiling, default);
+                var compilingClass = new CompilingClass(file.name, declaration, compiling, default, []);
                 declarations.Add(compilingClass);
                 compilingClass.AddCite(file);
                 manager.library.classes.Add(compilingClass);

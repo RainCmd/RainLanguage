@@ -291,7 +291,6 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, Typ
 			if(member->name == name && IsVisible(manager, member->declaration))
 				results.Add(member->declaration);
 		}
-		if(results.Count())return true;
 	}
 	else if(type.code == TypeCode::Handle)
 	{
@@ -302,7 +301,7 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, Typ
 			for(uint32 i = 0; i < abstractClass->variables.Count(); i++)
 			{
 				AbstractVariable* member = abstractClass->variables[i];
-				if(member->name == name)
+				if(member->name == name && IsVisible(manager, member->declaration))
 				{
 					results.Add(member->declaration);
 					return true;
@@ -321,14 +320,9 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, Typ
 			abstractLibrary = manager->GetLibrary(abstractClass->parent.library);
 			abstractClass = abstractLibrary->classes[abstractClass->parent.index];
 		}
-		if(results.Count()) return true;
 	}
-	else if(type.code == TypeCode::Interface)
-	{
-		FindMember(manager, name, abstractLibrary->interfaces[type.index], results);
-		if(results.Count()) return true;
-	}
-	return false;
+	else if(type.code == TypeCode::Interface) FindMember(manager, name, abstractLibrary->interfaces[type.index], results);
+	return results.Count();;
 }
 
 void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& names, List<CompilingDeclaration, true>& results)
@@ -435,5 +429,5 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 		if(results[i].category != DeclarationCategory::Function)
 			EXCEPTION("操作类型必须是全局函数");
 #endif // DEBUG
-	}
+}
 

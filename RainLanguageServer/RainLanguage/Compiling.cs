@@ -7,7 +7,6 @@
         public readonly List<TextRange> attributes = [];
         public readonly CompilingSpace space = space;
 
-
         public string Name => name.ToString();
         public Declaration Declaration => declaration;
         public ISpace Space => space;
@@ -21,11 +20,12 @@
 
         public CitePort<FileDeclaration> Cites { get; } = [];
     }
-    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, bool isReadonly, Type type, TextRange expression) : CompilingDeclaration(name, declaration, space), IVariable
+    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, bool isReadonly, Type type, TextRange expression, List<ISpace> relies) : CompilingDeclaration(name, declaration, space), IVariable
     {
         public readonly bool isReadonly = isReadonly;
         public readonly Type type = type;
         public readonly TextRange expression = expression;
+        public readonly List<ISpace> relies = relies;
 
         public bool IsReadonly => isReadonly;
         public Type Type => type;
@@ -51,17 +51,19 @@
         }
         public Tuple Returns => returns;
     }
-    internal class CompilingFunction(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) : CompilingCallable(name, declaration, space, returns), IFunction
+    internal class CompilingFunction(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns, List<ISpace> relies) : CompilingCallable(name, declaration, space, returns), IFunction
     {
         public readonly List<TextLine> body = [];
+        public readonly List<ISpace> relies = relies;
     }
     internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IEnum
     {
-        public class Element(TextRange name, Declaration declaration, TextRange expression) : ICitePort<Element, FileEnum.Element>
+        public class Element(TextRange name, Declaration declaration, TextRange expression, List<ISpace> relies) : ICitePort<Element, FileEnum.Element>
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
             public readonly TextRange expression = expression;
+            public readonly List<ISpace> relies = relies;
 
             public CitePort<FileEnum.Element> Cites { get; } = [];
         }
@@ -84,14 +86,14 @@
         {
             get
             {
-                foreach(var variable in variables) yield return variable;
+                foreach (var variable in variables) yield return variable;
             }
         }
         public IEnumerable<IFunction> Functions
         {
             get
             {
-                foreach(var function in functions) yield return function;
+                foreach (var function in functions) yield return function;
             }
         }
     }
@@ -105,17 +107,19 @@
         {
             get
             {
-                foreach(var callable in callables) yield return callable;
+                foreach (var callable in callables) yield return callable;
             }
         }
     }
-    internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, Type parent) : CompilingDeclaration(name, declaration, space), IClass
+    internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, Type parent, List<ISpace> relies) : CompilingDeclaration(name, declaration, space), IClass
     {
         public readonly Type parent = parent;
         public readonly List<Type> inherits = [];
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> constructors = [];
         public readonly List<CompilingFunction> functions = [];
+        public readonly List<TextLine> destructor = [];
+        public readonly List<ISpace> relies = relies;
 
         public Type Parent => parent;
         public IEnumerable<Type> Inherits => inherits;
@@ -123,7 +127,7 @@
         {
             get
             {
-                foreach(var constructor in constructors) yield return constructor;
+                foreach (var constructor in constructors) yield return constructor;
             }
         }
         public IEnumerable<IVariable> Variables
@@ -137,7 +141,7 @@
         {
             get
             {
-                foreach(var function in functions) yield return function;
+                foreach (var function in functions) yield return function;
             }
         }
     }
@@ -234,56 +238,56 @@
         {
             get
             {
-                foreach(var function in functions) yield return function;
+                foreach (var function in functions) yield return function;
             }
         }
         public IEnumerable<IEnum> Enums
         {
             get
             {
-                foreach(var enumeration in  enums) yield return enumeration;
+                foreach (var enumeration in enums) yield return enumeration;
             }
         }
         public IEnumerable<IStruct> Structs
         {
             get
             {
-                foreach(var item in structs) yield return item;
+                foreach (var item in structs) yield return item;
             }
         }
         public IEnumerable<IInterface> Interfaces
         {
             get
             {
-                foreach(var item in  interfaces) yield return item;
+                foreach (var item in interfaces) yield return item;
             }
         }
         public IEnumerable<IClass> Classes
         {
             get
             {
-                foreach(var item in classes) yield return item;
+                foreach (var item in classes) yield return item;
             }
         }
         public IEnumerable<IDelegate> Delegates
         {
             get
             {
-                foreach(var item in delegates) yield return item;
+                foreach (var item in delegates) yield return item;
             }
         }
         public IEnumerable<ITask> Tasks
         {
             get
             {
-                foreach(var  task in tasks) yield return task;
+                foreach (var task in tasks) yield return task;
             }
         }
         public IEnumerable<INative> Natives
         {
             get
             {
-                foreach(var native in natives) yield return native;
+                foreach (var native in natives) yield return native;
             }
         }
     }
