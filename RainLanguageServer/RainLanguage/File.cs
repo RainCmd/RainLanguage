@@ -33,10 +33,12 @@
     }
     internal class FileEnum(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
-        public readonly struct Element(TextRange name, TextRange expression)
+        public class Element(TextRange name, TextRange expression) : ICitePort<Element, CompilingEnum.Element>
         {
             public readonly TextRange name = name;
             public readonly TextRange expression = expression;
+
+            public CitePort<CompilingEnum.Element> Cites { get; } = [];
         }
         public readonly List<Element> elements = [];
     }
@@ -89,8 +91,6 @@
         public readonly List<FileDelegate> delegates = [];
         public readonly List<FileTask> tasks = [];
         public readonly List<FileNative> natives = [];
-
-        public readonly List<CompilingSpace> cite = [];
 
         public CitePort<CompilingSpace> Cites { get; } = [];
     }

@@ -15,9 +15,9 @@
     {
         public readonly int library = library;
         public readonly TypeCode code = code;
-        public readonly string[] name = name;
+        public readonly string[] name = name;//不包含程序集名
         public readonly int dimension = dimension;
-
+        public bool Vaild => name != null;
         public bool Equals(Type type)
         {
             if (name.Length != type.name.Length) return false;

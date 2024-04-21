@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RainLanguageServer.RainLanguage
+﻿namespace RainLanguageServer.RainLanguage
 {
     internal class CompilingDeclaration(TextRange name, Declaration declaration, CompilingSpace space) : IDeclaration, ICitePort<CompilingDeclaration, FileDeclaration>
     {
@@ -17,10 +10,13 @@ namespace RainLanguageServer.RainLanguage
 
         public string Name => name.ToString();
         public Declaration Declaration => declaration;
-        public int AttributeCount => attributes.Count;
-        public string GetAttribute(int index)
+        public ISpace Space => space;
+        public IEnumerable<string> Attributes
         {
-            return attributes[index].ToString();
+            get
+            {
+                foreach (var attribute in attributes) yield return attribute.ToString();
+            }
         }
 
         public CitePort<FileDeclaration> Cites { get; } = [];
@@ -61,36 +57,57 @@ namespace RainLanguageServer.RainLanguage
     }
     internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IEnum
     {
-        public readonly struct Element(TextRange name, Declaration declaration, TextRange expression)
+        public class Element(TextRange name, Declaration declaration, TextRange expression) : ICitePort<Element, FileEnum.Element>
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
             public readonly TextRange expression = expression;
+
+            public CitePort<FileEnum.Element> Cites { get; } = [];
         }
         public readonly List<Element> elements = [];
 
-        public int ElementCount => elements.Count;
-        public string GetElement(int index) => elements[index].name.ToString();
+        public IEnumerable<string> Elements
+        {
+            get
+            {
+                foreach (var element in elements) yield return element.name.ToString();
+            }
+        }
     }
     internal class CompilingStruct(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IStruct
     {
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> functions = [];
 
-        public int VariableCount => variables.Count;
-        public int FunctionCount => functions.Count;
-        public IVariable GetVariable(int index) => variables[index];
-        public IFunction GetFunction(int index) => functions[index];
+        public IEnumerable<IVariable> Variables
+        {
+            get
+            {
+                foreach(var variable in variables) yield return variable;
+            }
+        }
+        public IEnumerable<IFunction> Functions
+        {
+            get
+            {
+                foreach(var function in functions) yield return function;
+            }
+        }
     }
     internal class CompilingInterface(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IInterface
     {
         public readonly List<Type> inherits = [];
         public readonly List<CompilingCallable> callables = [];
 
-        public int InheritCount => inherits.Count;
-        public int CallableCount => callables.Count;
-        public Type GetInherit(int index) => inherits[index];
-        public ICallable GetCallable(int index) => callables[index];
+        public IEnumerable<Type> Inherits => inherits;
+        public IEnumerable<ICallable> Callables
+        {
+            get
+            {
+                foreach(var callable in callables) yield return callable;
+            }
+        }
     }
     internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, Type parent) : CompilingDeclaration(name, declaration, space), IClass
     {
@@ -101,14 +118,28 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingFunction> functions = [];
 
         public Type Parent => parent;
-        public int InheritCount => inherits.Count;
-        public int VariableCount => variables.Count;
-        public int ConstructorCount => constructors.Count;
-        public int FunctionCount => functions.Count;
-        public Type GetInherit(int index) => inherits[index];
-        public IVariable GetVariable(int index) => variables[index];
-        public IFunction GetConstructor(int index) => constructors[index];
-        public IFunction GetFunction(int index) => functions[index];
+        public IEnumerable<Type> Inherits => inherits;
+        public IEnumerable<IFunction> Constructors
+        {
+            get
+            {
+                foreach(var constructor in constructors) yield return constructor;
+            }
+        }
+        public IEnumerable<IVariable> Variables
+        {
+            get
+            {
+                foreach (var variable in variables) yield return variable;
+            }
+        }
+        public IEnumerable<IFunction> Functions
+        {
+            get
+            {
+                foreach(var function in functions) yield return function;
+            }
+        }
     }
     internal class CompilingDelegate(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) : CompilingCallable(name, declaration, space, returns), IDelegate
     {
@@ -127,7 +158,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly CompilingSpace? parent = parent;
         public readonly string name = name;
         public readonly Dictionary<string, CompilingSpace> children = [];
-        public readonly Dictionary<string, List<Declaration>> declarations = [];
+        public readonly Dictionary<string, List<CompilingDeclaration>> declarations = [];
         public readonly List<TextRange> attributes = [];
 
         public CompilingSpace GetChild(string name)
@@ -149,10 +180,14 @@ namespace RainLanguageServer.RainLanguage
 
         public ISpace? Parent => parent;
         public string Name => name;
-        public int AttributeCount => attributes.Count;
-
-        public string GetAttribute(int index) => attributes[index].ToString();
-        public bool TryGet(string name, out ISpace? child)
+        public IEnumerable<string> Attributes
+        {
+            get
+            {
+                foreach (var attribute in attributes) yield return attribute.ToString();
+            }
+        }
+        public bool TryGetChild(string name, out ISpace? child)
         {
             if (children.TryGetValue(name, out var value))
             {
@@ -162,14 +197,26 @@ namespace RainLanguageServer.RainLanguage
             child = null;
             return false;
         }
-        public bool TryGet(string name, out List<Declaration>? declarations)
+        public bool TryGetDeclarations(string name, out List<Declaration>? declarations)
         {
             if (this.declarations.TryGetValue(name, out var value))
             {
-                declarations = value;
+                declarations = [];
+                foreach (var declaration in value) declarations.Add(declaration.declaration);
                 return true;
             }
             declarations = null;
+            return false;
+        }
+
+        public bool TryGetDeclarations(string name, out List<IDeclaration> declarations)
+        {
+            declarations = [];
+            if (this.declarations.TryGetValue(name, out var value))
+            {
+                foreach (var item in value) declarations.Add(item);
+                return true;
+            }
             return false;
         }
 
@@ -188,23 +235,68 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingNative> natives = [];
 
         public int Library => Type.LIBRARY_SELF;
-        public int VariableCount => variables.Count;
-        public int FunctionCount => functions.Count;
-        public int EnumCount => enums.Count;
-        public int StructCount => structs.Count;
-        public int InterfaceCount => interfaces.Count;
-        public int ClassCount => classes.Count;
-        public int DelegateCount => delegates.Count;
-        public int TaskCount => tasks.Count;
-        public int NativeCount => natives.Count;
-        public IVariable GetVariable(int index) => variables[index];
-        public IFunction GetFunction(int index) => functions[index];
-        public IEnum GetEnum(int index) => enums[index];
-        public IStruct GetStruct(int index) => structs[index];
-        public IInterface GetInterface(int index) => interfaces[index];
-        public IClass GetClass(int index) => classes[index];
-        public IDelegate GetDelegate(int index) => delegates[index];
-        public ITask GetTask(int index) => tasks[index];
-        public INative GetNative(int index) => natives[index];
+        public IEnumerable<IVariable> Variables
+        {
+            get
+            {
+                foreach (var variable in variables) yield return variable;
+            }
+        }
+        public IEnumerable<IFunction> Functions
+        {
+            get
+            {
+                foreach(var function in functions) yield return function;
+            }
+        }
+        public IEnumerable<IEnum> Enums
+        {
+            get
+            {
+                foreach(var enumeration in  enums) yield return enumeration;
+            }
+        }
+        public IEnumerable<IStruct> Structs
+        {
+            get
+            {
+                foreach(var item in structs) yield return item;
+            }
+        }
+        public IEnumerable<IInterface> Interfaces
+        {
+            get
+            {
+                foreach(var item in  interfaces) yield return item;
+            }
+        }
+        public IEnumerable<IClass> Classes
+        {
+            get
+            {
+                foreach(var item in classes) yield return item;
+            }
+        }
+        public IEnumerable<IDelegate> Delegates
+        {
+            get
+            {
+                foreach(var item in delegates) yield return item;
+            }
+        }
+        public IEnumerable<ITask> Tasks
+        {
+            get
+            {
+                foreach(var  task in tasks) yield return task;
+            }
+        }
+        public IEnumerable<INative> Natives
+        {
+            get
+            {
+                foreach(var native in natives) yield return native;
+            }
+        }
     }
 }

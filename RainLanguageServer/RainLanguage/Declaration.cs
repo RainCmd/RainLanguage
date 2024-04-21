@@ -32,13 +32,49 @@
         public readonly string[] name = name;//不包括程序集名
         public readonly Tuple signature = signature;
 
+        public Type GetDefineType()
+        {
+            switch (category)
+            {
+                case DeclarationCategory.Invalid:
+                case DeclarationCategory.Variable:
+                case DeclarationCategory.Function:
+                    break;
+                case DeclarationCategory.Enum: return new Type(library, TypeCode.Enum, name, 0);
+                case DeclarationCategory.EnumElement: return new Type(library, TypeCode.Enum, name[0..(name.Length - 1)], 0);
+                case DeclarationCategory.Struct: return new Type(library, TypeCode.Struct, name, 0);
+                case DeclarationCategory.StructVariable:
+                case DeclarationCategory.StructFunction: return new Type(library, TypeCode.Struct, name[0..(name.Length - 1)], 0);
+                case DeclarationCategory.Class: return new Type(library, TypeCode.Handle, name, 0);
+                case DeclarationCategory.Constructor:
+                case DeclarationCategory.ClassVariable:
+                case DeclarationCategory.ClassFunction: return new Type(library, TypeCode.Handle, name[0..(name.Length - 1)], 0);
+                case DeclarationCategory.Interface: return new Type(library, TypeCode.Interface, name, 0);
+                case DeclarationCategory.InterfaceFunction: return new Type(library, TypeCode.Interface, name[0..(name.Length - 1)], 0);
+                case DeclarationCategory.Delegate: return new Type(library, TypeCode.Delegate, name, 0);
+                case DeclarationCategory.Task: return new Type(library, TypeCode.Task, name, 0);
+                case DeclarationCategory.Native:
+                case DeclarationCategory.Lambda:
+                case DeclarationCategory.LambdaClosureValue:
+                case DeclarationCategory.LocalVariable:
+                    break;
+            }
+            return default;
+        }
         public bool Equals(Declaration declaration)
         {
+            if (name != null && declaration.name != null)
+            {
+                if (declaration.name.Length != name.Length) return false;
+                for (int i = 0; i < name.Length; i++)
+                    if (name[i] != declaration.name[i])
+                        return false;
+            }
+            else if (name != declaration.name) return false;
             return library == declaration.library &&
                    visibility == declaration.visibility &&
                    category == declaration.category &&
-                   index == declaration.index &&
-                   definition == declaration.definition;
+                   signature == declaration.signature;
         }
         public override readonly bool Equals(object? obj)
         {

@@ -5,11 +5,12 @@
         public readonly string name;
         public readonly Declaration declaration;
         public readonly List<string> attributes = [];
+        public readonly RSpace space;
 
         public string Name => name;
         public Declaration Declaration => declaration;
-        public int AttributeCount => attributes.Count;
-        public string GetAttribute(int index) => attributes[index];
+        public ISpace Space => space;
+        public IEnumerable<string> Attributes => attributes;
     }
     internal class RVariable : RDeclaration, IVariable
     {
@@ -32,28 +33,41 @@
     {
         public readonly List<string> elements = [];
 
-        public int ElementCount => elements.Count;
-        public string GetElement(int index) => elements[index];
+        public IEnumerable<string> Elements => elements;
     }
     internal class RStruct : RDeclaration, IStruct
     {
         public readonly List<RVariable> variables = [];
         public readonly List<RFunction> functions = [];
 
-        public int VariableCount => variables.Count;
-        public int FunctionCount => functions.Count;
-        public IVariable GetVariable(int index) => variables[index];
-        public IFunction GetFunction(int index) => functions[index];
+        public IEnumerable<IVariable> Variables
+        {
+            get
+            {
+                foreach (var variable in variables) yield return variable;
+            }
+        }
+        public IEnumerable<IFunction> Functions
+        {
+            get
+            {
+                foreach(var function in functions) yield return function;
+            }
+        }
     }
     internal class RInterface : RDeclaration, IInterface
     {
         public readonly List<Type> inherits = [];
         public readonly List<RFunction> callables = [];
 
-        public int InheritCount => inherits.Count;
-        public Type GetInherit(int index) => inherits[index];
-        public int CallableCount => callables.Count;
-        public ICallable GetCallable(int index) => callables[index];
+        public IEnumerable<Type> Inherits => inherits;
+        public IEnumerable<ICallable> Callables
+        {
+            get
+            {
+                foreach(var callable in callables) yield return callable;
+            }
+        }
     }
     internal class RClass : RDeclaration, IClass
     {
@@ -64,14 +78,28 @@
         public readonly List<RFunction> functions = [];
 
         public Type Parent => parent;
-        public int InheritCount => inherits.Count;
-        public Type GetInherit(int index) => inherits[index];
-        public int ConstructorCount => constructors.Count;
-        public IFunction GetConstructor(int index) => constructors[index];
-        public int VariableCount => variables.Count;
-        public IVariable GetVariable(int index) => variables[index];
-        public int FunctionCount => functions.Count;
-        public IFunction GetFunction(int index) => functions[index];
+        public IEnumerable<Type> Inherits => inherits;
+        public IEnumerable<IFunction> Constructors
+        {
+            get
+            {
+                foreach(var constructor in constructors) yield return constructor;
+            }
+        }
+        public IEnumerable<IVariable> Variables
+        {
+            get
+            {
+                foreach( var variable in variables) yield return variable;
+            }
+        }
+        public IEnumerable<IFunction> Functions
+        {
+            get
+            {
+                foreach(var function in functions) yield return function;
+            }
+        }
     }
     internal class RDelegate : RCallable, IDelegate { }
     internal class RTask : RDeclaration, ITask
@@ -88,13 +116,12 @@
         public readonly string name = name;
         public readonly List<string> attributes = [];
         public readonly Dictionary<string, RSpace> children = [];
-        public readonly Dictionary<string, List<Declaration>> declarations = [];
+        public readonly Dictionary<string, List<RDeclaration>> declarations = [];
 
         public ISpace? Parent => parent;
         public string Name => name;
-        public int AttributeCount => attributes.Count;
-        public string GetAttribute(int index) => attributes[index];
-        public bool TryGet(string name, out ISpace? child)
+        public IEnumerable<string> Attributes => attributes;
+        public bool TryGetChild(string name, out ISpace? child)
         {
             if (children.TryGetValue(name, out var result))
             {
@@ -104,7 +131,16 @@
             child = null;
             return false;
         }
-        public bool TryGet(string name, out List<Declaration>? declarations) => this.declarations.TryGetValue(name, out declarations);
+        public bool TryGetDeclarations(string name, out List<IDeclaration> declarations)
+        {
+            declarations = [];
+            if(this.declarations.TryGetValue(name,out var value))
+            {
+                foreach (var declaration in value) declarations.Add(declaration);
+                return true;
+            }
+            return false;
+        }
     }
     internal class RLibrary(int library, RSpace parent, string name) : RSpace(0, parent, name), ILibrary
     {
@@ -120,23 +156,68 @@
         public readonly List<RNative> natives = [];
 
         public int Library => library;
-        public int VariableCount => variables.Count;
-        public IVariable GetVariable(int index) => variables[index];
-        public int FunctionCount => functions.Count;
-        public IFunction GetFunction(int index) => functions[index];
-        public int EnumCount => enums.Count;
-        public IEnum GetEnum(int index) => enums[index];
-        public int StructCount => structs.Count;
-        public IStruct GetStruct(int index) => structs[index];
-        public int InterfaceCount => interfaces.Count;
-        public IInterface GetInterface(int index) => interfaces[index];
-        public int ClassCount => classes.Count;
-        public IClass GetClass(int index) => classes[index];
-        public int DelegateCount => delegates.Count;
-        public IDelegate GetDelegate(int index) => delegates[index];
-        public int TaskCount => tasks.Count;
-        public ITask GetTask(int index) => tasks[index];
-        public int NativeCount => natives.Count;
-        public INative GetNative(int index) => natives[index];
+        public IEnumerable<IVariable> Variables
+        {
+            get
+            {
+                foreach (var variable in variables) yield return variable;
+            }
+        }
+        public IEnumerable<IFunction> Functions
+        {
+            get
+            {
+                foreach (var function in functions) yield return function;
+            }
+        }
+        public IEnumerable<IEnum> Enums
+        {
+            get
+            {
+                foreach (var enumeration in enums) yield return enumeration;
+            }
+        }
+        public IEnumerable<IStruct> Structs
+        {
+            get
+            {
+                foreach (var item in structs) yield return item;
+            }
+        }
+        public IEnumerable<IInterface> Interfaces
+        {
+            get
+            {
+                foreach (var item in interfaces) yield return item;
+            }
+        }
+        public IEnumerable<IClass> Classes
+        {
+            get
+            {
+                foreach (var item in classes) yield return item;
+            }
+        }
+        public IEnumerable<IDelegate> Delegates
+        {
+            get
+            {
+                foreach (var item in delegates) yield return item;
+            }
+        }
+        public IEnumerable<ITask> Tasks
+        {
+            get
+            {
+                foreach (var task in tasks) yield return task;
+            }
+        }
+        public IEnumerable<INative> Natives
+        {
+            get
+            {
+                foreach (var native in natives) yield return native;
+            }
+        }
     }
 }

@@ -1,11 +1,13 @@
-﻿namespace RainLanguageServer.RainLanguage
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage
 {
     internal interface IDeclaration
     {
         string Name { get; }
         Declaration Declaration { get; }
-        int AttributeCount { get; }
-        string GetAttribute(int index);
+        ISpace Space { get; }
+        IEnumerable<string> Attributes { get; }
     }
     internal interface IVariable : IDeclaration
     {
@@ -20,34 +22,25 @@
     internal interface IFunction : ICallable { }
     internal interface IEnum : IDeclaration
     {
-        int ElementCount { get; }
-        string GetElement(int index);
+        IEnumerable<string> Elements { get; }
     }
     internal interface IStruct : IDeclaration
     {
-        int VariableCount { get; }
-        IVariable GetVariable(int index);
-        int FunctionCount { get; }
-        IFunction GetFunction(int index);
+        IEnumerable<IVariable> Variables { get; }
+        IEnumerable<IFunction> Functions { get; }
     }
     internal interface IInterface : IDeclaration
     {
-        int InheritCount { get; }
-        Type GetInherit(int index);
-        int CallableCount { get; }
-        ICallable GetCallable(int index);
+        IEnumerable<Type> Inherits { get; }
+        IEnumerable<ICallable> Callables { get; }
     }
     internal interface IClass : IDeclaration
     {
         Type Parent { get; }
-        int InheritCount { get; }
-        Type GetInherit(int index);
-        int ConstructorCount { get; }
-        IFunction GetConstructor(int index);
-        int VariableCount { get; }
-        IVariable GetVariable(int index);
-        int FunctionCount { get; }
-        IFunction GetFunction(int index);
+        IEnumerable<Type> Inherits { get; }
+        IEnumerable<IFunction> Constructors { get; }
+        IEnumerable<IVariable> Variables { get; }
+        IEnumerable<IFunction> Functions { get; }
     }
     internal interface IDelegate : ICallable { }
     internal interface ITask : IDeclaration
@@ -59,31 +52,79 @@
     {
         ISpace? Parent { get; }
         string Name { get; }
-        int AttributeCount { get; }
-        string GetAttribute(int index);
-        bool TryGet(string name, out ISpace? child);
-        bool TryGet(string name, out List<Declaration>? declarations);
+        IEnumerable<string> Attributes { get; }
+        bool TryGetChild(string name, out ISpace? child);
+        bool TryGetDeclarations(string name, out List<IDeclaration> declarations);
     }
     internal interface ILibrary : ISpace
     {
         int Library { get; }
-        int VariableCount { get; }
-        IVariable GetVariable(int index);
-        int FunctionCount { get; }
-        IFunction GetFunction(int index);
-        int EnumCount { get; }
-        IEnum GetEnum(int index);
-        int StructCount { get; }
-        IStruct GetStruct(int index);
-        int InterfaceCount { get; }
-        IInterface GetInterface(int index);
-        int ClassCount { get; }
-        IClass GetClass(int index);
-        int DelegateCount { get; }
-        IDelegate GetDelegate(int index);
-        int TaskCount { get; }
-        ITask GetTask(int index);
-        int NativeCount { get; }
-        INative GetNative(int index);
+        IEnumerable<IVariable> Variables { get; }
+        IEnumerable<IFunction> Functions { get; }
+        IEnumerable<IEnum> Enums { get; }
+        IEnumerable<IStruct> Structs { get; }
+        IEnumerable<IInterface> Interfaces { get; }
+        IEnumerable<IClass> Classes { get; }
+        IEnumerable<IDelegate> Delegates { get; }
+        IEnumerable<ITask> Tasks { get; }
+        IEnumerable<INative> Natives { get; }
+    }
+    internal static class IAbstractExtend
+    {
+        public static string GetFullName(this IDeclaration declaration)
+        {
+            switch (declaration.Declaration.category)
+            {
+                case DeclarationCategory.Invalid: break;
+                case DeclarationCategory.Variable:
+                case DeclarationCategory.Function:
+                case DeclarationCategory.Enum:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Name}";
+                case DeclarationCategory.EnumElement:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Declaration.name[^2]}.{declaration.Name}";
+                case DeclarationCategory.Struct:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Name}";
+                case DeclarationCategory.StructVariable:
+                case DeclarationCategory.StructFunction:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Declaration.name[^2]}.{declaration.Name}";
+                case DeclarationCategory.Class:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Name}";
+                case DeclarationCategory.Constructor:
+                case DeclarationCategory.ClassVariable:
+                case DeclarationCategory.ClassFunction:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Declaration.name[^2]}.{declaration.Name}";
+                case DeclarationCategory.Interface:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Name}";
+                case DeclarationCategory.InterfaceFunction:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Declaration.name[^2]}.{declaration.Name}";
+                case DeclarationCategory.Delegate:
+                case DeclarationCategory.Task:
+                case DeclarationCategory.Native:
+                    return $"{declaration.Space.GetFullName()}:{declaration.Name}";
+                case DeclarationCategory.Lambda:
+                case DeclarationCategory.LambdaClosureValue:
+                case DeclarationCategory.LocalVariable:
+                    break;
+            }
+            return "";
+        }
+        public static string GetFullName(this ISpace space)
+        {
+            var builder = new StringBuilder();
+            builder.Append(space.Name);
+            for (var index = space; index != null; index = index.Parent)
+            {
+                builder.Append('.');
+                builder.Insert(0, index.Name);
+            }
+            return builder.ToString();
+        }
+        public static bool Contain(this ISpace space, ISpace? target)
+        {
+            while (target != null)
+                if (space == target) return true;
+                else target = target.Parent;
+            return false;
+        }
     }
 }
