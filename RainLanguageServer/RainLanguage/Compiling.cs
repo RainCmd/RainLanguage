@@ -24,12 +24,12 @@
         /// </summary>
         public CitePort<FileDeclaration> Cites { get; } = [];
     }
-    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, bool isReadonly, Type type, TextRange expression, HashSet<ISpace> relies)
+    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, bool isReadonly, Type type, TextRange? expression, HashSet<ISpace> relies)
         : CompilingDeclaration(name, declaration, space, file), IVariable
     {
         public readonly bool isReadonly = isReadonly;
         public readonly Type type = type;
-        public readonly TextRange expression = expression;
+        public readonly TextRange? expression = expression;
         public readonly HashSet<ISpace> relies = relies;
 
         public bool IsReadonly => isReadonly;
@@ -38,9 +38,9 @@
     internal class CompilingCallable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, List<CompilingCallable.Parameter> parameters, Tuple returns)
         : CompilingDeclaration(name, declaration, space, file), ICallable
     {
-        public readonly struct Parameter(TextRange name, Type type)
+        public readonly struct Parameter(TextRange? name, Type type)
         {
-            public readonly TextRange name = name;
+            public readonly TextRange? name = name;
             public readonly Type type = type;
         }
         public readonly List<Parameter> parameters = parameters;
@@ -66,13 +66,13 @@
     internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file)
         : CompilingDeclaration(name, declaration, space, file), IEnum
     {
-        public class Element(TextRange name, Declaration declaration, TextRange expression, HashSet<ISpace> relies, FileDeclaration file) : ICitePort<Element, FileEnum.Element>
+        public class Element(TextRange name, Declaration declaration, TextRange? expression, HashSet<ISpace> relies, FileEnum.Element file) : ICitePort<Element, FileEnum.Element>
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
-            public readonly TextRange expression = expression;
+            public readonly TextRange? expression = expression;
             public readonly HashSet<ISpace> relies = relies;
-            public readonly FileDeclaration file = file;
+            public readonly FileEnum.Element file = file;
 
             public CitePort<FileEnum.Element> Cites { get; } = [];
         }
@@ -125,7 +125,7 @@
     internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, Type parent, List<TextLine>? destructor, HashSet<ISpace> relies)
         : CompilingDeclaration(name, declaration, space, file), IClass
     {
-        public readonly Type parent = parent;
+        public Type parent = parent;
         public readonly List<Type> inherits = [];
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> constructors = [];
@@ -192,6 +192,16 @@
             for (var index = this; index != null; index = index.parent) deep++;
             var result = new string[deep];
             result[--deep] = name;
+            for (var index = this; index.parent != null; index = index.parent) result[--deep] = index.name;
+            return result;
+        }
+        public string[] GetMemberName(string child, string name)
+        {
+            var deep = 1;
+            for (var index = this; index != null; index = index.parent) deep++;
+            var result = new string[deep];
+            result[--deep] = name;
+            result[--deep] = child;
             for (var index = this; index.parent != null; index = index.parent) result[--deep] = index.name;
             return result;
         }

@@ -30,6 +30,9 @@
                 manager.fileSpaces.Add(file.Path, new FileSpace(new LineReader(file), manager.library));
             foreach (var file in manager.fileSpaces)
                 file.Value.Tidy(manager);
+            foreach (var file in manager.fileSpaces)
+                file.Value.Link(manager);
+            //todo 检查命名冲突问题
             return manager;
         }
     }

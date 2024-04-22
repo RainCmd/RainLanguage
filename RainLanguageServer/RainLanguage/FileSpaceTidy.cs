@@ -20,7 +20,7 @@
                         if (space != null)
                         {
                             space.AddCite(this);
-                            relies.Add(space);
+                            if (!relies.Add(space)) collector.Add(import, CErrorLevel.Info, "重复导入的命名空间");
                         }
                         goto lable_next_import;
                     }
@@ -38,43 +38,20 @@
                                 collector.Add(import[i], CErrorLevel.Error, "导入的命名空间未找到");
                                 break;
                             }
-                        if (space != null) relies.Add(space);
+                        if (space != null&&!relies.Add(space)) collector.Add(import, CErrorLevel.Info, "重复导入的命名空间");
                     }
                 }
             lable_next_import:;
             }
         }
-        private List<CompilingDeclaration> GetDeclarations(TextRange name, bool isFunction)
+        private void AddCompilingTypeDeclaration(string name, CompilingDeclaration compilingDeclaration)
         {
-            if (compiling.declarations.TryGetValue(name.ToString(), out var declarations))
-            {
-                if (isFunction)
-                {
-                    var related = new List<TextRange>();
-                    foreach (var declaration in declarations)
-                        if (declaration.declaration.category != DeclarationCategory.Function && declaration.declaration.category != DeclarationCategory.Native)
-                            related.Add(declaration.name);
-                    if (related.Count > 0)
-                    {
-                        var message = new CompileMessage(name, CErrorLevel.Error, "命名冲突");
-                        message.related.AddRange(related);
-                        collector.Add(message);
-                    }
-                }
-                else
-                {
-                    var message = new CompileMessage(name, CErrorLevel.Error, "命名冲突");
-                    foreach (var declaration in declarations)
-                        message.related.Add(declaration.name);
-                    collector.Add(message);
-                }
-            }
-            else
+            if (!compiling.declarations.TryGetValue(name.ToString(), out var declarations))
             {
                 declarations = [];
                 compiling.declarations.Add(name.ToString(), declarations);
             }
-            return declarations;
+            declarations.Add(compilingDeclaration);
         }
         public void Tidy(ASTManager manager)
         {
@@ -86,72 +63,44 @@
             }
             foreach (var file in enums)
             {
-                var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Enum, compiling.GetChildName(file.name.ToString()), default);
                 var compilingEnum = new CompilingEnum(file.name, declaration, compiling, file);
-                declarations.Add(compilingEnum);
+                AddCompilingTypeDeclaration(file.name.ToString(), compilingEnum);
                 manager.library.enums.Add(compilingEnum);
-                //var related = new List<TextRange>();
-                //for (var x = 0; x < file.elements.Count; x++)
-                //{
-                //    var element = file.elements[x];
-                //    for (var y = 0; y < x; y++)
-                //        if (element.name.ToString() == file.elements[y].name.ToString())
-                //            related.Add(file.elements[y].name);
-                //    if (related.Count > 0)
-                //    {
-                //        var message = new CompileMessage(element.name, CErrorLevel.Error, "重复的枚举名");
-                //        message.related.AddRange(related);
-                //        collector.Add(message);
-                //        related.Clear();
-                //    }
-                //    var name = new string[compilingEnum.declaration.name.Length + 1];
-                //    Array.Copy(compilingEnum.declaration.name, name, compilingEnum.declaration.name.Length);
-                //    name[^1] = element.name.ToString();
-                //    declaration = new Declaration(Type.LIBRARY_SELF, Visibility.Public, DeclarationCategory.EnumElement, name, default);
-                //    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression);
-                //    compilingEnumElement.AddCite(element);
-                //    compilingEnum.elements.Add(compilingEnumElement);
-                //}
             }
             foreach (var file in structs)
             {
-                var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Struct, compiling.GetChildName(file.name.ToString()), default);
                 var compilingStruct = new CompilingStruct(file.name, declaration, compiling, file);
-                declarations.Add(compilingStruct);
+                AddCompilingTypeDeclaration(file.name.ToString(), compilingStruct);
                 manager.library.structs.Add(compilingStruct);
             }
             foreach (var file in interfaces)
             {
-                var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Interface, compiling.GetChildName(file.name.ToString()), default);
                 var compilingInterface = new CompilingInterface(file.name, declaration, compiling, file);
-                declarations.Add(compilingInterface);
+                AddCompilingTypeDeclaration(file.name.ToString(), compilingInterface);
                 manager.library.interfaces.Add(compilingInterface);
             }
             foreach (var file in classes)
             {
-                var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
-                var compilingClass = new CompilingClass(file.name, declaration, compiling, file, default, default, []);
-                declarations.Add(compilingClass);
+                var compilingClass = new CompilingClass(file.name, declaration, compiling, file, default, file.destructor, relies);
+                AddCompilingTypeDeclaration(file.name.ToString(), compilingClass);
                 manager.library.classes.Add(compilingClass);
             }
             foreach (var file in delegates)
             {
-                var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Delegate, compiling.GetChildName(file.name.ToString()), default);
                 var compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, file, [], default);
-                declarations.Add(compilingDelegate);
+                AddCompilingTypeDeclaration(file.name.ToString(), compilingDelegate);
                 manager.library.delegates.Add(compilingDelegate);
             }
             foreach (var file in tasks)
             {
-                var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Task, compiling.GetChildName(file.name.ToString()), default);
                 var compilingTask = new CompilingTask(file.name, declaration, compiling, file, default);
-                declarations.Add(compilingTask);
+                AddCompilingTypeDeclaration(file.name.ToString(), compilingTask);
                 manager.library.tasks.Add(compilingTask);
             }
         }
