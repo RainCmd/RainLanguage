@@ -1,11 +1,12 @@
 ﻿namespace RainLanguageServer.RainLanguage
 {
-    internal class CompilingDeclaration(TextRange name, Declaration declaration, CompilingSpace space) : IDeclaration, ICitePort<CompilingDeclaration, FileDeclaration>
+    internal class CompilingDeclaration(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file) : IDeclaration, ICitePort<CompilingDeclaration, FileDeclaration>
     {
         public readonly TextRange name = name;
         public readonly Declaration declaration = declaration;
         public readonly List<TextRange> attributes = [];
         public readonly CompilingSpace space = space;
+        public readonly FileDeclaration file = file;
 
         public string Name => name.ToString();
         public Declaration Declaration => declaration;
@@ -18,26 +19,31 @@
             }
         }
 
+        /// <summary>
+        /// 引用的声明集合
+        /// </summary>
         public CitePort<FileDeclaration> Cites { get; } = [];
     }
-    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, bool isReadonly, Type type, TextRange expression, List<ISpace> relies) : CompilingDeclaration(name, declaration, space), IVariable
+    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, bool isReadonly, Type type, TextRange expression, HashSet<ISpace> relies)
+        : CompilingDeclaration(name, declaration, space, file), IVariable
     {
         public readonly bool isReadonly = isReadonly;
         public readonly Type type = type;
         public readonly TextRange expression = expression;
-        public readonly List<ISpace> relies = relies;
+        public readonly HashSet<ISpace> relies = relies;
 
         public bool IsReadonly => isReadonly;
         public Type Type => type;
     }
-    internal class CompilingCallable(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) : CompilingDeclaration(name, declaration, space), ICallable
+    internal class CompilingCallable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingDeclaration(name, declaration, space, file), ICallable
     {
         public readonly struct Parameter(TextRange name, Type type)
         {
             public readonly TextRange name = name;
             public readonly Type type = type;
         }
-        public readonly List<Parameter> parameters = [];
+        public readonly List<Parameter> parameters = parameters;
         public readonly Tuple returns = returns;
 
         public Tuple Parameters
@@ -51,19 +57,22 @@
         }
         public Tuple Returns => returns;
     }
-    internal class CompilingFunction(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns, List<ISpace> relies) : CompilingCallable(name, declaration, space, returns), IFunction
+    internal class CompilingFunction(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, List<CompilingCallable.Parameter> parameters, Tuple returns, List<TextLine> body, HashSet<ISpace> relies)
+        : CompilingCallable(name, declaration, space, file, parameters, returns), IFunction
     {
-        public readonly List<TextLine> body = [];
-        public readonly List<ISpace> relies = relies;
+        public readonly List<TextLine> body = body;
+        public readonly HashSet<ISpace> relies = relies;
     }
-    internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IEnum
+    internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file)
+        : CompilingDeclaration(name, declaration, space, file), IEnum
     {
-        public class Element(TextRange name, Declaration declaration, TextRange expression, List<ISpace> relies) : ICitePort<Element, FileEnum.Element>
+        public class Element(TextRange name, Declaration declaration, TextRange expression, HashSet<ISpace> relies, FileDeclaration file) : ICitePort<Element, FileEnum.Element>
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
             public readonly TextRange expression = expression;
-            public readonly List<ISpace> relies = relies;
+            public readonly HashSet<ISpace> relies = relies;
+            public readonly FileDeclaration file = file;
 
             public CitePort<FileEnum.Element> Cites { get; } = [];
         }
@@ -77,7 +86,8 @@
             }
         }
     }
-    internal class CompilingStruct(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IStruct
+    internal class CompilingStruct(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file)
+        : CompilingDeclaration(name, declaration, space, file), IStruct
     {
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> functions = [];
@@ -97,7 +107,8 @@
             }
         }
     }
-    internal class CompilingInterface(TextRange name, Declaration declaration, CompilingSpace space) : CompilingDeclaration(name, declaration, space), IInterface
+    internal class CompilingInterface(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file)
+        : CompilingDeclaration(name, declaration, space, file), IInterface
     {
         public readonly List<Type> inherits = [];
         public readonly List<CompilingCallable> callables = [];
@@ -111,15 +122,16 @@
             }
         }
     }
-    internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, Type parent, List<ISpace> relies) : CompilingDeclaration(name, declaration, space), IClass
+    internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, Type parent, List<TextLine>? destructor, HashSet<ISpace> relies)
+        : CompilingDeclaration(name, declaration, space, file), IClass
     {
         public readonly Type parent = parent;
         public readonly List<Type> inherits = [];
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> constructors = [];
         public readonly List<CompilingFunction> functions = [];
-        public readonly List<TextLine> destructor = [];
-        public readonly List<ISpace> relies = relies;
+        public readonly List<TextLine>? destructor = destructor;
+        public readonly HashSet<ISpace> relies = relies;
 
         public Type Parent => parent;
         public IEnumerable<Type> Inherits => inherits;
@@ -145,16 +157,18 @@
             }
         }
     }
-    internal class CompilingDelegate(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) : CompilingCallable(name, declaration, space, returns), IDelegate
+    internal class CompilingDelegate(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingCallable(name, declaration, space, file, parameters, returns), IDelegate
     {
     }
-    internal class CompilingTask(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) : CompilingDeclaration(name, declaration, space), ITask
+    internal class CompilingTask(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, Tuple returns) : CompilingDeclaration(name, declaration, space, file), ITask
     {
         public readonly Tuple returns = returns;
 
         public Tuple Returns => returns;
     }
-    internal class CompilingNative(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) : CompilingCallable(name, declaration, space, returns), INative
+    internal class CompilingNative(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingCallable(name, declaration, space, file, parameters, returns), INative
     {
     }
     internal class CompilingSpace(CompilingSpace? parent, string name) : ISpace, ICitePort<CompilingSpace, FileSpace>
@@ -180,6 +194,15 @@
             result[--deep] = name;
             for (var index = this; index.parent != null; index = index.parent) result[--deep] = index.name;
             return result;
+        }
+        public void AddDeclaration(CompilingDeclaration declaration)
+        {
+            if (!declarations.TryGetValue(declaration.Name, out var values))
+            {
+                values = [];
+                declarations.Add(declaration.Name, values);
+            }
+            values.Add(declaration);
         }
 
         public ISpace? Parent => parent;
@@ -212,6 +235,9 @@
             return false;
         }
 
+        /// <summary>
+        /// 被import的文件空间集合
+        /// </summary>
         public CitePort<FileSpace> Cites { get; } = [];
     }
     internal class CompilingLibrary(string name) : CompilingSpace(null, name), ILibrary

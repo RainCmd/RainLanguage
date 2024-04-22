@@ -20,13 +20,17 @@
         public bool Vaild => name != null;
         public bool Equals(Type type)
         {
-            if (name.Length != type.name.Length) return false;
-            for (int i = 0; i < name.Length; i++)
-                if (name[i] != type.name[i])
-                    return false;
-            return library == type.library &&
-             code == type.code &&
-             dimension == type.dimension;
+            if (Vaild && type.Vaild)
+            {
+                if (name.Length != type.name.Length) return false;
+                for (int i = 0; i < name.Length; i++)
+                    if (name[i] != type.name[i])
+                        return false;
+                return library == type.library &&
+                       code == type.code &&
+                       dimension == type.dimension;
+            }
+            else return !Vaild && !type.Vaild;
         }
         public override bool Equals(object? obj)
         {
@@ -34,10 +38,10 @@
         }
         public override int GetHashCode()
         {
-            var name = 0;
-            for (int i = 0; i < this.name.Length; i++)
-                name = HashCode.Combine(name, this.name[i]);
-            return HashCode.Combine(library, code, name, dimension);
+            if (!Vaild) return 0;
+            var result = HashCode.Combine(library, code, dimension);
+            foreach (var item in name) result = HashCode.Combine(item, result);
+            return result;
         }
         public static bool operator ==(Type lhs, Type rhs) => lhs.Equals(rhs);
         public static bool operator !=(Type lhs, Type rhs) => !lhs.Equals(rhs);
@@ -66,14 +70,18 @@
         private readonly List<Type> types = types;
         public readonly int Count => types.Count;
         public readonly Type this[int index] => types[index];
-        public bool IsValid => types != null;
+        public bool Valid => types != null;
         public bool Equals(Tuple tuple)
         {
-            if (Count != tuple.Count) return false;
-            for (int i = 0; i < Count; i++)
-                if (this[i] != tuple[i])
-                    return false;
-            return true;
+            if (Valid && tuple.Valid)
+            {
+                if (Count != tuple.Count) return false;
+                for (int i = 0; i < Count; i++)
+                    if (this[i] != tuple[i])
+                        return false;
+                return true;
+            }
+            else return !Valid && !tuple.Valid;
         }
         public override bool Equals(object? obj)
         {
@@ -81,7 +89,9 @@
         }
         public override int GetHashCode()
         {
-            return HashCode.Combine(types, Count);
+            var result = 0;
+            foreach (var type in types) result = HashCode.Combine(result, type.GetHashCode());
+            return result;
         }
         public static bool operator ==(Tuple lhs, Tuple rhs) => lhs.Equals(rhs);
         public static bool operator !=(Tuple lhs, Tuple rhs) => !lhs.Equals(rhs);

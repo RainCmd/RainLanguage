@@ -88,9 +88,8 @@
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Enum, compiling.GetChildName(file.name.ToString()), default);
-                var compilingEnum = new CompilingEnum(file.name, declaration, compiling);
+                var compilingEnum = new CompilingEnum(file.name, declaration, compiling, file);
                 declarations.Add(compilingEnum);
-                compilingEnum.AddCite(file);
                 manager.library.enums.Add(compilingEnum);
                 //var related = new List<TextRange>();
                 //for (var x = 0; x < file.elements.Count; x++)
@@ -119,45 +118,40 @@
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Struct, compiling.GetChildName(file.name.ToString()), default);
-                var compilingStruct = new CompilingStruct(file.name, declaration, compiling);
+                var compilingStruct = new CompilingStruct(file.name, declaration, compiling, file);
                 declarations.Add(compilingStruct);
-                compilingStruct.AddCite(file);
                 manager.library.structs.Add(compilingStruct);
             }
             foreach (var file in interfaces)
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Interface, compiling.GetChildName(file.name.ToString()), default);
-                var compilingInterface = new CompilingInterface(file.name, declaration, compiling);
+                var compilingInterface = new CompilingInterface(file.name, declaration, compiling, file);
                 declarations.Add(compilingInterface);
-                compilingInterface.AddCite(file);
                 manager.library.interfaces.Add(compilingInterface);
             }
             foreach (var file in classes)
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
-                var compilingClass = new CompilingClass(file.name, declaration, compiling, default, []);
+                var compilingClass = new CompilingClass(file.name, declaration, compiling, file, default, default, []);
                 declarations.Add(compilingClass);
-                compilingClass.AddCite(file);
                 manager.library.classes.Add(compilingClass);
             }
             foreach (var file in delegates)
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Delegate, compiling.GetChildName(file.name.ToString()), default);
-                var compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, default);
+                var compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, file, [], default);
                 declarations.Add(compilingDelegate);
-                compilingDelegate.AddCite(file);
                 manager.library.delegates.Add(compilingDelegate);
             }
             foreach (var file in tasks)
             {
                 var declarations = GetDeclarations(file.name, false);
                 var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Task, compiling.GetChildName(file.name.ToString()), default);
-                var compilingTask = new CompilingTask(file.name, declaration, compiling, default);
+                var compilingTask = new CompilingTask(file.name, declaration, compiling, file, default);
                 declarations.Add(compilingTask);
-                compilingTask.AddCite(file);
                 manager.library.tasks.Add(compilingTask);
             }
         }

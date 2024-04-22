@@ -63,18 +63,22 @@
         }
         public bool Equals(Declaration declaration)
         {
-            if (name != null && declaration.name != null)
+            if (Vaild && declaration.Vaild)
             {
-                if (declaration.name.Length != name.Length) return false;
-                for (int i = 0; i < name.Length; i++)
-                    if (name[i] != declaration.name[i])
-                        return false;
+                if (name != null && declaration.name != null)
+                {
+                    if (declaration.name.Length != name.Length) return false;
+                    for (int i = 0; i < name.Length; i++)
+                        if (name[i] != declaration.name[i])
+                            return false;
+                }
+                else if (name != declaration.name) return false;
+                return library == declaration.library &&
+                       visibility == declaration.visibility &&
+                       category == declaration.category &&
+                       signature == declaration.signature;
             }
-            else if (name != declaration.name) return false;
-            return library == declaration.library &&
-                   visibility == declaration.visibility &&
-                   category == declaration.category &&
-                   signature == declaration.signature;
+            else return !Vaild && !declaration.Vaild;
         }
         public override readonly bool Equals(object? obj)
         {
@@ -82,7 +86,10 @@
         }
         public override readonly int GetHashCode()
         {
-            return HashCode.Combine(library, visibility, category, index, definition);
+            if (!Vaild) return 0;
+            var result = HashCode.Combine(library, visibility, category, signature);
+            foreach (var item in name) result = HashCode.Combine(item, result);
+            return result;
         }
         public static bool operator ==(Declaration lhs, Declaration rhs) => lhs.Equals(rhs);
         public static bool operator !=(Declaration lhs, Declaration rhs) => !lhs.Equals(rhs);

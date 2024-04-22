@@ -12,7 +12,7 @@ namespace RainLanguageServer.RainLanguage
         {
             if (isMember)
             {
-                if (IsVisiable(manager, manager.GetDefineDeclaration(declaration)!.Declaration, false))
+                if (IsVisiable(manager, manager.GetDeclaringDeclaration(declaration)!.Declaration, false))
                     if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
                 return false;
             }
@@ -41,7 +41,7 @@ namespace RainLanguageServer.RainLanguage
                         return IsVisiable(manager, declaration, true);
                     case DeclarationCategory.StructFunction:
                         {
-                            var define = manager.GetDefineDeclaration(declaration)!;
+                            var define = manager.GetDeclaringDeclaration(declaration)!;
                             if (define == this.declaration) return true;
                             if (IsVisiable(manager, define.Declaration, false))
                                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
@@ -53,7 +53,7 @@ namespace RainLanguageServer.RainLanguage
                     case DeclarationCategory.ClassVariable:
                     case DeclarationCategory.ClassFunction:
                         {
-                            var define = manager.GetDefineDeclaration(declaration)!;
+                            var define = manager.GetDeclaringDeclaration(declaration)!;
                             if (define == this.declaration) return true;
                             if (IsVisiable(manager, define.Declaration, false))
                                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
@@ -98,8 +98,7 @@ namespace RainLanguageServer.RainLanguage
             {
                 if (results.Count > 1)
                 {
-                    var message = new StringBuilder();
-                    message.AppendLine("依赖空间不明确");
+                    var message = new StringBuilder().AppendLine("依赖空间不明确");
                     foreach (var result in results)
                         message.AppendLine(result.GetFullName());
                     collector.Add(name, CErrorLevel.Error, message.ToString());
@@ -137,7 +136,7 @@ namespace RainLanguageServer.RainLanguage
             {
                 for (var index = declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
                 {
-                    var @class = (IClass)manager.GetDefineDeclaration(index)!;
+                    var @class = (IClass)manager.GetSourceDeclaration(index)!;
                     foreach (var variable in @class.Variables)
                         if (variable.Name == targetName && IsVisiable(manager, variable.Declaration))
                         {
@@ -165,8 +164,7 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var declaration in results)
                         if (declaration.Declaration.category != DeclarationCategory.Function && declaration.Declaration.category != DeclarationCategory.Native)
                         {
-                            var builder = new StringBuilder();
-                            builder.AppendLine("查找申明不明确");
+                            var builder = new StringBuilder().AppendLine("查找申明不明确");
                             foreach (var item in results)
                                 builder.AppendLine(item.GetFullName());
                             collector.Add(name, CErrorLevel.Error, builder.ToString());
@@ -187,8 +185,7 @@ namespace RainLanguageServer.RainLanguage
                         foreach (var declaration in results)
                             if (declaration.Declaration.category != DeclarationCategory.Function && declaration.Declaration.category != DeclarationCategory.Native)
                             {
-                                var builder = new StringBuilder();
-                                builder.AppendLine("查找申明不明确");
+                                var builder = new StringBuilder().AppendLine("查找申明不明确");
                                 foreach (var item in results)
                                     builder.AppendLine(item.GetFullName());
                                 collector.Add(name, CErrorLevel.Error, builder.ToString());
@@ -204,7 +201,7 @@ namespace RainLanguageServer.RainLanguage
         {
             while (@class.Parent.Vaild)
             {
-                @class = (IClass)manager.GetDefineDeclaration(@class.Parent)!;
+                @class = (IClass)manager.GetSourceDeclaration(@class.Parent)!;
                 foreach (var item in @class.Functions)
                     if (item.Name == function.Name && item.Parameters == function.Parameters)
                         filter.Add(item);
@@ -216,7 +213,7 @@ namespace RainLanguageServer.RainLanguage
                 if (item.Name == name)
                     results.Add(item);
             foreach (var item in @interface.Inherits)
-                CollectFunctions(manager, name, (IInterface)manager.GetDefineDeclaration(item)!, results);
+                CollectFunctions(manager, name, (IInterface)manager.GetSourceDeclaration(item)!, results);
         }
         public bool TryFindMember(ASTManager manager, TextRange name, Type type, out List<IDeclaration> results)
         {
@@ -224,7 +221,7 @@ namespace RainLanguageServer.RainLanguage
             if (type.dimension > 0) type = Type.ARRAY;
             else if (type.code == TypeCode.Task) type = Type.TASK;
             var targetName = name.ToString();
-            var declaration = manager.GetDefineDeclaration(type)!;
+            var declaration = manager.GetSourceDeclaration(type)!;
             if (type.code == TypeCode.Struct)
             {
                 var abstractStruct = (IStruct)declaration;
@@ -241,7 +238,7 @@ namespace RainLanguageServer.RainLanguage
             else if (type.code == TypeCode.Handle)
             {
                 var filter = new HashSet<IDeclaration>();
-                for (var index = (IClass)declaration; index != null; index = manager.GetDefineDeclaration(index.Parent) as IClass)
+                for (var index = (IClass)declaration; index != null; index = manager.GetSourceDeclaration(index.Parent) as IClass)
                 {
                     foreach (var item in index.Variables)
                         if (item.Name == targetName && IsVisiable(manager, item.Declaration))
@@ -268,22 +265,22 @@ namespace RainLanguageServer.RainLanguage
                 var type = LexicalTypeExtend.Parse(name[0].ToString());
                 switch (type)
                 {
-                    case LexicalType.KeyWord_bool: results.Add(manager.GetDefineDeclaration(Type.BOOL)!); break;
-                    case LexicalType.KeyWord_byte: results.Add(manager.GetDefineDeclaration(Type.BYTE)!); break;
-                    case LexicalType.KeyWord_char: results.Add(manager.GetDefineDeclaration(Type.CHAR)!); break;
-                    case LexicalType.KeyWord_integer: results.Add(manager.GetDefineDeclaration(Type.INT)!); break;
-                    case LexicalType.KeyWord_real: results.Add(manager.GetDefineDeclaration(Type.REAL)!); break;
-                    case LexicalType.KeyWord_real2: results.Add(manager.GetDefineDeclaration(Type.REAL2)!); break;
-                    case LexicalType.KeyWord_real3: results.Add(manager.GetDefineDeclaration(Type.REAL3)!); break;
-                    case LexicalType.KeyWord_real4: results.Add(manager.GetDefineDeclaration(Type.REAL4)!); break;
-                    case LexicalType.KeyWord_type: results.Add(manager.GetDefineDeclaration(Type.TYPE)!); break;
-                    case LexicalType.KeyWord_string: results.Add(manager.GetDefineDeclaration(Type.STRING)!); break;
-                    case LexicalType.KeyWord_entity: results.Add(manager.GetDefineDeclaration(Type.ENTITY)!); break;
-                    case LexicalType.KeyWord_handle: results.Add(manager.GetDefineDeclaration(Type.HANDLE)!); break;
-                    case LexicalType.KeyWord_interface: results.Add(manager.GetDefineDeclaration(Type.INTERFACE)!); break;
-                    case LexicalType.KeyWord_delegate: results.Add(manager.GetDefineDeclaration(Type.DELEGATE)!); break;
-                    case LexicalType.KeyWord_task: results.Add(manager.GetDefineDeclaration(Type.TASK)!); break;
-                    case LexicalType.KeyWord_array: results.Add(manager.GetDefineDeclaration(Type.ARRAY)!); break;
+                    case LexicalType.KeyWord_bool: results.Add(manager.GetSourceDeclaration(Type.BOOL)!); break;
+                    case LexicalType.KeyWord_byte: results.Add(manager.GetSourceDeclaration(Type.BYTE)!); break;
+                    case LexicalType.KeyWord_char: results.Add(manager.GetSourceDeclaration(Type.CHAR)!); break;
+                    case LexicalType.KeyWord_integer: results.Add(manager.GetSourceDeclaration(Type.INT)!); break;
+                    case LexicalType.KeyWord_real: results.Add(manager.GetSourceDeclaration(Type.REAL)!); break;
+                    case LexicalType.KeyWord_real2: results.Add(manager.GetSourceDeclaration(Type.REAL2)!); break;
+                    case LexicalType.KeyWord_real3: results.Add(manager.GetSourceDeclaration(Type.REAL3)!); break;
+                    case LexicalType.KeyWord_real4: results.Add(manager.GetSourceDeclaration(Type.REAL4)!); break;
+                    case LexicalType.KeyWord_type: results.Add(manager.GetSourceDeclaration(Type.TYPE)!); break;
+                    case LexicalType.KeyWord_string: results.Add(manager.GetSourceDeclaration(Type.STRING)!); break;
+                    case LexicalType.KeyWord_entity: results.Add(manager.GetSourceDeclaration(Type.ENTITY)!); break;
+                    case LexicalType.KeyWord_handle: results.Add(manager.GetSourceDeclaration(Type.HANDLE)!); break;
+                    case LexicalType.KeyWord_interface: results.Add(manager.GetSourceDeclaration(Type.INTERFACE)!); break;
+                    case LexicalType.KeyWord_delegate: results.Add(manager.GetSourceDeclaration(Type.DELEGATE)!); break;
+                    case LexicalType.KeyWord_task: results.Add(manager.GetSourceDeclaration(Type.TASK)!); break;
+                    case LexicalType.KeyWord_array: results.Add(manager.GetSourceDeclaration(Type.ARRAY)!); break;
                     default:
                         if (declaration != null)
                         {
@@ -299,7 +296,7 @@ namespace RainLanguageServer.RainLanguage
                             }
                             else if (declaration.declaration.category == DeclarationCategory.Class)
                             {
-                                for (var index = (IClass)declaration; index != null; index = manager.GetDefineDeclaration(index.Parent) as IClass)
+                                for (var index = (IClass)declaration; index != null; index = manager.GetSourceDeclaration(index.Parent) as IClass)
                                 {
                                     foreach (var item in index.Variables)
                                         if (item.Name == targetName && IsVisiable(manager, item.Declaration))

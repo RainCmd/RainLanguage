@@ -5,9 +5,9 @@
         public readonly List<TextRange> name = name;
         public readonly int dimension = dimension;
     }
-    internal class FileParameter(TextRange name, FileType type)
+    internal class FileParameter(TextRange? name, FileType type)
     {
-        public readonly TextRange name = name;
+        public readonly TextRange? name = name;
         public readonly FileType type = type;
     }
     internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space) : ICitePort<FileDeclaration, CompilingDeclaration>
@@ -17,13 +17,16 @@
         public readonly FileSpace space = space;
         public readonly List<TextRange> attributes = [];
 
+        /// <summary>
+        /// 被其他声明引用的集合
+        /// </summary>
         public CitePort<CompilingDeclaration> Cites { get; } = [];
     }
-    internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange expression) : FileDeclaration(name, visibility, space)
+    internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
         public readonly bool isReadonly = isReadonly;
         public readonly FileType type = type;
-        public readonly TextRange expression = expression;
+        public readonly TextRange? expression = expression;
     }
     internal class FileFunction(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns, List<TextLine> body) : FileDeclaration(name, visibility, space)
     {
@@ -33,10 +36,10 @@
     }
     internal class FileEnum(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
-        public class Element(TextRange name, TextRange expression) : ICitePort<Element, CompilingEnum.Element>
+        public class Element(TextRange name, TextRange? expression) : ICitePort<Element, CompilingEnum.Element>
         {
             public readonly TextRange name = name;
-            public readonly TextRange expression = expression;
+            public readonly TextRange? expression = expression;
 
             public CitePort<CompilingEnum.Element> Cites { get; } = [];
         }
@@ -92,6 +95,9 @@
         public readonly List<FileTask> tasks = [];
         public readonly List<FileNative> natives = [];
 
+        /// <summary>
+        /// import的命名空间集合
+        /// </summary>
         public CitePort<CompilingSpace> Cites { get; } = [];
     }
 }

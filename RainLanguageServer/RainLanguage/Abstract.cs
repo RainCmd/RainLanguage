@@ -110,8 +110,7 @@ namespace RainLanguageServer.RainLanguage
         }
         public static string GetFullName(this ISpace space)
         {
-            var builder = new StringBuilder();
-            builder.Append(space.Name);
+            var builder = new StringBuilder(space.Name);
             for (var index = space; index != null; index = index.Parent)
             {
                 builder.Append('.');

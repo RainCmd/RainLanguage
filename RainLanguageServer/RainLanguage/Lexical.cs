@@ -461,128 +461,6 @@ namespace RainLanguageServer.RainLanguage
                 _ => LexicalType.Word,
             };
         }
-        public static string ToKeyWord(this LexicalType type)
-        {
-            switch (type)
-            {
-                case LexicalType.Unknow:
-                case LexicalType.BracketLeft0:
-                case LexicalType.BracketLeft1:
-                case LexicalType.BracketLeft2:
-                case LexicalType.BracketRight0:
-                case LexicalType.BracketRight1:
-                case LexicalType.BracketRight2:
-                case LexicalType.Comma:
-                case LexicalType.Semicolon:
-                case LexicalType.Assignment:
-                case LexicalType.Equals:
-                case LexicalType.Lambda:
-                case LexicalType.BitAnd:
-                case LexicalType.LogicAnd:
-                case LexicalType.BitAndAssignment:
-                case LexicalType.BitOr:
-                case LexicalType.LogicOr:
-                case LexicalType.BitOrAssignment:
-                case LexicalType.BitXor:
-                case LexicalType.BitXorAssignment:
-                case LexicalType.Less:
-                case LexicalType.LessEquals:
-                case LexicalType.ShiftLeft:
-                case LexicalType.ShiftLeftAssignment:
-                case LexicalType.Greater:
-                case LexicalType.GreaterEquals:
-                case LexicalType.ShiftRight:
-                case LexicalType.ShiftRightAssignment:
-                case LexicalType.Plus:
-                case LexicalType.Increment:
-                case LexicalType.PlusAssignment:
-                case LexicalType.Minus:
-                case LexicalType.Decrement:
-                case LexicalType.RealInvoker:
-                case LexicalType.MinusAssignment:
-                case LexicalType.Mul:
-                case LexicalType.MulAssignment:
-                case LexicalType.Div:
-                case LexicalType.DivAssignment:
-                case LexicalType.Annotation:
-                case LexicalType.Mod:
-                case LexicalType.ModAssignment:
-                case LexicalType.Not:
-                case LexicalType.NotEquals:
-                case LexicalType.Negate:
-                case LexicalType.Dot:
-                case LexicalType.Question:
-                case LexicalType.QuestionDot:
-                case LexicalType.QuestionRealInvoke:
-                case LexicalType.QuestionInvoke:
-                case LexicalType.QuestionIndex:
-                case LexicalType.QuestionNull:
-                case LexicalType.Colon:
-                case LexicalType.ConstReal:
-                case LexicalType.ConstNumber:
-                case LexicalType.ConstBinary:
-                case LexicalType.ConstHexadecimal:
-                case LexicalType.ConstChars:
-                case LexicalType.ConstString:
-                case LexicalType.TemplateString:
-                case LexicalType.Word:
-                case LexicalType.Backslash:
-                    break;
-                case LexicalType.KeyWord_namespace: return "namespace";
-                case LexicalType.KeyWord_import: return "import";
-                case LexicalType.KeyWord_native: return "native";
-                case LexicalType.KeyWord_public: return "public";
-                case LexicalType.KeyWord_internal: return "internal";
-                case LexicalType.KeyWord_space: return "space";
-                case LexicalType.KeyWord_protected: return "protected";
-                case LexicalType.KeyWord_private: return "private";
-                case LexicalType.KeyWord_enum: return "enum";
-                case LexicalType.KeyWord_struct: return "struct";
-                case LexicalType.KeyWord_class: return "class";
-                case LexicalType.KeyWord_interface: return "interface";
-                case LexicalType.KeyWord_const: return "const";
-                case LexicalType.KeyWord_global: return "global";
-                case LexicalType.KeyWord_base: return "base";
-                case LexicalType.KeyWord_this: return "this";
-                case LexicalType.KeyWord_true: return "true";
-                case LexicalType.KeyWord_false: return "false";
-                case LexicalType.KeyWord_null: return "null";
-                case LexicalType.KeyWord_var: return "var";
-                case LexicalType.KeyWord_bool: return "bool";
-                case LexicalType.KeyWord_byte: return "byte";
-                case LexicalType.KeyWord_char: return "char";
-                case LexicalType.KeyWord_integer: return "integer";
-                case LexicalType.KeyWord_real: return "real";
-                case LexicalType.KeyWord_real2: return "real2";
-                case LexicalType.KeyWord_real3: return "real3";
-                case LexicalType.KeyWord_real4: return "real4";
-                case LexicalType.KeyWord_type: return "type";
-                case LexicalType.KeyWord_string: return "string";
-                case LexicalType.KeyWord_handle: return "handle";
-                case LexicalType.KeyWord_entity: return "entity";
-                case LexicalType.KeyWord_delegate: return "delegate";
-                case LexicalType.KeyWord_task: return "task";
-                case LexicalType.KeyWord_array: return "array";
-                case LexicalType.KeyWord_if: return "if";
-                case LexicalType.KeyWord_elseif: return "elseif";
-                case LexicalType.KeyWord_else: return "else";
-                case LexicalType.KeyWord_while: return "while";
-                case LexicalType.KeyWord_for: return "for";
-                case LexicalType.KeyWord_break: return "break";
-                case LexicalType.KeyWord_continue: return "continue";
-                case LexicalType.KeyWord_return: return "return";
-                case LexicalType.KeyWord_is: return "is";
-                case LexicalType.KeyWord_as: return "as";
-                case LexicalType.KeyWord_start: return "start";
-                case LexicalType.KeyWord_new: return "new";
-                case LexicalType.KeyWord_wait: return "wait";
-                case LexicalType.KeyWord_exit: return "exit";
-                case LexicalType.KeyWord_try: return "try";
-                case LexicalType.KeyWord_catch: return "catch";
-                case LexicalType.KeyWord_finally: return "finally";
-            }
-            return "";
-        }
     }
     internal readonly struct Lexical(TextRange anchor, LexicalType type)
     {
@@ -600,7 +478,7 @@ namespace RainLanguageServer.RainLanguage
             var index = 1;
             while (TryAnalysis(segment, index, out var lexical, collector))
             {
-                index = lexical.anchor.end.Position - segment.start.Position;
+                index = lexical.anchor.End - segment.Start;
                 if (lexical.type == LexicalType.BracketRight2)
                     return segment[..index];
             }
@@ -881,7 +759,7 @@ namespace RainLanguageServer.RainLanguage
         }
         public static bool TryAnalysis(TextRange segment, TextPosition index, out Lexical lexical, MessageCollector? collector)
         {
-            return TryAnalysis(segment, index - segment.start, out lexical, collector);
+            return TryAnalysis(segment, index - segment.Start, out lexical, collector);
         }
 
         public static bool TryExtractName(TextRange segment, int start, out int index, out List<TextRange> names, MessageCollector collector)
@@ -892,17 +770,17 @@ namespace RainLanguageServer.RainLanguage
             {
                 if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord()) names.Add(lexical.anchor);
                 else break;
-                index = lexical.anchor.end - segment.start;
+                index = lexical.anchor.End - segment.Start;
                 if (TryAnalysis(segment, index, out lexical, collector) && lexical.type == LexicalType.Dot)
-                    index = lexical.anchor.end - segment.start;
+                    index = lexical.anchor.End - segment.Start;
                 else return true;
             }
             return names.Count > 0;
         }
         public static bool TryExtractName(TextRange segment, TextPosition start, out TextPosition index, out List<TextRange> names, MessageCollector collector)
         {
-            var ressult = TryExtractName(segment, start - segment.start, out var i, out names, collector);
-            index = segment.start + i;
+            var ressult = TryExtractName(segment, start - segment.Start, out var i, out names, collector);
+            index = segment.Start + i;
             return ressult;
         }
 
@@ -912,17 +790,17 @@ namespace RainLanguageServer.RainLanguage
             while (true)
             {
                 if (!TryAnalysis(segment, position, out var lexical, null) || lexical.type != LexicalType.BracketLeft1) break;
-                if (!TryAnalysis(segment, lexical.anchor.end, out lexical, null) || lexical.type != LexicalType.BracketRight1) break;
-                position = lexical.anchor.end - segment.start;
+                if (!TryAnalysis(segment, lexical.anchor.End, out lexical, null) || lexical.type != LexicalType.BracketRight1) break;
+                position = lexical.anchor.End - segment.Start;
                 result++;
             }
             return result;
         }
         public static int ExtractDimension(TextRange segment, ref TextPosition position)
         {
-            var index = position - segment.start;
+            var index = position - segment.Start;
             var result = ExtractDimension(segment, ref index);
-            position = segment.start + index;
+            position = segment.Start + index;
             return result;
         }
     }

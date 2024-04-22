@@ -23,6 +23,7 @@
         public CompileMessage this[int index] => messages[index];
         public void Add(CompileMessage message) => messages.Add(message);
         public void Add(TextRange range, CErrorLevel level, string message) => Add(new CompileMessage(range, level, message));
+        public void Add(IList<TextRange> ranges, CErrorLevel level, string message) => Add(new TextRange(ranges[0].Start, ranges[^1].End), level, message);
         public void Clear() => messages.Clear();
     }
 }

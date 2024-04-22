@@ -136,7 +136,12 @@ namespace RainLanguageServer.RainLanguage
             }
             return null;
         }
-        public IDeclaration? GetDefineDeclaration(Declaration declaration)
+        /// <summary>
+        /// 获取声明此成员的定义
+        /// </summary>
+        /// <param name="declaration"></param>
+        /// <returns></returns>
+        public IDeclaration? GetDeclaringDeclaration(Declaration declaration)
         {
             switch (declaration.category)
             {
@@ -188,7 +193,7 @@ namespace RainLanguageServer.RainLanguage
             }
             return null;
         }
-        public IDeclaration? GetDefineDeclaration(Type type)
+        public IDeclaration? GetSourceDeclaration(Type type)
         {
             if (type.Vaild) switch (type.code)
                 {
