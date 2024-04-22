@@ -7,8 +7,9 @@ namespace RainLanguageServer
         [RequiresDynamicCode("Calls RainLanguageServer.Server.Server(Stream, Stream)")]
         static void Main(string[] args)
         {
-            var recorder = args?.Length > 0 ? File.CreateText(args[0] + "server.log") : null;
-            var server = new Server(new RecorderStream(Console.OpenStandardInput(), recorder), new RecorderStream(Console.OpenStandardOutput(), recorder));
+            var parser = new ArgsParser(args);
+            var recorder = parser.logPath == null ? null : File.CreateText(parser.logPath + "server.log");
+            var server = new Server(parser.kernelDefinePath, new RecorderStream(Console.OpenStandardInput(), recorder), new RecorderStream(Console.OpenStandardOutput(), recorder));
             server.Listen().Wait();
             recorder?.Close();
         }

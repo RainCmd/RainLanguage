@@ -10,7 +10,7 @@
             var attributeCollector = new List<TextRange>();
             while (reader.TryReadLine(out var line))
             {
-                if (line.Indent == -1) continue;
+                if (line!.Indent == -1) continue;
                 if (TryParseAttributes(line, attributeCollector)) continue;
                 if (Lexical.TryAnalysis(line, 0, out var lexical, collector))
                 {
@@ -151,7 +151,7 @@
                 CheckLineEnd(line, position);
 
                 var indent = -1; var previous = line.Indent;
-                while (reader.TryReadLine(out line))
+                while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
@@ -221,7 +221,7 @@
                 CheckLineEnd(line, position);
 
                 var indent = -1; var previous = line.Indent;
-                while (reader.TryReadLine(out line))
+                while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
@@ -259,7 +259,7 @@
                 structs.Add(fileStruct);
                 attributeCollector.Clear();
                 var indent = -1; var previous = line.Indent;
-                while (reader.TryReadLine(out line))
+                while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
@@ -310,7 +310,7 @@
                 enums.Add(fileEnum);
                 attributeCollector.Clear();
                 var indent = -1; var previous = line.Indent;
-                while (reader.TryReadLine(out line))
+                while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
@@ -563,7 +563,7 @@
             lines = [];
             while (reader.TryReadLine(out var line))
             {
-                if (line.Indent == -1) continue;
+                if (line!.Indent == -1) continue;
                 if (line.Indent <= indent) break;
                 else lines.Add(line);
             }

@@ -11,7 +11,7 @@
         {
             public readonly TextDocument document = new(file.Path, 0, file.Content);
             private int line = 0;
-            public bool TryReadLine(out TextLine line)
+            public bool TryReadLine(out TextLine? line)
             {
                 if (this.line++ < document.LineCount)
                 {
@@ -23,7 +23,7 @@
             }
             public void Rollback() => line--;
         }
-        public static ASTManager Build(string name, IEnumerable<IFileDocument> files)
+        public static ASTManager Build(string? kernelDefinePath, string name, IEnumerable<IFileDocument> files)
         {
             var manager = new ASTManager(name);
             foreach (var file in files)

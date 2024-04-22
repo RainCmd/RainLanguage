@@ -1,15 +1,19 @@
 
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node'
 import * as vscode from 'vscode'
-import * as cp from 'child_process'
 
 let client: LanguageClient;
 
 export function StartServer(context: vscode.ExtensionContext) {
     const binPath = `${context.extension.extensionUri.fsPath}/bin/`
+    let serverArgs: string[] = []
+    serverArgs.push('-logPath')
+    serverArgs.push(binPath)
+    serverArgs.push('-kernelDefinePath')
+    serverArgs.push(`${context.extension.extensionUri.fsPath}/kernel.rain`)
     const serverOptions: ServerOptions = {
         command: `${binPath}server/RainLanguageServer.exe`,
-        args: [binPath]
+        args: serverArgs
     }
 
     const clientOptions: LanguageClientOptions = {
@@ -18,6 +22,9 @@ export function StartServer(context: vscode.ExtensionContext) {
         }],
         synchronize: {
             fileEvents: vscode.workspace.createFileSystemWatcher("**/*.rain")
+        },
+        initializationOptions: {
+            
         }
     }
     client = new LanguageClient("雨言", "雨言服务客户端", serverOptions, clientOptions);

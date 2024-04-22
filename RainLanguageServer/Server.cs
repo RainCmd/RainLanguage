@@ -4,11 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using LanguageServer.Parameters.TextDocument;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
+using LanguageServer.Parameters.Workspace;
 
 namespace RainLanguageServer
 {
     [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
-    internal class Server(Stream input, Stream output) : ServiceConnection(input, output)
+    internal class Server(string? kernelDefinePath, Stream input, Stream output) : ServiceConnection(input, output)
     {
         private class DocumentLoader(string root, Dictionary<string, TextDocument> documents) : IEnumerable<IFileDocument>
         {
@@ -88,10 +89,14 @@ namespace RainLanguageServer
 
             return Result<InitializeResult, ResponseError<InitializeErrorData>>.Success(result);
         }
+        protected override void DidChangeConfiguration(DidChangeConfigurationParams param)
+        {
+
+        }
         protected override void Initialized()
         {
             //todo 可能需要名字
-            manager = ASTBuilder.Build("", new DocumentLoader(root, documents));
+            manager = ASTBuilder.Build(kernelDefinePath, "", new DocumentLoader(root, documents));
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
         {
