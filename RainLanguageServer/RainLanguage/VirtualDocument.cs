@@ -1,51 +1,51 @@
 ﻿namespace RainLanguageServer.RainLanguage
 {
     using Relies = Dictionary<string, VirtualDocument>;
-    internal class VirtualDeclaration(TextRange name, VirtualSpace space)
+    internal class VirtualDeclaration(TextRange name, Visibility visibility, VirtualSpace space)
     {
         public readonly TextRange name = name;
-        //todo 可见性（class中有public和protected的却别）
+        public readonly Visibility visibility = visibility;
         public readonly VirtualSpace space = space;
     }
-    internal class VirtualVariable(TextRange name, VirtualSpace space, bool isReadonly, FileType type) : VirtualDeclaration(name, space)
+    internal class VirtualVariable(TextRange name, Visibility visibility, VirtualSpace space, bool isReadonly, FileType type) : VirtualDeclaration(name, visibility, space)
     {
         public readonly bool isReadonly = isReadonly;
         public readonly FileType type = type;
     }
-    internal class VirtualFunction(TextRange name, VirtualSpace space, List<FileParameter> parameters, List<FileType> returns) : VirtualDeclaration(name, space)
+    internal class VirtualFunction(TextRange name, Visibility visibility, VirtualSpace space, List<FileParameter> parameters, List<FileType> returns) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
     }
-    internal class VirtualEnum(TextRange name, VirtualSpace space) : VirtualDeclaration(name, space)
+    internal class VirtualEnum(TextRange name, Visibility visibility, VirtualSpace space) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<TextRange> elements = [];
     }
-    internal class VirtualStruct(TextRange name, VirtualSpace space) : VirtualDeclaration(name, space)
+    internal class VirtualStruct(TextRange name, Visibility visibility, VirtualSpace space) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<VirtualVariable> variables = [];
         public readonly List<VirtualFunction> functions = [];
     }
-    internal class VirtualInterface(TextRange name, VirtualSpace space) : VirtualDeclaration(name, space)
+    internal class VirtualInterface(TextRange name, Visibility visibility, VirtualSpace space) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<FileType> inherits = [];
         public readonly List<VirtualFunction> functions = [];
     }
-    internal class VirtualClass(TextRange name, VirtualSpace space) : VirtualInterface(name, space)
+    internal class VirtualClass(TextRange name, Visibility visibility, VirtualSpace space) : VirtualInterface(name, visibility, space)
     {
         public readonly List<VirtualVariable> variables = [];
         public readonly List<VirtualFunction> constructors = [];
     }
-    internal class VirtualDelegate(TextRange name, VirtualSpace space, List<FileParameter> parameters, List<FileType> returns) : VirtualDeclaration(name, space)
+    internal class VirtualDelegate(TextRange name, Visibility visibility, VirtualSpace space, List<FileParameter> parameters, List<FileType> returns) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
     }
-    internal class VirtualTask(TextRange name, VirtualSpace space, List<FileType> returns) : VirtualDeclaration(name, space)
+    internal class VirtualTask(TextRange name, Visibility visibility, VirtualSpace space, List<FileType> returns) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<FileType> returns = returns;
     }
-    internal class VirtualNative(TextRange name, VirtualSpace space, List<FileParameter> parameters, List<FileType> returns) : VirtualDeclaration(name, space)
+    internal class VirtualNative(TextRange name, Visibility visibility, VirtualSpace space, List<FileParameter> parameters, List<FileType> returns) : VirtualDeclaration(name, visibility, space)
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
@@ -95,7 +95,7 @@
                             if (lexical.type == LexicalType.KeyWord_const)
                             {
                                 if (TryParseVariable(line, position, out var name, out var type))
-                                    variables.Add(new VirtualVariable(name!, this, true, type!));
+                                    variables.Add(new VirtualVariable(name!, Visibility.Public, this, true, type!));
                             }
                             else if (lexical.type == LexicalType.KeyWord_enum)
                                 ParseEnum(reader, line, position);
@@ -108,22 +108,22 @@
                             else if (lexical.type == LexicalType.KeyWord_delegate)
                             {
                                 if (TryParseCallable(line, position, out var name, out var parameters, out var returns))
-                                    delegates.Add(new VirtualDelegate(name!, this, parameters!, returns!));
+                                    delegates.Add(new VirtualDelegate(name!, Visibility.Public, this, parameters!, returns!));
                             }
                             else if (lexical.type == LexicalType.KeyWord_task)
                             {
                                 if (TryParseTuple(line, position, out var name, out var returns))
-                                    tasks.Add(new VirtualTask(name!, this, returns!));
+                                    tasks.Add(new VirtualTask(name!, Visibility.Public, this, returns!));
                             }
                             else if (lexical.type == LexicalType.KeyWord_native)
                             {
                                 if (TryParseCallable(line, position, out var name, out var parameters, out var returns))
-                                    natives.Add(new VirtualNative(name!, this, parameters!, returns!));
+                                    natives.Add(new VirtualNative(name!, Visibility.Public, this, parameters!, returns!));
                             }
                             else if (TryParseVariable(line, position, out var name, out var type))
-                                variables.Add(new VirtualVariable(name!, this, false, type!));
+                                variables.Add(new VirtualVariable(name!, Visibility.Public, this, false, type!));
                             else if (TryParseCallable(line, position, out name, out var parameters, out var returns))
-                                functions.Add(new VirtualFunction(name!, this, parameters!, returns!));
+                                functions.Add(new VirtualFunction(name!, Visibility.Public, this, parameters!, returns!));
                         }
                     }
                 }
@@ -134,7 +134,7 @@
             if (Lexical.TryAnalysis(line, position, out var lexical, null))
                 if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord())
                 {
-                    var virtualClass = new VirtualClass(lexical.anchor, this);
+                    var virtualClass = new VirtualClass(lexical.anchor, Visibility.Public, this);
                     classes.Add(virtualClass);
 
                     position = lexical.anchor.End;
@@ -156,12 +156,12 @@
                             if (visibility == Visibility.None || visibility.ContainAny(Visibility.Public | Visibility.Protected))
                             {
                                 if (TryParseVariable(line, position, out var name, out var type))
-                                    virtualClass.variables.Add(new VirtualVariable(name!, this, false, type!));
+                                    virtualClass.variables.Add(new VirtualVariable(name!, visibility, this, false, type!));
                                 else if (TryParseCallable(line, position, out name, out var parameters, out var returns))
                                     if (name!.ToString() == virtualClass.name.ToString())
-                                        virtualClass.constructors.Add(new VirtualFunction(name!, this, parameters!, returns!));
+                                        virtualClass.constructors.Add(new VirtualFunction(name!, visibility, this, parameters!, returns!));
                                     else
-                                        virtualClass.functions.Add(new VirtualFunction(name!, this, parameters!, returns!));
+                                        virtualClass.functions.Add(new VirtualFunction(name!, visibility, this, parameters!, returns!));
                             }
                         }
                     }
@@ -173,7 +173,7 @@
             if (Lexical.TryAnalysis(line, position, out var lexical, null))
                 if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord())
                 {
-                    var virtualInterface = new VirtualInterface(lexical.anchor, this);
+                    var virtualInterface = new VirtualInterface(lexical.anchor, Visibility.Public, this);
                     interfaces.Add(virtualInterface);
 
                     position = lexical.anchor.End;
@@ -193,7 +193,7 @@
                             indent = line.Indent;
                             ParseVisibility(line, out position);
                             if (TryParseCallable(line, position, out var name, out var parameters, out var returns))
-                                virtualInterface.functions.Add(new VirtualFunction(name!, this, parameters!, returns!));
+                                virtualInterface.functions.Add(new VirtualFunction(name!, Visibility.Public, this, parameters!, returns!));
                         }
                     }
                     reader.Rollback();
@@ -204,7 +204,7 @@
             if (Lexical.TryAnalysis(line, position, out var lexical, null))
                 if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord())
                 {
-                    var virtualStruct = new VirtualStruct(lexical.anchor, this);
+                    var virtualStruct = new VirtualStruct(lexical.anchor, Visibility.Public, this);
                     structs.Add(virtualStruct);
                     var indent = -1; var previous = line.Indent;
                     while (reader.TryReadLine(out line!))
@@ -218,9 +218,9 @@
                             if (visibility == Visibility.None || visibility.ContainAny(Visibility.Public))
                             {
                                 if (TryParseVariable(line, position, out var name, out var type))
-                                    virtualStruct.variables.Add(new VirtualVariable(name!, this, false, type!));
+                                    virtualStruct.variables.Add(new VirtualVariable(name!, Visibility.Public, this, false, type!));
                                 else if (TryParseCallable(line, position, out name, out var parameters, out var returns))
-                                    virtualStruct.functions.Add(new VirtualFunction(name!, this, parameters!, returns!));
+                                    virtualStruct.functions.Add(new VirtualFunction(name!, Visibility.Public, this, parameters!, returns!));
                             }
                         }
                     }
@@ -231,7 +231,7 @@
         {
             if (Lexical.TryAnalysis(line, position, out var lexical, null) && lexical.type == LexicalType.Word)
             {
-                var virtualEnum = new VirtualEnum(lexical.anchor, this);
+                var virtualEnum = new VirtualEnum(lexical.anchor, Visibility.Public, this);
                 enums.Add(virtualEnum);
                 var indent = -1; var previous = line.Indent;
                 while (reader.TryReadLine(out line!))
