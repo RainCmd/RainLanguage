@@ -1,24 +1,30 @@
-﻿using System.Runtime.InteropServices;
-using System.Xml.Linq;
+﻿using LanguageServer;
 
 namespace RainLanguageServer.RainLanguage
 {
-    internal class ASTManager(string name)
+    internal class ASTManager
     {
-        public readonly CompilingLibrary library = new(name);
+        public readonly CompilingLibrary library;
         public readonly Dictionary<string, FileSpace> fileSpaces = [];
-        public readonly Dictionary<string, RLibrary> relies = [];
-        public readonly RLibrary kernel;
+        public readonly Dictionary<string, VirtualDocument> relies = [];
+        public readonly VirtualDocument kernel;
+        public ASTManager(string kernelPath, string name)
+        {
+            library = new CompilingLibrary(name);
+            kernelPath = new UnifiedPath(kernelPath);
+            using var sr = File.OpenText(kernelPath);
+            kernel = new VirtualDocument("kernel", sr.ReadToEnd());
+        }
         public ILibrary? LoadLibrary(string name)
         {
-            //todo 加载程序集
+            //todo 加载程序集，转成VirtualDocument存到relies中
             return null;
         }
         public ILibrary GetLibrary(int library)
         {
             if (library == Type.LIBRARY_SELF) return this.library;
-            else if (library == Type.LIBRARY_KERNEL) return kernel;
-            else return relies.Values.First(x => x.library == library);
+            else if (library == Type.LIBRARY_KERNEL) return kernel.library;
+            else return relies.Values.First(x => x.library.library == library).library;
         }
         private bool TryGetDeclarations(int library, string[] name, out List<IDeclaration>? declarations)
         {

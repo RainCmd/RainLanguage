@@ -51,7 +51,7 @@
         {
             get
             {
-                foreach(var function in functions) yield return function;
+                foreach (var function in functions) yield return function;
             }
         }
     }
@@ -65,7 +65,7 @@
         {
             get
             {
-                foreach(var callable in callables) yield return callable;
+                foreach (var callable in callables) yield return callable;
             }
         }
     }
@@ -83,21 +83,21 @@
         {
             get
             {
-                foreach(var constructor in constructors) yield return constructor;
+                foreach (var constructor in constructors) yield return constructor;
             }
         }
         public IEnumerable<IVariable> Variables
         {
             get
             {
-                foreach( var variable in variables) yield return variable;
+                foreach (var variable in variables) yield return variable;
             }
         }
         public IEnumerable<IFunction> Functions
         {
             get
             {
-                foreach(var function in functions) yield return function;
+                foreach (var function in functions) yield return function;
             }
         }
     }
@@ -109,14 +109,23 @@
         public Tuple Returns => returns;
     }
     internal class RNative : RCallable, INative { }
-    internal class RSpace(int index, RSpace? parent, string name) : ISpace
+    internal class RSpace(RSpace? parent, string name) : ISpace
     {
-        public readonly int index = index;
         public readonly RSpace? parent = parent;
         public readonly string name = name;
         public readonly List<string> attributes = [];
         public readonly Dictionary<string, RSpace> children = [];
         public readonly Dictionary<string, List<RDeclaration>> declarations = [];
+
+        public RSpace GetChild(string name)
+        {
+            if (!children.TryGetValue(name, out var child))
+            {
+                child = new RSpace(this, name);
+                children.Add(name, child);
+            }
+            return child;
+        }
 
         public ISpace? Parent => parent;
         public string Name => name;
@@ -134,7 +143,7 @@
         public bool TryGetDeclarations(string name, out List<IDeclaration> declarations)
         {
             declarations = [];
-            if(this.declarations.TryGetValue(name,out var value))
+            if (this.declarations.TryGetValue(name, out var value))
             {
                 foreach (var declaration in value) declarations.Add(declaration);
                 return true;
@@ -142,7 +151,7 @@
             return false;
         }
     }
-    internal class RLibrary(int library, RSpace parent, string name) : RSpace(0, parent, name), ILibrary
+    internal class RLibrary(int library, string name) : RSpace(null, name), ILibrary
     {
         public readonly int library = library;
         public readonly List<RVariable> variables = [];

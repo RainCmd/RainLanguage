@@ -4,6 +4,11 @@ import * as vscode from 'vscode'
 
 let client: LanguageClient;
 
+export function RestartServer(context: vscode.ExtensionContext) {
+    StopServer()
+    StartServer(context)
+}
+
 export function StartServer(context: vscode.ExtensionContext) {
     const binPath = `${context.extension.extensionUri.fsPath}/bin/`
     let serverArgs: string[] = []
@@ -40,5 +45,6 @@ export function StopServer() {
     if (client) {
         console.log("雨言服务客户端：终止")
         client.stop()
+        client = null
     }
 }

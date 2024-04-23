@@ -92,8 +92,8 @@ namespace RainLanguageServer.RainLanguage
             var results = new HashSet<ISpace>();
             foreach (var rely in relies)
                 if (rely.TryGetChild(targetName, out space)) results.Add(space!);
-            if (manager.relies.TryGetValue(targetName, out var library))
-                results.Add(library);
+            if (manager.relies.TryGetValue(targetName, out var libraryDocument))
+                results.Add(libraryDocument.library);
             if (results.Count > 0)
             {
                 if (results.Count > 1)
@@ -106,9 +106,9 @@ namespace RainLanguageServer.RainLanguage
                 space = results.First();
                 return true;
             }
-            else if (targetName == manager.kernel.Name)
+            else if (targetName == manager.kernel.library.Name)
             {
-                space = manager.kernel;
+                space = manager.kernel.library;
                 return true;
             }
             space = default;

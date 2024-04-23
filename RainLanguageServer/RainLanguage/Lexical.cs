@@ -762,7 +762,7 @@ namespace RainLanguageServer.RainLanguage
             return TryAnalysis(segment, index - segment.Start, out lexical, collector);
         }
 
-        public static bool TryExtractName(TextRange segment, int start, out int index, out List<TextRange> names, MessageCollector collector)
+        public static bool TryExtractName(TextRange segment, int start, out int index, out List<TextRange> names, MessageCollector? collector)
         {
             index = start;
             names = [];
@@ -777,7 +777,7 @@ namespace RainLanguageServer.RainLanguage
             }
             return names.Count > 0;
         }
-        public static bool TryExtractName(TextRange segment, TextPosition start, out TextPosition index, out List<TextRange> names, MessageCollector collector)
+        public static bool TryExtractName(TextRange segment, TextPosition start, out TextPosition index, out List<TextRange> names, MessageCollector? collector)
         {
             var ressult = TryExtractName(segment, start - segment.Start, out var i, out names, collector);
             index = segment.Start + i;

@@ -9,28 +9,33 @@ using LanguageServer.Parameters.Workspace;
 namespace RainLanguageServer
 {
     [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
-    internal class Server(string? kernelDefinePath, Stream input, Stream output) : ServiceConnection(input, output)
+    internal class Server : ServiceConnection
     {
-        private class DocumentLoader(string root, Dictionary<string, TextDocument> documents) : IEnumerable<IFileDocument>
+        private class FileDocument : IFileDocument
         {
-            private class FileDocument(string path, string content) : IFileDocument
+            public string Path { get; }
+            public string Content { get; }
+            public FileDocument(string path, Server server)
             {
-                public string Path => path;
-                public string Content => content;
+                Path = path;
+                path = new UnifiedPath(path);
+                if (server.documents.TryGetValue(path, out var document)) Content = document.text;
+                else
+                {
+                    using var sr = File.OpenText(path);
+                    Content = sr.ReadToEnd();
+                }
             }
+        }
+        private class DocumentLoader(string root, Server server) : IEnumerable<IFileDocument>
+        {
             private readonly string root = root;
-            private readonly Dictionary<string, TextDocument> documents = documents;
+            private readonly Server server = server;
 
             public IEnumerator<IFileDocument> GetEnumerator()
             {
                 foreach (var path in Directory.GetFiles(root, "*.rain", SearchOption.AllDirectories))
-                {
-                    var file = new UnifiedPath(path);
-                    if (documents.TryGetValue(path, out var document))
-                        yield return new FileDocument(file, document.text);
-                    using var sr = File.OpenText(file);
-                    yield return new FileDocument(file, sr.ReadToEnd());
-                }
+                    yield return new FileDocument(path, server);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -38,12 +43,18 @@ namespace RainLanguageServer
                 return GetEnumerator();
             }
         }
-        private string root = "";
-        private ASTManager? manager;
+        private readonly ASTManager manager;
+
+        public Server(ArgsParser args, Stream input, Stream output) : base(input, output)
+        {
+            if (args.filePath == null)
+                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName!, new DocumentLoader(args.projectRoot!, this));
+            else
+                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName ?? "TestRainLibrary", [new FileDocument(args.filePath, this)]);
+        }
+
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
-            root = new UnifiedPath(param.rootUri);
-
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
             result.capabilities.executeCommandProvider = new ExecuteCommandOptions();
@@ -95,8 +106,7 @@ namespace RainLanguageServer
         }
         protected override void Initialized()
         {
-            //todo 可能需要名字
-            manager = ASTBuilder.Build(kernelDefinePath, "", new DocumentLoader(root, documents));
+
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
         {

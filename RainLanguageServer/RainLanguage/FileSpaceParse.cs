@@ -2,7 +2,7 @@
 {
     internal partial class FileSpace
     {
-        public FileSpace(ASTBuilder.LineReader reader, CompilingSpace compiling, FileSpace? parent = null, int parentIndent = -1)
+        public FileSpace(LineReader reader, CompilingSpace compiling, FileSpace? parent = null, int parentIndent = -1)
         {
             this.compiling = compiling;
             this.parent = parent;
@@ -133,7 +133,7 @@
             }
             attributes.AddRange(attributeCollector);
         }
-        private void ParseClass(ASTBuilder.LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
+        private void ParseClass(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
             else if (lexical.type == LexicalType.Word)
@@ -145,7 +145,9 @@
                 position = lexical.anchor.End;
                 while (Lexical.TryExtractName(line, position, out var index, out var names, collector))
                 {
-                    fileClass.inherits.Add(new FileType(names, Lexical.ExtractDimension(line, ref index)));
+                    var dimension = Lexical.ExtractDimension(line, ref index);
+                    if (dimension > 0) collector.Add(names, CErrorLevel.Error, "数组不能被继承");
+                    fileClass.inherits.Add(new FileType(names, dimension));
                     position = index;
                 }
                 CheckLineEnd(line, position);
@@ -203,7 +205,7 @@
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private void ParseInterface(ASTBuilder.LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
+        private void ParseInterface(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
             else if (lexical.type == LexicalType.Word)
@@ -215,7 +217,9 @@
                 position = lexical.anchor.End;
                 while (Lexical.TryExtractName(line, position, out var index, out var names, collector))
                 {
-                    fileInterface.inherits.Add(new FileType(names, Lexical.ExtractDimension(line, ref index)));
+                    var dimension = Lexical.ExtractDimension(line, ref index);
+                    if (dimension > 0) collector.Add(names, CErrorLevel.Error, "数组不能被继承");
+                    fileInterface.inherits.Add(new FileType(names, dimension));
                     position = index;
                 }
                 CheckLineEnd(line, position);
@@ -248,7 +252,7 @@
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private void ParseStruct(ASTBuilder.LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
+        private void ParseStruct(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
             else if (lexical.type == LexicalType.Word)
@@ -299,7 +303,7 @@
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private void ParseEnum(ASTBuilder.LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
+        private void ParseEnum(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
             else if (lexical.type == LexicalType.Word)
@@ -475,14 +479,14 @@
                     }
                     else if (names.Count == 1 && !segmented)
                     {
-                        name = names[1];
+                        name = names[0];
                         return true;
                     }
                     else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                 }
                 else if (names.Count == 1 && !segmented)
                 {
-                    name = names[1];
+                    name = names[0];
                     return true;
                 }
                 else collector.Add(line, CErrorLevel.Error, "缺少名称");
@@ -496,7 +500,7 @@
             name = default;
             return false;
         }
-        private void ParseChild(TextLine line, TextPosition index, ASTBuilder.LineReader reader, List<TextRange> attributeCollector)
+        private void ParseChild(TextLine line, TextPosition index, LineReader reader, List<TextRange> attributeCollector)
         {
             if (Lexical.TryExtractName(line, index, out var end, out var names, collector))
             {
@@ -558,7 +562,7 @@
         {
             CheckLineEnd(line, position.Position - line.Start.Position);
         }
-        private static void ParseBlock(ASTBuilder.LineReader reader, int indent, out List<TextLine> lines)
+        private static void ParseBlock(LineReader reader, int indent, out List<TextLine> lines)
         {
             lines = [];
             while (reader.TryReadLine(out var line))
