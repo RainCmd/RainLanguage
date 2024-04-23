@@ -8,7 +8,7 @@ namespace RainLanguageServer
         static void Main(string[] args)
         {
             var parser = new ArgsParser(args);
-            var recorder = parser.logPath == null ? null : File.CreateText(parser.logPath + "server.log");
+            var recorder = parser.logPath == null ? null : File.CreateText(parser.logPath);
             var server = new Server(parser.kernelDefinePath, new RecorderStream(Console.OpenStandardInput(), recorder), new RecorderStream(Console.OpenStandardOutput(), recorder));
             server.Listen().Wait();
             recorder?.Close();

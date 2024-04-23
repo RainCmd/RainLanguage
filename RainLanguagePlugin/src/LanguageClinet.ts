@@ -8,7 +8,7 @@ export function StartServer(context: vscode.ExtensionContext) {
     const binPath = `${context.extension.extensionUri.fsPath}/bin/`
     let serverArgs: string[] = []
     serverArgs.push('-logPath')
-    serverArgs.push(binPath)
+    serverArgs.push(`${binPath}server.log`)
     serverArgs.push('-kernelDefinePath')
     serverArgs.push(`${context.extension.extensionUri.fsPath}/kernel.rain`)
     const serverOptions: ServerOptions = {
