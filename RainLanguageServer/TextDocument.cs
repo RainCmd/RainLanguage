@@ -104,10 +104,25 @@ namespace RainLanguageServer
                 return new(new TextPosition(start.document, start.GetPosition(Adsorption.Forward) - start.Position), new TextPosition(start.document, end.GetPosition(Adsorption.Backward) - start.Position));
             }
         }
+        public static bool operator ==(TextRange? left, string? right) => left?.ToString() == right;
+        public static bool operator !=(TextRange? left, string? right) => !(left == right);
+        public static bool operator ==(string? left, TextRange? right) => left == right?.ToString();
+        public static bool operator !=(string? left, TextRange? right) => !(left == right);
         public override string ToString()
         {
             RefreshPosition();
             return start.document.text[start.Position..end.Position];
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is string value) return this == value;
+            return ReferenceEquals(this, obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return start.GetHashCode() ^ end.GetHashCode();
         }
     }
     internal class TextLine(TextPosition start, TextPosition end) : TextRange(start, end)

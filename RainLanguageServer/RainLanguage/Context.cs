@@ -2,29 +2,29 @@
 
 namespace RainLanguageServer.RainLanguage
 {
-    internal class Context(CompilingSpace space, HashSet<ISpace> relies, CompilingDeclaration? declaration)
+    internal class Context(CompilingSpace space, HashSet<CompilingSpace> relies, CompilingDeclaration? declaration)
     {
         public readonly CompilingSpace space = space;
-        public readonly HashSet<ISpace> relies = relies;
+        public readonly HashSet<CompilingSpace> relies = relies;
         public readonly CompilingDeclaration? declaration = declaration;
 
         private bool IsVisiable(ASTManager manager, Declaration declaration, bool isMember)
         {
             if (isMember)
             {
-                if (IsVisiable(manager, manager.GetDeclaringDeclaration(declaration)!.Declaration, false))
+                if (IsVisiable(manager, manager.GetDeclaringDeclaration(declaration)!.declaration, false))
                     if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
                 return false;
             }
             else
             {
                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
-                return manager.GetDeclaration(declaration)!.Space.Contain(space);
+                return manager.GetDeclaration(declaration)!.space.Contain(space);
             }
         }
         public bool IsVisiable(ASTManager manager, Declaration declaration)
         {
-            if (declaration.library == Type.LIBRARY_SELF)
+            if (declaration.library == manager.library.name)
             {
                 switch (declaration.category)
                 {
@@ -43,7 +43,7 @@ namespace RainLanguageServer.RainLanguage
                         {
                             var define = manager.GetDeclaringDeclaration(declaration)!;
                             if (define == this.declaration) return true;
-                            if (IsVisiable(manager, define.Declaration, false))
+                            if (IsVisiable(manager, define.declaration, false))
                                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
                         }
                         return false;
@@ -55,12 +55,12 @@ namespace RainLanguageServer.RainLanguage
                         {
                             var define = manager.GetDeclaringDeclaration(declaration)!;
                             if (define == this.declaration) return true;
-                            if (IsVisiable(manager, define.Declaration, false))
+                            if (IsVisiable(manager, define.declaration, false))
                                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
                                 else if (this.declaration?.declaration.category == DeclarationCategory.Class)
                                     if (declaration.visibility.ContainAny(Visibility.Protected))
                                     {
-                                        var defineType = define.Declaration.GetDefineType();
+                                        var defineType = define.declaration.GetDefineType();
                                         for (var index = this.declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
                                             if (index == defineType) return true;
                                     }
@@ -84,16 +84,16 @@ namespace RainLanguageServer.RainLanguage
             }
             return false;
         }
-        public bool TryFindSpace(ASTManager manager, TextRange name, out ISpace? space, MessageCollector collector)
+        public bool TryFindSpace(ASTManager manager, TextRange name, out CompilingSpace? space, MessageCollector collector)
         {
             var targetName = name.ToString();
             for (var index = this.space; index != null; index = index.parent)
-                if (index.TryGetChild(targetName, out space)) return true;
-            var results = new HashSet<ISpace>();
+                if (index.children.TryGetValue(targetName, out space)) return true;
+            var results = new HashSet<CompilingSpace>();
             foreach (var rely in relies)
-                if (rely.TryGetChild(targetName, out space)) results.Add(space!);
-            if (manager.relies.TryGetValue(targetName, out var libraryDocument))
-                results.Add(libraryDocument.library);
+                if (rely.children.TryGetValue(targetName, out space)) results.Add(space!);
+            if (manager.relies.TryGetValue(targetName, out var library))
+                results.Add(library);
             if (results.Count > 0)
             {
                 if (results.Count > 1)
@@ -106,45 +106,45 @@ namespace RainLanguageServer.RainLanguage
                 space = results.First();
                 return true;
             }
-            else if (targetName == manager.kernel.library.Name)
+            else if (targetName == manager.kernel.name)
             {
-                space = manager.kernel.library;
+                space = manager.kernel;
                 return true;
             }
             space = default;
             return false;
         }
-        public bool TryFindDeclaration(ASTManager manager, TextRange name, out List<IDeclaration> results, MessageCollector collector)
+        public bool TryFindDeclaration(ASTManager manager, TextRange name, out List<CompilingDeclaration> results, MessageCollector collector)
         {
             results = [];
             var targetName = name.ToString();
-            if (declaration?.Declaration.category == DeclarationCategory.Struct)
+            if (declaration?.declaration.category == DeclarationCategory.Struct)
             {
                 var compilingStruct = (CompilingStruct)declaration;
                 foreach (var variable in compilingStruct.variables)
-                    if (variable.Name == targetName)
+                    if (variable.name == targetName)
                     {
                         results.Add(variable);
                         return true;
                     }
                 foreach (var function in compilingStruct.functions)
-                    if (function.Name == targetName)
+                    if (function.name == targetName)
                         results.Add(function);
                 if (results.Count > 0) return true;
             }
-            else if (declaration?.Declaration.category == DeclarationCategory.Class)
+            else if (declaration?.declaration.category == DeclarationCategory.Class)
             {
                 for (var index = declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
                 {
-                    var @class = (IClass)manager.GetSourceDeclaration(index)!;
-                    foreach (var variable in @class.Variables)
-                        if (variable.Name == targetName && IsVisiable(manager, variable.Declaration))
+                    var @class = (CompilingClass)manager.GetSourceDeclaration(index)!;
+                    foreach (var variable in @class.variables)
+                        if (variable.name == targetName && IsVisiable(manager, variable.declaration))
                         {
                             results.Add(variable);
                             return true;
                         }
-                    foreach (var function in @class.Functions)
-                        if (function.Name == targetName && IsVisiable(manager, function.Declaration))
+                    foreach (var function in @class.functions)
+                        if (function.name == targetName && IsVisiable(manager, function.declaration))
                             results.Add(function);
                 }
                 if (results.Count > 0) return true;
@@ -152,17 +152,17 @@ namespace RainLanguageServer.RainLanguage
             else
             {
                 for (var index = space; index != null; index = index.parent)
-                    if (index.TryGetDeclarations(targetName, out var declarations))
+                    if (index.declarations.TryGetValue(targetName, out var declarations))
                     {
                         results.AddRange(declarations);
-                        var declaration = declarations[0].Declaration;
+                        var declaration = declarations[0].declaration;
                         if (declaration.category != DeclarationCategory.Function && declaration.category != DeclarationCategory.Native) break;
                     }
                 if (results.Count == 1) return true;
                 else if (results.Count > 1)
                 {
                     foreach (var declaration in results)
-                        if (declaration.Declaration.category != DeclarationCategory.Function && declaration.Declaration.category != DeclarationCategory.Native)
+                        if (declaration.declaration.category != DeclarationCategory.Function && declaration.declaration.category != DeclarationCategory.Native)
                         {
                             var builder = new StringBuilder().AppendLine("查找申明不明确");
                             foreach (var item in results)
@@ -175,15 +175,15 @@ namespace RainLanguageServer.RainLanguage
                 else
                 {
                     foreach (var rely in relies)
-                        if (rely.TryGetDeclarations(targetName, out var declarations))
+                        if (rely.declarations.TryGetValue(targetName, out var declarations))
                             foreach (var declaration in declarations)
-                                if (IsVisiable(manager, declaration.Declaration))
+                                if (IsVisiable(manager, declaration.declaration))
                                     results.Add(declaration);
                     if (results.Count == 1) return true;
                     else if (results.Count > 1)
                     {
                         foreach (var declaration in results)
-                            if (declaration.Declaration.category != DeclarationCategory.Function && declaration.Declaration.category != DeclarationCategory.Native)
+                            if (declaration.declaration.category != DeclarationCategory.Function && declaration.declaration.category != DeclarationCategory.Native)
                             {
                                 var builder = new StringBuilder().AppendLine("查找申明不明确");
                                 foreach (var item in results)
@@ -197,25 +197,25 @@ namespace RainLanguageServer.RainLanguage
             }
             return false;
         }
-        private static void CollectOverideFunctions(HashSet<IDeclaration> filter, ASTManager manager, IClass @class, IFunction function)
+        private static void CollectOverideFunctions(HashSet<CompilingDeclaration> filter, ASTManager manager, CompilingClass @class, CompilingFunction function)
         {
-            while (@class.Parent.Vaild)
+            while (@class.parent.Vaild)
             {
-                @class = (IClass)manager.GetSourceDeclaration(@class.Parent)!;
-                foreach (var item in @class.Functions)
-                    if (item.Name == function.Name && item.Parameters == function.Parameters)
+                @class = (CompilingClass)manager.GetSourceDeclaration(@class.parent)!;
+                foreach (var item in @class.functions)
+                    if (item.name == function.name && item.parameters == function.parameters)
                         filter.Add(item);
             }
         }
-        private static void CollectFunctions(ASTManager manager, string name, IInterface @interface, List<IDeclaration> results)
+        private static void CollectFunctions(ASTManager manager, string name, CompilingInterface @interface, List<CompilingDeclaration> results)
         {
-            foreach (var item in @interface.Callables)
-                if (item.Name == name)
+            foreach (var item in @interface.callables)
+                if (item.name == name)
                     results.Add(item);
-            foreach (var item in @interface.Inherits)
-                CollectFunctions(manager, name, (IInterface)manager.GetSourceDeclaration(item)!, results);
+            foreach (var item in @interface.inherits)
+                CollectFunctions(manager, name, (CompilingInterface)manager.GetSourceDeclaration(item)!, results);
         }
-        public bool TryFindMember(ASTManager manager, TextRange name, Type type, out List<IDeclaration> results)
+        public bool TryFindMember(ASTManager manager, TextRange name, Type type, out List<CompilingDeclaration> results)
         {
             results = [];
             if (type.dimension > 0) type = Type.ARRAY;
@@ -224,40 +224,40 @@ namespace RainLanguageServer.RainLanguage
             var declaration = manager.GetSourceDeclaration(type)!;
             if (type.code == TypeCode.Struct)
             {
-                var abstractStruct = (IStruct)declaration;
-                foreach (var item in abstractStruct.Variables)
-                    if (item.Name == targetName)
+                var compiling = (CompilingStruct)declaration;
+                foreach (var item in compiling.variables)
+                    if (item.name == targetName)
                     {
                         results.Add(item);
                         return true;
                     }
-                foreach (var item in abstractStruct.Functions)
-                    if (item.Name == targetName && IsVisiable(manager, item.Declaration))
+                foreach (var item in compiling.functions)
+                    if (item.name == targetName && IsVisiable(manager, item.declaration))
                         results.Add(item);
             }
             else if (type.code == TypeCode.Handle)
             {
-                var filter = new HashSet<IDeclaration>();
-                for (var index = (IClass)declaration; index != null; index = manager.GetSourceDeclaration(index.Parent) as IClass)
+                var filter = new HashSet<CompilingDeclaration>();
+                for (var index = (CompilingClass)declaration; index != null; index = manager.GetSourceDeclaration(index.parent) as CompilingClass)
                 {
-                    foreach (var item in index.Variables)
-                        if (item.Name == targetName && IsVisiable(manager, item.Declaration))
+                    foreach (var item in index.variables)
+                        if (item.name == targetName && IsVisiable(manager, item.declaration))
                         {
                             results.Add(item);
                             return true;
                         }
-                    foreach (var item in index.Functions)
-                        if (item.Name == targetName && IsVisiable(manager, item.Declaration) && !filter.Contains(item))
+                    foreach (var item in index.functions)
+                        if (item.name == targetName && IsVisiable(manager, item.declaration) && !filter.Contains(item))
                         {
                             results.Add(item);
                             CollectOverideFunctions(filter, manager, index, item);
                         }
                 }
             }
-            else if (type.code == TypeCode.Interface) CollectFunctions(manager, targetName, (IInterface)declaration, results);
+            else if (type.code == TypeCode.Interface) CollectFunctions(manager, targetName, (CompilingInterface)declaration, results);
             return results.Count > 0;
         }
-        public bool TryFindDeclaration(ASTManager manager, List<TextRange> name, out List<IDeclaration> results, MessageCollector collector)
+        public bool TryFindDeclaration(ASTManager manager, List<TextRange> name, out List<CompilingDeclaration> results, MessageCollector collector)
         {
             results = [];
             if (name.Count == 1)
@@ -287,34 +287,35 @@ namespace RainLanguageServer.RainLanguage
                             var targetName = name[0].ToString();
                             if (declaration.declaration.category == DeclarationCategory.Struct)
                             {
-                                foreach (var item in ((IStruct)declaration).Variables)
-                                    if (item.Name == targetName)
+                                var compiling = (CompilingStruct)declaration;
+                                foreach (var item in compiling.variables)
+                                    if (item.name == targetName)
                                         results.Add(item);
-                                foreach (var item in ((IStruct)declaration).Functions)
-                                    if (item.Name == targetName)
+                                foreach (var item in compiling.functions)
+                                    if (item.name == targetName)
                                         results.Add(item);
                             }
                             else if (declaration.declaration.category == DeclarationCategory.Class)
                             {
-                                for (var index = (IClass)declaration; index != null; index = manager.GetSourceDeclaration(index.Parent) as IClass)
+                                for (var index = (CompilingClass)declaration; index != null; index = manager.GetSourceDeclaration(index.parent) as CompilingClass)
                                 {
-                                    foreach (var item in index.Variables)
-                                        if (item.Name == targetName && IsVisiable(manager, item.Declaration))
+                                    foreach (var item in index.variables)
+                                        if (item.name == targetName && IsVisiable(manager, item.declaration))
                                             results.Add(item);
-                                    foreach (var item in index.Functions)
-                                        if (item.Name == targetName && IsVisiable(manager, item.Declaration))
+                                    foreach (var item in index.functions)
+                                        if (item.name == targetName && IsVisiable(manager, item.declaration))
                                             results.Add(item);
                                 }
                             }
                             if (results.Count > 0) return true;
                             for (var index = space; index != null; index = index.parent)
-                                if (index.TryGetDeclarations(targetName, out var declarations))
+                                if (index.declarations.TryGetValue(targetName, out var declarations))
                                 {
                                     results.AddRange(declarations);
                                     return true;
                                 }
                             foreach (var rely in relies)
-                                if (rely.TryGetDeclarations(targetName, out var declarations))
+                                if (rely.declarations.TryGetValue(targetName, out var declarations))
                                     results.AddRange(declarations);
                         }
                         break;
@@ -325,9 +326,9 @@ namespace RainLanguageServer.RainLanguage
                 if (TryFindSpace(manager, name[0], out var space, collector))
                 {
                     for (var i = 1; i < name.Count - 1; i++)
-                        if (!space!.TryGetChild(name[i].ToString(), out space))
+                        if (!space!.children.TryGetValue(name[i].ToString(), out space))
                             return false;
-                    if (space!.TryGetDeclarations(name[^1].ToString(), out results)) return true;
+                    if (space!.declarations.TryGetValue(name[^1].ToString(), out results!)) return true;
                 }
             }
             return results.Count > 0;

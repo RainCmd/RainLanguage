@@ -1,21 +1,41 @@
 
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node'
 import * as vscode from 'vscode'
+import * as fs from 'fs'
 
 let client: LanguageClient;
 
-export function RestartServer(context: vscode.ExtensionContext) {
+export async function RestartServer(context: vscode.ExtensionContext) {
     StopServer()
-    StartServer(context)
+    await StartServer(context)
 }
 
-export function StartServer(context: vscode.ExtensionContext) {
+async function TryPushProjectName(serverArgs: string[]) {
+    if (vscode.workspace.workspaceFolders.length > 0) {
+        const projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath
+        const data = await fs.promises.readFile(projectPath + "/.vscode/launch.json", 'utf-8')
+        const cfgs = JSON.parse(data).configurations
+        if (cfgs && cfgs.length > 0 && cfgs[0].ProjectName) {
+            serverArgs.push('-projectRoot')
+            serverArgs.push(projectPath)
+            serverArgs.push('-projectName')
+            serverArgs.push((String)(cfgs[0].ProjectName))
+            return true
+        }
+    }
+    return false
+}
+
+export async function StartServer(context: vscode.ExtensionContext) {
     const binPath = `${context.extension.extensionUri.fsPath}/bin/`
     let serverArgs: string[] = []
     serverArgs.push('-logPath')
     serverArgs.push(`${binPath}server.log`)
     serverArgs.push('-kernelDefinePath')
     serverArgs.push(`${context.extension.extensionUri.fsPath}/kernel.rain`)
+    if (!await TryPushProjectName(serverArgs)) {
+        //todo 没有打开工作区，看是否有必要传当前打开的文档什么的，单个文档指令参数 -filePath
+    }
     const serverOptions: ServerOptions = {
         command: `${binPath}server/RainLanguageServer.exe`,
         args: serverArgs

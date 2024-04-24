@@ -31,7 +31,7 @@
             foreach (var file in manager.fileSpaces)
                 file.Value.Tidy(manager);
             foreach (var file in manager.fileSpaces)
-                file.Value.Link(manager);
+                file.Value.Link(manager, true);
             //todo 检查命名冲突问题
             return manager;
         }

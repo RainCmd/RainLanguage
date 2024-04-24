@@ -2,31 +2,31 @@
 {
     enum DeclarationCategory
     {
-        //                    library		        name            signature
-        Invalid,              //INVALID		                        -
-        Variable,             //程序集编号                          -
-        Function,             //程序集编号                          参数类型列表
-        Enum,                 //程序集编号                          -
-        EnumElement,          //程序集编号                          -
-        Struct,               //程序集编号                          -
-        StructVariable,       //程序集编号                          -
-        StructFunction,       //程序集编号                          参数类型列表
-        Class,                //程序集编号                          -
-        Constructor,          //程序集编号                          参数类型列表
-        ClassVariable,        //程序集编号                          -
-        ClassFunction,        //程序集编号                          参数类型列表
-        Interface,            //程序集编号                          -
-        InterfaceFunction,    //程序集编号                          参数类型列表
-        Delegate,             //程序集编号                          参数类型列表
-        Task,                 //程序集编号                          -
-        Native,               //程序集编号                          参数类型列表
-        Lambda,               //LIBRARY_SELF                        -
-        LambdaClosureValue,   //LIBRARY_SELF                        -
-        LocalVariable,        //LIBRARY_SELF                        -
+        //                    library		        name                signature
+        Invalid,              //程序集名            名称路径            -
+        Variable,             //程序集名            名称路径            -
+        Function,             //程序集名            名称路径            参数类型列表
+        Enum,                 //程序集名            名称路径            -
+        EnumElement,          //程序集名            名称路径            -
+        Struct,               //程序集名            名称路径            -
+        StructVariable,       //程序集名            名称路径            -
+        StructFunction,       //程序集名            名称路径            参数类型列表
+        Class,                //程序集名            名称路径            -
+        Constructor,          //程序集名            名称路径            参数类型列表
+        ClassVariable,        //程序集名            名称路径            -
+        ClassFunction,        //程序集名            名称路径            参数类型列表
+        Interface,            //程序集名            名称路径            -
+        InterfaceFunction,    //程序集名            名称路径            参数类型列表
+        Delegate,             //程序集名            名称路径            参数类型列表
+        Task,                 //程序集名            名称路径            -
+        Native,               //程序集名            名称路径            参数类型列表
+        Lambda,               //程序集名            名称路径            -
+        LambdaClosureValue,   //程序集名            名称路径            -
+        LocalVariable,        //程序集名            名称路径            -
     }
-    internal readonly struct Declaration(int library, Visibility visibility, DeclarationCategory category, string[] name, Tuple signature) : IEquatable<Declaration>
+    internal readonly struct Declaration(string library, Visibility visibility, DeclarationCategory category, string[] name, Tuple signature) : IEquatable<Declaration>
     {
-        public readonly int library = library;
+        public readonly string library = library;
         public readonly Visibility visibility = visibility;
         public readonly DeclarationCategory category = category;
         public readonly string[] name = name;//不包括程序集名

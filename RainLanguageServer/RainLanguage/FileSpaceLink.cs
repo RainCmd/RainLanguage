@@ -11,7 +11,7 @@ namespace RainLanguageServer.RainLanguage
             {
                 if (declarations.Count == 1)
                 {
-                    result = declarations[0].Declaration.GetDefineType();
+                    result = declarations[0].declaration.GetDefineType();
                     if (!result.Vaild) collector.Add(fileType.name, CErrorLevel.Error, "无效的类型");
                 }
                 else
@@ -25,27 +25,27 @@ namespace RainLanguageServer.RainLanguage
             else collector.Add(fileType.name, CErrorLevel.Error, "声明未找到");
             return result;
         }
-        private static void AddTypeCite(ASTManager manager, CompilingDeclaration source, Type type)
+        private static void AddTypeCite(ASTManager manager, CompilingDeclaration compiling, FileDeclaration file, Type type)
         {
             if (manager.GetSourceDeclaration(type) is CompilingDeclaration target)
-                source.AddCite(target.file);
+                compiling.AddCite(file);
         }
-        private static void AddTypeCites(ASTManager manager, CompilingDeclaration source, IList<Type> types)
+        private static void AddTypeCites(ASTManager manager, CompilingDeclaration source, FileDeclaration file, IList<Type> types)
         {
-            foreach (var type in types) AddTypeCite(manager, source, type);
+            foreach (var type in types) AddTypeCite(manager, source, file, type);
         }
-        public void Link(ASTManager manager)
+        public void Link(ASTManager manager, bool cite)
         {
-            foreach (var child in children) child.Link(manager);
+            foreach (var child in children) child.Link(manager, cite);
             var context = new Context(compiling, relies, default);
             foreach (var file in variables)
             {
                 var type = GetType(context, manager, file.type);
-                var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Variable, compiling.GetChildName(file.name.ToString()), default);
-                var variable = new CompilingVariable(file.name, declaration, compiling, file, file.isReadonly, type, file.expression, relies);
+                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Variable, compiling.GetChildName(file.name.ToString()), default);
+                var variable = new CompilingVariable(file.name, declaration, compiling, file.isReadonly, type, file.expression, relies);
                 manager.library.variables.Add(variable);
                 compiling.AddDeclaration(variable);
-                AddTypeCite(manager, variable, type);
+                if (cite) AddTypeCite(manager, variable, file, type);
             }
             foreach (var file in functions)
             {
@@ -57,21 +57,21 @@ namespace RainLanguageServer.RainLanguage
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
                     returnTypes.Add(GetType(context, manager, type));
-                var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
-                var function = new CompilingFunction(file.name, declaration, compiling, file, parameters, new Tuple(returnTypes), file.body, relies);
+                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
+                var function = new CompilingFunction(file.name, declaration, compiling, parameters, new Tuple(returnTypes), file.body, relies);
                 manager.library.functions.Add(function);
                 compiling.AddDeclaration(function);
-                AddTypeCites(manager, function, parameterTypes);
-                AddTypeCites(manager, function, returnTypes);
+                if (cite) AddTypeCites(manager, function, file, parameterTypes);
+                if (cite) AddTypeCites(manager, function, file, returnTypes);
             }
             foreach (var file in enums)
             {
                 compiling.declarations.TryGetValue(file.name.ToString(), out var declarations);
-                var compilingEnum = (CompilingEnum)declarations!.Find(value => value.file == file)!;
+                var compilingEnum = (CompilingEnum)declarations!.Find(value => value.name == file.name)!;
 
                 foreach (var element in file.elements)
                 {
-                    var declaration = new Declaration(Type.LIBRARY_SELF, Visibility.Public, DeclarationCategory.EnumElement, compiling.GetMemberName(file.name.ToString(), element.name.ToString()), default);
+                    var declaration = new Declaration(manager.library.name, Visibility.Public, DeclarationCategory.EnumElement, compiling.GetMemberName(file.name.ToString(), element.name.ToString()), default);
                     var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression, relies, element);
                     compilingEnumElement.AddCite(element);
                     compilingEnum.elements.Add(compilingEnumElement);
@@ -80,15 +80,15 @@ namespace RainLanguageServer.RainLanguage
             foreach (var file in structs)
             {
                 compiling.declarations.TryGetValue(file.name.ToString(), out var declarations);
-                var compilingStruct = (CompilingStruct)declarations!.Find(value => value.file == file)!;
+                var compilingStruct = (CompilingStruct)declarations!.Find(value => value.name == file.name)!;
 
                 foreach (var variable in file.variables)
                 {
                     var type = GetType(context, manager, variable.type);
-                    var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
-                    var compilingVariable = new CompilingVariable(variable.name, declaration, compiling, variable, variable.isReadonly, type, variable.expression, relies);
+                    var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
+                    var compilingVariable = new CompilingVariable(variable.name, declaration, compiling, variable.isReadonly, type, variable.expression, relies);
                     compilingStruct.variables.Add(compilingVariable);
-                    AddTypeCite(manager, compilingVariable, type);
+                    if (cite) AddTypeCite(manager, compilingVariable, variable, type);
                 }
                 foreach (var function in file.functions)
                 {
@@ -100,23 +100,23 @@ namespace RainLanguageServer.RainLanguage
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
-                    var declaration = new Declaration(Type.LIBRARY_SELF, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, compiling, function, parameters, new Tuple(returnTypes), function.body, relies);
+                    var declaration = new Declaration(manager.library.name, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
+                    var compilingFunction = new CompilingFunction(function.name, declaration, compiling, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingStruct.functions.Add(compilingFunction);
-                    AddTypeCites(manager, compilingFunction, parameterTypes);
-                    AddTypeCites(manager, compilingFunction, returnTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, parameterTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, returnTypes);
                 }
             }
             foreach (var file in interfaces)
             {
                 compiling.declarations.TryGetValue(file.name.ToString(), out var declarations);
-                var compilingInterface = (CompilingInterface)declarations!.Find(value => value.file == file)!;
+                var compilingInterface = (CompilingInterface)declarations!.Find(value => value.name == file.name)!;
 
                 foreach (var fileType in file.inherits)
                 {
                     var type = GetType(context, manager, fileType);
                     compilingInterface.inherits.Add(type);
-                    AddTypeCite(manager, compilingInterface, type);
+                    if (cite) AddTypeCite(manager, compilingInterface, file, type);
                 }
                 foreach (var function in file.functions)
                 {
@@ -128,32 +128,32 @@ namespace RainLanguageServer.RainLanguage
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
-                    var declaration = new Declaration(Type.LIBRARY_SELF, function.visibility, DeclarationCategory.InterfaceFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingCallable(function.name, declaration, compiling, function, parameters, new Tuple(returnTypes));
+                    var declaration = new Declaration(manager.library.name, function.visibility, DeclarationCategory.InterfaceFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
+                    var compilingFunction = new CompilingCallable(function.name, declaration, compiling, parameters, new Tuple(returnTypes));
                     compilingInterface.callables.Add(compilingFunction);
-                    AddTypeCites(manager, compilingFunction, parameterTypes);
-                    AddTypeCites(manager, compilingFunction, returnTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, parameterTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, returnTypes);
                 }
             }
             foreach (var file in classes)
             {
                 compiling.declarations.TryGetValue(file.name.ToString(), out var declarations);
-                var compilingClass = (CompilingClass)declarations!.Find(value => value.file == file)!;
+                var compilingClass = (CompilingClass)declarations!.Find(value => value.name == file.name)!;
 
                 for (int i = 0; i < file.inherits.Count; i++)
                 {
                     var type = GetType(context, manager, file.inherits[i]);
                     if (i > 0) compilingClass.inherits.Add(type);
                     else compilingClass.parent = type;
-                    AddTypeCite(manager, compilingClass, type);
+                    if (cite) AddTypeCite(manager, compilingClass, file, type);
                 }
                 foreach (var variable in file.variables)
                 {
                     var type = GetType(context, manager, variable.type);
-                    var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
-                    var compilingVariable = new CompilingVariable(variable.name, declaration, compiling, variable, variable.isReadonly, type, variable.expression, relies);
+                    var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
+                    var compilingVariable = new CompilingVariable(variable.name, declaration, compiling, variable.isReadonly, type, variable.expression, relies);
                     compilingClass.variables.Add(compilingVariable);
-                    AddTypeCite(manager, compilingVariable, type);
+                    if (cite) AddTypeCite(manager, compilingVariable, variable, type);
                 }
                 foreach (var function in file.constructors)
                 {
@@ -162,10 +162,10 @@ namespace RainLanguageServer.RainLanguage
                         parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
-                    var declaration = new Declaration(Type.LIBRARY_SELF, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, compiling, function, parameters, new Tuple([]), function.body, relies);
+                    var declaration = new Declaration(manager.library.name, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
+                    var compilingFunction = new CompilingFunction(function.name, declaration, compiling, parameters, new Tuple([]), function.body, relies);
                     compilingClass.constructors.Add(compilingFunction);
-                    AddTypeCites(manager, compilingFunction, parameterTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, parameterTypes);
                 }
                 foreach (var function in file.functions)
                 {
@@ -177,17 +177,17 @@ namespace RainLanguageServer.RainLanguage
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
-                    var declaration = new Declaration(Type.LIBRARY_SELF, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, compiling, function, parameters, new Tuple(returnTypes), function.body, relies);
+                    var declaration = new Declaration(manager.library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
+                    var compilingFunction = new CompilingFunction(function.name, declaration, compiling, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingClass.functions.Add(compilingFunction);
-                    AddTypeCites(manager, compilingFunction, parameterTypes);
-                    AddTypeCites(manager, compilingFunction, returnTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, parameterTypes);
+                    if (cite) AddTypeCites(manager, compilingFunction, function, returnTypes);
                 }
             }
-            foreach(var file in delegates)
+            foreach (var file in delegates)
             {
                 compiling.declarations.TryGetValue(file.name.ToString(), out var declarations);
-                var compilingDelegate = (CompilingDelegate)declarations!.Find(value => value.file == file)!;
+                var compilingDelegate = (CompilingDelegate)declarations!.Find(value => value.name == file.name)!;
 
                 var name = compilingDelegate.declaration.name;
                 var parameters = new List<CompilingCallable.Parameter>();
@@ -198,34 +198,34 @@ namespace RainLanguageServer.RainLanguage
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
                     returnTypes.Add(GetType(context, manager, type));
-                var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Delegate, name, new Tuple(parameterTypes));
+                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Delegate, name, new Tuple(parameterTypes));
 
                 declarations.Remove(compilingDelegate);
                 manager.library.delegates.Remove(compilingDelegate);
 
-                compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, file, parameters, new Tuple(returnTypes));
-                AddTypeCites(manager, compilingDelegate, parameterTypes);
-                AddTypeCites(manager, compilingDelegate, returnTypes);
+                compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, parameters, new Tuple(returnTypes));
+                if (cite) AddTypeCites(manager, compilingDelegate, file, parameterTypes);
+                if (cite) AddTypeCites(manager, compilingDelegate, file, returnTypes);
 
                 declarations.Add(compilingDelegate);
                 manager.library.delegates.Add(compilingDelegate);
             }
-            foreach(var file in tasks)
+            foreach (var file in tasks)
             {
                 compiling.declarations.TryGetValue(file.name.ToString(), out var declarations);
-                var compilingTask = (CompilingTask)declarations!.Find(value => value.file == file)!;
+                var compilingTask = (CompilingTask)declarations!.Find(value => value.name == file.name)!;
 
                 var name = compilingTask.declaration.name;
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
                     returnTypes.Add(GetType(context, manager, type));
-                var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Task, name, default);
+                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Task, name, default);
 
                 declarations.Remove(compilingTask);
                 manager.library.tasks.Remove(compilingTask);
 
-                compilingTask = new CompilingTask(file.name, declaration, compiling, file, new Tuple(returnTypes));
-                AddTypeCites(manager, compilingTask, returnTypes);
+                compilingTask = new CompilingTask(file.name, declaration, compiling, new Tuple(returnTypes));
+                if (cite) AddTypeCites(manager, compilingTask, file, returnTypes);
 
                 declarations.Add(compilingTask);
                 manager.library.tasks.Add(compilingTask);
@@ -240,12 +240,12 @@ namespace RainLanguageServer.RainLanguage
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
                     returnTypes.Add(GetType(context, manager, type));
-                var declaration = new Declaration(Type.LIBRARY_SELF, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
-                var native = new CompilingNative(file.name, declaration, compiling, file, parameters, new Tuple(returnTypes));
+                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
+                var native = new CompilingNative(file.name, declaration, compiling, parameters, new Tuple(returnTypes));
                 manager.library.natives.Add(native);
                 compiling.AddDeclaration(native);
-                AddTypeCites(manager, native, parameterTypes);
-                AddTypeCites(manager, native, returnTypes);
+                if (cite) AddTypeCites(manager, native, file, parameterTypes);
+                if (cite) AddTypeCites(manager, native, file, returnTypes);
             }
         }
     }

@@ -47,10 +47,12 @@ namespace RainLanguageServer
 
         public Server(ArgsParser args, Stream input, Stream output) : base(input, output)
         {
-            if (args.filePath == null)
-                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName!, new DocumentLoader(args.projectRoot!, this));
-            else
+            if (args.filePath != null)
                 manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName ?? "TestRainLibrary", [new FileDocument(args.filePath, this)]);
+            else if (args.projectRoot != null)
+                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName!, new DocumentLoader(args.projectRoot, this));
+            else
+                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName ?? "TestRainLibrary", []);
         }
 
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)

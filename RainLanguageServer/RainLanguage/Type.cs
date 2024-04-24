@@ -11,9 +11,9 @@
         Delegate,
         Task,
     }
-    internal readonly struct Type(int library, TypeCode code, string[] name, int dimension) : IEquatable<Type>
+    internal readonly struct Type(string library, TypeCode code, string[] name, int dimension) : IEquatable<Type>
     {
-        public readonly int library = library;
+        public readonly string library = library;
         public readonly TypeCode code = code;
         public readonly string[] name = name;//不包含程序集名
         public readonly int dimension = dimension;
@@ -45,8 +45,7 @@
         }
         public static bool operator ==(Type lhs, Type rhs) => lhs.Equals(rhs);
         public static bool operator !=(Type lhs, Type rhs) => !lhs.Equals(rhs);
-        public const int LIBRARY_KERNEL = -2;
-        public const int LIBRARY_SELF = -3;
+        public const string LIBRARY_KERNEL = "kernel";
         public static readonly Type BOOL = new(LIBRARY_KERNEL, TypeCode.Struct, ["bool"], 0);
         public static readonly Type BYTE = new(LIBRARY_KERNEL, TypeCode.Struct, ["byte"], 0);
         public static readonly Type CHAR = new(LIBRARY_KERNEL, TypeCode.Struct, ["char"], 0);

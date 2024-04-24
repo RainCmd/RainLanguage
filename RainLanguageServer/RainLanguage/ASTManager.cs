@@ -4,59 +4,69 @@ namespace RainLanguageServer.RainLanguage
 {
     internal class ASTManager
     {
+        private class FileDocument(string path, string content) : IFileDocument
+        {
+            public string Path => path;
+            public string Content => content;
+        }
         public readonly CompilingLibrary library;
         public readonly Dictionary<string, FileSpace> fileSpaces = [];
-        public readonly Dictionary<string, VirtualDocument> relies = [];
-        public readonly VirtualDocument kernel;
+        public readonly Dictionary<string, CompilingLibrary> relies = [];
+        public readonly CompilingLibrary kernel;
         public ASTManager(string kernelPath, string name)
         {
             library = new CompilingLibrary(name);
             kernelPath = new UnifiedPath(kernelPath);
             using var sr = File.OpenText(kernelPath);
-            kernel = new VirtualDocument("kernel", sr.ReadToEnd());
+            kernel = LoadLibrary("kernel", sr.ReadToEnd());
         }
-        public ILibrary? LoadLibrary(string name)
+        public CompilingLibrary? LoadLibrary(string name)
         {
             //todo 加载程序集，转成VirtualDocument存到relies中
-            return null;
+            return LoadLibrary(name, "");
         }
-        public ILibrary GetLibrary(int library)
+        private CompilingLibrary LoadLibrary(string name, string content)
         {
-            if (library == Type.LIBRARY_SELF) return this.library;
-            else if (library == Type.LIBRARY_KERNEL) return kernel.library;
-            else return relies.Values.First(x => x.library.library == library).library;
+            var reader = new LineReader(new FileDocument("rain-language:" + name, content));
+            //todo 
+            return new CompilingLibrary(name);
         }
-        private bool TryGetDeclarations(int library, string[] name, out List<IDeclaration>? declarations)
+        public CompilingLibrary GetLibrary(string library)
+        {
+            if (library == this.library.name) return this.library;
+            else if (library == Type.LIBRARY_KERNEL) return kernel;
+            else return relies.Values.First(x => x.name == library);
+        }
+        private bool TryGetDeclarations(string library, string[] name, out List<CompilingDeclaration>? declarations)
         {
             declarations = null;
             var space = GetLibrary(library).GetSpace(name.AsSpan()[..^2]);
             if (space == null) return false;
-            return space.TryGetDeclarations(name[^1], out declarations);
+            return space.declarations.TryGetValue(name[^1], out declarations);
         }
-        public IDeclaration? GetDeclaration(Declaration declaration)
+        public CompilingDeclaration? GetDeclaration(Declaration declaration)
         {
             if (!declaration.Vaild) return null;
+            CompilingDeclaration? result = null;
             switch (declaration.category)
             {
                 case DeclarationCategory.Invalid: break;
                 case DeclarationCategory.Variable:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.Function:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            foreach (var item in declarations!)
-                                if (((IFunction)item).Parameters == declaration.signature)
-                                    return item;
+                            result = declarations!.Find(value => value.declaration.signature == declaration.signature);
                     }
                     break;
                 case DeclarationCategory.Enum:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.EnumElement:
@@ -64,75 +74,74 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.Struct:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.StructVariable:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            foreach (var item in ((IStruct)declarations![0]).Variables)
-                                if (item.Name == declaration.name[^1])
-                                    return item;
+                            if (declarations![0] is CompilingStruct compiling)
+                                result = compiling.variables.Find(value => value.name == declaration.name[^1]);
                     }
                     break;
                 case DeclarationCategory.StructFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            foreach (var item in ((IStruct)declarations![0]).Functions)
-                                if (item.Name == declaration.name[^1] && item.Parameters == declaration.signature)
-                                    return item;
+                            if (declarations![0] is CompilingStruct compiling)
+                                result = compiling.functions.Find(value => value.name == declaration.name[^1] && value.declaration.signature == declaration.signature);
                     }
                     break;
                 case DeclarationCategory.Class:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.Constructor:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            foreach (var item in ((IClass)declarations![0]).Constructors)
-                                if (item.Parameters == declaration.signature)
-                                    return item;
+                            if (declarations![0] is CompilingClass compiling)
+                                result = compiling.constructors.Find(value => value.name == declaration.name[^1] && value.declaration.signature == declaration.signature);
                     }
                     break;
                 case DeclarationCategory.ClassVariable:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            foreach (var item in ((IClass)declarations![0]).Variables)
-                                if (item.Name == declaration.name[^1])
-                                    return item;
+                            if (declarations![0] is CompilingClass compiling)
+                                result = compiling.variables.Find(value => value.name == declaration.name[^1]);
                     }
                     break;
                 case DeclarationCategory.ClassFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            foreach (var item in ((IClass)declarations![0]).Functions)
-                                if (item.Name == declaration.name[^1] && item.Parameters == declaration.signature)
-                                    return item;
+                            if (declarations![0] is CompilingClass compiling)
+                                result = compiling.functions.Find(value => value.name == declaration.name[^1] && value.declaration.signature == declaration.signature);
                     }
                     break;
                 case DeclarationCategory.Interface:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.InterfaceFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            foreach (var item in ((IInterface)declarations![0]).Callables)
-                                if (item.Name == declaration.name[^1] && item.Parameters == declaration.signature)
-                                    return item;
+                            if (declarations![0] is CompilingInterface compiling)
+                                result = compiling.callables.Find(value => value.name == declaration.name[^1] && value.declaration.signature == declaration.signature);
                     }
                     break;
                 case DeclarationCategory.Delegate:
                 case DeclarationCategory.Task:
+                    {
+                        if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
+                            result = declarations![0];
+                    }
+                    break;
                 case DeclarationCategory.Native:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name, out var declarations))
-                            return declarations![0];
+                            result = declarations!.Find(value => value.declaration.signature == declaration.signature);
                     }
                     break;
                 case DeclarationCategory.Lambda:
@@ -140,6 +149,7 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.LocalVariable:
                     break;
             }
+            if (result != null && result.declaration.category == declaration.category) return result;
             return null;
         }
         /// <summary>
@@ -147,8 +157,9 @@ namespace RainLanguageServer.RainLanguage
         /// </summary>
         /// <param name="declaration"></param>
         /// <returns></returns>
-        public IDeclaration? GetDeclaringDeclaration(Declaration declaration)
+        public CompilingDeclaration? GetDeclaringDeclaration(Declaration declaration)
         {
+            CompilingDeclaration? result = null;
             switch (declaration.category)
             {
                 case DeclarationCategory.Invalid:
@@ -159,7 +170,7 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.EnumElement:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.Struct:
@@ -168,7 +179,7 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.StructFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.Class:
@@ -178,7 +189,7 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.ClassFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.Interface:
@@ -186,7 +197,7 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.InterfaceFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            return declarations![0];
+                            result = declarations![0];
                     }
                     break;
                 case DeclarationCategory.Delegate:
@@ -197,9 +208,10 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.LocalVariable:
                     break;
             }
+            if (result != null && result.declaration.category == declaration.category) return result;
             return null;
         }
-        public IDeclaration? GetSourceDeclaration(Type type)
+        public CompilingDeclaration? GetSourceDeclaration(Type type)
         {
             if (type.Vaild) switch (type.code)
                 {
@@ -228,7 +240,8 @@ namespace RainLanguageServer.RainLanguage
                     case TypeCode.Enum: break;
                     case TypeCode.Handle:
                         if (type != Type.HANDLE && TryGetDeclarations(type.library, type.name, out var declarations))
-                            return ((IClass)declarations![0]).Parent;
+                            if (declarations![0] is CompilingClass compiling)
+                                return compiling.parent;
                         break;
                     case TypeCode.Interface: return Type.INTERFACE;
                     case TypeCode.Delegate: return Type.DELEGATE;
