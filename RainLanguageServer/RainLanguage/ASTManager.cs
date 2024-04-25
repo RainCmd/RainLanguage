@@ -22,14 +22,25 @@ namespace RainLanguageServer.RainLanguage
         }
         public CompilingLibrary? LoadLibrary(string name)
         {
-            //todo 加载程序集，转成VirtualDocument存到relies中
-            return LoadLibrary(name, "");
+            if (!relies.TryGetValue(name, out CompilingLibrary? library))
+            {
+                var content = "";//todo 加载程序集，转成VirtualDocument存到relies中
+                if (string.IsNullOrEmpty(content))
+                {
+                    library = LoadLibrary(name, content);
+                    relies[name] = library;
+                }
+            }
+            return library;
         }
         private CompilingLibrary LoadLibrary(string name, string content)
         {
             var reader = new LineReader(new FileDocument("rain-language:" + name, content));
-            //todo 
-            return new CompilingLibrary(name);
+            var library = new CompilingLibrary(name);
+            var file = new FileSpace(reader, library, false);
+            foreach (var space in file.children) space.Tidy(this, library, false);
+            foreach (var space in file.children) space.Link(this, library, false);
+            return library;
         }
         public CompilingLibrary GetLibrary(string library)
         {

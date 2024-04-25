@@ -82,7 +82,6 @@
         public readonly MessageCollector collector = new();
 
         public readonly List<FileSpace> children = [];
-        public readonly List<TextRange> attributes = [];
         public readonly List<List<TextRange>> imports = [];
 
         public readonly List<FileVariable> variables = [];

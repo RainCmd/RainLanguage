@@ -2,7 +2,7 @@
 {
     internal partial class FileSpace
     {
-        public FileSpace(LineReader reader, CompilingSpace compiling, FileSpace? parent = null, int parentIndent = -1)
+        public FileSpace(LineReader reader, CompilingSpace compiling, bool defaultNamespace = true, FileSpace? parent = null, int parentIndent = -1)
         {
             this.compiling = compiling;
             this.parent = parent;
@@ -25,7 +25,7 @@
                         if (parentIndent == -1) collector.Add(line, CErrorLevel.Error, "对齐错误");
                         else
                         {
-                            attributes.AddRange(attributeCollector);
+                            compiling.attributes.AddRange(attributeCollector);
                             return;
                         }
                     }
@@ -40,7 +40,8 @@
                             ParseImport(line, lexical);
                         }
                     }
-                    else if (lexical.type == LexicalType.KeyWord_namespace) ParseChild(line, lexical.anchor.End, reader, attributeCollector);
+                    else if (lexical.type == LexicalType.KeyWord_namespace) ParseChild(line, lexical.anchor.End, reader, attributeCollector, defaultNamespace);
+                    else if (!defaultNamespace) collector.Add(line, CErrorLevel.Error, "当前区域不允许有定义");
                     else
                     {
                         var visibility = ParseVisibility(line, out var position);
@@ -131,7 +132,10 @@
                     }
                 }
             }
-            attributes.AddRange(attributeCollector);
+            compiling.attributes.AddRange(attributeCollector);
+            if (!defaultNamespace)
+                foreach (var child in children)
+                    child.imports.AddRange(imports);
         }
         private void ParseClass(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
         {
@@ -500,16 +504,17 @@
             name = default;
             return false;
         }
-        private void ParseChild(TextLine line, TextPosition index, LineReader reader, List<TextRange> attributeCollector)
+        private void ParseChild(TextLine line, TextPosition index, LineReader reader, List<TextRange> attributeCollector, bool defaultNamespace)
         {
             if (Lexical.TryExtractName(line, index, out var end, out var names, collector))
             {
                 CheckLineEnd(line, end);
                 CompilingSpace space = compiling;
-                foreach (var name in names) space = space.GetChild(name.ToString());
-                var child = new FileSpace(reader, space, this, line.Indent);
+                if (defaultNamespace) foreach (var name in names) space = space.GetChild(name.ToString());
+                else if (names.Count != 1 || names[0] != space.name) collector.Add(line, CErrorLevel.Error, "名称不匹配");
+                var child = new FileSpace(reader, space, false, defaultNamespace ? this : null, line.Indent);
                 children.Add(child);
-                child.attributes.AddRange(attributeCollector);
+                child.compiling.attributes.AddRange(attributeCollector);
                 attributeCollector.Clear();
                 reader.Rollback();
             }

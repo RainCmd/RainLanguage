@@ -64,42 +64,42 @@
             foreach (var file in enums)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Enum, compiling.GetChildName(file.name.ToString()), default);
-                var compilingEnum = new CompilingEnum(file.name, declaration, compiling, cite ? file : null);
+                var compilingEnum = new CompilingEnum(file.name, declaration, file.attributes, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingEnum);
                 library.enums.Add(compilingEnum);
             }
             foreach (var file in structs)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Struct, compiling.GetChildName(file.name.ToString()), default);
-                var compilingStruct = new CompilingStruct(file.name, declaration, compiling, cite ? file : null);
+                var compilingStruct = new CompilingStruct(file.name, declaration, file.attributes, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingStruct);
                 library.structs.Add(compilingStruct);
             }
             foreach (var file in interfaces)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Interface, compiling.GetChildName(file.name.ToString()), default);
-                var compilingInterface = new CompilingInterface(file.name, declaration, compiling, cite ? file : null);
+                var compilingInterface = new CompilingInterface(file.name, declaration, file.attributes, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingInterface);
                 library.interfaces.Add(compilingInterface);
             }
             foreach (var file in classes)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
-                var compilingClass = new CompilingClass(file.name, declaration, compiling, cite ? file : null, default, file.destructor, relies);
+                var compilingClass = new CompilingClass(file.name, declaration, file.attributes, compiling, cite ? file : null, default, file.destructor, relies);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingClass);
                 library.classes.Add(compilingClass);
             }
             foreach (var file in delegates)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Delegate, compiling.GetChildName(file.name.ToString()), default);
-                var compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, cite ? file : null, [], default);
+                var compilingDelegate = new CompilingDelegate(file.name, declaration, file.attributes, compiling, cite ? file : null, [], default);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingDelegate);
                 library.delegates.Add(compilingDelegate);
             }
             foreach (var file in tasks)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Task, compiling.GetChildName(file.name.ToString()), default);
-                var compilingTask = new CompilingTask(file.name, declaration, compiling, cite ? file : null, default);
+                var compilingTask = new CompilingTask(file.name, declaration, file.attributes, compiling, cite ? file : null, default);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingTask);
                 library.tasks.Add(compilingTask);
             }
