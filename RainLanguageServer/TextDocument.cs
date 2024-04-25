@@ -23,7 +23,7 @@ namespace RainLanguageServer
     {
         public readonly TextDocument document = document;
         private readonly int charactor = charactor;
-        private readonly long version = document.version;
+        public readonly long version = document.version;
         public int Line => document.GetLine(Position);
         public int Position => GetPosition(Adsorption.Discard);
         public int GetPosition(Adsorption adsorption) => document.Conversion(charactor, version, adsorption);
@@ -47,12 +47,15 @@ namespace RainLanguageServer
     /// <param name="end"></param>
     internal class TextRange(TextPosition start, TextPosition end)
     {
+        private string? value = null;
         protected TextPosition start = start;
         protected TextPosition end = end;
         protected void RefreshPosition()
         {
+            var version = start.version;
             start = new TextPosition(start.document, start.GetPosition(Adsorption.Forward));
             end = new TextPosition(start.document, end.GetPosition(Adsorption.Backward));
+            if (version != start.version) value = null;
         }
         public TextPosition Start
         {
@@ -109,7 +112,7 @@ namespace RainLanguageServer
         public override string ToString()
         {
             RefreshPosition();
-            return start.document.text[start.Position..end.Position];
+            return value ??= start.document.text[start.Position..end.Position];
         }
 
         public override bool Equals(object? obj)

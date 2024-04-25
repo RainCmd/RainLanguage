@@ -127,7 +127,7 @@ namespace RainLanguageServer.RainLanguage
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
     {
     }
-    internal class CompilingSpace(CompilingSpace? parent, string name) : ICitePort<CompilingSpace, FileSpace>
+    internal partial class CompilingSpace(CompilingSpace? parent, string name) : ICitePort<CompilingSpace, FileSpace>
     {
         public readonly CompilingSpace? parent = parent;
         public readonly string name = name;
@@ -202,7 +202,7 @@ namespace RainLanguageServer.RainLanguage
         /// </summary>
         public CitePort<FileSpace> Cites { get; } = [];
     }
-    internal class CompilingLibrary(string name) : CompilingSpace(null, name)
+    internal partial class CompilingLibrary(string name) : CompilingSpace(null, name)
     {
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> functions = [];

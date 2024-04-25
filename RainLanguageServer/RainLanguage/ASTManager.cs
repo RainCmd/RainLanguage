@@ -18,7 +18,7 @@ namespace RainLanguageServer.RainLanguage
             library = new CompilingLibrary(name);
             kernelPath = new UnifiedPath(kernelPath);
             using var sr = File.OpenText(kernelPath);
-            kernel = LoadLibrary("kernel", sr.ReadToEnd());
+            kernel = LoadLibrary("kernel", sr.ReadToEnd(), true);
         }
         public CompilingLibrary? LoadLibrary(string name)
         {
@@ -27,17 +27,17 @@ namespace RainLanguageServer.RainLanguage
                 var content = "";//todo 加载程序集，转成VirtualDocument存到relies中
                 if (string.IsNullOrEmpty(content))
                 {
-                    library = LoadLibrary(name, content);
+                    library = LoadLibrary(name, content, false);
                     relies[name] = library;
                 }
             }
             return library;
         }
-        private CompilingLibrary LoadLibrary(string name, string content)
+        private CompilingLibrary LoadLibrary(string name, string content, bool allowKeywordType)
         {
             var reader = new LineReader(new FileDocument("rain-language:" + name, content));
             var library = new CompilingLibrary(name);
-            var file = new FileSpace(reader, library, false);
+            var file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
             foreach (var space in file.children) space.Tidy(this, library, false);
             foreach (var space in file.children) space.Link(this, library, false);
             return library;
