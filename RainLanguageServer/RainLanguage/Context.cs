@@ -24,7 +24,7 @@ namespace RainLanguageServer.RainLanguage
         }
         public bool IsVisiable(ASTManager manager, Declaration declaration)
         {
-            if (declaration.library == manager.library.name)
+            if (declaration.library == space.Library.name)
             {
                 switch (declaration.category)
                 {

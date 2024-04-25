@@ -2,12 +2,13 @@
 
 namespace RainLanguageServer.RainLanguage
 {
-    internal class CompilingDeclaration(TextRange name, Declaration declaration, CompilingSpace space) : ICitePort<CompilingDeclaration, FileDeclaration>
+    internal class CompilingDeclaration(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file) : ICitePort<CompilingDeclaration, FileDeclaration>
     {
         public readonly TextRange name = name;
         public readonly Declaration declaration = declaration;
         public readonly List<TextRange> attributes = [];
         public readonly CompilingSpace space = space;
+        public readonly FileDeclaration? file = file;
         public string GetFullName()
         {
             switch (declaration.category)
@@ -50,16 +51,16 @@ namespace RainLanguageServer.RainLanguage
         /// </summary>
         public CitePort<FileDeclaration> Cites { get; } = [];
     }
-    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, bool isReadonly, Type type, TextRange? expression, HashSet<CompilingSpace> relies)
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingVariable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, bool isReadonly, Type type, TextRange? expression, HashSet<CompilingSpace> relies)
+        : CompilingDeclaration(name, declaration, space, file)
     {
         public readonly bool isReadonly = isReadonly;
         public readonly Type type = type;
         public readonly TextRange? expression = expression;
         public readonly HashSet<CompilingSpace> relies = relies;
     }
-    internal class CompilingCallable(TextRange name, Declaration declaration, CompilingSpace space, List<CompilingCallable.Parameter> parameters, Tuple returns)
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingCallable(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingDeclaration(name, declaration, space, file)
     {
         public readonly struct Parameter(TextRange? name, Type type)
         {
@@ -69,41 +70,41 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<Parameter> parameters = parameters;
         public readonly Tuple returns = returns;
     }
-    internal class CompilingFunction(TextRange name, Declaration declaration, CompilingSpace space, List<CompilingCallable.Parameter> parameters, Tuple returns, List<TextLine> body, HashSet<CompilingSpace> relies)
-        : CompilingCallable(name, declaration, space, parameters, returns)
+    internal class CompilingFunction(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, List<TextLine> body, HashSet<CompilingSpace> relies)
+        : CompilingCallable(name, declaration, space, file, parameters, returns)
     {
         public readonly List<TextLine> body = body;
         public readonly HashSet<CompilingSpace> relies = relies;
     }
-    internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space)
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingEnum(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file)
+        : CompilingDeclaration(name, declaration, space, file)
     {
-        public class Element(TextRange name, Declaration declaration, TextRange? expression, HashSet<CompilingSpace> relies, FileEnum.Element file) : ICitePort<Element, FileEnum.Element>
+        public class Element(TextRange name, Declaration declaration, TextRange? expression, HashSet<CompilingSpace> relies, FileEnum.Element? file) : ICitePort<Element, FileEnum.Element>
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
             public readonly TextRange? expression = expression;
             public readonly HashSet<CompilingSpace> relies = relies;
-            public readonly FileEnum.Element file = file;
+            public readonly FileEnum.Element? file = file;
 
             public CitePort<FileEnum.Element> Cites { get; } = [];
         }
         public readonly List<Element> elements = [];
     }
-    internal class CompilingStruct(TextRange name, Declaration declaration, CompilingSpace space)
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingStruct(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file)
+        : CompilingDeclaration(name, declaration, space, file)
     {
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> functions = [];
     }
-    internal class CompilingInterface(TextRange name, Declaration declaration, CompilingSpace space)
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingInterface(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file)
+        : CompilingDeclaration(name, declaration, space, file)
     {
         public readonly List<Type> inherits = [];
         public readonly List<CompilingCallable> callables = [];
     }
-    internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, Type parent, List<TextLine>? destructor, HashSet<CompilingSpace> relies)
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingClass(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, Type parent, List<TextLine>? destructor, HashSet<CompilingSpace> relies)
+        : CompilingDeclaration(name, declaration, space, file)
     {
         public Type parent = parent;
         public readonly List<Type> inherits = [];
@@ -113,17 +114,17 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<TextLine>? destructor = destructor;
         public readonly HashSet<CompilingSpace> relies = relies;
     }
-    internal class CompilingDelegate(TextRange name, Declaration declaration, CompilingSpace space, List<CompilingCallable.Parameter> parameters, Tuple returns)
-        : CompilingCallable(name, declaration, space, parameters, returns)
-    { 
+    internal class CompilingDelegate(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingCallable(name, declaration, space, file, parameters, returns)
+    {
     }
-    internal class CompilingTask(TextRange name, Declaration declaration, CompilingSpace space, Tuple returns) 
-        : CompilingDeclaration(name, declaration, space)
+    internal class CompilingTask(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, Tuple returns)
+        : CompilingDeclaration(name, declaration, space, file)
     {
         public readonly Tuple returns = returns;
     }
-    internal class CompilingNative(TextRange name, Declaration declaration, CompilingSpace space, List<CompilingCallable.Parameter> parameters, Tuple returns)
-        : CompilingCallable(name, declaration, space, parameters, returns)
+    internal class CompilingNative(TextRange name, Declaration declaration, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingCallable(name, declaration, space, file, parameters, returns)
     {
     }
     internal class CompilingSpace(CompilingSpace? parent, string name) : ICitePort<CompilingSpace, FileSpace>
@@ -185,6 +186,15 @@ namespace RainLanguageServer.RainLanguage
                 if (this == target) return true;
                 else target = target.parent;
             return false;
+        }
+        public CompilingLibrary Library
+        {
+            get
+            {
+                var index = this;
+                while (index.parent != null) index = index.parent;
+                return (CompilingLibrary)index;
+            }
         }
 
         /// <summary>

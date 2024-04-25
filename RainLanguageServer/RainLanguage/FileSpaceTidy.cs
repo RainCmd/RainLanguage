@@ -3,7 +3,7 @@
     internal partial class FileSpace
     {
         public readonly HashSet<CompilingSpace> relies = [];
-        private void InitRelies(ASTManager manager)
+        private void InitRelies(ASTManager manager, CompilingLibrary library)
         {
             foreach (var import in imports)
             {
@@ -25,7 +25,7 @@
                         goto lable_next_import;
                     }
                 }
-                if (import[0].ToString() == manager.library.name) collector.Add(import[0], CErrorLevel.Error, "不能导入自己");
+                if (import[0].ToString() == library.name) collector.Add(import[0], CErrorLevel.Error, "不能导入自己");
                 else
                 {
                     CompilingSpace? space = manager.LoadLibrary(import[0].ToString());
@@ -53,55 +53,55 @@
             }
             declarations.Add(compilingDeclaration);
         }
-        public void Tidy(ASTManager manager)
+        public void Tidy(ASTManager manager, CompilingLibrary library, bool cite)
         {
-            InitRelies(manager);
+            InitRelies(manager, library);
             foreach (var child in children)
             {
                 foreach (var rely in relies) child.relies.Add(rely);
-                child.Tidy(manager);
+                child.Tidy(manager, library, cite);
             }
             foreach (var file in enums)
             {
-                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Enum, compiling.GetChildName(file.name.ToString()), default);
-                var compilingEnum = new CompilingEnum(file.name, declaration, compiling);
+                var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Enum, compiling.GetChildName(file.name.ToString()), default);
+                var compilingEnum = new CompilingEnum(file.name, declaration, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingEnum);
-                manager.library.enums.Add(compilingEnum);
+                library.enums.Add(compilingEnum);
             }
             foreach (var file in structs)
             {
-                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Struct, compiling.GetChildName(file.name.ToString()), default);
-                var compilingStruct = new CompilingStruct(file.name, declaration, compiling);
+                var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Struct, compiling.GetChildName(file.name.ToString()), default);
+                var compilingStruct = new CompilingStruct(file.name, declaration, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingStruct);
-                manager.library.structs.Add(compilingStruct);
+                library.structs.Add(compilingStruct);
             }
             foreach (var file in interfaces)
             {
-                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Interface, compiling.GetChildName(file.name.ToString()), default);
-                var compilingInterface = new CompilingInterface(file.name, declaration, compiling);
+                var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Interface, compiling.GetChildName(file.name.ToString()), default);
+                var compilingInterface = new CompilingInterface(file.name, declaration, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingInterface);
-                manager.library.interfaces.Add(compilingInterface);
+                library.interfaces.Add(compilingInterface);
             }
             foreach (var file in classes)
             {
-                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
-                var compilingClass = new CompilingClass(file.name, declaration, compiling, default, file.destructor, relies);
+                var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
+                var compilingClass = new CompilingClass(file.name, declaration, compiling, cite ? file : null, default, file.destructor, relies);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingClass);
-                manager.library.classes.Add(compilingClass);
+                library.classes.Add(compilingClass);
             }
             foreach (var file in delegates)
             {
-                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Delegate, compiling.GetChildName(file.name.ToString()), default);
-                var compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, [], default);
+                var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Delegate, compiling.GetChildName(file.name.ToString()), default);
+                var compilingDelegate = new CompilingDelegate(file.name, declaration, compiling, cite ? file : null, [], default);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingDelegate);
-                manager.library.delegates.Add(compilingDelegate);
+                library.delegates.Add(compilingDelegate);
             }
             foreach (var file in tasks)
             {
-                var declaration = new Declaration(manager.library.name, file.visibility, DeclarationCategory.Task, compiling.GetChildName(file.name.ToString()), default);
-                var compilingTask = new CompilingTask(file.name, declaration, compiling, default);
+                var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Task, compiling.GetChildName(file.name.ToString()), default);
+                var compilingTask = new CompilingTask(file.name, declaration, compiling, cite ? file : null, default);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingTask);
-                manager.library.tasks.Add(compilingTask);
+                library.tasks.Add(compilingTask);
             }
         }
     }
