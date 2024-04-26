@@ -77,6 +77,7 @@
     {
         public readonly FileSpace? parent;
         public readonly CompilingSpace compiling;
+        public readonly TextDocument document;
         public readonly MessageCollector collector = new();
 
         public readonly List<FileSpace> children = [];
@@ -91,6 +92,25 @@
         public readonly List<FileDelegate> delegates = [];
         public readonly List<FileTask> tasks = [];
         public readonly List<FileNative> natives = [];
+
+        public IEnumerable<FileDeclaration> Declarations
+        {
+            get
+            {
+                foreach(var file in variables) yield return file;
+                foreach(var file in functions) yield return file;
+                foreach(var file in enums) yield return file;
+                foreach(var file in structs) yield return file;
+                foreach (var file in interfaces) yield return file;
+                foreach(var file in classes) yield return file;
+                foreach(var file in delegates) yield return file;
+                foreach(var file in tasks) yield return file;
+                foreach(var file in natives) yield return file;
+                foreach(var child in children)
+                    foreach(var file in child.Declarations) 
+                        yield return file;
+            }
+        }
 
         /// <summary>
         /// import的命名空间集合

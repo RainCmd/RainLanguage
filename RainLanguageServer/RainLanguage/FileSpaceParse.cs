@@ -4,8 +4,9 @@
     {
         public FileSpace(LineReader reader, CompilingSpace compiling, bool defaultNamespace, FileSpace? parent, int parentIndent, bool allowKeywordType)
         {
-            this.compiling = compiling;
             this.parent = parent;
+            this.compiling = compiling;
+            document = reader.document;
             int indent = -1;
             var attributeCollector = new List<TextRange>();
             while (reader.TryReadLine(out var line))
@@ -47,11 +48,10 @@
                         var visibility = ParseVisibility(line, out var position);
                         if (Lexical.TryAnalysis(line, position, out lexical, collector))
                         {
-                            position = lexical.anchor.End;
                             if (visibility == Visibility.None) visibility = Visibility.Space;
                             if (lexical.type == LexicalType.KeyWord_const)
                             {
-                                if (TryParseVariable(line, position, out var name, out var type, out var expression))
+                                if (TryParseVariable(line, lexical.anchor.End, out var name, out var type, out var expression))
                                 {
                                     if (expression == null) collector.Add(line, CErrorLevel.Error, "常量缺少赋值表达式");
                                     var variable = new FileVariable(name!, visibility, this, true, type!, expression);
@@ -63,27 +63,27 @@
                             }
                             else if (lexical.type == LexicalType.KeyWord_enum)
                             {
-                                ParseEnum(reader, line, position, visibility, attributeCollector);
+                                ParseEnum(reader, line, lexical.anchor.End, visibility, attributeCollector);
                                 attributeCollector.Clear();
                             }
                             else if (lexical.type == LexicalType.KeyWord_struct)
                             {
-                                ParseStruct(reader, line, position, visibility, allowKeywordType, attributeCollector);
+                                ParseStruct(reader, line, lexical.anchor.End, visibility, allowKeywordType, attributeCollector);
                                 attributeCollector.Clear();
                             }
                             else if (lexical.type == LexicalType.KeyWord_interface)
                             {
-                                ParseInterface(reader, line, position, visibility, attributeCollector);
+                                ParseInterface(reader, line, lexical.anchor.End, visibility, attributeCollector);
                                 attributeCollector.Clear();
                             }
                             else if (lexical.type == LexicalType.KeyWord_class)
                             {
-                                ParseClass(reader, line, position, visibility, allowKeywordType, attributeCollector);
+                                ParseClass(reader, line, lexical.anchor.End, visibility, allowKeywordType, attributeCollector);
                                 attributeCollector.Clear();
                             }
                             else if (lexical.type == LexicalType.KeyWord_delegate)
                             {
-                                if (TryParseCallable(line, position, false, out var name, out var parameters, out var returns))
+                                if (TryParseCallable(line, lexical.anchor.End, false, out var name, out var parameters, out var returns))
                                 {
                                     var fileDelegate = new FileDelegate(name!, visibility, this, parameters!, returns!);
                                     fileDelegate.attributes.AddRange(attributeCollector);
@@ -93,7 +93,7 @@
                             }
                             else if (lexical.type == LexicalType.KeyWord_task)
                             {
-                                if (TryParseTuple(line, position, false, out var name, out var types))
+                                if (TryParseTuple(line, lexical.anchor.End, false, out var name, out var types))
                                 {
                                     var fileTask = new FileTask(name!, visibility, this, types!);
                                     fileTask.attributes.AddRange(attributeCollector);
@@ -104,7 +104,7 @@
                             }
                             else if (lexical.type == LexicalType.KeyWord_native)
                             {
-                                if (TryParseCallable(line, position, false, out var name, out var parameters, out var returns))
+                                if (TryParseCallable(line, lexical.anchor.End, false, out var name, out var parameters, out var returns))
                                 {
                                     var fileNative = new FileNative(name!, visibility, this, parameters!, returns!);
                                     fileNative.attributes.AddRange(attributeCollector);
@@ -421,6 +421,7 @@
         {
             parameters = [];
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector) || lexical.type != LexicalType.BracketLeft0) return false;
+            position = lexical.anchor.End;
             if (Lexical.TryAnalysis(line, lexical.anchor.End, out lexical, collector))
             {
                 if (lexical.type == LexicalType.BracketRight0)
@@ -431,7 +432,7 @@
                 else
                 {
                 label_parse_parameter:
-                    if (Lexical.TryExtractName(line, lexical.anchor.End, out var index, out var names, collector))
+                    if (Lexical.TryExtractName(line, position, out var index, out var names, collector))
                     {
                         var type = new FileType(names, Lexical.ExtractDimension(line, ref index));
                         if (Lexical.TryAnalysis(line, index, out lexical, collector))
@@ -447,12 +448,9 @@
                                 }
                             }
                             parameters.Add(new FileParameter(name, type));
+                            position = lexical.anchor.End;
                             if (lexical.type == LexicalType.Comma || lexical.type == LexicalType.Semicolon) goto label_parse_parameter;
-                            else if (lexical.type == LexicalType.BracketRight0)
-                            {
-                                position = lexical.anchor.End;
-                                return true;
-                            }
+                            else if (lexical.type == LexicalType.BracketRight0) return true;
                         }
                         else collector.Add(line, CErrorLevel.Error, "意外的行尾");
                     }

@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using LanguageServer.Parameters.TextDocument;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
-using LanguageServer.Parameters.Workspace;
+using LanguageServer.Parameters;
 
 namespace RainLanguageServer
 {
@@ -17,8 +17,8 @@ namespace RainLanguageServer
             public string Content { get; }
             public FileDocument(string path, Server server)
             {
-                Path = path;
                 path = new UnifiedPath(path);
+                Path = path;
                 if (server.documents.TryGetValue(path, out var document)) Content = document.text;
                 else
                 {
@@ -48,9 +48,9 @@ namespace RainLanguageServer
 
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
-            var kernelDefinePath = param.initializationOptions?.kernelDefinePath as string;
-            var projectPath = param.initializationOptions?.projectPath as string;
-            var projectName = param.initializationOptions?.projectName as string;
+            var kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
+            var projectPath = param.initializationOptions?.projectPath?.Value as string;
+            var projectName = param.initializationOptions?.projectName?.Value as string;
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
             manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this));
@@ -100,13 +100,21 @@ namespace RainLanguageServer
 
             return Result<InitializeResult, ResponseError<InitializeErrorData>>.Success(result);
         }
-        protected override void DidChangeConfiguration(DidChangeConfigurationParams param)
-        {
-
-        }
         protected override void Initialized()
         {
-
+            if (manager != null)
+            {
+                var list = new List<Diagnostic>();
+                foreach (var fileSpace in manager.fileSpaces)
+                {
+                    //CollectFileDiagnostic(fileSpace.Value, list);
+                    //var param = new PublishDiagnosticsParams(new Uri(fileSpace.Key), [.. list]);
+                    //Proxy.TextDocument.PublishDiagnostics(param);
+                    //list.Clear();
+                    var param = new PublishDiagnosticsParams(new Uri(fileSpace.Key), [new Diagnostic(new LanguageServer.Parameters.Range(new Position(0, 0), new Position(0, 10)), "啊啊啊哦呦")]);
+                    Proxy.TextDocument.PublishDiagnostics(param);
+                }
+            }
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
         {
@@ -121,7 +129,20 @@ namespace RainLanguageServer
 
         protected override Result<Hover, ResponseError> Hover(TextDocumentPositionParams param, CancellationToken token)
         {
-            return base.Hover(param, token);
+            if (manager != null)
+            {
+                string path = new UnifiedPath(param.textDocument.uri);
+                if (manager.fileSpaces.TryGetValue(path, out var fileSpace))
+                {
+                    var position = GetFilePosition(fileSpace.document, param.position);
+                    foreach (var file in fileSpace.Declarations)
+                    {
+                        if (file.name.Contain(position))
+                            return Result<Hover, ResponseError>.Success(new Hover(file.name.ToString(), TR2R(file.name)));
+                    }
+                }
+            }
+            return Result<Hover, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         #region 文档相关
@@ -141,5 +162,45 @@ namespace RainLanguageServer
             documents.Remove(new UnifiedPath(param.textDocument.uri));
         }
         #endregion
+        private static void CollectFileDiagnostic(FileSpace space, List<Diagnostic> diagnostics)
+        {
+            foreach (var msg in space.collector)
+            {
+                var diagnostic = new Diagnostic(TR2R(msg.range), msg.message);
+                switch (msg.level)
+                {
+                    case CErrorLevel.Error:
+                        diagnostic.severity = DiagnosticSeverity.Error;
+                        break;
+                    case CErrorLevel.Warning:
+                        diagnostic.severity = DiagnosticSeverity.Warning;
+                        break;
+                    case CErrorLevel.Info:
+                        diagnostic.severity = DiagnosticSeverity.Information;
+                        break;
+                }
+                if (msg.related.Count > 0)
+                {
+                    diagnostic.relatedInformation = new DiagnosticRelatedInformation[msg.related.Count];
+                    for (var i = 0; i < msg.related.Count; i++)
+                        diagnostic.relatedInformation[i] = new DiagnosticRelatedInformation(TR2L(msg.related[i]), "引用地址消息？");
+                }
+                diagnostics.Add(diagnostic);
+            }
+        }
+        private static Location TR2L(TextRange range)
+        {
+            return new Location(new Uri(range.Start.document.path), TR2R(range));
+        }
+        private static LanguageServer.Parameters.Range TR2R(TextRange range)
+        {
+            var startLine = range.Start.document[range.Start.Line];
+            var endLine = range.End.document[range.End.Line];
+            return new LanguageServer.Parameters.Range(new Position(range.Start.Line, range.Start - startLine.Start), new Position(range.End.Line, range.End - endLine.Start));
+        }
+        private static TextPosition GetFilePosition(TextDocument document, Position position)
+        {
+            return document[(int)position.line].Start + (int)position.character;
+        }
     }
 }

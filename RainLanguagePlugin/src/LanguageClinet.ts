@@ -2,6 +2,7 @@
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node'
 import * as vscode from 'vscode'
 import * as fs from 'fs'
+import * as net from 'net'
 
 let client: LanguageClient;
 
@@ -30,19 +31,42 @@ async function GetProject(): Promise<{ projectPath: string, projectName: string 
     return { projectPath: null, projectName: null }
 }
 
-export async function StartServer(context: vscode.ExtensionContext) {
+function GetCPServerOptions(context: vscode.ExtensionContext): ServerOptions {
     const binPath = `${context.extension.extensionUri.fsPath}/bin/`
     let serverArgs: string[] = []
     serverArgs.push('-logPath')
     serverArgs.push(`${binPath}server.log`)
     
-    const project = await GetProject()
-
-    const serverOptions: ServerOptions = {
+    return {
         command: `${binPath}server/RainLanguageServer.exe`,
         args: serverArgs
     }
+}
 
+function GetSocketServerOperation() {
+    return new Promise<StreamInfo>((resolve, reject) => {
+        const client = net.connect({
+            port: 14567,
+            host: "127.0.0.1"
+        })
+        client.on('connect', () => {
+            resolve({
+                reader: client,
+                writer: client
+            })
+        })
+        client.on('error', err => {
+            reject(err)
+        })
+    })
+}
+
+export async function StartServer(context: vscode.ExtensionContext) {
+
+    //const serverOptions = GetCPServerOptions(context)
+    const serverOptions = GetSocketServerOperation
+
+    const project = await GetProject()
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{
             language: "雨言"

@@ -39,6 +39,10 @@ namespace RainLanguageServer
         public static TextPosition operator +(TextPosition position, int right) => new(position.document, position.Position + right);
         public static bool operator ==(TextPosition left, TextPosition right) => left.Equals(right);
         public static bool operator !=(TextPosition left, TextPosition right) => !left.Equals(right);
+        public static bool operator >(TextPosition left, TextPosition right) => left.document == right.document && left.Position > right.Position;
+        public static bool operator >=(TextPosition left, TextPosition right) => left.document == right.document && left.Position >= right.Position;
+        public static bool operator <(TextPosition left, TextPosition right) => left.document == right.document && left.Position < right.Position;
+        public static bool operator <=(TextPosition left, TextPosition right) => left.document == right.document && left.Position <= right.Position;
     }
     /// <summary>
     /// [start, end)
@@ -104,6 +108,11 @@ namespace RainLanguageServer
                 RefreshPosition();
                 return new(new TextPosition(start.document, start.GetPosition(Adsorption.Forward) - start.Position), new TextPosition(start.document, end.GetPosition(Adsorption.Backward) - start.Position));
             }
+        }
+        public bool Contain(TextPosition position)
+        {
+            RefreshPosition();
+            return start <= position && position < end;
         }
         public static bool operator ==(TextRange? left, string? right) => left?.ToString() == right;
         public static bool operator !=(TextRange? left, string? right) => !(left == right);

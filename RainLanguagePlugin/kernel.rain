@@ -1,4 +1,4 @@
-﻿namespace kernel
+namespace kernel
 	public enum TaskState
 		Unstart
 		Running
