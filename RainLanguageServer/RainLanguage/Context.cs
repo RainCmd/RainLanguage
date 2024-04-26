@@ -282,9 +282,9 @@ namespace RainLanguageServer.RainLanguage
                     case LexicalType.KeyWord_task: results.Add(manager.GetSourceDeclaration(Type.TASK)!); break;
                     case LexicalType.KeyWord_array: results.Add(manager.GetSourceDeclaration(Type.ARRAY)!); break;
                     default:
+                        var targetName = name[0].ToString();
                         if (declaration != null)
                         {
-                            var targetName = name[0].ToString();
                             if (declaration.declaration.category == DeclarationCategory.Struct)
                             {
                                 var compiling = (CompilingStruct)declaration;
@@ -308,16 +308,16 @@ namespace RainLanguageServer.RainLanguage
                                 }
                             }
                             if (results.Count > 0) return true;
-                            for (var index = space; index != null; index = index.parent)
-                                if (index.declarations.TryGetValue(targetName, out var declarations))
-                                {
-                                    results.AddRange(declarations);
-                                    return true;
-                                }
-                            foreach (var rely in relies)
-                                if (rely.declarations.TryGetValue(targetName, out var declarations))
-                                    results.AddRange(declarations);
                         }
+                        for (var index = space; index != null; index = index.parent)
+                            if (index.declarations.TryGetValue(targetName, out var declarations))
+                            {
+                                results.AddRange(declarations);
+                                return true;
+                            }
+                        foreach (var rely in relies)
+                            if (rely.declarations.TryGetValue(targetName, out var declarations))
+                                results.AddRange(declarations);
                         break;
                 }
             }

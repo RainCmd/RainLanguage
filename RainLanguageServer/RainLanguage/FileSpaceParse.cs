@@ -35,7 +35,8 @@
                         if (attributeCollector.Count > 0)
                         {
                             var message = new CompileMessage(line, CErrorLevel.Error, "无效的属性声明");
-                            message.related.AddRange(attributeCollector);
+                            foreach (var attribute in attributeCollector)
+                                message.related.Add(new(attribute, "无效的属性"));
                             collector.Add(message);
                             attributeCollector.Clear();
                             ParseImport(line, lexical);
@@ -63,7 +64,7 @@
                             }
                             else if (lexical.type == LexicalType.KeyWord_enum)
                             {
-                                ParseEnum(reader, line, lexical.anchor.End, visibility, attributeCollector);
+                                ParseEnum(reader, line, lexical.anchor.End, visibility, allowKeywordType, attributeCollector);
                                 attributeCollector.Clear();
                             }
                             else if (lexical.type == LexicalType.KeyWord_struct)
@@ -73,7 +74,7 @@
                             }
                             else if (lexical.type == LexicalType.KeyWord_interface)
                             {
-                                ParseInterface(reader, line, lexical.anchor.End, visibility, attributeCollector);
+                                ParseInterface(reader, line, lexical.anchor.End, visibility, allowKeywordType, attributeCollector);
                                 attributeCollector.Clear();
                             }
                             else if (lexical.type == LexicalType.KeyWord_class)
@@ -141,7 +142,7 @@
         private void ParseClass(LineReader reader, TextLine line, TextPosition position, Visibility visibility, bool allowKeywordType, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
-            else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsTypeKeyWord()))
+            else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 var fileClass = new FileClass(lexical.anchor, visibility, this);
                 fileClass.attributes.AddRange(attributeCollector);
@@ -211,10 +212,10 @@
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private void ParseInterface(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
+        private void ParseInterface(LineReader reader, TextLine line, TextPosition position, Visibility visibility, bool allowKeywordType, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
-            else if (lexical.type == LexicalType.Word)
+            else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 var fileInterface = new FileInterface(lexical.anchor, visibility, this);
                 fileInterface.attributes.AddRange(attributeCollector);
@@ -262,7 +263,7 @@
         private void ParseStruct(LineReader reader, TextLine line, TextPosition position, Visibility visibility, bool allowKeywordType, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
-            else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsTypeKeyWord()))
+            else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 CheckLineEnd(line, lexical.anchor.End);
                 var fileStruct = new FileStruct(lexical.anchor, visibility, this);
@@ -310,10 +311,10 @@
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private void ParseEnum(LineReader reader, TextLine line, TextPosition position, Visibility visibility, List<TextRange> attributeCollector)
+        private void ParseEnum(LineReader reader, TextLine line, TextPosition position, Visibility visibility, bool allowKeywordType, List<TextRange> attributeCollector)
         {
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少名称");
-            else if (lexical.type == LexicalType.Word)
+            else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 CheckLineEnd(line, lexical.anchor.End);
                 FileEnum fileEnum = new(lexical.anchor, visibility, this);

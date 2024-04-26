@@ -45,15 +45,15 @@ namespace RainLanguageServer
             }
         }
         private ASTManager? manager;
-
+        private string? root;
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
             var kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
-            var projectPath = param.initializationOptions?.projectPath?.Value as string;
             var projectName = param.initializationOptions?.projectName?.Value as string;
+            root = new UnifiedPath(param.rootPath!);
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
-            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this));
+            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(root, this));
 
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
@@ -97,6 +97,7 @@ namespace RainLanguageServer
             result.capabilities.workspace = new WorkspaceOptions() { workspaceFolders = new WorkspaceFoldersOptions() { supported = true, changeNotifications = true } };
             //实验性服务器功能。
             result.capabilities.experimental = param.capabilities?.experimental;
+            result.capabilities.diagnosticProvider = new DiagnosticOptionsOrProviderOptions(new DiagnosticOptions(true, true));
 
             return Result<InitializeResult, ResponseError<InitializeErrorData>>.Success(result);
         }
@@ -107,11 +108,10 @@ namespace RainLanguageServer
                 var list = new List<Diagnostic>();
                 foreach (var fileSpace in manager.fileSpaces)
                 {
-                    //CollectFileDiagnostic(fileSpace.Value, list);
-                    //var param = new PublishDiagnosticsParams(new Uri(fileSpace.Key), [.. list]);
-                    //Proxy.TextDocument.PublishDiagnostics(param);
-                    //list.Clear();
-                    var param = new PublishDiagnosticsParams(new Uri(fileSpace.Key), [new Diagnostic(new LanguageServer.Parameters.Range(new Position(0, 0), new Position(0, 10)), "啊啊啊哦呦")]);
+                    CollectFileDiagnostic(fileSpace.Value, list);
+                    var param = new PublishDiagnosticsParams(new Uri(fileSpace.Key), [.. list]);
+                    Proxy.TextDocument.PublishDiagnostics(param);
+                    list.Clear();
                     Proxy.TextDocument.PublishDiagnostics(param);
                 }
             }
@@ -183,7 +183,7 @@ namespace RainLanguageServer
                 {
                     diagnostic.relatedInformation = new DiagnosticRelatedInformation[msg.related.Count];
                     for (var i = 0; i < msg.related.Count; i++)
-                        diagnostic.relatedInformation[i] = new DiagnosticRelatedInformation(TR2L(msg.related[i]), "引用地址消息？");
+                        diagnostic.relatedInformation[i] = new DiagnosticRelatedInformation(TR2L(msg.related[i].range), msg.related[i].message);
                 }
                 diagnostics.Add(diagnostic);
             }

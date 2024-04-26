@@ -11,7 +11,7 @@ export async function RestartServer(context: vscode.ExtensionContext) {
     await StartServer(context)
 }
 
-async function GetProject(): Promise<{ projectPath: string, projectName: string }> {
+async function GetProjectName(): Promise<string | null> {
     if (vscode.workspace.workspaceFolders.length > 0) {
         const projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath
         const data = await fs.promises.readFile(projectPath + "/.vscode/launch.json", 'utf-8')
@@ -20,15 +20,12 @@ async function GetProject(): Promise<{ projectPath: string, projectName: string 
             for (let index = 0; index < cfgs.length; index++) {
                 const element = cfgs[index];
                 if (element.ProjectName) {
-                    return {
-                        projectPath: projectPath,
-                        projectName: (String)(element.ProjectName)
-                    }
+                    return (String)(element.ProjectName)
                 }
             }
         }
     }
-    return { projectPath: null, projectName: null }
+    return null
 }
 
 function GetCPServerOptions(context: vscode.ExtensionContext): ServerOptions {
@@ -66,7 +63,7 @@ export async function StartServer(context: vscode.ExtensionContext) {
     //const serverOptions = GetCPServerOptions(context)
     const serverOptions = GetSocketServerOperation
 
-    const project = await GetProject()
+    const projectName = await GetProjectName()
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{
             language: "雨言"
@@ -76,8 +73,7 @@ export async function StartServer(context: vscode.ExtensionContext) {
         },
         initializationOptions: {
             kernelDefinePath: `${context.extension.extensionUri.fsPath}/kernel.rain`,
-            projectPath: project.projectPath,
-            projectName: project.projectName,
+            projectName: projectName,
         }
     }
     client = new LanguageClient("雨言", "雨言服务客户端", serverOptions, clientOptions);

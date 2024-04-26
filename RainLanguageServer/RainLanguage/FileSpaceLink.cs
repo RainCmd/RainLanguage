@@ -16,10 +16,10 @@ namespace RainLanguageServer.RainLanguage
                 }
                 else
                 {
-                    var builder = new StringBuilder().AppendLine("类型不明确");
+                    var msg = new CompileMessage(fileType.name, CErrorLevel.Error, "类型不明确");
                     foreach (var item in declarations)
-                        builder.AppendLine(item.GetFullName());
-                    collector.Add(fileType.name, CErrorLevel.Error, builder.ToString());
+                        msg.related.Add(new RelatedInfo(item.name, item.GetFullName()));
+                    collector.Add(msg);
                 }
             }
             else collector.Add(fileType.name, CErrorLevel.Error, "声明未找到");

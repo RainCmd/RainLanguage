@@ -255,12 +255,15 @@ namespace RainLanguageServer
             ParseLines();
             if (lines.Count > 0)
             {
-                var start = 0; var end = lines.Count - 1;
-                while (start + 1 < end)
+                var end = lines.Count - 1;
+                if (charactor >= lines[end].Start.Position) return end;
+                var start = 0;
+                while (start < end)
                 {
                     var middle = (start + end) >> 1;
                     if (lines[middle].Start.Position <= charactor) start = middle;
                     else end = middle;
+                    if (start + 1 == end) return start;
                 }
                 return start;
             }

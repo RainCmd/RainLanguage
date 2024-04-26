@@ -11,12 +11,18 @@ namespace RainLanguageServer.RainLanguage
         Warning,
         Info,
     }
+    internal readonly struct RelatedInfo(TextRange range, string message)
+    {
+        public readonly TextRange range = range;
+        public readonly string message = message;
+    }
     internal readonly struct CompileMessage(TextRange range, CErrorLevel level, string message)
     {
         public readonly TextRange range = range;
         public readonly CErrorLevel level = level;
         public readonly string message = message;
-        public readonly List<TextRange> related = [];
+        public readonly List<RelatedInfo> related = [];
+        public CompileMessage(IList<TextRange> ranges, CErrorLevel level, string message) : this(new TextRange(ranges[0].Start, ranges[^1].End), level, message) { }
     }
     internal class MessageCollector : IEnumerable<CompileMessage>
     {

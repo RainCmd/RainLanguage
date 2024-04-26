@@ -23,14 +23,14 @@
                             if (self == null)
                             {
                                 var msg = new CompileMessage(member.name, CErrorLevel.Error, "函数返回值类型与接口函数不一致");
-                                msg.related.Add(function.name);
+                                msg.related.Add(new(function.name, "实现的接口函数"));
                                 member.file?.space.collector.Add(msg);
                             }
                             else
                             {
                                 var msg = new CompileMessage(self, CErrorLevel.Error, "父类实现函数返回值类型与接口函数不一致");
-                                msg.related.Add(member.name);
-                                msg.related.Add(function.name);
+                                msg.related.Add(new(member.name, "来自父类的实现"));
+                                msg.related.Add(new(function.name, "需要实现的接口函数"));
                                 member.file?.space.collector.Add(msg);
                             }
                         }
@@ -54,8 +54,8 @@
                                 {
                                     if (member.declaration.visibility.ContainAny(Visibility.Public | Visibility.Protected) && member.returns != function.returns)
                                     {
-                                        var msg = new CompileMessage(function.name, CErrorLevel.Error, "重载的函数返回值不一致");
-                                        msg.related.Add(member.name);
+                                        var msg = new CompileMessage(function.name, CErrorLevel.Error, "覆盖的函数返回值不一致");
+                                        msg.related.Add(new(member.name, "被覆盖的函数"));
                                         function.file?.space.collector.Add(msg);
                                     }
                                     function.overrides.Add(member);
