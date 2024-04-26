@@ -36,12 +36,10 @@
     }
     internal class FileEnum(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
-        public class Element(TextRange name, TextRange? expression) : ICitePort<Element, CompilingEnum.Element>
+        public class Element(TextRange name, TextRange? expression)
         {
             public readonly TextRange name = name;
             public readonly TextRange? expression = expression;
-
-            public CitePort<CompilingEnum.Element> Cites { get; } = [];
         }
         public readonly List<Element> elements = [];
     }

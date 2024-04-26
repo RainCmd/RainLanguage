@@ -33,7 +33,8 @@
             foreach (var file in manager.fileSpaces)
                 file.Value.Link(manager, manager.library, true);
             manager.library.DeclarationValidityCheck(manager);
-            //todo 检查接口实现和父类函数override
+            manager.library.ImplementsCheck(manager);
+
             return manager;
         }
     }

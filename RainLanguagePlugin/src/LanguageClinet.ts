@@ -49,6 +49,7 @@ export async function StartServer(context: vscode.ExtensionContext) {
             fileEvents: vscode.workspace.createFileSystemWatcher("**/*.rain")
         },
         initializationOptions: {
+            kernelDefinePath: `${context.extension.extensionUri.fsPath}/kernel.rain`,
             
         }
     }

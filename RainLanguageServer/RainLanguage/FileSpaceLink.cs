@@ -74,7 +74,6 @@ namespace RainLanguageServer.RainLanguage
                 {
                     var declaration = new Declaration(library.name, Visibility.Public, DeclarationCategory.EnumElement, compiling.GetMemberName(file.name.ToString(), element.name.ToString()), default);
                     var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression, relies, cite ? element : null);
-                    compilingEnumElement.AddCite(element);
                     compilingEnum.elements.Add(compilingEnumElement);
                 }
             }
@@ -120,6 +119,8 @@ namespace RainLanguageServer.RainLanguage
                     else if (type.code == TypeCode.Interface || type == Type.HANDLE) compilingInterface.inherits.Add(type);
                     else collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
                     if (cite) AddTypeCite(manager, compilingInterface, type);
+                    if (manager.GetSourceDeclaration(type) is CompilingInterface inherit)
+                        compilingInterface.implements.Add(inherit);
                 }
                 foreach (var function in file.functions)
                 {
@@ -132,7 +133,7 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.InterfaceFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingCallable(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes));
+                    var compilingFunction = new CompilingAbstractFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes));
                     compilingInterface.callables.Add(compilingFunction);
                     if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                     if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
@@ -152,6 +153,9 @@ namespace RainLanguageServer.RainLanguage
                     else if (type.code == TypeCode.Handle) compilingClass.parent = type;
                     else file.space.collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
                     if (cite) AddTypeCite(manager, compilingClass, type);
+                    var inherit = manager.GetSourceDeclaration(type);
+                    if (inherit is CompilingInterface @interface) @interface.implements.Add(compilingClass);
+                    else if (inherit is CompilingClass @class) @class.implements.Add(compilingClass);
                 }
                 foreach (var variable in file.variables)
                 {
@@ -184,7 +188,7 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
+                    var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingClass.functions.Add(compilingFunction);
                     if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                     if (cite) AddTypeCites(manager, compilingFunction, returnTypes);

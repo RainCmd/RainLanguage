@@ -48,10 +48,17 @@ namespace RainLanguageServer.RainLanguage
             else if (library == Type.LIBRARY_KERNEL) return kernel;
             else return relies.Values.First(x => x.name == library);
         }
+        private CompilingSpace? GetChildSpace(CompilingSpace? space, Span<string> name)
+        {
+            foreach (var item in name)
+                if (space == null || !space.children.TryGetValue(item, out space))
+                    return null;
+            return space;
+        }
         private bool TryGetDeclarations(string library, string[] name, out List<CompilingDeclaration>? declarations)
         {
             declarations = null;
-            var space = GetLibrary(library).GetSpace(name.AsSpan()[..^2]);
+            var space = GetChildSpace(GetLibrary(library), name.AsSpan()[..^2]);
             if (space == null) return false;
             return space.declarations.TryGetValue(name[^1], out declarations);
         }

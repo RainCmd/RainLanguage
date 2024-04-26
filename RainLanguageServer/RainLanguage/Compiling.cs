@@ -79,15 +79,13 @@ namespace RainLanguageServer.RainLanguage
     internal class CompilingEnum(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
-        public class Element(TextRange name, Declaration declaration, TextRange? expression, HashSet<CompilingSpace> relies, FileEnum.Element? file) : ICitePort<Element, FileEnum.Element>
+        public class Element(TextRange name, Declaration declaration, TextRange? expression, HashSet<CompilingSpace> relies, FileEnum.Element? file)
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
             public readonly TextRange? expression = expression;
             public readonly HashSet<CompilingSpace> relies = relies;
             public readonly FileEnum.Element? file = file;
-
-            public CitePort<FileEnum.Element> Cites { get; } = [];
         }
         public readonly List<Element> elements = [];
     }
@@ -97,11 +95,23 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> functions = [];
     }
+    internal class CompilingAbstractFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
+        : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
+    {
+        public HashSet<CompilingVirtualFunction> implements = [];
+    }
     internal class CompilingInterface(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
         public readonly List<Type> inherits = [];
-        public readonly List<CompilingCallable> callables = [];
+        public readonly List<CompilingAbstractFunction> callables = [];
+        public readonly HashSet<CompilingDeclaration> implements = [];
+    }
+    internal class CompilingVirtualFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, List<TextLine> body, HashSet<CompilingSpace> relies)
+        : CompilingFunction(name, declaration, attributes, space, file, parameters, returns, body, relies)
+    {
+        public HashSet<CompilingCallable> overrides = [];
+        public HashSet<CompilingVirtualFunction> implements = [];
     }
     internal class CompilingClass(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, Type parent, List<TextLine>? destructor, HashSet<CompilingSpace> relies)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -110,9 +120,10 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<Type> inherits = [];
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> constructors = [];
-        public readonly List<CompilingFunction> functions = [];
+        public readonly List<CompilingVirtualFunction> functions = [];
         public readonly List<TextLine>? destructor = destructor;
         public readonly HashSet<CompilingSpace> relies = relies;
+        public readonly HashSet<CompilingClass> implements = [];
     }
     internal class CompilingDelegate(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
@@ -213,13 +224,5 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingDelegate> delegates = [];
         public readonly List<CompilingTask> tasks = [];
         public readonly List<CompilingNative> natives = [];
-        public CompilingSpace? GetSpace(Span<string> name)
-        {
-            CompilingSpace? space = this;
-            foreach (var item in name)
-                if (!space!.children.TryGetValue(item, out space))
-                    return null;
-            return space;
-        }
     }
 }
