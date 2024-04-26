@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using System.Text;
+﻿using System.Text;
 
 namespace RainLanguageServer.RainLanguage
 {

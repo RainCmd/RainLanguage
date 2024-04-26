@@ -247,7 +247,7 @@ namespace RainLanguageServer
             if (lines.Count > 0)
             {
                 var start = 0; var end = lines.Count - 1;
-                while (start < end)
+                while (start + 1 < end)
                 {
                     var middle = (start + end) >> 1;
                     if (lines[middle].Start.Position <= charactor) start = middle;

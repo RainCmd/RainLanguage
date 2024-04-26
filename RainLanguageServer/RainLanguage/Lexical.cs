@@ -470,7 +470,7 @@ namespace RainLanguageServer.RainLanguage
         {
             if (ch == '_' || ch > 128) return true;
             ch |= 0x20;
-            return ch >= 'a' || ch <= 'z';
+            return ch >= 'a' && ch <= 'z';
         }
         private static TextRange MatchStringTemplateBlock(TextRange segment, MessageCollector? collector)
         {

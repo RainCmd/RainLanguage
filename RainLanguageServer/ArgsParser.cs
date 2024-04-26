@@ -35,16 +35,18 @@ namespace RainLanguageServer
                         if (++i < args.Length) filePath = args[i]; break;
                 }
             }
-            foreach (var field in fields)
-                if (field.GetValue(this) == null)
+            foreach (var field in typeof(ArgsParser).GetFields())
+                if (field.GetCustomAttribute<NecessaryAttribute>() != null && field.GetValue(this) == null)
                     throw new ArgumentNullException($"缺少 {field.Name} 参数");
         }
-        private readonly static List<FieldInfo> fields = [];
-        static ArgsParser()
+
+        public ArgsParser(string? logPath, string? kernelDefinePath, string? projectRoot, string? projectName, string? filePath)
         {
-            foreach (var field in typeof(ArgsParser).GetFields())
-                if (field.GetCustomAttribute<NecessaryAttribute>() != null)
-                    fields.Add(field);
+            this.logPath = logPath;
+            this.kernelDefinePath = kernelDefinePath;
+            this.projectRoot = projectRoot;
+            this.projectName = projectName;
+            this.filePath = filePath;
         }
     }
 }

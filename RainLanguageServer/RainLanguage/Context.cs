@@ -329,6 +329,7 @@ namespace RainLanguageServer.RainLanguage
                         if (!space!.children.TryGetValue(name[i].ToString(), out space))
                             return false;
                     if (space!.declarations.TryGetValue(name[^1].ToString(), out results!)) return true;
+                    else results = [];
                 }
             }
             return results.Count > 0;

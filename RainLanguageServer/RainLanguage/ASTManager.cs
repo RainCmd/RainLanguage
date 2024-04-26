@@ -18,7 +18,8 @@ namespace RainLanguageServer.RainLanguage
             library = new CompilingLibrary(name);
             kernelPath = new UnifiedPath(kernelPath);
             using var sr = File.OpenText(kernelPath);
-            kernel = LoadLibrary("kernel", sr.ReadToEnd(), true);
+            kernel = LoadLibrary(Type.LIBRARY_KERNEL, sr.ReadToEnd(), true, out var file);
+            foreach (var space in file.children) space.Link(this, library, false);
         }
         public CompilingLibrary? LoadLibrary(string name)
         {
@@ -27,19 +28,19 @@ namespace RainLanguageServer.RainLanguage
                 var content = "";//todo 加载程序集，转成VirtualDocument存到relies中
                 if (string.IsNullOrEmpty(content))
                 {
-                    library = LoadLibrary(name, content, false);
+                    library = LoadLibrary(name, content, false, out var file);
                     relies[name] = library;
+                    foreach (var space in file.children) space.Link(this, library, false);
                 }
             }
             return library;
         }
-        private CompilingLibrary LoadLibrary(string name, string content, bool allowKeywordType)
+        private CompilingLibrary LoadLibrary(string name, string content, bool allowKeywordType, out FileSpace file)
         {
             var reader = new LineReader(new FileDocument("rain-language:" + name, content));
             var library = new CompilingLibrary(name);
-            var file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
+            file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
             foreach (var space in file.children) space.Tidy(this, library, false);
-            foreach (var space in file.children) space.Link(this, library, false);
             return library;
         }
         public CompilingLibrary GetLibrary(string library)
@@ -58,7 +59,7 @@ namespace RainLanguageServer.RainLanguage
         private bool TryGetDeclarations(string library, string[] name, out List<CompilingDeclaration>? declarations)
         {
             declarations = null;
-            var space = GetChildSpace(GetLibrary(library), name.AsSpan()[..^2]);
+            var space = GetChildSpace(GetLibrary(library), name.AsSpan()[..^1]);
             if (space == null) return false;
             return space.declarations.TryGetValue(name[^1], out declarations);
         }

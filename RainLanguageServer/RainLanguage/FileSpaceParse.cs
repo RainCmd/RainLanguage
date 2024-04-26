@@ -29,7 +29,7 @@
                             return;
                         }
                     }
-                    else if (lexical.type == LexicalType.KeyWord_import)
+                    if (lexical.type == LexicalType.KeyWord_import)
                     {
                         if (attributeCollector.Count > 0)
                         {
@@ -47,6 +47,7 @@
                         var visibility = ParseVisibility(line, out var position);
                         if (Lexical.TryAnalysis(line, position, out lexical, collector))
                         {
+                            position = lexical.anchor.End;
                             if (visibility == Visibility.None) visibility = Visibility.Space;
                             if (lexical.type == LexicalType.KeyWord_const)
                             {
@@ -512,7 +513,7 @@
                 CompilingSpace space = compiling;
                 if (defaultNamespace) foreach (var name in names) space = space.GetChild(name.ToString());
                 else if (names.Count != 1 || names[0] != space.name) collector.Add(line, CErrorLevel.Error, "名称不匹配");
-                var child = new FileSpace(reader, space, false, defaultNamespace ? this : null, line.Indent, allowKeywordType);
+                var child = new FileSpace(reader, space, true, defaultNamespace ? this : null, line.Indent, allowKeywordType);
                 children.Add(child);
                 child.compiling.attributes.AddRange(attributeCollector);
                 attributeCollector.Clear();
