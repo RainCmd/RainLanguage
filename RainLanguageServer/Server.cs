@@ -9,7 +9,7 @@ using LanguageServer.Parameters.Workspace;
 namespace RainLanguageServer
 {
     [RequiresDynamicCode("Calls LanguageServer.Reflector.GetRequestType(MethodInfo)")]
-    internal class Server : ServiceConnection
+    internal class Server(Stream input, Stream output) : ServiceConnection(input, output)
     {
         private class FileDocument : IFileDocument
         {
@@ -27,13 +27,14 @@ namespace RainLanguageServer
                 }
             }
         }
-        private class DocumentLoader(string root, Server server) : IEnumerable<IFileDocument>
+        private class DocumentLoader(string? root, Server server) : IEnumerable<IFileDocument>
         {
-            private readonly string root = root;
+            private readonly string? root = root;
             private readonly Server server = server;
 
             public IEnumerator<IFileDocument> GetEnumerator()
             {
+                if (root == null) yield break;
                 foreach (var path in Directory.GetFiles(root, "*.rain", SearchOption.AllDirectories))
                     yield return new FileDocument(path, server);
             }
@@ -43,20 +44,17 @@ namespace RainLanguageServer
                 return GetEnumerator();
             }
         }
-        private readonly ASTManager manager;
-
-        public Server(ArgsParser args, Stream input, Stream output) : base(input, output)
-        {
-            if (!string.IsNullOrEmpty(args.filePath))
-                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName ?? "TestRainLibrary", [new FileDocument(args.filePath, this)]);
-            else if (!string.IsNullOrEmpty(args.projectRoot))
-                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName!, new DocumentLoader(args.projectRoot, this));
-            else
-                manager = ASTBuilder.Build(args.kernelDefinePath!, args.projectName ?? "TestRainLibrary", []);
-        }
+        private ASTManager? manager;
 
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
+            var kernelDefinePath = param.initializationOptions?.kernelDefinePath as string;
+            var projectPath = param.initializationOptions?.projectPath as string;
+            var projectName = param.initializationOptions?.projectName as string;
+            if (kernelDefinePath == null)
+                return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
+            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this));
+
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
             result.capabilities.executeCommandProvider = new ExecuteCommandOptions();

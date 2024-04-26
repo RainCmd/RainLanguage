@@ -7,11 +7,6 @@ namespace RainLanguageServer
     internal class ArgsParser
     {
         public readonly string? logPath;
-        [Necessary]
-        public readonly string? kernelDefinePath;
-        public readonly string? projectRoot;
-        public readonly string? projectName;
-        public readonly string? filePath;
         public ArgsParser(string[] args)
         {
             for (int i = 0; i < args.Length; i++)
@@ -21,18 +16,6 @@ namespace RainLanguageServer
                     case "-lp":
                     case "-logpath":
                         if (++i < args.Length) logPath = args[i]; break;
-                    case "-kdp":
-                    case "-kerneldefinepath":
-                        if (++i < args.Length) kernelDefinePath = args[i]; break;
-                    case "-pr":
-                    case "-projectroot":
-                        if (++i < args.Length) projectRoot = args[i]; break;
-                    case "-pn":
-                    case "-projectname":
-                        if (++i < args.Length) projectName = args[i]; break;
-                    case "-fp":
-                    case "-filepath":
-                        if (++i < args.Length) filePath = args[i]; break;
                 }
             }
             foreach (var field in typeof(ArgsParser).GetFields())
@@ -40,13 +23,9 @@ namespace RainLanguageServer
                     throw new ArgumentNullException($"缺少 {field.Name} 参数");
         }
 
-        public ArgsParser(string? logPath, string? kernelDefinePath, string? projectRoot, string? projectName, string? filePath)
+        public ArgsParser(string? logPath)
         {
             this.logPath = logPath;
-            this.kernelDefinePath = kernelDefinePath;
-            this.projectRoot = projectRoot;
-            this.projectName = projectName;
-            this.filePath = filePath;
         }
     }
 }

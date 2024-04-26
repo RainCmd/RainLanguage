@@ -145,6 +145,7 @@
             {
                 var fileClass = new FileClass(lexical.anchor, visibility, this);
                 fileClass.attributes.AddRange(attributeCollector);
+                classes.Add(fileClass);
                 attributeCollector.Clear();
 
                 position = lexical.anchor.End;
@@ -217,6 +218,7 @@
             {
                 var fileInterface = new FileInterface(lexical.anchor, visibility, this);
                 fileInterface.attributes.AddRange(attributeCollector);
+                interfaces.Add(fileInterface);
                 attributeCollector.Clear();
 
                 position = lexical.anchor.End;
