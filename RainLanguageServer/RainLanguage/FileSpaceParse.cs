@@ -9,7 +9,6 @@
             compiling.files?.Add(this);
             document = reader.document;
             TextPosition? start = null;
-            int indent = -1;
             var attributeCollector = new List<TextRange>();
             while (reader.TryReadLine(out var line))
             {
@@ -133,8 +132,8 @@
                             }
                             else if (TryParseCallable(line, position, true, out name, out var parameters, out var returns, collector))
                             {
-                                ParseBlock(reader, line.Indent, out var body);
-                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End) };
+                                ParseBlock(reader, line.Indent, out var body, out var blockIndent, collector);
+                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End), indent = blockIndent };
                                 function.attributes.AddRange(attributeCollector);
                                 functions.Add(function);
                                 attributeCollector.Clear();
@@ -172,14 +171,14 @@
                 }
                 CheckLineEnd(line, position, collector);
 
-                var indent = -1; var previous = line.Indent;
+                var previous = line.Indent;
                 while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
-                    else if (indent == -1 || line.Indent == indent)
+                    else if (fileClass.indent == -1 || line.Indent == fileClass.indent)
                     {
-                        indent = line.Indent;
+                        fileClass.indent = line.Indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
                         visibility = ParseVisibility(line, out position, fileClass.collector);
                         if (TryParseVariable(line, position, out var name, out var type, out var expression, fileClass.collector))
@@ -193,8 +192,8 @@
                         else if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, fileClass.collector))
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
-                            ParseBlock(reader, indent, out var body);
-                            var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End) };
+                            ParseBlock(reader, fileClass.indent, out var body, out var blockIndent, fileClass.collector);
+                            var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End), indent = blockIndent };
                             function.attributes.AddRange(attributeCollector);
                             if (name!.ToString() == fileClass.name.ToString())
                             {
@@ -210,7 +209,7 @@
                             {
                                 if (visibility != Visibility.None) fileClass.collector.Add(lexical.anchor, CErrorLevel.Error, "析构函数不允许有访问修饰符");
                                 CheckLineEnd(line, lexical.anchor.End, fileClass.collector);
-                                ParseBlock(reader, indent, out var body);
+                                ParseBlock(reader, fileClass.indent, out var body, out fileClass.destructorIndent, fileClass.collector);
                                 fileClass.destructor.AddRange(body);
                             }
                             else fileClass.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -246,14 +245,14 @@
                 }
                 CheckLineEnd(line, position, collector);
 
-                var indent = -1; var previous = line.Indent;
+                var previous = line.Indent;
                 while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
-                    else if (indent == -1 || line.Indent == indent)
+                    else if (fileInterface.indent == -1 || line.Indent == fileInterface.indent)
                     {
-                        indent = line.Indent;
+                        fileInterface.indent = line.Indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
                         visibility = ParseVisibility(line, out position, fileInterface.collector);
                         if (TryParseCallable(line, position, false, out var name, out var parameters, out var returns, fileInterface.collector))
@@ -286,14 +285,14 @@
                 fileStruct.attributes.AddRange(attributeCollector);
                 structs.Add(fileStruct);
                 attributeCollector.Clear();
-                var indent = -1; var previous = line.Indent;
+                var previous = line.Indent;
                 while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
-                    else if (indent == -1 || line.Indent == indent)
+                    else if (fileStruct.indent == -1 || line.Indent == fileStruct.indent)
                     {
-                        indent = line.Indent;
+                        fileStruct.indent = line.Indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
                         visibility = ParseVisibility(line, out position, fileStruct.collector);
                         if (TryParseVariable(line, position, out var name, out var type, out var expression, fileStruct.collector))
@@ -310,8 +309,8 @@
                             if (visibility == Visibility.None) visibility = Visibility.Private;
                             if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, fileStruct.collector))
                             {
-                                ParseBlock(reader, indent, out var body);
-                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End) };
+                                ParseBlock(reader, fileStruct.indent, out var body, out var blockIndent, fileStruct.collector);
+                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End), indent = blockIndent };
                                 function.attributes.AddRange(attributeCollector);
                                 fileStruct.functions.Add(function);
                                 attributeCollector.Clear();
@@ -339,14 +338,14 @@
                 fileEnum.attributes.AddRange(attributeCollector);
                 enums.Add(fileEnum);
                 attributeCollector.Clear();
-                var indent = -1; var previous = line.Indent;
+                var previous = line.Indent;
                 while (reader.TryReadLine(out line!))
                 {
                     if (line.Indent == -1) continue;
                     if (line.Indent <= previous) break;
-                    else if (indent == -1 || line.Indent == indent)
+                    else if (fileEnum.indent == -1 || line.Indent == fileEnum.indent)
                     {
-                        indent = line.Indent;
+                        fileEnum.indent = line.Indent;
                         if (!Lexical.TryAnalysis(line, 0, out lexical, fileEnum.collector)) continue;
                         if (lexical.type == LexicalType.Word)
                         {
@@ -588,14 +587,20 @@
         {
             CheckLineEnd(line, position.Position - line.Start.Position, collector);
         }
-        private static void ParseBlock(LineReader reader, int indent, out List<TextLine> lines)
+        private static void ParseBlock(LineReader reader, int indent, out List<TextLine> lines, out int blockIndent, MessageCollector collector)
         {
+            blockIndent = -1;
             lines = [];
             while (reader.TryReadLine(out var line))
             {
                 if (line!.Indent == -1) continue;
                 if (line.Indent <= indent) break;
-                else lines.Add(line);
+                else
+                {
+                    if (blockIndent == -1) blockIndent = line.Indent;
+                    else if (line.Indent < blockIndent) collector.Add(line, CErrorLevel.Error, "对齐错误");
+                    lines.Add(line);
+                }
             }
             reader.Rollback();
         }

@@ -13,6 +13,10 @@
     internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space)
         : ICitePort<FileDeclaration, CompilingDeclaration>, ICitePort<FileDeclaration, CompilingSpace>, IGroupMember<FileDeclaration>
     {
+        /// <summary>
+        /// 内部成员的缩进，没有内部成员的定义这个值为-1
+        /// </summary>
+        public int indent = -1;
         public readonly TextRange name = name;
         public readonly Visibility visibility = visibility;
         public readonly FileSpace space = space;
@@ -70,6 +74,7 @@
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> constructors = [];
         public readonly List<TextLine> destructor = [];
+        public int destructorIndent = -1;
     }
     internal class FileDelegate(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
@@ -87,6 +92,10 @@
     }
     internal partial class FileSpace : ICitePort<FileSpace, CompilingSpace>
     {
+        /// <summary>
+        /// 内部定义的缩进
+        /// </summary>
+        public int indent = -1;
         public readonly FileSpace? parent;
         public readonly CompilingSpace compiling;
         public readonly TextDocument document;

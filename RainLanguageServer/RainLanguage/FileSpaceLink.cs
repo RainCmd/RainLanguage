@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace RainLanguageServer.RainLanguage
+﻿namespace RainLanguageServer.RainLanguage
 {
     internal partial class FileSpace
     {
