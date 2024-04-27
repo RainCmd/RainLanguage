@@ -217,7 +217,7 @@ namespace RainLanguageServer
             {
                 ParseLines();
                 if (line < 0) line = 0;
-                else if (line > lines.Count) line = lines.Count - 1;
+                else if (line >= lines.Count) line = lines.Count - 1;
                 return lines[line];
             }
         }

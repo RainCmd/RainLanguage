@@ -67,6 +67,7 @@
                 var compilingEnum = new CompilingEnum(file.name, declaration, file.attributes, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingEnum);
                 library.enums.Add(compilingEnum);
+                file.compiling = compilingEnum;
             }
             foreach (var file in structs)
             {
@@ -74,6 +75,7 @@
                 var compilingStruct = new CompilingStruct(file.name, declaration, file.attributes, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingStruct);
                 library.structs.Add(compilingStruct);
+                file.compiling = compilingStruct;
             }
             foreach (var file in interfaces)
             {
@@ -81,6 +83,7 @@
                 var compilingInterface = new CompilingInterface(file.name, declaration, file.attributes, compiling, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingInterface);
                 library.interfaces.Add(compilingInterface);
+                file.compiling = compilingInterface;
             }
             foreach (var file in classes)
             {
@@ -88,6 +91,7 @@
                 var compilingClass = new CompilingClass(file.name, declaration, file.attributes, compiling, cite ? file : null, default, file.destructor, relies);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingClass);
                 library.classes.Add(compilingClass);
+                file.compiling = compilingClass;
             }
             foreach (var file in delegates)
             {
@@ -95,6 +99,7 @@
                 var compilingDelegate = new CompilingDelegate(file.name, declaration, file.attributes, compiling, cite ? file : null, [], default);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingDelegate);
                 library.delegates.Add(compilingDelegate);
+                file.compiling = compilingDelegate;
             }
             foreach (var file in tasks)
             {
@@ -102,6 +107,7 @@
                 var compilingTask = new CompilingTask(file.name, declaration, file.attributes, compiling, cite ? file : null, default);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingTask);
                 library.tasks.Add(compilingTask);
+                file.compiling = compilingTask;
             }
         }
     }

@@ -2,7 +2,7 @@
 
 namespace RainLanguageServer.RainLanguage
 {
-    internal class CompilingDeclaration(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file) 
+    internal class CompilingDeclaration(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
         : ICitePort<CompilingDeclaration, FileDeclaration>
     {
         public readonly TextRange name = name;
@@ -139,7 +139,7 @@ namespace RainLanguageServer.RainLanguage
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
     {
     }
-    internal partial class CompilingSpace(CompilingSpace? parent, string name, HashSet<FileSpace>? files) 
+    internal partial class CompilingSpace(CompilingSpace? parent, string name, HashSet<FileSpace>? files)
         : ICitePort<CompilingSpace, FileSpace>, ICitePort<CompilingSpace, FileDeclaration>
     {
         public readonly CompilingSpace? parent = parent;
@@ -187,9 +187,9 @@ namespace RainLanguageServer.RainLanguage
         public string GetFullName()
         {
             var builder = new StringBuilder(name);
-            for (var index = this; index != null; index = index.parent)
+            for (var index = parent; index != null; index = index.parent)
             {
-                builder.Append('.');
+                builder.Insert(0, '.');
                 builder.Insert(0, index.name);
             }
             return builder.ToString();

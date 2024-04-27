@@ -1,9 +1,21 @@
-﻿namespace RainLanguageServer.RainLanguage
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage
 {
     internal class FileType(List<TextRange> name, int dimension)
     {
         public readonly List<TextRange> name = name;
         public readonly int dimension = dimension;
+        public bool Contain(TextPosition position)
+        {
+            foreach (var name in name)
+                if (name.Contain(position)) return true;
+            return false;
+        }
+        public TextRange GetNameRange()
+        {
+            return new TextRange(name[0].Start, name[^1].End);
+        }
     }
     internal class FileParameter(TextRange? name, FileType type)
     {
@@ -24,6 +36,7 @@
 
         public TextRange? range;
         public readonly MessageCollector collector = [];//仅存储子模块内的错误信息和语义层面的错误信息（如：命名冲突，函数实现错误等）
+        public CompilingDeclaration? compiling;
 
         /// <summary>
         /// 被其他声明引用的集合
@@ -37,18 +50,70 @@
         /// 命名冲突的集合
         /// </summary>
         public Groups<FileDeclaration> Groups { get; } = [];
+
+        public virtual bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            range = null;
+            info = null;
+            isMarkdown = false;
+            return false;
+        }
+        protected T? GetCompiling<T>() where T : CompilingDeclaration
+        {
+            return compiling as T;
+        }
     }
     internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
         public readonly bool isReadonly = isReadonly;
         public readonly FileType type = type;
         public readonly TextRange? expression = expression;
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
+        }
+        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cpp");
+                if (declaration == null) sb.AppendLine($"(全局变量) {GetCompiling<CompilingVariable>()?.type} {compiling?.GetFullName()}");
+                else sb.AppendLine($"(字段) {GetCompiling<CompilingVariable>()?.type} {compiling?.GetFullName()}");
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (type.Contain(position))
+            {
+                range = type.GetNameRange();
+                var sb = new StringBuilder();
+                sb.AppendLine("``` csharp");
+                sb.AppendLine($"{GetCompiling<CompilingVariable>()?.type}");
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else
+            {
+                //todo 表达式中的token
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileFunction(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns, List<TextLine> body) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
         public readonly List<TextLine> body = body;
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            //todo 函数token信息
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileEnum(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {

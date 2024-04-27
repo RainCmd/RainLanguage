@@ -42,6 +42,7 @@
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Variable, compiling.GetChildName(file.name.ToString()), default);
                 var variable = new CompilingVariable(file.name, declaration, file.attributes, compiling, cite ? file : null, file.isReadonly, type, file.expression, relies);
                 library.variables.Add(variable);
+                file.compiling = variable;
                 compiling.AddDeclaration(variable);
                 if (cite) AddTypeCite(manager, variable, type);
             }
@@ -58,6 +59,7 @@
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
                 var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), file.body, relies);
                 library.functions.Add(function);
+                file.compiling = function;
                 compiling.AddDeclaration(function);
                 if (cite) AddTypeCites(manager, function, parameterTypes);
                 if (cite) AddTypeCites(manager, function, returnTypes);
@@ -85,6 +87,7 @@
                     var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingStruct.variables.Add(compilingVariable);
+                    variable.compiling = compilingVariable;
                     if (cite) AddTypeCite(manager, compilingVariable, type);
                 }
                 foreach (var function in file.functions)
@@ -100,6 +103,7 @@
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingStruct.functions.Add(compilingFunction);
+                    function.compiling = compilingFunction;
                     if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                     if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
                 }
@@ -132,6 +136,7 @@
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.InterfaceFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingAbstractFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes));
                     compilingInterface.callables.Add(compilingFunction);
+                    function.compiling = compilingFunction;
                     if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                     if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
                 }
@@ -160,6 +165,7 @@
                     var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingClass.variables.Add(compilingVariable);
+                    variable.compiling = compilingVariable;
                     if (cite) AddTypeCite(manager, compilingVariable, type);
                 }
                 foreach (var function in file.constructors)
@@ -172,6 +178,7 @@
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple([]), function.body, relies);
                     compilingClass.constructors.Add(compilingFunction);
+                    function.compiling = compilingFunction;
                     if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                 }
                 foreach (var function in file.functions)
@@ -187,6 +194,7 @@
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingClass.functions.Add(compilingFunction);
+                    function.compiling = compilingFunction;
                     if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                     if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
                 }
@@ -216,6 +224,7 @@
 
                 declarations.Add(compilingDelegate);
                 library.delegates.Add(compilingDelegate);
+                file.compiling = compilingDelegate;
             }
             foreach (var file in tasks)
             {
@@ -236,6 +245,7 @@
 
                 declarations.Add(compilingTask);
                 library.tasks.Add(compilingTask);
+                file.compiling = compilingTask;
             }
             foreach (var file in natives)
             {
@@ -251,6 +261,7 @@
                 var native = new CompilingNative(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes));
                 library.natives.Add(native);
                 compiling.AddDeclaration(native);
+                file.compiling = native;
                 if (cite) AddTypeCites(manager, native, parameterTypes);
                 if (cite) AddTypeCites(manager, native, returnTypes);
             }

@@ -5,8 +5,6 @@ using LanguageServer.Parameters.TextDocument;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
 using LanguageServer.Parameters;
-using System.Collections.Generic;
-using System.IO;
 
 namespace RainLanguageServer
 {
@@ -129,10 +127,17 @@ namespace RainLanguageServer
                 if (manager.fileSpaces.TryGetValue(path, out var fileSpace))
                 {
                     var position = GetFilePosition(fileSpace.document, param.position);
-                    foreach (var file in fileSpace.Declarations)
+                    var declaration = fileSpace.GetFileDeclaration(position);
+                    if (declaration != null && declaration.TryGetTokenInfo(position, out var range, out var info, out var isMarkdown))
                     {
-                        if (file.name.Contain(position))
-                            return Result<Hover, ResponseError>.Success(new Hover(file.name.ToString(), TR2R(file.name)));
+                        if (isMarkdown)
+                        {
+                            return Result<Hover, ResponseError>.Success(new Hover(new MarkupContent(MarkupKind.Markdown, info!), TR2R(range!)));
+                        }
+                        else
+                        {
+                            return Result<Hover, ResponseError>.Success(new Hover(info!, TR2R(range!)));
+                        }
                     }
                 }
             }

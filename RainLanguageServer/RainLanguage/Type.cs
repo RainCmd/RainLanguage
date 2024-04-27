@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage
 {
     internal enum TypeCode
     {
@@ -42,6 +44,20 @@
             var result = HashCode.Combine(library, code, dimension);
             foreach (var item in name) result = HashCode.Combine(item, result);
             return result;
+        }
+        public override string ToString()
+        {
+            if (Vaild)
+            {
+                var sb = new StringBuilder(library);
+                foreach (var name in name)
+                {
+                    sb.Append('.');
+                    sb.Append(name);
+                }
+                return sb.ToString();
+            }
+            return "无效的类型";
         }
         public static bool operator ==(Type lhs, Type rhs) => lhs.Equals(rhs);
         public static bool operator !=(Type lhs, Type rhs) => !lhs.Equals(rhs);
