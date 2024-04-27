@@ -70,6 +70,10 @@
                 {
                     "command": "cmd.核心库定义",
                     "when": "resourceLangId == 雨言"
+                },
+                {
+                    "command": "cmd.debug.重启雨言服务",
+                    "when": "resourceLangId == 雨言"
                 }
             ]
         },
@@ -88,6 +92,11 @@
                 "command": "cmd.核心库定义",
                 "title": "核心库定义",
                 "icon": "$(remote-explorer-documentation)"
+            },
+            {
+                "command": "cmd.debug.重启雨言服务",
+                "title": "重启雨言服务",
+                "icon": "$(debug-restart)"
             }
         ],
         "snippets": [

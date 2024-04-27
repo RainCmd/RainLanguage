@@ -9,6 +9,7 @@
     {
         public readonly TextDocument document = new(file.Path, 0, file.Content);
         private int line = 0;
+        public TextLine CurrentLine => document[line - 1];
         public bool TryReadLine(out TextLine? line)
         {
             if (this.line++ < document.LineCount)

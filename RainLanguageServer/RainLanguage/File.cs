@@ -10,17 +10,29 @@
         public readonly TextRange? name = name;
         public readonly FileType type = type;
     }
-    internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space) : ICitePort<FileDeclaration, CompilingDeclaration>
+    internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space)
+        : ICitePort<FileDeclaration, CompilingDeclaration>, ICitePort<FileDeclaration, CompilingSpace>, IGroupMember<FileDeclaration>
     {
         public readonly TextRange name = name;
         public readonly Visibility visibility = visibility;
         public readonly FileSpace space = space;
         public readonly List<TextRange> attributes = [];
 
+        public TextRange? range;
+        public readonly MessageCollector collector = [];//仅存储子模块内的错误信息和语义层面的错误信息（如：命名冲突，函数实现错误等）
+
         /// <summary>
         /// 被其他声明引用的集合
         /// </summary>
-        public CitePort<CompilingDeclaration> Cites { get; } = [];
+        CitePort<CompilingDeclaration> ICitePort<FileDeclaration, CompilingDeclaration>.Cites { get; } = [];
+        /// <summary>
+        /// 存放命名冲突的命名空间集合，错误消息存放在<see cref="collector"/>
+        /// </summary>
+        CitePort<CompilingSpace> ICitePort<FileDeclaration, CompilingSpace>.Cites { get; } = [];
+        /// <summary>
+        /// 命名冲突的集合
+        /// </summary>
+        public Groups<FileDeclaration> Groups { get; } = [];
     }
     internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
@@ -78,7 +90,9 @@
         public readonly FileSpace? parent;
         public readonly CompilingSpace compiling;
         public readonly TextDocument document;
-        public readonly MessageCollector collector = new();
+
+        public TextRange? range;
+        public readonly MessageCollector collector = [];//命名空间缩进对齐的所有错误信息
 
         public readonly List<FileSpace> children = [];
         public readonly List<List<TextRange>> imports = [];
@@ -97,17 +111,17 @@
         {
             get
             {
-                foreach(var file in variables) yield return file;
-                foreach(var file in functions) yield return file;
-                foreach(var file in enums) yield return file;
-                foreach(var file in structs) yield return file;
+                foreach (var file in variables) yield return file;
+                foreach (var file in functions) yield return file;
+                foreach (var file in enums) yield return file;
+                foreach (var file in structs) yield return file;
                 foreach (var file in interfaces) yield return file;
-                foreach(var file in classes) yield return file;
-                foreach(var file in delegates) yield return file;
-                foreach(var file in tasks) yield return file;
-                foreach(var file in natives) yield return file;
-                foreach(var child in children)
-                    foreach(var file in child.Declarations) 
+                foreach (var file in classes) yield return file;
+                foreach (var file in delegates) yield return file;
+                foreach (var file in tasks) yield return file;
+                foreach (var file in natives) yield return file;
+                foreach (var child in children)
+                    foreach (var file in child.Declarations)
                         yield return file;
             }
         }

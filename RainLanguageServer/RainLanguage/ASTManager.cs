@@ -15,7 +15,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly CompilingLibrary kernel;
         public ASTManager(string kernelPath, string name)
         {
-            library = new CompilingLibrary(name);
+            library = new CompilingLibrary(name, []);
             kernelPath = new UnifiedPath(kernelPath);
             using var sr = File.OpenText(kernelPath);
             kernel = LoadLibrary(Type.LIBRARY_KERNEL, sr.ReadToEnd(), true, out var file);
@@ -38,7 +38,7 @@ namespace RainLanguageServer.RainLanguage
         private CompilingLibrary LoadLibrary(string name, string content, bool allowKeywordType, out FileSpace file)
         {
             var reader = new LineReader(new FileDocument("rain-language:" + name, content));
-            var library = new CompilingLibrary(name);
+            var library = new CompilingLibrary(name, null);
             file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
             foreach (var space in file.children) space.Tidy(this, library, false);
             return library;

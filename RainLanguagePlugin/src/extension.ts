@@ -59,7 +59,8 @@ export async function activate(context: vscode.ExtensionContext) {
                     })
                 })
             }
-        })
+        }),
+        vscode.commands.registerCommand('cmd.debug.重启雨言服务', () => rainLanguageClient.RestartServer(context))
     );
     await rainLanguageClient.StartServer(context);
 }

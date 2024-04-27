@@ -19,7 +19,7 @@
                             }
                         if (space != null)
                         {
-                            space.AddCite(this);
+                            ((ICitePort<CompilingSpace, FileSpace>)space).AddCite(this);
                             if (!relies.Add(space)) collector.Add(import, CErrorLevel.Info, "重复导入的命名空间");
                         }
                         goto lable_next_import;

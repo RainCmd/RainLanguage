@@ -301,7 +301,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 			if(indent == INVALID)
 			{
 				indent = line.indent;
-				if(parentIndent != INVALID && indent <= parentIndent)return;
+				if(parentIndent != INVALID && indent <= parentIndent)break;
 			}
 			else if(line.indent > indent) MESSAGE2(parameter->messages, line, MessageType::ERROR_INDENT)
 			else if(line.indent < indent)
@@ -310,7 +310,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 				else
 				{
 					this->attributes.Add(attributeCollector.GetPointer(), attributeCollector.Count());
-					return;
+					break;
 				}
 			}
 			if(lexical.type == LexicalType::Word)

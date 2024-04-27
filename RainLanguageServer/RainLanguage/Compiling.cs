@@ -2,7 +2,8 @@
 
 namespace RainLanguageServer.RainLanguage
 {
-    internal class CompilingDeclaration(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file) : ICitePort<CompilingDeclaration, FileDeclaration>
+    internal class CompilingDeclaration(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file) 
+        : ICitePort<CompilingDeclaration, FileDeclaration>
     {
         public readonly TextRange name = name;
         public readonly Declaration declaration = declaration;
@@ -138,18 +139,20 @@ namespace RainLanguageServer.RainLanguage
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
     {
     }
-    internal partial class CompilingSpace(CompilingSpace? parent, string name) : ICitePort<CompilingSpace, FileSpace>
+    internal partial class CompilingSpace(CompilingSpace? parent, string name, HashSet<FileSpace>? files) 
+        : ICitePort<CompilingSpace, FileSpace>, ICitePort<CompilingSpace, FileDeclaration>
     {
         public readonly CompilingSpace? parent = parent;
         public readonly string name = name;
         public readonly Dictionary<string, CompilingSpace> children = [];
         public readonly Dictionary<string, List<CompilingDeclaration>> declarations = [];
         public readonly List<TextRange> attributes = [];
+        public readonly HashSet<FileSpace>? files = files;
 
         public CompilingSpace GetChild(string name)
         {
             if (children.TryGetValue(name, out var child)) return child;
-            child = new CompilingSpace(this, name);
+            child = new CompilingSpace(this, name, files == null ? null : []);
             children.Add(name, child);
             return child;
         }
@@ -211,9 +214,13 @@ namespace RainLanguageServer.RainLanguage
         /// <summary>
         /// 被import的文件空间集合
         /// </summary>
-        public CitePort<FileSpace> Cites { get; } = [];
+        CitePort<FileSpace> ICitePort<CompilingSpace, FileSpace>.Cites { get; } = [];
+        /// <summary>
+        /// 存放名称冲突的定义集合
+        /// </summary>
+        CitePort<FileDeclaration> ICitePort<CompilingSpace, FileDeclaration>.Cites { get; } = [];
     }
-    internal partial class CompilingLibrary(string name) : CompilingSpace(null, name)
+    internal partial class CompilingLibrary(string name, HashSet<FileSpace>? files) : CompilingSpace(null, name, files)
     {
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> functions = [];

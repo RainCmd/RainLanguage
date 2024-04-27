@@ -6,7 +6,9 @@
         {
             this.parent = parent;
             this.compiling = compiling;
+            compiling.files?.Add(this);
             document = reader.document;
+            TextPosition? start = null;
             int indent = -1;
             var attributeCollector = new List<TextRange>();
             while (reader.TryReadLine(out var line))
@@ -18,18 +20,27 @@
                     if (indent == -1)
                     {
                         indent = line.Indent;
-                        if (parentIndent != -1 && indent < parentIndent) return;
+                        if (parentIndent != -1 && indent < parentIndent) break;
                     }
-                    else if (line.Indent > indent) collector.Add(line, CErrorLevel.Error, "对齐错误");
+                    else if (line.Indent > indent)
+                    {
+                        collector.Add(line, CErrorLevel.Error, "对齐错误");
+                        continue;
+                    }
                     else if (line.Indent < indent)
                     {
-                        if (parentIndent == -1) collector.Add(line, CErrorLevel.Error, "对齐错误");
+                        if (parentIndent == -1)
+                        {
+                            collector.Add(line, CErrorLevel.Error, "对齐错误");
+                            continue;
+                        }
                         else
                         {
                             compiling.attributes.AddRange(attributeCollector);
-                            return;
+                            break;
                         }
                     }
+                    if (start == null) start = line.Start;
                     if (lexical.type == LexicalType.KeyWord_import)
                     {
                         if (attributeCollector.Count > 0)
@@ -54,8 +65,8 @@
                             {
                                 if (TryParseVariable(line, lexical.anchor.End, out var name, out var type, out var expression))
                                 {
+                                    var variable = new FileVariable(name!, visibility, this, true, type!, expression) { range = line };
                                     if (expression == null) collector.Add(line, CErrorLevel.Error, "常量缺少赋值表达式");
-                                    var variable = new FileVariable(name!, visibility, this, true, type!, expression);
                                     variable.attributes.AddRange(attributeCollector);
                                     variables.Add(variable);
                                 }
@@ -86,7 +97,7 @@
                             {
                                 if (TryParseCallable(line, lexical.anchor.End, false, out var name, out var parameters, out var returns))
                                 {
-                                    var fileDelegate = new FileDelegate(name!, visibility, this, parameters!, returns!);
+                                    var fileDelegate = new FileDelegate(name!, visibility, this, parameters!, returns!) { range = line };
                                     fileDelegate.attributes.AddRange(attributeCollector);
                                     delegates.Add(fileDelegate);
                                     attributeCollector.Clear();
@@ -96,7 +107,7 @@
                             {
                                 if (TryParseTuple(line, lexical.anchor.End, false, out var name, out var types))
                                 {
-                                    var fileTask = new FileTask(name!, visibility, this, types!);
+                                    var fileTask = new FileTask(name!, visibility, this, types!) { range = line };
                                     fileTask.attributes.AddRange(attributeCollector);
                                     tasks.Add(fileTask);
                                     attributeCollector.Clear();
@@ -107,7 +118,7 @@
                             {
                                 if (TryParseCallable(line, lexical.anchor.End, false, out var name, out var parameters, out var returns))
                                 {
-                                    var fileNative = new FileNative(name!, visibility, this, parameters!, returns!);
+                                    var fileNative = new FileNative(name!, visibility, this, parameters!, returns!) { range = line };
                                     fileNative.attributes.AddRange(attributeCollector);
                                     natives.Add(fileNative);
                                     attributeCollector.Clear();
@@ -115,7 +126,7 @@
                             }
                             else if (TryParseVariable(line, position, out var name, out var type, out var expression))
                             {
-                                var variable = new FileVariable(name!, visibility, this, true, type!, expression);
+                                var variable = new FileVariable(name!, visibility, this, true, type!, expression) { range = line };
                                 variable.attributes.AddRange(attributeCollector);
                                 variables.Add(variable);
                                 attributeCollector.Clear();
@@ -123,7 +134,7 @@
                             else if (TryParseCallable(line, position, true, out name, out var parameters, out var returns))
                             {
                                 ParseBlock(reader, line.Indent, out var body);
-                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body);
+                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End) };
                                 function.attributes.AddRange(attributeCollector);
                                 functions.Add(function);
                                 attributeCollector.Clear();
@@ -134,6 +145,7 @@
                     }
                 }
             }
+            if (start != null) range = new TextRange(start.Value, reader.CurrentLine.End);
             compiling.attributes.AddRange(attributeCollector);
             if (!defaultNamespace)
                 foreach (var child in children)
@@ -145,6 +157,7 @@
             else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 var fileClass = new FileClass(lexical.anchor, visibility, this);
+                var start = line.Start;
                 fileClass.attributes.AddRange(attributeCollector);
                 classes.Add(fileClass);
                 attributeCollector.Clear();
@@ -172,8 +185,8 @@
                         if (TryParseVariable(line, position, out var name, out var type, out var expression))
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
-                            if (expression != null) collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
-                            var variable = new FileVariable(name!, visibility, this, false, type!, expression);
+                            if (expression != null) fileClass.collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
+                            var variable = new FileVariable(name!, visibility, this, false, type!, expression) { range = line };
                             variable.attributes.AddRange(attributeCollector);
                             fileClass.variables.Add(variable);
                             attributeCollector.Clear();
@@ -182,32 +195,33 @@
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
                             ParseBlock(reader, indent, out var body);
-                            var function = new FileFunction(name!, visibility, this, parameters!, returns!, body);
+                            var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End) };
                             function.attributes.AddRange(attributeCollector);
                             if (name!.ToString() == fileClass.name.ToString())
                             {
-                                if (returns!.Count > 0) collector.Add(name, CErrorLevel.Error, "构造函数不能有返回值");
+                                if (returns!.Count > 0) fileClass.collector.Add(name, CErrorLevel.Error, "构造函数不能有返回值");
                                 fileClass.constructors.Add(function);
                             }
                             else fileClass.functions.Add(function);
                             attributeCollector.Clear();
                         }
-                        else if (Lexical.TryAnalysis(line, position, out lexical, collector))
+                        else if (Lexical.TryAnalysis(line, position, out lexical, fileClass.collector))
                         {
                             if (lexical.type == LexicalType.Negate)
                             {
-                                if (visibility != Visibility.None) collector.Add(lexical.anchor, CErrorLevel.Error, "析构函数不允许有访问修饰符");
+                                if (visibility != Visibility.None) fileClass.collector.Add(lexical.anchor, CErrorLevel.Error, "析构函数不允许有访问修饰符");
                                 CheckLineEnd(line, lexical.anchor.End);
                                 ParseBlock(reader, indent, out var body);
                                 fileClass.destructor.AddRange(body);
                             }
-                            else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                            else fileClass.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                         }
                     }
                 }
                 reader.Rollback();
+                fileClass.range = new TextRange(start, reader.CurrentLine.End);
                 foreach (var item in attributeCollector)
-                    collector.Add(item, CErrorLevel.Warning, "忽略的属性");
+                    fileClass.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -218,6 +232,7 @@
             else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 var fileInterface = new FileInterface(lexical.anchor, visibility, this);
+                var start = line.Start;
                 fileInterface.attributes.AddRange(attributeCollector);
                 interfaces.Add(fileInterface);
                 attributeCollector.Clear();
@@ -242,20 +257,21 @@
                         indent = line.Indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
                         visibility = ParseVisibility(line, out position);
-                        if (visibility != Visibility.None) collector.Add(line, CErrorLevel.Error, "接口函数不允许加访问修饰符");
                         if (TryParseCallable(line, position, false, out var name, out var parameters, out var returns))
                         {
-                            var function = new FileFunction(name!, Visibility.Public, this, parameters!, returns!, []);
+                            if (visibility != Visibility.None) fileInterface.collector.Add(line, CErrorLevel.Error, "接口函数不允许加访问修饰符");
+                            var function = new FileFunction(name!, Visibility.Public, this, parameters!, returns!, []) { range = line };
                             function.attributes.AddRange(attributeCollector);
                             fileInterface.functions.Add(function);
                             attributeCollector.Clear();
                         }
                     }
-                    else collector.Add(line, CErrorLevel.Error, "缩进错误");
+                    else fileInterface.collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
+                fileInterface.range = new TextRange(start, reader.CurrentLine.End);
                 foreach (var item in attributeCollector)
-                    collector.Add(item, CErrorLevel.Warning, "忽略的属性");
+                    fileInterface.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -267,6 +283,7 @@
             {
                 CheckLineEnd(line, lexical.anchor.End);
                 var fileStruct = new FileStruct(lexical.anchor, visibility, this);
+                var start = line.Start;
                 fileStruct.attributes.AddRange(attributeCollector);
                 structs.Add(fileStruct);
                 attributeCollector.Clear();
@@ -282,9 +299,9 @@
                         visibility = ParseVisibility(line, out position);
                         if (TryParseVariable(line, position, out var name, out var type, out var expression))
                         {
-                            if (visibility != Visibility.None) collector.Add(line, CErrorLevel.Error, "结构体成员字段不允许加访问修饰符");
-                            if (expression != null) collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
-                            var variable = new FileVariable(name!, Visibility.Public, this, false, type!, expression);
+                            if (visibility != Visibility.None) fileStruct.collector.Add(line, CErrorLevel.Error, "结构体成员字段不允许加访问修饰符");
+                            if (expression != null) fileStruct.collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
+                            var variable = new FileVariable(name!, Visibility.Public, this, false, type!, expression) { range = line };
                             variable.attributes.AddRange(attributeCollector);
                             fileStruct.variables.Add(variable);
                             attributeCollector.Clear();
@@ -295,18 +312,19 @@
                             if (TryParseCallable(line, position, false, out name, out var parameters, out var returns))
                             {
                                 ParseBlock(reader, indent, out var body);
-                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body);
+                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End) };
                                 function.attributes.AddRange(attributeCollector);
                                 fileStruct.functions.Add(function);
                                 attributeCollector.Clear();
                             }
                         }
                     }
-                    else collector.Add(line, CErrorLevel.Error, "缩进错误");
+                    else fileStruct.collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
+                fileStruct.range = new TextRange(start, reader.CurrentLine.End);
                 foreach (var item in attributeCollector)
-                    collector.Add(item, CErrorLevel.Warning, "忽略的属性");
+                    fileStruct.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -317,7 +335,8 @@
             else if (lexical.type == LexicalType.Word || (allowKeywordType && lexical.type.IsKernelType()))
             {
                 CheckLineEnd(line, lexical.anchor.End);
-                FileEnum fileEnum = new(lexical.anchor, visibility, this);
+                var fileEnum = new FileEnum(lexical.anchor, visibility, this);
+                var start = line.Start;
                 fileEnum.attributes.AddRange(attributeCollector);
                 enums.Add(fileEnum);
                 attributeCollector.Clear();
@@ -329,24 +348,25 @@
                     else if (indent == -1 || line.Indent == indent)
                     {
                         indent = line.Indent;
-                        if (!Lexical.TryAnalysis(line, 0, out lexical, collector)) continue;
+                        if (!Lexical.TryAnalysis(line, 0, out lexical, fileEnum.collector)) continue;
                         if (lexical.type == LexicalType.Word)
                         {
                             var name = lexical.anchor;
-                            if (!Lexical.TryAnalysis(line, lexical.anchor.End, out lexical, collector)) fileEnum.elements.Add(new FileEnum.Element(name, default));
-                            else if (lexical.type != LexicalType.Assignment) collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
-                            else if (!Lexical.TryAnalysis(line, lexical.anchor.End, out lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少赋值表达式");
+                            if (!Lexical.TryAnalysis(line, lexical.anchor.End, out lexical, fileEnum.collector)) fileEnum.elements.Add(new FileEnum.Element(name, default));
+                            else if (lexical.type != LexicalType.Assignment) fileEnum.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                            else if (!Lexical.TryAnalysis(line, lexical.anchor.End, out lexical, fileEnum.collector)) fileEnum.collector.Add(line, CErrorLevel.Error, "缺少赋值表达式");
                             else fileEnum.elements.Add(new FileEnum.Element(name, line[lexical.anchor.Start, line.End]));
                         }
-                        else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                        else fileEnum.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                     }
-                    else collector.Add(line, CErrorLevel.Error, "缩进错误");
+                    else fileEnum.collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
+                fileEnum.range = new TextRange(start, reader.CurrentLine.End);
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private bool TryParseVariable(TextLine line, TextPosition position, out TextRange? name, out FileType? type, out TextRange? expression)
+        private bool TryParseVariable(TextLine line, TextPosition position, out TextRange? name, out FileType? type, out TextRange? expression)//todo 这个函数里的错误信息收集器需要新建然后传出去
         {
             if (Lexical.TryExtractName(line, position, out var index, out var names, collector))
             {
@@ -386,7 +406,7 @@
             expression = default;
             return false;
         }
-        private Visibility ParseVisibility(TextLine line, out TextPosition position)
+        private Visibility ParseVisibility(TextLine line, out TextPosition position)//todo 这个里面收集器需要传出去
         {
             var result = Visibility.None;
             position = line.Start;
@@ -418,7 +438,7 @@
             returns = default;
             return false;
         }
-        private bool TryParseParameters(TextLine line, ref TextPosition position, out List<FileParameter> parameters)
+        private bool TryParseParameters(TextLine line, ref TextPosition position, out List<FileParameter> parameters)//todo 消息收集器需要新建然后传出去
         {
             parameters = [];
             if (!Lexical.TryAnalysis(line, position, out var lexical, collector) || lexical.type != LexicalType.BracketLeft0) return false;
@@ -460,7 +480,7 @@
             }
             return false;
         }
-        private bool TryParseTuple(TextLine line, TextPosition position, bool operatorReloadable, out TextRange? name, out List<FileType> types)
+        private bool TryParseTuple(TextLine line, TextPosition position, bool operatorReloadable, out TextRange? name, out List<FileType> types)//todo 消息收集器需要新建
         {
             types = [];
             var segmented = false;
@@ -560,7 +580,7 @@
                 collector.Add(line, CErrorLevel.Error, "缺少名称");
             }
         }
-        private void CheckLineEnd(TextLine line, int position)
+        private void CheckLineEnd(TextLine line, int position)//todo 需要传入消息收集器
         {
             if (Lexical.TryAnalysis(line, position, out var lexical, collector))
                 collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");

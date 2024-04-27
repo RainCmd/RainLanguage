@@ -4,7 +4,7 @@ namespace RainLanguageServer.RainLanguage
 {
     internal partial class FileSpace
     {
-        private Type GetType(Context context, ASTManager manager, FileType fileType)
+        private Type GetType(Context context, ASTManager manager, FileType fileType)//todo 这里要把错误消息收集器传进来
         {
             Type result = default;
             if (context.TryFindDeclaration(manager, fileType.name, out var declarations, collector))
@@ -114,9 +114,9 @@ namespace RainLanguageServer.RainLanguage
                 foreach (var fileType in file.inherits)
                 {
                     var type = GetType(context, manager, fileType);
-                    if (type.dimension > 0) collector.Add(fileType.name, CErrorLevel.Error, "不能继承数组");
+                    if (type.dimension > 0) file.collector.Add(fileType.name, CErrorLevel.Error, "不能继承数组");
                     else if (type.code == TypeCode.Interface || type == Type.HANDLE) compilingInterface.inherits.Add(type);
-                    else collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
+                    else file.collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
                     if (cite) AddTypeCite(manager, compilingInterface, type);
                     if (manager.GetSourceDeclaration(type) is CompilingInterface inherit)
                         compilingInterface.implements.Add(inherit);
@@ -146,11 +146,11 @@ namespace RainLanguageServer.RainLanguage
                 for (int i = 0; i < file.inherits.Count; i++)
                 {
                     var type = GetType(context, manager, file.inherits[i]);
-                    if (type.dimension > 0) collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承数组");
+                    if (type.dimension > 0) file.collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承数组");
                     else if (type.code == TypeCode.Interface) compilingClass.inherits.Add(type);
-                    else if (i > 0) file.space.collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
+                    else if (i > 0) file.collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
                     else if (type.code == TypeCode.Handle) compilingClass.parent = type;
-                    else file.space.collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
+                    else file.collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
                     if (cite) AddTypeCite(manager, compilingClass, type);
                     var inherit = manager.GetSourceDeclaration(type);
                     if (inherit is CompilingInterface @interface) @interface.implements.Add(compilingClass);
