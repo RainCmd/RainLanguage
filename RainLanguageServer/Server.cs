@@ -5,6 +5,8 @@ using LanguageServer.Parameters.TextDocument;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
 using LanguageServer.Parameters;
+using System.Collections.Generic;
+using System.IO;
 
 namespace RainLanguageServer
 {
@@ -105,15 +107,7 @@ namespace RainLanguageServer
         {
             if (manager != null)
             {
-                var list = new List<Diagnostic>();
-                foreach (var fileSpace in manager.fileSpaces)
-                {
-                    CollectFileDiagnostic(fileSpace.Value, list);
-                    var param = new PublishDiagnosticsParams(new Uri(fileSpace.Key), [.. list]);
-                    Proxy.TextDocument.PublishDiagnostics(param);
-                    list.Clear();
-                    Proxy.TextDocument.PublishDiagnostics(param);
-                }
+                RefreshDiagnostics(manager.fileSpaces.Keys);
             }
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
@@ -162,9 +156,28 @@ namespace RainLanguageServer
             documents.Remove(new UnifiedPath(param.textDocument.uri));
         }
         #endregion
+
+        private readonly List<Diagnostic> diagnosticsHelper = [];
+        /// <summary>
+        /// 刷新文件的诊断信息
+        /// </summary>
+        /// <param name="files"></param>
+        private void RefreshDiagnostics(IEnumerable<string> files)
+        {
+            if (manager == null) return;
+            foreach (var file in files)
+                if (manager.fileSpaces.TryGetValue(file, out var space))
+                {
+                    CollectFileDiagnostic(space, diagnosticsHelper);
+                    var param = new PublishDiagnosticsParams(new Uri(file), [.. diagnosticsHelper]);
+                    Proxy.TextDocument.PublishDiagnostics(param);
+                    diagnosticsHelper.Clear();
+                }
+        }
+
         private static void CollectFileDiagnostic(FileSpace space, List<Diagnostic> diagnostics)
         {
-            foreach (var msg in space.collector)
+            foreach (var msg in space.Messages)
             {
                 var diagnostic = new Diagnostic(TR2R(msg.range), msg.message);
                 switch (msg.level)

@@ -2,13 +2,12 @@
 {
     internal partial class FileSpace
     {
-        public FileSpace(LineReader reader, CompilingSpace compiling, bool defaultNamespace, FileSpace? parent, int parentIndent, bool allowKeywordType)
+        public FileSpace(LineReader reader, TextPosition start, CompilingSpace compiling, bool defaultNamespace, FileSpace? parent, int parentIndent, bool allowKeywordType)
         {
             this.parent = parent;
             this.compiling = compiling;
             compiling.files?.Add(this);
             document = reader.document;
-            TextPosition? start = null;
             var attributeCollector = new List<TextRange>();
             while (reader.TryReadLine(out var line))
             {
@@ -133,7 +132,7 @@
                             else if (TryParseCallable(line, position, true, out name, out var parameters, out var returns, collector))
                             {
                                 ParseBlock(reader, line.Indent, out var body, out var blockIndent, collector);
-                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End), indent = blockIndent };
+                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.GetLastNBNC().End), indent = blockIndent };
                                 function.attributes.AddRange(attributeCollector);
                                 functions.Add(function);
                                 attributeCollector.Clear();
@@ -144,7 +143,7 @@
                     }
                 }
             }
-            if (start != null) range = new TextRange(start.Value, reader.CurrentLine.End);
+            range = new TextRange(start, reader.GetLastNBNC().End);
             compiling.attributes.AddRange(attributeCollector);
             if (!defaultNamespace)
                 foreach (var child in children)
@@ -193,7 +192,7 @@
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
                             ParseBlock(reader, fileClass.indent, out var body, out var blockIndent, fileClass.collector);
-                            var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End), indent = blockIndent };
+                            var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.GetLastNBNC().End), indent = blockIndent };
                             function.attributes.AddRange(attributeCollector);
                             if (name!.ToString() == fileClass.name.ToString())
                             {
@@ -217,7 +216,7 @@
                     }
                 }
                 reader.Rollback();
-                fileClass.range = new TextRange(start, reader.CurrentLine.End);
+                fileClass.range = new TextRange(start, reader.GetLastNBNC().End);
                 foreach (var item in attributeCollector)
                     fileClass.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
@@ -267,7 +266,7 @@
                     else fileInterface.collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
-                fileInterface.range = new TextRange(start, reader.CurrentLine.End);
+                fileInterface.range = new TextRange(start, reader.GetLastNBNC().End);
                 foreach (var item in attributeCollector)
                     fileInterface.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
@@ -310,7 +309,7 @@
                             if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, fileStruct.collector))
                             {
                                 ParseBlock(reader, fileStruct.indent, out var body, out var blockIndent, fileStruct.collector);
-                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.CurrentLine.End), indent = blockIndent };
+                                var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.Start, reader.GetLastNBNC().End), indent = blockIndent };
                                 function.attributes.AddRange(attributeCollector);
                                 fileStruct.functions.Add(function);
                                 attributeCollector.Clear();
@@ -320,7 +319,7 @@
                     else fileStruct.collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
-                fileStruct.range = new TextRange(start, reader.CurrentLine.End);
+                fileStruct.range = new TextRange(start, reader.GetLastNBNC().End);
                 foreach (var item in attributeCollector)
                     fileStruct.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
@@ -360,7 +359,7 @@
                     else fileEnum.collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
-                fileEnum.range = new TextRange(start, reader.CurrentLine.End);
+                fileEnum.range = new TextRange(start, reader.GetLastNBNC().End);
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
@@ -532,7 +531,7 @@
                 CompilingSpace space = compiling;
                 if (defaultNamespace) foreach (var name in names) space = space.GetChild(name.ToString());
                 else if (names.Count != 1 || names[0] != space.name) collector.Add(line, CErrorLevel.Error, "名称不匹配");
-                var child = new FileSpace(reader, space, true, defaultNamespace ? this : null, line.Indent, allowKeywordType);
+                var child = new FileSpace(reader, line.Start, space, true, defaultNamespace ? this : null, line.Indent, allowKeywordType);
                 children.Add(child);
                 child.compiling.attributes.AddRange(attributeCollector);
                 attributeCollector.Clear();

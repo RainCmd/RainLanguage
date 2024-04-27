@@ -9,7 +9,19 @@
     {
         public readonly TextDocument document = new(file.Path, 0, file.Content);
         private int line = 0;
-        public TextLine CurrentLine => document[line - 1];
+        /// <summary>
+        /// 获取上一个非空非注释行
+        /// </summary>
+        /// <returns></returns>
+        public TextLine GetLastNBNC()
+        {
+            for (var index = line - 1; index >= 0; index--)
+            {
+                var result = document[index];
+                if (result.Indent >= 0) return result;
+            }
+            return document[0];
+        }
         public bool TryReadLine(out TextLine? line)
         {
             if (this.line++ < document.LineCount)
@@ -28,7 +40,10 @@
         {
             var manager = new ASTManager(kernelPath, name);
             foreach (var file in files)
-                manager.fileSpaces.Add(file.Path, new FileSpace(new LineReader(file), manager.library, true, null, -1, false));
+            {
+                var reader = new LineReader(file);
+                manager.fileSpaces.Add(file.Path, new FileSpace(reader, new TextPosition(reader.document, 0), manager.library, true, null, -1, false));
+            }
             foreach (var file in manager.fileSpaces)
                 file.Value.Tidy(manager, manager.library, true);
             foreach (var file in manager.fileSpaces)

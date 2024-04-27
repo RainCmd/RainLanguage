@@ -39,7 +39,7 @@ namespace RainLanguageServer.RainLanguage
         {
             var reader = new LineReader(new FileDocument("rain-language:" + name, content));
             var library = new CompilingLibrary(name, null);
-            file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
+            file = new FileSpace(reader, new TextPosition(reader.document, 0), library, false, null, -1, allowKeywordType);
             foreach (var space in file.children) space.Tidy(this, library, false);
             return library;
         }
