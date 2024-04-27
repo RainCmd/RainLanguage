@@ -4,7 +4,7 @@ namespace RainLanguageServer.RainLanguage
 {
     internal partial class FileSpace
     {
-        private Type GetType(Context context, ASTManager manager, FileType fileType)//todo 这里要把错误消息收集器传进来
+        private static Type GetType(Context context, ASTManager manager, FileType fileType, MessageCollector collector)
         {
             Type result = default;
             if (context.TryFindDeclaration(manager, fileType.name, out var declarations, collector))
@@ -40,7 +40,7 @@ namespace RainLanguageServer.RainLanguage
             var context = new Context(compiling, relies, default);
             foreach (var file in variables)
             {
-                var type = GetType(context, manager, file.type);
+                var type = GetType(context, manager, file.type, collector);
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Variable, compiling.GetChildName(file.name.ToString()), default);
                 var variable = new CompilingVariable(file.name, declaration, file.attributes, compiling, cite ? file : null, file.isReadonly, type, file.expression, relies);
                 library.variables.Add(variable);
@@ -51,12 +51,12 @@ namespace RainLanguageServer.RainLanguage
             {
                 var parameters = new List<CompilingCallable.Parameter>();
                 foreach (var parameter in file.parameters)
-                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, collector)));
                 var parameterTypes = new List<Type>();
                 foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type));
+                    returnTypes.Add(GetType(context, manager, type, collector));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
                 var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), file.body, relies);
                 library.functions.Add(function);
@@ -83,7 +83,7 @@ namespace RainLanguageServer.RainLanguage
 
                 foreach (var variable in file.variables)
                 {
-                    var type = GetType(context, manager, variable.type);
+                    var type = GetType(context, manager, variable.type, file.collector);
                     var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingStruct.variables.Add(compilingVariable);
@@ -93,12 +93,12 @@ namespace RainLanguageServer.RainLanguage
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
-                        returnTypes.Add(GetType(context, manager, type));
+                        returnTypes.Add(GetType(context, manager, type, file.collector));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingStruct.functions.Add(compilingFunction);
@@ -113,10 +113,10 @@ namespace RainLanguageServer.RainLanguage
 
                 foreach (var fileType in file.inherits)
                 {
-                    var type = GetType(context, manager, fileType);
-                    if (type.dimension > 0) file.collector.Add(fileType.name, CErrorLevel.Error, "不能继承数组");
+                    var type = GetType(context, manager, fileType, collector);
+                    if (type.dimension > 0) collector.Add(fileType.name, CErrorLevel.Error, "不能继承数组");
                     else if (type.code == TypeCode.Interface || type == Type.HANDLE) compilingInterface.inherits.Add(type);
-                    else file.collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
+                    else collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
                     if (cite) AddTypeCite(manager, compilingInterface, type);
                     if (manager.GetSourceDeclaration(type) is CompilingInterface inherit)
                         compilingInterface.implements.Add(inherit);
@@ -125,12 +125,12 @@ namespace RainLanguageServer.RainLanguage
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
-                        returnTypes.Add(GetType(context, manager, type));
+                        returnTypes.Add(GetType(context, manager, type, file.collector));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.InterfaceFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingAbstractFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes));
                     compilingInterface.callables.Add(compilingFunction);
@@ -145,12 +145,12 @@ namespace RainLanguageServer.RainLanguage
 
                 for (int i = 0; i < file.inherits.Count; i++)
                 {
-                    var type = GetType(context, manager, file.inherits[i]);
-                    if (type.dimension > 0) file.collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承数组");
+                    var type = GetType(context, manager, file.inherits[i], collector);
+                    if (type.dimension > 0) collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承数组");
                     else if (type.code == TypeCode.Interface) compilingClass.inherits.Add(type);
-                    else if (i > 0) file.collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
+                    else if (i > 0) collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
                     else if (type.code == TypeCode.Handle) compilingClass.parent = type;
-                    else file.collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
+                    else collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
                     if (cite) AddTypeCite(manager, compilingClass, type);
                     var inherit = manager.GetSourceDeclaration(type);
                     if (inherit is CompilingInterface @interface) @interface.implements.Add(compilingClass);
@@ -158,7 +158,7 @@ namespace RainLanguageServer.RainLanguage
                 }
                 foreach (var variable in file.variables)
                 {
-                    var type = GetType(context, manager, variable.type);
+                    var type = GetType(context, manager, variable.type, file.collector);
                     var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingClass.variables.Add(compilingVariable);
@@ -168,7 +168,7 @@ namespace RainLanguageServer.RainLanguage
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
@@ -180,12 +180,12 @@ namespace RainLanguageServer.RainLanguage
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
-                        returnTypes.Add(GetType(context, manager, type));
+                        returnTypes.Add(GetType(context, manager, type, file.collector));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingClass.functions.Add(compilingFunction);
@@ -201,12 +201,12 @@ namespace RainLanguageServer.RainLanguage
                 var name = compilingDelegate.declaration.name;
                 var parameters = new List<CompilingCallable.Parameter>();
                 foreach (var parameter in file.parameters)
-                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, collector)));
                 var parameterTypes = new List<Type>();
                 foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type));
+                    returnTypes.Add(GetType(context, manager, type, collector));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Delegate, name, new Tuple(parameterTypes));
 
                 declarations.Remove(compilingDelegate);
@@ -227,7 +227,7 @@ namespace RainLanguageServer.RainLanguage
                 var name = compilingTask.declaration.name;
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type));
+                    returnTypes.Add(GetType(context, manager, type, collector));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Task, name, default);
 
                 declarations.Remove(compilingTask);
@@ -243,12 +243,12 @@ namespace RainLanguageServer.RainLanguage
             {
                 var parameters = new List<CompilingCallable.Parameter>();
                 foreach (var parameter in file.parameters)
-                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
+                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, collector)));
                 var parameterTypes = new List<Type>();
                 foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type));
+                    returnTypes.Add(GetType(context, manager, type, collector));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
                 var native = new CompilingNative(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes));
                 library.natives.Add(native);
