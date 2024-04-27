@@ -78,9 +78,9 @@ namespace RainLanguageServer.RainLanguage
             {
                 range = name;
                 var sb = new StringBuilder();
-                sb.AppendLine("``` cpp");
-                if (declaration == null) sb.AppendLine($"(全局变量) {GetCompiling<CompilingVariable>()?.type} {compiling?.GetFullName()}");
-                else sb.AppendLine($"(字段) {GetCompiling<CompilingVariable>()?.type} {compiling?.GetFullName()}");
+                sb.AppendLine("``` cs");
+                if (declaration == null) sb.AppendLine($"(全局变量) {GetCompiling<CompilingVariable>()?.type.ToString(false)} {compiling?.GetFullName()}");
+                else sb.AppendLine($"(字段) {GetCompiling<CompilingVariable>()?.type.ToString(false)} {compiling?.GetFullName()}");
                 sb.AppendLine("```");
                 info = sb.ToString();
                 isMarkdown = true;
@@ -138,6 +138,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> constructors = [];
+        public TextRange? destructorRange;//todo 析构函数范围
         public readonly List<TextLine> destructor = [];
         public int destructorIndent = -1;
     }

@@ -47,15 +47,39 @@ namespace RainLanguageServer.RainLanguage
         }
         public override string ToString()
         {
+            return ToString(true);
+        }
+        public string ToString(bool addCode)
+        {
             if (Vaild)
             {
                 var sb = new StringBuilder(library);
-                foreach (var name in name)
+                for (var i = 0; i < name.Length; ++i)
                 {
-                    sb.Append('.');
-                    sb.Append(name);
+                    if (i == name.Length - 1) sb.Append(':');
+                    else sb.Append('.');
+                    sb.Append(name[i]);
                 }
-                return sb.ToString();
+                if (addCode)
+                {
+                    switch (code)
+                    {
+                        case TypeCode.Invalid: break;
+                        case TypeCode.Struct:
+                            return $"struct {sb}";
+                        case TypeCode.Enum:
+                            return $"enum {sb}";
+                        case TypeCode.Handle:
+                            return $"handle {sb}";
+                        case TypeCode.Interface:
+                            return $"interface {sb}";
+                        case TypeCode.Delegate:
+                            return $"delegate {sb}";
+                        case TypeCode.Task:
+                            return $"task {sb}";
+                    }
+                }
+                else return sb.ToString();
             }
             return "无效的类型";
         }

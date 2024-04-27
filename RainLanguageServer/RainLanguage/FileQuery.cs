@@ -33,6 +33,16 @@ namespace RainLanguageServer.RainLanguage
                         yield return file;
             }
         }
+        public IEnumerable<FileSpace> Spaces
+        {
+            get
+            {
+                yield return this;
+                foreach(var child in children)
+                    foreach(var space in child.Spaces)
+                        yield return space;
+            }
+        }
 
         public IEnumerable<CompileMessage> Messages
         {

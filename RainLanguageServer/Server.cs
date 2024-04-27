@@ -5,6 +5,7 @@ using LanguageServer.Parameters.TextDocument;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
 using LanguageServer.Parameters;
+using System.Xml.Linq;
 
 namespace RainLanguageServer
 {
@@ -123,25 +124,54 @@ namespace RainLanguageServer
         {
             if (manager != null)
             {
-                string path = new UnifiedPath(param.textDocument.uri);
-                if (manager.fileSpaces.TryGetValue(path, out var fileSpace))
+                if (manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
                 {
                     var position = GetFilePosition(fileSpace.document, param.position);
                     var declaration = fileSpace.GetFileDeclaration(position);
                     if (declaration != null && declaration.TryGetTokenInfo(position, out var range, out var info, out var isMarkdown))
                     {
-                        if (isMarkdown)
-                        {
-                            return Result<Hover, ResponseError>.Success(new Hover(new MarkupContent(MarkupKind.Markdown, info!), TR2R(range!)));
-                        }
-                        else
-                        {
-                            return Result<Hover, ResponseError>.Success(new Hover(info!, TR2R(range!)));
-                        }
+                        if (isMarkdown) return Result<Hover, ResponseError>.Success(new Hover(new MarkupContent(MarkupKind.Markdown, info!), TR2R(range!)));
+                        else return Result<Hover, ResponseError>.Success(new Hover(info!, TR2R(range!)));
                     }
                 }
             }
             return Result<Hover, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
+
+        protected override Result<FoldingRange[], ResponseError> FoldingRange(FoldingRangeRequestParam param, CancellationToken token)
+        {
+            if (manager != null)
+            {
+                if (manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
+                {
+                    //todo 函数逻辑内语句结构的折叠关系
+                    var list = new List<FoldingRange>();
+                    foreach (var space in fileSpace.Spaces)
+                        if (space.range != null && space.indent > 0)
+                            list.Add(CreateFoldingRange(space.range));
+                    foreach (var declaration in fileSpace.Declarations)
+                        if (declaration.range != null && declaration.indent > 0)
+                        {
+                            list.Add(CreateFoldingRange(declaration.range));
+                            if (declaration is FileStruct fileStruct)
+                            {
+                                foreach (var member in fileStruct.functions)
+                                    if (member.range != null && member.indent > 0)
+                                        list.Add(CreateFoldingRange(member.range));
+                            }
+                            else if (declaration is FileClass fileClass)
+                            {
+                                foreach (var member in fileClass.functions)
+                                    if (member.range != null && member.indent > 0)
+                                        list.Add(CreateFoldingRange(member.range));
+                                if (fileClass.destructorRange != null && fileClass.destructor.Count > 0)
+                                    list.Add(CreateFoldingRange(fileClass.destructorRange));
+                            }
+                        }
+                    return Result<FoldingRange[], ResponseError>.Success([.. list]);
+                }
+            }
+            return Result<FoldingRange[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         #region 文档相关
@@ -161,6 +191,11 @@ namespace RainLanguageServer
             documents.Remove(new UnifiedPath(param.textDocument.uri));
         }
         #endregion
+
+        private static FoldingRange CreateFoldingRange(TextRange range)
+        {
+            return new FoldingRange() { startLine = range.Start.Line, endLine = range.End.Line - 1, kind = FoldingRangeKind.Comment };
+        }
 
         private readonly List<Diagnostic> diagnosticsHelper = [];
         /// <summary>
