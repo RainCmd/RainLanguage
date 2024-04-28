@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Xml.Linq;
 
 namespace RainLanguageServer.RainLanguage
 {
@@ -58,10 +59,6 @@ namespace RainLanguageServer.RainLanguage
             isMarkdown = false;
             return false;
         }
-        protected T? GetCompiling<T>() where T : CompilingDeclaration
-        {
-            return compiling as T;
-        }
     }
     internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
@@ -72,6 +69,7 @@ namespace RainLanguageServer.RainLanguage
         {
             return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
         }
+        private CompilingVariable? Compiling => compiling as CompilingVariable;
         public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange? range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
@@ -79,8 +77,8 @@ namespace RainLanguageServer.RainLanguage
                 range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
-                if (declaration == null) sb.AppendLine($"(全局变量) {GetCompiling<CompilingVariable>()?.type.ToString(false)} {compiling?.GetFullName()}");
-                else sb.AppendLine($"(字段) {GetCompiling<CompilingVariable>()?.type.ToString(false)} {compiling?.GetFullName()}");
+                if (declaration == null) sb.AppendLine($"(全局变量) {Compiling?.type.ToString(false, compiling?.space)} {name}");
+                else sb.AppendLine($"(字段) {Compiling?.type.ToString(false, compiling?.space)} {declaration.name}.{name}");
                 sb.AppendLine("```");
                 info = sb.ToString();
                 isMarkdown = true;
@@ -91,7 +89,7 @@ namespace RainLanguageServer.RainLanguage
                 range = type.GetNameRange();
                 var sb = new StringBuilder();
                 sb.AppendLine("``` csharp");
-                sb.AppendLine($"{GetCompiling<CompilingVariable>()?.type}");
+                sb.AppendLine($"{Compiling?.type}");
                 sb.AppendLine("```");
                 info = sb.ToString();
                 isMarkdown = true;
@@ -111,7 +109,95 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<TextLine> body = body;
         public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
         {
-            //todo 函数token信息
+            return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
+        }
+        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` js");
+                if (compiling is CompilingCallable callable)
+                {
+                    for (var i = 0; i < callable.returns.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        sb.Append(callable.returns[i].ToString(false, callable.space));
+                    }
+                    if (callable.returns.Count > 0) sb.Append(' ');
+                    if (declaration != null)
+                    {
+                        sb.Append(declaration.name);
+                        sb.Append('.');
+                    }
+                    sb.Append(name);
+                    sb.Append('(');
+                    for (var i = 0; i < callable.parameters.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        var param = callable.parameters[i];
+                        sb.Append(param.type.ToString(false, callable.space));
+                        if (param.name != null)
+                        {
+                            sb.Append(' ');
+                            sb.Append(param.name);
+                        }
+                    }
+                    sb.Append(')');
+                }
+                else sb.Append(name.Start.document[name.Start.Line]);
+                sb.AppendLine();
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (compiling is CompilingCallable callable)
+            {
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        range = returns[i].GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{callable.returns[i]}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        range = param.type.GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{callable.parameters[i].type}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                    else if (param.name != null && param.name.Contain(position))
+                    {
+                        range = param.name;
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                }
+                if (callable is CompilingFunction function)
+                {
+                    //todo 函数表达式内容
+                }
+            }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
         }
     }
@@ -123,16 +209,115 @@ namespace RainLanguageServer.RainLanguage
             public readonly TextRange? expression = expression;
         }
         public readonly List<Element> elements = [];
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                if (compiling != null) sb.AppendLine($"enum {compiling.GetFullName()}");
+                else sb.AppendLine($"enum {name}");
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else
+            {
+                for (var i = 0; i < elements.Count; i++)
+                {
+                    var element = elements[i];
+                    if (element.name.Contain(position))
+                    {
+                        range = element.name;
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` cs");
+                        sb.AppendLine($"{name}.{element.name}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                    else if (element.expression != null && element.expression.Contain(position))
+                    {
+                        //todo 枚举表达式内容
+                    }
+                }
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileStruct(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> functions = [];
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                if (compiling != null) sb.AppendLine($"struct {compiling.GetFullName()}");
+                else sb.AppendLine($"struct {name}");
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else
+            {
+                foreach (var value in variables)
+                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                        return true;
+                foreach (var value in functions)
+                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                        return true;
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileInterface(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileType> inherits = [];
         public readonly List<FileFunction> functions = [];
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                if (compiling != null) sb.AppendLine($"interface {compiling.GetFullName()}");
+                else sb.AppendLine($"interface {name}");
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (compiling is CompilingInterface compilingInterface)
+            {
+                for (var i = 0; i < inherits.Count; i++)
+                {
+                    if (inherits[i].Contain(position))
+                    {
+                        range = inherits[i].GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` cs");
+                        sb.AppendLine($"{compilingInterface.inherits[i]}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                }
+                foreach (var vaalue in functions)
+                    if (vaalue.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                        return true;
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileClass(TextRange name, Visibility visibility, FileSpace space) : FileInterface(name, visibility, space)
     {
@@ -141,20 +326,275 @@ namespace RainLanguageServer.RainLanguage
         public TextRange? destructorRange;//todo 析构函数范围
         public readonly List<TextLine> destructor = [];
         public int destructorIndent = -1;
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                if (compiling != null) sb.AppendLine($"class {compiling.GetFullName()}");
+                else sb.AppendLine($"class {name}");
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (compiling is CompilingClass compilingClass)
+            {
+                for (var i = 0; i < inherits.Count; i++)
+                {
+                    if (inherits[i].Contain(position))
+                    {
+                        range = inherits[i].GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` cs");
+                        if (compilingClass.parent != null)
+                        {
+                            if (i > 0) sb.AppendLine($"{compilingClass.inherits[i - 1]}");
+                            else sb.AppendLine($"{compilingClass.parent}");
+                        }
+                        else sb.AppendLine($"{compilingClass.inherits[i]}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                }
+                foreach (var value in variables)
+                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                        return true;
+                foreach (var value in constructors)
+                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                        return true;
+                foreach (var value in functions)
+                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                        return true;
+                if (destructorRange != null && destructorRange.Contain(position))
+                {
+                    //todo 析构函数表达式
+                }
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileDelegate(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` js");
+                if (compiling is CompilingCallable callable)
+                {
+                    sb.Append("delegate ");
+                    for (var i = 0; i < callable.returns.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        sb.Append(callable.returns[i].ToString(false, callable.space));
+                    }
+                    if (callable.returns.Count > 0) sb.Append(' ');
+                    sb.Append(name);
+                    sb.Append('(');
+                    for (var i = 0; i < callable.parameters.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        var param = callable.parameters[i];
+                        sb.Append(param.type.ToString(false, callable.space));
+                        if (param.name != null)
+                        {
+                            sb.Append(' ');
+                            sb.Append(param.name);
+                        }
+                    }
+                    sb.Append(')');
+                }
+                else sb.Append(name.Start.document[name.Start.Line]);
+                sb.AppendLine();
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (compiling is CompilingCallable callable)
+            {
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        range = returns[i].GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{callable.returns[i]}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        range = param.type.GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{callable.parameters[i].type}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                    else if (param.name != null && param.name.Contain(position))
+                    {
+                        range = param.name;
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                }
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileType> returns = returns;
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` js");
+                if (compiling is CompilingTask task)
+                {
+                    sb.Append("task ");
+                    for (var i = 0; i < task.returns.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        sb.Append(task.returns[i].ToString(false, task.space));
+                    }
+                    if (task.returns.Count > 0) sb.Append(' ');
+                    sb.Append(name);
+                }
+                else sb.Append(name.Start.document[name.Start.Line]);
+                sb.AppendLine();
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (compiling is CompilingTask task)
+            {
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        range = returns[i].GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{task.returns[i]}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal class FileNative(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        {
+            if (name.Contain(position))
+            {
+                range = name;
+                var sb = new StringBuilder();
+                sb.AppendLine("``` js");
+                if (compiling is CompilingCallable callable)
+                {
+                    sb.Append("native ");
+                    for (var i = 0; i < callable.returns.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        sb.Append(callable.returns[i].ToString(false, callable.space));
+                    }
+                    if (callable.returns.Count > 0) sb.Append(' ');
+                    sb.Append(name);
+                    sb.Append('(');
+                    for (var i = 0; i < callable.parameters.Count; i++)
+                    {
+                        if (i > 0) sb.Append(", ");
+                        var param = callable.parameters[i];
+                        sb.Append(param.type.ToString(false, callable.space));
+                        if (param.name != null)
+                        {
+                            sb.Append(' ');
+                            sb.Append(param.name);
+                        }
+                    }
+                    sb.Append(')');
+                }
+                else sb.Append(name.Start.document[name.Start.Line]);
+                sb.AppendLine();
+                sb.AppendLine("```");
+                info = sb.ToString();
+                isMarkdown = true;
+                return true;
+            }
+            else if (compiling is CompilingCallable callable)
+            {
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        range = returns[i].GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{callable.returns[i]}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        range = param.type.GetNameRange();
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"{callable.parameters[i].type}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                    else if (param.name != null && param.name.Contain(position))
+                    {
+                        range = param.name;
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` csharp");
+                        sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
+                        sb.AppendLine("```");
+                        info = sb.ToString();
+                        isMarkdown = true;
+                        return true;
+                    }
+                }
+            }
+            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
     }
     internal partial class FileSpace : ICitePort<FileSpace, CompilingSpace>
     {

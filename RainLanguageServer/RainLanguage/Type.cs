@@ -47,17 +47,43 @@ namespace RainLanguageServer.RainLanguage
         }
         public override string ToString()
         {
-            return ToString(true);
+            return ToString(true, null);
         }
-        public string ToString(bool addCode)
+        private static bool GetCommon(CompilingSpace space, string library, string[] names, out int index)
+        {
+            if (space.parent == null)
+            {
+                index = 0;
+                return space.name == library;
+            }
+            else if (GetCommon(space.parent, library, names, out index))
+            {
+                if (index < names.Length - 1 && space.name == names[index])
+                {
+                    index++;
+                    return true;
+                }
+            }
+            return false;
+        }
+        public string ToString(bool addCode, CompilingSpace? space)
         {
             if (Vaild)
             {
-                var sb = new StringBuilder(library);
-                for (var i = 0; i < name.Length; ++i)
+                var sb = new StringBuilder();
+                var index = 0;
+                if (library != LIBRARY_KERNEL)
                 {
-                    if (i == name.Length - 1) sb.Append(':');
-                    else sb.Append('.');
+                    if (space != null) GetCommon(space, library, name, out index);
+                    else sb.Append(library);
+                }
+                for (var i = index; i < name.Length; ++i)
+                {
+                    if (sb.Length > 0)
+                    {
+                        if (i == name.Length - 1) sb.Append(':');
+                        else sb.Append('.');
+                    }
                     sb.Append(name[i]);
                 }
                 if (addCode)
