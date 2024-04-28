@@ -349,7 +349,7 @@ namespace RainLanguageServer.RainLanguage
                         range = inherits[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` cs");
-                        if (compilingClass.parent != null)
+                        if (compilingClass.parent.Vaild)
                         {
                             if (i > 0) sb.AppendLine($"{compilingClass.inherits[i - 1]}");
                             else sb.AppendLine($"{compilingClass.parent}");

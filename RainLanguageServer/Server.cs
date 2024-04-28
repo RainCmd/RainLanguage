@@ -46,22 +46,20 @@ namespace RainLanguageServer
             }
         }
         private ASTManager? manager;
-        private string? root;
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
             var kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
             var projectName = param.initializationOptions?.projectName?.Value as string;
-            root = new UnifiedPath(param.rootUri);
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
-            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(root, this));
+            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(new UnifiedPath(param.rootUri), this));
 
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
             result.capabilities.executeCommandProvider = new ExecuteCommandOptions();
             //提供折叠支持
             result.capabilities.foldingRangeProvider = true;
-            result.capabilities.colorProvider = true;
+            result.capabilities.colorProvider = false;
             //提供文档连接支持
             result.capabilities.documentLinkProvider = new DocumentLinkOptions() { resolveProvider = false };
             result.capabilities.renameProvider = true;
@@ -174,27 +172,10 @@ namespace RainLanguageServer
             return Result<FoldingRange[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
-        protected override Result<ColorPresentation[], ResponseError> ColorPresentation(ColorPresentationParams param, CancellationToken token)
+        protected override Result<DocumentHighlight[], ResponseError> DocumentHighlight(TextDocumentPositionParams param, CancellationToken token)
         {
-
-            return Result<ColorPresentation[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
-        }
-
-        protected override Result<ColorInformation[], ResponseError> DocumentColor(DocumentColorParams param, CancellationToken token)
-        {
-            if (manager != null)
-            {
-                if (manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
-                {
-                    var cis = new ColorInformation[]
-                    {
-                        new(new LanguageServer.Parameters.Range(new Position(1,2),new Position(1,15)),new Color(1,.75,0,1))
-                    };
-                    return Result<ColorInformation[], ResponseError>.Success(cis);
-                }
-            }
-            //todo 文档着色
-            return Result<ColorInformation[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+            //todo 高亮功能
+            return Result<DocumentHighlight[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         #region 文档相关

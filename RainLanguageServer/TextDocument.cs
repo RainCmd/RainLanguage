@@ -279,9 +279,9 @@ namespace RainLanguageServer
             var index = 0;
             foreach (var change in changes)
             {
-                if (change.IsChange)
+                if (change.IsFirst)
                 {
-                    var changeValue = change.Change;
+                    var changeValue = change.First;
                     var start = GetLineStartCharactor((int)changeValue.range.start.line, 0, 0);
                     var end = GetLineStartCharactor((int)changeValue.range.end.line, (int)changeValue.range.start.line, start);
                     start += (int)changeValue.range.start.character;
@@ -289,11 +289,11 @@ namespace RainLanguageServer
                     text = string.Concat(text.AsSpan(0, start), changeValue.text, text.AsSpan(end));
                     changeds[index++] = new Change(start, end, changeValue.text.Length);
                 }
-                else if (change.IsWhole)
+                else if (change.IsSecond)
                 {
-                    var changeValue = change.Whole.text;
+                    var changeValue = change.Second.text;
                     changeds[index++] = new Change(0, text.Length, changeValue.Length);
-                    text = change.Whole.text;
+                    text = changeValue;
                 }
             }
             this.changeds.Add(changeds);
