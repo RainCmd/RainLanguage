@@ -183,18 +183,36 @@ namespace RainLanguageServer
         protected override void DidOpenTextDocument(DidOpenTextDocumentParams param)
         {
             string path = new UnifiedPath(param.textDocument.uri);
-            documents[path] = new TextDocument(path, param.textDocument.version, param.textDocument.text);
+            TextDocument? document = null;
+            if (manager != null && manager.fileSpaces.TryGetValue(path, out var fileSpace))
+            {
+                if (param.textDocument.text != fileSpace.document.text)
+                    document = fileSpace.document;
+                fileSpace.document.Set(param.textDocument.text);
+                documents[path] = fileSpace.document;
+            }
+            else documents[path] = document = new TextDocument(path, param.textDocument.text);
+            if (document != null) OnChanged(document);
         }
         protected override void DidChangeTextDocument(DidChangeTextDocumentParams param)
         {
             if (documents.TryGetValue(new UnifiedPath(param.textDocument.uri), out var document))
-                document.OnChanged(param.textDocument.version, param.contentChanges);
+            {
+                document.OnChanged(param.contentChanges);
+                OnChanged(document);
+            }
         }
         protected override void DidCloseTextDocument(DidCloseTextDocumentParams param)
         {
             documents.Remove(new UnifiedPath(param.textDocument.uri));
         }
         #endregion
+
+        private void OnChanged(TextDocument document)
+        {
+            var changes = document.GetLastChanges();
+            //todo 处理文档变化，需要收集音响范围并重新解析
+        }
 
         private static FoldingRange CreateFoldingRange(TextRange range)
         {

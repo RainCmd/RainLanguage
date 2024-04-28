@@ -7,7 +7,7 @@
     }
     internal class LineReader(IFileDocument file)
     {
-        public readonly TextDocument document = new(file.Path, 0, file.Content);
+        public readonly TextDocument document = new(file.Path, file.Content);
         private int line = 0;
         /// <summary>
         /// 获取上一个非空非注释行

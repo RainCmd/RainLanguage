@@ -188,19 +188,19 @@ namespace RainLanguageServer
             return -1;
         }
     }
-    internal class TextDocument(string path, long version, string text)
+    internal class TextDocument(string path, string text)
     {
-        private readonly struct Change(int start, int end, int length)
+        public readonly struct Change(int start, int end, int length)
         {
             public readonly int start = start;
             public readonly int end = end;
             public readonly int length = length;
             public readonly int Variation => length - (end - start);
         }
-        public string path = path;
-        public long version = version;
+        public readonly string path = path;
+        public long version = 0;
         public string text = text;
-        private long lineVersion = version - 1;
+        private long lineVersion = -1;
         private readonly List<TextLine> lines = [];
         private readonly List<Change[]> changeds = [];
         public int LineCount
@@ -221,6 +221,13 @@ namespace RainLanguageServer
                 return lines[line];
             }
         }
+        public void Set(string text)
+        {
+            version++;
+            changeds.Add([new(0, this.text.Length, text.Length)]);
+            this.text = text;
+        }
+        public Change[] GetLastChanges() => changeds[^1];
         public int Conversion(int charactor, long version, Adsorption adsorption = Adsorption.Discard)
         {
             version = this.version - version;
@@ -271,10 +278,9 @@ namespace RainLanguageServer
             }
             return 0;
         }
-        public bool OnChanged(long version, TextDocumentContentChangeEvent[] changes)
+        public void OnChanged(TextDocumentContentChangeEvent[] changes)
         {
-            if (version != this.version + 1) return false;
-            this.version = version;
+            version++;
             var changeds = new Change[changes.Length];
             var index = 0;
             foreach (var change in changes)
@@ -297,7 +303,6 @@ namespace RainLanguageServer
                 }
             }
             this.changeds.Add(changeds);
-            return true;
         }
         private void ParseLines()
         {
