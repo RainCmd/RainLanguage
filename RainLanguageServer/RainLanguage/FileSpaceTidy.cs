@@ -32,7 +32,7 @@
                     if (space == null) collector.Add(import[0], CErrorLevel.Error, "未找到命名空间或程序集");
                     else
                     {
-                        for (var i = 0; i < import.Count; i++)
+                        for (var i = 1; i < import.Count; i++)
                             if (!space!.children.TryGetValue(import[i].ToString(), out space))
                             {
                                 collector.Add(import[i], CErrorLevel.Error, "导入的命名空间未找到");

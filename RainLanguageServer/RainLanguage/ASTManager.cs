@@ -23,7 +23,9 @@ namespace RainLanguageServer.RainLanguage
         }
         public CompilingLibrary? LoadLibrary(string name)
         {
-            if (!relies.TryGetValue(name, out CompilingLibrary? library))
+            if (name == kernel.name) return kernel;
+            else if (name == this.library.name) return this.library;
+            else if (!relies.TryGetValue(name, out CompilingLibrary? library))
             {
                 var content = "";//todo 加载程序集，转成VirtualDocument存到relies中
                 if (string.IsNullOrEmpty(content))
@@ -39,7 +41,7 @@ namespace RainLanguageServer.RainLanguage
         {
             var reader = new LineReader(new FileDocument("rain-language:" + name, content));
             var library = new CompilingLibrary(name, null);
-            file = new FileSpace(reader, new TextPosition(reader.document, 0), library, false, null, -1, allowKeywordType);
+            file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
             foreach (var space in file.children) space.Tidy(this, library, false);
             return library;
         }

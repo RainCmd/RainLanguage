@@ -51,7 +51,7 @@ namespace RainLanguageServer
         {
             var kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
             var projectName = param.initializationOptions?.projectName?.Value as string;
-            root = new UnifiedPath(param.rootPath!);
+            root = new UnifiedPath(param.rootUri);
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
             manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(root, this));
@@ -172,6 +172,29 @@ namespace RainLanguageServer
                 }
             }
             return Result<FoldingRange[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
+
+        protected override Result<ColorPresentation[], ResponseError> ColorPresentation(ColorPresentationParams param, CancellationToken token)
+        {
+
+            return Result<ColorPresentation[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
+
+        protected override Result<ColorInformation[], ResponseError> DocumentColor(DocumentColorParams param, CancellationToken token)
+        {
+            if (manager != null)
+            {
+                if (manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
+                {
+                    var cis = new ColorInformation[]
+                    {
+                        new(new LanguageServer.Parameters.Range(new Position(1,2),new Position(1,15)),new Color(1,.75,0,1))
+                    };
+                    return Result<ColorInformation[], ResponseError>.Success(cis);
+                }
+            }
+            //todo 文档着色
+            return Result<ColorInformation[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         #region 文档相关

@@ -42,7 +42,7 @@
             foreach (var file in files)
             {
                 var reader = new LineReader(file);
-                manager.fileSpaces.Add(file.Path, new FileSpace(reader, new TextPosition(reader.document, 0), manager.library, true, null, -1, false));
+                manager.fileSpaces.Add(file.Path, new FileSpace(reader, manager.library, true, null, -1, false));
             }
             foreach (var file in manager.fileSpaces)
                 file.Value.Tidy(manager, manager.library, true);

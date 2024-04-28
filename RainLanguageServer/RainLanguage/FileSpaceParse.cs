@@ -2,7 +2,7 @@
 {
     internal partial class FileSpace
     {
-        public FileSpace(LineReader reader, TextPosition start, CompilingSpace compiling, bool defaultNamespace, FileSpace? parent, int parentIndent, bool allowKeywordType)
+        public FileSpace(LineReader reader, CompilingSpace compiling, bool defaultNamespace, FileSpace? parent, int parentIndent, bool allowKeywordType)
         {
             this.parent = parent;
             this.compiling = compiling;
@@ -38,7 +38,6 @@
                             break;
                         }
                     }
-                    if (start == null) start = line.Start;
                     if (lexical.type == LexicalType.KeyWord_import)
                     {
                         if (attributeCollector.Count > 0)
@@ -48,8 +47,8 @@
                                 message.related.Add(new(attribute, "无效的属性"));
                             collector.Add(message);
                             attributeCollector.Clear();
-                            ParseImport(line, lexical);
                         }
+                        ParseImport(line, lexical);
                     }
                     else if (lexical.type == LexicalType.KeyWord_namespace) ParseChild(line, lexical.anchor.End, reader, attributeCollector, defaultNamespace, allowKeywordType);
                     else if (!defaultNamespace) collector.Add(line, CErrorLevel.Error, "当前区域不允许有定义");
@@ -143,7 +142,6 @@
                     }
                 }
             }
-            range = new TextRange(start, reader.GetLastNBNC().End);
             compiling.attributes.AddRange(attributeCollector);
             if (!defaultNamespace)
                 foreach (var child in children)
@@ -531,11 +529,12 @@
                 CompilingSpace space = compiling;
                 if (defaultNamespace) foreach (var name in names) space = space.GetChild(name.ToString());
                 else if (names.Count != 1 || names[0] != space.name) collector.Add(line, CErrorLevel.Error, "名称不匹配");
-                var child = new FileSpace(reader, line.Start, space, true, defaultNamespace ? this : null, line.Indent, allowKeywordType);
+                var child = new FileSpace(reader, space, true, defaultNamespace ? this : null, line.Indent, allowKeywordType);
                 children.Add(child);
                 child.compiling.attributes.AddRange(attributeCollector);
                 attributeCollector.Clear();
                 reader.Rollback();
+                child.range = new TextRange(line.Start, reader.GetLastNBNC().End);
             }
             else collector.Add(line, CErrorLevel.Error, "缺少名称");
         }
