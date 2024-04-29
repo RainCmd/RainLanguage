@@ -7,6 +7,7 @@ using System.Collections;
 using LanguageServer.Parameters;
 using System.Xml.Linq;
 using System.Runtime.InteropServices;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RainLanguageServer
 {
@@ -129,7 +130,7 @@ namespace RainLanguageServer
                     {
                         var locations = new Location[result!.Cites.Count];
                         var index = 0;
-                        foreach(var item in result.Cites)
+                        foreach (var item in result.Cites)
                             locations[index++] = TR2L(item.name);
                         return Result<Location[], ResponseError>.Success(locations);
                     }
@@ -208,6 +209,21 @@ namespace RainLanguageServer
         {
             //todo 高亮功能
             return Result<DocumentHighlight[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
+
+        protected override Result<CodeLens[], ResponseError> CodeLens(CodeLensParams param, CancellationToken token)
+        {
+            if (builder != null)
+            {
+                if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
+                {
+                    var list = new List<CodeLens>();
+                    foreach (var declaration in fileSpace.Declarations)
+                        list.Add(new CodeLens(TR2R(declaration.name)) { command = new Command("引用：" + ((ICitePort<FileDeclaration, CompilingDeclaration>)declaration).Cites.Count, "") });
+                    return Result<CodeLens[], ResponseError>.Success([.. list]);
+                }
+            }
+            return Result<CodeLens[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         #region 文档相关

@@ -49,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     console.log(error)
                 } else {
                     RegistRainLanguagePreviewDoc(path, data.toString())
+                    vscode.window.showTextDocument(vscode.Uri.parse("rain-language:" + path))
                 }
             })
         }),
