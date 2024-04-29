@@ -48,13 +48,16 @@ namespace RainLanguageServer
             }
         }
         private ASTBuilder? builder;
+        private string? kernelDefinePath;
+        private string? projectName;
+        private string? projectPath;
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
-            var kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
-            var projectName = param.initializationOptions?.projectName?.Value as string;
+            kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
+            projectName = param.initializationOptions?.projectName?.Value as string;
+            projectPath = new UnifiedPath(param.rootUri);
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
-            builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(new UnifiedPath(param.rootUri), this), LoadRelyLibrary, RegPreviewDoc);
 
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
@@ -104,8 +107,9 @@ namespace RainLanguageServer
         }
         protected override void Initialized()
         {
-            if (builder != null)
+            if (kernelDefinePath != null)
             {
+                builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this), LoadRelyLibrary, RegPreviewDoc);
                 builder.Reparse();
                 RefreshDiagnostics(builder.manager.fileSpaces.Keys);
             }
@@ -128,10 +132,10 @@ namespace RainLanguageServer
                 if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
                     if (fileSpace.TryGetDeclaration(builder.manager, GetFilePosition(fileSpace.document, param.position), out var result))
                     {
-                        var locations = new Location[result!.Cites.Count];
+                        var locations = new Location[result!.references.Count];
                         var index = 0;
-                        foreach (var item in result.Cites)
-                            locations[index++] = TR2L(item.name);
+                        foreach (var item in result.references)
+                            locations[index++] = TR2L(item);
                         return Result<Location[], ResponseError>.Success(locations);
                     }
             }
@@ -219,7 +223,7 @@ namespace RainLanguageServer
                 {
                     var list = new List<CodeLens>();
                     foreach (var declaration in fileSpace.Declarations)
-                        list.Add(new CodeLens(TR2R(declaration.name)) { command = new Command("引用：" + ((ICitePort<FileDeclaration, CompilingDeclaration>)declaration).Cites.Count, "") });
+                        list.Add(new CodeLens(TR2R(declaration.name)) { command = new Command("引用：" + declaration.compiling?.references.Count, "") });
                     return Result<CodeLens[], ResponseError>.Success([.. list]);
                 }
             }

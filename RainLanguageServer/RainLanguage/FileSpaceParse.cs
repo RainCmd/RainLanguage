@@ -177,8 +177,8 @@
                     {
                         fileClass.indent = line.indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
-                        visibility = ParseVisibility(line, out position, fileClass.collector);
-                        if (TryParseVariable(line, position, out var name, out var type, out var expression, fileClass.collector))
+                        visibility = ParseVisibility(line, out position, collector);
+                        if (TryParseVariable(line, position, out var name, out var type, out var expression, collector))
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
                             var variable = new FileVariable(name!, visibility, this, false, type!, expression) { range = line };
@@ -186,37 +186,37 @@
                             fileClass.variables.Add(variable);
                             attributeCollector.Clear();
                         }
-                        else if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, fileClass.collector))
+                        else if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, collector))
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
-                            ParseBlock(reader, fileClass.indent, out var body, out var blockIndent, fileClass.collector);
+                            ParseBlock(reader, fileClass.indent, out var body, out var blockIndent, collector);
                             var function = new FileFunction(name, visibility, this, parameters!, returns!, body) { range = new TextRange(line.start, reader.GetLastNBNC().end), indent = blockIndent };
                             function.attributes.AddRange(attributeCollector);
                             if (name!.ToString() == fileClass.name.ToString())
                             {
-                                if (returns!.Count > 0) fileClass.collector.Add(name, CErrorLevel.Error, "构造函数不能有返回值");
+                                if (returns!.Count > 0) collector.Add(name, CErrorLevel.Error, "构造函数不能有返回值");
                                 fileClass.constructors.Add(function);
                             }
                             else fileClass.functions.Add(function);
                             attributeCollector.Clear();
                         }
-                        else if (Lexical.TryAnalysis(line, position, out lexical, fileClass.collector))
+                        else if (Lexical.TryAnalysis(line, position, out lexical, collector))
                         {
                             if (lexical.type == LexicalType.Negate)
                             {
-                                if (visibility != Visibility.None) fileClass.collector.Add(lexical.anchor, CErrorLevel.Error, "析构函数不允许有访问修饰符");
-                                CheckLineEnd(line, lexical.anchor.end, fileClass.collector);
-                                ParseBlock(reader, fileClass.indent, out var body, out fileClass.destructorIndent, fileClass.collector);
+                                if (visibility != Visibility.None) collector.Add(lexical.anchor, CErrorLevel.Error, "析构函数不允许有访问修饰符");
+                                CheckLineEnd(line, lexical.anchor.end, collector);
+                                ParseBlock(reader, fileClass.indent, out var body, out fileClass.destructorIndent, collector);
                                 fileClass.destructor.AddRange(body);
                             }
-                            else fileClass.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                            else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                         }
                     }
                 }
                 reader.Rollback();
                 fileClass.range = new TextRange(start, reader.GetLastNBNC().end);
                 foreach (var item in attributeCollector)
-                    fileClass.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
+                    collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -251,22 +251,22 @@
                     {
                         fileInterface.indent = line.indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
-                        visibility = ParseVisibility(line, out position, fileInterface.collector);
-                        if (TryParseCallable(line, position, false, out var name, out var parameters, out var returns, fileInterface.collector))
+                        visibility = ParseVisibility(line, out position, collector);
+                        if (TryParseCallable(line, position, false, out var name, out var parameters, out var returns, collector))
                         {
-                            if (visibility != Visibility.None) fileInterface.collector.Add(line, CErrorLevel.Error, "接口函数不允许加访问修饰符");
+                            if (visibility != Visibility.None) collector.Add(line, CErrorLevel.Error, "接口函数不允许加访问修饰符");
                             var function = new FileFunction(name!, Visibility.Public, this, parameters!, returns!, []) { range = line };
                             function.attributes.AddRange(attributeCollector);
                             fileInterface.functions.Add(function);
                             attributeCollector.Clear();
                         }
                     }
-                    else fileInterface.collector.Add(line, CErrorLevel.Error, "缩进错误");
+                    else collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
                 fileInterface.range = new TextRange(start, reader.GetLastNBNC().end);
                 foreach (var item in attributeCollector)
-                    fileInterface.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
+                    collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -291,11 +291,11 @@
                     {
                         fileStruct.indent = line.indent;
                         if (TryParseAttributes(line, attributeCollector)) continue;
-                        visibility = ParseVisibility(line, out position, fileStruct.collector);
-                        if (TryParseVariable(line, position, out var name, out var type, out var expression, fileStruct.collector))
+                        visibility = ParseVisibility(line, out position, collector);
+                        if (TryParseVariable(line, position, out var name, out var type, out var expression, collector))
                         {
-                            if (visibility != Visibility.None) fileStruct.collector.Add(line, CErrorLevel.Error, "结构体成员字段不允许加访问修饰符");
-                            if (expression != null) fileStruct.collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
+                            if (visibility != Visibility.None) collector.Add(line, CErrorLevel.Error, "结构体成员字段不允许加访问修饰符");
+                            if (expression != null) collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
                             var variable = new FileVariable(name!, Visibility.Public, this, false, type!, expression) { range = line };
                             variable.attributes.AddRange(attributeCollector);
                             fileStruct.variables.Add(variable);
@@ -304,9 +304,9 @@
                         else
                         {
                             if (visibility == Visibility.None) visibility = Visibility.Private;
-                            if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, fileStruct.collector))
+                            if (TryParseCallable(line, position, false, out name, out var parameters, out var returns, collector))
                             {
-                                ParseBlock(reader, fileStruct.indent, out var body, out var blockIndent, fileStruct.collector);
+                                ParseBlock(reader, fileStruct.indent, out var body, out var blockIndent, collector);
                                 var function = new FileFunction(name!, visibility, this, parameters!, returns!, body) { range = new TextRange(line.start, reader.GetLastNBNC().end), indent = blockIndent };
                                 function.attributes.AddRange(attributeCollector);
                                 fileStruct.functions.Add(function);
@@ -314,12 +314,12 @@
                             }
                         }
                     }
-                    else fileStruct.collector.Add(line, CErrorLevel.Error, "缩进错误");
+                    else collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
                 fileStruct.range = new TextRange(start, reader.GetLastNBNC().end);
                 foreach (var item in attributeCollector)
-                    fileStruct.collector.Add(item, CErrorLevel.Warning, "忽略的属性");
+                    collector.Add(item, CErrorLevel.Warning, "忽略的属性");
                 attributeCollector.Clear();
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -343,18 +343,18 @@
                     else if (fileEnum.indent == -1 || line.indent == fileEnum.indent)
                     {
                         fileEnum.indent = line.indent;
-                        if (!Lexical.TryAnalysis(line, 0, out lexical, fileEnum.collector)) continue;
+                        if (!Lexical.TryAnalysis(line, 0, out lexical, collector)) continue;
                         if (lexical.type == LexicalType.Word)
                         {
                             var name = lexical.anchor;
-                            if (!Lexical.TryAnalysis(line, lexical.anchor.end, out lexical, fileEnum.collector)) fileEnum.elements.Add(new FileEnum.Element(name, default));
-                            else if (lexical.type != LexicalType.Assignment) fileEnum.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
-                            else if (!Lexical.TryAnalysis(line, lexical.anchor.end, out lexical, fileEnum.collector)) fileEnum.collector.Add(line, CErrorLevel.Error, "缺少赋值表达式");
+                            if (!Lexical.TryAnalysis(line, lexical.anchor.end, out lexical, collector)) fileEnum.elements.Add(new FileEnum.Element(name, default));
+                            else if (lexical.type != LexicalType.Assignment) collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                            else if (!Lexical.TryAnalysis(line, lexical.anchor.end, out lexical, collector)) collector.Add(line, CErrorLevel.Error, "缺少赋值表达式");
                             else fileEnum.elements.Add(new FileEnum.Element(name, new(lexical.anchor.start, line.end)));
                         }
-                        else fileEnum.collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                        else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                     }
-                    else fileEnum.collector.Add(line, CErrorLevel.Error, "缩进错误");
+                    else collector.Add(line, CErrorLevel.Error, "缩进错误");
                 }
                 reader.Rollback();
                 fileEnum.range = new TextRange(start, reader.GetLastNBNC().end);

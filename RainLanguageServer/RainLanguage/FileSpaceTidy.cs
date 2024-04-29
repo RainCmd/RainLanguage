@@ -17,11 +17,7 @@
                                 collector.Add(import[i], CErrorLevel.Error, "导入的命名空间未找到");
                                 break;
                             }
-                        if (space != null)
-                        {
-                            ((ICitePort<CompilingSpace, FileSpace>)space).AddCite(this);
-                            if (!relies.Add(space)) collector.Add(import, CErrorLevel.Info, "重复导入的命名空间");
-                        }
+                        if (space != null && !relies.Add(space)) collector.Add(import, CErrorLevel.Info, "重复导入的命名空间");
                         goto lable_next_import;
                     }
                 }

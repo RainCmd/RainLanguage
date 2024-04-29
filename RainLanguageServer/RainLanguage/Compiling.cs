@@ -3,13 +3,13 @@
 namespace RainLanguageServer.RainLanguage
 {
     internal class CompilingDeclaration(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
-        : ICitePort<CompilingDeclaration, FileDeclaration>
     {
         public readonly TextRange name = name;
         public readonly Declaration declaration = declaration;
         public readonly List<TextRange> attributes = attributes;
         public readonly CompilingSpace space = space;
         public readonly FileDeclaration? file = file;
+        public readonly List<TextRange> references = [];
         public string GetFullName()
         {
             switch (declaration.category)
@@ -47,10 +47,6 @@ namespace RainLanguageServer.RainLanguage
             }
             return "";
         }
-        /// <summary>
-        /// 引用的声明集合
-        /// </summary>
-        public CitePort<FileDeclaration> Cites { get; } = [];
     }
     internal class CompilingVariable(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, bool isReadonly, Type type, TextRange? expression, HashSet<CompilingSpace> relies)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -140,7 +136,6 @@ namespace RainLanguageServer.RainLanguage
     {
     }
     internal partial class CompilingSpace(CompilingSpace? parent, string name, HashSet<FileSpace>? files)
-        : ICitePort<CompilingSpace, FileSpace>, ICitePort<CompilingSpace, FileDeclaration>
     {
         public readonly CompilingSpace? parent = parent;
         public readonly string name = name;
@@ -210,24 +205,6 @@ namespace RainLanguageServer.RainLanguage
                 else target = target.parent;
             return false;
         }
-        public virtual void Clear()
-        {
-            children.Clear();
-            declarations.Clear();
-            attributes.Clear();
-            files?.Clear();
-            ((ICitePort<CompilingSpace, FileSpace>)this).ClearCite();
-            ((ICitePort<CompilingSpace, FileDeclaration>)this).ClearCite();
-        }
-
-        /// <summary>
-        /// 被import的文件空间集合
-        /// </summary>
-        CitePort<FileSpace> ICitePort<CompilingSpace, FileSpace>.Cites { get; } = [];
-        /// <summary>
-        /// 存放名称冲突的定义集合
-        /// </summary>
-        CitePort<FileDeclaration> ICitePort<CompilingSpace, FileDeclaration>.Cites { get; } = [];
     }
     internal partial class CompilingLibrary(string name, HashSet<FileSpace>? files) : CompilingSpace(null, name, files)
     {
@@ -241,9 +218,13 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingTask> tasks = [];
         public readonly List<CompilingNative> natives = [];
 
-        public override void Clear()
+        public void Clear()
         {
-            base.Clear();
+            children.Clear();
+            declarations.Clear();
+            attributes.Clear();
+            files?.Clear();
+
             variables.Clear();
             functions.Clear();
             enums.Clear();
@@ -253,6 +234,18 @@ namespace RainLanguageServer.RainLanguage
             delegates.Clear();
             tasks.Clear();
             natives.Clear();
+        }
+        public void ClearReferences()
+        {
+            foreach (var item in variables) item.references.Clear();
+            foreach (var item in functions) item.references.Clear();
+            foreach (var item in enums) item.references.Clear();
+            foreach (var item in structs) item.references.Clear();
+            foreach (var item in interfaces) item.references.Clear();
+            foreach (var item in classes) item.references.Clear();
+            foreach (var item in delegates) item.references.Clear();
+            foreach (var item in tasks) item.references.Clear();
+            foreach (var item in natives) item.references.Clear();
         }
     }
 }

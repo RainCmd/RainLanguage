@@ -24,6 +24,7 @@ namespace RainLanguageServer.RainLanguage
             using var sr = File.OpenText(kernelPath);
             kernel = LoadLibrary(Type.LIBRARY_KERNEL, sr.ReadToEnd(), true, out var file);
             foreach (var space in file.children) space.Link(this, library, false);
+            kernel.ClearReferences();
         }
         public CompilingLibrary? LoadLibrary(string name)
         {
@@ -39,6 +40,7 @@ namespace RainLanguageServer.RainLanguage
                         library = LoadLibrary(name, content, false, out var file);
                         relies[name] = library;
                         foreach (var space in file.children) space.Link(this, library, false);
+                        library.ClearReferences();
                     }
                 }
                 return library;
@@ -288,7 +290,8 @@ namespace RainLanguageServer.RainLanguage
         {
             library.Clear();
             fileSpaces.Clear();
-            //todo kernel和relies中实现内容也要清理
+            kernel.ClearReferences();
+            foreach (var rely in relies.Values) rely.ClearReferences();
         }
     }
 }

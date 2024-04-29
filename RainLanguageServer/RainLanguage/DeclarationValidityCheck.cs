@@ -9,11 +9,7 @@
                 child.Value.DuplicationNameCheck(manager);
                 if (this.declarations.TryGetValue(child.Key, out var declarations))
                     foreach (var declaration in declarations)
-                        if (declaration.file != null)
-                        {
-                            declaration.file.collector.Add(declaration.name, CErrorLevel.Error, "当前命名空间下有同名子命名空间");
-                            ((ICitePort<FileDeclaration, CompilingSpace>)declaration.file).AddCite(child.Value);
-                        }
+                            declaration.file?.space.collector.Add(declaration.name, CErrorLevel.Error, "当前命名空间下有同名子命名空间");
             }
             var filter = new HashSet<Declaration>();
             var duplications = new List<CompilingDeclaration>();
@@ -45,7 +41,7 @@
                                         foreach (var item in duplications)
                                             if (item != declaration)
                                                 msg.related.Add(new(item.name, "重载的函数"));
-                                        declaration.file?.collector.Add(msg);
+                                        declaration.file?.space.collector.Add(msg);
                                     }
                                     duplications.Clear();
                                 }
@@ -61,7 +57,7 @@
                             foreach (var item in declarations)
                                 if (item != declaration)
                                     msg.related.Add(new(item.name, "名称重复的定义"));
-                            declaration.file?.collector.Add(msg);
+                            declaration.file?.space.collector.Add(msg);
                         }
                     }
                 }
@@ -101,7 +97,7 @@
                                 foreach (var index in duplicationNames)
                                     if (index != element)
                                         msg.related.Add(new(index, "名称重复的枚举"));
-                                compilingElement.file?.collector.Add(msg);
+                                compilingElement.file?.space.collector.Add(msg);
                             }
                             duplicationNames.Clear();
                         }
@@ -140,7 +136,7 @@
                                 foreach (var item in duplications)
                                     if (item != index)
                                         msg.related.Add(new(item.name, "名称重复的成员"));
-                                index.file?.collector.Add(msg);
+                                index.file?.space.collector.Add(msg);
                             }
                             duplications.Clear();
                         }
@@ -151,7 +147,7 @@
                 {
                     var functionX = compilingStruct.functions[x];
                     if (functionX.name.ToString() == compilingStruct.name.ToString())
-                        functionX.file?.collector.Add(functionX.name, CErrorLevel.Error, "结构体不允许有构造函数");
+                        functionX.file?.space.collector.Add(functionX.name, CErrorLevel.Error, "结构体不允许有构造函数");
                     else if (filter.Add(functionX.declaration))
                     {
                         for (var y = x + 1; y < compilingStruct.functions.Count; y++)
@@ -172,7 +168,7 @@
                                 foreach (var index in duplications)
                                     if (index != function)
                                         msg.related.Add(new(index.name, "重复定义的函数"));
-                                function.file?.collector.Add(msg);
+                                function.file?.space.collector.Add(msg);
                             }
                             duplications.Clear();
                         }
@@ -185,7 +181,7 @@
             {
                 typeStack.Add(compilingInterface.declaration.GetDefineType());
                 if (CheckCircularInheritance(manager, compilingInterface.inherits, typeStack))
-                    compilingInterface.file?.collector.Add(compilingInterface.name, CErrorLevel.Error, "存在循环继承");
+                    compilingInterface.file?.space.collector.Add(compilingInterface.name, CErrorLevel.Error, "存在循环继承");
                 typeStack.Clear();
                 for (var x = 0; x < compilingInterface.callables.Count; x++)
                 {
@@ -210,7 +206,7 @@
                                 foreach (var index in duplications)
                                     if (index != callable)
                                         msg.related.Add(new(index.name, "重复定义的接口函数"));
-                                callable.file?.collector.Add(msg);
+                                callable.file?.space.collector.Add(msg);
                             }
                             duplications.Clear();
                         }
@@ -224,7 +220,7 @@
                 for (var index = compilingClass.parent; index.Vaild; index = manager.GetParent(index))
                     if (typeStack.Contains(index))
                     {
-                        compilingClass.file?.collector.Add(compilingClass.name, CErrorLevel.Error, "存在循环继承");
+                        compilingClass.file?.space.collector.Add(compilingClass.name, CErrorLevel.Error, "存在循环继承");
                         break;
                     }
                     else typeStack.Add(index);
@@ -232,7 +228,7 @@
                 for (var x = 0; x < compilingClass.constructors.Count; x++)
                 {
                     var ctorX = compilingClass.constructors[x];
-                    if (ctorX.returns.Count > 0) ctorX.file?.collector.Add(ctorX.name, CErrorLevel.Error, "构造函数不能有返回值");
+                    if (ctorX.returns.Count > 0) ctorX.file?.space.collector.Add(ctorX.name, CErrorLevel.Error, "构造函数不能有返回值");
                     if (filter.Add(ctorX.declaration))
                     {
                         for (var y = x + 1; y < compilingClass.constructors.Count; y++)
@@ -253,7 +249,7 @@
                                 foreach (var item in duplications)
                                     if (item != index)
                                         msg.related.Add(new(item.name, "重复定义的构造函数"));
-                                index.file?.collector.Add(msg);
+                                index.file?.space.collector.Add(msg);
                             }
                             duplications.Clear();
                         }
@@ -289,7 +285,7 @@
                                 foreach (var item in duplications)
                                     if (index != item)
                                         msg.related.Add(new(item.name, "命名冲突的成员"));
-                                index.file?.collector.Add(msg);
+                                index.file?.space.collector.Add(msg);
                             }
                             duplications.Clear();
                         }
@@ -319,7 +315,7 @@
                                 foreach (var item in duplications)
                                     if (index != item)
                                         msg.related.Add(new(item.name, "重复定义的函数"));
-                                index.file?.collector.Add(msg);
+                                index.file?.space.collector.Add(msg);
                             }
                             duplications.Clear();
                         }

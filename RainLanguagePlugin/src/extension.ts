@@ -66,5 +66,7 @@ export async function deactivate() {
 
 const langugaePreviewDoc = new Map<string, string>()
 export function RegistRainLanguagePreviewDoc(path: string, content: string) {
-    langugaePreviewDoc.set(path, content)
+    const uri = vscode.Uri.parse(path)
+    if (uri.scheme == "rain-language")
+        langugaePreviewDoc.set(uri.path, content)
 }

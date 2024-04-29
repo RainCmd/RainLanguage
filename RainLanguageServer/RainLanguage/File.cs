@@ -23,7 +23,6 @@ namespace RainLanguageServer.RainLanguage
         public readonly FileType type = type;
     }
     internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space)
-        : ICitePort<FileDeclaration, CompilingDeclaration>, ICitePort<FileDeclaration, CompilingSpace>
     {
         /// <summary>
         /// 内部成员的缩进，没有内部成员的定义这个值为-1
@@ -35,17 +34,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<TextRange> attributes = [];
 
         public TextRange range;
-        public readonly MessageCollector collector = [];//仅存储子模块内的错误信息和语义层面的错误信息（如：命名冲突，函数实现错误等）
         public CompilingDeclaration? compiling;
-
-        /// <summary>
-        /// 被其他声明引用的集合
-        /// </summary>
-        CitePort<CompilingDeclaration> ICitePort<FileDeclaration, CompilingDeclaration>.Cites { get; } = [];
-        /// <summary>
-        /// 存放命名冲突的命名空间集合，错误消息存放在<see cref="collector"/>
-        /// </summary>
-        CitePort<CompilingSpace> ICitePort<FileDeclaration, CompilingSpace>.Cites { get; } = [];
 
         public virtual bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
@@ -763,7 +752,7 @@ namespace RainLanguageServer.RainLanguage
             return false;
         }
     }
-    internal partial class FileSpace : ICitePort<FileSpace, CompilingSpace>
+    internal partial class FileSpace
     {
         /// <summary>
         /// 内部定义的缩进
@@ -788,10 +777,5 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<FileDelegate> delegates = [];
         public readonly List<FileTask> tasks = [];
         public readonly List<FileNative> natives = [];
-
-        /// <summary>
-        /// import的命名空间集合
-        /// </summary>
-        public CitePort<CompilingSpace> Cites { get; } = [];
     }
 }

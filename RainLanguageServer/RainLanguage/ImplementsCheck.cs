@@ -24,14 +24,14 @@
                             {
                                 var msg = new CompileMessage(member.name, CErrorLevel.Error, "函数返回值类型与接口函数不一致");
                                 msg.related.Add(new(function.name, "实现的接口函数"));
-                                compiling.file?.collector.Add(msg);
+                                compiling.file?.space.collector.Add(msg);
                             }
                             else
                             {
                                 var msg = new CompileMessage(self.Value, CErrorLevel.Error, "父类实现函数返回值类型与接口函数不一致");
                                 msg.related.Add(new(member.name, "来自父类的实现"));
                                 msg.related.Add(new(function.name, "需要实现的接口函数"));
-                                compiling.file?.collector.Add(msg);
+                                compiling.file?.space.collector.Add(msg);
                             }
                         }
                         return member;
@@ -56,7 +56,7 @@
                                     {
                                         var msg = new CompileMessage(function.name, CErrorLevel.Error, "覆盖的函数返回值不一致");
                                         msg.related.Add(new(member.name, "被覆盖的函数"));
-                                        compiling.file?.collector.Add(msg);
+                                        compiling.file?.space.collector.Add(msg);
                                     }
                                     function.overrides.Add(member);
                                     member.implements.Add(function);
@@ -85,7 +85,7 @@
                         {
                             var msg = new CompileMessage(compiling.name, CErrorLevel.Error, $"接口 {inherit.GetFullName()} 有函数没实现");
                             msg.related.Add(new RelatedInfo(callable.name, "没实现的函数"));
-                            compiling.file?.collector.Add(msg);
+                            compiling.file?.space.collector.Add(msg);
                         }
                         else function.overrides.Add(callable);
 

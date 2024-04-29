@@ -43,9 +43,6 @@
             get
             {
                 foreach (var msg in collector) yield return msg;
-                foreach (var file in SelfDeclarations)
-                    foreach (var msg in file.collector)
-                        yield return msg;
                 foreach (var child in children)
                     foreach (var msg in child.Messages)
                         yield return msg;

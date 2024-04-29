@@ -2,7 +2,7 @@
 {
     internal partial class FileSpace
     {
-        private static Type GetType(Context context, ASTManager manager, FileType fileType, MessageCollector collector)
+        private Type GetType(Context context, ASTManager manager, FileType fileType)
         {
             Type result = default;
             if (context.TryFindDeclaration(manager, fileType.name, out var declarations, collector))
@@ -21,16 +21,9 @@
                 }
             }
             else collector.Add(fileType.name, CErrorLevel.Error, "声明未找到");
+            if (manager.GetSourceDeclaration(result) is CompilingDeclaration target)
+                target.references.Add(fileType.GetNameRange());
             return new Type(result.library!, result.code, result.name!, fileType.dimension);
-        }
-        private static void AddTypeCite(ASTManager manager, CompilingDeclaration compiling, Type type)
-        {
-            if (manager.GetSourceDeclaration(type.Source) is CompilingDeclaration target && target.file != null)
-                compiling.AddCite(target.file);
-        }
-        private static void AddTypeCites(ASTManager manager, CompilingDeclaration source, IList<Type> types)
-        {
-            foreach (var type in types) AddTypeCite(manager, source, type);
         }
         public void Link(ASTManager manager, CompilingLibrary library, bool cite)
         {
@@ -38,31 +31,28 @@
             var context = new Context(compiling, relies, default);
             foreach (var file in variables)
             {
-                var type = GetType(context, manager, file.type, collector);
+                var type = GetType(context, manager, file.type);
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Variable, compiling.GetChildName(file.name.ToString()), default);
                 var variable = new CompilingVariable(file.name, declaration, file.attributes, compiling, cite ? file : null, file.isReadonly, type, file.expression, relies);
                 library.variables.Add(variable);
                 file.compiling = variable;
                 compiling.AddDeclaration(variable);
-                if (cite) AddTypeCite(manager, variable, type);
             }
             foreach (var file in functions)
             {
                 var parameters = new List<CompilingCallable.Parameter>();
                 foreach (var parameter in file.parameters)
-                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, collector)));
+                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                 var parameterTypes = new List<Type>();
                 foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type, collector));
+                    returnTypes.Add(GetType(context, manager, type));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
                 var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), file.body, relies);
                 library.functions.Add(function);
                 file.compiling = function;
                 compiling.AddDeclaration(function);
-                if (cite) AddTypeCites(manager, function, parameterTypes);
-                if (cite) AddTypeCites(manager, function, returnTypes);
             }
             foreach (var file in enums)
             {
@@ -83,29 +73,26 @@
 
                 foreach (var variable in file.variables)
                 {
-                    var type = GetType(context, manager, variable.type, file.collector);
+                    var type = GetType(context, manager, variable.type);
                     var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingStruct.variables.Add(compilingVariable);
                     variable.compiling = compilingVariable;
-                    if (cite) AddTypeCite(manager, compilingVariable, type);
                 }
                 foreach (var function in file.functions)
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
-                        returnTypes.Add(GetType(context, manager, type, file.collector));
+                        returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingStruct.functions.Add(compilingFunction);
                     function.compiling = compilingFunction;
-                    if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
-                    if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
                 }
             }
             foreach (var file in interfaces)
@@ -115,11 +102,10 @@
 
                 foreach (var fileType in file.inherits)
                 {
-                    var type = GetType(context, manager, fileType, collector);
+                    var type = GetType(context, manager, fileType);
                     if (type.dimension > 0) collector.Add(fileType.name, CErrorLevel.Error, "不能继承数组");
                     else if (type.code != TypeCode.Interface && type != Type.HANDLE) collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
                     compilingInterface.inherits.Add(type);
-                    if (cite) AddTypeCite(manager, compilingInterface, type);
                     if (manager.GetSourceDeclaration(type) is CompilingInterface inherit)
                         compilingInterface.implements.Add(inherit);
                 }
@@ -127,18 +113,16 @@
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
-                        returnTypes.Add(GetType(context, manager, type, file.collector));
+                        returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.InterfaceFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingAbstractFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes));
                     compilingInterface.callables.Add(compilingFunction);
                     function.compiling = compilingFunction;
-                    if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
-                    if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
                 }
             }
             foreach (var file in classes)
@@ -148,61 +132,56 @@
 
                 for (int i = 0; i < file.inherits.Count; i++)
                 {
-                    var type = GetType(context, manager, file.inherits[i], collector);
+                    var type = GetType(context, manager, file.inherits[i]);
                     if (type.dimension > 0) collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承数组");
                     if (i > 0 || type.code == TypeCode.Interface)
                     {
                         compilingClass.inherits.Add(type);
-                        if(type.code != TypeCode.Interface) collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
+                        if (type.code != TypeCode.Interface) collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
                     }
                     else
                     {
                         compilingClass.parent = type;
                         if (type.code != TypeCode.Handle) collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
                     }
-                    if (cite) AddTypeCite(manager, compilingClass, type);
                     var inherit = manager.GetSourceDeclaration(type);
                     if (inherit is CompilingInterface @interface) @interface.implements.Add(compilingClass);
                     else if (inherit is CompilingClass @class) @class.implements.Add(compilingClass);
                 }
                 foreach (var variable in file.variables)
                 {
-                    var type = GetType(context, manager, variable.type, file.collector);
+                    var type = GetType(context, manager, variable.type);
                     var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingClass.variables.Add(compilingVariable);
                     variable.compiling = compilingVariable;
-                    if (cite) AddTypeCite(manager, compilingVariable, type);
                 }
                 foreach (var function in file.constructors)
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple([]), function.body, relies);
                     compilingClass.constructors.Add(compilingFunction);
                     function.compiling = compilingFunction;
-                    if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
                 }
                 foreach (var function in file.functions)
                 {
                     var parameters = new List<CompilingCallable.Parameter>();
                     foreach (var parameter in function.parameters)
-                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, file.collector)));
+                        parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var returnTypes = new List<Type>();
                     foreach (var type in function.returns)
-                        returnTypes.Add(GetType(context, manager, type, file.collector));
+                        returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
                     var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
                     compilingClass.functions.Add(compilingFunction);
                     function.compiling = compilingFunction;
-                    if (cite) AddTypeCites(manager, compilingFunction, parameterTypes);
-                    if (cite) AddTypeCites(manager, compilingFunction, returnTypes);
                 }
             }
             foreach (var file in delegates)
@@ -213,20 +192,20 @@
                 var name = compilingDelegate.declaration.name;
                 var parameters = new List<CompilingCallable.Parameter>();
                 foreach (var parameter in file.parameters)
-                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, collector)));
+                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                 var parameterTypes = new List<Type>();
                 foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type, collector));
+                    returnTypes.Add(GetType(context, manager, type));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Delegate, name, new Tuple(parameterTypes));
 
                 declarations.Remove(compilingDelegate);
                 library.delegates.Remove(compilingDelegate);
 
+                var references = compilingDelegate.references;
                 compilingDelegate = new CompilingDelegate(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes));
-                if (cite) AddTypeCites(manager, compilingDelegate, parameterTypes);
-                if (cite) AddTypeCites(manager, compilingDelegate, returnTypes);
+                compilingDelegate.references.AddRange(references);
 
                 declarations.Add(compilingDelegate);
                 library.delegates.Add(compilingDelegate);
@@ -240,14 +219,15 @@
                 var name = compilingTask.declaration.name;
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type, collector));
+                    returnTypes.Add(GetType(context, manager, type));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Task, name, default);
 
                 declarations.Remove(compilingTask);
                 library.tasks.Remove(compilingTask);
 
+                var references = compilingTask.references;
                 compilingTask = new CompilingTask(file.name, declaration, file.attributes, compiling, cite ? file : null, new Tuple(returnTypes));
-                if (cite) AddTypeCites(manager, compilingTask, returnTypes);
+                compilingTask.references.AddRange(references);
 
                 declarations.Add(compilingTask);
                 library.tasks.Add(compilingTask);
@@ -257,19 +237,17 @@
             {
                 var parameters = new List<CompilingCallable.Parameter>();
                 foreach (var parameter in file.parameters)
-                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type, collector)));
+                    parameters.Add(new CompilingCallable.Parameter(parameter.name, GetType(context, manager, parameter.type)));
                 var parameterTypes = new List<Type>();
                 foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                 var returnTypes = new List<Type>();
                 foreach (var type in file.returns)
-                    returnTypes.Add(GetType(context, manager, type, collector));
+                    returnTypes.Add(GetType(context, manager, type));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
                 var native = new CompilingNative(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes));
                 library.natives.Add(native);
                 compiling.AddDeclaration(native);
                 file.compiling = native;
-                if (cite) AddTypeCites(manager, native, parameterTypes);
-                if (cite) AddTypeCites(manager, native, returnTypes);
             }
         }
     }
