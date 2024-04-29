@@ -599,7 +599,7 @@ namespace RainLanguageServer.RainLanguage
             var index = 1;
             while (TryAnalysis(segment, index, out var lexical, collector))
             {
-                index = lexical.anchor.End - segment.Start;
+                index = lexical.anchor.end - segment.start;
                 if (lexical.type == LexicalType.BracketRight2)
                     return segment[..index];
             }
@@ -880,7 +880,7 @@ namespace RainLanguageServer.RainLanguage
         }
         public static bool TryAnalysis(TextRange segment, TextPosition index, out Lexical lexical, MessageCollector? collector)
         {
-            return TryAnalysis(segment, index - segment.Start, out lexical, collector);
+            return TryAnalysis(segment, index - segment.start, out lexical, collector);
         }
 
         public static bool TryExtractName(TextRange segment, int start, out int index, out List<TextRange> names, MessageCollector? collector)
@@ -891,17 +891,17 @@ namespace RainLanguageServer.RainLanguage
             {
                 if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord()) names.Add(lexical.anchor);
                 else break;
-                index = lexical.anchor.End - segment.Start;
+                index = lexical.anchor.end - segment.start;
                 if (TryAnalysis(segment, index, out lexical, collector) && lexical.type == LexicalType.Dot)
-                    index = lexical.anchor.End - segment.Start;
+                    index = lexical.anchor.end - segment.start;
                 else return true;
             }
             return names.Count > 0;
         }
         public static bool TryExtractName(TextRange segment, TextPosition start, out TextPosition index, out List<TextRange> names, MessageCollector? collector)
         {
-            var ressult = TryExtractName(segment, start - segment.Start, out var i, out names, collector);
-            index = segment.Start + i;
+            var ressult = TryExtractName(segment, start - segment.start, out var i, out names, collector);
+            index = segment.start + i;
             return ressult;
         }
 
@@ -911,17 +911,17 @@ namespace RainLanguageServer.RainLanguage
             while (true)
             {
                 if (!TryAnalysis(segment, position, out var lexical, null) || lexical.type != LexicalType.BracketLeft1) break;
-                if (!TryAnalysis(segment, lexical.anchor.End, out lexical, null) || lexical.type != LexicalType.BracketRight1) break;
-                position = lexical.anchor.End - segment.Start;
+                if (!TryAnalysis(segment, lexical.anchor.end, out lexical, null) || lexical.type != LexicalType.BracketRight1) break;
+                position = lexical.anchor.end - segment.start;
                 result++;
             }
             return result;
         }
         public static int ExtractDimension(TextRange segment, ref TextPosition position)
         {
-            var index = position - segment.Start;
+            var index = position - segment.start;
             var result = ExtractDimension(segment, ref index);
-            position = segment.Start + index;
+            position = segment.start + index;
             return result;
         }
     }

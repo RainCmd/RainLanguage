@@ -55,7 +55,7 @@
         public bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
             foreach (var child in children)
-                if ((child.range != null) && child.range.Contain(position))
+                if (child.range.Contain(position))
                     return child.TryGetDeclaration(manager, position, out result);
             foreach (var declaration in SelfDeclarations)
                 if (declaration.range != null && declaration.range.Contain(position))
@@ -67,7 +67,7 @@
         public FileSpace GetFileSpace(TextPosition position)
         {
             foreach (var child in children)
-                if (child.range != null && child.range.Contain(position))
+                if (child.range.Contain(position))
                     return child.GetFileSpace(position);
             return this;
         }
@@ -75,7 +75,7 @@
         {
             var space = GetFileSpace(position);
             foreach (var file in space.SelfDeclarations)
-                if (file.range != null && file.range.Contain(position))
+                if (file.range.Contain(position))
                     return file;
             return null;
         }

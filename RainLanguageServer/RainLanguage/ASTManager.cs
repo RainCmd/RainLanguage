@@ -50,7 +50,7 @@ namespace RainLanguageServer.RainLanguage
             var reader = new LineReader(new FileDocument(path, content));
             regPreviewDoc(path, content);
             var library = new CompilingLibrary(name, null);
-            file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
+            file = new FileSpace(reader, library, false, null, -1, allowKeywordType) { range = new TextRange(reader.document, 0, content.Length) };
             foreach (var space in file.children) space.Tidy(this, library, false);
             return library;
         }
@@ -60,7 +60,7 @@ namespace RainLanguageServer.RainLanguage
             else if (library == Type.LIBRARY_KERNEL) return kernel;
             else return relies.Values.First(x => x.name == library);
         }
-        private CompilingSpace? GetChildSpace(CompilingSpace? space, Span<string> name)
+        private static CompilingSpace? GetChildSpace(CompilingSpace? space, Span<string> name)
         {
             foreach (var item in name)
                 if (space == null || !space.children.TryGetValue(item, out space))

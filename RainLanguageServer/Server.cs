@@ -178,7 +178,7 @@ namespace RainLanguageServer
                     //todo 函数逻辑内语句结构的折叠关系
                     var list = new List<FoldingRange>();
                     foreach (var space in fileSpace.Spaces)
-                        if (space.range != null && space.indent > 0)
+                        if (space.indent > 0)
                             list.Add(CreateFoldingRange(space.range));
                     foreach (var declaration in fileSpace.Declarations)
                         if (declaration.range != null && declaration.indent > 0)
@@ -288,7 +288,7 @@ namespace RainLanguageServer
 
         private static FoldingRange CreateFoldingRange(TextRange range)
         {
-            return new FoldingRange() { startLine = range.Start.Line, endLine = range.End.Line - 1, kind = FoldingRangeKind.Comment };
+            return new FoldingRange() { startLine = range.start.Line.line, endLine = range.end.Line.line - 1, kind = FoldingRangeKind.Comment };
         }
 
         private readonly List<Diagnostic> diagnosticsHelper = [];
@@ -337,17 +337,17 @@ namespace RainLanguageServer
         }
         private static Location TR2L(TextRange range)
         {
-            return new Location(new Uri(range.Start.document.path), TR2R(range));
+            return new Location(new Uri(range.start.document.path), TR2R(range));
         }
         private static LanguageServer.Parameters.Range TR2R(TextRange range)
         {
-            var startLine = range.Start.document[range.Start.Line];
-            var endLine = range.End.document[range.End.Line];
-            return new LanguageServer.Parameters.Range(new Position(range.Start.Line, range.Start - startLine.Start), new Position(range.End.Line, range.End - endLine.Start));
+            var startLine = range.start.Line;
+            var endLine = range.end.Line;
+            return new LanguageServer.Parameters.Range(new Position(range.start.Line.line, range.start - startLine.start), new Position(range.end.Line.line, range.end - endLine.start));
         }
         private static TextPosition GetFilePosition(TextDocument document, Position position)
         {
-            return document[(int)position.line].Start + (int)position.character;
+            return document[(int)position.line].start + (int)position.character;
         }
     }
 }

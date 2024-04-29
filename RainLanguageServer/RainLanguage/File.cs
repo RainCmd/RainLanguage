@@ -14,7 +14,7 @@ namespace RainLanguageServer.RainLanguage
         }
         public TextRange GetNameRange()
         {
-            return new TextRange(name[0].Start, name[^1].End);
+            return new TextRange(name[0].start, name[^1].end);
         }
     }
     internal class FileParameter(TextRange? name, FileType type)
@@ -34,7 +34,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly FileSpace space = space;
         public readonly List<TextRange> attributes = [];
 
-        public TextRange? range;
+        public TextRange range;
         public readonly MessageCollector collector = [];//仅存储子模块内的错误信息和语义层面的错误信息（如：命名冲突，函数实现错误等）
         public CompilingDeclaration? compiling;
 
@@ -47,10 +47,10 @@ namespace RainLanguageServer.RainLanguage
         /// </summary>
         CitePort<CompilingSpace> ICitePort<FileDeclaration, CompilingSpace>.Cites { get; } = [];
 
-        public virtual bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public virtual bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
-            range = null;
-            info = null;
+            range = default;
+            info = default;
             isMarkdown = false;
             return false;
         }
@@ -65,12 +65,12 @@ namespace RainLanguageServer.RainLanguage
         public readonly bool isReadonly = isReadonly;
         public readonly FileType type = type;
         public readonly TextRange? expression = expression;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
         }
         private CompilingVariable? Compiling => compiling as CompilingVariable;
-        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange? range, out string? info, out bool isMarkdown)
+        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -124,11 +124,11 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
         public readonly List<TextLine> body = body;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
         }
-        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange? range, out string? info, out bool isMarkdown)
+        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -163,7 +163,7 @@ namespace RainLanguageServer.RainLanguage
                     }
                     sb.Append(')');
                 }
-                else sb.Append(name.Start.document[name.Start.Line]);
+                else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
                 info = sb.ToString();
@@ -198,9 +198,9 @@ namespace RainLanguageServer.RainLanguage
                         isMarkdown = true;
                         return true;
                     }
-                    else if (param.name != null && param.name.Contain(position))
+                    else if (param.name != null && param.name.Value.Contain(position))
                     {
-                        range = param.name;
+                        range = param.name.Value;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
@@ -230,7 +230,7 @@ namespace RainLanguageServer.RainLanguage
                         result = manager.GetSourceDeclaration(callable.parameters[i].type.Source);
                         return result != null;
                     }
-                    else if (param.name != null && param.name.Contain(position)) return false;
+                    else if (param.name != null && param.name.Value.Contain(position)) return false;
                 }
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
@@ -251,7 +251,7 @@ namespace RainLanguageServer.RainLanguage
             public readonly TextRange? expression = expression;
         }
         public readonly List<Element> elements = [];
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -281,7 +281,7 @@ namespace RainLanguageServer.RainLanguage
                         isMarkdown = true;
                         return true;
                     }
-                    else if (element.expression != null && element.expression.Contain(position))
+                    else if (element.expression != null && element.expression.Value.Contain(position))
                     {
                         //todo 枚举表达式内容
                     }
@@ -295,7 +295,7 @@ namespace RainLanguageServer.RainLanguage
             for (var i = 0; i < elements.Count; i++)
             {
                 var element = elements[i];
-                if (element.expression != null && element.expression.Contain(position))
+                if (element.expression != null && element.expression.Value.Contain(position))
                 {
                     //todo 枚举表达式内容
                 }
@@ -307,7 +307,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> functions = [];
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -348,7 +348,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileType> inherits = [];
         public readonly List<FileFunction> functions = [];
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -404,10 +404,10 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> constructors = [];
-        public TextRange? destructorRange;//todo 析构函数范围
+        public TextRange destructorRange;//todo 析构函数范围
         public readonly List<TextLine> destructor = [];
         public int destructorIndent = -1;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -489,7 +489,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -520,7 +520,7 @@ namespace RainLanguageServer.RainLanguage
                     }
                     sb.Append(')');
                 }
-                else sb.Append(name.Start.document[name.Start.Line]);
+                else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
                 info = sb.ToString();
@@ -555,9 +555,9 @@ namespace RainLanguageServer.RainLanguage
                         isMarkdown = true;
                         return true;
                     }
-                    else if (param.name != null && param.name.Contain(position))
+                    else if (param.name != null && param.name.Value.Contain(position))
                     {
-                        range = param.name;
+                        range = param.name.Value;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
@@ -583,7 +583,7 @@ namespace RainLanguageServer.RainLanguage
                         result = manager.GetSourceDeclaration(compilingDelegate.parameters[i].type.Source);
                         return result != null;
                     }
-                    else if (param.name != null && param.name.Contain(position)) return false;
+                    else if (param.name != null && param.name.Value.Contain(position)) return false;
                 }
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
@@ -598,7 +598,7 @@ namespace RainLanguageServer.RainLanguage
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileType> returns = returns;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -616,7 +616,7 @@ namespace RainLanguageServer.RainLanguage
                     if (task.returns.Count > 0) sb.Append(' ');
                     sb.Append(name);
                 }
-                else sb.Append(name.Start.document[name.Start.Line]);
+                else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
                 info = sb.ToString();
@@ -657,7 +657,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
+        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
         {
             if (name.Contain(position))
             {
@@ -688,7 +688,7 @@ namespace RainLanguageServer.RainLanguage
                     }
                     sb.Append(')');
                 }
-                else sb.Append(name.Start.document[name.Start.Line]);
+                else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
                 info = sb.ToString();
@@ -723,9 +723,9 @@ namespace RainLanguageServer.RainLanguage
                         isMarkdown = true;
                         return true;
                     }
-                    else if (param.name != null && param.name.Contain(position))
+                    else if (param.name != null && param.name.Value.Contain(position))
                     {
-                        range = param.name;
+                        range = param.name.Value;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
@@ -751,7 +751,7 @@ namespace RainLanguageServer.RainLanguage
                         result = manager.GetSourceDeclaration(compilingNative.parameters[i].type.Source);
                         return result != null;
                     }
-                    else if (param.name != null && param.name.Contain(position)) return false;
+                    else if (param.name != null && param.name.Value.Contain(position)) return false;
                 }
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
@@ -773,7 +773,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly CompilingSpace compiling;
         public readonly TextDocument document;
 
-        public TextRange? range;
+        public TextRange range;
         public readonly MessageCollector collector = [];//命名空间缩进对齐的所有错误信息
 
         public readonly List<FileSpace> children = [];

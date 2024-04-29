@@ -18,11 +18,11 @@
             for (var index = line - 1; index >= 0; index--)
             {
                 var result = document[index];
-                if (result.Indent >= 0) return result;
+                if (result.indent >= 0) return result;
             }
             return document[0];
         }
-        public bool TryReadLine(out TextLine? line)
+        public bool TryReadLine(out TextLine line)
         {
             if (this.line++ < document.LineCount)
             {
@@ -45,7 +45,7 @@
             foreach (var file in files)
             {
                 var reader = new LineReader(file);
-                manager.fileSpaces.Add(file.Path, new FileSpace(reader, manager.library, true, null, -1, false));
+                manager.fileSpaces.Add(file.Path, new FileSpace(reader, manager.library, true, null, -1, false) { range = new TextRange(reader.document, 0, reader.document.text.Length) });
             }
             foreach (var file in manager.fileSpaces)
                 file.Value.Tidy(manager, manager.library, true);

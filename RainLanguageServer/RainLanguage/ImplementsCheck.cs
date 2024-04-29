@@ -28,7 +28,7 @@
                             }
                             else
                             {
-                                var msg = new CompileMessage(self, CErrorLevel.Error, "父类实现函数返回值类型与接口函数不一致");
+                                var msg = new CompileMessage(self.Value, CErrorLevel.Error, "父类实现函数返回值类型与接口函数不一致");
                                 msg.related.Add(new(member.name, "来自父类的实现"));
                                 msg.related.Add(new(function.name, "需要实现的接口函数"));
                                 compiling.file?.collector.Add(msg);
