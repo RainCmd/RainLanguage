@@ -3,7 +3,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as net from 'net'
-import { ShowRainLanguagePreviewDoc } from './extension';
+import { RegistRainLanguagePreviewDoc } from './extension';
 
 let client: LanguageClient;
 
@@ -78,8 +78,8 @@ export async function StartServer(context: vscode.ExtensionContext) {
         }
     }
     client = new LanguageClient("雨言", "雨言服务客户端", serverOptions, clientOptions)
-    client.onNotification("rainlanguage/previewDoc", doc => {
-        ShowRainLanguagePreviewDoc(doc.path, doc.content)
+    client.onNotification("rainlanguage/regPreviewDoc", doc => {
+        RegistRainLanguagePreviewDoc(doc.path, doc.content)
     })
     client.start().then(() => {
         console.log("雨言服务客户端：启动")

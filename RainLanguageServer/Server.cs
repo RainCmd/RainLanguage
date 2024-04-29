@@ -6,6 +6,7 @@ using RainLanguageServer.RainLanguage;
 using System.Collections;
 using LanguageServer.Parameters;
 using System.Xml.Linq;
+using System.Runtime.InteropServices;
 
 namespace RainLanguageServer
 {
@@ -45,14 +46,14 @@ namespace RainLanguageServer
                 return GetEnumerator();
             }
         }
-        private ASTManager? manager;
+        private ASTBuilder? builder;
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
             var kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
             var projectName = param.initializationOptions?.projectName?.Value as string;
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
-            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(new UnifiedPath(param.rootUri), this), LoadRelyLibrary);
+            builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(new UnifiedPath(param.rootUri), this), LoadRelyLibrary, RegPreviewDoc);
 
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
@@ -102,9 +103,10 @@ namespace RainLanguageServer
         }
         protected override void Initialized()
         {
-            if (manager != null)
+            if (builder != null)
             {
-                RefreshDiagnostics(manager.fileSpaces.Keys);
+                builder.Reparse();
+                RefreshDiagnostics(builder.manager.fileSpaces.Keys);
             }
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
@@ -118,11 +120,16 @@ namespace RainLanguageServer
             return Result<CompletionResult, ResponseError>.Success(result);
         }
 
+        protected override Result<Location[], ResponseError> FindReferences(ReferenceParams param, CancellationToken token)
+        {
+            return Result<Location[], ResponseError>.Success([new Location("rain-language:kernel.rain", new LanguageServer.Parameters.Range(new Position(0, 1), new Position(0, 10)))]);
+        }
+
         protected override Result<Hover, ResponseError> Hover(TextDocumentPositionParams param, CancellationToken token)
         {
-            if (manager != null)
+            if (builder != null)
             {
-                if (manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
+                if (builder.manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
                 {
                     var position = GetFilePosition(fileSpace.document, param.position);
                     var declaration = fileSpace.GetFileDeclaration(position);
@@ -138,9 +145,9 @@ namespace RainLanguageServer
 
         protected override Result<FoldingRange[], ResponseError> FoldingRange(FoldingRangeRequestParam param, CancellationToken token)
         {
-            if (manager != null)
+            if (builder != null)
             {
-                if (manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
+                if (builder.manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
                 {
                     //todo 函数逻辑内语句结构的折叠关系
                     var list = new List<FoldingRange>();
@@ -185,11 +192,11 @@ namespace RainLanguageServer
             public string path = path;
             public string content = content;
         }
-        public void ShowPreviewDoc(string path, string content)
+        public void RegPreviewDoc(string path, string content)
         {
             SendNotification(new NotificationMessage<PreviewDoc>()
             {
-                method = "rainlanguage/previewDoc",
+                method = "rainlanguage/regPreviewDoc",
                 @params = new PreviewDoc(path, content)
             });
         }
@@ -204,11 +211,13 @@ namespace RainLanguageServer
         {
             string path = new UnifiedPath(param.textDocument.uri);
             TextDocument? document = null;
-            if (manager != null && manager.fileSpaces.TryGetValue(path, out var fileSpace))
+            if (builder != null && builder.manager.fileSpaces.TryGetValue(path, out var fileSpace))
             {
                 if (param.textDocument.text != fileSpace.document.text)
+                {
                     document = fileSpace.document;
-                fileSpace.document.Set(param.textDocument.text);
+                    fileSpace.document.Set(param.textDocument.text);
+                }
                 documents[path] = fileSpace.document;
             }
             else documents[path] = document = new TextDocument(path, param.textDocument.text);
@@ -230,8 +239,10 @@ namespace RainLanguageServer
 
         private void OnChanged(TextDocument document)
         {
-            var changes = document.GetLastChanges();
+            //var changes = document.GetLastChanges();
             //todo 处理文档变化，需要收集音响范围并重新解析
+            builder?.Reparse();
+            RefreshDiagnostics([document.path]);
         }
 
         private static FoldingRange CreateFoldingRange(TextRange range)
@@ -246,9 +257,9 @@ namespace RainLanguageServer
         /// <param name="files"></param>
         private void RefreshDiagnostics(IEnumerable<string> files)
         {
-            if (manager == null) return;
+            if (builder == null) return;
             foreach (var file in files)
-                if (manager.fileSpaces.TryGetValue(file, out var space))
+                if (builder.manager.fileSpaces.TryGetValue(file, out var space))
                 {
                     CollectFileDiagnostic(space, diagnosticsHelper);
                     var param = new PublishDiagnosticsParams(new Uri(file), [.. diagnosticsHelper]);

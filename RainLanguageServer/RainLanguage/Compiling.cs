@@ -149,6 +149,15 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<TextRange> attributes = [];
         public readonly HashSet<FileSpace>? files = files;
 
+        public CompilingLibrary Library
+        {
+            get
+            {
+                var index = this;
+                while (index.parent != null) index = index.parent;
+                return (CompilingLibrary)index;
+            }
+        }
         public CompilingSpace GetChild(string name)
         {
             if (children.TryGetValue(name, out var child)) return child;
@@ -201,14 +210,14 @@ namespace RainLanguageServer.RainLanguage
                 else target = target.parent;
             return false;
         }
-        public CompilingLibrary Library
+        public virtual void Clear()
         {
-            get
-            {
-                var index = this;
-                while (index.parent != null) index = index.parent;
-                return (CompilingLibrary)index;
-            }
+            children.Clear();
+            declarations.Clear();
+            attributes.Clear();
+            files?.Clear();
+            ((ICitePort<CompilingSpace, FileSpace>)this).ClearCite();
+            ((ICitePort<CompilingSpace, FileDeclaration>)this).ClearCite();
         }
 
         /// <summary>
@@ -231,5 +240,19 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingDelegate> delegates = [];
         public readonly List<CompilingTask> tasks = [];
         public readonly List<CompilingNative> natives = [];
+
+        public override void Clear()
+        {
+            base.Clear();
+            variables.Clear();
+            functions.Clear();
+            enums.Clear();
+            structs.Clear();
+            interfaces.Clear();
+            classes.Clear();
+            delegates.Clear();
+            tasks.Clear();
+            natives.Clear();
+        }
     }
 }

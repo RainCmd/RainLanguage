@@ -14,11 +14,13 @@ namespace RainLanguageServer.RainLanguage
         public readonly Dictionary<string, CompilingLibrary> relies = [];
         public readonly CompilingLibrary kernel;
         private readonly Func<string, string> relyLoader;
-        public ASTManager(string kernelPath, string name, Func<string, string> relyLoader)
+        private readonly Action<string, string> regPreviewDoc;
+        public ASTManager(string kernelPath, string name, Func<string, string> relyLoader, Action<string, string> regPreviewDoc)
         {
             library = new CompilingLibrary(name, []);
             kernelPath = new UnifiedPath(kernelPath);
             this.relyLoader = relyLoader;
+            this.regPreviewDoc = regPreviewDoc;
             using var sr = File.OpenText(kernelPath);
             kernel = LoadLibrary(Type.LIBRARY_KERNEL, sr.ReadToEnd(), true, out var file);
             foreach (var space in file.children) space.Link(this, library, false);
@@ -44,7 +46,9 @@ namespace RainLanguageServer.RainLanguage
         }
         private CompilingLibrary LoadLibrary(string name, string content, bool allowKeywordType, out FileSpace file)
         {
-            var reader = new LineReader(new FileDocument("rain-language:" + name, content));
+            var path = $"rain-language:{name}.rain";
+            var reader = new LineReader(new FileDocument(path, content));
+            regPreviewDoc(path, content);
             var library = new CompilingLibrary(name, null);
             file = new FileSpace(reader, library, false, null, -1, allowKeywordType);
             foreach (var space in file.children) space.Tidy(this, library, false);

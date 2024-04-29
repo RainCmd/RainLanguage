@@ -34,11 +34,15 @@
         }
         public void Rollback() => line--;
     }
-    internal static class ASTBuilder
+    internal class ASTBuilder(string kernelPath, string name, IEnumerable<IFileDocument> files, Func<string, string> relyLoader, Action<string, string> regPreviewDoc)
     {
-        public static ASTManager Build(string kernelPath, string name, IEnumerable<IFileDocument> files, Func<string, string> relyLoader)
+        public readonly ASTManager manager = new(kernelPath, name, relyLoader, regPreviewDoc);
+        private readonly IEnumerable<IFileDocument> files = files;
+
+        public void Reparse()
         {
-            var manager = new ASTManager(kernelPath, name, relyLoader);
+            manager.library.Clear();
+            manager.fileSpaces.Clear();
             foreach (var file in files)
             {
                 var reader = new LineReader(file);
@@ -50,8 +54,6 @@
                 file.Value.Link(manager, manager.library, true);
             manager.library.DeclarationValidityCheck(manager);
             manager.library.ImplementsCheck(manager);
-
-            return manager;
         }
     }
 }

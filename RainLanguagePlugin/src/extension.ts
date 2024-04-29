@@ -6,7 +6,6 @@ import { KernelStateViewProvider } from "./KernelStateViewProvider";
 import { readFile } from "fs";
 import * as rainLanguageClient from "./LanguageClinet";
 import { RainEvaluatableExpressionProvider } from "./EvaluatableExpressionProvider";
-import { error } from "console";
 
 export let kernelStateViewProvider: KernelStateViewProvider;
 
@@ -49,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (error) {
                     console.log(error)
                 } else {
-                    ShowRainLanguagePreviewDoc(path, data.toString())
+                    RegistRainLanguagePreviewDoc(path, data.toString())
                 }
             })
         }),
@@ -65,11 +64,6 @@ export async function deactivate() {
 }
 
 const langugaePreviewDoc = new Map<string, string>()
-export function ShowRainLanguagePreviewDoc(path: string, content: string) {
-    if (!path) {
-        return;
-    }
+export function RegistRainLanguagePreviewDoc(path: string, content: string) {
     langugaePreviewDoc.set(path, content)
-    const uri = vscode.Uri.parse("rain-language:" + path)
-    vscode.window.showTextDocument(uri, { preview: true })
 }
