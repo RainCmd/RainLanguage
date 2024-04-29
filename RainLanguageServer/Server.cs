@@ -122,7 +122,32 @@ namespace RainLanguageServer
 
         protected override Result<Location[], ResponseError> FindReferences(ReferenceParams param, CancellationToken token)
         {
-            return Result<Location[], ResponseError>.Success([new Location("rain-language:kernel.rain", new LanguageServer.Parameters.Range(new Position(0, 1), new Position(0, 10)))]);
+            if (builder != null)
+            {
+                if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
+                    if (fileSpace.TryGetDeclaration(builder.manager, GetFilePosition(fileSpace.document, param.position), out var result))
+                    {
+                        var locations = new Location[result!.Cites.Count];
+                        var index = 0;
+                        foreach(var item in result.Cites)
+                            locations[index++] = TR2L(item.name);
+                        return Result<Location[], ResponseError>.Success(locations);
+                    }
+            }
+            return Result<Location[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
+
+        protected override Result<LocationSingleOrArray, ResponseError> GotoDefinition(TextDocumentPositionParams param, CancellationToken token)
+        {
+            if (builder != null)
+            {
+                if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
+                    if (fileSpace.TryGetDeclaration(builder.manager, GetFilePosition(fileSpace.document, param.position), out var result))
+                    {
+                        return Result<LocationSingleOrArray, ResponseError>.Success(TR2L(result!.name));
+                    }
+            }
+            return Result<LocationSingleOrArray, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         protected override Result<Hover, ResponseError> Hover(TextDocumentPositionParams param, CancellationToken token)

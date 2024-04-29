@@ -243,7 +243,10 @@ namespace RainLanguageServer.RainLanguage
         }
         public CompilingDeclaration? GetSourceDeclaration(Type type)
         {
-            if (type.Vaild) switch (type.code)
+            if (type.Vaild)
+            {
+                if (type.dimension > 0) type = Type.ARRAY;
+                switch (type.code)
                 {
                     case TypeCode.Invalid: break;
                     case TypeCode.Struct:
@@ -256,6 +259,7 @@ namespace RainLanguageServer.RainLanguage
                             return declarations![0];
                         break;
                 }
+            }
             return null;
         }
         public Type GetParent(Type type)
@@ -279,6 +283,12 @@ namespace RainLanguageServer.RainLanguage
                 }
             }
             return default;
+        }
+        public void Clear()
+        {
+            library.Clear();
+            fileSpaces.Clear();
+            //todo kernel和relies中实现内容也要清理
         }
     }
 }

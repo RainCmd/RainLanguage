@@ -25,7 +25,7 @@
         }
         private static void AddTypeCite(ASTManager manager, CompilingDeclaration compiling, Type type)
         {
-            if (manager.GetSourceDeclaration(type) is CompilingDeclaration target && target.file != null)
+            if (manager.GetSourceDeclaration(type.Source) is CompilingDeclaration target && target.file != null)
                 compiling.AddCite(target.file);
         }
         private static void AddTypeCites(ASTManager manager, CompilingDeclaration source, IList<Type> types)
@@ -117,8 +117,8 @@
                 {
                     var type = GetType(context, manager, fileType, collector);
                     if (type.dimension > 0) collector.Add(fileType.name, CErrorLevel.Error, "不能继承数组");
-                    else if (type.code == TypeCode.Interface || type == Type.HANDLE) compilingInterface.inherits.Add(type);
-                    else collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
+                    else if (type.code != TypeCode.Interface && type != Type.HANDLE) collector.Add(fileType.name, CErrorLevel.Error, "必须是接口");
+                    compilingInterface.inherits.Add(type);
                     if (cite) AddTypeCite(manager, compilingInterface, type);
                     if (manager.GetSourceDeclaration(type) is CompilingInterface inherit)
                         compilingInterface.implements.Add(inherit);
@@ -150,10 +150,16 @@
                 {
                     var type = GetType(context, manager, file.inherits[i], collector);
                     if (type.dimension > 0) collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承数组");
-                    else if (type.code == TypeCode.Interface) compilingClass.inherits.Add(type);
-                    else if (i > 0) collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
-                    else if (type.code == TypeCode.Handle) compilingClass.parent = type;
-                    else collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
+                    if (i > 0 || type.code == TypeCode.Interface)
+                    {
+                        compilingClass.inherits.Add(type);
+                        if(type.code != TypeCode.Interface) collector.Add(file.inherits[i].name, CErrorLevel.Error, "必须是接口");
+                    }
+                    else
+                    {
+                        compilingClass.parent = type;
+                        if (type.code != TypeCode.Handle) collector.Add(file.inherits[i].name, CErrorLevel.Error, "不能继承该类型");
+                    }
                     if (cite) AddTypeCite(manager, compilingClass, type);
                     var inherit = manager.GetSourceDeclaration(type);
                     if (inherit is CompilingInterface @interface) @interface.implements.Add(compilingClass);

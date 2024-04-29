@@ -32,8 +32,8 @@
             get
             {
                 yield return this;
-                foreach(var child in children)
-                    foreach(var space in child.Spaces)
+                foreach (var child in children)
+                    foreach (var space in child.Spaces)
                         yield return space;
             }
         }
@@ -50,6 +50,18 @@
                     foreach (var msg in child.Messages)
                         yield return msg;
             }
+        }
+
+        public bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            foreach (var child in children)
+                if ((child.range != null) && child.range.Contain(position))
+                    return child.TryGetDeclaration(manager, position, out result);
+            foreach (var declaration in SelfDeclarations)
+                if (declaration.range != null && declaration.range.Contain(position))
+                    return declaration.TryGetDeclaration(manager, position, out result);
+            result = null;
+            return false;
         }
 
         public FileSpace GetFileSpace(TextPosition position)

@@ -71,14 +71,24 @@
                     foreach (var callable in inherit.callables)
                     {
                         var function = FindImplement(compiling, callable, null);
-                        function?.overrides.Add(callable);
                         if (function == null)
                         {
                             for (var index = compiling.parent; index.Vaild; index = manager.GetParent(index))
                                 if (manager.GetSourceDeclaration(index) is CompilingClass parent && classSet.Add(parent))
-                                    if (FindImplement(parent, callable, compiling.name) != null) break;
+                                {
+                                    function = FindImplement(parent, callable, compiling.name);
+                                    if (function != null) break;
+                                }
                             classSet.Clear();
                         }
+                        if (function == null)
+                        {
+                            var msg = new CompileMessage(compiling.name, CErrorLevel.Error, $"接口 {inherit.GetFullName()} 有函数没实现");
+                            msg.related.Add(new RelatedInfo(callable.name, "没实现的函数"));
+                            compiling.file?.collector.Add(msg);
+                        }
+                        else function.overrides.Add(callable);
+
                     }
                 interfaceSet.Clear();
             }

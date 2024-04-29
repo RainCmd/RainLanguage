@@ -112,7 +112,7 @@ namespace RainLanguageServer
         public bool Contain(TextPosition position)
         {
             RefreshPosition();
-            return start <= position && position < end;
+            return start <= position && position <= end;
         }
         public bool Overlap(TextRange range)
         {

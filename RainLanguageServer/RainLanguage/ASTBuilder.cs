@@ -41,8 +41,7 @@
 
         public void Reparse()
         {
-            manager.library.Clear();
-            manager.fileSpaces.Clear();
+            manager.Clear();
             foreach (var file in files)
             {
                 var reader = new LineReader(file);

@@ -9,6 +9,7 @@ namespace RainLanguageServer.RainLanguage
     internal class CitePort<T> : IEnumerable<T>
     {
         private readonly HashSet<T> values = [];
+        internal int Count => values.Count;
         internal void Add(T value) => values.Add(value);
         internal void Remove(T value) => values.Remove(value);
         internal void Clear() => values.Clear();

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Xml.Linq;
 
 namespace RainLanguageServer.RainLanguage
 {
@@ -55,6 +54,11 @@ namespace RainLanguageServer.RainLanguage
             isMarkdown = false;
             return false;
         }
+        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            result = compiling;
+            return name.Contain(position);
+        }
     }
     internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
@@ -96,6 +100,23 @@ namespace RainLanguageServer.RainLanguage
                 //todo 表达式中的token
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if (compiling is CompilingVariable variable)
+            {
+                if (type.Contain(position))
+                {
+                    result = manager.GetSourceDeclaration(variable.type.Source);
+                    return result != null;
+                }
+                else
+                {
+                    //todo 表达式内的定义
+                }
+            }
+            return false;
         }
     }
     internal class FileFunction(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns, List<TextLine> body) : FileDeclaration(name, visibility, space)
@@ -196,6 +217,31 @@ namespace RainLanguageServer.RainLanguage
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
         }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if (compiling is CompilingCallable callable)
+            {
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(callable.parameters[i].type.Source);
+                        return result != null;
+                    }
+                    else if (param.name != null && param.name.Contain(position)) return false;
+                }
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(callable.returns[i].Source);
+                        return result != null;
+                    }
+                //todo 函数body
+            }
+            return false;
+        }
     }
     internal class FileEnum(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
@@ -229,7 +275,7 @@ namespace RainLanguageServer.RainLanguage
                         range = element.name;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` cs");
-                        sb.AppendLine($"{name}.{element.name}");
+                        sb.AppendLine($"{name}.{element.name}"); //todo 枚举的值
                         sb.AppendLine("```");
                         info = sb.ToString();
                         isMarkdown = true;
@@ -242,6 +288,19 @@ namespace RainLanguageServer.RainLanguage
                 }
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            for (var i = 0; i < elements.Count; i++)
+            {
+                var element = elements[i];
+                if (element.expression != null && element.expression.Contain(position))
+                {
+                    //todo 枚举表达式内容
+                }
+            }
+            return false;
         }
     }
     internal class FileStruct(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
@@ -272,6 +331,17 @@ namespace RainLanguageServer.RainLanguage
                         return true;
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            foreach (var variable in variables)
+                if (variable.range != null && variable.range.Contain(position))
+                    return variable.TryGetDeclaration(manager, position, out result);
+            foreach (var function in functions)
+                if (function.range != null && function.range.Contain(position))
+                    return function.TryGetDeclaration(manager, position, out result);
+            return false;
         }
     }
     internal class FileInterface(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
@@ -313,6 +383,21 @@ namespace RainLanguageServer.RainLanguage
                         return true;
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if (compiling is CompilingInterface compilingInterface)
+                for (var i = 0; i < inherits.Count; i++)
+                    if (inherits[i].Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(compilingInterface.inherits[i].Source);
+                        return result != null;
+                    }
+            foreach (var function in functions)
+                if (function.range != null && function.range.Contain(position))
+                    return function.TryGetDeclaration(manager, position, out result);
+            return false;
         }
     }
     internal class FileClass(TextRange name, Visibility visibility, FileSpace space) : FileInterface(name, visibility, space)
@@ -372,6 +457,32 @@ namespace RainLanguageServer.RainLanguage
                 }
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if (compiling is CompilingClass compilingClass)
+            {
+                for (var i = 0; i < inherits.Count; i++)
+                    if (inherits[i].Contain(position))
+                    {
+                        if (inherits.Count == compilingClass.inherits.Count)
+                            result = manager.GetSourceDeclaration(compilingClass.inherits[i].Source);
+                        else if (i > 0)
+                            result = manager.GetSourceDeclaration(compilingClass.inherits[i - 1].Source);
+                        else
+                            result = manager.GetSourceDeclaration(compilingClass.parent.Source);
+                        return result != null;
+                    }
+                foreach (var variable in variables)
+                    if (variable.range != null && variable.range.Contain(position))
+                        return variable.TryGetDeclaration(manager, position, out result);
+                if (destructorRange != null && destructorRange.Contain(position))
+                {
+                    //todo 析构函数表达式
+                }
+            }
+            return false;
         }
     }
     internal class FileDelegate(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
@@ -459,6 +570,30 @@ namespace RainLanguageServer.RainLanguage
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
         }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if(compiling is CompilingDelegate compilingDelegate)
+            {
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(compilingDelegate.parameters[i].type.Source);
+                        return result != null;
+                    }
+                    else if (param.name != null && param.name.Contain(position)) return false;
+                }
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(compilingDelegate.returns[i].Source);
+                        return result != null;
+                    }
+            }
+            return false;
+        }
     }
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
@@ -504,6 +639,18 @@ namespace RainLanguageServer.RainLanguage
                     }
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if (compiling is CompilingTask task)
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(task.returns[i].Source);
+                        return result != null;
+                    }
+            return false;
         }
     }
     internal class FileNative(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
@@ -590,6 +737,30 @@ namespace RainLanguageServer.RainLanguage
                 }
             }
             return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (base.TryGetDeclaration(manager, position, out result)) return true;
+            if (compiling is CompilingNative compilingNative)
+            {
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(compilingNative.parameters[i].type.Source);
+                        return result != null;
+                    }
+                    else if (param.name != null && param.name.Contain(position)) return false;
+                }
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        result = manager.GetSourceDeclaration(compilingNative.returns[i].Source);
+                        return result != null;
+                    }
+            }
+            return false;
         }
     }
     internal partial class FileSpace : ICitePort<FileSpace, CompilingSpace>
