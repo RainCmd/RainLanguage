@@ -117,10 +117,14 @@ namespace RainLanguageServer
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
         {
             var result = new CompletionResult([
-                new CompletionItem("asdf阿斯蒂芬"){
+                new CompletionItem("阿斯蒂芬"){
                     kind = CompletionItemKind.Method,
                     data = "这是什么万一"
-                }
+                },
+                new CompletionItem("斯国一"){
+                    kind = CompletionItemKind.Method,
+                    data = "哈哈哈"
+                },
                 ]);
             return Result<CompletionResult, ResponseError>.Success(result);
         }
@@ -132,11 +136,20 @@ namespace RainLanguageServer
                 if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
                     if (fileSpace.TryGetDeclaration(builder.manager, GetFilePosition(fileSpace.document, param.position), out var result))
                     {
-                        var locations = new Location[result!.references.Count];
-                        var index = 0;
-                        foreach (var item in result.references)
-                            locations[index++] = TR2L(item);
-                        return Result<Location[], ResponseError>.Success(locations);
+                        var locations = new List<Location>();
+                        foreach (var item in result!.references)
+                            locations.Add(TR2L(item));
+                        if (result is CompilingAbstractFunction abstractFunction)
+                        {
+                            foreach (var implement in abstractFunction.implements)
+                                locations.Add(TR2L(implement.name));
+                        }
+                        else if(result is CompilingVirtualFunction virtualFunction)
+                        {
+                            foreach (var implement in virtualFunction.implements)
+                                locations.Add(TR2L(implement.name));
+                        }
+                        return Result<Location[], ResponseError>.Success([.. locations]);
                     }
             }
             return Result<Location[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
@@ -223,7 +236,34 @@ namespace RainLanguageServer
                 {
                     var list = new List<CodeLens>();
                     foreach (var declaration in fileSpace.Declarations)
+                    {
                         list.Add(new CodeLens(TR2R(declaration.name)) { command = new Command("引用：" + declaration.compiling?.references.Count, "") });
+                        if (declaration is FileStruct fileStruct)
+                        {
+                            foreach (var member in fileStruct.variables)
+                                list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
+                            foreach (var member in fileStruct.functions)
+                                list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
+                        }
+                        else if (declaration is FileInterface fileInterface)
+                        {
+                            foreach (var member in fileInterface.functions)
+                            {
+                                list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
+                                if (member.compiling is CompilingAbstractFunction abstractFunction)
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + abstractFunction.implements.Count, "") });
+                                else if (member.compiling is CompilingVirtualFunction virtualFunction)
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("覆盖：" + virtualFunction.implements.Count, "") });
+                            }
+                            if (fileInterface is FileClass fileClass)
+                            {
+                                foreach (var member in fileClass.variables)
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
+                                foreach (var member in fileClass.constructors)
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
+                            }
+                        }
+                    }
                     return Result<CodeLens[], ResponseError>.Success([.. list]);
                 }
             }
@@ -248,7 +288,7 @@ namespace RainLanguageServer
         private string LoadRelyLibrary(string library)
         {
             //todo 加载依赖程序集
-            var result = "";
+            var result = "暂时还没想好依赖库怎么加载╰(￣▽￣)╭";
 
             return result;
         }

@@ -162,8 +162,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 			case LexicalType::Colon:
 				if (stack.Count())
 				{
-					Lexical question = stack.Pop();
-					if (question.type == LexicalType::Question)break;
+					if (stack.Pop().type == LexicalType::Question)break;
 				}
 				else if (ContainAny(flag, SplitFlag::Colon))
 				{

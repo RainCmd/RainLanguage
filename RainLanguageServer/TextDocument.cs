@@ -1,4 +1,5 @@
 ﻿using LanguageServer.Parameters.TextDocument;
+using RainLanguageServer.RainLanguage;
 
 namespace RainLanguageServer
 {
@@ -31,6 +32,18 @@ namespace RainLanguageServer
 
         public TextRange(TextDocument document, int start, int end) : this(new TextPosition(document, start), new TextPosition(document, end)) { }
         public int Count => end - start;
+        public TextRange Trim
+        {
+            get
+            {
+                var start = 0;
+                var end = Count;
+                while (start < end && char.IsWhiteSpace(this[start])) start++;
+                while (end-- > start && char.IsWhiteSpace(this[end])) ;
+                if (start > end) start = end;
+                return this[start..end];
+            }
+        }
         public char this[int index]
         {
             get

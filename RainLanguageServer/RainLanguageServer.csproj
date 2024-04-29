@@ -35,4 +35,8 @@
     <ProjectReference Include="..\..\..\CSharp\LanguageServerProtocol\LanguageServerProtocol\LanguageServerProtocol.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="RainLanguage\GrammaticalAnalysis\Statements\" />
+  </ItemGroup>
+
 </Project>

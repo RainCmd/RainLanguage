@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 
 namespace RainLanguageServer.RainLanguage
 {
@@ -131,7 +132,7 @@ namespace RainLanguageServer.RainLanguage
         public static readonly Type TASK = new(LIBRARY_KERNEL, TypeCode.Handle, ["task"], 0);
         public static readonly Type ARRAY = new(LIBRARY_KERNEL, TypeCode.Handle, ["array"], 0);
     }
-    internal readonly struct Tuple(List<Type> types) : IEquatable<Tuple>
+    internal readonly struct Tuple(List<Type> types) : IEquatable<Tuple>, IEnumerable<Type>
     {
         private readonly List<Type> types = types;
         public readonly int Count => types.Count;
@@ -155,10 +156,23 @@ namespace RainLanguageServer.RainLanguage
         }
         public override int GetHashCode()
         {
+            if (types == null) return 0;
             var result = 0;
-            foreach (var type in types) result = HashCode.Combine(result, type.GetHashCode());
+            foreach (var type in types)
+                result = HashCode.Combine(result, type.GetHashCode());
             return result;
         }
+
+        public IEnumerator<Type> GetEnumerator()
+        {
+            return types.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         public static bool operator ==(Tuple lhs, Tuple rhs) => lhs.Equals(rhs);
         public static bool operator !=(Tuple lhs, Tuple rhs) => !lhs.Equals(rhs);
     }
