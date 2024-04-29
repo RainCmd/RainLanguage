@@ -24,7 +24,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly FileType type = type;
     }
     internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space)
-        : ICitePort<FileDeclaration, CompilingDeclaration>, ICitePort<FileDeclaration, CompilingSpace>, IGroupMember<FileDeclaration>
+        : ICitePort<FileDeclaration, CompilingDeclaration>, ICitePort<FileDeclaration, CompilingSpace>
     {
         /// <summary>
         /// 内部成员的缩进，没有内部成员的定义这个值为-1
@@ -47,10 +47,6 @@ namespace RainLanguageServer.RainLanguage
         /// 存放命名冲突的命名空间集合，错误消息存放在<see cref="collector"/>
         /// </summary>
         CitePort<CompilingSpace> ICitePort<FileDeclaration, CompilingSpace>.Cites { get; } = [];
-        /// <summary>
-        /// 命名冲突的集合
-        /// </summary>
-        public Groups<FileDeclaration> Groups { get; } = [];
 
         public virtual bool TryGetTokenInfo(TextPosition position, out TextRange? range, out string? info, out bool isMarkdown)
         {

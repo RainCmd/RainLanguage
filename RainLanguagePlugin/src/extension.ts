@@ -6,6 +6,7 @@ import { KernelStateViewProvider } from "./KernelStateViewProvider";
 import { readFile } from "fs";
 import * as rainLanguageClient from "./LanguageClinet";
 import { RainEvaluatableExpressionProvider } from "./EvaluatableExpressionProvider";
+import { error } from "console";
 
 export let kernelStateViewProvider: KernelStateViewProvider;
 
@@ -42,23 +43,18 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerWebviewViewProvider("RainKernelState", kernelStateViewProvider),
 
         vscode.commands.registerCommand('cmd.核心库定义', async () => {
-            const uri = vscode.Uri.parse("rain-language:kernel.rain")
-            const doc = await vscode.workspace.openTextDocument(uri)
-            vscode.window.showTextDocument(doc, { preview: true })
+            const path = "kernel.rain"
+            const filePath = context.extensionPath + "/" + path;
+            readFile(filePath, (error, data) => {
+                if (error) {
+                    console.log(error)
+                } else {
+                    ShowRainLanguagePreviewDoc(path, data.toString())
+                }
+            })
         }),
         vscode.workspace.registerTextDocumentContentProvider("rain-language", {
-            provideTextDocumentContent: function (uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
-                return new Promise<string>((resolve, reject) => {
-                    const path = context.extensionPath + "/" + uri.path;
-                    readFile(path, (error, data) => {
-                        if (error) {
-                            reject(error)
-                        } else {
-                            resolve(data.toString())
-                        }
-                    })
-                })
-            }
+            provideTextDocumentContent: function (uri: vscode.Uri) { return langugaePreviewDoc.get(uri.path) } 
         }),
         vscode.commands.registerCommand('cmd.debug.重启雨言服务', () => rainLanguageClient.RestartServer(context))
     );
@@ -66,4 +62,14 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 export async function deactivate() {
     rainLanguageClient.StopServer();
+}
+
+const langugaePreviewDoc = new Map<string, string>()
+export function ShowRainLanguagePreviewDoc(path: string, content: string) {
+    if (!path) {
+        return;
+    }
+    langugaePreviewDoc.set(path, content)
+    const uri = vscode.Uri.parse("rain-language:" + path)
+    vscode.window.showTextDocument(uri, { preview: true })
 }

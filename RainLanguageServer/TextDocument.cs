@@ -114,6 +114,10 @@ namespace RainLanguageServer
             RefreshPosition();
             return start <= position && position < end;
         }
+        public bool Overlap(TextRange range)
+        {
+            return Start < range.End && End > range.Start;
+        }
         public static bool operator ==(TextRange? left, string? right) => left?.ToString() == right;
         public static bool operator !=(TextRange? left, string? right) => !(left == right);
         public static bool operator ==(string? left, TextRange? right) => left == right?.ToString();
@@ -196,6 +200,11 @@ namespace RainLanguageServer
             public readonly int end = end;
             public readonly int length = length;
             public readonly int Variation => length - (end - start);
+
+            public bool Overlap(TextRange range)
+            {
+                return start < range.End.Position && start + length > range.Start.Position;
+            }
         }
         public readonly string path = path;
         public long version = 0;
@@ -227,7 +236,7 @@ namespace RainLanguageServer
             changeds.Add([new(0, this.text.Length, text.Length)]);
             this.text = text;
         }
-        public Change[] GetLastChanges() => changeds[^1];
+        public Change[] GetLastChanges() => changeds.Count > 0 ? changeds[^1] : [];
         public int Conversion(int charactor, long version, Adsorption adsorption = Adsorption.Discard)
         {
             version = this.version - version;

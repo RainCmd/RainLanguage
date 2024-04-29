@@ -36,9 +36,9 @@
     }
     internal static class ASTBuilder
     {
-        public static ASTManager Build(string kernelPath, string name, IEnumerable<IFileDocument> files)
+        public static ASTManager Build(string kernelPath, string name, IEnumerable<IFileDocument> files, Func<string, string> relyLoader)
         {
-            var manager = new ASTManager(kernelPath, name);
+            var manager = new ASTManager(kernelPath, name, relyLoader);
             foreach (var file in files)
             {
                 var reader = new LineReader(file);

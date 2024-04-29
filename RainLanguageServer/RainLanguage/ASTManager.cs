@@ -13,10 +13,12 @@ namespace RainLanguageServer.RainLanguage
         public readonly Dictionary<string, FileSpace> fileSpaces = [];
         public readonly Dictionary<string, CompilingLibrary> relies = [];
         public readonly CompilingLibrary kernel;
-        public ASTManager(string kernelPath, string name)
+        private readonly Func<string, string> relyLoader;
+        public ASTManager(string kernelPath, string name, Func<string, string> relyLoader)
         {
             library = new CompilingLibrary(name, []);
             kernelPath = new UnifiedPath(kernelPath);
+            this.relyLoader = relyLoader;
             using var sr = File.OpenText(kernelPath);
             kernel = LoadLibrary(Type.LIBRARY_KERNEL, sr.ReadToEnd(), true, out var file);
             foreach (var space in file.children) space.Link(this, library, false);
@@ -24,18 +26,21 @@ namespace RainLanguageServer.RainLanguage
         public CompilingLibrary? LoadLibrary(string name)
         {
             if (name == kernel.name) return kernel;
-            else if (name == this.library.name) return this.library;
-            else if (!relies.TryGetValue(name, out CompilingLibrary? library))
+            else if (name == library.name) return library;
+            else
             {
-                var content = "";//todo 加载程序集，转成VirtualDocument存到relies中
-                if (string.IsNullOrEmpty(content))
+                if (!relies.TryGetValue(name, out CompilingLibrary? library))
                 {
-                    library = LoadLibrary(name, content, false, out var file);
-                    relies[name] = library;
-                    foreach (var space in file.children) space.Link(this, library, false);
+                    var content = relyLoader(name);
+                    if (string.IsNullOrEmpty(content))
+                    {
+                        library = LoadLibrary(name, content, false, out var file);
+                        relies[name] = library;
+                        foreach (var space in file.children) space.Link(this, library, false);
+                    }
                 }
+                return library;
             }
-            return library;
         }
         private CompilingLibrary LoadLibrary(string name, string content, bool allowKeywordType, out FileSpace file)
         {

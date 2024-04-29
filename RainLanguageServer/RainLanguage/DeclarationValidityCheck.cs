@@ -39,7 +39,6 @@
                                 if (duplications.Count > 0)
                                 {
                                     duplications.Add(declarationX);
-                                    Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                                     foreach (var declaration in duplications)
                                     {
                                         var msg = new CompileMessage(declaration.name, CErrorLevel.Error, "无效的重载");
@@ -56,7 +55,6 @@
                     }
                     else
                     {
-                        Group<FileDeclaration>.CreateGroup(declarations.Select(value => value.file));
                         foreach (var declaration in declarations)
                         {
                             var msg = new CompileMessage(declaration.name, CErrorLevel.Error, "名称重复");
@@ -136,7 +134,6 @@
                         if (duplications.Count > 0)
                         {
                             duplications.Add(variableX);
-                            Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                             foreach (var index in duplications)
                             {
                                 var msg = new CompileMessage(index.name, CErrorLevel.Error, "名称重复");
@@ -169,7 +166,6 @@
                         if (duplications.Count > 0)
                         {
                             duplications.Add(functionX);
-                            Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                             foreach (var function in duplications)
                             {
                                 var msg = new CompileMessage(function.name, CErrorLevel.Error, "重复的定义");
@@ -189,10 +185,7 @@
             {
                 typeStack.Add(compilingInterface.declaration.GetDefineType());
                 if (CheckCircularInheritance(manager, compilingInterface.inherits, typeStack))
-                {
                     compilingInterface.file?.collector.Add(compilingInterface.name, CErrorLevel.Error, "存在循环继承");
-                    Group<FileDeclaration>.CreateGroup(typeStack.Select(value => manager.GetSourceDeclaration(value)?.file));
-                }
                 typeStack.Clear();
                 for (var x = 0; x < compilingInterface.callables.Count; x++)
                 {
@@ -211,7 +204,6 @@
                         if (duplications.Count > 0)
                         {
                             duplications.Add(callableX);
-                            Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                             foreach (var callable in duplications)
                             {
                                 var msg = new CompileMessage(callable.name, CErrorLevel.Error, "重复的定义");
@@ -233,7 +225,6 @@
                     if (typeStack.Contains(index))
                     {
                         compilingClass.file?.collector.Add(compilingClass.name, CErrorLevel.Error, "存在循环继承");
-                        Group<FileDeclaration>.CreateGroup(typeStack.Select(value => manager.GetSourceDeclaration(value)?.file));
                         break;
                     }
                     else typeStack.Add(index);
@@ -256,7 +247,6 @@
                         if (duplications.Count > 0)
                         {
                             duplications.Add(ctorX);
-                            Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                             foreach (var index in duplications)
                             {
                                 var msg = new CompileMessage(index.name, CErrorLevel.Error, "重复的定义");
@@ -293,7 +283,6 @@
                         if (duplications.Count > 0)
                         {
                             duplications.Add(variableX);
-                            Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                             foreach (var index in duplications)
                             {
                                 var msg = new CompileMessage(index.name, CErrorLevel.Error, "命名冲突");
@@ -324,7 +313,6 @@
                         if (duplications.Count > 0)
                         {
                             duplications.Add(functionX);
-                            Group<FileDeclaration>.CreateGroup(duplications.Select(value => value.file));
                             foreach (var index in duplications)
                             {
                                 var msg = new CompileMessage(index.name, CErrorLevel.Error, "重复的定义");

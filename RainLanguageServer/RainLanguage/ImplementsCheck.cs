@@ -20,7 +20,6 @@
                         function.implements.Add(member);
                         if (function.returns != member.returns)
                         {
-                            Group<FileDeclaration>.CreateGroup([function.file, member.file]);
                             if (self == null)
                             {
                                 var msg = new CompileMessage(member.name, CErrorLevel.Error, "函数返回值类型与接口函数不一致");
@@ -55,7 +54,6 @@
                                 {
                                     if (member.declaration.visibility.ContainAny(Visibility.Public | Visibility.Protected) && member.returns != function.returns)
                                     {
-                                        Group<FileDeclaration>.CreateGroup([function.file, member.file]);
                                         var msg = new CompileMessage(function.name, CErrorLevel.Error, "覆盖的函数返回值不一致");
                                         msg.related.Add(new(member.name, "被覆盖的函数"));
                                         compiling.file?.collector.Add(msg);

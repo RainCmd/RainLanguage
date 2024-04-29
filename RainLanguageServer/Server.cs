@@ -52,7 +52,7 @@ namespace RainLanguageServer
             var projectName = param.initializationOptions?.projectName?.Value as string;
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
-            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(new UnifiedPath(param.rootUri), this));
+            manager = ASTBuilder.Build(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(new UnifiedPath(param.rootUri), this), LoadRelyLibrary);
 
             var result = new InitializeResult() { capabilities = new ServerCapabilities() };
             //提供的命令支持
@@ -180,6 +180,26 @@ namespace RainLanguageServer
 
         #region 文档相关
         private readonly Dictionary<string, TextDocument> documents = [];
+        private struct PreviewDoc(string path, string content)
+        {
+            public string path = path;
+            public string content = content;
+        }
+        public void ShowPreviewDoc(string path, string content)
+        {
+            SendNotification(new NotificationMessage<PreviewDoc>()
+            {
+                method = "rainlanguage/previewDoc",
+                @params = new PreviewDoc(path, content)
+            });
+        }
+        private string LoadRelyLibrary(string library)
+        {
+            //todo 加载依赖程序集
+            var result = "";
+
+            return result;
+        }
         protected override void DidOpenTextDocument(DidOpenTextDocumentParams param)
         {
             string path = new UnifiedPath(param.textDocument.uri);
