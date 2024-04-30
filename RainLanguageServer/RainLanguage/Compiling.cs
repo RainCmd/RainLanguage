@@ -55,6 +55,8 @@ namespace RainLanguageServer.RainLanguage
         public readonly Type type = type;
         public readonly TextRange? expression = expression;
         public readonly HashSet<CompilingSpace> relies = relies;
+        public readonly List<TextRange> read = [];
+        public readonly List<TextRange> write = [];
     }
     internal class CompilingCallable(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -83,6 +85,7 @@ namespace RainLanguageServer.RainLanguage
             public readonly TextRange? expression = expression;
             public readonly HashSet<CompilingSpace> relies = relies;
             public readonly FileEnum.Element? file = file;
+            public readonly List<TextRange> references = [];
         }
         public readonly List<Element> elements = [];
     }
@@ -239,10 +242,52 @@ namespace RainLanguageServer.RainLanguage
         {
             foreach (var item in variables) item.references.Clear();
             foreach (var item in functions) item.references.Clear();
-            foreach (var item in enums) item.references.Clear();
-            foreach (var item in structs) item.references.Clear();
-            foreach (var item in interfaces) item.references.Clear();
-            foreach (var item in classes) item.references.Clear();
+            foreach (var item in enums)
+            {
+                item.references.Clear();
+                foreach(var element in item.elements)
+                    element.references.Clear();
+            }
+            foreach (var item in structs)
+            {
+                item.references.Clear();
+                foreach(var member in item.variables)
+                {
+                    member.references.Clear();
+                    member.read.Clear();
+                    member.write.Clear();
+                }
+                foreach(var memeber in item.functions)
+                    memeber.references.Clear();
+            }
+            foreach (var item in interfaces)
+            {
+                item.references.Clear();
+                item.implements.Clear();
+                foreach(var member in item.callables)
+                {
+                    member.references.Clear();
+                    member.implements.Clear();
+                }
+            }
+            foreach (var item in classes)
+            {
+                item.references.Clear();
+                item.implements.Clear();
+                foreach(var member in item.variables)
+                {
+                    member.references.Clear();
+                    member.read.Clear();
+                    member.write.Clear();
+                }
+                foreach(var member in item.constructors)
+                    member.references.Clear();
+                foreach(var member in item.functions)
+                {
+                    member.references.Clear();
+                    member.implements.Clear();
+                }
+            }
             foreach (var item in delegates) item.references.Clear();
             foreach (var item in tasks) item.references.Clear();
             foreach (var item in natives) item.references.Clear();

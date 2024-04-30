@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal class TupleExpression : Expression
     {

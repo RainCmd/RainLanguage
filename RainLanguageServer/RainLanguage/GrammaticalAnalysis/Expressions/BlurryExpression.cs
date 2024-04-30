@@ -83,21 +83,21 @@
                 var compiling = parameter.manager.GetDeclaration(declaration);
                 if (compiling != null) msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
                 if (compiling is CompilingVirtualFunction virtualFunction)
-                    Reference(virtualFunction, range);
+                    Reference(virtualFunction);
                 else if (compiling is CompilingAbstractFunction abstractFunction)
                 {
                     abstractFunction.references.Add(range);
                     foreach (var implement in abstractFunction.implements)
-                        Reference(implement, range);
+                        Reference(implement);
                 }
             }
             parameter.collector.Add(msg);
         }
-        private static void Reference(CompilingVirtualFunction function, TextRange range)
+        private void Reference(CompilingVirtualFunction function)
         {
             function.references.Add(range);
             foreach (var implement in function.implements)
-                Reference(implement, range);
+                Reference(implement);
         }
     }
     internal class BlurryTaskExpression : Expression

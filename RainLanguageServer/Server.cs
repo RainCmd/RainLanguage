@@ -8,6 +8,7 @@ using LanguageServer.Parameters;
 using System.Xml.Linq;
 using System.Runtime.InteropServices;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Diagnostics.Metrics;
 
 namespace RainLanguageServer
 {
@@ -236,38 +237,54 @@ namespace RainLanguageServer
                 {
                     var list = new List<CodeLens>();
                     foreach (var declaration in fileSpace.Declarations)
-                    {
-                        list.Add(new CodeLens(TR2R(declaration.name)) { command = new Command("引用：" + declaration.compiling?.references.Count, "") });
-                        if (declaration is FileStruct fileStruct)
+                        if (declaration.compiling != null)
                         {
-                            foreach (var member in fileStruct.variables)
-                                list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
-                            foreach (var member in fileStruct.functions)
-                                list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
-                        }
-                        else if (declaration is FileInterface fileInterface)
-                        {
-                            foreach (var member in fileInterface.functions)
+                            var compiling = declaration.compiling;
+                            list.Add(new CodeLens(TR2R(compiling.name)) { command = new Command("引用：" + compiling.references.Count, "") });
+                            if (compiling is CompilingVariable compilingVariable)
                             {
-                                list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
-                                if (member.compiling is CompilingAbstractFunction abstractFunction)
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + abstractFunction.implements.Count, "") });
-                                else if (member.compiling is CompilingVirtualFunction virtualFunction)
+                                list.Add(new CodeLens(TR2R(compilingVariable.name)) { command = new Command("读取：" + compilingVariable.read.Count, "") });
+                                list.Add(new CodeLens(TR2R(compilingVariable.name)) { command = new Command("写入：" + compilingVariable.write.Count, "") });
+                            }
+                            else if (compiling is CompilingStruct compilingStruct)
+                            {
+                                foreach (var member in compilingStruct.variables)
                                 {
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + virtualFunction.implements.Count, "") });
-                                    if (virtualFunction.overrides.Count > 0)
-                                        list.Add(new CodeLens(TR2R(member.name)) { command = new Command("覆盖：" + virtualFunction.overrides.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("读取：" + member.read.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("写入：" + member.write.Count, "") });
+                                }
+                                foreach (var member in compilingStruct.functions)
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
+                            }
+                            else if (compiling is CompilingInterface compilingInterface)
+                            {
+                                list.Add(new CodeLens(TR2R(compilingInterface.name)) { command = new Command("实现：" + compilingInterface.implements.Count, "") });
+                                foreach(var member in compilingInterface.callables)
+                                {
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + member.implements.Count, "") });
                                 }
                             }
-                            if (fileInterface is FileClass fileClass)
+                            else if(compiling is CompilingClass compilingClass)
                             {
-                                foreach (var member in fileClass.variables)
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
-                                foreach (var member in fileClass.constructors)
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.compiling?.references.Count, "") });
+                                list.Add(new CodeLens(TR2R(compilingClass.name)) { command = new Command("子类：" + compilingClass.implements.Count, "") });
+                                foreach (var member in compilingClass.variables)
+                                {
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("读取：" + member.read.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("写入：" + member.write.Count, "") });
+                                }
+                                foreach(var member in compilingClass.constructors)
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
+                                foreach(var member in compilingClass.functions)
+                                {
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("覆盖：" + member.overrides.Count, "") });
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + member.implements.Count, "") });
+                                }
                             }
                         }
-                    }
                     return Result<CodeLens[], ResponseError>.Success([.. list]);
                 }
             }

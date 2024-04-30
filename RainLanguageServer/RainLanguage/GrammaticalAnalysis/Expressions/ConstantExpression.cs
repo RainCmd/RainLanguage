@@ -18,7 +18,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantBooleanExpression(TextRange range, bool value, Expression source) : ConstantBooleanExpression(range, value)
+    internal class EvaluateConstantBooleanExpression(bool value, Expression source) : ConstantBooleanExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
@@ -52,7 +52,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantByteExpression(TextRange range, byte value, Expression source) : ConstantByteExpression(range, value)
+    internal class EvaluateConstantByteExpression(byte value, Expression source) : ConstantByteExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
@@ -81,7 +81,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantCharExpression(TextRange range, char value, Expression source) : ConstantCharExpression(range, value)
+    internal class EvaluateConstantCharExpression(char value, Expression source) : ConstantCharExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
@@ -105,7 +105,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantIntegerExpression(TextRange range, long value, Expression source) : ConstantIntegerExpression(range, value)
+    internal class EvaluateConstantIntegerExpression(long value, Expression source) : ConstantIntegerExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
@@ -119,7 +119,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantRealExpression(TextRange range, double value, Expression source) : ConstantRealExpression(range, value)
+    internal class EvaluateConstantRealExpression(double value, Expression source) : ConstantRealExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
@@ -138,7 +138,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantStringExpression(TextRange range, string value, Expression source) : ConstantStringExpression(range, value)
+    internal class EvaluateConstantStringExpression(string value, Expression source) : ConstantStringExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
@@ -156,7 +156,7 @@
             return true;
         }
     }
-    internal class EvaluateConstantTypeExpression(TextRange range, Type value, Expression source) : ConstantTypeExpression(range, value)
+    internal class EvaluateConstantTypeExpression(Type value, Expression source) : ConstantTypeExpression(source.range, value)
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter)

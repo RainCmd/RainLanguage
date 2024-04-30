@@ -1578,8 +1578,9 @@ bool TryParseLambdaParameter(const Anchor& anchor, Anchor& parameter, MessageCol
 
 bool ExpressionParser::TryParseLambda(const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result)
 {
+	Anchor localParameterAnchor = parameterAnchor;
 	Anchor anchor;
-	TryRemoveBracket(parameterAnchor, anchor, manager->messages);
+	while(TryRemoveBracket(localParameterAnchor, anchor, manager->messages)) localParameterAnchor = anchor;
 	List<Anchor> parameters(0);
 	Anchor left, right;
 	while(Split(anchor, anchor.position, SplitFlag::Comma | SplitFlag::Semicolon, left, right, manager->messages) != LexicalType::Unknow)
