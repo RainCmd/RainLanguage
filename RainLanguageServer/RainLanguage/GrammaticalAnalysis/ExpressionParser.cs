@@ -1,5 +1,4 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
-using System.Runtime.InteropServices;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
@@ -40,81 +39,63 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.BracketLeft2:
                         break;
                     case LexicalType.BracketRight0:
-                        break;
                     case LexicalType.BracketRight1:
-                        break;
                     case LexicalType.BracketRight2:
-                        break;
                     case LexicalType.Comma:
-                        break;
                     case LexicalType.Semicolon:
-                        break;
-                    case LexicalType.Assignment:
-                        break;
+                    case LexicalType.Assignment: goto default;
                     case LexicalType.Equals:
                         break;
-                    case LexicalType.Lambda:
-                        break;
+                    case LexicalType.Lambda: goto default;
                     case LexicalType.BitAnd:
                         break;
                     case LexicalType.LogicAnd:
                         break;
-                    case LexicalType.BitAndAssignment:
-                        break;
+                    case LexicalType.BitAndAssignment: goto default;
                     case LexicalType.BitOr:
                         break;
                     case LexicalType.LogicOr:
                         break;
-                    case LexicalType.BitOrAssignment:
-                        break;
+                    case LexicalType.BitOrAssignment: goto default;
                     case LexicalType.BitXor:
                         break;
-                    case LexicalType.BitXorAssignment:
-                        break;
+                    case LexicalType.BitXorAssignment: goto default;
                     case LexicalType.Less:
                         break;
                     case LexicalType.LessEquals:
                         break;
                     case LexicalType.ShiftLeft:
                         break;
-                    case LexicalType.ShiftLeftAssignment:
-                        break;
+                    case LexicalType.ShiftLeftAssignment: goto default;
                     case LexicalType.Greater:
                         break;
                     case LexicalType.GreaterEquals:
                         break;
                     case LexicalType.ShiftRight:
                         break;
-                    case LexicalType.ShiftRightAssignment:
-                        break;
+                    case LexicalType.ShiftRightAssignment: goto default;
                     case LexicalType.Plus:
                         break;
                     case LexicalType.Increment:
                         break;
-                    case LexicalType.PlusAssignment:
-                        break;
+                    case LexicalType.PlusAssignment: goto default;
                     case LexicalType.Minus:
                         break;
                     case LexicalType.Decrement:
                         break;
                     case LexicalType.RealInvoker:
                         break;
-                    case LexicalType.MinusAssignment:
-                        break;
+                    case LexicalType.MinusAssignment: goto default;
                     case LexicalType.Mul:
                         break;
-                    case LexicalType.MulAssignment:
-                        break;
+                    case LexicalType.MulAssignment: goto default;
                     case LexicalType.Div:
                         break;
                     case LexicalType.DivAssignment:
-                        break;
-                    case LexicalType.Annotation:
-                        break;
+                    case LexicalType.Annotation: goto default;
                     case LexicalType.Mod:
                         break;
-                    case LexicalType.ModAssignment:
-                        break;
+                    case LexicalType.ModAssignment: goto default;
                     case LexicalType.Not:
                         break;
                     case LexicalType.NotEquals:
@@ -123,8 +104,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         break;
                     case LexicalType.Dot:
                         break;
-                    case LexicalType.Question:
-                        break;
+                    case LexicalType.Question: goto default;
                     case LexicalType.QuestionDot:
                         break;
                     case LexicalType.QuestionRealInvoke:
@@ -135,8 +115,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         break;
                     case LexicalType.QuestionNull:
                         break;
-                    case LexicalType.Colon:
-                        break;
+                    case LexicalType.Colon: goto default;
                     case LexicalType.ConstReal:
                         break;
                     case LexicalType.ConstNumber:
@@ -153,33 +132,20 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         break;
                     case LexicalType.Word:
                         break;
-                    case LexicalType.Backslash: goto default;
+                    case LexicalType.Backslash:
                     case LexicalType.KeyWord_namespace:
-                        break;
                     case LexicalType.KeyWord_import:
-                        break;
                     case LexicalType.KeyWord_native:
-                        break;
                     case LexicalType.KeyWord_public:
-                        break;
                     case LexicalType.KeyWord_internal:
-                        break;
                     case LexicalType.KeyWord_space:
-                        break;
                     case LexicalType.KeyWord_protected:
-                        break;
                     case LexicalType.KeyWord_private:
-                        break;
                     case LexicalType.KeyWord_enum:
-                        break;
                     case LexicalType.KeyWord_struct:
-                        break;
                     case LexicalType.KeyWord_class:
-                        break;
                     case LexicalType.KeyWord_interface:
-                        break;
-                    case LexicalType.KeyWord_const:
-                        break;
+                    case LexicalType.KeyWord_const: goto default;
                     case LexicalType.KeyWord_global:
                         break;
                     case LexicalType.KeyWord_base:
@@ -187,13 +153,41 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_this:
                         break;
                     case LexicalType.KeyWord_true:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            expressionStack.Push(new ConstantBooleanExpression(lexical.anchor, true));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.KeyWord_false:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            expressionStack.Push(new ConstantBooleanExpression(lexical.anchor, false));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.KeyWord_null:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            expressionStack.Push(new ConstantNullExpression(lexical.anchor));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.KeyWord_var:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None))
+                        {
+                            if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifier, collector) && identifier.type == LexicalType.Word)
+                            {
+                                index = identifier.anchor.end;
+                                expressionStack.Push(new BlurryVariableDeclarationExpression(identifier.anchor));
+                                attribute = ExpressionAttribute.Assignable;
+                                goto label_next_lexical;
+                            }
+                        }
+                        goto default;
                     case LexicalType.KeyWord_bool:
                         break;
                     case LexicalType.KeyWord_byte:
@@ -219,55 +213,143 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_entity:
                         break;
                     case LexicalType.KeyWord_delegate:
-                        break;
                     case LexicalType.KeyWord_task:
-                        break;
                     case LexicalType.KeyWord_array:
-                        break;
                     case LexicalType.KeyWord_if:
-                        break;
                     case LexicalType.KeyWord_elseif:
-                        break;
                     case LexicalType.KeyWord_else:
-                        break;
                     case LexicalType.KeyWord_while:
-                        break;
                     case LexicalType.KeyWord_for:
-                        break;
                     case LexicalType.KeyWord_break:
-                        break;
                     case LexicalType.KeyWord_continue:
-                        break;
-                    case LexicalType.KeyWord_return:
-                        break;
+                    case LexicalType.KeyWord_return: goto default;
                     case LexicalType.KeyWord_is:
                         break;
                     case LexicalType.KeyWord_as:
                         break;
                     case LexicalType.KeyWord_start:
-                        break;
                     case LexicalType.KeyWord_new:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            var expression = Parse(new TextRange(lexical.anchor.end, range.end));
+                            if (expression is InvokerExpression invoker)
+                            {
+                                var taskExpression = new BlurryTaskExpression(lexical.anchor & invoker.range, invoker);
+                                expressionStack.Push(taskExpression);
+                                attribute = taskExpression.attribute;
+                                index = range.end;
+                                goto label_next_lexical;
+                            }
+                            expressionStack.Push(expression);
+                            collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+                            goto label_parse_fail;
+                        }
+                        goto default;
                     case LexicalType.KeyWord_wait:
-                        break;
                     case LexicalType.KeyWord_exit:
-                        break;
                     case LexicalType.KeyWord_try:
-                        break;
                     case LexicalType.KeyWord_catch:
-                        break;
                     case LexicalType.KeyWord_finally:
-                        break;
                     default:
-                        return new InvalidExpression(range);
+                        collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                        goto label_parse_fail;
                 }
                 index = lexical.anchor.end;
             label_next_lexical:;
             }
-
+        label_parse_fail:
             return new InvalidExpression(range);
         }
-
+        private bool PushToken(Stack<Expression> expressionStack, Stack<Token> tokenStack, Token token, ExpressionAttribute attribute)
+        {
+            while (tokenStack.Count > 0 && token.Priority <= tokenStack.Peek().Priority)
+            {
+                attribute = PopToken(expressionStack, tokenStack.Pop());
+                if (attribute == ExpressionAttribute.Invalid) return false;
+            }
+            if (attribute.ContainAny(token.Precondition))
+            {
+                tokenStack.Push(token);
+                return true;
+            }
+            else
+            {
+                collector.Add(token.lexical.anchor, CErrorLevel.Error, "无效的操作");
+                return false;
+            }
+        }
+        private ExpressionAttribute PopToken(Stack<Expression> expressionStack, Token token)
+        {
+            switch (token.type)
+            {
+                case TokenType.Invalid:
+                case TokenType.LogicOperationPriority: break;
+                case TokenType.LogicAnd:
+                case TokenType.LogicOr:
+                    if (expressionStack.Count >= 2)
+                    {
+                        var right = expressionStack.Pop();
+                        var left = expressionStack.Pop();
+                        left = AssignmentConvert(left, Type.BOOL);
+                        right = AssignmentConvert(right, Type.BOOL);
+                        var expression = new LogicExpression(left.range & right.range, left, right);
+                        expressionStack.Push(expression);
+                        return expression.attribute;
+                    }
+                    else
+                    {
+                        collector.Add(token.lexical.anchor, CErrorLevel.Error, "缺少表达式");
+                        return ExpressionAttribute.Invalid;
+                    }
+                case TokenType.CompareOperationPriority: break;
+                case TokenType.Less:
+                case TokenType.Greater:
+                case TokenType.LessEquals:
+                case TokenType.GreaterEquals:
+                case TokenType.Equals:
+                case TokenType.NotEquals: return Operator(expressionStack, token.lexical.anchor, 2);
+                case TokenType.BitOperationPriority: break;
+                case TokenType.BitAnd:
+                case TokenType.BitOr:
+                case TokenType.BitXor:
+                case TokenType.ShiftLeft:
+                case TokenType.ShiftRight: return Operator(expressionStack, token.lexical.anchor, 2);
+                case TokenType.ElementaryOperationPriority: break;
+                case TokenType.Plus:
+                case TokenType.Minus: return Operator(expressionStack, token.lexical.anchor, 2);
+                case TokenType.IntermediateOperationPriority: break;
+                case TokenType.Mul:
+                case TokenType.Div:
+                case TokenType.Mod: return Operator(expressionStack, token.lexical.anchor, 2);
+                case TokenType.SymbolicOperationPriority: break;
+                case TokenType.Casting:
+                    {
+                        //todo casting token
+                    }
+                    break;
+                case TokenType.Not:
+                case TokenType.Inverse:
+                case TokenType.Positive:
+                case TokenType.Negative:
+                case TokenType.IncrementLeft:
+                case TokenType.DecrementLeft: return Operator(expressionStack, token.lexical.anchor, 1);
+            }
+            throw new Exception("无效的token类型");
+        }
+        private ExpressionAttribute Operator(Stack<Expression> expressionStack, TextRange name, int count)
+        {
+            if (expressionStack.Count < count)
+            {
+                collector.Add(name, CErrorLevel.Error, "缺少表达式");
+                return ExpressionAttribute.Invalid;
+            }
+            var parameters = new List<Expression>();
+            while (count-- > 0) parameters.Add(expressionStack.Pop());
+            parameters.Reverse();
+            var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), TupleExpression.Create(parameters));
+            expressionStack.Push(result);
+            return result.attribute;
+        }
         private bool TryParseBracket(TextRange range, ref TextPosition index, SplitFlag flag, out Expression? result)
         {
             if (ExpressionSplit.Split(range, index - range.start, flag, out var left, out var right, collector) != LexicalType.Unknow)
@@ -298,10 +380,28 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             rightExpression = AssignmentConvert(rightExpression, leftExpression.types);
             return valid ? new QuestionNullExpression(leftExpression, rightExpression) : new InvalidExpression(left & right, leftExpression, rightExpression);
         }
+        private Expression AssignmentConvert(Expression source, Type type)
+        {
+            if (!source.Valid) return source;
+            if (source.types.Count == 1)
+            {
+                source = InferRightValueType(source, type);
+                if (source.Valid)
+                {
+                    if (Convert(manager, source.types[0], type) < 0)
+                        collector.Add(source.range, CErrorLevel.Error, "无法转换为目标的类型");
+                    if (source.types[0] != type)
+                        source = new TupleCastExpression(new Tuple([type]), source);
+                }
+                return source;
+            }
+            collector.Add(source.range, CErrorLevel.Error, "类型数量不一致");
+            return new InvalidExpression(source);
+        }
         private Expression AssignmentConvert(Expression source, List<Type> types)
         {
             if (!source.Valid) return source;
-            if (source.types.Count != types.Count)
+            if (source.types.Count == types.Count)
             {
                 source = InferRightValueType(source, types);
                 if (source.Valid)
@@ -309,7 +409,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     for (int i = 0; i < types.Count; i++)
                         if (Convert(manager, source.types[i], types[i]) < 0)
                             collector.Add(source.range, CErrorLevel.Error, $"当前表达式的第{i + 1}个类型无法转换为目标的类型");
-                    source = new TupleCastExpression(new Tuple(types), source);
+                    if (source.types != new Tuple(types))
+                        source = new TupleCastExpression(new Tuple(types), source);
                 }
                 return source;
             }
