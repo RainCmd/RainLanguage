@@ -21,6 +21,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly string[] name = name;//不包含程序集名
         public readonly int dimension = dimension;
         public bool Vaild => name != null;
+        public bool Managed => Vaild && (dimension > 0 || code >= TypeCode.Handle);
         public Type Source => new(library, code, name, 0);
         public bool Equals(Type type)
         {
@@ -175,5 +176,6 @@ namespace RainLanguageServer.RainLanguage
 
         public static bool operator ==(Tuple lhs, Tuple rhs) => lhs.Equals(rhs);
         public static bool operator !=(Tuple lhs, Tuple rhs) => !lhs.Equals(rhs);
+        public static implicit operator List<Type>(Tuple tuple) => tuple.types;
     }
 }

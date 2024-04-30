@@ -12,7 +12,7 @@ public:
 	void Generator(LogicGenerateParameter& parameter);
 };
 
-class MethodExpression :public Expression//°üÀ¨globalºÍnative
+class MethodExpression :public Expression//包括global和native
 {
 public:
 	List<CompilingDeclaration, true> declarations;

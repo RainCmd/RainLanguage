@@ -1841,7 +1841,7 @@ bool ExpressionParser::TryParseQuestionNull(const Anchor& left, const  Anchor& r
 				Expression* rightExpression = NULL;
 				if(TryParse(right, rightExpression))
 				{
-					if(rightExpression->returns.Count() == 1 && TryAssignmentConvert(rightExpression, Span<Type, true>(&leftExpression->returns)))
+					if(TryAssignmentConvert(rightExpression, Span<Type, true>(&leftExpression->returns)))
 					{
 						result = new QuestionNullExpression(left, leftExpression, rightExpression);
 						return true;

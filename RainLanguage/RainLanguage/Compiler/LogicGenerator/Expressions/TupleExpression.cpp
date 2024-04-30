@@ -41,72 +41,37 @@ void TupleExpression::FillResultVariable(LogicGenerateParameter& parameter, uint
 
 bool TupleExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluation(value, parameter))
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluation(value, parameter);
 }
 
 bool TupleExpression::TryEvaluation(uint8& value, LogicGenerateParameter& parameter)
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluation(value, parameter))
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluation(value, parameter);
 }
 
 bool TupleExpression::TryEvaluation(character& value, LogicGenerateParameter& parameter)
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluation(value, parameter))
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluation(value, parameter);
 }
 
 bool TupleExpression::TryEvaluation(integer& value, LogicGenerateParameter& parameter)
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluation(value, parameter))
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluation(value, parameter);
 }
 
 bool TupleExpression::TryEvaluation(real& value, LogicGenerateParameter& parameter)
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluation(value, parameter))
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluation(value, parameter);
 }
 
 bool TupleExpression::TryEvaluation(String& value, LogicGenerateParameter& parameter)
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluation(value, parameter))
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluation(value, parameter);
 }
 
 bool TupleExpression::TryEvaluationNull()
 {
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (!ContainAny(expressions[i]->attribute, Attribute::Constant)) return false;
-	for (uint32 i = 0; i < expressions.Count(); i++)
-		if (expressions[i]->TryEvaluationNull())
-			return true;
-	return false;
+	return expressions.Count() == 1 && expressions[0]->TryEvaluationNull();
 }
 
 bool TupleExpression::TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter& parameter)

@@ -144,7 +144,7 @@ namespace RainLanguageServer
                             foreach (var implement in abstractFunction.implements)
                                 locations.Add(TR2L(implement.name));
                         }
-                        else if(result is CompilingVirtualFunction virtualFunction)
+                        else if (result is CompilingVirtualFunction virtualFunction)
                         {
                             foreach (var implement in virtualFunction.implements)
                                 locations.Add(TR2L(implement.name));
@@ -253,7 +253,11 @@ namespace RainLanguageServer
                                 if (member.compiling is CompilingAbstractFunction abstractFunction)
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + abstractFunction.implements.Count, "") });
                                 else if (member.compiling is CompilingVirtualFunction virtualFunction)
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("覆盖：" + virtualFunction.implements.Count, "") });
+                                {
+                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + virtualFunction.implements.Count, "") });
+                                    if (virtualFunction.overrides.Count > 0)
+                                        list.Add(new CodeLens(TR2R(member.name)) { command = new Command("覆盖：" + virtualFunction.overrides.Count, "") });
+                                }
                             }
                             if (fileInterface is FileClass fileClass)
                             {

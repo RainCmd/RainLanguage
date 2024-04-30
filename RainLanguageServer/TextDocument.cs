@@ -15,6 +15,7 @@ namespace RainLanguageServer
         public static int operator -(TextPosition left, TextPosition right) => left.charactor - right.charactor;
         public static TextPosition operator -(TextPosition position, int right) => new(position.document, position.charactor - right);
         public static TextPosition operator +(TextPosition position, int right) => new(position.document, position.charactor + right);
+        public static TextRange operator &(TextPosition left, TextPosition right) => new(left, right);
         public static bool operator ==(TextPosition left, TextPosition right) => left.Equals(right);
         public static bool operator !=(TextPosition left, TextPosition right) => !left.Equals(right);
         public static bool operator >(TextPosition left, TextPosition right) => left.document == right.document && left.charactor > right.charactor;
@@ -72,6 +73,7 @@ namespace RainLanguageServer
         public static bool operator !=(TextRange left, string? right) => !(left == right);
         public static bool operator ==(string? left, TextRange right) => right == left;
         public static bool operator !=(string? left, TextRange right) => right != left;
+        public static TextRange operator &(TextRange left, TextRange right) => new(left.start, right.end);
         public override readonly string ToString() => start.document.text[start.charactor..end.charactor];
         public override readonly bool Equals(object? obj) => obj is string value && this == value;
 

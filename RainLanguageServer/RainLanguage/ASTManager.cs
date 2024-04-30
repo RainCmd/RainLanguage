@@ -286,6 +286,75 @@ namespace RainLanguageServer.RainLanguage
             }
             return default;
         }
+        private int GetInterfaceInherit(Type baseType, Type subType)
+        {
+            if (baseType == subType) return 0;
+            if (GetSourceDeclaration(subType) is CompilingInterface compiling)
+            {
+                var min = -1;
+                foreach (var inherit in compiling.inherits)
+                {
+                    var current = GetInterfaceInherit(baseType, inherit);
+                    if (current >= 0 && (current < min || min < 0)) min = current;
+                }
+                if (min >= 0) min++;
+                return min;
+            }
+            return -1;
+        }
+        /// <summary>
+        /// 返回-1表示没有继承关系
+        /// </summary>
+        public int GetInherit(Type baseType, Type subType)
+        {
+            if (baseType == subType) return 0;
+            else if (baseType.dimension == 0)
+            {
+                if (subType.dimension > 0)
+                {
+                    if (baseType == Type.ARRAY) return 1;
+                    else if (baseType == Type.HANDLE) return 2;
+                }
+                else if (subType.code == TypeCode.Delegate)
+                {
+                    if (baseType == Type.DELEGATE) return 1;
+                    else if (baseType == Type.HANDLE) return 2;
+                }
+                else if (subType.code == TypeCode.Task)
+                {
+                    if (baseType == Type.TASK) return 1;
+                    else if (baseType == Type.HANDLE) return 2;
+                }
+                else if (subType.code == TypeCode.Interface)
+                {
+                    if (baseType == Type.INTERFACE) return 1;
+                    else if (baseType == Type.HANDLE) return 2;
+                    else if (baseType.code == TypeCode.Interface) return GetInterfaceInherit(baseType, subType);
+                }
+                else if (subType.code == TypeCode.Handle && (baseType.code == TypeCode.Handle || baseType.code == TypeCode.Interface))
+                {
+                    var index = subType;
+                    var depth = 0;
+                    var min = -1;
+                    while (GetSourceDeclaration(index) is CompilingClass compiling)
+                    {
+                        if (baseType.code == TypeCode.Interface)
+                            foreach (var inherit in compiling.inherits)
+                            {
+                                var current = GetInterfaceInherit(baseType, inherit);
+                                if (current >= 0)
+                                    if (min < 0 || depth + current < min)
+                                        min = depth + current;
+                            }
+                        depth++;
+                        index = compiling.parent;
+                        if (index == baseType) return depth;
+                    }
+                    return min;
+                }
+            }
+            return -1;
+        }
         public void Clear()
         {
             library.Clear();

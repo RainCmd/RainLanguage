@@ -227,16 +227,18 @@ AbstractLibrary* DeclarationManager::GetLibrary(const String& libraryName)
 	return NULL;
 }
 
-bool TryGetInterfaceInherit(DeclarationManager* manager, Type subType, Type baseType, uint32& depth)
+uint32 GetInterfaceInherit(DeclarationManager* manager, Type subType, Type baseType)
 {
-	if(subType == baseType) return true;
+	if(subType == baseType) return 0;
 	AbstractInterface* index = manager->GetLibrary(subType.library)->interfaces[subType.index];
-	depth++;
+	uint32 minDepth = INVALID;
 	for(uint32 i = 0; i < index->inherits.Count(); i++)
-		if(TryGetInterfaceInherit(manager, index->inherits[i], baseType, depth))
-			return true;
-	depth--;
-	return false;
+	{
+		uint32 depth = GetInterfaceInherit(manager, index->inherits[i], baseType);
+		if(depth < minDepth) minDepth = depth;
+	}
+	if(minDepth != INVALID)minDepth++;
+	return minDepth;
 }
 
 bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType, uint32& depth)
@@ -301,24 +303,33 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 			}
 			else if(baseType.code == TypeCode::Interface)
 			{
-				depth = 0;
-				return TryGetInterfaceInherit(this, subType, baseType, depth);
+				depth = GetInterfaceInherit(this, subType, baseType);
+				return depth != INVALID;
 			}
 		}
-		else if(subType.code == TypeCode::Handle)
+		else if(subType.code == TypeCode::Handle && (baseType.code == TypeCode::Handle || baseType.code == TypeCode::Interface))
 		{
 			Type index = subType;
 			depth = 0;
+			uint32 minInheritDepth = INVALID;
 			while(index.code == TypeCode::Handle)
 			{
 				AbstractClass* declaration = GetLibrary(index.library)->classes[index.index];
 				if(baseType.code == TypeCode::Interface)
 					for(uint32 i = 0; i < declaration->inherits.Count(); i++)
-						if(TryGetInterfaceInherit(this, declaration->inherits[i], baseType, depth))
-							return true;
+					{
+						uint32 inheritDepth = GetInterfaceInherit(this, declaration->inherits[i], baseType);
+						if(inheritDepth != INVALID && inheritDepth + depth < minInheritDepth)
+							minInheritDepth = inheritDepth + depth;
+					}
 				depth++;
-				index = GetParent(index);
-				if(index == baseType)return true;
+				index = declaration->parent;
+				if(index == baseType) return true;
+			}
+			if(minInheritDepth != INVALID)
+			{
+				depth = minInheritDepth;
+				return true;
 			}
 		}
 	}

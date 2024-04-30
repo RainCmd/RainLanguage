@@ -20,9 +20,9 @@
         Delegate,             //程序集名            名称路径            参数类型列表
         Task,                 //程序集名            名称路径            -
         Native,               //程序集名            名称路径            参数类型列表
-        Lambda,               //-                   名称路径            -
-        LambdaClosureValue,   //-                   名称路径            -
-        LocalVariable,        //-                   名称路径            -
+        Lambda,               //匿名函数索引        名称路径            参数类型列表
+        LambdaClosureValue,   //-                   名称                -
+        LocalVariable,        //索引                名称                -
     }
     internal readonly struct Declaration(string library, Visibility visibility, DeclarationCategory category, string[] name, Tuple signature) : IEquatable<Declaration>
     {

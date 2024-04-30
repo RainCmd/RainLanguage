@@ -82,7 +82,7 @@ public:
 	inline ConstantStringExpression(const Anchor& anchor, const String& value) :Expression(ExpressionType::ConstantStringExpression, anchor, List<Type, true>(1)), value(value)
 	{
 		returns.Add(TYPE_String);
-		attribute = Attribute::Constant;
+		attribute = Attribute::Constant | Attribute::Array;
 	}
 	bool TryEvaluation(String& result, LogicGenerateParameter& parameter);
 	void Generator(LogicGenerateParameter& parameter);
