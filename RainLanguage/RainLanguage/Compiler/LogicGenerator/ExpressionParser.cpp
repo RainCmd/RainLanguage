@@ -663,7 +663,8 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 	{
 		if(type != TYPE_Entity && !IsHandleType(type)) return false;
 	}
-	else if(expression->returns[0] == TYPE_Blurry)
+	else if(expression->returns[0] != TYPE_Blurry) types.Add(expression->returns[0]);
+	else
 	{
 		if(ContainAll(expression->type, ExpressionType::BlurrySetExpression))
 		{
@@ -681,16 +682,6 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractCallable* callable;
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if(!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable)) return false;
-			if(!IsEquals(abstractDelegate->parameters.GetTypes(), callable->parameters.GetTypes()))
-			{
-				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
-				return false;
-			}
-			if(!IsEquals(abstractDelegate->returns.GetTypes(), callable->returns.GetTypes()))
-			{
-				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT);
-				return false;
-			}
 		}
 		else if(ContainAll(expression->type, ExpressionType::MethodMemberExpression))
 		{
@@ -700,16 +691,6 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if(!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable)) return false;
 			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::StructFunction || callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
-			if(!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
-			{
-				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
-				return false;
-			}
-			if(!IsEquals(abstractDelegate->returns.GetTypes(), callable->returns.GetTypes()))
-			{
-				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT);
-				return false;
-			}
 		}
 		else if(ContainAll(expression->type, ExpressionType::MethodVirtualExpression))
 		{
@@ -719,21 +700,12 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if(!TryGetFunction(expression->anchor, methodExpression->declarations, abstractDelegate->parameters.GetTypesSpan(), callable))return false;
 			ASSERT_DEBUG(callable->declaration.category == DeclarationCategory::ClassFunction, "类型错误");
-			if(!IsEquals(abstractDelegate->parameters.GetTypes(), 0, callable->parameters.GetTypes(), 1))
-			{
-				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_PARAMETER_TYPES_INCONSISTENT);
-				return false;
-			}
-			if(!IsEquals(abstractDelegate->returns.GetTypes(), callable->returns.GetTypes()))
-			{
-				MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT);
-				return false;
-			}
 		}
 		else if(ContainAll(expression->type, ExpressionType::BlurryTaskExpression))
 		{
 			if(type.dimension || type.code != TypeCode::Task) return false;
-			if(!IsEquals(manager->GetLibrary(type.library)->tasks[type.index]->returns.GetTypes(), expression->returns)) return false;
+			BlurryTaskExpression* taskExpression = (BlurryTaskExpression*)expression;
+			if(!IsEquals(manager->GetLibrary(type.library)->tasks[type.index]->returns.GetTypes(), taskExpression->invoker->returns)) return false;
 		}
 		else if(ContainAll(expression->type, ExpressionType::BlurryLambdaExpression))
 		{
@@ -775,9 +747,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			delete lambdaBody;
 		}
 		types.Add(type);
-		return true;
 	}
-	types.Add(expression->returns[0]);
 	return true;
 }
 

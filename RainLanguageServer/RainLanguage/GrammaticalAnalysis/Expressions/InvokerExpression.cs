@@ -22,13 +22,13 @@
             invoker.Read(parameter);
         }
     }
-    internal class InvokerFunctionExpression(TextRange range, List<Type> returns, Expression parameters, Declaration declaration) : InvokerExpression(range, returns, parameters)
+    internal class InvokerFunctionExpression(TextRange range, List<Type> returns, Expression parameters, CompilingCallable callable) : InvokerExpression(range, returns, parameters)
     {
-        public readonly Declaration declaration = declaration;
+        public readonly CompilingCallable callable = callable;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            parameter.manager.GetDeclaration(declaration)?.references.Add(range);
+           callable.references.Add(range);
         }
     }
     internal class InvokerMemberExpression(TextRange range, List<Type> returns, Expression parameters, Expression target, Declaration declaration) : InvokerExpression(range, returns, parameters)

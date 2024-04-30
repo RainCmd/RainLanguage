@@ -49,25 +49,14 @@
                 Reference(implement);
         }
     }
-    internal class LambdaClosureDelegateCreateExpression : DelegateCreateExpression
+    internal class LambdaDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, Expression lambdaBody) : DelegateCreateExpression(range, type, callable)
     {
-        public readonly List<Declaration> sourceVariables;
-
-        public LambdaClosureDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, List<Declaration> sourceVariables) : base(range, type, callable)
-        {
-            this.sourceVariables = sourceVariables;
-            attribute = ExpressionAttribute.Value | ExpressionAttribute.Callable;
-        }
-
-        public override bool Valid => true;
+        public readonly Expression lambdaBody = lambdaBody;
+        public override bool Valid => lambdaBody.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            //todo 闭包中引用的变量
+            lambdaBody.Read(parameter);
         }
-    }
-    internal class LambdaDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable) : DelegateCreateExpression(range, type, callable)
-    {
-        public override bool Valid => true;
     }
 }

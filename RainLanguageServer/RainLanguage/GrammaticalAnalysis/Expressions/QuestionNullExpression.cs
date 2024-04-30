@@ -6,10 +6,10 @@
         public Expression right = right;
         public override bool Valid => left.Valid && right.Valid;
 
-        public override void Read()
+        public override void Read(ExpressionParameter parameter)
         {
-            left.Read();
-            right.Read();
+            left.Read(parameter);
+            right.Read(parameter);
         }
     }
 }

@@ -74,12 +74,6 @@ namespace RainLanguageServer.RainLanguage
                     case DeclarationCategory.Task:
                     case DeclarationCategory.Native:
                         return IsVisiable(manager, declaration, false);
-                    case DeclarationCategory.Lambda:
-                        break;
-                    case DeclarationCategory.LambdaClosureValue:
-                        break;
-                    case DeclarationCategory.LocalVariable:
-                        break;
                 }
             }
             return false;
@@ -333,6 +327,19 @@ namespace RainLanguageServer.RainLanguage
                 }
             }
             return results.Count > 0;
+        }
+        public List<CompilingDeclaration> FindOperator(ASTManager manager, string name)
+        {
+            var result = new List<CompilingDeclaration>();
+            if (manager.kernel.declarations.TryGetValue(name, out var declarations))
+                result.AddRange(declarations);
+            for (CompilingSpace? index = space; index != null; index = index.parent)
+                if (index.declarations.TryGetValue(name, out declarations))
+                    result.AddRange(declarations);
+            foreach(var rely in relies)
+                if(rely.declarations.TryGetValue(name,out declarations))
+                    result.AddRange(declarations);
+            return result;
         }
     }
 }

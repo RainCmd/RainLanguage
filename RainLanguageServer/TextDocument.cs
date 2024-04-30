@@ -1,5 +1,4 @@
 ﻿using LanguageServer.Parameters.TextDocument;
-using RainLanguageServer.RainLanguage;
 
 namespace RainLanguageServer
 {

@@ -20,9 +20,6 @@
         Delegate,             //程序集名            名称路径            参数类型列表
         Task,                 //程序集名            名称路径            -
         Native,               //程序集名            名称路径            参数类型列表
-        Lambda,               //匿名函数索引        名称路径            参数类型列表
-        LambdaClosureValue,   //-                   名称                -
-        LocalVariable,        //索引                名称                -
     }
     internal readonly struct Declaration(string library, Visibility visibility, DeclarationCategory category, string[] name, Tuple signature) : IEquatable<Declaration>
     {
@@ -54,9 +51,6 @@
                 case DeclarationCategory.Delegate: return new Type(library, TypeCode.Delegate, name, 0);
                 case DeclarationCategory.Task: return new Type(library, TypeCode.Task, name, 0);
                 case DeclarationCategory.Native:
-                case DeclarationCategory.Lambda:
-                case DeclarationCategory.LambdaClosureValue:
-                case DeclarationCategory.LocalVariable:
                     break;
             }
             return default;

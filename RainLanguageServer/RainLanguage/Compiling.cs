@@ -40,10 +40,6 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.Task:
                 case DeclarationCategory.Native:
                     return $"{space.GetFullName()}:{name}";
-                case DeclarationCategory.Lambda:
-                case DeclarationCategory.LambdaClosureValue:
-                case DeclarationCategory.LocalVariable:
-                    break;
             }
             return "";
         }

@@ -1,4 +1,5 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+using System.Runtime.InteropServices;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
@@ -258,13 +259,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_finally:
                         break;
                     default:
-                        return false;
+                        return new InvalidExpression(range);
                 }
                 index = lexical.anchor.end;
             label_next_lexical:;
             }
 
-            return false;
+            return new InvalidExpression(range);
         }
 
         private bool TryParseBracket(TextRange range, ref TextPosition index, SplitFlag flag, out Expression? result)
@@ -299,6 +300,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression AssignmentConvert(Expression source, List<Type> types)
         {
+            if (!source.Valid) return source;
             if (source.types.Count != types.Count)
             {
                 source = InferRightValueType(source, types);
@@ -341,62 +343,61 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case LexicalType.Comma:
                 case LexicalType.Semicolon: goto case default;
                 case LexicalType.Assignment:
-                    //todo 赋值操作
                     leftExpression = InferLeftValueType(leftExpression, rightExpression.types);
                     rightExpression = AssignmentConvert(rightExpression, leftExpression.types);
-
-                    break;
+                    if (vaild) return new TupleAssignmentExpression(left & right, leftExpression, rightExpression);
+                    else return new InvalidExpression(leftExpression, rightExpression);
                 case LexicalType.Equals:
                 case LexicalType.Lambda:
                 case LexicalType.BitAnd:
                 case LexicalType.LogicAnd: goto case default;
                 case LexicalType.BitAndAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "&", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.BitOr:
                 case LexicalType.LogicOr: goto case default;
                 case LexicalType.BitOrAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "|", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.BitXor: goto case default;
                 case LexicalType.BitXorAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "^", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Less:
                 case LexicalType.LessEquals:
                 case LexicalType.ShiftLeft: goto case default;
                 case LexicalType.ShiftLeftAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "<<", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Greater:
                 case LexicalType.GreaterEquals:
                 case LexicalType.ShiftRight: goto case default;
                 case LexicalType.ShiftRightAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, ">>", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Plus:
                 case LexicalType.Increment: goto case default;
                 case LexicalType.PlusAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "+", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Minus:
                 case LexicalType.Decrement:
                 case LexicalType.RealInvoker: goto case default;
                 case LexicalType.MinusAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "-", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Mul: goto case default;
                 case LexicalType.MulAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "*", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Div: goto case default;
                 case LexicalType.DivAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "/", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Annotation:
                 case LexicalType.Mod: goto case default;
                 case LexicalType.ModAssignment:
-                    //todo 运算表达式
+                    rightExpression = CreateOperation(left & right, "%", TupleExpression.Create(leftExpression, rightExpression));
                     goto case LexicalType.Assignment;
                 case LexicalType.Not:
                 case LexicalType.NotEquals:
@@ -473,10 +474,22 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 default:
                     throw new Exception("语法类型错误");
             }
-            return new InvalidExpression(leftExpression, rightExpression);
+        }
+        private Expression CreateOperation(TextRange range, string operation, Expression parameter)
+        {
+            if (!parameter.Valid) return parameter;
+            var operations = context.FindOperator(manager, operation);
+            if (TryGetFunction(range, operations, parameter, out var callable))
+            {
+                parameter = AssignmentConvert(parameter, callable!.declaration.signature);
+                return new InvokerFunctionExpression(range, callable.returns, parameter, callable);
+            }
+            else collector.Add(range, CErrorLevel.Error, "操作未找到");
+            return new InvalidExpression(range, parameter);
         }
         private Expression InferRightValueType(Expression expression, List<Type> types)
         {
+            if (!expression.Valid) return expression;
             if (expression is TupleExpression tuple)
             {
                 var expressions = new List<Expression>();
@@ -494,6 +507,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression InferRightValueType(Expression expression, Type type)
         {
+            if (!expression.Valid) return expression;
             if (type == Expression.BLURRY)
             {
                 collector.Add(expression.range, CErrorLevel.Error, "表达式意义不明确");
@@ -590,12 +604,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 {
                     if (blurryLambda.parameters.Count == compilingDelegate.parameters.Count)
                     {
-                        var lambdaLocalContext = new LocalContext();
-                        var lambdaParameters = new List<Local>();
+                        localContext.PushBlock();
                         for (var i = 0; i < compilingDelegate.parameters.Count; i++)
-                            lambdaParameters.Add(lambdaLocalContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type));
-
-
+                            localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
+                        var lambdaBodyExpression = Parse(blurryLambda.body);
+                        localContext.PopBlock();
+                        if (lambdaBodyExpression.Valid && compilingDelegate.returns.Count > 0)
+                            if (compilingDelegate.returns != lambdaBodyExpression.types)
+                                lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
+                        return new LambdaDelegateCreateExpression(expression.range, type, compilingDelegate, lambdaBodyExpression);
                     }
                     else collector.Add(expression.range, CErrorLevel.Error, "参数数量不一致");
                 }
@@ -660,8 +677,124 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             callable = default;
             return false;
         }
+        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Expression parameter, out CompilingCallable? callable)
+        {
+            callable = default;
+            if (!parameter.Valid) return false;
+            var parameterTypes = new List<Type>();
+            var minMeasure = 0;
+            var result = new List<CompilingCallable>();
+            foreach (var declaration in declarations)
+                if (declaration is CompilingCallable compiling)
+                {
+                    if (compiling.parameters.Count == parameter.types.Count && TryExplicitTypes(parameter, compiling.declaration.signature, parameterTypes))
+                    {
+                        var measure = Convert(manager, parameterTypes, compiling.declaration.signature);
+                        if (measure >= 0)
+                        {
+                            if (compiling.declaration.library == Type.LIBRARY_KERNEL) measure++;
+                            if (measure < minMeasure || result.Count == 0)
+                            {
+                                result.Clear();
+                                result.Add(compiling);
+                                minMeasure = measure;
+                            }
+                            else if (minMeasure == measure) result.Add(compiling);
+                        }
+                    }
+                    parameterTypes.Clear();
+                }
+            if (result.Count > 1)
+            {
+                var msg = new CompileMessage(range, CErrorLevel.Error, "目标函数不明确");
+                foreach (var item in result)
+                    msg.related.Add(new RelatedInfo(item.name, "符合条件的函数"));
+                collector.Add(msg);
+            }
+            if (result.Count > 0)
+            {
+                callable = result[0];
+                return true;
+            }
+            return false;
+        }
+        private bool TryExplicitTypes(Expression expression, List<Type> targetTypes, List<Type> result)
+        {
+            if (!expression.Valid) return false;
+            if (expression is TupleExpression tuple)
+            {
+                var index = 0;
+                foreach (var item in tuple.expressions)
+                {
+                    if (!TryExplicitTypes(item, targetTypes[index..(index + item.types.Count)], result)) return false;
+                    index += item.types.Count;
+                }
+                return true;
+            }
+            else if (expression.types.Count == 1) return TryExplicitTypes(expression, targetTypes[0], result);
+            result.AddRange(expression.types);
+            return true;
+        }
+        private bool TryExplicitTypes(Expression expression, Type target, List<Type> result)
+        {
+            if (!expression.Valid) return false;
+            if (expression.types[0] == Expression.NULL)
+            {
+                if (target != Type.ENTITY && !target.Managed) return false;
+            }
+            else if (expression.types[0] != Expression.BLURRY) result.Add(expression.types[0]);
+            else
+            {
+                if (expression is BlurrySetExpression blurrySet)
+                {
+                    if (target.dimension == 0) return false;
+                    var elementTypes = new List<Type>();
+                    for (var i = 0; i < blurrySet.types.Count; i++) elementTypes.Add(new Type(target.library, target.code, target.name, target.dimension - 1));
+                    if (TryExplicitTypes(blurrySet, elementTypes, result)) result.RemoveRange(result.Count - elementTypes.Count, elementTypes.Count);
+                    else return false;
+                }
+                else if (expression is MethodExpression methodExpression)
+                {
+                    if (manager.GetSourceDeclaration(target) is not CompilingDelegate compilingDelegate) return false;
+                    if (!TryGetFunction(expression.range, methodExpression.declarations, compilingDelegate.declaration.signature, out _)) return false;
+                }
+                else if (expression is MethodMemberExpression methodMember)
+                {
+                    if (manager.GetSourceDeclaration(target) is not CompilingDelegate compilingDelegate) return false;
+                    if (!TryGetFunction(expression.range, methodMember.declarations, compilingDelegate.declaration.signature, out _)) return false;
+                }
+                else if (expression is MethodVirtualExpression methodVirtual)
+                {
+                    if (manager.GetSourceDeclaration(target) is not CompilingDelegate compilingDelegate) return false;
+                    if (!TryGetFunction(expression.range, methodVirtual.declarations, compilingDelegate.declaration.signature, out _)) return false;
+                }
+                else if (expression is BlurryTaskExpression blurryTask)
+                {
+                    if (manager.GetSourceDeclaration(target) is not CompilingTask compilingTask) return false;
+                    if (compilingTask.returns != blurryTask.types) return false;
+                }
+                else if (expression is BlurryLambdaExpression blurryLambda)
+                {
+                    if (manager.GetSourceDeclaration(target) is not CompilingDelegate compilingDelegate) return false;
+                    localContext.PushBlock();
+                    for (var i = 0; i < compilingDelegate.parameters.Count; i++)
+                        localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
+                    var lambdaBodyExpression = Parse(blurryLambda.body);
+                    localContext.PopBlock();
+                    if (!lambdaBodyExpression.Valid) return false;
+                    else if (compilingDelegate.returns.Count > 0 && compilingDelegate.returns != lambdaBodyExpression.types)
+                    {
+                        lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
+                        if (!lambdaBodyExpression.Valid) return false;
+                    }
+                }
+                result.Add(target);
+            }
+            return true;
+        }
         private Expression InferLeftValueType(Expression expression, List<Type> types)
         {
+            if (!expression.Valid) return expression;
             if (expression.types.Count != types.Count)
             {
                 collector.Add(expression.range, CErrorLevel.Error, "类型数量不一致");
@@ -684,6 +817,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression InferLeftValueType(Expression expression, Type type)
         {
+            if (!expression.Valid) return expression;
             if (expression.types.Count == 1 && expression.attribute.ContainAll(ExpressionAttribute.Assignable) && expression.types[0] == Expression.BLURRY)
             {
                 if (type == Expression.BLURRY || type == Expression.NULL)

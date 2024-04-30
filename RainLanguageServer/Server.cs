@@ -237,7 +237,7 @@ namespace RainLanguageServer
                 {
                     var list = new List<CodeLens>();
                     foreach (var declaration in fileSpace.Declarations)
-                        if (declaration.compiling != null)
+                        if (declaration.compiling != null && declaration.name.Count > 0)
                         {
                             var compiling = declaration.compiling;
                             list.Add(new CodeLens(TR2R(compiling.name)) { command = new Command("引用：" + compiling.references.Count, "") });
@@ -260,13 +260,13 @@ namespace RainLanguageServer
                             else if (compiling is CompilingInterface compilingInterface)
                             {
                                 list.Add(new CodeLens(TR2R(compilingInterface.name)) { command = new Command("实现：" + compilingInterface.implements.Count, "") });
-                                foreach(var member in compilingInterface.callables)
+                                foreach (var member in compilingInterface.callables)
                                 {
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("实现：" + member.implements.Count, "") });
                                 }
                             }
-                            else if(compiling is CompilingClass compilingClass)
+                            else if (compiling is CompilingClass compilingClass)
                             {
                                 list.Add(new CodeLens(TR2R(compilingClass.name)) { command = new Command("子类：" + compilingClass.implements.Count, "") });
                                 foreach (var member in compilingClass.variables)
@@ -275,9 +275,9 @@ namespace RainLanguageServer
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("读取：" + member.read.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("写入：" + member.write.Count, "") });
                                 }
-                                foreach(var member in compilingClass.constructors)
+                                foreach (var member in compilingClass.constructors)
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
-                                foreach(var member in compilingClass.functions)
+                                foreach (var member in compilingClass.functions)
                                 {
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("覆盖：" + member.overrides.Count, "") });
@@ -309,7 +309,7 @@ namespace RainLanguageServer
         private string LoadRelyLibrary(string library)
         {
             //todo 加载依赖程序集
-            var result = "暂时还没想好依赖库怎么加载╰(￣▽￣)╭";
+            var result = "";
 
             return result;
         }

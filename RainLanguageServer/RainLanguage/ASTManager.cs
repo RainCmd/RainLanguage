@@ -35,7 +35,7 @@ namespace RainLanguageServer.RainLanguage
                 if (!relies.TryGetValue(name, out CompilingLibrary? library))
                 {
                     var content = relyLoader(name);
-                    if (string.IsNullOrEmpty(content))
+                    if (!string.IsNullOrEmpty(content))
                     {
                         library = LoadLibrary(name, content, false, out var file);
                         relies[name] = library;
@@ -176,10 +176,6 @@ namespace RainLanguageServer.RainLanguage
                             result = declarations!.Find(value => value.declaration.signature == declaration.signature);
                     }
                     break;
-                case DeclarationCategory.Lambda:
-                case DeclarationCategory.LambdaClosureValue:
-                case DeclarationCategory.LocalVariable:
-                    break;
             }
             if (result != null && result.declaration.category == declaration.category) return result;
             return null;
@@ -235,9 +231,6 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.Delegate:
                 case DeclarationCategory.Task:
                 case DeclarationCategory.Native:
-                case DeclarationCategory.Lambda:
-                case DeclarationCategory.LambdaClosureValue:
-                case DeclarationCategory.LocalVariable:
                     break;
             }
             if (result != null && result.declaration.category == declaration.category) return result;
