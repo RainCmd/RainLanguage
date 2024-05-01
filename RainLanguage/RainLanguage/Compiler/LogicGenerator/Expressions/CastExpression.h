@@ -35,8 +35,7 @@ public:
 	inline IsCastExpression(const Anchor& anchor, Expression* expression, VariableLocalExpression* local, const Type& targetType) :Expression(ExpressionType::IsCastExpression, anchor, List<Type, true>(1)), expression(expression), local(local), targetType(targetType) 
 	{
 		returns.Add(TYPE_Bool);
-		attribute = (expression->attribute & Attribute::Constant) | Attribute::Value;
-		attribute = CombineType(attribute, targetType);
+		attribute = Attribute::Value;
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~IsCastExpression();

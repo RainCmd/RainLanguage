@@ -1,4 +1,6 @@
-﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+﻿using Newtonsoft.Json.Linq;
+using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
@@ -45,90 +47,267 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Semicolon:
                     case LexicalType.Assignment: goto default;
                     case LexicalType.Equals:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Equals), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Lambda: goto default;
                     case LexicalType.BitAnd:
+                        if (attribute.ContainAny(ExpressionAttribute.Type)) PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Casting), attribute);
+                        else PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.BitAnd), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.LogicAnd:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.LogicAnd), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.BitAndAssignment: goto default;
                     case LexicalType.BitOr:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.BitOr), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.LogicOr:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.LogicOr), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.BitOrAssignment: goto default;
                     case LexicalType.BitXor:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.BitXor), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.BitXorAssignment: goto default;
                     case LexicalType.Less:
+                        if (attribute.ContainAny(ExpressionAttribute.Value))
+                        {
+                            PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Less), attribute);
+                            attribute = ExpressionAttribute.Operator;
+                            break;
+                        }
+                        else
+                        {
+                            //todo 可能是表示类型的尖括号
+
+                        }
                         break;
                     case LexicalType.LessEquals:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.LessEquals), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.ShiftLeft:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.ShiftLeft), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.ShiftLeftAssignment: goto default;
                     case LexicalType.Greater:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Greater), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.GreaterEquals:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.GreaterEquals), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.ShiftRight:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.ShiftRight), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.ShiftRightAssignment: goto default;
                     case LexicalType.Plus:
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator)) PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Positive), attribute);
+                        else PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Plus), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Increment:
+                        if (attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
+                        {
+                            var operationParameter = expressionStack.Pop();
+                            var operation = CreateOperation(operationParameter.range & lexical.anchor, "++", operationParameter);
+                            expressionStack.Push(operation);
+                            attribute = operation.attribute;
+                        }
+                        else
+                        {
+                            PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.IncrementLeft), attribute);
+                            attribute = ExpressionAttribute.Operator;
+                        }
                         break;
                     case LexicalType.PlusAssignment: goto default;
                     case LexicalType.Minus:
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator)) PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Negative), attribute);
+                        else PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Minus), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Decrement:
+                        if (attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
+                        {
+                            var operationParameter = expressionStack.Pop();
+                            var operation = CreateOperation(operationParameter.range & lexical.anchor, "--", operationParameter);
+                            expressionStack.Push(operation);
+                            attribute = operation.attribute;
+                        }
+                        else
+                        {
+                            PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.DecrementLeft), attribute);
+                            attribute = ExpressionAttribute.Operator;
+                        }
                         break;
                     case LexicalType.RealInvoker:
+                        //todo 实调用
                         break;
                     case LexicalType.MinusAssignment: goto default;
                     case LexicalType.Mul:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Mul), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.MulAssignment: goto default;
                     case LexicalType.Div:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Div), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.DivAssignment:
                     case LexicalType.Annotation: goto default;
                     case LexicalType.Mod:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Mod), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.ModAssignment: goto default;
                     case LexicalType.Not:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Not), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.NotEquals:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.NotEquals), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Negate:
+                        PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Inverse), attribute);
+                        attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Dot:
+                        //todo 点运算符
                         break;
                     case LexicalType.Question: goto default;
                     case LexicalType.QuestionDot:
+                        //todo 过滤一下值类型然后直接跳转到点运算符
                         break;
                     case LexicalType.QuestionRealInvoke:
+                        //todo 过滤一下非空类型然后直接跳转到实调用
                         break;
                     case LexicalType.QuestionInvoke:
                         break;
                     case LexicalType.QuestionIndex:
                         break;
                     case LexicalType.QuestionNull:
-                        break;
                     case LexicalType.Colon: goto default;
                     case LexicalType.ConstReal:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            _ = double.TryParse(lexical.anchor.ToString().Replace("_", ""), out var value);
+                            expressionStack.Push(new ConstantRealExpression(lexical.anchor, value));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.ConstNumber:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            _ = long.TryParse(lexical.anchor.ToString().Replace("_", ""), out var value);
+                            expressionStack.Push(new ConstantIntegerExpression(lexical.anchor, value));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.ConstBinary:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            long value = 0;
+                            for (var i = 2; i < lexical.anchor.Count; i++)
+                            {
+                                var c = lexical.anchor[i];
+                                if (c != '_')
+                                {
+                                    value <<= 1;
+                                    if (c == '1') value++;
+                                }
+                            }
+                            expressionStack.Push(new ConstantIntegerExpression(lexical.anchor, value));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.ConstHexadecimal:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            long value = 0;
+                            for (var i = 2; i < lexical.anchor.Count; i++)
+                            {
+                                var element = lexical.anchor[i];
+                                if (element != '_')
+                                {
+                                    value <<= 4;
+                                    if (element >= '0' && element <= '9') value += element - '0';
+                                    else value += (element | 0x20) - 'a' + 10;
+                                }
+                            }
+                            expressionStack.Push(new ConstantIntegerExpression(lexical.anchor, value));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.ConstChars:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            long value = 0;
+                            for (var i = 1; i < lexical.anchor.Count; i++)
+                            {
+                                var element = lexical.anchor[i];
+                                if (element != '\'')
+                                {
+                                    value <<= 8;
+                                    if (element != '\\') value += element & 0xff;
+                                    else if (StringExtend.TryEscapeCharacter(lexical.anchor.Slice(i), out var resultChar, out var resultLength))
+                                    {
+                                        value += resultChar & 0xff;
+                                        i += resultLength - 1;
+                                    }
+                                    else collector.Add(lexical.anchor[i..(i + 1)], CErrorLevel.Error, "无效的转义符");
+                                }
+                            }
+                            expressionStack.Push(new ConstantIntegerExpression(lexical.anchor, value));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.ConstString:
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            var builder = new StringBuilder();
+                            for (var i = 1; i < lexical.anchor.Count; i++)
+                            {
+                                var element = lexical.anchor[i];
+                                if (element != '\"')
+                                {
+                                    if (element != '\\') builder.Append(element);
+                                    else if (StringExtend.TryEscapeCharacter(lexical.anchor.Slice(i), out var resultChar, out var resultLength))
+                                    {
+                                        builder.Append(resultChar);
+                                        i += resultLength - 1;
+                                    }
+                                    else collector.Add(lexical.anchor[i..(i + 1)], CErrorLevel.Error, "无效的转义符");
+                                }
+                            }
+                            expressionStack.Push(new ConstantStringExpression(lexical.anchor, builder.ToString()));
+                            attribute = ExpressionAttribute.Constant;
+                            break;
+                        }
+                        goto default;
                     case LexicalType.TemplateString:
+                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                        {
+                            var builder = new StringBuilder();
+                            var expressions = new List<Expression>();
+                            //todo 模板字符串解析逻辑
+                            expressionStack.Push(new ComplexStringExpression(lexical.anchor, expressions));
+                            attribute = ExpressionAttribute.Value;
+                        }
                         break;
                     case LexicalType.Word:
                         break;
@@ -252,7 +431,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_finally:
                     default:
                         collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
-                        goto label_parse_fail;
+                        expressionStack.Push(new InvalidExpression(lexical.anchor));
+                        break;
                 }
                 index = lexical.anchor.end;
             label_next_lexical:;
@@ -260,23 +440,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         label_parse_fail:
             return new InvalidExpression(range);
         }
-        private bool PushToken(Stack<Expression> expressionStack, Stack<Token> tokenStack, Token token, ExpressionAttribute attribute)
+        private void PushToken(Stack<Expression> expressionStack, Stack<Token> tokenStack, Token token, ExpressionAttribute attribute)
         {
-            while (tokenStack.Count > 0 && token.Priority <= tokenStack.Peek().Priority)
-            {
-                attribute = PopToken(expressionStack, tokenStack.Pop());
-                if (attribute == ExpressionAttribute.Invalid) return false;
-            }
-            if (attribute.ContainAny(token.Precondition))
-            {
-                tokenStack.Push(token);
-                return true;
-            }
-            else
-            {
+            while (tokenStack.Count > 0 && token.Priority <= tokenStack.Peek().Priority) attribute = PopToken(expressionStack, tokenStack.Pop());
+
+            if (attribute != ExpressionAttribute.Invalid && !attribute.ContainAny(token.Precondition))
                 collector.Add(token.lexical.anchor, CErrorLevel.Error, "无效的操作");
-                return false;
-            }
+            tokenStack.Push(token);
         }
         private ExpressionAttribute PopToken(Stack<Expression> expressionStack, Token token)
         {
@@ -292,15 +462,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         var left = expressionStack.Pop();
                         left = AssignmentConvert(left, Type.BOOL);
                         right = AssignmentConvert(right, Type.BOOL);
-                        var expression = new LogicExpression(left.range & right.range, left, right);
-                        expressionStack.Push(expression);
-                        return expression.attribute;
+                        expressionStack.Push(new LogicExpression(left.range & right.range, left, right));
+                        return expressionStack.Peek().attribute;
                     }
-                    else
-                    {
-                        collector.Add(token.lexical.anchor, CErrorLevel.Error, "缺少表达式");
-                        return ExpressionAttribute.Invalid;
-                    }
+                    else if (expressionStack.Count > 0)
+                        expressionStack.Push(new InvalidExpression(expressionStack.Pop()));
+                    else expressionStack.Push(new InvalidExpression(token.lexical.anchor));
+                    collector.Add(token.lexical.anchor, CErrorLevel.Error, "缺少表达式");
+                    return ExpressionAttribute.Invalid;
                 case TokenType.CompareOperationPriority: break;
                 case TokenType.Less:
                 case TokenType.Greater:
@@ -323,10 +492,40 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case TokenType.Mod: return Operator(expressionStack, token.lexical.anchor, 2);
                 case TokenType.SymbolicOperationPriority: break;
                 case TokenType.Casting:
+                    if (expressionStack.Count >= 2)
                     {
-                        //todo casting token
+                        var right = expressionStack.Pop();
+                        var left = expressionStack.Pop();
+                        if (!left.Valid || !right.Valid)
+                        {
+                            expressionStack.Push(new InvalidExpression(left, right));
+                            return ExpressionAttribute.Invalid;
+                        }
+                        if (right.attribute.ContainAny(ExpressionAttribute.Value))
+                        {
+                            if (left is TypeExpression typeExpression)
+                            {
+                                if (Convert(manager, right.types[0], typeExpression.type) < 0 && Convert(manager, typeExpression.type, right.types[0]) < 0)
+                                {
+                                    collector.Add(left.range & right.range, CErrorLevel.Error, $"无法从{right.types[0]}转换为{typeExpression.type}");
+                                }
+                                expressionStack.Push(new CastExpression(left.range & right.range, typeExpression, right));
+                                return expressionStack.Peek().attribute;
+                            }
+                            else throw new Exception("左边表达式不是类型，解析逻辑应该有bug");
+                        }
+                        else
+                        {
+                            expressionStack.Push(new InvalidExpression(left, right));
+                            collector.Add(right.range, CErrorLevel.Error, "无法进行类型强转");
+                            return ExpressionAttribute.Invalid;
+                        }
                     }
-                    break;
+                    else if (expressionStack.Count > 0)
+                        expressionStack.Push(new InvalidExpression(expressionStack.Pop()));
+                    else expressionStack.Push(new InvalidExpression(token.lexical.anchor));
+                    collector.Add(token.lexical.anchor, CErrorLevel.Error, "缺少表达式");
+                    return ExpressionAttribute.Invalid;
                 case TokenType.Not:
                 case TokenType.Inverse:
                 case TokenType.Positive:
@@ -341,6 +540,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (expressionStack.Count < count)
             {
                 collector.Add(name, CErrorLevel.Error, "缺少表达式");
+                if (expressionStack.Count > 0)
+                {
+                    var invalids = new List<Expression>(expressionStack);
+                    invalids.Reverse();
+                    expressionStack.Clear();
+                    expressionStack.Push(new InvalidExpression([.. invalids]));
+                }
+                else expressionStack.Push(new InvalidExpression(name));
                 return ExpressionAttribute.Invalid;
             }
             var parameters = new List<Expression>();
@@ -928,7 +1135,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 }
                 else if (expression is BlurryVariableDeclarationExpression blurry)
                 {
-                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.range, type)) { attribute = ExpressionAttribute.Assignable | ExpressionAttribute.Value };
+                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.range, type), ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                 }
                 else
                 {
