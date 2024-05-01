@@ -24,6 +24,7 @@ enum class MessageType :uint32
 {
 	ERROR = ((uint32)ErrorLevel::Error) << 24,
 	ERROR_MISSING_PAIRED_SYMBOL,			//缺少配对的符号
+	ERROR_INVALID_ESCAPE_CHARACTER,			//无效的转义符
 	ERROR_UNKNOWN_SYMBOL,					//未知的符号
 	ERROR_INDENT,							//缩进问题
 	ERROR_INPUT_STRINGL,					//输入字符串

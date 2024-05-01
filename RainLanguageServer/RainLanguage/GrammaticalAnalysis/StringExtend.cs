@@ -11,15 +11,13 @@
 
         public readonly char this[int index] => value[start + index];
         public readonly int Length => end - start;
-        public readonly StringFragment this[int start, int end] => new(value, this.start + start, this.start + end);
-        public readonly StringFragment this[Range range] => this[range.Start.Value, range.End.IsFromEnd ? end - start : range.End.Value];
+        public readonly StringFragment this[Range range] => new(value, start + range.Start.GetOffset(Length), start + range.End.GetOffset(Length));
         public override string ToString() => value[start..end];
         public static implicit operator string(StringFragment fragment) => fragment.ToString();
     }
     internal static class StringExtend
     {
-        internal static StringFragment Slice(this string value, int start, int end) => new(value, start, end);
-        internal static StringFragment Slice(this string value, int start) => new(value, start, value.Length);
+        internal static StringFragment Slice(this string value, Range range) => new(value, range.Start.GetOffset(value.Length), range.End.GetOffset(value.Length));
         public static bool TryEscapeCharacter(StringFragment fragment, out char result, out int length)
         {
             if (fragment.Length >= 2)
@@ -109,7 +107,6 @@
             }
             return false;
         }
-        internal static StringFragment Slice(this TextRange value, int start, int end) => new(value.start.document.text, value.start.charactor + start, value.start.charactor + end);
-        internal static StringFragment Slice(this TextRange value, int start) => value.Slice(start, value.Count);
+        internal static StringFragment Slice(this TextRange value, Range range) => new(value.start.document.text, value.start.charactor + range.Start.GetOffset(value.Count), value.start.charactor + range.End.GetOffset(value.Count));
     }
 }

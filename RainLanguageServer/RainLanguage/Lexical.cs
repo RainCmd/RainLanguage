@@ -499,6 +499,154 @@ namespace RainLanguageServer.RainLanguage
             }
             return false;
         }
+        public static bool TryConvertType(this LexicalType type, out Type result)
+        {
+            result = new Type();
+            switch (type)
+            {
+                case LexicalType.Unknow:
+                case LexicalType.BracketLeft0:
+                case LexicalType.BracketLeft1:
+                case LexicalType.BracketLeft2:
+                case LexicalType.BracketRight0:
+                case LexicalType.BracketRight1:
+                case LexicalType.BracketRight2:
+                case LexicalType.Comma:
+                case LexicalType.Semicolon:
+                case LexicalType.Assignment:
+                case LexicalType.Equals:
+                case LexicalType.Lambda:
+                case LexicalType.BitAnd:
+                case LexicalType.LogicAnd:
+                case LexicalType.BitAndAssignment:
+                case LexicalType.BitOr:
+                case LexicalType.LogicOr:
+                case LexicalType.BitOrAssignment:
+                case LexicalType.BitXor:
+                case LexicalType.BitXorAssignment:
+                case LexicalType.Less:
+                case LexicalType.LessEquals:
+                case LexicalType.ShiftLeft:
+                case LexicalType.ShiftLeftAssignment:
+                case LexicalType.Greater:
+                case LexicalType.GreaterEquals:
+                case LexicalType.ShiftRight:
+                case LexicalType.ShiftRightAssignment:
+                case LexicalType.Plus:
+                case LexicalType.Increment:
+                case LexicalType.PlusAssignment:
+                case LexicalType.Minus:
+                case LexicalType.Decrement:
+                case LexicalType.RealInvoker:
+                case LexicalType.MinusAssignment:
+                case LexicalType.Mul:
+                case LexicalType.MulAssignment:
+                case LexicalType.Div:
+                case LexicalType.DivAssignment:
+                case LexicalType.Annotation:
+                case LexicalType.Mod:
+                case LexicalType.ModAssignment:
+                case LexicalType.Not:
+                case LexicalType.NotEquals:
+                case LexicalType.Negate:
+                case LexicalType.Dot:
+                case LexicalType.Question:
+                case LexicalType.QuestionDot:
+                case LexicalType.QuestionRealInvoke:
+                case LexicalType.QuestionInvoke:
+                case LexicalType.QuestionIndex:
+                case LexicalType.QuestionNull:
+                case LexicalType.Colon:
+                case LexicalType.ConstReal:
+                case LexicalType.ConstNumber:
+                case LexicalType.ConstBinary:
+                case LexicalType.ConstHexadecimal:
+                case LexicalType.ConstChars:
+                case LexicalType.ConstString:
+                case LexicalType.TemplateString:
+                case LexicalType.Word:
+                case LexicalType.Backslash:
+                case LexicalType.KeyWord_namespace:
+                case LexicalType.KeyWord_import:
+                case LexicalType.KeyWord_native:
+                case LexicalType.KeyWord_public:
+                case LexicalType.KeyWord_internal:
+                case LexicalType.KeyWord_space:
+                case LexicalType.KeyWord_protected:
+                case LexicalType.KeyWord_private:
+                case LexicalType.KeyWord_enum:
+                case LexicalType.KeyWord_struct:
+                case LexicalType.KeyWord_class:
+                case LexicalType.KeyWord_interface:
+                case LexicalType.KeyWord_const:
+                case LexicalType.KeyWord_global:
+                case LexicalType.KeyWord_base:
+                case LexicalType.KeyWord_this:
+                case LexicalType.KeyWord_true:
+                case LexicalType.KeyWord_false:
+                case LexicalType.KeyWord_null:
+                case LexicalType.KeyWord_var: return false;
+                case LexicalType.KeyWord_bool:
+                    result = Type.BOOL;
+                    return true;
+                case LexicalType.KeyWord_byte:
+                    result = Type.BYTE;
+                    return true;
+                case LexicalType.KeyWord_char:
+                    result = Type.CHAR;
+                    return true;
+                case LexicalType.KeyWord_integer:
+                    result = Type.INT;
+                    return true;
+                case LexicalType.KeyWord_real:
+                    result = Type.REAL;
+                    return true;
+                case LexicalType.KeyWord_real2:
+                    result = Type.REAL2;
+                    return true;
+                case LexicalType.KeyWord_real3:
+                    result = Type.REAL3;
+                    return true;
+                case LexicalType.KeyWord_real4:
+                    result = Type.REAL4;
+                    return true;
+                case LexicalType.KeyWord_type:
+                    result = Type.TYPE;
+                    return true;
+                case LexicalType.KeyWord_string:
+                    result = Type.STRING;
+                    return true;
+                case LexicalType.KeyWord_handle:
+                    result = Type.HANDLE;
+                    return true;
+                case LexicalType.KeyWord_entity:
+                    result = Type.ENTITY;
+                    return true;
+                case LexicalType.KeyWord_delegate:
+                case LexicalType.KeyWord_task: return false;
+                case LexicalType.KeyWord_array:
+                    result = Type.ARRAY;
+                    return true;
+                case LexicalType.KeyWord_if:
+                case LexicalType.KeyWord_elseif:
+                case LexicalType.KeyWord_else:
+                case LexicalType.KeyWord_while:
+                case LexicalType.KeyWord_for:
+                case LexicalType.KeyWord_break:
+                case LexicalType.KeyWord_continue:
+                case LexicalType.KeyWord_return:
+                case LexicalType.KeyWord_is:
+                case LexicalType.KeyWord_as:
+                case LexicalType.KeyWord_start:
+                case LexicalType.KeyWord_new:
+                case LexicalType.KeyWord_wait:
+                case LexicalType.KeyWord_exit:
+                case LexicalType.KeyWord_try:
+                case LexicalType.KeyWord_catch:
+                case LexicalType.KeyWord_finally: return false;
+            }
+            return false;
+        }
         public static bool TryConvertVisibility(this LexicalType type, out Visibility visibility)
         {
             switch (type)
@@ -593,7 +741,7 @@ namespace RainLanguageServer.RainLanguage
             ch |= 0x20;
             return ch >= 'a' && ch <= 'z';
         }
-        private static TextRange MatchStringTemplateBlock(TextRange segment, MessageCollector? collector)
+        public static TextRange MatchStringTemplateBlock(TextRange segment, MessageCollector? collector)
         {
             if (segment[0] != '{') throw new ArgumentException("需要保留前后花括号");
             var index = 1;

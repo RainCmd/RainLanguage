@@ -20,9 +20,10 @@ namespace RainLanguageServer.RainLanguage
         public readonly TypeCode code = code;
         public readonly string[] name = name;//不包含程序集名
         public readonly int dimension = dimension;
-        public bool Vaild => name != null;
+        public bool Vaild => name != null && dimension >= 0;
         public bool Managed => Vaild && (dimension > 0 || code >= TypeCode.Handle);
         public Type Source => new(library, code, name, 0);
+        public Type GetDimensionType(int dimension) => new(library, code, name, dimension);
         public bool Equals(Type type)
         {
             if (Vaild && type.Vaild)

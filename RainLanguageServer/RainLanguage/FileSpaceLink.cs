@@ -23,7 +23,7 @@
             else collector.Add(fileType.name, CErrorLevel.Error, "声明未找到");
             if (manager.GetSourceDeclaration(result) is CompilingDeclaration target)
                 target.references.Add(fileType.GetNameRange());
-            return new Type(result.library!, result.code, result.name!, fileType.dimension);
+            return result.GetDimensionType(fileType.dimension);
         }
         public void Link(ASTManager manager, CompilingLibrary library, bool cite)
         {

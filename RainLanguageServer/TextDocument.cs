@@ -52,7 +52,7 @@ namespace RainLanguageServer
                 else return '\0';
             }
         }
-        public readonly TextRange this[Range range] => new(new(start.document, start.charactor + range.Start.Value), range.End.IsFromEnd ? end : new(start.document, start.charactor + range.End.Value));
+        public readonly TextRange this[Range range] => new(start + range.Start.GetOffset(Count), start + range.End.GetOffset(Count));
 
         public bool Contain(TextPosition position) => start <= position && position <= end;
         public static bool operator ==(TextRange left, TextRange right) => left.Equals(right);

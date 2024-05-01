@@ -2394,9 +2394,11 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				}
 				else
 				{
+					Anchor operatorAnchor = lexical.anchor;
 					index = lexical.anchor.GetEnd();
-					if(TryAnalysis(anchor, index, lexical, manager->messages) && lexical.type == LexicalType::Word)
+					if(TryAnalysis(anchor, index, lexical, manager->messages))
 					{
+						if(lexical.type != LexicalType::Word) goto label_error_unexpected_lexcal;
 						Type type = MatchBaseType(lexical.anchor);
 						if(type.IsValid())
 						{
@@ -2443,7 +2445,11 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 						goto label_parse_fail;
 					}
-					else goto label_error_unexpected_lexcal;
+					else
+					{
+						MESSAGE2(manager->messages, operatorAnchor, MessageType::ERROR_MISSING_TYPE);
+						goto label_parse_fail;
+					}
 				}
 			case LexicalType::LessEquals:
 				PUSH_TOKEN(TokenType::LessEquals, Attribute::Operator);
@@ -2889,6 +2895,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							value <<= 8;
 							if(element != '\\') value += element & 0xff;
 							else if(++i < length) value += EscapeCharacter(i, content.GetPointer(), length) & 0xff;
+							else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_INVALID_ESCAPE_CHARACTER);
 						}
 					}
 					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
@@ -2908,6 +2915,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							if(element != '\\') stringBuilder.Add(element);
 							else if(++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+							else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_INVALID_ESCAPE_CHARACTER);
 						}
 					}
 					expressionStack.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
@@ -2984,6 +2992,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						}
 						else if(element != '\\') stringBuilder.Add(element);
 						else if(++i < length) stringBuilder.Add(EscapeCharacter(i, content.GetPointer(), length));
+						else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_INVALID_ESCAPE_CHARACTER);
 					}
 					if(stringBuilder.Count())
 					{
