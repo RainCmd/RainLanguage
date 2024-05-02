@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
@@ -86,14 +85,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         else
                         {
-                            //todo 可能是表示类型的尖括号
                             var operatorAnchor = lexical.anchor;
-                            index = lexical.anchor.end;
-                            if (Lexical.TryAnalysis(range, index, out lexical, collector))
+                            if (Lexical.TryAnalysis(range, lexical.anchor.end, out lexical, collector))
                             {
+                                index = lexical.anchor.end;
                                 if (lexical.type.TryConvertType(out var type))
                                 {
-                                    index = lexical.anchor.end;
                                     expressionStack.Push(new TypeExpression(lexical.anchor, type.GetDimensionType(Lexical.ExtractDimension(range, ref index))));
                                     attribute = ExpressionAttribute.Type;
                                 }
@@ -101,7 +98,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 {
                                     if (localContext.TryGetLocal(lexical.anchor.ToString(), out var local))
                                     {
-                                        var variableExpression = new VariableLocalExpression(lexical.anchor, local, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
+                                        var variableExpression = new VariableLocalExpression(lexical.anchor, local, null, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
                                         expressionStack.Push(variableExpression);
                                         attribute = variableExpression.attribute;
                                     }
@@ -111,36 +108,52 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         {
                                             if (context.TryFindSpace(manager, lexical.anchor, out var space, collector))
                                             {
+                                                declarations = FindDeclaration(range, ref lexical, space!);
                                                 index = lexical.anchor.end;
-                                                declarations = FindDeclaration(range, ref index, ref lexical, space!);
-                                                if (declarations != null)
-                                                    PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, ref lexical, declarations);
                                             }
                                             else collector.Add(lexical.anchor, CErrorLevel.Error, "未找到标识符的申明");
                                         }
-                                        if (declarations != null)
-                                        {
-                                            if (Lexical.TryAnalysis(range, index))
-                                        }
-                                        else
-                                        {
-                                            expressionStack.Push(new InvalidExpression(lexical.anchor));
-                                            attribute = ExpressionAttribute.Invalid;
-                                        }
+                                        if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, lexical, declarations);
                                     }
                                 }
                                 else
                                 {
-                                    collector.Add(operatorAnchor, CErrorLevel.Error, "意外的词条");
-                                    expressionStack.Push(new InvalidExpression(operatorAnchor));
-                                    break;
+                                    collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                                    expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                    goto label_next_lexical;
                                 }
+                                if (Lexical.TryAnalysis(range, index, out lexical, collector))
+                                {
+                                    index = lexical.anchor.end;
+                                    if (lexical.type != LexicalType.Greater)
+                                    {
+                                        collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                    else if (expressionStack.Peek() is TypeExpression typeExpression)
+                                    {
+                                        expressionStack.Pop();
+                                        var expression = new EvaluateConstantTypeExpression(typeExpression.type, typeExpression);
+                                        expressionStack.Push(expression);
+                                        attribute = expression.attribute;
+                                    }
+                                    else
+                                    {
+                                        collector.Add(expressionStack.Peek().range, CErrorLevel.Error, "不是类型表达式");
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                }
+                                else
+                                {
+                                    collector.Add(operatorAnchor, CErrorLevel.Error, "缺少配对的符号");
+                                    attribute = ExpressionAttribute.Invalid;
+                                }
+                                goto label_next_lexical;
                             }
                             else
                             {
                                 collector.Add(operatorAnchor, CErrorLevel.Error, "缺少类型");
                                 expressionStack.Push(new InvalidExpression(operatorAnchor));
-                                goto label_next_lexical;
                             }
                         }
                         break;
@@ -480,7 +493,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifier, collector) && identifier.type == LexicalType.Word)
                             {
                                 index = identifier.anchor.end;
-                                expressionStack.Push(new BlurryVariableDeclarationExpression(identifier.anchor));
+                                expressionStack.Push(new BlurryVariableDeclarationExpression(identifier.anchor, lexical.anchor));
                                 attribute = ExpressionAttribute.Assignable;
                                 goto label_next_lexical;
                             }
@@ -1068,21 +1081,20 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             return expression;
         }
-        private List<CompilingDeclaration>? FindDeclaration(TextRange range, ref TextPosition index, ref Lexical lastLexical, CompilingSpace space)
+        private List<CompilingDeclaration>? FindDeclaration(TextRange range, ref Lexical lastLexical, CompilingSpace space)
         {
-            if (Lexical.TryAnalysis(range, index, out var lexical, collector))
+            if (Lexical.TryAnalysis(range, lastLexical.anchor.end, out var lexical, collector))
             {
                 if (lexical.type == LexicalType.Dot)
                 {
-                    index = lexical.anchor.end;
                     lastLexical = lexical;
-                    if (Lexical.TryAnalysis(range, index, out lexical, collector))
+                    if (Lexical.TryAnalysis(range, lastLexical.anchor.end, out lexical, collector))
                     {
                         if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord())
                         {
-                            index = lexical.anchor.end;
+                            lastLexical = lexical;
                             if (space.declarations.TryGetValue(lexical.anchor.ToString(), out var declarations)) return declarations;
-                            else if (space.children.TryGetValue(lexical.anchor.ToString(), out var child)) return FindDeclaration(range, ref index, ref lastLexical, child);
+                            else if (space.children.TryGetValue(lexical.anchor.ToString(), out var child)) return FindDeclaration(range, ref lastLexical, child);
                             else collector.Add(lexical.anchor, CErrorLevel.Error, "未找到标识符的申明");
                         }
                         else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
@@ -1094,9 +1106,139 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             else collector.Add(lastLexical.anchor, CErrorLevel.Error, "缺少标识符");
             return null;
         }
-        private void PushDeclarationsExpression(TextRange range, ref TextPosition index, ref ExpressionAttribute attribute, Stack<Expression> expressionStack, ref Lexical lastLexical, List<CompilingDeclaration> declarations)
+        private void PushDeclarationsExpression(TextRange range, ref TextPosition index, ref ExpressionAttribute attribute, Stack<Expression> expressionStack, Lexical lexical, List<CompilingDeclaration> declarations)
         {
-            //todo TryPushDeclarationsExpression
+            switch (declarations[0].declaration.category)
+            {
+                case DeclarationCategory.Invalid: break;
+                case DeclarationCategory.Variable:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        if (declarations[0] is CompilingVariable variable)
+                        {
+                            var expression = new VariableGlobalExpression(lexical.anchor, variable);
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        else throw new Exception("前面解析逻辑可能有问题");
+                    }
+                    break;
+                case DeclarationCategory.Function:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                    {
+                        var expression = new MethodExpression(lexical.anchor, declarations);
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.Enum:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        var expression = new TypeExpression(lexical.anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.EnumElement: throw new Exception("枚举内没有逻辑代码，不会直接查找到枚举");
+                case DeclarationCategory.Struct:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        var expression = new TypeExpression(lexical.anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.StructVariable:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        if (localContext.thisValue == null || declarations[0] is not CompilingVariable variable) throw new Exception("前面解析逻辑可能有问题");
+                        var thisValueExpression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, null, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                        var expression = new VariableMemberExpression(lexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, variable);
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.StructFunction:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                    {
+                        if (localContext.thisValue == null) throw new Exception("前面解析逻辑可能有问题");
+                        var thisValueExpression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, null, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                        var expression = new MethodMemberExpression(lexical.anchor, thisValueExpression, declarations);
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.Class:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        var expression = new TypeExpression(lexical.anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.Constructor: throw new Exception("构造函数不参与重载决议");
+                case DeclarationCategory.ClassVariable:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        if (localContext.thisValue == null || declarations[0] is not CompilingVariable variable) throw new Exception("前面解析逻辑可能有问题");
+                        var thisValueExpression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, null, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                        var expression = new VariableMemberExpression(lexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, variable);
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.ClassFunction:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                    {
+                        if (localContext.thisValue == null) throw new Exception("前面解析逻辑可能有问题");
+                        var thisValueExpression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, null, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                        var expression = new MethodVirtualExpression(lexical.anchor, thisValueExpression, declarations);
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.Interface:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        var expression = new TypeExpression(lexical.anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.InterfaceFunction: throw new Exception("接口内没有逻辑代码，不应该查找到接口函数");
+                case DeclarationCategory.Delegate:
+                case DeclarationCategory.Task:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    {
+                        var expression = new TypeExpression(lexical.anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+                case DeclarationCategory.Native:
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                    {
+                        var expression = new MethodExpression(lexical.anchor, declarations);
+                        expressionStack.Push(expression);
+                        attribute = expression.attribute;
+                        return;
+                    }
+                    break;
+            }
+            collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
+            expressionStack.Push(new InvalidDeclarationsExpression(lexical.anchor, declarations));
+            attribute = ExpressionAttribute.Invalid;
         }
         private bool TryGetFunction(TextRange range, List<Declaration> declarations, Tuple signature, out CompilingCallable? callable)
         {
@@ -1285,7 +1427,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 }
                 else if (expression is BlurryVariableDeclarationExpression blurry)
                 {
-                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.range, type), ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.range, type), blurry.declarationRange, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                 }
                 else
                 {

@@ -2,8 +2,10 @@
 {
     internal class BlurryVariableDeclarationExpression : Expression
     {
-        public BlurryVariableDeclarationExpression(TextRange range) : base(range, new Tuple([BLURRY]))
+        public readonly TextRange declarationRange;
+        public BlurryVariableDeclarationExpression(TextRange range, TextRange declarationRange) : base(range, new Tuple([BLURRY]))
         {
+            this.declarationRange = declarationRange;
             attribute = ExpressionAttribute.Assignable;
         }
         public override bool Valid => true;
@@ -14,8 +16,8 @@
     }
     internal class MethodExpression : Expression//global & native
     {
-        public readonly List<Declaration> declarations;
-        public MethodExpression(TextRange range, List<Declaration> declarations) : base(range, new Tuple([BLURRY]))
+        public readonly List<CompilingDeclaration> declarations;
+        public MethodExpression(TextRange range, List<CompilingDeclaration> declarations) : base(range, new Tuple([BLURRY]))
         {
             this.declarations = declarations;
             attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
@@ -26,12 +28,8 @@
             var msg = new CompileMessage(range, CErrorLevel.Error, "目标函数不明确");
             foreach (var declaration in declarations)
             {
-                var compiling = parameter.manager.GetDeclaration(declaration);
-                if (compiling != null)
-                {
-                    compiling.references.Add(range);
-                    msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
-                }
+                declaration.references.Add(range);
+                msg.related.Add(new RelatedInfo(declaration.name, "符合条件的函数"));
             }
             parameter.collector.Add(msg);
         }
@@ -39,8 +37,8 @@
     internal class MethodMemberExpression : Expression
     {
         public readonly Expression target;
-        public readonly List<Declaration> declarations;
-        public MethodMemberExpression(TextRange range, Expression target, List<Declaration> declarations) : base(range, new Tuple([BLURRY]))
+        public readonly List<CompilingDeclaration> declarations;
+        public MethodMemberExpression(TextRange range, Expression target, List<CompilingDeclaration> declarations) : base(range, new Tuple([BLURRY]))
         {
             this.target = target;
             this.declarations = declarations;
@@ -53,12 +51,8 @@
             target.Read(parameter);
             foreach (var declaration in declarations)
             {
-                var compiling = parameter.manager.GetDeclaration(declaration);
-                if (compiling != null)
-                {
-                    compiling.references.Add(range);
-                    msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
-                }
+                declaration.references.Add(range);
+                msg.related.Add(new RelatedInfo(declaration.name, "符合条件的函数"));
             }
             parameter.collector.Add(msg);
         }
@@ -66,8 +60,8 @@
     internal class MethodVirtualExpression : Expression
     {
         public readonly Expression target;
-        public readonly List<Declaration> declarations;
-        public MethodVirtualExpression(TextRange range, Expression target, List<Declaration> declarations) : base(range, new Tuple([BLURRY]))
+        public readonly List<CompilingDeclaration> declarations;
+        public MethodVirtualExpression(TextRange range, Expression target, List<CompilingDeclaration> declarations) : base(range, new Tuple([BLURRY]))
         {
             this.target = target;
             this.declarations = declarations;
@@ -80,11 +74,10 @@
             target.Read(parameter);
             foreach (var declaration in declarations)
             {
-                var compiling = parameter.manager.GetDeclaration(declaration);
-                if (compiling != null) msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
-                if (compiling is CompilingVirtualFunction virtualFunction)
+                if (declaration != null) msg.related.Add(new RelatedInfo(declaration.name, "符合条件的函数"));
+                if (declaration is CompilingVirtualFunction virtualFunction)
                     Reference(virtualFunction);
-                else if (compiling is CompilingAbstractFunction abstractFunction)
+                else if (declaration is CompilingAbstractFunction abstractFunction)
                 {
                     abstractFunction.references.Add(range);
                     foreach (var implement in abstractFunction.implements)

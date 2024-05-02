@@ -10,4 +10,15 @@
             foreach (var expression in expressions) expression.Read(parameter);
         }
     }
+    internal class InvalidDeclarationsExpression(TextRange range, List<CompilingDeclaration> declarations) : Expression(range, new Tuple([]))
+    {
+        public readonly List<CompilingDeclaration> declarations = declarations;
+
+        public override bool Valid => false;
+
+        public override void Read(ExpressionParameter parameter)
+        {
+            foreach (var declaration in declarations) declaration.references.Add(range);
+        }
+    }
 }

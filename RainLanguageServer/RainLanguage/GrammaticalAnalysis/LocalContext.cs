@@ -10,6 +10,7 @@
     }
     internal class LocalContext
     {
+        public readonly Local? thisValue;
         private readonly List<Local> locals = [];
         private readonly List<Dictionary<string, Local>> localStack = [[]];
         public void PushBlock() => localStack.Add([]);
