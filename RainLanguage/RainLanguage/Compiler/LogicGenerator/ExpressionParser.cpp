@@ -3015,6 +3015,10 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 			case LexicalType::Word:
 				if(lexical.anchor.content == KeyWord_global())
 				{
+					if(context.declaration.category == DeclarationCategory::Invalid)
+					{
+						MESSAGE2(manager->messages, lexical.anchor, MessageType::WARRING_LEVEL2_GLOBAL_WILL_BE_IGNORED);
+					}
 					if(TryAnalysis(anchor, lexical.anchor.GetEnd(), lexical, manager->messages) && lexical.type == LexicalType::Word)
 					{
 						List<CompilingDeclaration, true> declarations(0);

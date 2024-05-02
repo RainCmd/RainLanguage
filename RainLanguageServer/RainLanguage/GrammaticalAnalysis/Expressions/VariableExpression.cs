@@ -8,17 +8,31 @@
         }
     }
 
-    internal class VariableLocalExpression(TextRange range, Local local, TextRange? declarationRange, ExpressionAttribute attribute) : VariableExpression(range, local.type, attribute)
+    internal class VariableLocalExpression : VariableExpression
     {
-        public readonly Local local = local;
-        public readonly TextRange? declarationRange = declarationRange;
-
+        public readonly Local local;
+        public readonly TextRange? declarationRange;
+        public VariableLocalExpression(TextRange range, Local local, TextRange declarationRange, ExpressionAttribute attribute) : base(range, local.type, attribute)
+        {
+            this.local = local;
+            this.declarationRange = declarationRange;
+        }
+        public VariableLocalExpression(TextRange range, Local local, Type type, ExpressionAttribute attribute) : base(range, type, attribute)
+        {
+            this.local = local;
+            declarationRange = null;
+        }
+        public VariableLocalExpression(TextRange range, Local local, ExpressionAttribute attribute) : base(range, local.type, attribute)
+        {
+            this.local = local;
+            declarationRange = null;
+        }
         public override bool Valid => true;
         public override void Read(ExpressionParameter parameter)
         {
             local.read.Add(range);
             parameter.manager.GetSourceDeclaration(local.type)?.references.Add(range);
-        } 
+        }
         public override void Write(ExpressionParameter parameter)
         {
             local.write.Add(range);
