@@ -12,13 +12,15 @@ namespace RainLanguageServer.RainLanguage
         public readonly CompilingLibrary library;
         public readonly Dictionary<string, FileSpace> fileSpaces = [];
         public readonly Dictionary<string, CompilingLibrary> relies = [];
+        private readonly HashSet<string> imports;
         public readonly CompilingLibrary kernel;
         private readonly Func<string, string> relyLoader;
         private readonly Action<string, string> regPreviewDoc;
-        public ASTManager(string kernelPath, string name, Func<string, string> relyLoader, Action<string, string> regPreviewDoc)
+        public ASTManager(string kernelPath, string name, string[]? imports, Func<string, string> relyLoader, Action<string, string> regPreviewDoc)
         {
             library = new CompilingLibrary(name, []);
             kernelPath = new UnifiedPath(kernelPath);
+            this.imports = imports != null ? new HashSet<string>(imports) : [];
             this.relyLoader = relyLoader;
             this.regPreviewDoc = regPreviewDoc;
             using var sr = File.OpenText(kernelPath);
@@ -32,7 +34,7 @@ namespace RainLanguageServer.RainLanguage
             else if (name == library.name) return library;
             else
             {
-                if (!relies.TryGetValue(name, out CompilingLibrary? library))
+                if (!relies.TryGetValue(name, out CompilingLibrary? library) && imports.Contains(name))
                 {
                     var content = relyLoader(name);
                     if (!string.IsNullOrEmpty(content))

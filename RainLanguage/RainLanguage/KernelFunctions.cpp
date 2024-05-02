@@ -2189,6 +2189,13 @@ String task_Abort(KernelInvokerParameter parameter)//task.(string)
 	return String();
 }
 
+String task_GetInstantID(KernelInvokerParameter parameter)//integer task.()
+{
+	GET_THIS_VALUE(1, uint64);
+	RETURN_VALUE(integer, 0) = (integer)parameter.kernel->taskAgency->GetInvoker(thisValue)->instanceID;
+	return String();
+}
+
 String task_GetState(KernelInvokerParameter parameter)//TaskState task.()
 {
 	GET_THIS_VALUE(1, uint64);

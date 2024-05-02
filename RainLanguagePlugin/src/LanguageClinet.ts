@@ -29,6 +29,15 @@ async function GetProjectName(): Promise<string | null> {
     return null
 }
 
+async function CollectImports(): Promise<string[]> {
+    //todo 收集当前工作区可用的dll路径
+    return []
+}
+async function LoadRely(rely: string): Promise<string> {
+    //todo 参数rely是CollectImports传给服务的内容，返回类似kernel.rain的字符串内容
+    return ""
+}
+
 function GetCPServerOptions(context: vscode.ExtensionContext): ServerOptions {
     const binPath = `${context.extension.extensionUri.fsPath}/bin/`
     let serverArgs: string[] = []
@@ -65,6 +74,7 @@ export async function StartServer(context: vscode.ExtensionContext) {
     const serverOptions = GetSocketServerOperation
 
     const projectName = await GetProjectName()
+    const imports = await CollectImports()
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{
             language: "雨言"
@@ -75,12 +85,14 @@ export async function StartServer(context: vscode.ExtensionContext) {
         initializationOptions: {
             kernelDefinePath: `${context.extension.extensionUri.fsPath}/kernel.rain`,
             projectName: projectName,
+            imports: imports
         }
     }
     client = new LanguageClient("雨言", "雨言服务客户端", serverOptions, clientOptions)
     client.onNotification("rainlanguage/regPreviewDoc", doc => {
         RegistRainLanguagePreviewDoc(doc.path, doc.content)
     })
+    client.onRequest("rainlanguage/loadRely", LoadRely)
     client.start().then(() => {
         console.log("雨言服务客户端：启动")
     }).catch((error) => {

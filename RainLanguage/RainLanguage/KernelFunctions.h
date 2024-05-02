@@ -225,6 +225,7 @@ String handle_GetType(KernelInvokerParameter parameter);										//type handle.
 
 String task_Start(KernelInvokerParameter parameter);											//task.(bool, bool)
 String task_Abort(KernelInvokerParameter parameter);											//task.(string)
+String task_GetInstantID(KernelInvokerParameter parameter);										//integer task.()
 String task_GetState(KernelInvokerParameter parameter);											//TaskState task.()
 String task_GetExitCode(KernelInvokerParameter parameter);										//string task.()
 String task_IsPause(KernelInvokerParameter parameter);											//bool task.()

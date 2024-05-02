@@ -107,7 +107,7 @@ enum class MessageType :uint32
 	WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
 
 	WARRING_LEVEL2 = ((uint32)ErrorLevel::WarringLevel2) << 24,
-	WARRING_LEVEL2_SINGLE_TYPE_EXPRESSION,	//将被忽略的全局关键字
+	WARRING_LEVEL2_GLOBAL_WILL_BE_IGNORED,	//将被忽略的全局关键字
 
 	WARRING_LEVEL3 = ((uint32)ErrorLevel::WarringLevel3) << 24,
 

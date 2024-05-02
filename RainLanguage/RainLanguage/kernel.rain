@@ -78,6 +78,7 @@
 	public class task handle
 		public Start(bool immediately, bool ignoreWait)
 		public Abort(string message)
+		public integer GetInstantID()
 		public TaskState GetState()
 		public string GetExitCode()
 		public bool IsPause()
@@ -261,6 +262,7 @@
 		public integer StringCount()
 		public SetRandomSeed(integer)
 		public Reflection.Assembly[] GetAssembles()
+		public integer GetCurrentTaskInstantID()
 
 	namespace Reflection
 		public enum TypeCode

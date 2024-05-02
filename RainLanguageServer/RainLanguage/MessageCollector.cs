@@ -29,7 +29,7 @@ namespace RainLanguageServer.RainLanguage
         private readonly List<CompileMessage> messages = [];
         public void Add(CompileMessage message) => messages.Add(message);
         public void Add(TextRange range, CErrorLevel level, string message) => Add(new CompileMessage(range, level, message));
-        public void Add(IList<TextRange> ranges, CErrorLevel level, string message) => Add(new TextRange(ranges[0].start, ranges[^1].end), level, message);
+        public void Add(IList<TextRange> ranges, CErrorLevel level, string message) => Add(ranges[0].start & ranges[^1].end, level, message);
         public void Clear() => messages.Clear();
 
         public IEnumerator<CompileMessage> GetEnumerator()

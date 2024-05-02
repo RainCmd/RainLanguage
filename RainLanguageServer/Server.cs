@@ -5,10 +5,7 @@ using LanguageServer.Parameters.TextDocument;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
 using LanguageServer.Parameters;
-using System.Xml.Linq;
-using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Diagnostics.Metrics;
+using Newtonsoft.Json.Linq;
 
 namespace RainLanguageServer
 {
@@ -52,11 +49,14 @@ namespace RainLanguageServer
         private string? kernelDefinePath;
         private string? projectName;
         private string? projectPath;
+        private string[]? imports;
         protected override Result<InitializeResult, ResponseError<InitializeErrorData>> Initialize(InitializeParams param, CancellationToken token)
         {
             kernelDefinePath = param.initializationOptions?.kernelDefinePath?.Value as string;
             projectName = param.initializationOptions?.projectName?.Value as string;
             projectPath = new UnifiedPath(param.rootUri);
+            var imports = param.initializationOptions?.imports;
+            if (imports is JToken jtoken) this.imports = jtoken.ToObject<string[]>();
             if (kernelDefinePath == null)
                 return Result<InitializeResult, ResponseError<InitializeErrorData>>.Error(Message.ServerError(ErrorCodes.ServerNotInitialized, new InitializeErrorData(false)));
 
@@ -110,7 +110,7 @@ namespace RainLanguageServer
         {
             if (kernelDefinePath != null)
             {
-                builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this), LoadRelyLibrary, RegPreviewDoc);
+                builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this), imports, LoadRelyLibrary, RegPreviewDoc);
                 builder.Reparse();
                 RefreshDiagnostics(builder.manager.fileSpaces.Keys);
             }
@@ -300,18 +300,11 @@ namespace RainLanguageServer
         }
         public void RegPreviewDoc(string path, string content)
         {
-            SendNotification(new NotificationMessage<PreviewDoc>()
-            {
-                method = "rainlanguage/regPreviewDoc",
-                @params = new PreviewDoc(path, content)
-            });
+            Proxy.SendNotification("rainlanguage/regPreviewDoc", new PreviewDoc(path, content));
         }
         private string LoadRelyLibrary(string library)
         {
-            //todo 加载依赖程序集
-            var result = "";
-
-            return result;
+            return Proxy.SendRequest<string, string>("rainlanguage/loadRely", library).Result;
         }
         protected override void DidOpenTextDocument(DidOpenTextDocumentParams param)
         {
@@ -345,8 +338,6 @@ namespace RainLanguageServer
 
         private void OnChanged(TextDocument document)
         {
-            //var changes = document.GetLastChanges();
-            //todo 处理文档变化，需要收集音响范围并重新解析
             builder?.Reparse();
             RefreshDiagnostics([document.path]);
         }

@@ -34,9 +34,9 @@
         }
         public void Rollback() => line--;
     }
-    internal class ASTBuilder(string kernelPath, string name, IEnumerable<IFileDocument> files, Func<string, string> relyLoader, Action<string, string> regPreviewDoc)
+    internal class ASTBuilder(string kernelPath, string name, IEnumerable<IFileDocument> files, string[]? imports, Func<string, string> relyLoader, Action<string, string> regPreviewDoc)
     {
-        public readonly ASTManager manager = new(kernelPath, name, relyLoader, regPreviewDoc);
+        public readonly ASTManager manager = new(kernelPath, name, imports, relyLoader, regPreviewDoc);
         private readonly IEnumerable<IFileDocument> files = files;
 
         public void Reparse()
