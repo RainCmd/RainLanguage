@@ -1240,13 +1240,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             expressionStack.Push(new InvalidDeclarationsExpression(lexical.anchor, declarations));
             attribute = ExpressionAttribute.Invalid;
         }
-        private bool TryGetFunction(TextRange range, List<Declaration> declarations, Tuple signature, out CompilingCallable? callable)
+        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)
         {
-            var results = new List<Declaration>();
+            var results = new List<CompilingDeclaration>();
             var min = 0;
             foreach (var declaration in declarations)
             {
-                var measure = Convert(manager, declaration.signature, signature);
+                var measure = Convert(manager, declaration.declaration.signature, signature);
                 if (measure >= 0)
                     if (results.Count == 0 || measure < min)
                     {
@@ -1258,7 +1258,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             if (results.Count == 1)
             {
-                callable = manager.GetDeclaration(results[0]) as CompilingCallable;
+                callable = results[0] as CompilingCallable;
                 return callable != null;
             }
             else if (results.Count > 1)
@@ -1266,7 +1266,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 callable = default;
                 var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");
                 foreach (var declaration in results)
-                    if (manager.GetDeclaration(declaration) is CompilingCallable compiling)
+                    if (declaration is CompilingCallable compiling)
                     {
                         callable = compiling;
                         msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
