@@ -115,6 +115,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 {
                                     collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                                     expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                    attribute = ExpressionAttribute.Invalid;
                                     goto label_next_lexical;
                                 }
                                 if (Lexical.TryAnalysis(range, index, out lexical, collector))
@@ -149,6 +150,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             {
                                 collector.Add(operatorAnchor, CErrorLevel.Error, "缺少类型");
                                 expressionStack.Push(new InvalidExpression(operatorAnchor));
+                                attribute = ExpressionAttribute.Invalid;
                             }
                         }
                         break;
@@ -574,29 +576,85 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_is:
                         if (attribute.ContainAny(ExpressionAttribute.Value))
                         {
+                            var sourceExpression = expressionStack.Pop();
+                            if (sourceExpression.types.Count != 1 || !sourceExpression.types[0].Managed)
+                            {
+                                collector.Add(sourceExpression.range, CErrorLevel.Error, "无效的操作");
+                                expressionStack.Push(new InvalidExpression(sourceExpression));
+                                attribute = ExpressionAttribute.Invalid;
+                                break;
+                            }
                             index = lexical.anchor.end;
                             var declarations = FindDeclaration(range, ref index, out var name);
                             if (declarations != null)
                             {
-                                PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, name, declarations);
-                                if(expressionStack.Peek() is not TypeExpression typeExpression)
+                                if (declarations.Count != 1)
                                 {
-                                    collector.Add(expressionStack.Peek().range, CErrorLevel.Error, "无效的操作");
+                                    collector.Add(name, CErrorLevel.Error, "无效的操作");
+                                    expressionStack.Push(new InvalidExpression(sourceExpression));
+                                    attribute = ExpressionAttribute.Invalid;
                                     goto label_next_lexical;
                                 }
-                                expressionStack.Pop();
-                                var sourceExpression = expressionStack.Pop();
-                                if (sourceExpression.types.Count != 1)
+                                var targetType = declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index));
+                                if (!targetType.Vaild)
                                 {
-
+                                    collector.Add(name, CErrorLevel.Error, "无效的类型");
+                                    expressionStack.Push(new InvalidExpression(sourceExpression));
+                                    attribute = ExpressionAttribute.Invalid;
+                                    goto label_next_lexical;
+                                }
+                                if (Lexical.TryAnalysis(range, index, out lexical, collector) && lexical.type == LexicalType.Word)
+                                {
+                                    var local = localContext.Add(lexical.anchor, targetType);
+                                    var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType), sourceExpression, local);
+                                    expressionStack.Push(expression);
+                                    attribute = expression.attribute;
+                                }
+                                else
+                                {
+                                    var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType), sourceExpression, null);
+                                    expressionStack.Push(expression);
+                                    attribute = expression.attribute;
                                 }
                             }
+                            goto label_next_lexical;
                         }
                         goto default;
                     case LexicalType.KeyWord_as:
                         if (attribute.ContainAny(ExpressionAttribute.Value))
                         {
-
+                            var sourceExpression = expressionStack.Pop();
+                            if (sourceExpression.types.Count != 1 || !sourceExpression.types[0].Managed)
+                            {
+                                collector.Add(sourceExpression.range, CErrorLevel.Error, "无效的操作");
+                                expressionStack.Push(new InvalidExpression(sourceExpression));
+                                attribute = ExpressionAttribute.Invalid;
+                                break;
+                            }
+                            index = lexical.anchor.end;
+                            var declarations = FindDeclaration(range, ref index, out var name);
+                            if (declarations != null)
+                            {
+                                if (declarations.Count != 1)
+                                {
+                                    collector.Add(sourceExpression.range, CErrorLevel.Error, "无效的操作");
+                                    expressionStack.Push(new InvalidExpression(sourceExpression));
+                                    attribute = ExpressionAttribute.Invalid;
+                                    goto label_next_lexical;
+                                }
+                                var targetType = declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index));
+                                if (!targetType.Vaild || !targetType.Managed)
+                                {
+                                    collector.Add(name, CErrorLevel.Error, "无效的类型");
+                                    expressionStack.Push(new InvalidExpression(sourceExpression));
+                                    attribute = ExpressionAttribute.Invalid;
+                                    goto label_next_lexical;
+                                }
+                                var expression = new CastExpression(sourceExpression.range & name, new TypeExpression(name, targetType), sourceExpression);
+                                expressionStack.Push(expression);
+                                attribute = expression.attribute;
+                            }
+                            goto label_next_lexical;
                         }
                         goto default;
                     case LexicalType.KeyWord_start:
@@ -612,7 +670,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 index = range.end;
                                 goto label_next_lexical;
                             }
-                            expressionStack.Push(expression);
+                            expressionStack.Push(new InvalidExpression(expression));
+                            attribute = ExpressionAttribute.Invalid;
                             collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
                             goto label_parse_fail;
                         }
@@ -625,6 +684,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     default:
                         collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                         expressionStack.Push(new InvalidExpression(lexical.anchor));
+                        attribute = ExpressionAttribute.Invalid;
                         break;
                 }
                 index = lexical.anchor.end;
