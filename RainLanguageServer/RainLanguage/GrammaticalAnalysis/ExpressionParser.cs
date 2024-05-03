@@ -200,7 +200,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             if (TryParseBracket(range, ref index, SplitFlag.Bracket1, out var tuple))
                             {
-                                //todo 
+                                //todo 索引
                             }
                             break;
                         }

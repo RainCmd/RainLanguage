@@ -393,7 +393,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> constructors = [];
-        public TextRange destructorRange;//todo 析构函数范围
+        public TextRange destructorRange;
         public readonly List<TextLine> destructor = [];
         public int destructorIndent = -1;
         public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)

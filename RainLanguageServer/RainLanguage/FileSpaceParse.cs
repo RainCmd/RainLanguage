@@ -208,6 +208,8 @@
                                 CheckLineEnd(line, lexical.anchor.end, collector);
                                 ParseBlock(reader, fileClass.indent, out var body, out fileClass.destructorIndent, collector);
                                 fileClass.destructor.AddRange(body);
+                                if (body.Count > 0)
+                                    fileClass.destructorRange = body[0].start & body[^1].end;
                             }
                             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                         }
