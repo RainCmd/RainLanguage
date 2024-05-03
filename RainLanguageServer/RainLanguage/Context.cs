@@ -213,7 +213,9 @@ namespace RainLanguageServer.RainLanguage
         {
             results = [];
             if (type.dimension > 0) type = Type.ARRAY;
+            else if (type.code == TypeCode.Enum) type = Type.ENUM;
             else if (type.code == TypeCode.Task) type = Type.TASK;
+            else if (type.code == TypeCode.Delegate) type = Type.DELEGATE;
             var targetName = name.ToString();
             var declaration = manager.GetSourceDeclaration(type)!;
             if (type.code == TypeCode.Struct)
@@ -336,8 +338,8 @@ namespace RainLanguageServer.RainLanguage
             for (CompilingSpace? index = space; index != null; index = index.parent)
                 if (index.declarations.TryGetValue(name, out declarations))
                     result.AddRange(declarations);
-            foreach(var rely in relies)
-                if(rely.declarations.TryGetValue(name,out declarations))
+            foreach (var rely in relies)
+                if (rely.declarations.TryGetValue(name, out declarations))
                     result.AddRange(declarations);
             return result;
         }

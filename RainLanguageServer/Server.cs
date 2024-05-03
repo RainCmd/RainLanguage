@@ -64,7 +64,7 @@ namespace RainLanguageServer
             //提供的命令支持
             result.capabilities.executeCommandProvider = new ExecuteCommandOptions();
             //提供折叠支持
-            result.capabilities.foldingRangeProvider = true;
+            result.capabilities.foldingRangeProvider = false;
             result.capabilities.colorProvider = false;
             //提供文档连接支持
             result.capabilities.documentLinkProvider = new DocumentLinkOptions() { resolveProvider = false };
@@ -185,42 +185,6 @@ namespace RainLanguageServer
                 }
             }
             return Result<Hover, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
-        }
-
-        protected override Result<FoldingRange[], ResponseError> FoldingRange(FoldingRangeRequestParam param, CancellationToken token)
-        {
-            if (builder != null)
-            {
-                if (builder.manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
-                {
-                    //todo 函数逻辑内语句结构的折叠关系
-                    var list = new List<FoldingRange>();
-                    foreach (var space in fileSpace.Spaces)
-                        if (space.indent > 0)
-                            list.Add(CreateFoldingRange(space.range));
-                    foreach (var declaration in fileSpace.Declarations)
-                        if (declaration.range != null && declaration.indent > 0)
-                        {
-                            list.Add(CreateFoldingRange(declaration.range));
-                            if (declaration is FileStruct fileStruct)
-                            {
-                                foreach (var member in fileStruct.functions)
-                                    if (member.range != null && member.indent > 0)
-                                        list.Add(CreateFoldingRange(member.range));
-                            }
-                            else if (declaration is FileClass fileClass)
-                            {
-                                foreach (var member in fileClass.functions)
-                                    if (member.range != null && member.indent > 0)
-                                        list.Add(CreateFoldingRange(member.range));
-                                if (fileClass.destructorRange != null && fileClass.destructor.Count > 0)
-                                    list.Add(CreateFoldingRange(fileClass.destructorRange));
-                            }
-                        }
-                    return Result<FoldingRange[], ResponseError>.Success([.. list]);
-                }
-            }
-            return Result<FoldingRange[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         protected override Result<DocumentHighlight[], ResponseError> DocumentHighlight(TextDocumentPositionParams param, CancellationToken token)

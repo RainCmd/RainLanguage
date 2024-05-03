@@ -1,5 +1,4 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
-using System.Linq.Expressions;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
@@ -305,59 +304,108 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Dot:
                         if (attribute.ContainAny(ExpressionAttribute.Type))
                         {
+                            var typeExpression = (TypeExpression)expressionStack.Pop();
                             if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifierLexical, collector))
                             {
-                                if (identifierLexical.type == LexicalType.Word)
+                                index = identifierLexical.anchor.end;
+                                if (identifierLexical.type == LexicalType.Word && typeExpression.type.code == TypeCode.Enum)
                                 {
-
+                                    var compiling = (CompilingEnum)manager.GetSourceDeclaration(typeExpression.type)!;
+                                    CompilingEnum.Element? element = null;
+                                    foreach (var item in compiling.elements)
+                                        if (item.name.ToString() == identifierLexical.anchor)
+                                        {
+                                            element = item;
+                                            break;
+                                        }
+                                    var expression = new EnumElementExpression(typeExpression.range & identifierLexical.anchor, compiling, element, identifierLexical.anchor);
+                                    expressionStack.Push(expression);
+                                    attribute = expression.attribute;
                                 }
+                                else
+                                {
+                                    collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+                                    expressionStack.Push(new InvalidExpression(typeExpression, new InvalidExpression(identifierLexical.anchor)));
+                                    attribute = ExpressionAttribute.Invalid;
+                                }
+                                goto label_next_lexical;
+                            }
+                            else
+                            {
+                                collector.Add(lexical.anchor, CErrorLevel.Error, "需要输入标识符");
+                                expressionStack.Push(typeExpression.ToInvalid());
+                                attribute = ExpressionAttribute.Invalid;
+                                break;
                             }
                         }
                         else if (attribute.ContainAny(ExpressionAttribute.Value))
                         {
                             if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifierLexical, collector))
                             {
-                                if (identifierLexical.type == LexicalType.Word)
+                                index = identifierLexical.anchor.end;
+                                if (identifierLexical.type == LexicalType.Word && attribute.ContainAny(ExpressionAttribute.Value))
                                 {
-                                    if (attribute.ContainAny(ExpressionAttribute.Type))
+                                    var expression = expressionStack.Pop();
+                                    if (context.TryFindMember(manager, identifierLexical.anchor, expression.types[0], out var declarations))
                                     {
-                                        var typeExpression = (TypeExpression)expressionStack.Pop();
-                                        if (typeExpression.type.code == TypeCode.Enum)
+                                        var category = declarations[0].declaration.category;
+                                        if (category == DeclarationCategory.StructVariable || category == DeclarationCategory.ClassVariable)
+                                            expression = new VariableMemberExpression(expression.range & identifierLexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, expression, (CompilingVariable)declarations[0]);
+                                        else if (category == DeclarationCategory.StructFunction || category == DeclarationCategory.ClassFunction || category == DeclarationCategory.InterfaceFunction)
+                                            expression = new MethodVirtualExpression(expression.range & identifierLexical.anchor, expression, identifierLexical.anchor, declarations);
+                                        else
                                         {
-
+                                            collector.Add(identifierLexical.anchor, CErrorLevel.Error, "你找到了一些未知的东西 ⊙▃⊙");
+                                            expression = new InvalidExpression(expression, new InvalidExpression(identifierLexical.anchor));
                                         }
-                                        else collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
-
                                     }
-                                    else if (attribute.ContainAny(ExpressionAttribute.Value))
+                                    else if (TryCreateVectorMemberExpression(identifierLexical.anchor, expression, out var vectorMember)) expression = vectorMember!;
+                                    else
                                     {
-
+                                        collector.Add(identifierLexical.anchor, CErrorLevel.Error, "没有找到成员函数或字段");
+                                        expression = new InvalidExpression(expression, new InvalidExpression(identifierLexical.anchor));
                                     }
+                                    expressionStack.Push(expression);
+                                    attribute = expression.attribute;
                                 }
                                 else
                                 {
                                     collector.Add(identifierLexical.anchor, CErrorLevel.Error, "无效的标识符");
                                     expressionStack.Push(new InvalidExpression(identifierLexical.anchor));
                                     attribute = ExpressionAttribute.Invalid;
-                                    index = identifierLexical.anchor.end;
-                                    goto label_next_lexical;
                                 }
+                                goto label_next_lexical;
                             }
-                            else
-                            {
-                                collector.Add(lexical.anchor, CErrorLevel.Error, "缺少标识符");
-                                expressionStack.Push(new InvalidExpression(lexical.anchor));
-                                attribute = ExpressionAttribute.Invalid;
-                            }
+                            else collector.Add(lexical.anchor, CErrorLevel.Error, "缺少标识符");
                         }
-                        break;
+                        goto default;
                     case LexicalType.Question: goto default;
                     case LexicalType.QuestionDot:
-                        //todo 过滤一下值类型然后直接跳转到点运算符
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.Value))
+                        {
+                            if (expressionStack.Peek().types[0].Managed) goto case LexicalType.Dot;
+                            else
+                            {
+                                collector.Add(lexical.anchor, CErrorLevel.Error, "非托管类型的变量无法使用控制传播");
+                                expressionStack.Push(expressionStack.Pop().ToInvalid());
+                                attribute = ExpressionAttribute.Invalid;
+                                break;
+                            }
+                        }
+                        goto default;
                     case LexicalType.QuestionRealInvoke:
-                        //todo 过滤一下非空类型然后直接跳转到实调用
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.Value))
+                        {
+                            if (expressionStack.Peek().types[0].Managed) goto case LexicalType.RealInvoker;
+                            else
+                            {
+                                collector.Add(lexical.anchor, CErrorLevel.Error, "非托管类型的变量无法使用控制传播");
+                                expressionStack.Push(expressionStack.Pop().ToInvalid());
+                                attribute = ExpressionAttribute.Invalid;
+                                break;
+                            }
+                        }
+                        goto default;
                     case LexicalType.QuestionInvoke:
                         //todo 
                         break;
@@ -1764,6 +1812,42 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             result = default;
             return false;
+        }
+        private static bool TryCreateVectorMemberExpression(TextRange range, Expression target, out VectorMemberExpression? result)
+        {
+            result = default;
+            if (target.types.Count == 1 && range.Count > 0 && range.Count <= 4)
+            {
+                if (target.types[0] == Type.REAL2)
+                {
+                    if (!CheckTextRangeInCharSet(range, "xy")) return false;
+                }
+                else if (target.types[0] == Type.REAL3)
+                {
+                    if (!CheckTextRangeInCharSet(range, "xyz")) return false;
+                }
+                else if (target.types[0] == Type.REAL4)
+                {
+                    if (!CheckTextRangeInCharSet(range, "xyzwrgba")) return false;
+                }
+                else return false;
+                if (range.Count == 1) result = new VectorMemberExpression(target.range & range, Type.REAL, target, range);
+                else if (range.Count == 2) result = new VectorMemberExpression(target.range & range, Type.REAL2, target, range);
+                else if (range.Count == 3) result = new VectorMemberExpression(target.range & range, Type.REAL3, target, range);
+                else result = new VectorMemberExpression(target.range & range, Type.REAL4, target, range);
+                return true;
+            }
+            //todo 向量成员
+            return false;
+        }
+        private static bool CheckTextRangeInCharSet(TextRange range, string set)
+        {
+            for (var i = 0; i < range.Count; i++)
+            {
+                var element = range[i];
+                if (!set.Contains(element)) return false;
+            }
+            return true;
         }
         private bool TryRemoveBracket(TextRange range, out TextRange result)
         {
