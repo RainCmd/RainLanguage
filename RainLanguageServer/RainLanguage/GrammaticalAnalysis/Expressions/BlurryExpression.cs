@@ -37,10 +37,12 @@
     internal class MethodMemberExpression : Expression
     {
         public readonly Expression target;
+        public readonly TextRange memberRange;
         public readonly List<CompilingDeclaration> declarations;
-        public MethodMemberExpression(TextRange range, Expression target, List<CompilingDeclaration> declarations) : base(range, new Tuple([BLURRY]))
+        public MethodMemberExpression(TextRange range, Expression target, TextRange memberRange, List<CompilingDeclaration> declarations) : base(range, new Tuple([BLURRY]))
         {
             this.target = target;
+            this.memberRange = memberRange;
             this.declarations = declarations;
             attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
         }
@@ -57,17 +59,8 @@
             parameter.collector.Add(msg);
         }
     }
-    internal class MethodVirtualExpression : Expression
+    internal class MethodVirtualExpression(TextRange range, Expression target, TextRange memberRange, List<CompilingDeclaration> declarations) : MethodMemberExpression(range, target, memberRange, declarations)
     {
-        public readonly Expression target;
-        public readonly List<CompilingDeclaration> declarations;
-        public MethodVirtualExpression(TextRange range, Expression target, List<CompilingDeclaration> declarations) : base(range, new Tuple([BLURRY]))
-        {
-            this.target = target;
-            this.declarations = declarations;
-            attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
-        }
-        public override bool Valid => target.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");

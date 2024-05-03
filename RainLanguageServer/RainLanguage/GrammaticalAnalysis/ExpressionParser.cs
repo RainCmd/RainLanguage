@@ -235,7 +235,40 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 index = identifierLexical.anchor.end;
                                 if (identifierLexical.type != LexicalType.Word)
                                     collector.Add(identifierLexical.anchor, CErrorLevel.Error, "无效的标识符");
-                                //todo 实调用
+                                var targetExpression = expressionStack.Pop();
+                                var type = targetExpression.types[0];
+                                if (type.dimension > 0) type = Type.ARRAY;
+                                if (type.code == TypeCode.Handle)
+                                {
+                                    if (context.TryFindMember(manager, identifierLexical.anchor, type, out var declarations))
+                                    {
+                                        if (declarations[0].declaration.category == DeclarationCategory.ClassFunction)
+                                        {
+                                            var expression = new MethodMemberExpression(targetExpression.range & identifierLexical.anchor, targetExpression, identifierLexical.anchor, declarations);
+                                            expressionStack.Push(expression);
+                                            attribute = expression.attribute;
+                                        }
+                                        else
+                                        {
+                                            collector.Add(identifierLexical.anchor, CErrorLevel.Error, "不是成员函数");
+                                            expressionStack.Push(new MethodMemberExpression(targetExpression.range & identifierLexical.anchor, targetExpression, identifierLexical.anchor, declarations).ToInvalid());
+                                            attribute = ExpressionAttribute.Invalid;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        collector.Add(identifierLexical.anchor, CErrorLevel.Error, "未找到该成员函数");
+                                        expressionStack.Push(new MethodMemberExpression(targetExpression.range & identifierLexical.anchor, targetExpression, identifierLexical.anchor, []).ToInvalid());
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                }
+                                else
+                                {
+                                    collector.Add(lexical.anchor, CErrorLevel.Error, "只有classc才可以使用实调用");
+                                    expressionStack.Push(new MethodMemberExpression(targetExpression.range & identifierLexical.anchor, targetExpression, identifierLexical.anchor, []).ToInvalid());
+                                    attribute = ExpressionAttribute.Invalid;
+                                }
+                                goto label_next_lexical;
                             }
                             else collector.Add(lexical.anchor, CErrorLevel.Error, "缺少标识符");
                         }
@@ -1391,7 +1424,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (localContext.thisValue == null) throw new Exception("前面解析逻辑可能有问题");
                         var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                        var expression = new MethodMemberExpression(anchor, thisValueExpression, declarations);
+                        var expression = new MethodMemberExpression(anchor, thisValueExpression, anchor, declarations);
                         expressionStack.Push(expression);
                         attribute = expression.attribute;
                         return;
@@ -1430,7 +1463,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (localContext.thisValue == null) throw new Exception("前面解析逻辑可能有问题");
                         var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                        var expression = new MethodVirtualExpression(anchor, thisValueExpression, declarations);
+                        var expression = new MethodVirtualExpression(anchor, thisValueExpression, anchor, declarations);
                         expressionStack.Push(expression);
                         attribute = expression.attribute;
                         return;
