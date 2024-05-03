@@ -12,15 +12,20 @@
     }
     internal class ArrayInitExpression : Expression
     {
+        public readonly TextRange? typeRange;
         public readonly Expression elements;
-
-        public ArrayInitExpression(TextRange range, Expression elements, Type type) : base(range, new Tuple([type]))
+        public ArrayInitExpression(TextRange range, TextRange? typeRange, Expression elements, Type type) : base(range, new Tuple([type]))
         {
+            this.typeRange = typeRange;
             this.elements = elements;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
 
-        public override void Read(ExpressionParameter parameter) => elements.Read(parameter);
+        public override void Read(ExpressionParameter parameter)
+        {
+            if (typeRange != null) parameter.manager.GetSourceDeclaration(types[0])?.references.Add(typeRange.Value);
+            elements.Read(parameter);
+        }
     }
     internal class ArrayEvaluationExpression : Expression
     {

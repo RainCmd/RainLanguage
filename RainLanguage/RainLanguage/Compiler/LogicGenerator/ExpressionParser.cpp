@@ -2329,12 +2329,11 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					{
 						TypeExpression* typeExpression = (TypeExpression*)expressionStack.Pop();
 						ASSERT_DEBUG(ContainAny(typeExpression->type, ExpressionType::TypeExpression), "表达式类型错");
-						Type elementType = Type(typeExpression->customType, typeExpression->customType.dimension + ExtractDimension(anchor, index));
 						List<Type, true> types(tuple->returns.Count());
-						for(uint32 i = 0; i < tuple->returns.Count(); i++) types.Add(elementType);
+						for(uint32 i = 0; i < tuple->returns.Count(); i++) types.Add(typeExpression->customType);
 						if(TryAssignmentConvert(tuple, Span<Type, true>(&types)))
 						{
-							ArrayInitExpression* expression = new ArrayInitExpression(typeExpression->anchor, tuple, Type(elementType, elementType.dimension + 1));
+							ArrayInitExpression* expression = new ArrayInitExpression(typeExpression->anchor, tuple, Type(typeExpression->customType, typeExpression->customType.dimension + 1));
 							expressionStack.Add(expression);
 							attribute = expression->attribute;
 							delete typeExpression; typeExpression = NULL;
