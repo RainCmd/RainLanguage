@@ -200,7 +200,65 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             if (TryParseBracket(range, ref index, SplitFlag.Bracket1, out var tuple))
                             {
-                                //todo 索引
+                                if (attribute.ContainAll(ExpressionAttribute.Value | ExpressionAttribute.Array))
+                                {
+                                    var list = new List<Type>();
+                                    for (var i = 0; i < tuple!.types.Count; i++) list.Add(Type.INT);
+                                    tuple = AssignmentConvert(tuple, list);
+                                    if (tuple.Valid)
+                                    {
+                                        var arrayExpression = expressionStack.Pop();
+                                        var type = arrayExpression.types[0];
+                                        if (tuple.types.Count == 1)
+                                        {
+                                            if (type == Type.STRING)
+                                            {
+                                                var expression = new StringEvaluationExpression(arrayExpression.range & tuple.range, arrayExpression, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                            }
+                                            else
+                                            {
+                                                var expression = new ArrayEvaluationExpression(arrayExpression.range & tuple.range, arrayExpression, tuple, type.GetDimensionType(type.dimension - 1), true);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                            }
+                                            goto label_next_lexical;
+                                        }
+                                        else if (tuple.types.Count == 2)
+                                        {
+                                            var expression = new ArraySubExpression(arrayExpression.range & tuple.range, arrayExpression, tuple);
+                                            expressionStack.Push(expression);
+                                            attribute = expression.attribute;
+                                            goto label_next_lexical;
+                                        }
+                                        expressionStack.Push(arrayExpression);
+                                    }
+                                    else collector.Add(tuple.range, CErrorLevel.Error, "无效的操作");
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.Tuple))
+                                {
+                                    //todo 元组
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.Task))
+                                {
+                                    //todo task
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.Type))
+                                {
+                                    //todo 创建数组
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.Value))
+                                {
+                                    //todo 结构体解构
+                                }
+                                else collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+                                if (attribute == ExpressionAttribute.Invalid || attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Type))
+                                    expressionStack.Push(new InvalidExpression(expressionStack.Pop(), tuple!));
+                                else
+                                    expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                attribute = ExpressionAttribute.Invalid;
+                                goto label_next_lexical;
                             }
                             break;
                         }
@@ -665,7 +723,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             var arrayExpression = expressionStack.Pop();
                                             if (tuple.types.Count == 1)
                                             {
-                                                var expression = new ArrayEvaluationExpression(arrayExpression.range & tuple.range, arrayExpression, tuple, type.GetDimensionType(type.dimension - 1), true);
+                                                var expression = new ArrayEvaluationExpression(arrayExpression.range & tuple.range, arrayExpression, tuple, type.GetDimensionType(type.dimension - 1), false);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;

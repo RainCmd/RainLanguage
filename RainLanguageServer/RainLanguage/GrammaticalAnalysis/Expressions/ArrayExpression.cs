@@ -31,12 +31,12 @@
     {
         public readonly Expression array;
         public readonly Expression index;
-        public ArrayEvaluationExpression(TextRange range, Expression array, Expression index, Type elementType, bool question) : base(range, new Tuple([elementType]))
+        public ArrayEvaluationExpression(TextRange range, Expression array, Expression index, Type elementType, bool assignable) : base(range, new Tuple([elementType]))
         {
             this.array = array;
             this.index = index;
             attribute = ExpressionAttribute.Value | elementType.GetAttribute();
-            if (!question) attribute |= ExpressionAttribute.Assignable;
+            if (assignable) attribute |= ExpressionAttribute.Assignable;
         }
         public override void Read(ExpressionParameter parameter)
         {
