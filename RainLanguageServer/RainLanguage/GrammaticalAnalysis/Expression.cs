@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
+﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
     internal enum ExpressionAttribute
     {
@@ -46,6 +48,11 @@
         public readonly Tuple types = types;
         public ExpressionAttribute attribute = ExpressionAttribute.Invalid;
         public abstract bool Valid { get; }
+        public InvalidExpression ToInvalid() 
+        {
+            if (this is InvalidExpression invalid) return invalid;
+            return new InvalidExpression(this);
+        }
         public abstract void Read(ExpressionParameter parameter);
         public virtual void Write(ExpressionParameter parameter) => throw new NotImplementedException();
         public virtual bool TryEvaluate(ExpressionParameter parameter, out bool value)

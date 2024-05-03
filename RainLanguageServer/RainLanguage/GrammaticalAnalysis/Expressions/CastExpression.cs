@@ -19,9 +19,16 @@
             expression.Read(parameter);
         }
     }
-    internal class TupleCastExpression(Tuple types, Expression expression) : Expression(expression.range, types)
+    internal class TupleCastExpression : Expression
     {
-        public readonly Expression expression = expression;
+        public readonly Expression expression;
+        public TupleCastExpression(Tuple types, Expression expression) : base(expression.range, types)
+        {
+            this.expression = expression;
+            if (types.Count == 1) attribute = ExpressionAttribute.Value | types[0].GetAttribute();
+            else attribute = ExpressionAttribute.Tuple;
+            attribute |= expression.attribute & ~ExpressionAttribute.Assignable;
+        }
         public override bool Valid => expression.Valid;
 
         public override void Read(ExpressionParameter parameter) => expression.Read(parameter);

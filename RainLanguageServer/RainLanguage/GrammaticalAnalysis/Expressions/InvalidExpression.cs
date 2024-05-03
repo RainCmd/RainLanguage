@@ -1,10 +1,19 @@
 ﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
-    internal class InvalidExpression(TextRange range, params Expression[] expressions) : Expression(range, new Tuple([]))
+    internal class InvalidExpression : Expression
     {
-        public readonly Expression[] expressions = expressions;
+        public readonly Expression[] expressions;
         public override bool Valid => false;
+        public InvalidExpression(TextRange range, params Expression[] expressions) : base(range, new Tuple([]))
+        {
+            this.expressions = expressions;
+        }
         public InvalidExpression(params Expression[] expressions) : this(expressions[0].range & expressions[^1].range, expressions) { }
+        public InvalidExpression(TextRange range, List<Type> types, params Expression[] expressions) : base(range, new Tuple(types))
+        {
+            this.expressions = expressions;
+        }
+        public InvalidExpression(List<Type> types, params Expression[] expressions) : this(expressions[0].range & expressions[^1].range, types, expressions) { }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var expression in expressions) expression.Read(parameter);

@@ -1,4 +1,5 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
@@ -99,8 +100,17 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     if (localContext.TryGetLocal(lexical.anchor.ToString(), out var local))
                                     {
                                         var variableExpression = new VariableLocalExpression(lexical.anchor, local, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
-                                        expressionStack.Push(variableExpression);
-                                        attribute = variableExpression.attribute;
+                                        if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                                        {
+                                            expressionStack.Push(variableExpression);
+                                            attribute = variableExpression.attribute;
+                                        }
+                                        else
+                                        {
+                                            collector.Add(lexical.anchor, CErrorLevel.Error, "无效的表达式");
+                                            expressionStack.Push(new InvalidExpression(variableExpression));
+                                            attribute = ExpressionAttribute.Invalid;
+                                        }
                                     }
                                     else if (context.TryFindDeclaration(manager, lexical.anchor, out var declarations, collector))
                                         PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, lexical.anchor, declarations);
@@ -109,6 +119,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         index = lexical.anchor.end;
                                         declarations = FindDeclaration(range, ref index, out TextRange name, space!);
                                         if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, lexical.anchor & name, declarations);
+                                        else expressionStack.Push(new InvalidExpression(name));
                                     }
                                 }
                                 else
@@ -136,6 +147,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     else
                                     {
                                         collector.Add(expressionStack.Peek().range, CErrorLevel.Error, "不是类型表达式");
+                                        if (expressionStack.Peek() is not InvalidExpression) expressionStack.Push(expressionStack.Pop().ToInvalid());
                                         attribute = ExpressionAttribute.Invalid;
                                     }
                                 }
@@ -148,7 +160,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             }
                             else
                             {
-                                collector.Add(operatorAnchor, CErrorLevel.Error, "缺少类型");
+                                collector.Add(operatorAnchor, CErrorLevel.Error, "需要输入类型名");
                                 expressionStack.Push(new InvalidExpression(operatorAnchor));
                                 attribute = ExpressionAttribute.Invalid;
                             }
@@ -216,8 +228,18 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         break;
                     case LexicalType.RealInvoker:
-                        //todo 实调用
-                        break;
+                        if (attribute.ContainAny(ExpressionAttribute.Value))
+                        {
+                            if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifierLexical, collector))
+                            {
+                                index = identifierLexical.anchor.end;
+                                if (identifierLexical.type != LexicalType.Word)
+                                    collector.Add(identifierLexical.anchor, CErrorLevel.Error, "无效的标识符");
+                                //todo 实调用
+                            }
+                            else collector.Add(lexical.anchor, CErrorLevel.Error, "缺少标识符");
+                        }
+                        goto default;
                     case LexicalType.MinusAssignment: goto default;
                     case LexicalType.Mul:
                         PushToken(expressionStack, tokenStack, new Token(lexical, TokenType.Mul), attribute);
@@ -248,7 +270,53 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Dot:
-                        //todo 点运算符
+                        if (attribute.ContainAny(ExpressionAttribute.Type))
+                        {
+                            if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifierLexical, collector))
+                            {
+                                if (identifierLexical.type == LexicalType.Word)
+                                {
+
+                                }
+                            }
+                        }
+                        else if (attribute.ContainAny(ExpressionAttribute.Value))
+                        {
+                            if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifierLexical, collector))
+                            {
+                                if (identifierLexical.type == LexicalType.Word)
+                                {
+                                    if (attribute.ContainAny(ExpressionAttribute.Type))
+                                    {
+                                        var typeExpression = (TypeExpression)expressionStack.Pop();
+                                        if (typeExpression.type.code == TypeCode.Enum)
+                                        {
+
+                                        }
+                                        else collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+
+                                    }
+                                    else if (attribute.ContainAny(ExpressionAttribute.Value))
+                                    {
+
+                                    }
+                                }
+                                else
+                                {
+                                    collector.Add(identifierLexical.anchor, CErrorLevel.Error, "无效的标识符");
+                                    expressionStack.Push(new InvalidExpression(identifierLexical.anchor));
+                                    attribute = ExpressionAttribute.Invalid;
+                                    index = identifierLexical.anchor.end;
+                                    goto label_next_lexical;
+                                }
+                            }
+                            else
+                            {
+                                collector.Add(lexical.anchor, CErrorLevel.Error, "缺少标识符");
+                                expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                attribute = ExpressionAttribute.Invalid;
+                            }
+                        }
                         break;
                     case LexicalType.Question: goto default;
                     case LexicalType.QuestionDot:
@@ -436,6 +504,34 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         break;
                     case LexicalType.Word:
+                        if (attribute.ContainAny(ExpressionAttribute.Type))
+                        {
+                            var typeExpression = (TypeExpression)expressionStack.Pop();
+                            var local = localContext.Add(lexical.anchor, typeExpression.type);
+                            expressionStack.Push(new VariableLocalExpression(typeExpression.range & lexical.anchor, local, typeExpression.range, ExpressionAttribute.Assignable));
+                            attribute = expressionStack.Peek().attribute;
+                        }
+                        else if (localContext.TryGetLocal(lexical.anchor.ToString(), out var local))
+                        {
+                            var variableExpression = new VariableLocalExpression(lexical.anchor, local, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
+                            if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                            {
+                                expressionStack.Push(variableExpression);
+                                attribute = variableExpression.attribute;
+                            }
+                            else
+                            {
+                                collector.Add(lexical.anchor, CErrorLevel.Error, "无效的表达式");
+                                expressionStack.Push(new InvalidExpression(variableExpression));
+                                attribute = ExpressionAttribute.Invalid;
+                            }
+                        }
+                        else
+                        {
+                            var declarations = FindDeclaration(lexical.anchor, ref index, out var name);
+                            if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, name, declarations);
+                            goto label_next_lexical;
+                        }
                         break;
                     case LexicalType.Backslash:
                     case LexicalType.KeyWord_namespace:
@@ -662,18 +758,20 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                         {
                             var expression = Parse(new TextRange(lexical.anchor.end, range.end));
+                            index = range.end;
                             if (expression is InvokerExpression invoker)
                             {
                                 var taskExpression = new BlurryTaskExpression(lexical.anchor & invoker.range, invoker);
                                 expressionStack.Push(taskExpression);
                                 attribute = taskExpression.attribute;
-                                index = range.end;
-                                goto label_next_lexical;
                             }
-                            expressionStack.Push(new InvalidExpression(expression));
-                            attribute = ExpressionAttribute.Invalid;
-                            collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
-                            goto label_parse_fail;
+                            else
+                            {
+                                collector.Add(expression.range, CErrorLevel.Error, "不是个调用表达式");
+                                expressionStack.Push(new InvalidExpression(expression));
+                                attribute = ExpressionAttribute.Invalid;
+                            }
+                            goto label_next_lexical;
                         }
                         goto default;
                     case LexicalType.KeyWord_wait:
@@ -683,15 +781,25 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_finally:
                     default:
                         collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
-                        expressionStack.Push(new InvalidExpression(lexical.anchor));
+                        if (attribute == ExpressionAttribute.Invalid || attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Type))
+                            expressionStack.Push(new InvalidExpression(expressionStack.Pop(), new InvalidExpression(lexical.anchor)));
+                        else
+                            expressionStack.Push(new InvalidExpression(lexical.anchor));
                         attribute = ExpressionAttribute.Invalid;
                         break;
                 }
                 index = lexical.anchor.end;
             label_next_lexical:;
             }
-        label_parse_fail:
-            return new InvalidExpression(range);
+            while (tokenStack.Count > 0) PopToken(expressionStack, tokenStack.Pop());
+            if (expressionStack.Count > 1)
+            {
+                var list = new List<Expression>(expressionStack);
+                list.Reverse();
+                return TupleExpression.Create(list);
+            }
+            else if (expressionStack.Count > 0) return expressionStack.Pop();
+            else return TupleExpression.CreateEmpty(range);
         }
 
         private void PushToken(Stack<Expression> expressionStack, Stack<Token> tokenStack, Token token, ExpressionAttribute attribute)
@@ -699,7 +807,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             while (tokenStack.Count > 0 && token.Priority <= tokenStack.Peek().Priority) attribute = PopToken(expressionStack, tokenStack.Pop());
 
             if (attribute != ExpressionAttribute.Invalid && !attribute.ContainAny(token.Precondition))
+            {
                 collector.Add(token.lexical.anchor, CErrorLevel.Error, "无效的操作");
+                if (token.Precondition.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Type))
+                    expressionStack.Push(new InvalidExpression(token.lexical.anchor));
+            }
             tokenStack.Push(token);
         }
         private ExpressionAttribute PopToken(Stack<Expression> expressionStack, Token token)
@@ -710,7 +822,6 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case TokenType.LogicOperationPriority: break;
                 case TokenType.LogicAnd:
                 case TokenType.LogicOr:
-                    if (expressionStack.Count >= 2)
                     {
                         var right = expressionStack.Pop();
                         var left = expressionStack.Pop();
@@ -719,11 +830,6 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         expressionStack.Push(new LogicExpression(left.range & right.range, left, right));
                         return expressionStack.Peek().attribute;
                     }
-                    else if (expressionStack.Count > 0)
-                        expressionStack.Push(new InvalidExpression(expressionStack.Pop()));
-                    else expressionStack.Push(new InvalidExpression(token.lexical.anchor));
-                    collector.Add(token.lexical.anchor, CErrorLevel.Error, "缺少表达式");
-                    return ExpressionAttribute.Invalid;
                 case TokenType.CompareOperationPriority: break;
                 case TokenType.Less:
                 case TokenType.Greater:
@@ -746,40 +852,20 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case TokenType.Mod: return Operator(expressionStack, token.lexical.anchor, 2);
                 case TokenType.SymbolicOperationPriority: break;
                 case TokenType.Casting:
-                    if (expressionStack.Count >= 2)
                     {
                         var right = expressionStack.Pop();
                         var left = expressionStack.Pop();
-                        if (!left.Valid || !right.Valid)
+                        if (left is TypeExpression typeExpression)
                         {
-                            expressionStack.Push(new InvalidExpression(left, right));
-                            return ExpressionAttribute.Invalid;
+                            if (!right.attribute.ContainAny(ExpressionAttribute.Value))
+                                collector.Add(right.range, CErrorLevel.Error, "无法进行类型强转");
+                            else if (Convert(manager, right.types[0], typeExpression.type) < 0 && Convert(manager, typeExpression.type, right.types[0]) < 0)
+                                collector.Add(left.range & right.range, CErrorLevel.Error, $"无法从{right.types[0]}转换为{typeExpression.type}");
+                            expressionStack.Push(new CastExpression(left.range & right.range, typeExpression, right));
                         }
-                        if (right.attribute.ContainAny(ExpressionAttribute.Value))
-                        {
-                            if (left is TypeExpression typeExpression)
-                            {
-                                if (Convert(manager, right.types[0], typeExpression.type) < 0 && Convert(manager, typeExpression.type, right.types[0]) < 0)
-                                {
-                                    collector.Add(left.range & right.range, CErrorLevel.Error, $"无法从{right.types[0]}转换为{typeExpression.type}");
-                                }
-                                expressionStack.Push(new CastExpression(left.range & right.range, typeExpression, right));
-                                return expressionStack.Peek().attribute;
-                            }
-                            else throw new Exception("左边表达式不是类型，解析逻辑应该有bug");
-                        }
-                        else
-                        {
-                            expressionStack.Push(new InvalidExpression(left, right));
-                            collector.Add(right.range, CErrorLevel.Error, "无法进行类型强转");
-                            return ExpressionAttribute.Invalid;
-                        }
+                        else expressionStack.Push(new InvalidExpression(left, right));
+                        return expressionStack.Peek().attribute;
                     }
-                    else if (expressionStack.Count > 0)
-                        expressionStack.Push(new InvalidExpression(expressionStack.Pop()));
-                    else expressionStack.Push(new InvalidExpression(token.lexical.anchor));
-                    collector.Add(token.lexical.anchor, CErrorLevel.Error, "缺少表达式");
-                    return ExpressionAttribute.Invalid;
                 case TokenType.Not:
                 case TokenType.Inverse:
                 case TokenType.Positive:
@@ -791,25 +877,21 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private ExpressionAttribute Operator(Stack<Expression> expressionStack, TextRange name, int count)
         {
-            if (expressionStack.Count < count)
+            if (count > 0)
             {
-                collector.Add(name, CErrorLevel.Error, "缺少表达式");
-                if (expressionStack.Count > 0)
-                {
-                    var invalids = new List<Expression>(expressionStack);
-                    invalids.Reverse();
-                    expressionStack.Clear();
-                    expressionStack.Push(new InvalidExpression([.. invalids]));
-                }
-                else expressionStack.Push(new InvalidExpression(name));
-                return ExpressionAttribute.Invalid;
+                var parameters = new List<Expression>();
+                while (count-- > 0) parameters.Add(expressionStack.Pop());
+                parameters.Reverse();
+                var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), TupleExpression.Create(parameters));
+                expressionStack.Push(result);
+                return result.attribute;
             }
-            var parameters = new List<Expression>();
-            while (count-- > 0) parameters.Add(expressionStack.Pop());
-            parameters.Reverse();
-            var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), TupleExpression.Create(parameters));
-            expressionStack.Push(result);
-            return result.attribute;
+            else
+            {
+                var result = CreateOperation(name, name.ToString(), TupleExpression.Empty);
+                expressionStack.Push(result);
+                return result.attribute;
+            }
         }
         private bool TryParseBracket(TextRange range, ref TextPosition index, SplitFlag flag, out Expression? result)
         {
@@ -823,23 +905,22 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             result = default;
             return false;
         }
-        private Expression ParseQuestionNull(TextRange left, TextRange right)
+        private QuestionNullExpression ParseQuestionNull(TextRange left, TextRange right)
         {
-            var valid = true;
             var leftExpression = Parse(left);
             var rightExpression = Parse(right);
-            if (!leftExpression!.attribute.ContainAll(ExpressionAttribute.Value))
+            if (!leftExpression.attribute.ContainAll(ExpressionAttribute.Value))
             {
                 collector.Add(left, CErrorLevel.Error, "表达式不是个值");
-                valid = false;
+                leftExpression = leftExpression.ToInvalid();
             }
             else if (leftExpression.types[0] != Type.ENTITY && !leftExpression.types[0].Managed)
             {
                 collector.Add(left, CErrorLevel.Error, "不是可以为空的类型");
-                valid = false;
+                rightExpression = rightExpression.ToInvalid();
             }
             rightExpression = AssignmentConvert(rightExpression, leftExpression.types);
-            return valid ? new QuestionNullExpression(leftExpression, rightExpression) : new InvalidExpression(left & right, leftExpression, rightExpression);
+            return new QuestionNullExpression(leftExpression, rightExpression);
         }
         private Expression AssignmentConvert(Expression source, Type type)
         {
@@ -851,13 +932,10 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 {
                     if (Convert(manager, source.types[0], type) < 0)
                         collector.Add(source.range, CErrorLevel.Error, "无法转换为目标的类型");
-                    if (source.types[0] != type)
-                        source = new TupleCastExpression(new Tuple([type]), source);
                 }
-                return source;
             }
-            collector.Add(source.range, CErrorLevel.Error, "类型数量不一致");
-            return new InvalidExpression(source);
+            else collector.Add(source.range, CErrorLevel.Error, "类型数量不一致");
+            return new TupleCastExpression(new Tuple([type]), source);
         }
         private Expression AssignmentConvert(Expression source, List<Type> types)
         {
@@ -870,29 +948,17 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     for (int i = 0; i < types.Count; i++)
                         if (Convert(manager, source.types[i], types[i]) < 0)
                             collector.Add(source.range, CErrorLevel.Error, $"当前表达式的第{i + 1}个类型无法转换为目标的类型");
-                    if (source.types != new Tuple(types))
-                        source = new TupleCastExpression(new Tuple(types), source);
                 }
-                return source;
             }
-            collector.Add(source.range, CErrorLevel.Error, "类型数量不一致");
-            return new InvalidExpression(source);
+            else collector.Add(source.range, CErrorLevel.Error, "类型数量不一致");
+            return new TupleCastExpression(new Tuple(types), source);
         }
-        private Expression ParseAssignment(LexicalType type, TextRange left, TextRange right)
+        private TupleAssignmentExpression ParseAssignment(LexicalType type, TextRange left, TextRange right)
         {
             var leftExpression = Parse(left);
             var rightExpression = Parse(right);
-            if (leftExpression.types.Count != rightExpression.types.Count)
-            {
-                collector.Add(left & right, CErrorLevel.Error, "类型数量不一致");
-                return new InvalidExpression(leftExpression, rightExpression);
-            }
-            var vaild = true;
             if (!leftExpression.attribute.ContainAll(ExpressionAttribute.Assignable))
-            {
                 collector.Add(left, CErrorLevel.Error, "表达式不可赋值");
-                vaild = false;
-            }
             switch (type)
             {
                 case LexicalType.Unknow:
@@ -907,8 +973,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case LexicalType.Assignment:
                     leftExpression = InferLeftValueType(leftExpression, rightExpression.types);
                     rightExpression = AssignmentConvert(rightExpression, leftExpression.types);
-                    if (vaild) return new TupleAssignmentExpression(left & right, leftExpression, rightExpression);
-                    else return new InvalidExpression(leftExpression, rightExpression);
+                    return new TupleAssignmentExpression(left & right, leftExpression, rightExpression);
                 case LexicalType.Equals:
                 case LexicalType.Lambda:
                 case LexicalType.BitAnd:
@@ -1069,18 +1134,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression InferRightValueType(Expression expression, Type type)
         {
-            if (!expression.Valid) return expression;
-            if (type == Expression.BLURRY)
-            {
-                collector.Add(expression.range, CErrorLevel.Error, "表达式意义不明确");
-                return new InvalidExpression(expression);
-            }
+            if (expression.types.Count == 1 && expression.types[0] == type) return expression;
+            else if (!expression.Valid) return new InvalidExpression([type], expression);
+            else if (type == Expression.BLURRY) collector.Add(expression.range, CErrorLevel.Error, "表达式意义不明确");
             else if (expression is ConstantNullExpression)
             {
                 if (type == Type.ENTITY) return new ConstantEntityNullExpression(expression.range);
                 else if (type.Managed) return new ConstantHandleNullExpression(expression.range, type);
                 collector.Add(expression.range, CErrorLevel.Error, "类型不匹配");
-                return new InvalidExpression(expression);
             }
             else if (expression is BlurrySetExpression blurrySetExpression)
             {
@@ -1092,11 +1153,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     var elements = AssignmentConvert(blurrySetExpression.tuple, elementTypes);
                     return new ArrayInitExpression(expression.range, elements, type);
                 }
-                else
-                {
-                    collector.Add(expression.range, CErrorLevel.Error, "类型不匹配");
-                    return new InvalidExpression(expression);
-                }
+                else collector.Add(expression.range, CErrorLevel.Error, "类型不匹配");
             }
             else if (expression is MethodExpression methodExpression)
             {
@@ -1105,15 +1162,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     if (TryGetFunction(expression.range, methodExpression.declarations, compilingDelegate.declaration.signature, out var callable))
                     {
                         if (callable!.returns != compilingDelegate.returns)
-                        {
                             collector.Add(expression.range, CErrorLevel.Error, "返回值类型不一致");
-                            return new InvalidExpression(expression);
-                        }
                         return new FunctionDelegateCreateExpression(expression.range, type, callable);
                     }
                 }
                 collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
-                expression = new InvalidExpression(expression);
             }
             else if (expression is MethodMemberExpression methodMember)
             {
@@ -1122,15 +1175,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     if (TryGetFunction(expression.range, methodMember.declarations, compilingDelegate.declaration.signature, out var callable))
                     {
                         if (callable!.returns != compilingDelegate.returns)
-                        {
                             collector.Add(expression.range, CErrorLevel.Error, "返回值类型不一致");
-                            return new InvalidExpression(expression);
-                        }
                         return new MemberFunctionDelegateCreateExpression(expression.range, type, callable, methodMember.target);
                     }
                 }
                 collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
-                expression = new InvalidExpression(expression);
             }
             else if (expression is MethodVirtualExpression methodVirtual)
             {
@@ -1139,47 +1188,55 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     if (TryGetFunction(expression.range, methodVirtual.declarations, compilingDelegate.declaration.signature, out var callable))
                     {
                         if (callable!.returns != compilingDelegate.returns)
-                        {
                             collector.Add(expression.range, CErrorLevel.Error, "返回值类型不一致");
-                            return new InvalidExpression(expression);
-                        }
                         return new VirtualFunctionDelegateCreateExpression(expression.range, type, callable, methodVirtual.target);
                     }
                 }
                 collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
-                expression = new InvalidExpression(expression);
             }
             else if (expression is BlurryTaskExpression blurryTask)
             {
                 if (manager.GetSourceDeclaration(type) is CompilingTask compilingTask)
                 {
                     if (blurryTask.types == compilingTask.returns)
-                        return new TaskCreateExpression(expression.range, blurryTask.invoker, type);
-                    else collector.Add(expression.range, CErrorLevel.Error, "返回值类型不同");
+                        collector.Add(expression.range, CErrorLevel.Error, "返回值类型不同");
+                    return new TaskCreateExpression(expression.range, blurryTask.invoker, type);
                 }
-                else collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
-                expression = new InvalidExpression(expression);
+                collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
             }
             else if (expression is BlurryLambdaExpression blurryLambda)
             {
                 if (manager.GetSourceDeclaration(type) is CompilingDelegate compilingDelegate)
                 {
-                    if (blurryLambda.parameters.Count == compilingDelegate.parameters.Count)
+                    if (blurryLambda.parameters.Count > 0)
                     {
-                        localContext.PushBlock();
-                        for (var i = 0; i < compilingDelegate.parameters.Count; i++)
-                            localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
-                        var lambdaBodyExpression = Parse(blurryLambda.body);
-                        localContext.PopBlock();
-                        if (lambdaBodyExpression.Valid && compilingDelegate.returns.Count > 0)
-                            if (compilingDelegate.returns != lambdaBodyExpression.types)
-                                lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
-                        return new LambdaDelegateCreateExpression(expression.range, type, compilingDelegate, lambdaBodyExpression);
+                        while (blurryLambda.parameters.Count < compilingDelegate.parameters.Count)
+                        {
+                            collector.Add(blurryLambda.parameters[^1], CErrorLevel.Error, "缺少参数:" + compilingDelegate.parameters[blurryLambda.parameters.Count].type.ToString());
+                            blurryLambda.parameters.Add(blurryLambda.parameters[^1]);
+                        }
+                        while (blurryLambda.parameters.Count > compilingDelegate.parameters.Count)
+                        {
+                            collector.Add(blurryLambda.parameters[^1], CErrorLevel.Error, "多余的参数");
+                            blurryLambda.parameters.RemoveAt(blurryLambda.parameters.Count - 1);
+                        }
                     }
-                    else collector.Add(expression.range, CErrorLevel.Error, "参数数量不一致");
+                    else
+                    {
+                        foreach (var parameter in compilingDelegate.parameters)
+                            collector.Add(blurryLambda.range, CErrorLevel.Error, "缺少参数:" + parameter.type.ToString());
+                    }
+                    localContext.PushBlock();
+                    for (var i = 0; i < blurryLambda.parameters.Count; i++)
+                        localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
+                    var lambdaBodyExpression = Parse(blurryLambda.body);
+                    localContext.PopBlock();
+                    if (lambdaBodyExpression.Valid && compilingDelegate.returns.Count > 0)
+                        if (compilingDelegate.returns != lambdaBodyExpression.types)
+                            lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
+                    return new LambdaDelegateCreateExpression(expression.range, type, compilingDelegate, lambdaBodyExpression);
                 }
-                else collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
-                expression = new InvalidExpression(expression);
+                collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
             }
             else
             {
@@ -1200,7 +1257,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         return new EvaluateConstantCharExpression(value, expression);
                 }
             }
-            return expression;
+            return new InvalidExpression([type], expression);
         }
         private List<CompilingDeclaration>? FindDeclaration(TextRange range, ref TextPosition index, out TextRange name)
         {
@@ -1267,16 +1324,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             {
                 case DeclarationCategory.Invalid: break;
                 case DeclarationCategory.Variable:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        if (declarations[0] is CompilingVariable variable)
+                        if (declarations.Count == 1)
                         {
-                            var expression = new VariableGlobalExpression(anchor, variable);
+                            var expression = new VariableGlobalExpression(anchor, (CompilingVariable)declarations[0]);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
                         }
-                        else throw new Exception("前面解析逻辑可能有问题");
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.Function:
@@ -1289,33 +1346,44 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                     break;
                 case DeclarationCategory.Enum:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.EnumElement: throw new Exception("枚举内没有逻辑代码，不会直接查找到枚举");
                 case DeclarationCategory.Struct:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.StructVariable:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        if (localContext.thisValue == null || declarations[0] is not CompilingVariable variable) throw new Exception("前面解析逻辑可能有问题");
-                        var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                        var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, variable);
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                            var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0]);
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.StructFunction:
@@ -1330,24 +1398,31 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                     break;
                 case DeclarationCategory.Class:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.Constructor: throw new Exception("构造函数不参与重载决议");
                 case DeclarationCategory.ClassVariable:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        if (localContext.thisValue == null || declarations[0] is not CompilingVariable variable) throw new Exception("前面解析逻辑可能有问题");
-                        var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                        var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, variable);
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                            var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0]);
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.ClassFunction:
@@ -1362,23 +1437,31 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                     break;
                 case DeclarationCategory.Interface:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.InterfaceFunction: throw new Exception("接口内没有逻辑代码，不应该查找到接口函数");
                 case DeclarationCategory.Delegate:
                 case DeclarationCategory.Task:
-                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && declarations.Count == 1)
+                    if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
-                        expressionStack.Push(expression);
-                        attribute = expression.attribute;
-                        return;
+                        if (declarations.Count == 1)
+                        {
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            expressionStack.Push(expression);
+                            attribute = expression.attribute;
+                            return;
+                        }
+                        goto label_invalid_expression;
                     }
                     break;
                 case DeclarationCategory.Native:
@@ -1391,8 +1474,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                     break;
             }
-            collector.Add(anchor, CErrorLevel.Error, "意外的词条");
+            if (expressionStack.Count > 0)
+                expressionStack.Push(new InvalidExpression(expressionStack.Pop(), new InvalidDeclarationsExpression(anchor, declarations)));
+            else
+                expressionStack.Push(new InvalidDeclarationsExpression(anchor, declarations));
+            goto label_exit;
+        label_invalid_expression:
             expressionStack.Push(new InvalidDeclarationsExpression(anchor, declarations));
+        label_exit:
+            collector.Add(anchor, CErrorLevel.Error, "意外的词条");
             attribute = ExpressionAttribute.Invalid;
         }
         private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)
@@ -1549,11 +1639,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression InferLeftValueType(Expression expression, List<Type> types)
         {
-            if (!expression.Valid) return expression;
+            if (!expression.Valid) return new InvalidExpression(types, expression);
             if (expression.types.Count != types.Count)
             {
                 collector.Add(expression.range, CErrorLevel.Error, "类型数量不一致");
-                return new InvalidExpression(expression);
+                return new InvalidExpression(types, expression);
             }
             else if (expression is VariableLocalExpression) return InferLeftValueType(expression, types[0]);
             else if (expression is TupleExpression tuple)
@@ -1572,62 +1662,41 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression InferLeftValueType(Expression expression, Type type)
         {
-            if (!expression.Valid) return expression;
+            if (!expression.Valid) return new InvalidExpression([type], expression);
             if (expression.types.Count == 1 && expression.attribute.ContainAll(ExpressionAttribute.Assignable) && expression.types[0] == Expression.BLURRY)
             {
-                if (type == Expression.BLURRY || type == Expression.NULL)
-                {
-                    collector.Add(expression.range, CErrorLevel.Error, "表达式类型不明确");
-                    return new InvalidExpression(expression);
-                }
+                if (type == Expression.BLURRY || type == Expression.NULL) collector.Add(expression.range, CErrorLevel.Error, "表达式类型不明确");
                 else if (expression is BlurryVariableDeclarationExpression blurry)
-                {
                     return new VariableLocalExpression(blurry.range, localContext.Add(blurry.range, type), blurry.declarationRange, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                }
-                else
-                {
-                    collector.Add(expression.range, CErrorLevel.Error, "无效的操作");
-                    return new InvalidExpression(expression);
-                }
+                else collector.Add(expression.range, CErrorLevel.Error, "无效的操作");
+                return new InvalidExpression([type], expression);
             }
             else throw new Exception("表达式类型错误");
         }
-        private Expression ParseQuestion(TextRange condition, TextRange expression)
+        private QuestionExpression ParseQuestion(TextRange condition, TextRange expression)
         {
             var conditionExpression = Parse(condition);
-            var vaild = true;
             if (!conditionExpression.attribute.ContainAll(ExpressionAttribute.Value))
             {
                 collector.Add(condition, CErrorLevel.Error, "表达式不是个值");
-                vaild = false;
+                conditionExpression = conditionExpression.ToInvalid();
             }
             if (ExpressionSplit.Split(expression, 0, SplitFlag.Colon, out var left, out var right, collector) != LexicalType.Unknow)
-            {
-                var expressionExpression = Parse(expression);
-                if (vaild) return new QuestionExpression(condition & expression, conditionExpression, expressionExpression, null);
-                else return new InvalidExpression(conditionExpression, expressionExpression);
-            }
+                return new QuestionExpression(condition & expression, conditionExpression, Parse(left), Parse(right));
             else
-            {
-                var leftExpression = Parse(left);
-                var rightExpression = Parse(right);
-                if (vaild) return new QuestionExpression(condition & expression, conditionExpression, leftExpression, rightExpression);
-                else return new InvalidExpression(conditionExpression, leftExpression, rightExpression);
-            }
+                return new QuestionExpression(condition & expression, conditionExpression, Parse(expression), null);
         }
-        private Expression ParseLambda(TextRange parameters, TextRange expression)
+        private BlurryLambdaExpression ParseLambda(TextRange parameters, TextRange expression)
         {
             TextRange parameterRange;
             while (TryRemoveBracket(parameters, out parameterRange)) parameters = parameterRange;
             var list = new List<TextRange>();
             while (ExpressionSplit.Split(parameterRange, 0, SplitFlag.Comma | SplitFlag.Semicolon, out var left, out var right, collector) != LexicalType.Unknow)
             {
-                if (!TryParseLambdaParameter(left.Trim, out left)) return new InvalidExpression(parameterRange & expression);
-                if (left.Count > 0) list.Add(left);
+                if (TryParseLambdaParameter(left.Trim, out left)) list.Add(left);
                 parameterRange = right.Trim;
             }
-            if (!TryParseLambdaParameter(parameterRange.Trim, out parameterRange)) return new InvalidExpression(parameterRange & expression);
-            if (parameterRange.Count > 0) list.Add(parameterRange);
+            if (TryParseLambdaParameter(parameterRange.Trim, out parameterRange)) list.Add(parameterRange);
             return new BlurryLambdaExpression(parameters & expression, list, expression);
         }
         private bool TryParseLambdaParameter(TextRange range, out TextRange parameter)
@@ -1635,16 +1704,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             parameter = range;
             if (Lexical.TryAnalysis(range, 0, out var lexical, collector))
             {
+                parameter = lexical.anchor;
                 if (lexical.type == LexicalType.Word)
                 {
-                    parameter = lexical.anchor;
-                    if (Lexical.TryAnalysis(range, lexical.anchor.end, out lexical, collector)) collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
-                    else return true;
+                    if (Lexical.TryAnalysis(range, lexical.anchor.end, out lexical, collector))
+                        collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
                 }
                 else collector.Add(range, CErrorLevel.Error, "无效的词条");
-                return false;
+                return true;
             }
-            return true;
+            return false;
         }
         private bool TryParseTuple(SplitFlag flag, LexicalType type, TextRange range, out Expression? result)
         {
