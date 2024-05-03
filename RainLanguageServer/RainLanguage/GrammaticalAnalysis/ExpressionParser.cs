@@ -33,16 +33,185 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             if (TryParseBracket(range, ref index, SplitFlag.Bracket0, out var tuple))
                             {
+                                if (attribute.ContainAny(ExpressionAttribute.Method))
+                                {
+                                    var expression = expressionStack.Pop();
+                                    if (expression is MethodExpression methodExpression)
+                                    {
+                                        if (tuple!.Valid)
+                                        {
+                                            if (TryGetFunction(methodExpression.range, methodExpression.declarations, tuple.types, out var callable))
+                                            {
+                                                tuple = AssignmentConvert(tuple, callable!.returns);
+                                                expression = new InvokerFunctionExpression(lexical.anchor & tuple.range, tuple, callable);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            }
+                                            else collector.Add(methodExpression.range, CErrorLevel.Error, "未找到匹配的函数");
+                                        }
+                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodExpression.range, methodExpression.declarations), tuple));
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                    else if (expression is MethodMemberExpression methodMemberExpression)
+                                    {
+                                        if (tuple!.Valid)
+                                        {
+                                            if (TryGetFunction(methodMemberExpression.range, methodMemberExpression.declarations, tuple.types, out var callable))
+                                            {
+                                                tuple = AssignmentConvert(tuple, callable!.returns);
+                                                expression = new InvokerMemberExpression(lexical.anchor & tuple.range, tuple, methodMemberExpression.target, callable);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            }
+                                            else collector.Add(methodMemberExpression.range, CErrorLevel.Error, "未找到匹配的函数");
+                                        }
+                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodMemberExpression.range, methodMemberExpression.declarations), tuple));
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                    else if (expression is MethodVirtualExpression methodVirtualExpression)
+                                    {
+                                        if (tuple!.Valid)
+                                        {
+                                            if (TryGetFunction(methodVirtualExpression.range, methodVirtualExpression.declarations, tuple.types, out var callable))
+                                            {
+                                                tuple = AssignmentConvert(tuple, callable!.returns);
+                                                expression = new InvokerVirtualMemberExpression(lexical.anchor & tuple.range, tuple, methodVirtualExpression.target, callable);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            }
+                                            else collector.Add(methodVirtualExpression.range, CErrorLevel.Error, "未找到匹配的函数");
+                                        }
+                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodVirtualExpression.range, methodVirtualExpression.declarations), tuple));
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                    else throw new Exception("未知的调用");
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.Callable))
+                                {
+                                    var expression = expressionStack.Pop();
+                                    var compiling = (CompilingDelegate)manager.GetSourceDeclaration(expression.types[0])!;
+                                    tuple = AssignmentConvert(tuple!, compiling.declaration.signature);
+                                    expression = new InvokerDelegateExpression(expression.range & tuple.range, compiling.returns, tuple, expression);
+                                    expressionStack.Push(expression);
+                                    attribute = expression.attribute;
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.Type))
+                                {
+                                    var typeExpression = (TypeExpression)expressionStack.Pop();
+                                    var type = typeExpression.type;
+                                    if (type == Type.REAL2)
+                                    {
+                                        tuple = ConvertVectorParameter(tuple!, 2);
+                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL2, tuple);
+                                        expressionStack.Push(expression);
+                                        attribute = expression.attribute;
+                                    }
+                                    else if (type == Type.REAL3)
+                                    {
+                                        tuple = ConvertVectorParameter(tuple!, 3);
+                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL3, tuple);
+                                        expressionStack.Push(expression);
+                                        attribute = expression.attribute;
+                                    }
+                                    else if (type == Type.REAL4)
+                                    {
+                                        tuple = ConvertVectorParameter(tuple!, 4);
+                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL4, tuple);
+                                        expressionStack.Push(expression);
+                                        attribute = expression.attribute;
+                                    }
+                                    else if (type.dimension == 0)
+                                    {
+                                        if (type.code == TypeCode.Struct)
+                                        {
+                                            if (!tuple!.Valid || tuple.types.Count == 0)
+                                            {
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, null, null, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                            }
+                                            else
+                                            {
+                                                var compiling = (CompilingStruct)manager.GetSourceDeclaration(type)!;
+                                                var members = new List<Type>();
+                                                foreach (var member in compiling.variables) members.Add(member.type);
+                                                tuple = AssignmentConvert(tuple, members);
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, null, null, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                            }
+                                        }
+                                        else if (type.code == TypeCode.Handle)
+                                        {
+                                            var compiling = (CompilingClass)manager.GetSourceDeclaration(type)!;
+                                            var constructors = new List<CompilingDeclaration>();
+                                            foreach (var constructor in compiling.constructors) constructors.Add(constructor);
+                                            if (TryGetFunction(typeExpression.range, constructors, tuple!.types, out var callable))
+                                            {
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, callable, null, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                            }
+                                            else
+                                            {
+                                                collector.Add(typeExpression.range, CErrorLevel.Error, "未找到匹配的构造函数");
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, null, constructors, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+                                            expressionStack.Push(new InvalidExpression(typeExpression, tuple!));
+                                            attribute = ExpressionAttribute.Invalid;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        collector.Add(lexical.anchor, CErrorLevel.Error, "数组没有构造函数");
+                                        expressionStack.Push(new InvalidExpression(typeExpression, tuple!));
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                }
+                                else if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
+                                {
+                                    expressionStack.Push(tuple!);
+                                    attribute = tuple!.attribute;
+                                    goto label_next_lexical;
+                                }
+                                else
+                                {
+                                    collector.Add(lexical.anchor, CErrorLevel.Error, "意外的符号");
+                                    if (attribute == ExpressionAttribute.Invalid || attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Type))
+                                        expressionStack.Push(new InvalidExpression(expressionStack.Pop(), tuple!));
+                                    else
+                                        expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                    attribute = ExpressionAttribute.Invalid;
+                                }
+                                goto label_next_lexical;
+                            }
+                            break;
+                        }
+                    case LexicalType.BracketLeft1:
+                        {
+                            if (TryParseBracket(range, ref index, SplitFlag.Bracket1, out var tuple))
+                            {
                                 //todo 
                             }
+                            break;
                         }
-                        break;
-                    case LexicalType.BracketLeft1:
-                        //todo
-                        break;
                     case LexicalType.BracketLeft2:
-                        //todo 
-                        break;
+                        {
+                            if (TryParseBracket(range, ref index, SplitFlag.Bracket2, out var tuple))
+                            {
+                                //todo 
+                            }
+                            break;
+                        }
                     case LexicalType.BracketRight0:
                     case LexicalType.BracketRight1:
                     case LexicalType.BracketRight2:
@@ -1108,6 +1277,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (Convert(manager, source.types[i], types[i]) < 0)
                             collector.Add(source.range, CErrorLevel.Error, $"当前表达式的第{i + 1}个类型无法转换为目标的类型");
                 }
+                return source;
             }
             else collector.Add(source.range, CErrorLevel.Error, "类型数量不一致");
             return new TupleCastExpression(new Tuple(types), source);
@@ -1650,6 +1820,29 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         label_exit:
             collector.Add(anchor, CErrorLevel.Error, "意外的词条");
             attribute = ExpressionAttribute.Invalid;
+        }
+        private Expression ConvertVectorParameter(Expression parameter, int count)
+        {
+            if (!parameter.Valid) return parameter;
+            var parameterTypes = new List<Type>();
+            for (var i = 0; i < parameter.types.Count; i++)
+                if (parameter.types[i] == Type.REAL || parameter.types[i] == Type.REAL2 || parameter.types[i] == Type.REAL3 || parameter.types[i] == Type.REAL4) parameterTypes.Add(parameter.types[i]);
+                else parameterTypes.Add(Type.REAL);
+            parameter = AssignmentConvert(parameter, parameterTypes);
+            for (var i = 0; i < parameter.types.Count; i++)
+            {
+                if (parameter.types[i] == Type.REAL) count--;
+                else if (parameter.types[i] == Type.REAL2) count -= 2;
+                else if (parameter.types[i] == Type.REAL3) count -= 3;
+                else if (parameter.types[i] == Type.REAL4) count -= 4;
+                else
+                {
+                    collector.Add(parameter.range, CErrorLevel.Error, $"第{i + 1}个返回值不是实数也不是向量");
+                    count--;
+                }
+            }
+            if (count < 0) collector.Add(parameter.range, CErrorLevel.Error, "参数数量过多");
+            return parameter;
         }
         private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)
         {

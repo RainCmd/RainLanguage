@@ -2083,6 +2083,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							}
 							else MESSAGE2(manager->messages, typeExpression->anchor, MessageType::ERROR_INVALID_OPERATOR);
 						}
+						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
 						expressionStack.Add(typeExpression);
 						expressionStack.Add(tuple);
 						goto label_parse_fail;

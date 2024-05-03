@@ -20,7 +20,7 @@
             invoker.Read(parameter);
         }
     }
-    internal class InvokerFunctionExpression(TextRange range, List<Type> returns, Expression parameters, CompilingCallable callable) : InvokerExpression(range, returns, parameters)
+    internal class InvokerFunctionExpression(TextRange range, Expression parameters, CompilingCallable callable) : InvokerExpression(range, callable.returns, parameters)
     {
         public readonly CompilingCallable callable = callable;
         public override void Read(ExpressionParameter parameter)
@@ -29,26 +29,25 @@
            callable.references.Add(range);
         }
     }
-    internal class InvokerMemberExpression(TextRange range, List<Type> returns, Expression parameters, Expression target, Declaration declaration) : InvokerExpression(range, returns, parameters)
+    internal class InvokerMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable) : InvokerExpression(range, callable.returns, parameters)
     {
         public readonly Expression target = target;
-        public readonly Declaration declaration = declaration;
+        public readonly CompilingCallable callable = callable;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            parameter.manager.GetDeclaration(declaration)?.references.Add(range);
+            callable.references.Add(range);
         }
     }
-    internal class InvokerVirtualMemberExpression(TextRange range, List<Type> returns, Expression parameters, Expression target, Declaration declaration) : InvokerExpression(range, returns, parameters)
+    internal class InvokerVirtualMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable) : InvokerExpression(range, callable.returns, parameters)
     {
         public readonly Expression target = target;
-        public readonly Declaration declaration = declaration;
+        public readonly CompilingCallable callable = callable;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            var compiling = parameter.manager.GetDeclaration(declaration);
-            if (compiling is CompilingVirtualFunction virtualFunction) Reference(virtualFunction, range);
-            else if (compiling is CompilingAbstractFunction abstractFunction)
+            if (callable is CompilingVirtualFunction virtualFunction) Reference(virtualFunction, range);
+            else if (callable is CompilingAbstractFunction abstractFunction)
             {
                 abstractFunction.references.Add(range);
                 foreach (var implement in abstractFunction.implements)
