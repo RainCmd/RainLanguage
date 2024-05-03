@@ -1613,47 +1613,6 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             callable = default;
             return false;
         }
-        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Expression parameter, out CompilingCallable? callable)
-        {
-            callable = default;
-            if (!parameter.Valid) return false;
-            var parameterTypes = new List<Type>();
-            var minMeasure = 0;
-            var result = new List<CompilingCallable>();
-            foreach (var declaration in declarations)
-                if (declaration is CompilingCallable compiling)
-                {
-                    if (compiling.parameters.Count == parameter.types.Count && TryExplicitTypes(parameter, compiling.declaration.signature, parameterTypes))
-                    {
-                        var measure = Convert(manager, parameterTypes, compiling.declaration.signature);
-                        if (measure >= 0)
-                        {
-                            if (compiling.declaration.library == Type.LIBRARY_KERNEL) measure++;
-                            if (measure < minMeasure || result.Count == 0)
-                            {
-                                result.Clear();
-                                result.Add(compiling);
-                                minMeasure = measure;
-                            }
-                            else if (minMeasure == measure) result.Add(compiling);
-                        }
-                    }
-                    parameterTypes.Clear();
-                }
-            if (result.Count > 1)
-            {
-                var msg = new CompileMessage(range, CErrorLevel.Error, "目标函数不明确");
-                foreach (var item in result)
-                    msg.related.Add(new RelatedInfo(item.name, "符合条件的函数"));
-                collector.Add(msg);
-            }
-            if (result.Count > 0)
-            {
-                callable = result[0];
-                return true;
-            }
-            return false;
-        }
         private bool TryExplicitTypes(Expression expression, List<Type> targetTypes, List<Type> result)
         {
             if (!expression.Valid) return false;
