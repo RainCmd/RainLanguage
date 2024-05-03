@@ -11,9 +11,9 @@
         }
         public override void Read(ExpressionParameter parameter) => parameters.Read(parameter);
     }
-    internal class InvokerDelegateExpression(TextRange range, List<Type> returns, Expression parameters, Expression invaoker) : InvokerExpression(range, returns, parameters)
+    internal class InvokerDelegateExpression(TextRange range, List<Type> returns, Expression parameters, Expression invoker) : InvokerExpression(range, returns, parameters)
     {
-        public readonly Expression invoker = invaoker;
+        public readonly Expression invoker = invoker;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);

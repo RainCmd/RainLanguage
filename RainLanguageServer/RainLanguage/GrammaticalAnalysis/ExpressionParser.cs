@@ -30,9 +30,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 {
                     case LexicalType.Unknow: goto default;
                     case LexicalType.BracketLeft0:
-                        if (TryParseBracket(range, ref index, SplitFlag.Bracket0, out var tuple))
                         {
-                            //todo 
+                            if (TryParseBracket(range, ref index, SplitFlag.Bracket0, out var tuple))
+                            {
+                                //todo 
+                            }
                         }
                         break;
                     case LexicalType.BracketLeft1:
@@ -416,11 +418,84 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         goto default;
                     case LexicalType.QuestionInvoke:
-                        //todo 
-                        break;
+                        {
+                            if (TryParseBracket(range, ref index, SplitFlag.Bracket0, out var tuple))
+                            {
+                                if (attribute.ContainAll(ExpressionAttribute.Value | ExpressionAttribute.Callable))
+                                {
+                                    var expression = expressionStack.Pop();
+                                    if (manager.GetSourceDeclaration(expression.types[0]) is CompilingDelegate compiling)
+                                    {
+                                        tuple = AssignmentConvert(tuple!, compiling.declaration.signature);
+                                        expression = new InvokerDelegateExpression(expression.range & tuple.range, compiling.returns, tuple, expression);
+                                        expressionStack.Push(expression);
+                                        attribute = expression.attribute;
+                                    }
+                                    else
+                                    {
+                                        collector.Add(lexical.anchor, CErrorLevel.Error, "只有委托类型才能使用空值传播的调用运算符");
+                                        expressionStack.Push(new InvalidExpression(expressionStack.Pop(), tuple!.ToInvalid()));
+                                        attribute = ExpressionAttribute.Invalid;
+                                    }
+                                }
+                                else
+                                {
+                                    collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+                                    if (attribute == ExpressionAttribute.Invalid || attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Type))
+                                        expressionStack.Push(new InvalidExpression(expressionStack.Pop(), tuple!));
+                                    else
+                                        expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                    attribute = ExpressionAttribute.Invalid;
+                                }
+                                goto label_next_lexical;
+                            }
+                            break;
+                        }
                     case LexicalType.QuestionIndex:
-                        //todo 
-                        break;
+                        {
+                            if (TryParseBracket(range, ref index, SplitFlag.Bracket1, out var tuple))
+                            {
+                                var list = new List<Type>();
+                                for (var i = 0; i < tuple!.types.Count; i++) list.Add(Type.INT);
+                                tuple = AssignmentConvert(tuple, list);
+                                if (tuple.Valid)
+                                {
+                                    if (attribute.ContainAny(ExpressionAttribute.Array))
+                                    {
+                                        var type = expressionStack.Pop().types[0];
+                                        if (type.dimension > 0)
+                                        {
+                                            var arrayExpression = expressionStack.Pop();
+                                            if (tuple.types.Count == 1)
+                                            {
+                                                var expression = new ArrayEvaluationExpression(arrayExpression.range & tuple.range, arrayExpression, tuple, type.GetDimensionType(type.dimension - 1), true);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            }
+                                            else if (tuple.types.Count == 2)
+                                            {
+                                                var expression = new ArraySubExpression(arrayExpression.range & tuple.range, arrayExpression, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            }
+                                            expressionStack.Push(arrayExpression);
+                                        }
+                                        collector.Add(tuple.range, CErrorLevel.Error, "无效的操作");
+                                    }
+                                    else collector.Add(lexical.anchor, CErrorLevel.Error, "不是数组");
+                                }
+                                else collector.Add(tuple.range, CErrorLevel.Error, "无效的操作");
+                                if (attribute == ExpressionAttribute.Invalid || attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Type))
+                                    expressionStack.Push(new InvalidExpression(expressionStack.Pop(), tuple));
+                                else
+                                    expressionStack.Push(new InvalidExpression(lexical.anchor));
+                                attribute = ExpressionAttribute.Invalid;
+                                goto label_next_lexical;
+                            }
+                            break;
+                        }
                     case LexicalType.QuestionNull:
                     case LexicalType.Colon: goto default;
                     case LexicalType.ConstReal:

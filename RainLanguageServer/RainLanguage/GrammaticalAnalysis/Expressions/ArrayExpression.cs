@@ -26,11 +26,12 @@
     {
         public readonly Expression array;
         public readonly Expression index;
-        public ArrayEvaluationExpression(TextRange range, Expression array, Expression index, Type elementType) : base(range, new Tuple([elementType]))
+        public ArrayEvaluationExpression(TextRange range, Expression array, Expression index, Type elementType, bool question) : base(range, new Tuple([elementType]))
         {
             this.array = array;
             this.index = index;
-            attribute = ExpressionAttribute.Value | ExpressionAttribute.Assignable | elementType.GetAttribute();
+            attribute = ExpressionAttribute.Value | elementType.GetAttribute();
+            if (!question) attribute |= ExpressionAttribute.Assignable;
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -38,22 +39,6 @@
             index.Read(parameter);
         }
         public override void Write(ExpressionParameter parameter)
-        {
-            array.Read(parameter);
-            index.Read(parameter);
-        }
-    }
-    internal class ArrayQuestionEvaluationExpression : Expression
-    {
-        public readonly Expression array;
-        public readonly Expression index;
-        public ArrayQuestionEvaluationExpression(TextRange range, Expression array, Expression index, Type elementType) : base(range, new Tuple([elementType]))
-        {
-            this.array = array;
-            this.index = index;
-            attribute = ExpressionAttribute.Value | elementType.GetAttribute();
-        }
-        public override void Read(ExpressionParameter parameter)
         {
             array.Read(parameter);
             index.Read(parameter);
