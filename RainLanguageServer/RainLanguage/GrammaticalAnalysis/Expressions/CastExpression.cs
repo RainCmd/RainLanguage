@@ -10,9 +10,6 @@
             this.expression = expression;
             attribute = ExpressionAttribute.Value | (expression.attribute & ExpressionAttribute.Constant) | typeExpression.type.GetAttribute();
         }
-
-        public override bool Valid => typeExpression.Valid && expression.Valid;
-
         public override void Read(ExpressionParameter parameter)
         {
             typeExpression.Read(parameter);
@@ -29,8 +26,6 @@
             else attribute = ExpressionAttribute.Tuple;
             attribute |= expression.attribute & ~ExpressionAttribute.Assignable;
         }
-        public override bool Valid => expression.Valid;
-
         public override void Read(ExpressionParameter parameter) => expression.Read(parameter);
     }
     internal class IsCastExpression : Expression
@@ -45,7 +40,6 @@
             this.local = local;
             attribute = ExpressionAttribute.Value;
         }
-        public override bool Valid => typeExpression.Valid && expression.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             typeExpression.Read(parameter);

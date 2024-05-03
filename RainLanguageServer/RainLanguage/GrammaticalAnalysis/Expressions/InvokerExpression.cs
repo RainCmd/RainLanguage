@@ -9,13 +9,11 @@
             if (returns.Count == 0) attribute = ExpressionAttribute.Value | returns[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
-        public override bool Valid => parameters.Valid;
         public override void Read(ExpressionParameter parameter) => parameters.Read(parameter);
     }
     internal class InvokerDelegateExpression(TextRange range, List<Type> returns, Expression parameters, Expression invaoker) : InvokerExpression(range, returns, parameters)
     {
         public readonly Expression invoker = invaoker;
-        public override bool Valid => base.Valid && invoker.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
@@ -35,7 +33,6 @@
     {
         public readonly Expression target = target;
         public readonly Declaration declaration = declaration;
-        public override bool Valid => base.Valid && target.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
@@ -46,7 +43,6 @@
     {
         public readonly Expression target = target;
         public readonly Declaration declaration = declaration;
-        public override bool Valid => base.Valid && target.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);

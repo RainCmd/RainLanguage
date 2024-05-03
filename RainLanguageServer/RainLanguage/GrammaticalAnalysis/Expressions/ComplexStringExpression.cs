@@ -9,17 +9,6 @@
             attribute = ExpressionAttribute.Value;
         }
 
-        public override bool Valid
-        {
-            get
-            {
-                foreach (var expression in expressions)
-                    if (!expression.Valid)
-                        return false;
-                return true;
-            }
-        }
-
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var expression in expressions)

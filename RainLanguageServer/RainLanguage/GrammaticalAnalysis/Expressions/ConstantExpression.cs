@@ -6,7 +6,6 @@
         {
             attribute = ExpressionAttribute.Constant;
         }
-        public override bool Valid => true;
         public override void Read(ExpressionParameter parameter) { }
     }
     internal class ConstantBooleanExpression(TextRange range, bool value) : ConstantExpression(range, Type.BOOL)

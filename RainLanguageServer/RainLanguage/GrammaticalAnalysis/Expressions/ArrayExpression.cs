@@ -8,7 +8,6 @@
             this.length = length;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
-        public override bool Valid => length.Valid;
         public override void Read(ExpressionParameter parameter) => length.Read(parameter);
     }
     internal class ArrayInitExpression : Expression
@@ -20,8 +19,6 @@
             this.elements = elements;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
-
-        public override bool Valid => elements.Valid;
 
         public override void Read(ExpressionParameter parameter) => elements.Read(parameter);
     }
@@ -35,7 +32,6 @@
             this.index = index;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Assignable | elementType.GetAttribute();
         }
-        public override bool Valid => array.Valid && index.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             array.Read(parameter);
@@ -57,7 +53,6 @@
             this.index = index;
             attribute = ExpressionAttribute.Value | elementType.GetAttribute();
         }
-        public override bool Valid => array.Valid && index.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             array.Read(parameter);
@@ -74,7 +69,6 @@
             this.index = index;
             attribute = ExpressionAttribute.Value;
         }
-        public override bool Valid => source.Valid && index.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);
@@ -91,7 +85,6 @@
             this.subRange = subRange;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
-        public override bool Valid => source.Valid && subRange.Valid;
 
         public override void Read(ExpressionParameter parameter)
         {

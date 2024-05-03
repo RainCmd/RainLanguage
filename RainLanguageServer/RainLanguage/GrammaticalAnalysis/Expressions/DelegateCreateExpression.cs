@@ -10,15 +10,11 @@
         }
         public override void Read(ExpressionParameter parameter) => callable.references.Add(range);
     }
-    internal class FunctionDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable) : DelegateCreateExpression(range, type, callable)
-    {
-        public override bool Valid => true;
-    }
+    internal class FunctionDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable) : DelegateCreateExpression(range, type, callable) { }
     internal class MemberFunctionDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, Expression source) : DelegateCreateExpression(range, type, callable)
     {
         public readonly Expression source = source;
 
-        public override bool Valid => source.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
@@ -28,7 +24,6 @@
     internal class VirtualFunctionDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, Expression source) : DelegateCreateExpression(range, type, callable)
     {
         public readonly Expression source = source;
-        public override bool Valid => source.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
@@ -52,7 +47,6 @@
     internal class LambdaDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, Expression lambdaBody) : DelegateCreateExpression(range, type, callable)
     {
         public readonly Expression lambdaBody = lambdaBody;
-        public override bool Valid => lambdaBody.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);

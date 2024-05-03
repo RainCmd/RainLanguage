@@ -3,17 +3,7 @@
     internal class TupleExpression : Expression
     {
         public readonly List<Expression> expressions;
-        public override bool Valid
-        {
-            get
-            {
-                foreach (var e in expressions)
-                    if (!e.Valid)
-                        return false;
-                return true;
-            }
-        }
-        public TupleExpression(TextRange range, Tuple types, List<Expression> expressions) : base(range, types)
+        private TupleExpression(TextRange range, Tuple types, List<Expression> expressions) : base(range, types)
         {
             this.expressions = expressions;
             attribute = ExpressionAttribute.Assignable;
@@ -33,13 +23,15 @@
             return true;
         }
 
-        public static TupleExpression Create(params Expression[] expressions) => Create(new List<Expression>(expressions));
-        public static TupleExpression Create(List<Expression> expressions)
+        public static Expression Create(List<Expression> expressions)
         {
             if (expressions.Count == 0) return Empty;
             var types = new List<Type>();
             foreach (var expression in expressions)
-                types.AddRange(expression.types);
+            {
+                if (expression.Valid) types.AddRange(expression.types);
+                else return new InvalidExpression(expression);
+            }
             return new TupleExpression(new TextRange(expressions[0].range.start, expressions[^1].range.end), new Tuple(types), expressions);
         }
         public static TupleExpression CreateEmpty(TextRange range) => new(range, new Tuple([]), []);
@@ -55,7 +47,6 @@
             if (types.Count == 1) attribute = ExpressionAttribute.Value | types[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
-        public override bool Valid => source.Valid;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
     }
     internal class TupleAssignmentExpression : Expression
@@ -68,7 +59,7 @@
             this.right = right;
             attribute = left.attribute & ~ExpressionAttribute.Assignable;
         }
-        public override bool Valid => left.Valid && right.Valid;
+        public override bool Valid => left.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             left.Write(parameter);

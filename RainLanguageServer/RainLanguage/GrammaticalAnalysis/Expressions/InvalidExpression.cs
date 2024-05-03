@@ -30,4 +30,73 @@
             foreach (var declaration in declarations) declaration.references.Add(range);
         }
     }
+    internal class InvalidMemberExpression : Expression
+    {
+        public readonly Expression target;
+        public readonly TextRange member;
+        public readonly List<CompilingDeclaration>? declarations;
+        public readonly LexicalType type;
+        public InvalidMemberExpression(TextRange range, Expression target, TextRange member, List<CompilingDeclaration>? declarations, LexicalType type) : base(range, new Tuple([]))
+        {
+            this.target = target;
+            this.member = member;
+            this.declarations = declarations;
+            this.type = type;
+        }
+
+        public override bool Valid => false;
+
+        public override void Read(ExpressionParameter parameter)
+        {
+            target.Read(parameter);
+            if (declarations != null)
+                foreach (var declaration in declarations)
+                    declaration.references.Add(range);
+        }
+    }
+    internal class InvalidOperationExpression : Expression
+    {
+        public readonly CompilingCallable? callable;
+        public readonly Expression[]? parameters;
+
+        public InvalidOperationExpression(TextRange range, CompilingCallable? callable, Expression[]? parameters) : base(range, new Tuple([]))
+        {
+            this.callable = callable;
+            this.parameters = parameters;
+        }
+
+        public override bool Valid => false;
+
+        public override void Read(ExpressionParameter parameter)
+        {
+            callable?.references.Add(range);
+            if (parameters != null)
+                foreach (var item in parameters) item.Read(parameter);
+        }
+    }
+    internal class InvalidCastExpression : Expression
+    {
+        public readonly Expression source;
+        public readonly TextRange typeRange;
+        public readonly List<CompilingDeclaration>? declarations;
+        public readonly TextRange? local;
+
+        public InvalidCastExpression(TextRange range, Expression source, TextRange typeRange, List<CompilingDeclaration>? declarations, TextRange? local) : base(range, new Tuple([]))
+        {
+            this.source = source;
+            this.typeRange = typeRange;
+            this.declarations = declarations;
+            this.local = local;
+        }
+
+        public override bool Valid => false;
+
+        public override void Read(ExpressionParameter parameter)
+        {
+            source.Read(parameter);
+            if (declarations != null)
+                foreach (var item in declarations)
+                    item.references.Add(typeRange);
+        }
+    }
 }

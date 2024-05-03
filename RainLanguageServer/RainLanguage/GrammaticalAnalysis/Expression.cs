@@ -47,7 +47,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         public readonly TextRange range = range;
         public readonly Tuple types = types;
         public ExpressionAttribute attribute = ExpressionAttribute.Invalid;
-        public abstract bool Valid { get; }
+        public virtual bool Valid => true;
         public InvalidExpression ToInvalid() 
         {
             if (this is InvalidExpression invalid) return invalid;

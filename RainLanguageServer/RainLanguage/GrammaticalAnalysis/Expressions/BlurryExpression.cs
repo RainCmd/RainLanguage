@@ -8,7 +8,6 @@
             this.declarationRange = declarationRange;
             attribute = ExpressionAttribute.Assignable;
         }
-        public override bool Valid => true;
         public override void Read(ExpressionParameter parameter)
         {
             parameter.collector.Add(range, CErrorLevel.Error, "类型不明确");
@@ -22,7 +21,6 @@
             this.declarations = declarations;
             attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
         }
-        public override bool Valid => true;
         public override void Read(ExpressionParameter parameter)
         {
             var msg = new CompileMessage(range, CErrorLevel.Error, "目标函数不明确");
@@ -46,7 +44,6 @@
             this.declarations = declarations;
             attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
         }
-        public override bool Valid => target.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");
@@ -94,7 +91,6 @@
             this.invoker = invoker;
             attribute = ExpressionAttribute.Value;
         }
-        public override bool Valid => invoker.Valid;
         public override void Read(ExpressionParameter parameter) => invoker.Read(parameter);
     }
     internal class BlurryLambdaExpression : Expression
@@ -107,7 +103,6 @@
             this.body = body;
             attribute = ExpressionAttribute.Value;
         }
-        public override bool Valid => true;
         public override void Read(ExpressionParameter parameter)
         {
             parameter.collector.Add(range, CErrorLevel.Error, "无法推断lambda表达式类型");
@@ -121,7 +116,6 @@
             this.tuple = tuple;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
-        public override bool Valid => tuple.Valid;
         public override void Read(ExpressionParameter parameter)
         {
             parameter.collector.Add(range, CErrorLevel.Error, "类型不明确");

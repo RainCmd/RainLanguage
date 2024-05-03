@@ -8,9 +8,6 @@
             this.type = type;
             attribute = ExpressionAttribute.Type;
         }
-
-        public override bool Valid => type.Vaild;
-
         public override void Read(ExpressionParameter parameter) => parameter.manager.GetSourceDeclaration(type.Source)?.references.Add(range);
     }
 }

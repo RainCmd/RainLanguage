@@ -27,7 +27,6 @@
             this.local = local;
             declarationRange = null;
         }
-        public override bool Valid => true;
         public override void Read(ExpressionParameter parameter)
         {
             local.read.Add(range);
@@ -47,8 +46,6 @@
             this.variable = variable;
             if (!variable.isReadonly) attribute |= ExpressionAttribute.Assignable;
         }
-        public override bool Valid => true;
-
         public override void Read(ExpressionParameter parameter) => variable.read.Add(range);
         public override void Write(ExpressionParameter parameter) => variable.write.Add(range);
     }
@@ -56,8 +53,6 @@
     {
         public readonly Expression target = target;
         public readonly CompilingVariable member = member;
-
-        public override bool Valid => target.Valid;
 
         public override void Read(ExpressionParameter parameter)
         {

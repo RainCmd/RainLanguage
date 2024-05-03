@@ -11,8 +11,6 @@
             attribute = ExpressionAttribute.Value | (target.attribute & ~ExpressionAttribute.Assignable);
         }
 
-        public override bool Valid => target.Valid && types[0].Vaild;
-
         public override void Read(ExpressionParameter parameter) => target.Read(parameter);
     }
     internal class VectorConstructorExpression : Expression
@@ -23,8 +21,6 @@
             this.parameter = parameter;
             attribute = ExpressionAttribute.Value;
         }
-
-        public override bool Valid => parameter.Valid;
 
         public override void Read(ExpressionParameter parameter) => this.parameter.Read(parameter);
     }
