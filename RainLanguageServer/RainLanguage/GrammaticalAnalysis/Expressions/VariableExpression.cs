@@ -28,6 +28,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             this.local = local;
             declarationRange = null;
         }
+        public override bool Valid => local.type.Vaild;
         public override void Read(ExpressionParameter parameter)
         {
             local.read.Add(range);

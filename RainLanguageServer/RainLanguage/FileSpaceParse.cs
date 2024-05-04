@@ -123,7 +123,7 @@
                             }
                             else if (TryParseVariable(line, position, out var name, out var type, out var expression, collector))
                             {
-                                var variable = new FileVariable(name!, visibility, this, true, type!, expression) { range = line };
+                                var variable = new FileVariable(name!, visibility, this, false, type!, expression) { range = line };
                                 variable.attributes.AddRange(attributeCollector);
                                 variables.Add(variable);
                                 attributeCollector.Clear();

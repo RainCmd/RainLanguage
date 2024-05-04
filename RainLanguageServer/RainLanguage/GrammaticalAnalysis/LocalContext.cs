@@ -8,11 +8,12 @@
         public readonly HashSet<TextRange> read = [];
         public readonly HashSet<TextRange> write = [];
     }
-    internal class LocalContext
+    internal class LocalContext(Local? thisValue = null)
     {
-        public readonly Local? thisValue;
+        public readonly Local? thisValue = thisValue;
         private readonly List<Local> locals = [];
         private readonly List<Dictionary<string, Local>> localStack = [[]];
+
         public void PushBlock() => localStack.Add([]);
         public void PopBlock() => localStack.RemoveAt(localStack.Count - 1);
         public Local Add(string name, TextRange range, Type type)

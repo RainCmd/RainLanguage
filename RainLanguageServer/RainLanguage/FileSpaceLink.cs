@@ -34,6 +34,8 @@
                 var type = GetType(context, manager, file.type);
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Variable, compiling.GetChildName(file.name.ToString()), default);
                 var variable = new CompilingVariable(file.name, declaration, file.attributes, compiling, cite ? file : null, file.isReadonly, type, file.expression, relies);
+                if (file.isReadonly && type != Type.BOOL && type != Type.BYTE && type != Type.CHAR && type != Type.INT && type != Type.REAL && type != Type.STRING)
+                    file.space.collector.Add(file.name, CErrorLevel.Error, "该类型不能作为常量");
                 library.variables.Add(variable);
                 file.compiling = variable;
                 compiling.AddDeclaration(variable);

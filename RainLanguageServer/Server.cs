@@ -112,7 +112,9 @@ namespace RainLanguageServer
             {
                 builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this), imports, LoadRelyLibrary, RegPreviewDoc);
                 builder.Reparse();
-                RefreshDiagnostics(builder.manager.fileSpaces.Keys);
+                foreach (var file in builder.manager.fileSpaces.Keys)
+                    if (builder.manager.fileSpaces.TryGetValue(file, out var space))
+                        RefreshDiagnostics(space);
             }
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
@@ -302,8 +304,22 @@ namespace RainLanguageServer
 
         private void OnChanged(TextDocument document)
         {
-            builder?.Reparse();
-            RefreshDiagnostics([document.path]);
+            if (builder != null)
+            {
+                builder.Reparse();
+                foreach (var file in documents.Keys)
+                    if (builder.manager.fileSpaces.TryGetValue(file, out var space))
+                    {
+                        builder.Reparse(space);
+                        RefreshDiagnostics(space);
+                    }
+                if (!documents.ContainsKey(document.path))
+                    if (builder.manager.fileSpaces.TryGetValue(document.path, out var space))
+                    {
+                        builder.Reparse(space);
+                        RefreshDiagnostics(space);
+                    }
+            }
         }
 
         private static FoldingRange CreateFoldingRange(TextRange range)
@@ -316,17 +332,12 @@ namespace RainLanguageServer
         /// 刷新文件的诊断信息
         /// </summary>
         /// <param name="files"></param>
-        private void RefreshDiagnostics(IEnumerable<string> files)
+        private void RefreshDiagnostics(FileSpace space)
         {
-            if (builder == null) return;
-            foreach (var file in files)
-                if (builder.manager.fileSpaces.TryGetValue(file, out var space))
-                {
-                    CollectFileDiagnostic(space, diagnosticsHelper);
-                    var param = new PublishDiagnosticsParams(new Uri(file), [.. diagnosticsHelper]);
-                    Proxy.TextDocument.PublishDiagnostics(param);
-                    diagnosticsHelper.Clear();
-                }
+            CollectFileDiagnostic(space, diagnosticsHelper);
+            var param = new PublishDiagnosticsParams(new Uri(space.document.path), [.. diagnosticsHelper]);
+            Proxy.TextDocument.PublishDiagnostics(param);
+            diagnosticsHelper.Clear();
         }
 
         private static void CollectFileDiagnostic(FileSpace space, List<Diagnostic> diagnostics)

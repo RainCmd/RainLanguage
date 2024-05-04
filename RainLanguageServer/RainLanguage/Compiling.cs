@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis;
+using System.Text;
 
 namespace RainLanguageServer.RainLanguage
 {
@@ -44,13 +45,14 @@ namespace RainLanguageServer.RainLanguage
             return "";
         }
     }
-    internal class CompilingVariable(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, bool isReadonly, Type type, TextRange? expression, HashSet<CompilingSpace> relies)
+    internal class CompilingVariable(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, bool isReadonly, Type type, TextRange? expressionRange, HashSet<CompilingSpace> relies)
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
         public readonly bool isReadonly = isReadonly;
         public object? value;
         public readonly Type type = type;
-        public readonly TextRange? expression = expression;
+        public readonly TextRange? expressionRange = expressionRange;
+        public Expression? expression;
         public readonly HashSet<CompilingSpace> relies = relies;
         public readonly List<TextRange> read = [];
         public readonly List<TextRange> write = [];
@@ -71,6 +73,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<TextLine> body = body;
         public readonly HashSet<CompilingSpace> relies = relies;
+        public readonly List<Statement> statements = [];
     }
     internal class CompilingEnum(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -242,26 +245,26 @@ namespace RainLanguageServer.RainLanguage
             foreach (var item in enums)
             {
                 item.references.Clear();
-                foreach(var element in item.elements)
+                foreach (var element in item.elements)
                     element.references.Clear();
             }
             foreach (var item in structs)
             {
                 item.references.Clear();
-                foreach(var member in item.variables)
+                foreach (var member in item.variables)
                 {
                     member.references.Clear();
                     member.read.Clear();
                     member.write.Clear();
                 }
-                foreach(var memeber in item.functions)
+                foreach (var memeber in item.functions)
                     memeber.references.Clear();
             }
             foreach (var item in interfaces)
             {
                 item.references.Clear();
                 item.implements.Clear();
-                foreach(var member in item.callables)
+                foreach (var member in item.callables)
                 {
                     member.references.Clear();
                     member.implements.Clear();
@@ -271,15 +274,15 @@ namespace RainLanguageServer.RainLanguage
             {
                 item.references.Clear();
                 item.implements.Clear();
-                foreach(var member in item.variables)
+                foreach (var member in item.variables)
                 {
                     member.references.Clear();
                     member.read.Clear();
                     member.write.Clear();
                 }
-                foreach(var member in item.constructors)
+                foreach (var member in item.constructors)
                     member.references.Clear();
-                foreach(var member in item.functions)
+                foreach (var member in item.functions)
                 {
                     member.references.Clear();
                     member.implements.Clear();
