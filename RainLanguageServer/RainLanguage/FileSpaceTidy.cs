@@ -60,7 +60,7 @@
             foreach (var file in enums)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Enum, compiling.GetChildName(file.name.ToString()), default);
-                var compilingEnum = new CompilingEnum(file.name, declaration, file.attributes, compiling, cite ? file : null);
+                var compilingEnum = new CompilingEnum(file.name, declaration, file.attributes, compiling, relies, cite ? file : null);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingEnum);
                 library.enums.Add(compilingEnum);
                 file.compiling = compilingEnum;
@@ -84,7 +84,8 @@
             foreach (var file in classes)
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
-                var compilingClass = new CompilingClass(file.name, declaration, file.attributes, compiling, cite ? file : null, default, file.destructor, relies);
+                var compilingClass = new CompilingClass(file.name, declaration, file.attributes, compiling, cite ? file : null, default);
+                compilingClass.destructor = new GrammaticalAnalysis.LogicBlock(compilingClass, file.destructor, relies);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingClass);
                 library.classes.Add(compilingClass);
                 file.compiling = compilingClass;

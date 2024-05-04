@@ -68,25 +68,24 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<Parameter> parameters = parameters;
         public readonly Tuple returns = returns;
     }
-    internal class CompilingFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, List<TextLine> body, HashSet<CompilingSpace> relies)
+    internal class CompilingFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, LogicBlock logicBlock)
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
     {
-        public readonly List<TextLine> body = body;
-        public readonly HashSet<CompilingSpace> relies = relies;
-        public readonly List<Statement> statements = [];
+        public readonly LogicBlock logicBlock = logicBlock;
     }
-    internal class CompilingEnum(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
+    internal class CompilingEnum(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, HashSet<CompilingSpace> relies, FileDeclaration? file)
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
-        public class Element(TextRange name, Declaration declaration, TextRange? expression, HashSet<CompilingSpace> relies, FileEnum.Element? file)
+        public class Element(TextRange name, Declaration declaration, TextRange? expression, FileEnum.Element? file)
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
             public readonly TextRange? expression = expression;
-            public readonly HashSet<CompilingSpace> relies = relies;
             public readonly FileEnum.Element? file = file;
             public readonly List<TextRange> references = [];
+            public long? value;
         }
+        public readonly HashSet<CompilingSpace> relies = relies;
         public readonly List<Element> elements = [];
     }
     internal class CompilingStruct(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
@@ -107,13 +106,13 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingAbstractFunction> callables = [];
         public readonly HashSet<CompilingDeclaration> implements = [];
     }
-    internal class CompilingVirtualFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, List<TextLine> body, HashSet<CompilingSpace> relies)
-        : CompilingFunction(name, declaration, attributes, space, file, parameters, returns, body, relies)
+    internal class CompilingVirtualFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, LogicBlock logicBlock)
+        : CompilingFunction(name, declaration, attributes, space, file, parameters, returns, logicBlock)
     {
         public HashSet<CompilingCallable> overrides = [];
         public HashSet<CompilingVirtualFunction> implements = [];
     }
-    internal class CompilingClass(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, Type parent, List<TextLine>? destructor, HashSet<CompilingSpace> relies)
+    internal class CompilingClass(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, Type parent)
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
         public Type parent = parent;
@@ -121,8 +120,7 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<CompilingVariable> variables = [];
         public readonly List<CompilingFunction> constructors = [];
         public readonly List<CompilingVirtualFunction> functions = [];
-        public readonly List<TextLine>? destructor = destructor;
-        public readonly HashSet<CompilingSpace> relies = relies;
+        public LogicBlock? destructor;
         public readonly HashSet<CompilingClass> implements = [];
     }
     internal class CompilingDelegate(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)

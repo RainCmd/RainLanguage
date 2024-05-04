@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage
+﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis;
+
+namespace RainLanguageServer.RainLanguage
 {
     internal partial class FileSpace
     {
@@ -51,7 +53,7 @@
                 foreach (var type in file.returns)
                     returnTypes.Add(GetType(context, manager, type));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
-                var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), file.body, relies);
+                var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), new LogicBlock(null, compiling, file.body, relies, parameters, returnTypes));
                 library.functions.Add(function);
                 file.compiling = function;
                 compiling.AddDeclaration(function);
@@ -64,7 +66,7 @@
                 foreach (var element in file.elements)
                 {
                     var declaration = new Declaration(library.name, Visibility.Public, DeclarationCategory.EnumElement, compiling.GetMemberName(file.name.ToString(), element.name.ToString()), default);
-                    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression, relies, cite ? element : null);
+                    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression, cite ? element : null);
                     compilingEnum.elements.Add(compilingEnumElement);
                 }
             }
@@ -92,7 +94,7 @@
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
+                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), new LogicBlock(compilingStruct, compiling, function.body, relies, parameters, returnTypes));
                     compilingStruct.functions.Add(compilingFunction);
                     function.compiling = compilingFunction;
                 }
@@ -166,7 +168,7 @@
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple([]), function.body, relies);
+                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple([]), new LogicBlock(compilingClass, compiling, function.body, relies, parameters, []));
                     compilingClass.constructors.Add(compilingFunction);
                     function.compiling = compilingFunction;
                 }
@@ -181,7 +183,7 @@
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), function.body, relies);
+                    var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), new LogicBlock(compilingClass, compiling, function.body, relies, parameters, returnTypes));
                     compilingClass.functions.Add(compilingFunction);
                     function.compiling = compilingFunction;
                 }

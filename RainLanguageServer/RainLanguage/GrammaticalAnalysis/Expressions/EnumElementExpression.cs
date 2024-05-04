@@ -17,5 +17,15 @@
             compiling.references.Add(range);
             element.references.Add(elementRange);
         }
+        public override bool TryEvaluate(out long value)
+        {
+            if (element.value != null)
+            {
+                value = element.value.Value;
+                return true;
+            }
+            value = default;
+            return false;
+        }
     }
 }

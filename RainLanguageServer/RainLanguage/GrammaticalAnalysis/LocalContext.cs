@@ -8,11 +8,16 @@
         public readonly HashSet<TextRange> read = [];
         public readonly HashSet<TextRange> write = [];
     }
-    internal class LocalContext(Local? thisValue = null)
+    internal class LocalContext
     {
-        public readonly Local? thisValue = thisValue;
+        public readonly Local? thisValue;
         private readonly List<Local> locals = [];
         private readonly List<Dictionary<string, Local>> localStack = [[]];
+        public LocalContext(CompilingDeclaration? declaration = null)
+        {
+            if (declaration != null)
+                thisValue = Add("this", declaration.name, declaration.declaration.GetDefineType());
+        }
 
         public void PushBlock() => localStack.Add([]);
         public void PopBlock() => localStack.RemoveAt(localStack.Count - 1);

@@ -32,10 +32,6 @@
   </Target>
 
   <ItemGroup>
-    <Folder Include="RainLanguage\GrammaticalAnalysis\Statements\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\CSharp\LanguageServerProtocol\LanguageServerProtocol\LanguageServerProtocol.csproj" />
   </ItemGroup>
 
