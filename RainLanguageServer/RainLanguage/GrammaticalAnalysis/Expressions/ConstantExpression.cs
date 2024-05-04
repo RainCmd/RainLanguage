@@ -11,7 +11,7 @@
     internal class ConstantBooleanExpression(TextRange range, bool value) : ConstantExpression(range, Type.BOOL)
     {
         public readonly bool value = value;
-        public override bool TryEvaluate(ExpressionParameter parameter, out bool value)
+        public override bool TryEvaluate(out bool value)
         {
             value = this.value;
             return true;
@@ -25,27 +25,27 @@
     internal class ConstantByteExpression(TextRange range, byte value) : ConstantExpression(range, Type.BYTE)
     {
         public readonly byte value = value;
-        public override bool TryEvaluate(ExpressionParameter parameter, out byte value)
+        public override bool TryEvaluate(out byte value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out char value)
+        public override bool TryEvaluate(out char value)
         {
             value = (char)this.value;
             return true;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out long value)
+        public override bool TryEvaluate(out long value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out double value)
+        public override bool TryEvaluate(out double value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluateIndices(ExpressionParameter parameter, List<long> indices)
+        public override bool TryEvaluateIndices(List<long> indices)
         {
             indices.Add(value);
             return true;
@@ -59,22 +59,22 @@
     internal class ConstantCharExpression(TextRange range, char value) : ConstantExpression(range, Type.CHAR)
     {
         public readonly char value = value;
-        public override bool TryEvaluate(ExpressionParameter parameter, out char value)
+        public override bool TryEvaluate(out char value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out long value)
+        public override bool TryEvaluate(out long value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out double value)
+        public override bool TryEvaluate(out double value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluateIndices(ExpressionParameter parameter, List<long> indices)
+        public override bool TryEvaluateIndices(List<long> indices)
         {
             indices.Add(value);
             return true;
@@ -88,17 +88,17 @@
     internal class ConstantIntegerExpression(TextRange range, long value) : ConstantExpression(range, Type.INT)
     {
         public readonly long value = value;
-        public override bool TryEvaluate(ExpressionParameter parameter, out long value)
+        public override bool TryEvaluate(out long value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out double value)
+        public override bool TryEvaluate(out double value)
         {
             value = this.value;
             return true;
         }
-        public override bool TryEvaluateIndices(ExpressionParameter parameter, List<long> indices)
+        public override bool TryEvaluateIndices(List<long> indices)
         {
             indices.Add(value);
             return true;
@@ -112,7 +112,7 @@
     internal class ConstantRealExpression(TextRange range, double value) : ConstantExpression(range, Type.REAL)
     {
         public readonly double value = value;
-        public override bool TryEvaluate(ExpressionParameter parameter, out double value)
+        public override bool TryEvaluate(out double value)
         {
             value = this.value;
             return true;
@@ -131,7 +131,7 @@
             this.value = value;
             attribute |= ExpressionAttribute.Array;
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out string? value)
+        public override bool TryEvaluate(out string? value)
         {
             value = this.value;
             return true;
@@ -149,7 +149,7 @@
         {
             parameter.manager.GetSourceDeclaration(value)?.references.Add(range);
         }
-        public override bool TryEvaluate(ExpressionParameter parameter, out Type value)
+        public override bool TryEvaluate(out Type value)
         {
             value = this.value;
             return true;

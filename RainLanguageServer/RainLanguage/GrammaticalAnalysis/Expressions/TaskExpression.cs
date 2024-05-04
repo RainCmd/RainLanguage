@@ -14,12 +14,18 @@
     internal class TaskEvaluationExpression : Expression
     {
         public readonly Expression source;
-        public TaskEvaluationExpression(TextRange range, Tuple types, Expression source) : base(range, types)
+        public readonly Expression? indices;
+        public TaskEvaluationExpression(TextRange range, Tuple types, Expression source, Expression? indices) : base(range, types)
         {
             this.source = source;
+            this.indices = indices;
             if (types.Count == 1) attribute = ExpressionAttribute.Value | types[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
-        public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void Read(ExpressionParameter parameter)
+        {
+            source.Read(parameter);
+            indices?.Read(parameter);
+        }
     }
 }

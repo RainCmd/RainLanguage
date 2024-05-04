@@ -48,6 +48,7 @@ namespace RainLanguageServer.RainLanguage
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
         public readonly bool isReadonly = isReadonly;
+        public object? value;
         public readonly Type type = type;
         public readonly TextRange? expression = expression;
         public readonly HashSet<CompilingSpace> relies = relies;

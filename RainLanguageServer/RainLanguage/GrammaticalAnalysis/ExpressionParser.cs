@@ -1,4 +1,5 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
@@ -238,11 +239,74 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 }
                                 else if (attribute.ContainAny(ExpressionAttribute.Tuple))
                                 {
-                                    //todo 元组
+                                    if (tuple!.Valid)
+                                    {
+                                        var indices = new List<long>();
+                                        if (tuple.TryEvaluateIndices(indices))
+                                        {
+                                            var expression = expressionStack.Pop();
+                                            var types = new List<Type>();
+                                            for (var i = 0; i < indices.Count; i++)
+                                            {
+                                                if (indices[i] < 0) indices[i] += expression.types.Count;
+                                                if (indices[i] < expression.types.Count) types.Add(expression.types[(int)indices[i]]);
+                                                else
+                                                {
+                                                    collector.Add(tuple.range, CErrorLevel.Error, $"第{i + 1}个索引超出了元组类型数量范围");
+                                                    goto label_tuple_indices_parse_fail;
+                                                }
+                                            }
+                                            expression = new TupleEvaluationExpression(expression.range & tuple.range, new Tuple(types), expression, tuple);
+                                            expressionStack.Push(expression);
+                                            attribute = expression.attribute;
+                                            goto label_next_lexical;
+                                        label_tuple_indices_parse_fail:;
+                                            expressionStack.Push(expression);
+                                        }
+                                        else collector.Add(tuple.range, CErrorLevel.Error, "元组索引必须是常量");
+                                    }
                                 }
                                 else if (attribute.ContainAny(ExpressionAttribute.Task))
                                 {
-                                    //todo task
+                                    if (expressionStack.Peek().types[0] == Expression.BLURRY) collector.Add(expressionStack.Peek().range, CErrorLevel.Error, "类型不明确");
+                                    else if (tuple!.Valid)
+                                    {
+                                        if (tuple is TupleExpression tupleExpression && tupleExpression.expressions.Count == 0)
+                                        {
+                                            var source = expressionStack.Pop();
+                                            var compiling = (CompilingTask)manager.GetSourceDeclaration(source.types[0])!;
+                                            var expression = new TaskEvaluationExpression(source.range & tuple.range, compiling.returns, source, null);
+                                            expressionStack.Push(expression);
+                                            attribute = expression.attribute;
+                                        }
+                                        else
+                                        {
+                                            var indices = new List<long>();
+                                            if (tuple.TryEvaluateIndices(indices))
+                                            {
+                                                var source = expressionStack.Pop();
+                                                var compiling = (CompilingTask)manager.GetSourceDeclaration(source.types[0])!;
+                                                var types = new List<Type>();
+                                                for (var i = 0; i < indices.Count; i++)
+                                                {
+                                                    if (indices[i] < 0) indices[i] += compiling.returns.Count;
+                                                    if (indices[i] < compiling.returns.Count) types.Add(compiling.returns[(int)indices[i]]);
+                                                    else
+                                                    {
+                                                        collector.Add(tuple.range, CErrorLevel.Error, $"第{i + 1}个索引超出了任务返回值类型数量范围");
+                                                        goto label_task_indices_parse_fail;
+                                                    }
+                                                }
+                                                var expression = new TaskEvaluationExpression(source.range & tuple.range, new Tuple(types), source, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            label_task_indices_parse_fail:;
+                                                expressionStack.Push(source);
+                                            }
+                                            else collector.Add(tuple.range, CErrorLevel.Error, "任务求值索引必须是常量");
+                                        }
+                                    }
                                 }
                                 else if (attribute.ContainAny(ExpressionAttribute.Type))
                                 {
@@ -1664,20 +1728,19 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             else
             {
-                var parameter = new ExpressionParameter(manager, collector);
                 if (type == Type.REAL)
                 {
-                    if (expression is not ConstantRealExpression && expression.TryEvaluate(parameter, out double value))
+                    if (expression is not ConstantRealExpression && expression.TryEvaluate(out double value))
                         return new EvaluateConstantRealExpression(value, expression);
                 }
                 else if (type == Type.INT)
                 {
-                    if (expression is not ConstantIntegerExpression && expression.TryEvaluate(parameter, out long value))
+                    if (expression is not ConstantIntegerExpression && expression.TryEvaluate(out long value))
                         return new EvaluateConstantIntegerExpression(value, expression);
                 }
                 else if (type == Type.CHAR)
                 {
-                    if (expression is not ConstantCharExpression && expression.TryEvaluate(parameter, out char value))
+                    if (expression is not ConstantCharExpression && expression.TryEvaluate(out char value))
                         return new EvaluateConstantCharExpression(value, expression);
                 }
             }

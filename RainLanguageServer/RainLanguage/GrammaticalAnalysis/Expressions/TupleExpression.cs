@@ -15,10 +15,10 @@
         {
             foreach (var e in expressions) e.Read(parameter);
         }
-        public override bool TryEvaluateIndices(ExpressionParameter parameter, List<long> indices)
+        public override bool TryEvaluateIndices(List<long> indices)
         {
             foreach (var expression in expressions)
-                if (!expression.TryEvaluateIndices(parameter, indices))
+                if (!expression.TryEvaluateIndices(indices))
                     return false;
             return true;
         }
@@ -41,13 +41,19 @@
     internal class TupleEvaluationExpression : Expression
     {
         public readonly Expression source;
-        public TupleEvaluationExpression(TextRange range, Tuple types, Expression source) : base(range, types)
+        public readonly Expression indices;
+        public TupleEvaluationExpression(TextRange range, Tuple types, Expression source, Expression indices) : base(range, types)
         {
             this.source = source;
+            this.indices = indices;
             if (types.Count == 1) attribute = ExpressionAttribute.Value | types[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
-        public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void Read(ExpressionParameter parameter)
+        {
+            source.Read(parameter);
+            indices.Read(parameter);
+        }
     }
     internal class TupleAssignmentExpression : Expression
     {

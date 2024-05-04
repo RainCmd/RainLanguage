@@ -1,4 +1,5 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal abstract class VariableExpression : Expression
     {
@@ -48,6 +49,100 @@
         }
         public override void Read(ExpressionParameter parameter) => variable.read.Add(range);
         public override void Write(ExpressionParameter parameter) => variable.write.Add(range);
+        public override bool TryEvaluate(out bool value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is bool result)
+            {
+                value = result;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluate(out byte value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is byte result)
+            {
+                value = result;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluate(out char value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is char result)
+            {
+                value = result;
+                return true;
+            }
+            else if (TryEvaluate(out byte byteValue))
+            {
+                value = (char)byteValue;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluate(out long value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is long result)
+            {
+                value = result;
+                return true;
+            }
+            else if (TryEvaluate(out char charValue))
+            {
+                value = charValue;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluate(out double value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is double result)
+            {
+                value = result;
+                return true;
+            }
+            else if (TryEvaluate(out long intValue))
+            {
+                value = intValue;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluate(out string? value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is string result)
+            {
+                value = result;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluate(out Type value)
+        {
+            value = default;
+            if (variable.isReadonly && variable.value is Type result)
+            {
+                value = result;
+                return true;
+            }
+            return false;
+        }
+        public override bool TryEvaluateIndices(List<long> indices)
+        {
+            if (TryEvaluate(out long value))
+            {
+                indices.Add(value);
+                return true;
+            }
+            return false;
+        }
     }
     internal class VariableMemberExpression(TextRange range, ExpressionAttribute attribute, Expression target, CompilingVariable member) : VariableExpression(range, member.type, attribute)
     {

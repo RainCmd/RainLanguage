@@ -55,44 +55,41 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         public abstract void Read(ExpressionParameter parameter);
         public virtual void Write(ExpressionParameter parameter) => throw new NotImplementedException();
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out bool value)
+        public virtual bool TryEvaluate(out bool value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out byte value)
+        public virtual bool TryEvaluate(out byte value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out char value)
+        public virtual bool TryEvaluate(out char value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out long value)
+        public virtual bool TryEvaluate(out long value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out double value)
+        public virtual bool TryEvaluate(out double value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out string? value)
+        public virtual bool TryEvaluate(out string? value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluate(ExpressionParameter parameter, out Type value)
+        public virtual bool TryEvaluate(out Type value)
         {
             value = default;
             return false;
         }
-        public virtual bool TryEvaluateIndices(ExpressionParameter parameter, List<long> indices)
-        {
-            return false;
-        }
+        public virtual bool TryEvaluateIndices(List<long> indices) => false;
     }
 }
