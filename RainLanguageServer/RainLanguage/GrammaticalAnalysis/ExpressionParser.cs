@@ -4,12 +4,13 @@ using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
-    internal class ExpressionParser(ASTManager manager, Context context, LocalContext localContext, MessageCollector collector)
+    internal class ExpressionParser(ASTManager manager, Context context, LocalContext localContext, MessageCollector collector, bool destructor)
     {
         public readonly ASTManager manager = manager;
         public readonly Context context = context;
         public readonly LocalContext localContext = localContext;
         public readonly MessageCollector collector = collector;
+        public readonly bool destructor = destructor;
         public Expression Parse(TextRange range)
         {
             if (range.Count == 0) return TupleExpression.CreateEmpty(range);
@@ -152,6 +153,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             foreach (var constructor in compiling.constructors) constructors.Add(constructor);
                                             if (TryGetFunction(typeExpression.range, constructors, tuple!.types, out var callable))
                                             {
+                                                if (destructor) collector.Add(typeExpression.range, CErrorLevel.Error, "析构函数中不能申请托管内存");
                                                 var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, callable, null, tuple);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
@@ -310,11 +312,76 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 }
                                 else if (attribute.ContainAny(ExpressionAttribute.Type))
                                 {
-                                    //todo 创建数组
+                                    if (tuple!.Valid)
+                                    {
+                                        if (tuple is TupleExpression tupleExpression && tupleExpression.expressions.Count == 0)
+                                        {
+                                            var expression = (TypeExpression)expressionStack.Pop();
+                                            expression = new TypeExpression(expression.range & tuple.range, expression.type.GetDimensionType(expression.type.dimension + 1));
+                                            expressionStack.Push(expression);
+                                            attribute = expression.attribute;
+                                            goto label_next_lexical;
+                                        }
+                                        else if (tuple.types.Count == 1)
+                                        {
+                                            tuple = AssignmentConvert(tuple, Type.INT);
+                                            var typeExpression = (TypeExpression)expressionStack.Pop();
+                                            if (destructor) collector.Add(typeExpression.range, CErrorLevel.Error, "析构函数中不能申请托管内存");
+                                            var expression = new ArrayCreateExpression(typeExpression.range & tuple.range, tuple, typeExpression.type.GetDimensionType(typeExpression.type.dimension + 1));
+                                            expressionStack.Push(expression);
+                                            attribute = expression.attribute;
+                                            goto label_next_lexical;
+                                        }
+                                        else collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
+                                    }
                                 }
                                 else if (attribute.ContainAny(ExpressionAttribute.Value))
                                 {
-                                    //todo 结构体解构
+                                    if (tuple!.Valid)
+                                    {
+                                        var expression = expressionStack.Pop();
+                                        var type = expression.types[0];
+                                        if (type.dimension == 0 && type.code == TypeCode.Struct)
+                                        {
+                                            if (tuple is TupleExpression tupleExpression && tupleExpression.expressions.Count == 0)
+                                            {
+                                                var compiling = (CompilingStruct)manager.GetSourceDeclaration(type)!;
+                                                var types = new List<Type>();
+                                                foreach (var member in compiling.variables) types.Add(member.type);
+                                                expression = new TupleEvaluationExpression(expression.range & tuple.range, new Tuple(types), expression, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            }
+                                            else
+                                            {
+                                                var indices = new List<long>();
+                                                if (tuple.TryEvaluateIndices(indices))
+                                                {
+                                                    var compiling = (CompilingStruct)manager.GetSourceDeclaration(type)!;
+                                                    var types = new List<Type>();
+                                                    for (var i = 0; i < indices.Count; i++)
+                                                    {
+                                                        if (indices[i] < 0) indices[i] += compiling.variables.Count;
+                                                        if (indices[i] < compiling.variables.Count) types.Add(compiling.variables[(int)indices[i]].type);
+                                                        else
+                                                        {
+                                                            collector.Add(tuple.range, CErrorLevel.Error, $"第{i + 1}个索引超出了结构体成员数量范围");
+                                                            goto label_struct_indices_parse_fail;
+                                                        }
+                                                    }
+                                                    expression = new TupleEvaluationExpression(expression.range & tuple.range, new Tuple(types), expression, tuple);
+                                                    expressionStack.Push(expression);
+                                                    attribute = expression.attribute;
+                                                    goto label_next_lexical;
+                                                label_struct_indices_parse_fail:;
+                                                }
+                                                else collector.Add(tuple.range, CErrorLevel.Error, "结构体解构索引必须是常量");
+                                            }
+                                        }
+                                        else collector.Add(expression.range, CErrorLevel.Error, $"类型：{type}不能进行解构操作");
+                                        expressionStack.Push(expression);
+                                    }
                                 }
                                 else collector.Add(lexical.anchor, CErrorLevel.Error, "无效的操作");
                                 if (attribute == ExpressionAttribute.Invalid || attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Type))
