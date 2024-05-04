@@ -1,7 +1,7 @@
 ﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
-    internal class Statement(TextLine range)
+    internal class Statement
     {
-        public readonly TextLine range = range;
+        public TextRange range;
     }
 }

@@ -85,7 +85,7 @@
             {
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Class, compiling.GetChildName(file.name.ToString()), default);
                 var compilingClass = new CompilingClass(file.name, declaration, file.attributes, compiling, cite ? file : null, default);
-                compilingClass.destructor = new GrammaticalAnalysis.LogicBlock(compilingClass, file.destructor, relies);
+                compilingClass.destructor = new GrammaticalAnalysis.LogicBlock(compilingClass, file.destructor, relies, collector);
                 AddCompilingTypeDeclaration(file.name.ToString(), compilingClass);
                 library.classes.Add(compilingClass);
                 file.compiling = compilingClass;

@@ -53,7 +53,7 @@ namespace RainLanguageServer.RainLanguage
                 foreach (var type in file.returns)
                     returnTypes.Add(GetType(context, manager, type));
                 var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.Function, compiling.GetChildName(file.name.ToString()), new Tuple(parameterTypes));
-                var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), new LogicBlock(null, compiling, file.body, relies, parameters, returnTypes));
+                var function = new CompilingFunction(file.name, declaration, file.attributes, compiling, cite ? file : null, parameters, new Tuple(returnTypes), new LogicBlock(null, parameters, returnTypes, compiling, file.body, relies, collector));
                 library.functions.Add(function);
                 file.compiling = function;
                 compiling.AddDeclaration(function);
@@ -94,7 +94,7 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.StructFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), new LogicBlock(compilingStruct, compiling, function.body, relies, parameters, returnTypes));
+                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), new LogicBlock(compilingStruct, parameters, returnTypes, compiling, function.body, relies, collector));
                     compilingStruct.functions.Add(compilingFunction);
                     function.compiling = compilingFunction;
                 }
@@ -168,7 +168,7 @@ namespace RainLanguageServer.RainLanguage
                     var parameterTypes = new List<Type>();
                     foreach (var parameter in parameters) parameterTypes.Add(parameter.type);
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.Constructor, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple([]), new LogicBlock(compilingClass, compiling, function.body, relies, parameters, []));
+                    var compilingFunction = new CompilingFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple([]), new LogicBlock(compilingClass, parameters, [], compiling, function.body, relies, collector));
                     compilingClass.constructors.Add(compilingFunction);
                     function.compiling = compilingFunction;
                 }
@@ -183,7 +183,7 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var type in function.returns)
                         returnTypes.Add(GetType(context, manager, type));
                     var declaration = new Declaration(library.name, function.visibility, DeclarationCategory.ClassFunction, compiling.GetMemberName(file.name.ToString(), function.name.ToString()), new Tuple(parameterTypes));
-                    var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), new LogicBlock(compilingClass, compiling, function.body, relies, parameters, returnTypes));
+                    var compilingFunction = new CompilingVirtualFunction(function.name, declaration, function.attributes, compiling, cite ? function : null, parameters, new Tuple(returnTypes), new LogicBlock(compilingClass, parameters, returnTypes, compiling, function.body, relies, collector));
                     compilingClass.functions.Add(compilingFunction);
                     function.compiling = compilingFunction;
                 }

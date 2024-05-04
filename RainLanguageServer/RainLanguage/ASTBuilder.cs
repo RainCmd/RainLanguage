@@ -55,7 +55,7 @@ namespace RainLanguageServer.RainLanguage
                 file.Value.Link(manager, manager.library, true);
             manager.library.DeclarationValidityCheck(manager);
             manager.library.ImplementsCheck(manager);
-
+            return;
             var localContext = new LocalContext();
             var constants = manager.library.variables.ToArray();
             var count = constants.Length;
@@ -150,6 +150,7 @@ namespace RainLanguageServer.RainLanguage
         }
         public void Reparse(FileSpace space)
         {
+            return;
             foreach (var child in space.children)
                 Reparse(child);
             foreach (var file in space.variables)

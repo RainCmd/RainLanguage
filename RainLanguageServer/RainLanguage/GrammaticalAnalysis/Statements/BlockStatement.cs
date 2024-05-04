@@ -1,8 +1,8 @@
 ﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
-    internal class BlockStatement(TextLine range) : Statement(range)
+    internal class BlockStatement : Statement
     {
-        public int indent;
+        public int indent = -1;
         public readonly List<Statement> statements = [];
     }
 }
