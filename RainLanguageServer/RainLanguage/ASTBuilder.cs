@@ -56,7 +56,6 @@ namespace RainLanguageServer.RainLanguage
             manager.library.DeclarationValidityCheck(manager);
             manager.library.ImplementsCheck(manager);
             return;
-            var localContext = new LocalContext();
             var constants = manager.library.variables.ToArray();
             var count = constants.Length;
             while (count > 0)
@@ -68,8 +67,8 @@ namespace RainLanguageServer.RainLanguage
                     if (variable.isReadonly && variable.expressionRange != null && variable.type.Vaild)
                     {
                         var context = new Context(manager.library, variable.relies, null);
-                        var parser = new ExpressionParser(manager, context, localContext, variable.file!.space.collector, false);
-                        localContext.PushBlock();
+                        var localContext = new LocalContext(variable.file!.space.collector);
+                        var parser = new ExpressionParser(manager, context, localContext, variable.file.space.collector, false);
                         if (variable.expression == null)
                         {
                             variable.expression = parser.Parse(variable.expressionRange.Value);
@@ -120,7 +119,6 @@ namespace RainLanguageServer.RainLanguage
                                 }
                             }
                         }
-                        localContext.PopBlock();
                     }
                     constants[i--] = constants[--count];
                 }
@@ -134,7 +132,8 @@ namespace RainLanguageServer.RainLanguage
             foreach (var enumeration in manager.library.enums)
             {
                 long index = 0;
-                var parser = new ExpressionParser(manager, new Context(enumeration.space, enumeration.relies, null), localContext, enumeration.file!.space.collector, false);
+                var localContext = new LocalContext(enumeration.file!.space.collector);
+                var parser = new ExpressionParser(manager, new Context(enumeration.space, enumeration.relies, null), localContext, enumeration.file.space.collector, false);
                 foreach (var element in enumeration.elements)
                     if (element.expression == null) element.value = index++;
                     else
@@ -157,7 +156,7 @@ namespace RainLanguageServer.RainLanguage
                 if (!file.isReadonly && file.compiling is CompilingVariable variable && variable.expressionRange != null && variable.type.Vaild)
                 {
                     var context = new Context(manager.library, variable.relies, null);
-                    var localContext = new LocalContext();
+                    var localContext = new LocalContext(space.collector);
                     var parser = new ExpressionParser(manager, context, localContext, file.space.collector, false);
                     variable.expression = parser.Parse(variable.expressionRange.Value);
                     if (variable.expression.Valid)
@@ -170,11 +169,11 @@ namespace RainLanguageServer.RainLanguage
                 }
             foreach (var file in space.functions)
                 if (file.compiling is CompilingFunction function)
-                    function.logicBlock.Parse();
+                    function.logicBlock.Parse(manager);
             foreach (var file in space.structs)
                 if (file.compiling is CompilingStruct compiling)
                     foreach (var member in compiling.functions)
-                        member.logicBlock.Parse();
+                        member.logicBlock.Parse(manager);
             foreach (var file in space.classes)
                 if (file.compiling is CompilingClass compiling)
                 {
@@ -182,16 +181,16 @@ namespace RainLanguageServer.RainLanguage
                         if (member.expressionRange != null)
                         {
                             var context = new Context(manager.library, member.relies, compiling);
-                            var localContext = new LocalContext(compiling);
+                            var localContext = new LocalContext(space.collector, compiling);
                             var parser = new ExpressionParser(manager, context, localContext, space.collector, false);
                             member.expression = parser.Parse(member.expressionRange.Value);
                             member.expression.Read(new ExpressionParameter(manager, space.collector));
                         }
                     foreach (var member in compiling.constructors)
-                        member.logicBlock.Parse();
-                    foreach(var member in compiling.functions)
-                        member.logicBlock.Parse();
-                    compiling.destructor?.Parse();   
+                        member.logicBlock.Parse(manager);
+                    foreach (var member in compiling.functions)
+                        member.logicBlock.Parse(manager);
+                    compiling.destructor?.Parse(manager);
                 }
         }
     }

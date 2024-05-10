@@ -1,11 +1,11 @@
-﻿using LanguageServer.Parameters.General;
-using LanguageServer;
-using System.Diagnostics.CodeAnalysis;
+﻿using LanguageServer;
+using LanguageServer.Parameters;
+using LanguageServer.Parameters.General;
 using LanguageServer.Parameters.TextDocument;
+using Newtonsoft.Json.Linq;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
-using LanguageServer.Parameters;
-using Newtonsoft.Json.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RainLanguageServer
 {

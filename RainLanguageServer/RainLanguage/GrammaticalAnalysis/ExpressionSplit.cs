@@ -26,6 +26,10 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         {
             return (flag & value) != 0;
         }
+        public static LexicalType Split(TextRange range, TextPosition start, SplitFlag flag, out TextRange left, out TextRange right, MessageCollector collector)
+        {
+            return Split(range, start - range.start, flag, out left, out right, collector);
+        }
         public static LexicalType Split(TextRange range, int start, SplitFlag flag, out TextRange left, out TextRange right, MessageCollector collector)
         {
             var stack = new Stack<Lexical>();
@@ -189,7 +193,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         else if (flag.ContainAny(SplitFlag.Colon))
                         {
-                            left= range[0..index];
+                            left = range[0..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }

@@ -2059,7 +2059,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (count < 0) collector.Add(parameter.range, CErrorLevel.Error, "参数数量过多");
             return parameter;
         }
-        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)
+        private CompilingCallable? GetFunction(TextRange range, List<CompilingDeclaration> declarations, Expression parameters)
+        {
+            foreach(var declaration in declarations)
+            {
+                //todo 先明确参数类型中的模糊类型，然后再计算匹配度
+            }
+            return null;
+        }
+        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)//todo 有些地方需要先明确返回值类型然后才能查找
         {
             var results = new List<CompilingDeclaration>();
             var min = 0;
@@ -2160,11 +2168,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     var lambdaBodyExpression = Parse(blurryLambda.body);
                     localContext.PopBlock();
                     if (!lambdaBodyExpression.Valid) return false;
-                    else if (compilingDelegate.returns.Count > 0 && compilingDelegate.returns != lambdaBodyExpression.types)
+                    else if (compilingDelegate.returns.Count > 0)
                     {
-                        lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
-                        if (!lambdaBodyExpression.Valid) return false;
+                        if (compilingDelegate.returns != lambdaBodyExpression.types)
+                        {
+                            lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
+                            if (!lambdaBodyExpression.Valid) return false;
+                        }
                     }
+                    else if (HasBlurryResult(lambdaBodyExpression)) return false;
                 }
                 result.Add(target);
             }
@@ -2289,7 +2301,6 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 else result = new VectorMemberExpression(target.range & range, Type.REAL4, target, range);
                 return true;
             }
-            //todo 向量成员
             return false;
         }
         private static bool CheckTextRangeInCharSet(TextRange range, string set)
@@ -2311,6 +2322,17 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 return true;
             }
             return false;
+        }
+        public static bool HasBlurryResult(Expression expression)
+        {
+            if (expression is TupleExpression tuple)
+            {
+                foreach (var item in tuple.expressions)
+                    if (HasBlurryResult(item))
+                        return true;
+            }
+            else if (expression is BlurryTaskExpression) return false;
+            return IsBlurry(expression.types);
         }
         private static bool IsBlurry(List<Type> types)
         {
