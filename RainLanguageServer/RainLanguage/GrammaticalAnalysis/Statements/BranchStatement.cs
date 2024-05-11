@@ -1,13 +1,14 @@
 ﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
-    internal class BranchStatement : Statement
+    internal class BranchStatement(Expression condition) : Statement
     {
-        public readonly Expression condition;
+        public readonly Expression condition = condition;
         public BlockStatement? trueBranch, falseBranch;
-
-        public BranchStatement(Expression condition)
+        public override void Read(ExpressionParameter parameter)
         {
-            this.condition = condition;
+            condition.Read(parameter);
+            trueBranch?.Read(parameter);
+            falseBranch?.Read(parameter);
         }
     }
 }

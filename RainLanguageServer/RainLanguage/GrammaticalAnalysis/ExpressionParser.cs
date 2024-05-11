@@ -1,4 +1,5 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
@@ -41,7 +42,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     {
                                         if (tuple!.Valid)
                                         {
-                                            if (TryGetFunction(methodExpression.range, methodExpression.declarations, tuple.types, out var callable))
+                                            if (TryGetFunction(methodExpression.range, methodExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.returns);
                                                 expression = new InvokerFunctionExpression(lexical.anchor & tuple.range, tuple, callable);
@@ -58,7 +59,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     {
                                         if (tuple!.Valid)
                                         {
-                                            if (TryGetFunction(methodMemberExpression.range, methodMemberExpression.declarations, tuple.types, out var callable))
+                                            if (TryGetFunction(methodMemberExpression.range, methodMemberExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.returns);
                                                 expression = new InvokerMemberExpression(lexical.anchor & tuple.range, tuple, methodMemberExpression.target, callable);
@@ -75,7 +76,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     {
                                         if (tuple!.Valid)
                                         {
-                                            if (TryGetFunction(methodVirtualExpression.range, methodVirtualExpression.declarations, tuple.types, out var callable))
+                                            if (TryGetFunction(methodVirtualExpression.range, methodVirtualExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.returns);
                                                 expression = new InvokerVirtualMemberExpression(lexical.anchor & tuple.range, tuple, methodVirtualExpression.target, callable);
@@ -150,7 +151,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             var compiling = (CompilingClass)manager.GetSourceDeclaration(type)!;
                                             var constructors = new List<CompilingDeclaration>();
                                             foreach (var constructor in compiling.constructors) constructors.Add(constructor);
-                                            if (TryGetFunction(typeExpression.range, constructors, tuple!.types, out var callable))
+                                            if (TryGetFunction(typeExpression.range, constructors, tuple!, out var callable))
                                             {
                                                 if (destructor) collector.Add(typeExpression.range, CErrorLevel.Error, "析构函数中不能申请托管内存");
                                                 var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, callable, null, tuple);
@@ -1657,10 +1658,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression CreateOperation(TextRange range, string operation, params Expression[] parameters)
         {
-            var operations = context.FindOperator(manager, operation);
-            var returns = new List<Type>();
-            foreach (var item in parameters) returns.AddRange(item.types);
-            if (TryGetFunction(range, operations, new Tuple(returns), out var callable))
+            if (TryGetFunction(range, context.FindOperator(manager, operation), TupleExpression.Create(new List<Expression>(parameters)), out var callable))
             {
                 AssignmentConvert(parameters, callable!.declaration.signature);
                 return new OperationExpression(range, callable.returns, callable, parameters);
@@ -1775,11 +1773,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             blurryLambda.parameters.RemoveAt(blurryLambda.parameters.Count - 1);
                         }
                     }
-                    else
-                    {
-                        foreach (var parameter in compilingDelegate.parameters)
+                    else foreach (var parameter in compilingDelegate.parameters)
                             collector.Add(blurryLambda.range, CErrorLevel.Error, "缺少参数:" + parameter.type.ToString());
-                    }
                     localContext.PushBlock();
                     for (var i = 0; i < blurryLambda.parameters.Count; i++)
                         localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
@@ -2059,21 +2054,52 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (count < 0) collector.Add(parameter.range, CErrorLevel.Error, "参数数量过多");
             return parameter;
         }
-        private CompilingCallable? GetFunction(TextRange range, List<CompilingDeclaration> declarations, Expression parameters)
+        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Expression parameters, out CompilingCallable? callable)
         {
-            foreach(var declaration in declarations)
+            callable = default;
+            if (!parameters.Valid) return false;
+            var results = new List<CompilingDeclaration>();
+            var min = 0;
+            var types = new List<Type>();
+            foreach (var declaration in declarations)
+                if (declaration.declaration.signature.Count == parameters.types.Count)
+                {
+                    if (TryExplicitTypes(parameters, declaration.declaration.signature, types))
+                    {
+                        var measure = Convert(manager, types, declaration.declaration.signature);
+                        if (measure >= 0)
+                            if (results.Count == 0 || measure < min)
+                            {
+                                results.Clear();
+                                min = measure;
+                                results.Add(declaration);
+                            }
+                            else if (measure == min) results.Add(declaration);
+                    }
+                    types.Clear();
+                }
+            if (results.Count == 1) callable = results[0] as CompilingCallable;
+            else if (results.Count > 1)
             {
-                //todo 先明确参数类型中的模糊类型，然后再计算匹配度
+                var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");
+                foreach (var declaration in results)
+                    if (declaration is CompilingCallable compiling)
+                    {
+                        callable = compiling;
+                        msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
+                    }
+                collector.Add(msg);
             }
-            return null;
+            return callable != null;
         }
-        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)//todo 有些地方需要先明确返回值类型然后才能查找
+        private bool TryGetFunction(TextRange range, List<CompilingDeclaration> declarations, Tuple signature, out CompilingCallable? callable)
         {
+            callable = default;
             var results = new List<CompilingDeclaration>();
             var min = 0;
             foreach (var declaration in declarations)
             {
-                var measure = Convert(manager, declaration.declaration.signature, signature);
+                var measure = Convert(manager, signature, declaration.declaration.signature);
                 if (measure >= 0)
                     if (results.Count == 0 || measure < min)
                     {
@@ -2083,14 +2109,9 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                     else if (measure == min) results.Add(declaration);
             }
-            if (results.Count == 1)
-            {
-                callable = results[0] as CompilingCallable;
-                return callable != null;
-            }
+            if (results.Count == 1) callable = results[0] as CompilingCallable;
             else if (results.Count > 1)
             {
-                callable = default;
                 var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");
                 foreach (var declaration in results)
                     if (declaration is CompilingCallable compiling)
@@ -2099,10 +2120,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         msg.related.Add(new RelatedInfo(compiling.name, "符合条件的函数"));
                     }
                 collector.Add(msg);
-                return callable != null;
             }
-            callable = default;
-            return false;
+            return callable != null;
         }
         private bool TryExplicitTypes(Expression expression, List<Type> targetTypes, List<Type> result)
         {

@@ -267,18 +267,23 @@ namespace RainLanguageServer
             if (builder != null)
             {
                 builder.Reparse();
-                foreach (var file in documents.Keys)
-                    if (builder.manager.fileSpaces.TryGetValue(file, out var space))
-                    {
-                        builder.Reparse(space);
-                        RefreshDiagnostics(space);
-                    }
-                if (!documents.ContainsKey(document.path))
-                    if (builder.manager.fileSpaces.TryGetValue(document.path, out var space))
-                    {
-                        builder.Reparse(space);
-                        RefreshDiagnostics(space);
-                    }
+                foreach(var space in builder.manager.fileSpaces)
+                {
+                    builder.Reparse(space.Value);
+                    RefreshDiagnostics(space.Value);
+                }
+                //foreach (var file in documents.Keys)
+                //    if (builder.manager.fileSpaces.TryGetValue(file, out var space))
+                //    {
+                //        builder.Reparse(space);
+                //        RefreshDiagnostics(space);
+                //    }
+                //if (!documents.ContainsKey(document.path))
+                //    if (builder.manager.fileSpaces.TryGetValue(document.path, out var space))
+                //    {
+                //        builder.Reparse(space);
+                //        RefreshDiagnostics(space);
+                //    }
             }
         }
 

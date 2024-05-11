@@ -55,7 +55,6 @@ namespace RainLanguageServer.RainLanguage
                 file.Value.Link(manager, manager.library, true);
             manager.library.DeclarationValidityCheck(manager);
             manager.library.ImplementsCheck(manager);
-            return;
             var constants = manager.library.variables.ToArray();
             var count = constants.Length;
             while (count > 0)
@@ -149,7 +148,6 @@ namespace RainLanguageServer.RainLanguage
         }
         public void Reparse(FileSpace space)
         {
-            return;
             foreach (var child in space.children)
                 Reparse(child);
             foreach (var file in space.variables)
@@ -159,6 +157,7 @@ namespace RainLanguageServer.RainLanguage
                     var localContext = new LocalContext(space.collector);
                     var parser = new ExpressionParser(manager, context, localContext, file.space.collector, false);
                     variable.expression = parser.Parse(variable.expressionRange.Value);
+                    variable.expression.Read(new ExpressionParameter(manager, space.collector));
                     if (variable.expression.Valid)
                     {
                         if (!variable.expression.attribute.ContainAny(ExpressionAttribute.Value))

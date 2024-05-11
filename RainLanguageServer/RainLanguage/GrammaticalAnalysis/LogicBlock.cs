@@ -274,6 +274,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                 }
             }
+            block.Read(new ExpressionParameter(manager, collector));
         }
         private void ParseBranch(ExpressionParser parser, Stack<BlockStatement> stack, TextLine line, Lexical lexical)
         {
