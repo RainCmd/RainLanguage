@@ -20,7 +20,7 @@ namespace RainLanguageServer
             {
                 path = new UnifiedPath(path);
                 Path = path;
-                if (server.documents.TryGetValue(path, out var document)) Content = document.text;
+                if (server.TryGetDoc(path, out var document)) Content = document.text;
                 else
                 {
                     using var sr = File.OpenText(path);
@@ -72,9 +72,11 @@ namespace RainLanguageServer
             {
                 builder = new(kernelDefinePath, projectName ?? "TestLibrary", new DocumentLoader(projectPath, this), imports, LoadRelyLibrary, RegPreviewDoc);
                 builder.Reparse();
-                foreach (var file in builder.manager.fileSpaces.Keys)
-                    if (builder.manager.fileSpaces.TryGetValue(file, out var space))
-                        RefreshDiagnostics(space);
+                foreach (var space in builder.manager.fileSpaces.Values)
+                {
+                    builder.Reparse(space);
+                    RefreshDiagnostics(space);
+                }
             }
         }
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
@@ -219,6 +221,11 @@ namespace RainLanguageServer
 
         #region 文档相关
         private readonly Dictionary<string, TextDocument> documents = [];
+        private bool TryGetDoc(string path, out TextDocument document)
+        {
+            lock (documents)
+                return documents.TryGetValue(path, out document!);
+        }
         private struct PreviewDoc(string path, string content)
         {
             public string path = path;
@@ -243,14 +250,16 @@ namespace RainLanguageServer
                     document = fileSpace.document;
                     fileSpace.document.Set(param.textDocument.text);
                 }
-                documents[path] = fileSpace.document;
+                lock (documents)
+                    documents[path] = fileSpace.document;
             }
-            else documents[path] = document = new TextDocument(path, param.textDocument.text);
+            else lock (documents)
+                    documents[path] = document = new TextDocument(path, param.textDocument.text);
             if (document != null) OnChanged(document);
         }
         protected override void DidChangeTextDocument(DidChangeTextDocumentParams param)
         {
-            if (documents.TryGetValue(new UnifiedPath(param.textDocument.uri), out var document))
+            if (TryGetDoc(new UnifiedPath(param.textDocument.uri), out var document))
             {
                 document.OnChanged(param.contentChanges);
                 OnChanged(document);
@@ -258,7 +267,8 @@ namespace RainLanguageServer
         }
         protected override void DidCloseTextDocument(DidCloseTextDocumentParams param)
         {
-            documents.Remove(new UnifiedPath(param.textDocument.uri));
+            lock (documents)
+                documents.Remove(new UnifiedPath(param.textDocument.uri));
         }
         #endregion
 
@@ -266,11 +276,14 @@ namespace RainLanguageServer
         {
             if (builder != null)
             {
-                builder.Reparse();
-                foreach(var space in builder.manager.fileSpaces)
+                lock (builder)
                 {
-                    builder.Reparse(space.Value);
-                    RefreshDiagnostics(space.Value);
+                    builder.Reparse();
+                    foreach (var space in builder.manager.fileSpaces.Values)
+                    {
+                        builder.Reparse(space);
+                        RefreshDiagnostics(space);
+                    }
                 }
                 //foreach (var file in documents.Keys)
                 //    if (builder.manager.fileSpaces.TryGetValue(file, out var space))

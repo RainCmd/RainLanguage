@@ -10,6 +10,7 @@ namespace RainLanguageServer
         public bool Equals(TextPosition position) => document == position.document && charactor == position.charactor;
         public override bool Equals(object? obj) => obj is TextPosition position && Equals(position);
         public override int GetHashCode() => document.GetHashCode() ^ charactor;
+        public override string ToString() => $"{Line.line}, {charactor - Line.start.charactor}";
 
         public static int operator -(TextPosition left, TextPosition right) => left.charactor - right.charactor;
         public static TextPosition operator -(TextPosition position, int right) => new(position.document, position.charactor - right);
@@ -41,7 +42,7 @@ namespace RainLanguageServer
                 while (start < end && char.IsWhiteSpace(this[start])) start++;
                 while (end-- > start && char.IsWhiteSpace(this[end])) ;
                 if (start > end) start = end;
-                return this[start..end];
+                return this[start..(end + 1)];
             }
         }
         public char this[int index]
@@ -91,6 +92,7 @@ namespace RainLanguageServer
         public readonly TextPosition end = end;
         public readonly TextRange Range => new(start, end);
         public static implicit operator TextRange(TextLine line) => line.Range;
+        public override string ToString() => Range.ToString();
     }
     internal class TextDocument(string path, string text)
     {
@@ -199,5 +201,6 @@ namespace RainLanguageServer
             }
             lines.Add(new TextLine(lines.Count, GetIndent(start, text.Length), new TextPosition(this, start), new TextPosition(this, text.Length)));
         }
+        public override string ToString() => path;
     }
 }

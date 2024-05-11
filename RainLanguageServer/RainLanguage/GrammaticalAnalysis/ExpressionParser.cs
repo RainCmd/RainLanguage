@@ -1079,6 +1079,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         else
                         {
+                            index = lexical.anchor.start;
                             var declarations = FindDeclaration(lexical.anchor, ref index, out var name);
                             if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, name, declarations);
                             goto label_next_lexical;
@@ -1099,8 +1100,6 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_interface:
                     case LexicalType.KeyWord_const: goto default;
                     case LexicalType.KeyWord_global:
-                        if (context.declaration == null) collector.Add(lexical.anchor, CErrorLevel.Warning, "不在定义成员内，该关键字将被忽略");
-                        else
                         {
                             var gloablAnchor = lexical.anchor;
                             if (Lexical.TryAnalysis(range, lexical.anchor.end, out lexical, collector))
@@ -1110,6 +1109,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     var globalContext = new Context(context.space, context.relies, null);
                                     if (globalContext.TryFindDeclaration(manager, lexical.anchor, out var results, collector))
                                     {
+                                        index = lexical.anchor.end;
                                         PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, lexical.anchor, results);
                                         goto label_next_lexical;
                                     }
@@ -1336,6 +1336,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 index = lexical.anchor.end;
             label_next_lexical:;
             }
+            if (attribute.ContainAny(ExpressionAttribute.Operator)) 
+                expressionStack.Push(new InvalidExpression(tokenStack.Peek().lexical.anchor));
             while (tokenStack.Count > 0) PopToken(expressionStack, tokenStack.Pop());
             if (expressionStack.Count > 1)
             {
@@ -2209,7 +2211,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 collector.Add(expression.range, CErrorLevel.Error, "类型数量不一致");
                 return new InvalidExpression(types, expression);
             }
-            else if (expression is VariableLocalExpression) return InferLeftValueType(expression, types[0]);
+            else if (expression is BlurryVariableDeclarationExpression) return InferLeftValueType(expression, types[0]);
             else if (expression is TupleExpression tuple)
             {
                 var expressions = new List<Expression>();

@@ -297,7 +297,7 @@
                         if (TryParseVariable(line, position, out var name, out var type, out var expression, collector))
                         {
                             if (visibility != Visibility.None) collector.Add(line, CErrorLevel.Error, "结构体成员字段不允许加访问修饰符");
-                            if (expression != null) collector.Add(expression, CErrorLevel.Error, "结构体成员不能赋初始值");
+                            if (expression != null) collector.Add(expression.Value, CErrorLevel.Error, "结构体成员不能赋初始值");
                             var variable = new FileVariable(name!, Visibility.Public, this, false, type!, expression) { range = line };
                             variable.attributes.AddRange(attributeCollector);
                             fileStruct.variables.Add(variable);
@@ -363,7 +363,7 @@
             }
             else collector.Add(lexical.anchor, CErrorLevel.Error, "意外的词条");
         }
-        private static bool TryParseVariable(TextLine line, TextPosition position, out TextRange name, out FileType? type, out TextRange expression, MessageCollector collector)
+        private static bool TryParseVariable(TextLine line, TextPosition position, out TextRange name, out FileType? type, out TextRange? expression, MessageCollector collector)
         {
             if (Lexical.TryExtractName(line, position, out var index, out var names, collector))
             {

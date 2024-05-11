@@ -143,15 +143,35 @@ namespace RainLanguageServer.RainLanguage
                 }
                 if (results.Count > 0) return true;
             }
+
+            for (var index = space; index != null; index = index.parent)
+                if (index.declarations.TryGetValue(targetName, out var declarations))
+                {
+                    results.AddRange(declarations);
+                    var declaration = declarations[0].declaration;
+                    if (declaration.category != DeclarationCategory.Function && declaration.category != DeclarationCategory.Native) break;
+                }
+            if (results.Count == 1) return true;
+            else if (results.Count > 1)
+            {
+                foreach (var declaration in results)
+                    if (declaration.declaration.category != DeclarationCategory.Function && declaration.declaration.category != DeclarationCategory.Native)
+                    {
+                        var builder = new StringBuilder().AppendLine("查找申明不明确");
+                        foreach (var item in results)
+                            builder.AppendLine(item.GetFullName());
+                        collector.Add(name, CErrorLevel.Error, builder.ToString());
+                        break;
+                    }
+                return true;
+            }
             else
             {
-                for (var index = space; index != null; index = index.parent)
-                    if (index.declarations.TryGetValue(targetName, out var declarations))
-                    {
-                        results.AddRange(declarations);
-                        var declaration = declarations[0].declaration;
-                        if (declaration.category != DeclarationCategory.Function && declaration.category != DeclarationCategory.Native) break;
-                    }
+                foreach (var rely in relies)
+                    if (rely.declarations.TryGetValue(targetName, out var declarations))
+                        foreach (var declaration in declarations)
+                            if (IsVisiable(manager, declaration.declaration))
+                                results.Add(declaration);
                 if (results.Count == 1) return true;
                 else if (results.Count > 1)
                 {
@@ -165,28 +185,6 @@ namespace RainLanguageServer.RainLanguage
                             break;
                         }
                     return true;
-                }
-                else
-                {
-                    foreach (var rely in relies)
-                        if (rely.declarations.TryGetValue(targetName, out var declarations))
-                            foreach (var declaration in declarations)
-                                if (IsVisiable(manager, declaration.declaration))
-                                    results.Add(declaration);
-                    if (results.Count == 1) return true;
-                    else if (results.Count > 1)
-                    {
-                        foreach (var declaration in results)
-                            if (declaration.declaration.category != DeclarationCategory.Function && declaration.declaration.category != DeclarationCategory.Native)
-                            {
-                                var builder = new StringBuilder().AppendLine("查找申明不明确");
-                                foreach (var item in results)
-                                    builder.AppendLine(item.GetFullName());
-                                collector.Add(name, CErrorLevel.Error, builder.ToString());
-                                break;
-                            }
-                        return true;
-                    }
                 }
             }
             return false;

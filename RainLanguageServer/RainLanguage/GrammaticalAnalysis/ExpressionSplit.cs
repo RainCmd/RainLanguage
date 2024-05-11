@@ -98,7 +98,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         collector.Add(lexical.anchor, CErrorLevel.Error, "缺少配对的括号");
                         break;
                     case LexicalType.Comma:
-                        if (stack.Count > 0 && flag.ContainAny(SplitFlag.Comma))
+                        if (stack.Count == 0 && flag.ContainAny(SplitFlag.Comma))
                         {
                             left = range[0..index];
                             right = new(lexical.anchor.end, range.end);
@@ -106,7 +106,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         break;
                     case LexicalType.Semicolon:
-                        if (stack.Count > 0 && flag.ContainAny(SplitFlag.Semicolon))
+                        if (stack.Count == 0 && flag.ContainAny(SplitFlag.Semicolon))
                         {
                             left = range[0..index];
                             right = new TextRange(lexical.anchor.end, range.end);
@@ -114,7 +114,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         break;
                     case LexicalType.Assignment:
-                        if (stack.Count > 0 && flag.ContainAny(SplitFlag.Assignment))
+                        if (stack.Count == 0 && flag.ContainAny(SplitFlag.Assignment))
                         {
                             left = range[0..index];
                             right = new TextRange(lexical.anchor.end, range.end);
@@ -123,7 +123,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         break;
                     case LexicalType.Equals: break;
                     case LexicalType.Lambda:
-                        if (stack.Count > 0 && flag.ContainAny(SplitFlag.Lambda))
+                        if (stack.Count == 0 && flag.ContainAny(SplitFlag.Lambda))
                         {
                             left = range[0..index];
                             right = new TextRange(lexical.anchor.end, range.end);

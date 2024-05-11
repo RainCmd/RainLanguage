@@ -6,7 +6,7 @@
         public InvokerExpression(TextRange range, List<Type> returns, Expression parameters) : base(range, new Tuple(returns))
         {
             this.parameters = parameters;
-            if (returns.Count == 0) attribute = ExpressionAttribute.Value | returns[0].GetAttribute();
+            if (returns.Count == 1) attribute = ExpressionAttribute.Value | returns[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
         public override void Read(ExpressionParameter parameter) => parameters.Read(parameter);

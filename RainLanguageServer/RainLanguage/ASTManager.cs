@@ -189,7 +189,6 @@ namespace RainLanguageServer.RainLanguage
         /// <returns></returns>
         public CompilingDeclaration? GetDeclaringDeclaration(Declaration declaration)
         {
-            CompilingDeclaration? result = null;
             switch (declaration.category)
             {
                 case DeclarationCategory.Invalid:
@@ -199,8 +198,10 @@ namespace RainLanguageServer.RainLanguage
                     break;
                 case DeclarationCategory.EnumElement:
                     {
-                        if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            result = declarations![0];
+                        if (TryGetDeclarations(declaration.library, declaration.name[..^1], out var declarations))
+                            foreach (var compiling in declarations!)
+                                if (compiling is CompilingEnum)
+                                    return compiling;
                     }
                     break;
                 case DeclarationCategory.Struct:
@@ -208,8 +209,10 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.StructVariable:
                 case DeclarationCategory.StructFunction:
                     {
-                        if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            result = declarations![0];
+                        if (TryGetDeclarations(declaration.library, declaration.name[..^1], out var declarations))
+                            foreach (var compiling in declarations!)
+                                if (compiling is CompilingStruct)
+                                    return compiling;
                     }
                     break;
                 case DeclarationCategory.Class:
@@ -218,16 +221,20 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.ClassVariable:
                 case DeclarationCategory.ClassFunction:
                     {
-                        if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            result = declarations![0];
+                        if (TryGetDeclarations(declaration.library, declaration.name[..^1], out var declarations))
+                            foreach (var compiling in declarations!)
+                                if (compiling is CompilingClass)
+                                    return compiling;
                     }
                     break;
                 case DeclarationCategory.Interface:
                     break;
                 case DeclarationCategory.InterfaceFunction:
                     {
-                        if (TryGetDeclarations(declaration.library, declaration.name[..^2], out var declarations))
-                            result = declarations![0];
+                        if (TryGetDeclarations(declaration.library, declaration.name[..^1], out var declarations))
+                            foreach (var compiling in declarations!)
+                                if (compiling is CompilingInterface)
+                                    return compiling;
                     }
                     break;
                 case DeclarationCategory.Delegate:
@@ -235,7 +242,6 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.Native:
                     break;
             }
-            if (result != null && result.declaration.category == declaration.category) return result;
             return null;
         }
         public CompilingDeclaration? GetSourceDeclaration(Type type)

@@ -65,10 +65,10 @@
             this.right = right;
             attribute = left.attribute & ~ExpressionAttribute.Assignable;
         }
-        public override bool Valid => left.Valid;
+        public override bool Valid => left.Valid && left.attribute.ContainAll(ExpressionAttribute.Assignable);
         public override void Read(ExpressionParameter parameter)
         {
-            left.Write(parameter);
+            if (Valid) left.Write(parameter);
             right.Read(parameter);
         }
     }
