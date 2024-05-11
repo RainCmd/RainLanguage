@@ -2476,7 +2476,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				else PUSH_TOKEN(TokenType::Plus, Attribute::Operator);
 				break;
 			case LexicalType::Increment:
-				if(ContainAny(attribute, Attribute::Assignable | Attribute::Value))
+				if(ContainAll(attribute, Attribute::Assignable | Attribute::Value))
 				{
 					Expression* operatorExpression = CreateIncrementRightOperator(lexical.anchor, this, expressionStack.Pop());
 					if(operatorExpression)
@@ -2497,7 +2497,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				else PUSH_TOKEN(TokenType::Minus, Attribute::Operator);
 				break;
 			case LexicalType::Decrement:
-				if(ContainAny(attribute, Attribute::Assignable | Attribute::Value))
+				if(ContainAll(attribute, Attribute::Assignable | Attribute::Value))
 				{
 					Expression* operatorExpression = CreateDecrementRightOperator(lexical.anchor, this, expressionStack.Pop());
 					if(operatorExpression)

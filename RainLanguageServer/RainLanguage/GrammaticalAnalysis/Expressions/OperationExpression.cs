@@ -8,6 +8,8 @@
         {
             this.callable = callable;
             this.parameters = parameters;
+            if (returns.Count == 1) attribute = ExpressionAttribute.Value | returns[0].GetAttribute();
+            else attribute = ExpressionAttribute.Value;
         }
         public override void Read(ExpressionParameter parameter)
         {

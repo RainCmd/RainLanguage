@@ -65,7 +65,7 @@ namespace RainLanguageServer.RainLanguage
                     var variable = constants[i];
                     if (variable.isReadonly && variable.expressionRange != null && variable.type.Vaild)
                     {
-                        var context = new Context(manager.library, variable.relies, null);
+                        var context = new Context(variable.space, variable.relies, null);
                         var localContext = new LocalContext(variable.file!.space.collector);
                         var parser = new ExpressionParser(manager, context, localContext, variable.file.space.collector, false);
                         if (variable.expression == null)
@@ -153,7 +153,7 @@ namespace RainLanguageServer.RainLanguage
             foreach (var file in space.variables)
                 if (!file.isReadonly && file.compiling is CompilingVariable variable && variable.expressionRange != null && variable.type.Vaild)
                 {
-                    var context = new Context(manager.library, variable.relies, null);
+                    var context = new Context(variable.space, variable.relies, null);
                     var localContext = new LocalContext(space.collector);
                     var parser = new ExpressionParser(manager, context, localContext, file.space.collector, false);
                     variable.expression = parser.Parse(variable.expressionRange.Value);
@@ -179,7 +179,7 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var member in compiling.variables)
                         if (member.expressionRange != null)
                         {
-                            var context = new Context(manager.library, member.relies, compiling);
+                            var context = new Context(compiling.space, member.relies, compiling);
                             var localContext = new LocalContext(space.collector, compiling);
                             var parser = new ExpressionParser(manager, context, localContext, space.collector, false);
                             member.expression = parser.Parse(member.expressionRange.Value);

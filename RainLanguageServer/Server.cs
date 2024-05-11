@@ -285,18 +285,6 @@ namespace RainLanguageServer
                         RefreshDiagnostics(space);
                     }
                 }
-                //foreach (var file in documents.Keys)
-                //    if (builder.manager.fileSpaces.TryGetValue(file, out var space))
-                //    {
-                //        builder.Reparse(space);
-                //        RefreshDiagnostics(space);
-                //    }
-                //if (!documents.ContainsKey(document.path))
-                //    if (builder.manager.fileSpaces.TryGetValue(document.path, out var space))
-                //    {
-                //        builder.Reparse(space);
-                //        RefreshDiagnostics(space);
-                //    }
             }
         }
 

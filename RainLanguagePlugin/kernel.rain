@@ -182,10 +182,10 @@ namespace kernel
 	public real2 - (real2)
 	public real3 - (real3)
 	public real4 - (real4)
-	public ++ (integer)				//反射调用该函数无效果，这里只是个声明
-	public ++ (real)				//反射调用该函数无效果，这里只是个声明
-	public -- (integer)				//反射调用该函数无效果，这里只是个声明
-	public -- (real)				//反射调用该函数无效果，这里只是个声明
+	public integer ++ (integer)				//反射调用该函数无效果，这里只是个声明
+	public integer ++ (real)				//反射调用该函数无效果，这里只是个声明
+	public integer -- (integer)				//反射调用该函数无效果，这里只是个声明
+	public integer -- (real)				//反射调用该函数无效果，这里只是个声明
 
 	namespace BitConvert
 		public integer BytesConvertInteger(byte, byte, byte, byte, byte, byte, byte, byte)

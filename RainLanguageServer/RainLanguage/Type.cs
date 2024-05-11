@@ -164,6 +164,16 @@ namespace RainLanguageServer.RainLanguage
                 result = HashCode.Combine(result, type.GetHashCode());
             return result;
         }
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+            foreach (var type in types)
+            {
+                if (builder.Length > 0) builder.Append(", ");
+                builder.Append(type.ToString());
+            }
+            return builder.ToString();
+        }
 
         public IEnumerator<Type> GetEnumerator()
         {

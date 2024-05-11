@@ -44,7 +44,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         {
                                             if (TryGetFunction(methodExpression.range, methodExpression.declarations, tuple, out var callable))
                                             {
-                                                tuple = AssignmentConvert(tuple, callable!.returns);
+                                                tuple = AssignmentConvert(tuple, callable!.declaration.signature);
                                                 expression = new InvokerFunctionExpression(lexical.anchor & tuple.range, tuple, callable);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
@@ -61,7 +61,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         {
                                             if (TryGetFunction(methodMemberExpression.range, methodMemberExpression.declarations, tuple, out var callable))
                                             {
-                                                tuple = AssignmentConvert(tuple, callable!.returns);
+                                                tuple = AssignmentConvert(tuple, callable!.declaration.signature);
                                                 expression = new InvokerMemberExpression(lexical.anchor & tuple.range, tuple, methodMemberExpression.target, callable);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
@@ -78,7 +78,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         {
                                             if (TryGetFunction(methodVirtualExpression.range, methodVirtualExpression.declarations, tuple, out var callable))
                                             {
-                                                tuple = AssignmentConvert(tuple, callable!.returns);
+                                                tuple = AssignmentConvert(tuple, callable!.declaration.signature);
                                                 expression = new InvokerVirtualMemberExpression(lexical.anchor & tuple.range, tuple, methodVirtualExpression.target, callable);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
@@ -581,7 +581,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Increment:
-                        if (attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
+                        if (attribute.ContainAll(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
                         {
                             var operationParameter = expressionStack.Pop();
                             var operation = CreateOperation(operationParameter.range & lexical.anchor, "++", operationParameter);
@@ -601,7 +601,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         attribute = ExpressionAttribute.Operator;
                         break;
                     case LexicalType.Decrement:
-                        if (attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
+                        if (attribute.ContainAll(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
                         {
                             var operationParameter = expressionStack.Pop();
                             var operation = CreateOperation(operationParameter.range & lexical.anchor, "--", operationParameter);

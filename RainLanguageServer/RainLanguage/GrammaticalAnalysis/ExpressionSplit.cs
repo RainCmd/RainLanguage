@@ -100,7 +100,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Comma:
                         if (stack.Count == 0 && flag.ContainAny(SplitFlag.Comma))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
@@ -108,7 +108,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Semicolon:
                         if (stack.Count == 0 && flag.ContainAny(SplitFlag.Semicolon))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
@@ -116,7 +116,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Assignment:
                         if (stack.Count == 0 && flag.ContainAny(SplitFlag.Assignment))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
@@ -125,7 +125,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Lambda:
                         if (stack.Count == 0 && flag.ContainAny(SplitFlag.Lambda))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
@@ -167,7 +167,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Question:
                         if (stack.Count > 0 && flag.ContainAny(SplitFlag.Question))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
@@ -181,7 +181,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.QuestionNull:
                         if (stack.Count > 0 && flag.ContainAny(SplitFlag.QuestionNull))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
@@ -193,7 +193,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         else if (flag.ContainAny(SplitFlag.Colon))
                         {
-                            left = range[0..index];
+                            left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical.type;
                         }
