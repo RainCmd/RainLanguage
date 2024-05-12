@@ -255,24 +255,25 @@ namespace RainLanguageServer
             }
             else lock (documents)
                     documents[path] = document = new TextDocument(path, param.textDocument.text);
-            if (document != null) OnChanged(document);
+            if (document != null) OnChanged();
         }
         protected override void DidChangeTextDocument(DidChangeTextDocumentParams param)
         {
             if (TryGetDoc(new UnifiedPath(param.textDocument.uri), out var document))
             {
                 document.OnChanged(param.contentChanges);
-                OnChanged(document);
+                OnChanged();
             }
         }
         protected override void DidCloseTextDocument(DidCloseTextDocumentParams param)
         {
             lock (documents)
                 documents.Remove(new UnifiedPath(param.textDocument.uri));
+            OnChanged();
         }
         #endregion
 
-        private void OnChanged(TextDocument document)
+        private void OnChanged()
         {
             if (builder != null)
             {

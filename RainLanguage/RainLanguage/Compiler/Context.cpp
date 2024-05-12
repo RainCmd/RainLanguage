@@ -83,7 +83,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			case DeclarationCategory::EnumElement: return ContainAny(manager->GetDeclaration(target)->declaration.visibility, Visibility::Public);
 			case DeclarationCategory::Struct: return ContainAny(target.visibility, Visibility::Public);
 			case DeclarationCategory::StructVariable: return ContainAny(manager->GetDeclaration(target)->declaration.visibility, Visibility::Public);
-			case DeclarationCategory::StructFunction: ContainAny(manager->GetDeclaration(target)->declaration.visibility, Visibility::Public) && ContainAny(target.visibility, Visibility::Public);
+			case DeclarationCategory::StructFunction: return ContainAny(manager->GetDeclaration(target)->declaration.visibility, Visibility::Public) && ContainAny(target.visibility, Visibility::Public);
 			case DeclarationCategory::Class: return ContainAny(target.visibility, Visibility::Public);
 			case DeclarationCategory::Constructor:
 			case DeclarationCategory::ClassVariable:

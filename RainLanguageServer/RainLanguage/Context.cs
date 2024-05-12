@@ -76,6 +76,39 @@ namespace RainLanguageServer.RainLanguage
                         return IsVisiable(manager, declaration, false);
                 }
             }
+            else
+            {
+                switch (declaration.category)
+                {
+                    case DeclarationCategory.Invalid: break;
+                    case DeclarationCategory.Variable:
+                    case DeclarationCategory.Function:
+                    case DeclarationCategory.Enum: return declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.EnumElement: return manager.GetDeclaringDeclaration(declaration)!.declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.Struct: return declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.StructVariable: return manager.GetDeclaringDeclaration(declaration)!.declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.StructFunction: return manager.GetDeclaringDeclaration(declaration)!.declaration.visibility.ContainAny(Visibility.Public) && declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.Class: return declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.Constructor:
+                    case DeclarationCategory.ClassVariable:
+                    case DeclarationCategory.ClassFunction:
+                        {
+                            var define = manager.GetDeclaringDeclaration(declaration);
+                            if (define!.declaration.visibility.ContainAny(Visibility.Public))
+                                if (declaration.visibility.ContainAny(Visibility.Public)) return true;
+                                else if (this.declaration != null && this.declaration.declaration.category == DeclarationCategory.Class && declaration.visibility.ContainAny(Visibility.Protected))
+                                    for (var index = this.declaration as CompilingClass; index != null; index = manager.GetSourceDeclaration(index.parent) as CompilingClass)
+                                        if (index == define)
+                                            return true;
+                        }
+                        break;
+                    case DeclarationCategory.Interface: return declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.InterfaceFunction: return manager.GetDeclaringDeclaration(declaration)!.declaration.visibility.ContainAny(Visibility.Public);
+                    case DeclarationCategory.Delegate:
+                    case DeclarationCategory.Task:
+                    case DeclarationCategory.Native: return declaration.visibility.ContainAny(Visibility.Public);
+                }
+            }
             return false;
         }
         public bool TryFindSpace(ASTManager manager, TextRange name, out CompilingSpace? space, MessageCollector collector)

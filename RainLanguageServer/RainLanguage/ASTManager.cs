@@ -25,7 +25,7 @@ namespace RainLanguageServer.RainLanguage
             this.regPreviewDoc = regPreviewDoc;
             using var sr = File.OpenText(kernelPath);
             kernel = LoadLibrary(Type.LIBRARY_KERNEL, sr.ReadToEnd(), true, out var file);
-            foreach (var space in file.children) space.Link(this, library, false);
+            foreach (var space in file.children) space.Link(this, kernel, false);
             kernel.ClearReferences();
         }
         public CompilingLibrary? LoadLibrary(string name)
@@ -194,8 +194,7 @@ namespace RainLanguageServer.RainLanguage
                 case DeclarationCategory.Invalid:
                 case DeclarationCategory.Variable:
                 case DeclarationCategory.Function:
-                case DeclarationCategory.Enum:
-                    break;
+                case DeclarationCategory.Enum: break;
                 case DeclarationCategory.EnumElement:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^1], out var declarations))
@@ -204,8 +203,7 @@ namespace RainLanguageServer.RainLanguage
                                     return compiling;
                     }
                     break;
-                case DeclarationCategory.Struct:
-                    break;
+                case DeclarationCategory.Struct: break;
                 case DeclarationCategory.StructVariable:
                 case DeclarationCategory.StructFunction:
                     {
@@ -215,8 +213,7 @@ namespace RainLanguageServer.RainLanguage
                                     return compiling;
                     }
                     break;
-                case DeclarationCategory.Class:
-                    break;
+                case DeclarationCategory.Class: break;
                 case DeclarationCategory.Constructor:
                 case DeclarationCategory.ClassVariable:
                 case DeclarationCategory.ClassFunction:
@@ -227,8 +224,7 @@ namespace RainLanguageServer.RainLanguage
                                     return compiling;
                     }
                     break;
-                case DeclarationCategory.Interface:
-                    break;
+                case DeclarationCategory.Interface: break;
                 case DeclarationCategory.InterfaceFunction:
                     {
                         if (TryGetDeclarations(declaration.library, declaration.name[..^1], out var declarations))
@@ -278,7 +274,7 @@ namespace RainLanguageServer.RainLanguage
                     case TypeCode.Handle:
                         if (type != Type.HANDLE && TryGetDeclarations(type.library, type.name, out var declarations))
                             if (declarations![0] is CompilingClass compiling)
-                                return compiling.parent;
+                                return compiling.parent.Vaild ? compiling.parent : Type.HANDLE;
                         break;
                     case TypeCode.Interface: return Type.INTERFACE;
                     case TypeCode.Delegate: return Type.DELEGATE;
