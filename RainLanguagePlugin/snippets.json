@@ -12,7 +12,7 @@
 		"body": [
 			"try",
 			"\t$1",
-			"cache $2",
+			"catch $2",
 			"\t$3",
 			"finally",
 			"\t$4"

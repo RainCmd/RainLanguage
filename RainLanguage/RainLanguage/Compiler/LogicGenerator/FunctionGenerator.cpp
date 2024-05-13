@@ -730,7 +730,9 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 							Expression* exitcodeExpression = NULL;
 							if(parser.TryParse(exitcode, exitcodeExpression))
 							{
-								if(exitcodeExpression->returns.Count() != 1 || exitcodeExpression->returns[0] != TYPE_String)
+								if(ContainAll(exitcodeExpression->type, ExpressionType::BlurryVariableDeclarationExpression))
+									parser.TryInferLeftValueType(exitcodeExpression, TYPE_String);
+								else if(exitcodeExpression->returns.Count() != 1 || exitcodeExpression->returns[0] != TYPE_String)
 									MESSAGE2(parameter.manager->messages, exitcode, MessageType::ERROR_TYPE_MISMATCH);
 								new (tryStatement->catchBlocks.Add())CatchExpressionBlock(exitcodeExpression, new BlockStatement(lexical.anchor));
 							}

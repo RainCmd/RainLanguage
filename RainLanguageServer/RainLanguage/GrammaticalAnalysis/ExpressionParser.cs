@@ -2226,7 +2226,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             else if (IsBlurry(expression.types)) throw new Exception("表达式类型错误");
             return expression;
         }
-        private Expression InferLeftValueType(Expression expression, Type type)
+        public Expression InferLeftValueType(Expression expression, Type type)
         {
             if (!expression.Valid) return new InvalidExpression([type], expression);
             if (expression.types.Count == 1 && expression.attribute.ContainAll(ExpressionAttribute.Assignable) && expression.types[0] == Expression.BLURRY)

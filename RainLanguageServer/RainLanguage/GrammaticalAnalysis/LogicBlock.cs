@@ -1,4 +1,5 @@
-﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements;
+﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions;
+using RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements;
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
@@ -63,13 +64,17 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     newBlock.indent = line.indent;
                     stack.Push(newBlock);
                 }
-                else while (stack.Count > 0)//todo block出栈时调整下block相关语句的range
+                else while (stack.Count > 0)
                     {
                         var block = stack.Peek();
                         if (block.indent > line.indent)
                         {
                             stack.Pop();
                             localContext.PopBlock();
+                            block.range = block.range.start & line.start;
+                            var statement = stack.Peek().statements[^1];
+                            statement.range = statement.range.start & line.start;
+                            if (statement is SubStatement sub) sub.parent.range = sub.parent.range.start & line.start;
                         }
                         else if (block.indent < line.indent)
                         {
@@ -243,6 +248,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             @try.tryBlock ??= new BlockStatement() { range = @try.range };
                             if (@try.finallyBlock != null) collector.Add(lexical.anchor, CErrorLevel.Error, "catch语句必须位于finally语句之前");
                             var condition = parser.Parse(lexical.anchor.end & line.end);
+                            if (condition is BlurryVariableDeclarationExpression) condition = parser.InferLeftValueType(condition, Type.STRING);
                             if (condition.Valid && !(condition.types.Count == 1 && condition.types[0] == Type.STRING))
                                 collector.Add(condition.range, CErrorLevel.Error, "catch的目标表达式返回值类型必须是字符串");
                             @try.catchBlocks.Add(new TryStatement.CatchBlock(condition, new BlockStatement() { range = line }));
