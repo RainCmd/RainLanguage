@@ -9,5 +9,12 @@
             foreach (var statement in statements) 
                 statement.Read(parameter);
         }
+        public override bool OnHover(TextPosition position, out HoverInfo info)
+        {
+            foreach(var statement in statements)
+                if(statement.range.Contain(position))
+                    return statement.OnHover(position, out info);
+            return base.OnHover(position, out info);
+        }
     }
 }

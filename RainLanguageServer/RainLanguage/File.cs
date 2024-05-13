@@ -36,11 +36,9 @@ namespace RainLanguageServer.RainLanguage
         public TextRange range;
         public CompilingDeclaration? compiling;
 
-        public virtual bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public virtual bool OnHover(TextPosition position, out HoverInfo info)
         {
-            range = default;
             info = default;
-            isMarkdown = false;
             return false;
         }
         public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
@@ -54,41 +52,38 @@ namespace RainLanguageServer.RainLanguage
         public readonly bool isReadonly = isReadonly;
         public readonly FileType type = type;
         public readonly TextRange? expression = expression;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
-            return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
+            return OnHover(position, null, out info);
         }
         private CompilingVariable? Compiling => compiling as CompilingVariable;
-        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange range, out string? info, out bool isMarkdown)
+        public bool OnHover(TextPosition position, FileDeclaration? declaration, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
                 if (declaration == null) sb.AppendLine($"(全局变量) {Compiling?.type.ToString(false, compiling?.space)} {name}");
                 else sb.AppendLine($"(字段) {Compiling?.type.ToString(false, compiling?.space)} {declaration.name}.{name}");
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (type.Contain(position))
             {
-                range = type.GetNameRange();
                 var sb = new StringBuilder();
                 sb.AppendLine("``` csharp");
                 sb.AppendLine($"{Compiling?.type}");
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(type.GetNameRange(), sb.ToString(), true);
                 return true;
             }
-            else
+            else if (expression != null)
             {
-                //todo 表达式中的token
+                var expression = Compiling?.expression;
+                if (expression != null) return expression.OnHover(position, out info);
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -113,15 +108,14 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
         public readonly List<TextLine> body = body;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
-            return TryGetTokenInfo(position, null, out range, out info, out isMarkdown);
+            return OnHover(position, null, out info);
         }
-        public bool TryGetTokenInfo(TextPosition position, FileDeclaration? declaration, out TextRange range, out string? info, out bool isMarkdown)
+        public bool OnHover(TextPosition position, FileDeclaration? declaration, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` js");
                 if (compiling is CompilingCallable callable)
@@ -155,8 +149,7 @@ namespace RainLanguageServer.RainLanguage
                 else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (compiling is CompilingCallable callable)
@@ -164,13 +157,11 @@ namespace RainLanguageServer.RainLanguage
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
                     {
-                        range = returns[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{callable.returns[i]}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(returns[i].GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                 for (var i = 0; i < parameters.Count; i++)
@@ -178,33 +169,26 @@ namespace RainLanguageServer.RainLanguage
                     var param = parameters[i];
                     if (param.type.Contain(position))
                     {
-                        range = param.type.GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{callable.parameters[i].type}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(param.type.GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                     else if (param.name != null && param.name.Value.Contain(position))
                     {
-                        range = param.name.Value;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(param.name.Value, sb.ToString(), true);
                         return true;
                     }
                 }
-                if (callable is CompilingFunction function)
-                {
-                    //todo 函数表达式内容
-                }
+                if (callable is CompilingFunction function) return function.logicBlock.block.OnHover(position, out info);
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -240,19 +224,35 @@ namespace RainLanguageServer.RainLanguage
             public readonly TextRange? expression = expression;
         }
         public readonly List<Element> elements = [];
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
                 if (compiling != null) sb.AppendLine($"enum {compiling.GetFullName()}");
                 else sb.AppendLine($"enum {name}");
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
+            }
+            else if (compiling is CompilingEnum compilingEnum)
+            {
+                for (var i = 0; i < compilingEnum.elements.Count; i++)
+                {
+                    var element = compilingEnum.elements[i];
+                    if (element.name.Contain(position))
+                    {
+                        var sb = new StringBuilder();
+                        sb.AppendLine("``` cs");
+                        sb.AppendLine($"{name}.{element.name} = {element.value}");
+                        sb.AppendLine("```");
+                        info = new HoverInfo(element.name, sb.ToString(), true);
+                        return true;
+                    }
+                    else if (element.expression != null && element.expression.range.Contain(position))
+                        return element.expression.OnHover(position, out info);
+                }
             }
             else
             {
@@ -261,22 +261,16 @@ namespace RainLanguageServer.RainLanguage
                     var element = elements[i];
                     if (element.name.Contain(position))
                     {
-                        range = element.name;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` cs");
-                        sb.AppendLine($"{name}.{element.name}"); //todo 枚举的值
+                        sb.AppendLine($"{name}.{element.name}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(element.name, sb.ToString(), true);
                         return true;
-                    }
-                    else if (element.expression != null && element.expression.Value.Contain(position))
-                    {
-                        //todo 枚举表达式内容
                     }
                 }
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -296,30 +290,28 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> functions = [];
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
                 if (compiling != null) sb.AppendLine($"struct {compiling.GetFullName()}");
                 else sb.AppendLine($"struct {name}");
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else
             {
                 foreach (var value in variables)
-                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                    if (value.OnHover(position, this, out info))
                         return true;
                 foreach (var value in functions)
-                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                    if (value.OnHover(position, this, out info))
                         return true;
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -337,18 +329,16 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileType> inherits = [];
         public readonly List<FileFunction> functions = [];
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
                 if (compiling != null) sb.AppendLine($"interface {compiling.GetFullName()}");
                 else sb.AppendLine($"interface {name}");
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (compiling is CompilingInterface compilingInterface)
@@ -357,21 +347,19 @@ namespace RainLanguageServer.RainLanguage
                 {
                     if (inherits[i].Contain(position))
                     {
-                        range = inherits[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` cs");
                         sb.AppendLine($"{compilingInterface.inherits[i]}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(inherits[i].GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                 }
                 foreach (var vaalue in functions)
-                    if (vaalue.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                    if (vaalue.OnHover(position, this, out info))
                         return true;
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -396,18 +384,16 @@ namespace RainLanguageServer.RainLanguage
         public TextRange destructorRange;
         public readonly List<TextLine> destructor = [];
         public int destructorIndent = -1;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
                 if (compiling != null) sb.AppendLine($"class {compiling.GetFullName()}");
                 else sb.AppendLine($"class {name}");
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (compiling is CompilingClass compilingClass)
@@ -416,7 +402,6 @@ namespace RainLanguageServer.RainLanguage
                 {
                     if (inherits[i].Contain(position))
                     {
-                        range = inherits[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` cs");
                         if (compilingClass.parent.Vaild)
@@ -426,26 +411,23 @@ namespace RainLanguageServer.RainLanguage
                         }
                         else sb.AppendLine($"{compilingClass.inherits[i]}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(inherits[i].GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                 }
                 foreach (var value in variables)
-                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                    if (value.OnHover(position, this, out info))
                         return true;
                 foreach (var value in constructors)
-                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                    if (value.OnHover(position, this, out info))
                         return true;
                 foreach (var value in functions)
-                    if (value.TryGetTokenInfo(position, this, out range, out info, out isMarkdown))
+                    if (value.OnHover(position, this, out info))
                         return true;
-                if (destructorRange != null && destructorRange.Contain(position))
-                {
-                    //todo 析构函数表达式
-                }
+                if (compilingClass.destructor != null && compilingClass.destructor.block.range.Contain(position))
+                    return compilingClass.destructor.block.OnHover(position, out info);
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -478,11 +460,10 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` js");
                 if (compiling is CompilingCallable callable)
@@ -512,8 +493,7 @@ namespace RainLanguageServer.RainLanguage
                 else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (compiling is CompilingCallable callable)
@@ -521,13 +501,11 @@ namespace RainLanguageServer.RainLanguage
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
                     {
-                        range = returns[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{callable.returns[i]}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(returns[i].GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                 for (var i = 0; i < parameters.Count; i++)
@@ -535,34 +513,30 @@ namespace RainLanguageServer.RainLanguage
                     var param = parameters[i];
                     if (param.type.Contain(position))
                     {
-                        range = param.type.GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{callable.parameters[i].type}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(param.type.GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                     else if (param.name != null && param.name.Value.Contain(position))
                     {
-                        range = param.name.Value;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(param.name.Value, sb.ToString(), true);
                         return true;
                     }
                 }
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
             if (base.TryGetDeclaration(manager, position, out result)) return true;
-            if(compiling is CompilingDelegate compilingDelegate)
+            if (compiling is CompilingDelegate compilingDelegate)
             {
                 for (int i = 0; i < parameters.Count; i++)
                 {
@@ -587,11 +561,10 @@ namespace RainLanguageServer.RainLanguage
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileType> returns = returns;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` js");
                 if (compiling is CompilingTask task)
@@ -608,8 +581,7 @@ namespace RainLanguageServer.RainLanguage
                 else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (compiling is CompilingTask task)
@@ -617,17 +589,15 @@ namespace RainLanguageServer.RainLanguage
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
                     {
-                        range = returns[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{task.returns[i]}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(returns[i].GetNameRange(), sb.ToString(), true);
                         return true;
                     }
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -646,11 +616,10 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
-        public override bool TryGetTokenInfo(TextPosition position, out TextRange range, out string? info, out bool isMarkdown)
+        public override bool OnHover(TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
-                range = name;
                 var sb = new StringBuilder();
                 sb.AppendLine("``` js");
                 if (compiling is CompilingCallable callable)
@@ -680,8 +649,7 @@ namespace RainLanguageServer.RainLanguage
                 else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");
-                info = sb.ToString();
-                isMarkdown = true;
+                info = new HoverInfo(name, sb.ToString(), true);
                 return true;
             }
             else if (compiling is CompilingCallable callable)
@@ -689,13 +657,11 @@ namespace RainLanguageServer.RainLanguage
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))
                     {
-                        range = returns[i].GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{callable.returns[i]}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(returns[i].GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                 for (var i = 0; i < parameters.Count; i++)
@@ -703,29 +669,25 @@ namespace RainLanguageServer.RainLanguage
                     var param = parameters[i];
                     if (param.type.Contain(position))
                     {
-                        range = param.type.GetNameRange();
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"{callable.parameters[i].type}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(param.type.GetNameRange(), sb.ToString(), true);
                         return true;
                     }
                     else if (param.name != null && param.name.Value.Contain(position))
                     {
-                        range = param.name.Value;
                         var sb = new StringBuilder();
                         sb.AppendLine("``` csharp");
                         sb.AppendLine($"(参数) {callable.parameters[i].type.ToString(false, callable.space)} {param.name}");
                         sb.AppendLine("```");
-                        info = sb.ToString();
-                        isMarkdown = true;
+                        info = new HoverInfo(param.name.Value, sb.ToString(), true);
                         return true;
                     }
                 }
             }
-            return base.TryGetTokenInfo(position, out range, out info, out isMarkdown);
+            return base.OnHover(position, out info);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {

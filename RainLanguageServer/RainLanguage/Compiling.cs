@@ -76,11 +76,11 @@ namespace RainLanguageServer.RainLanguage
     internal class CompilingEnum(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, HashSet<CompilingSpace> relies, FileDeclaration? file)
         : CompilingDeclaration(name, declaration, attributes, space, file)
     {
-        public class Element(TextRange name, Declaration declaration, TextRange? expression, FileEnum.Element? file)
+        public class Element(TextRange name, Declaration declaration, FileEnum.Element? file)
         {
             public readonly TextRange name = name;
             public readonly Declaration declaration = declaration;
-            public readonly TextRange? expression = expression;
+            public Expression? expression;
             public readonly FileEnum.Element? file = file;
             public readonly List<TextRange> references = [];
             public long? value;

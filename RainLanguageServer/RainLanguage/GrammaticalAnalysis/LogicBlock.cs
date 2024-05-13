@@ -37,6 +37,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         public void Parse(ASTManager manager)
         {
             if (body.Count == 0) return;
+            block.range = body[0].start & body[^1].end;
             var parser = new ExpressionParser(manager, context, localContext, collector, destructor);
             var stack = new Stack<BlockStatement>();
             stack.Push(block);

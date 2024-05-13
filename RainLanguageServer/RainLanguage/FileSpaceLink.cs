@@ -66,7 +66,7 @@ namespace RainLanguageServer.RainLanguage
                 foreach (var element in file.elements)
                 {
                     var declaration = new Declaration(library.name, Visibility.Public, DeclarationCategory.EnumElement, compiling.GetMemberName(file.name.ToString(), element.name.ToString()), default);
-                    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, element.expression, cite ? element : null);
+                    var compilingEnumElement = new CompilingEnum.Element(element.name, declaration, cite ? element : null);
                     compilingEnum.elements.Add(compilingEnumElement);
                 }
             }

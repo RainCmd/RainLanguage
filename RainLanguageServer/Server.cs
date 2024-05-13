@@ -141,10 +141,10 @@ namespace RainLanguageServer
                 {
                     var position = GetFilePosition(fileSpace.document, param.position);
                     var declaration = fileSpace.GetFileDeclaration(position);
-                    if (declaration != null && declaration.TryGetTokenInfo(position, out var range, out var info, out var isMarkdown))
+                    if (declaration != null && declaration.OnHover(position, out var info))
                     {
-                        if (isMarkdown) return Result<Hover, ResponseError>.Success(new Hover(new MarkupContent(MarkupKind.Markdown, info!), TR2R(range!)));
-                        else return Result<Hover, ResponseError>.Success(new Hover(info!, TR2R(range!)));
+                        if (info.markdown) return Result<Hover, ResponseError>.Success(new Hover(new MarkupContent(MarkupKind.Markdown, info.info), TR2R(info.range)));
+                        else return Result<Hover, ResponseError>.Success(new Hover(info.info, TR2R(info.range)));
                     }
                 }
             }

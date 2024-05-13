@@ -134,14 +134,15 @@ namespace RainLanguageServer.RainLanguage
                 var localContext = new LocalContext(enumeration.file!.space.collector);
                 var parser = new ExpressionParser(manager, new Context(enumeration.space, enumeration.relies, null), localContext, enumeration.file.space.collector, false);
                 foreach (var element in enumeration.elements)
-                    if (element.expression == null) element.value = index++;
+                    if (element.file!.expression == null) element.value = index++;
                     else
                     {
                         localContext.PushBlock();
-                        var expression = parser.Parse(element.expression.Value);
+                        var expression = parser.Parse(element.file.expression.Value);
                         expression.Read(new ExpressionParameter(manager, enumeration.file.space.collector));
                         if (expression.TryEvaluate(out index)) element.value = index++;
                         else if (expression.Valid) parser.collector.Add(expression.range, CErrorLevel.Error, "编译时无法计算表达式的整数值");
+                        element.expression = expression;
                         localContext.PopBlock();
                     }
             }

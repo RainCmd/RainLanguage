@@ -11,6 +11,13 @@
             loopBlock?.Read(parameter);
             elseBlock?.Read(parameter);
         }
+        public override bool OnHover(TextPosition position, out HoverInfo info)
+        {
+            if (condition != null && condition.range.Contain(position)) return condition.OnHover(position, out info);
+            else if (loopBlock != null && loopBlock.range.Contain(position)) return loopBlock.OnHover(position, out info);
+            else if (elseBlock != null && elseBlock.range.Contain(position)) return elseBlock.OnHover(position, out info);
+            return base.OnHover(position, out info);
+        }
     }
     internal class WhileStatement(Expression? condition) : LoopStatement(condition) { }
     internal class ForStatement(Expression? front, Expression? condition, Expression? back) : LoopStatement(condition)
@@ -21,6 +28,12 @@
             base.Read(parameter);
             front?.Read(parameter);
             back?.Read(parameter);
+        }
+        public override bool OnHover(TextPosition position, out HoverInfo info)
+        {
+            if (front != null && front.range.Contain(position)) return front.OnHover(position, out info);
+            else if (back != null && back.range.Contain(position)) return back.OnHover(position, out info);
+            return base.OnHover(position, out info);
         }
     }
 }

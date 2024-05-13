@@ -10,5 +10,12 @@
             trueBranch?.Read(parameter);
             falseBranch?.Read(parameter);
         }
+        public override bool OnHover(TextPosition position, out HoverInfo info)
+        {
+            if (condition.range.Contain(position)) return condition.OnHover(position, out info);
+            else if (trueBranch != null && trueBranch.range.Contain(position)) return trueBranch.OnHover(position, out info);
+            else if (falseBranch != null && falseBranch.range.Contain(position)) return falseBranch.OnHover(position, out info);
+            return base.OnHover(position, out info);
+        }
     }
 }
