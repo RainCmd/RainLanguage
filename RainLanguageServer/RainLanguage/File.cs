@@ -115,6 +115,7 @@ namespace RainLanguageServer.RainLanguage
                     var source = manager.GetSourceDeclaration(variable.type);
                     if (source != null)
                     {
+                        infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                         foreach (var range in source.references)
                             infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                     }
@@ -254,6 +255,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(callable.parameters[i].type);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -267,6 +269,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(callable.returns[i].Source);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -489,6 +492,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(compilingInterface.inherits[i].Source);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -586,6 +590,7 @@ namespace RainLanguageServer.RainLanguage
                             source = manager.GetSourceDeclaration(compilingClass.parent.Source);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -721,6 +726,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(compilingDelegate.parameters[i].type);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -734,6 +740,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(compilingDelegate.returns[i].Source);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -820,6 +827,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(compilingTask.returns[i].Source);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -932,6 +940,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(compilingNative.parameters[i].type);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }
@@ -945,6 +954,7 @@ namespace RainLanguageServer.RainLanguage
                         var source = manager.GetSourceDeclaration(compilingNative.returns[i].Source);
                         if (source != null)
                         {
+                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
                             foreach (var range in source.references)
                                 infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
                         }

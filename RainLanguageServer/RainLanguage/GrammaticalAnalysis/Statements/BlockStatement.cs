@@ -8,7 +8,8 @@
         public BlockStatement(TextRange anchor, List<TextRange>? group) : base(anchor)
         {
             this.group = group;
-            group?.Add(anchor);
+            if (anchor.start.document != null)
+                group?.Add(anchor);
         }
         public override void Read(ExpressionParameter parameter)
         {

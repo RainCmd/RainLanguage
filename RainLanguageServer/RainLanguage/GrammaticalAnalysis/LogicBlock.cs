@@ -263,7 +263,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (block.statements[^1] is TryStatement @try)
                             {
                                 @try.tryBlock ??= new BlockStatement(lexical.anchor, @try.group) { range = @try.range };
-                                block.statements.Add(new SubStatement(@try.anchor, @try, @try.group) { range = line });
+                                block.statements.Add(new SubStatement(lexical.anchor, @try, @try.group) { range = line });
                                 goto label_finally_parse_success;
                             }
                         }

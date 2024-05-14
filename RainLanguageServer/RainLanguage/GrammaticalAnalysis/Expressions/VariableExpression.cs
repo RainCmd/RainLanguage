@@ -32,12 +32,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         public override void Read(ExpressionParameter parameter)
         {
             local.read.Add(range);
-            parameter.manager.GetSourceDeclaration(local.type)?.references.Add(range);
+            if (declarationRange != null)
+                parameter.manager.GetSourceDeclaration(local.type)?.references.Add(declarationRange.Value);
         }
         public override void Write(ExpressionParameter parameter)
         {
             local.write.Add(range);
-            parameter.manager.GetSourceDeclaration(local.type)?.references.Add(range);
+            if (declarationRange != null)
+                parameter.manager.GetSourceDeclaration(local.type)?.references.Add(declarationRange.Value);
         }
     }
     internal class VariableGlobalExpression : VariableExpression

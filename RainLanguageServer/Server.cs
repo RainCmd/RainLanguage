@@ -200,6 +200,7 @@ namespace RainLanguageServer
                     var infos = new List<HighlightInfo>();
                     if (declaration != null && declaration.OnHighlight(builder.manager, position, infos))
                     {
+                        infos.RemoveAll(info => info.range.start.document != fileSpace.document);
                         var results = new DocumentHighlight[infos.Count];
                         for (int i = 0; i < infos.Count; i++)
                             results[i] = new DocumentHighlight(TR2R(infos[i].range)) { kind = infos[i].kind };
