@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using LanguageServer.Parameters.TextDocument;
 
 namespace RainLanguageServer.RainLanguage
 {
@@ -36,12 +37,23 @@ namespace RainLanguageServer.RainLanguage
         public TextRange range;
         public CompilingDeclaration? compiling;
 
-        public virtual bool OnHover(TextPosition position, out HoverInfo info)
+        public virtual bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             info = default;
             return false;
         }
-        public virtual bool OnHighlight(TextPosition position, List<HighlightInfo> infos) => false;//todo 高亮
+        public virtual bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (name.Contain(position))
+            {
+                infos.Add(new HighlightInfo(name, DocumentHighlightKind.Text));
+                if (compiling != null)
+                    foreach (var range in compiling.references)
+                        infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                return true;
+            }
+            return false;
+        }
         public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
             result = compiling;
@@ -53,12 +65,12 @@ namespace RainLanguageServer.RainLanguage
         public readonly bool isReadonly = isReadonly;
         public readonly FileType type = type;
         public readonly TextRange? expression = expression;
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            return OnHover(position, null, out info);
+            return OnHover(manager, position, null, out info);
         }
         private CompilingVariable? Compiling => compiling as CompilingVariable;
-        public bool OnHover(TextPosition position, FileDeclaration? declaration, out HoverInfo info)
+        public bool OnHover(ASTManager manager, TextPosition position, FileDeclaration? declaration, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -82,9 +94,37 @@ namespace RainLanguageServer.RainLanguage
             else if (expression != null)
             {
                 var expression = Compiling?.expression;
-                if (expression != null) return expression.OnHover(position, out info);
+                if (expression != null) return expression.OnHover(manager, position, out info);
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (compiling is CompilingVariable variable)
+            {
+                if (base.OnHighlight(manager, position, infos))
+                {
+                    foreach (var range in variable.read)
+                        infos.Add(new HighlightInfo(range, DocumentHighlightKind.Read));
+                    foreach (var range in variable.write)
+                        infos.Add(new HighlightInfo(range, DocumentHighlightKind.Write));
+                    return true;
+                }
+                if (type.Contain(position))
+                {
+                    var source = manager.GetSourceDeclaration(variable.type);
+                    if (source != null)
+                    {
+                        foreach (var range in source.references)
+                            infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                    }
+                    else infos.Add(new HighlightInfo(type.GetNameRange(), DocumentHighlightKind.Text));
+                    return true;
+                }
+                if (variable.expression != null && variable.expression.range.Contain(position))
+                    return variable.expression.OnHighlight(manager, position, infos);
+            }
+            return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -106,11 +146,11 @@ namespace RainLanguageServer.RainLanguage
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
         public readonly List<TextLine> body = body;
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            return OnHover(position, null, out info);
+            return OnHover(manager, position, null, out info);
         }
-        public bool OnHover(TextPosition position, FileDeclaration? declaration, out HoverInfo info)
+        public bool OnHover(ASTManager manager, TextPosition position, FileDeclaration? declaration, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -184,9 +224,58 @@ namespace RainLanguageServer.RainLanguage
                         return true;
                     }
                 }
-                if (callable is CompilingFunction function) return function.logicBlock.block.OnHover(position, out info);
+                if (callable is CompilingFunction function) return function.logicBlock.block.OnHover(manager, position, out info);
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (compiling is CompilingCallable callable)
+            {
+                if (base.OnHighlight(manager, position, infos))
+                {
+                    if (callable is CompilingVirtualFunction virtualFunction)
+                    {
+                        foreach (var range in virtualFunction.overrides)
+                            infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
+                        foreach (var range in virtualFunction.implements)
+                            infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
+                    }
+                    if (callable is CompilingAbstractFunction abstractFunction)
+                        foreach (var range in abstractFunction.implements)
+                            infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
+                    return true;
+                }
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(callable.parameters[i].type);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(param.type.GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+                }
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(callable.returns[i].Source);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+                if (callable is CompilingFunction function) return function.logicBlock.block.OnHighlight(manager, position, infos);
+            }
+            return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -222,7 +311,7 @@ namespace RainLanguageServer.RainLanguage
             public readonly TextRange? expression = expression;
         }
         public readonly List<Element> elements = [];
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -249,7 +338,7 @@ namespace RainLanguageServer.RainLanguage
                         return true;
                     }
                     else if (element.expression != null && element.expression.range.Contain(position))
-                        return element.expression.OnHover(position, out info);
+                        return element.expression.OnHover(manager, position, out info);
                 }
             }
             else
@@ -268,7 +357,27 @@ namespace RainLanguageServer.RainLanguage
                     }
                 }
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            if (compiling is CompilingEnum compilingEnum)
+            {
+                foreach (var element in compilingEnum.elements)
+                {
+                    if (element.name.Contain(position))
+                    {
+                        infos.Add(new HighlightInfo(element.name, DocumentHighlightKind.Text));
+                        foreach (var range in element.references)
+                            infos.Add(new HighlightInfo(range, DocumentHighlightKind.Read));
+                        return true;
+                    }
+                    else if (element.expression != null && element.expression.range.Contain(position))
+                        return element.expression.OnHighlight(manager, position, infos);
+                }
+            }
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -287,7 +396,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileVariable> variables = [];
         public readonly List<FileFunction> functions = [];
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -302,13 +411,24 @@ namespace RainLanguageServer.RainLanguage
             else
             {
                 foreach (var value in variables)
-                    if (value.OnHover(position, this, out info))
+                    if (value.OnHover(manager, position, this, out info))
                         return true;
                 foreach (var value in functions)
-                    if (value.OnHover(position, this, out info))
+                    if (value.OnHover(manager, position, this, out info))
                         return true;
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            foreach (var variable in variables)
+                if (variable.range != null && variable.range.Contain(position))
+                    return variable.OnHighlight(manager, position, infos);
+            foreach (var function in functions)
+                if (function.range != null && function.range.Contain(position))
+                    return function.OnHighlight(manager, position, infos);
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -326,7 +446,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileType> inherits = [];
         public readonly List<FileFunction> functions = [];
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -353,10 +473,33 @@ namespace RainLanguageServer.RainLanguage
                     }
                 }
                 foreach (var vaalue in functions)
-                    if (vaalue.OnHover(position, this, out info))
+                    if (vaalue.OnHover(manager, position, this, out info))
                         return true;
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            if (compiling is CompilingInterface compilingInterface)
+            {
+                for (var i = 0; i < inherits.Count; i++)
+                    if (inherits[i].Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(compilingInterface.inherits[i].Source);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(inherits[i].GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+            }
+            foreach (var function in functions)
+                if (function.range != null && function.range.Contain(position))
+                    return function.OnHighlight(manager, position, infos);
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -381,7 +524,7 @@ namespace RainLanguageServer.RainLanguage
         public TextRange destructorRange;
         public readonly List<TextLine> destructor = [];
         public int destructorIndent = -1;
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -413,18 +556,52 @@ namespace RainLanguageServer.RainLanguage
                     }
                 }
                 foreach (var value in variables)
-                    if (value.OnHover(position, this, out info))
+                    if (value.OnHover(manager, position, this, out info))
                         return true;
                 foreach (var value in constructors)
-                    if (value.OnHover(position, this, out info))
+                    if (value.OnHover(manager, position, this, out info))
                         return true;
                 foreach (var value in functions)
-                    if (value.OnHover(position, this, out info))
+                    if (value.OnHover(manager, position, this, out info))
                         return true;
                 if (compilingClass.destructor != null && compilingClass.destructor.block.range.Contain(position))
-                    return compilingClass.destructor.block.OnHover(position, out info);
+                    return compilingClass.destructor.block.OnHover(manager, position, out info);
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            if (compiling is CompilingClass compilingClass)
+            {
+                for (var i = 0; i < inherits.Count; i++)
+                    if (inherits[i].Contain(position))
+                    {
+                        CompilingDeclaration? source;
+                        if (inherits.Count == compilingClass.inherits.Count)
+                            source = manager.GetSourceDeclaration(compilingClass.inherits[i].Source);
+                        else if (i > 0)
+                            source = manager.GetSourceDeclaration(compilingClass.inherits[i - 1].Source);
+                        else
+                            source = manager.GetSourceDeclaration(compilingClass.parent.Source);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(inherits[i].GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+                if (compilingClass.destructor != null && compilingClass.destructor.block.range.Contain(position))
+                    return compilingClass.destructor.block.OnHighlight(manager, position, infos);
+            }
+            foreach (var variable in variables)
+                if (variable.range != null && variable.range.Contain(position))
+                    return variable.OnHighlight(manager, position, infos);
+            foreach (var constructor in constructors)
+                if (constructor.range != null && constructor.range.Contain(position))
+                    return constructor.OnHighlight(manager, position, infos);
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -442,12 +619,15 @@ namespace RainLanguageServer.RainLanguage
                             result = manager.GetSourceDeclaration(compilingClass.parent.Source);
                         return result != null;
                     }
-                foreach (var variable in variables)
-                    if (variable.range != null && variable.range.Contain(position))
-                        return variable.TryGetDeclaration(manager, position, out result);
                 if (compilingClass.destructor != null && compilingClass.destructor.block.range.Contain(position))
                     return compilingClass.destructor.block.TryGetDeclaration(manager, position, out result);
             }
+            foreach (var variable in variables)
+                if (variable.range != null && variable.range.Contain(position))
+                    return variable.TryGetDeclaration(manager, position, out result);
+            foreach (var constructor in constructors)
+                if (constructor.range != null && constructor.range.Contain(position))
+                    return constructor.TryGetDeclaration(manager, position, out result);
             return false;
         }
     }
@@ -455,7 +635,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -526,7 +706,42 @@ namespace RainLanguageServer.RainLanguage
                     }
                 }
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            if (compiling is CompilingDelegate compilingDelegate)
+            {
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(compilingDelegate.parameters[i].type);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(param.type.GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+                }
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(compilingDelegate.returns[i].Source);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+            }
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -556,7 +771,7 @@ namespace RainLanguageServer.RainLanguage
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
         public readonly List<FileType> returns = returns;
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -592,7 +807,27 @@ namespace RainLanguageServer.RainLanguage
                         return true;
                     }
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            if (compiling is CompilingTask compilingTask)
+            {
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(compilingTask.returns[i].Source);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+            }
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -611,7 +846,7 @@ namespace RainLanguageServer.RainLanguage
     {
         public readonly List<FileParameter> parameters = parameters;
         public readonly List<FileType> returns = returns;
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             if (name.Contain(position))
             {
@@ -682,7 +917,42 @@ namespace RainLanguageServer.RainLanguage
                     }
                 }
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (base.OnHighlight(manager, position, infos)) return true;
+            if (compiling is CompilingNative compilingNative)
+            {
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    var param = parameters[i];
+                    if (param.type.Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(compilingNative.parameters[i].type);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(param.type.GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+                }
+                for (var i = 0; i < returns.Count; i++)
+                    if (returns[i].Contain(position))
+                    {
+                        var source = manager.GetSourceDeclaration(compilingNative.returns[i].Source);
+                        if (source != null)
+                        {
+                            foreach (var range in source.references)
+                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                        }
+                        else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
+                        return true;
+                    }
+            }
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {

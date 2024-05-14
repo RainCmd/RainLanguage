@@ -11,12 +11,19 @@
             loopBlock?.Read(parameter);
             elseBlock?.Read(parameter);
         }
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (condition != null && condition.range.Contain(position)) return condition.OnHover(position, out info);
-            else if (loopBlock != null && loopBlock.range.Contain(position)) return loopBlock.OnHover(position, out info);
-            else if (elseBlock != null && elseBlock.range.Contain(position)) return elseBlock.OnHover(position, out info);
-            return base.OnHover(position, out info);
+            if (condition != null && condition.range.Contain(position)) return condition.OnHover(manager, position, out info);
+            else if (loopBlock != null && loopBlock.range.Contain(position)) return loopBlock.OnHover(manager, position, out info);
+            else if (elseBlock != null && elseBlock.range.Contain(position)) return elseBlock.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (condition != null && condition.range.Contain(position)) return condition.OnHighlight(manager, position, infos);
+            else if (loopBlock != null && loopBlock.range.Contain(position)) return loopBlock.OnHighlight(manager, position, infos);
+            else if (elseBlock != null && elseBlock.range.Contain(position)) return elseBlock.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -36,11 +43,17 @@
             front?.Read(parameter);
             back?.Read(parameter);
         }
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (front != null && front.range.Contain(position)) return front.OnHover(position, out info);
-            else if (back != null && back.range.Contain(position)) return back.OnHover(position, out info);
-            return base.OnHover(position, out info);
+            if (front != null && front.range.Contain(position)) return front.OnHover(manager, position, out info);
+            else if (back != null && back.range.Contain(position)) return back.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (front != null && front.range.Contain(position)) return front.OnHighlight(manager, position, infos);
+            else if (back != null && back.range.Contain(position)) return back.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {

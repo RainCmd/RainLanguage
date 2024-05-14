@@ -1,4 +1,5 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
+﻿
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
     internal class BranchStatement(Expression condition) : Statement
     {
@@ -10,12 +11,19 @@
             trueBranch?.Read(parameter);
             falseBranch?.Read(parameter);
         }
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (condition.range.Contain(position)) return condition.OnHover(position, out info);
-            else if (trueBranch != null && trueBranch.range.Contain(position)) return trueBranch.OnHover(position, out info);
-            else if (falseBranch != null && falseBranch.range.Contain(position)) return falseBranch.OnHover(position, out info);
-            return base.OnHover(position, out info);
+            if (condition.range.Contain(position)) return condition.OnHover(manager, position, out info);
+            else if (trueBranch != null && trueBranch.range.Contain(position)) return trueBranch.OnHover(manager, position, out info);
+            else if (falseBranch != null && falseBranch.range.Contain(position)) return falseBranch.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (condition.range.Contain(position)) return condition.OnHighlight(manager, position, infos);
+            else if (trueBranch != null && trueBranch.range.Contain(position)) return trueBranch.OnHighlight(manager, position, infos);
+            else if (falseBranch != null && falseBranch.range.Contain(position)) return falseBranch.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {

@@ -1,4 +1,5 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
+﻿
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
     internal class SubStatement(Statement parent) : Statement
     {
@@ -20,7 +21,8 @@
                 else if (parent is TryStatement @try) @try.finallyBlock = value;
             }
         }
-        public override bool OnHover(TextPosition position, out HoverInfo info) => parent.OnHover(position, out info);
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info) => parent.OnHover(manager, position, out info);
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos) => parent.OnHighlight(manager, position, infos);
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result) => parent.TryGetDeclaration(manager, position, out result);
     }
 }

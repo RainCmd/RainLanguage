@@ -179,7 +179,7 @@ namespace RainLanguageServer
                 {
                     var position = GetFilePosition(fileSpace.document, param.position);
                     var declaration = fileSpace.GetFileDeclaration(position);
-                    if (declaration != null && declaration.OnHover(position, out var info))
+                    if (declaration != null && declaration.OnHover(builder.manager, position, out var info))
                     {
                         if (info.markdown) return Result<Hover, ResponseError>.Success(new Hover(new MarkupContent(MarkupKind.Markdown, info.info), TR2R(info.range)));
                         else return Result<Hover, ResponseError>.Success(new Hover(info.info, TR2R(info.range)));
@@ -198,7 +198,7 @@ namespace RainLanguageServer
                     var position = GetFilePosition(fileSpace.document, param.position);
                     var declaration = fileSpace.GetFileDeclaration(position);
                     var infos = new List<HighlightInfo>();
-                    if (declaration != null && declaration.OnHighlight(position, infos))
+                    if (declaration != null && declaration.OnHighlight(builder.manager, position, infos))
                     {
                         var results = new DocumentHighlight[infos.Count];
                         for (int i = 0; i < infos.Count; i++)

@@ -53,12 +53,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (this is InvalidExpression invalid) return invalid;
             return new InvalidExpression(this);
         }
-        public virtual bool OnHover(TextPosition position, out HoverInfo info)//todo 悬停信息
+        public virtual bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)//todo 悬停信息
         {
             info = default;
             return false;
         }
-        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        public virtual bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos) => false;//todo 高亮
+        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)//todo 查找定义
         {
             result = default;
             return false;

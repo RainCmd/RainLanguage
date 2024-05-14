@@ -20,17 +20,29 @@
             }
             finallyBlock?.Read(parameter);
         }
-        public override bool OnHover(TextPosition position, out HoverInfo info)
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (tryBlock != null && tryBlock.range.Contain(position)) return tryBlock.OnHover(position, out info);
-            else if (finallyBlock != null && finallyBlock.range.Contain(position)) return finallyBlock.OnHover(position, out info);
+            if (tryBlock != null && tryBlock.range.Contain(position)) return tryBlock.OnHover(manager, position, out info);
+            else if (finallyBlock != null && finallyBlock.range.Contain(position)) return finallyBlock.OnHover(manager, position, out info);
             else
             {
                 foreach (var catchBlock in catchBlocks)
-                    if (catchBlock.condition.range.Contain(position)) return catchBlock.condition.OnHover(position, out info);
-                    else if (catchBlock.block.range.Contain(position)) return catchBlock.block.OnHover(position, out info);
+                    if (catchBlock.condition.range.Contain(position)) return catchBlock.condition.OnHover(manager, position, out info);
+                    else if (catchBlock.block.range.Contain(position)) return catchBlock.block.OnHover(manager, position, out info);
             }
-            return base.OnHover(position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (tryBlock != null && tryBlock.range.Contain(position)) return tryBlock.OnHighlight(manager, position, infos);
+            else if (finallyBlock != null && finallyBlock.range.Contain(position)) return finallyBlock.OnHighlight(manager, position, infos);
+            else
+            {
+                foreach (var catchBlock in catchBlocks)
+                    if (catchBlock.condition.range.Contain(position)) return catchBlock.condition.OnHighlight(manager, position, infos);
+                    else if (catchBlock.block.range.Contain(position)) return catchBlock.block.OnHighlight(manager, position, infos);
+            }
+            return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
