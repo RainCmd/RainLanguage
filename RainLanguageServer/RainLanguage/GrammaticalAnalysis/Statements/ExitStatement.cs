@@ -1,10 +1,16 @@
 ﻿
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
-    internal class ExitStatement(TextRange anchor, Expression expression, List<TextRange> group) : Statement(anchor)
+    internal class ExitStatement : Statement
     {
-        public readonly Expression expression = expression;
-        public readonly List<TextRange> group = group;
+        public readonly Expression expression;
+        public readonly List<TextRange> group;
+        public ExitStatement(TextRange anchor, Expression expression, List<TextRange> group) : base(anchor)
+        {
+            this.expression = expression;
+            this.group = group;
+            group.Add(anchor);
+        }
         public override void Read(ExpressionParameter parameter) => expression.Read(parameter);
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info) => expression.OnHover(manager, position, out info);
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)

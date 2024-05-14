@@ -65,7 +65,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     newBlock.indent = line.indent;
                     stack.Push(newBlock);
                 }
-                else while (stack.Count > 0)
+                else while (stack.Count > 0)//todo 这里应该解析的时候就重新这是range
                     {
                         var block = stack.Peek();
                         if (block.indent > line.indent)
