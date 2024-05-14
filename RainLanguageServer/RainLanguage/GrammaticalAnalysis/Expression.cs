@@ -58,6 +58,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             info = default;
             return false;
         }
+        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            result = default;
+            return false;
+        }
         public abstract void Read(ExpressionParameter parameter);
         public virtual void Write(ExpressionParameter parameter) => throw new NotImplementedException();
         public virtual bool TryEvaluate(out bool value)

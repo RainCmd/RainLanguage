@@ -11,6 +11,12 @@
             else if (condition.range.Contain(position)) return condition.OnHover(position, out info);
             return base.OnHover(position, out info);
         }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (loop != null && loop.range.Contain(position)) return loop.TryGetDeclaration(manager, position, out result);
+            else if (condition.range.Contain(position)) return condition.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
     }
     internal class BreakStatement(LoopStatement? loop, Expression condition) : JumpStatement(loop, condition) { }
     internal class ContinueStatement(LoopStatement? loop, Expression condition) : JumpStatement(loop, condition) { }

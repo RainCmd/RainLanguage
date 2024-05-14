@@ -9,5 +9,10 @@
             info = default;
             return false;
         }
+        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            result = default;
+            return false;
+        }
     }
 }

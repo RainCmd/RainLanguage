@@ -41,6 +41,7 @@ namespace RainLanguageServer.RainLanguage
             info = default;
             return false;
         }
+        public virtual bool OnHighlight(TextPosition position, List<HighlightInfo> infos) => false;//todo 高亮
         public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
             result = compiling;
@@ -95,10 +96,7 @@ namespace RainLanguageServer.RainLanguage
                     result = manager.GetSourceDeclaration(variable.type.Source);
                     return result != null;
                 }
-                else
-                {
-                    //todo 表达式内的定义
-                }
+                else if (variable.expression != null) return variable.expression!.TryGetDeclaration(manager, position, out result);
             }
             return false;
         }
@@ -211,7 +209,7 @@ namespace RainLanguageServer.RainLanguage
                         result = manager.GetSourceDeclaration(callable.returns[i].Source);
                         return result != null;
                     }
-                //todo 函数body
+                if (callable is CompilingFunction function) return function.logicBlock.block.TryGetDeclaration(manager, position, out result);
             }
             return false;
         }
@@ -275,14 +273,13 @@ namespace RainLanguageServer.RainLanguage
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
             if (base.TryGetDeclaration(manager, position, out result)) return true;
-            for (var i = 0; i < elements.Count; i++)
-            {
-                var element = elements[i];
-                if (element.expression != null && element.expression.Value.Contain(position))
+            if (compiling is CompilingEnum compilingEnum)
+                for (var i = 0; i < elements.Count; i++)
                 {
-                    //todo 枚举表达式内容
+                    var element = compilingEnum.elements[i];
+                    if (element.expression != null && element.expression.range.Contain(position))
+                        return element.expression.TryGetDeclaration(manager, position, out result);
                 }
-            }
             return false;
         }
     }
@@ -448,10 +445,8 @@ namespace RainLanguageServer.RainLanguage
                 foreach (var variable in variables)
                     if (variable.range != null && variable.range.Contain(position))
                         return variable.TryGetDeclaration(manager, position, out result);
-                if (destructorRange != null && destructorRange.Contain(position))
-                {
-                    //todo 析构函数表达式
-                }
+                if (compilingClass.destructor != null && compilingClass.destructor.block.range.Contain(position))
+                    return compilingClass.destructor.block.TryGetDeclaration(manager, position, out result);
             }
             return false;
         }

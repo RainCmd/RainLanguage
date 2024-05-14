@@ -32,5 +32,17 @@
             }
             return base.OnHover(position, out info);
         }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (tryBlock != null && tryBlock.range.Contain(position)) return tryBlock.TryGetDeclaration(manager, position, out result);
+            else if (finallyBlock != null && finallyBlock.range.Contain(position)) return finallyBlock.TryGetDeclaration(manager, position, out result);
+            else
+            {
+                foreach (var catchBlock in catchBlocks)
+                    if (catchBlock.condition.range.Contain(position)) return catchBlock.condition.TryGetDeclaration(manager, position, out result);
+                    else if (catchBlock.block.range.Contain(position)) return catchBlock.block.TryGetDeclaration(manager, position, out result);
+            }
+            return base.TryGetDeclaration(manager, position, out result);
+        }
     }
 }

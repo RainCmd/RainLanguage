@@ -82,16 +82,56 @@ namespace RainLanguageServer
         protected override Result<CompletionResult, ResponseError> Completion(CompletionParams param, CancellationToken token)
         {
             var result = new CompletionResult([
-                new CompletionItem("阿斯蒂芬"){
-                    kind = CompletionItemKind.Method,
-                    data = "这是什么万一"
+                new CompletionItem("function"){
+                    kind = CompletionItemKind.Function,
+                    data = "这是什么万一(qewr asd,cqe a,dfqe,dvsdf)"
                 },
-                new CompletionItem("斯国一"){
+                new CompletionItem("method"){
                     kind = CompletionItemKind.Method,
-                    data = "哈哈哈"
+                    data = "哈哈哈(asd,fqwe, ad,qwe qwfr,qew)"
                 },
                 ]);
             return Result<CompletionResult, ResponseError>.Success(result);
+        }
+        protected override Result<CompletionItem, ResponseError> ResolveCompletionItem(CompletionItem param, CancellationToken token)
+        {
+            return Result<CompletionItem, ResponseError>.Success(param);
+        }
+        protected override Result<SignatureHelp, ResponseError> SignatureHelp(TextDocumentPositionParams param, CancellationToken token)
+        {
+            var signs = new SignatureInformation[3];
+            signs[0] = new SignatureInformation("符号1信息")
+            {
+                documentation = new MarkupContent(MarkupKind.Markdown, "符号1的documentation"),
+                parameters = [
+                    new ParameterInformation("符号1的参数1信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号1的参数1的documentation") },
+                    new ParameterInformation("符号1的参数2信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号1的参数2的documentation") },
+                    new ParameterInformation("符号1的参数3信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号1的参数3的documentation") },
+                    new ParameterInformation("符号1的参数4信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号1的参数4的documentation") }
+                    ]
+            };
+            signs[1] = new SignatureInformation("符号2信息")
+            {
+                documentation = new MarkupContent(MarkupKind.Markdown, "符号2的documentation"),
+                parameters = [
+                    new ParameterInformation("符号2的参数1信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号2的参数1的documentation") },
+                    new ParameterInformation("符号2的参数2信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号2的参数2的documentation") },
+                    new ParameterInformation("符号2的参数3信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号2的参数3的documentation") },
+                    new ParameterInformation("符号2的参数4信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号2的参数4的documentation") },
+                    new ParameterInformation("符号2的参数5信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号2的参数5的documentation") },
+                    new ParameterInformation("符号2的参数6信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号2的参数6的documentation") }
+                    ]
+            };
+            signs[2] = new SignatureInformation("符号3信息")
+            {
+                documentation = new MarkupContent(MarkupKind.Markdown, "符号3的documentation"),
+                parameters = [
+                    new ParameterInformation("符号3的参数1信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号3的参数1的documentation") },
+                    new ParameterInformation("符号3的参数2信息") { documentation=new MarkupContent(MarkupKind.Markdown, "符号3的参数2的documentation") }
+                    ]
+            };
+            return Result<SignatureHelp, ResponseError>.Success(new SignatureHelp(signs) { activeSignature = 1, activeParameter = 2 });
+            //return Result<SignatureHelp, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
         protected override Result<Location[], ResponseError> FindReferences(ReferenceParams param, CancellationToken token)
@@ -126,9 +166,7 @@ namespace RainLanguageServer
             {
                 if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
                     if (fileSpace.TryGetDeclaration(builder.manager, GetFilePosition(fileSpace.document, param.position), out var result))
-                    {
                         return Result<LocationSingleOrArray, ResponseError>.Success(TR2L(result!.name));
-                    }
             }
             return Result<LocationSingleOrArray, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
@@ -153,7 +191,22 @@ namespace RainLanguageServer
 
         protected override Result<DocumentHighlight[], ResponseError> DocumentHighlight(TextDocumentPositionParams param, CancellationToken token)
         {
-            //todo 高亮功能
+            if (builder != null)
+            {
+                if (builder.manager.fileSpaces.TryGetValue(new UnifiedPath(param.textDocument.uri), out var fileSpace))
+                {
+                    var position = GetFilePosition(fileSpace.document, param.position);
+                    var declaration = fileSpace.GetFileDeclaration(position);
+                    var infos = new List<HighlightInfo>();
+                    if (declaration != null && declaration.OnHighlight(position, infos))
+                    {
+                        var results = new DocumentHighlight[infos.Count];
+                        for (int i = 0; i < infos.Count; i++)
+                            results[i] = new DocumentHighlight(TR2R(infos[i].range)) { kind = infos[i].kind };
+                        return Result<DocumentHighlight[], ResponseError>.Success(results);
+                    }
+                }
+            }
             return Result<DocumentHighlight[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 
