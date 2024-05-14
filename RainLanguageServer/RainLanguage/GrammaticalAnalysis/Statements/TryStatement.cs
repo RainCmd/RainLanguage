@@ -1,6 +1,6 @@
 ﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
-    internal class TryStatement : Statement
+    internal class TryStatement(TextRange anchor) : Statement(anchor)
     {
         public class CatchBlock(Expression condition, BlockStatement block)
         {
@@ -10,6 +10,7 @@
         public BlockStatement? tryBlock;
         public readonly List<CatchBlock> catchBlocks = [];
         public BlockStatement? finallyBlock;
+        public readonly List<TextRange> group = [anchor];
         public override void Read(ExpressionParameter parameter)
         {
             tryBlock?.Read(parameter);
@@ -34,7 +35,13 @@
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if (tryBlock != null && tryBlock.range.Contain(position)) return tryBlock.OnHighlight(manager, position, infos);
+            if (anchor.Contain(position))
+            {
+                foreach (var anchor in group)
+                    infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                return true;
+            }
+            else if (tryBlock != null && tryBlock.range.Contain(position)) return tryBlock.OnHighlight(manager, position, infos);
             else if (finallyBlock != null && finallyBlock.range.Contain(position)) return finallyBlock.OnHighlight(manager, position, infos);
             else
             {

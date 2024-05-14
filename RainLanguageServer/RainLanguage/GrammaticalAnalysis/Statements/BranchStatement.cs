@@ -1,10 +1,17 @@
 ﻿
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
-    internal class BranchStatement(Expression condition) : Statement
+    internal class BranchStatement : Statement
     {
-        public readonly Expression condition = condition;
+        public readonly Expression condition;
         public BlockStatement? trueBranch, falseBranch;
+        public List<TextRange> group;
+        public BranchStatement(TextRange anchor, Expression condition, List<TextRange> group):base(anchor)
+        {
+            this.condition = condition;
+            this.group = group;
+            group.Add(anchor);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             condition.Read(parameter);
@@ -20,7 +27,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if (condition.range.Contain(position)) return condition.OnHighlight(manager, position, infos);
+            if (anchor.Contain(position))
+            {
+                foreach (var anchor in group)
+                    infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                return true;
+            }
+            else if (condition.range.Contain(position)) return condition.OnHighlight(manager, position, infos);
             else if (trueBranch != null && trueBranch.range.Contain(position)) return trueBranch.OnHighlight(manager, position, infos);
             else if (falseBranch != null && falseBranch.range.Contain(position)) return falseBranch.OnHighlight(manager, position, infos);
             return base.OnHighlight(manager, position, infos);

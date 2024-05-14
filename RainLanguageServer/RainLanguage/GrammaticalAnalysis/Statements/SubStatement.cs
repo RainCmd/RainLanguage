@@ -1,10 +1,10 @@
 ﻿
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
-    internal class SubStatement(Statement parent) : Statement
+    internal class SubStatement : Statement
     {
-        public readonly Statement parent = parent;
-
+        public readonly Statement parent;
+        public readonly List<TextRange> group;
         public BlockStatement? Block
         {
             get
@@ -21,8 +21,23 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
                 else if (parent is TryStatement @try) @try.finallyBlock = value;
             }
         }
+        public SubStatement(TextRange anchor, Statement parent, List<TextRange> group) : base(anchor)
+        {
+            this.parent = parent;
+            this.group = group;
+            group.Add(anchor);
+        }
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info) => parent.OnHover(manager, position, out info);
-        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos) => parent.OnHighlight(manager, position, infos);
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (anchor.Contain(position))
+            {
+                foreach (var anchor in group)
+                    infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                return true;
+            }
+            return parent.OnHighlight(manager, position, infos);
+        }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result) => parent.TryGetDeclaration(manager, position, out result);
     }
 }

@@ -12,7 +12,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         public readonly List<TextLine> body;
         public readonly MessageCollector collector;
         public readonly bool destructor;
-        public readonly BlockStatement block = new();
+        public readonly BlockStatement block = new(default, []);
         public LogicBlock(CompilingDeclaration? declaration, List<CompilingCallable.Parameter> parameters, List<Type> returns, CompilingSpace space, List<TextLine> body, HashSet<CompilingSpace> relies, MessageCollector collector)
         {
             localContext = new LocalContext(collector, declaration);
@@ -52,16 +52,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     if (stack.Peek().statements.Count > 0)
                     {
                         var prev = stack.Peek().statements[^1];
-                        if (prev is BranchStatement branch) newBlock = branch.trueBranch = new BlockStatement() { range = branch.range };
-                        else if (prev is LoopStatement loop) newBlock = loop.loopBlock = new BlockStatement() { range = loop.range };
-                        else if (prev is SubStatement sub) newBlock = sub.Block = new BlockStatement() { range = sub.range };
+                        if (prev is BranchStatement branch) newBlock = branch.trueBranch = new BlockStatement(branch.anchor, branch.group) { range = branch.range };
+                        else if (prev is LoopStatement loop) newBlock = loop.loopBlock = new BlockStatement(loop.anchor, loop.group) { range = loop.range };
+                        else if (prev is SubStatement sub) newBlock = sub.Block = new BlockStatement(sub.anchor, sub.group) { range = sub.range };
                         else if (prev is TryStatement @try)
                         {
-                            if (@try.tryBlock == null) newBlock = @try.tryBlock = new BlockStatement() { range = @try.range };
+                            if (@try.tryBlock == null) newBlock = @try.tryBlock = new BlockStatement(@try.anchor, @try.group) { range = @try.range };
                             else newBlock = @try.catchBlocks[^1].block;
                         }
                     }
-                    if (newBlock == null) stack.Peek().statements.Add(newBlock = new BlockStatement() { range = body[lineIndex - 1] });
+                    if (newBlock == null) stack.Peek().statements.Add(newBlock = new BlockStatement(line, null) { range = body[lineIndex - 1] });
                     newBlock.indent = line.indent;
                     stack.Push(newBlock);
                 }
@@ -99,29 +99,29 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                 if (Lexical.TryAnalysis(line, 0, out var lexical, collector))
                 {
-                    if (lexical.type == LexicalType.KeyWord_if) ParseBranch(parser, stack, line, lexical);
+                    if (lexical.type == LexicalType.KeyWord_if) ParseBranch(parser, stack, line, lexical, []);
                     else if (lexical.type == LexicalType.KeyWord_elseif)
                     {
                         if (stack.TryPeek(out var block) && block.statements.Count > 0)
                         {
                             if (block.statements[^1] is BranchStatement branch)
                             {
-                                branch.falseBranch = new BlockStatement { range = line, indent = line.indent };
+                                branch.falseBranch = new BlockStatement(lexical.anchor, branch.group) { range = line, indent = line.indent };
                                 stack.Push(branch.falseBranch);
                                 localContext.PushBlock();
-                                goto label_elseif_parse_success;
+                                ParseBranch(parser, stack, line, lexical, branch.group);
+                                continue;
                             }
                             else if (block.statements[^1] is LoopStatement loop)
                             {
-                                loop.elseBlock = new BlockStatement { range = line, indent = line.indent };
+                                loop.elseBlock = new BlockStatement(lexical.anchor, loop.group) { range = line, indent = line.indent };
                                 stack.Push(loop.elseBlock);
                                 localContext.PushBlock();
-                                goto label_elseif_parse_success;
+                                ParseBranch(parser, stack, line, lexical, loop.group);
+                                continue;
                             }
                         }
                         collector.Add(lexical.anchor, CErrorLevel.Error, "elseif语句必须在if、elseif、while和for语句之后");
-                    label_elseif_parse_success:
-                        ParseBranch(parser, stack, line, lexical);
                     }
                     else if (lexical.type == LexicalType.KeyWord_else)
                     {
@@ -129,12 +129,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             if (block.statements[^1] is BranchStatement branch)
                             {
-                                block.statements.Add(new SubStatement(branch) { range = line });
+                                block.statements.Add(new SubStatement(lexical.anchor, branch, branch.group) { range = line });
                                 goto label_else_parse_success;
                             }
                             else if (block.statements[^1] is LoopStatement loop)
                             {
-                                block.statements.Add(new SubStatement(loop) { range = line });
+                                block.statements.Add(new SubStatement(lexical.anchor, loop, loop.group) { range = line });
                                 goto label_else_parse_success;
                             }
                         }
@@ -150,7 +150,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (!condition.attribute.ContainAny(ExpressionAttribute.Value)) collector.Add(condition.range, CErrorLevel.Error, "表达式返回值的不是一个有效值");
                             else if (condition.types[0] != Type.BOOL) collector.Add(condition.range, CErrorLevel.Error, "表达式返回值类型不是bool类型");
                         }
-                        stack.Peek().statements.Add(new WhileStatement(condition) { range = line });
+                        stack.Peek().statements.Add(new WhileStatement(lexical.anchor, condition) { range = line });
                     }
                     else if (lexical.type == LexicalType.KeyWord_for)
                     {
@@ -170,13 +170,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             }
                             if (condition.Valid && !(condition.types.Count == 1 && condition.types[0] == Type.BOOL))
                                 collector.Add(condition.range, CErrorLevel.Error, "表达式返回值类型不是bool类型");
-                            stack.Peek().statements.Add(new ForStatement(front, condition, back) { range = line });
+                            stack.Peek().statements.Add(new ForStatement(lexical.anchor, front, condition, back) { range = line });
                         }
                         else
                         {
                             collector.Add(lexical.anchor, CErrorLevel.Error, "for循环后需要有';'分割的表达式");
                             var condition = parser.Parse(lexical.anchor.end & line.end);
-                            stack.Peek().statements.Add(new LoopStatement(condition) { range = line });
+                            stack.Peek().statements.Add(new LoopStatement(lexical.anchor, condition) { range = line });
                         }
                     }
                     else if (lexical.type == LexicalType.KeyWord_break)
@@ -189,9 +189,9 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         if (!TryGetLoopStatement(stack.GetEnumerator(), out var loop))
                             collector.Add(lexical.anchor, CErrorLevel.Error, "break表达式必须位于while或for循环语句块中");
-                        var jump = new ContinueStatement(loop, condition) { range = line };
+                        var jump = new BreakStatement(lexical.anchor, loop, condition) { range = line };
                         stack.Peek().statements.Add(jump);
-                        loop?.jumps.Add(jump);
+                        loop?.group.Add(lexical.anchor);
                     }
                     else if (lexical.type == LexicalType.KeyWord_continue)
                     {
@@ -203,9 +203,9 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         }
                         if (!TryGetLoopStatement(stack.GetEnumerator(), out var loop))
                             collector.Add(lexical.anchor, CErrorLevel.Error, "continue表达式必须位于while或for循环语句块中");
-                        var jump = new ContinueStatement(loop, condition) { range = line };
+                        var jump = new ContinueStatement(lexical.anchor, loop, condition) { range = line };
                         stack.Peek().statements.Add(jump);
-                        loop?.jumps.Add(jump);
+                        loop?.group.Add(lexical.anchor);
                     }
                     else if (lexical.type == LexicalType.KeyWord_return)
                     {
@@ -217,7 +217,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 if (ExpressionParser.Convert(manager, result.types[i], returns[i]) < 0)
                                     collector.Add(result.range, CErrorLevel.Error, $"表达式第{i + 1}个返回值类型无法转换为函数返回值类型");
                         }
-                        stack.Peek().statements.Add(new ReturnStatement(result) { range = line });
+                        stack.Peek().statements.Add(new ReturnStatement(lexical.anchor, result, block.group!) { range = line });
                     }
                     else if (lexical.type == LexicalType.KeyWord_wait)
                     {
@@ -227,18 +227,18 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (expression.types.Count != 1 || expression.types[0] != Type.BOOL && expression.types[0] != Type.INT && expression.types[0].code != TypeCode.Task)
                                 collector.Add(expression.range, CErrorLevel.Error, "wait的目标表达式返回值类型必须是bool、integer或task");
                         }
-                        stack.Peek().statements.Add(new WaitStatement(expression) { range = line });
+                        stack.Peek().statements.Add(new WaitStatement(lexical.anchor, expression, block.group!) { range = line });
                     }
                     else if (lexical.type == LexicalType.KeyWord_exit)
                     {
                         var exit = parser.Parse(lexical.anchor.end & line.end);
                         if (exit.Valid && !(exit.types.Count == 1 && exit.types[0] == Type.STRING))
                             collector.Add(exit.range, CErrorLevel.Error, "exit的目标表达式返回值类型必须是string");
-                        stack.Peek().statements.Add(new ExitStatement(exit) { range = line });
+                        stack.Peek().statements.Add(new ExitStatement(lexical.anchor, exit, block.group!) { range = line });
                     }
                     else if (lexical.type == LexicalType.KeyWord_try)
                     {
-                        stack.Peek().statements.Add(new TryStatement() { range = line });
+                        stack.Peek().statements.Add(new TryStatement(lexical.anchor) { range = line });
                         if (Lexical.TryAnalysis(line, lexical.anchor.end, out var value, collector))
                             collector.Add(value.anchor, CErrorLevel.Error, "意外的符号");
                     }
@@ -246,13 +246,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (stack.Peek().statements.Count > 0 && stack.Peek().statements[^1] is TryStatement @try)
                         {
-                            @try.tryBlock ??= new BlockStatement() { range = @try.range };
+                            @try.tryBlock ??= new BlockStatement(@try.anchor, @try.group) { range = @try.range };
                             if (@try.finallyBlock != null) collector.Add(lexical.anchor, CErrorLevel.Error, "catch语句必须位于finally语句之前");
                             var condition = parser.Parse(lexical.anchor.end & line.end);
                             if (condition is BlurryVariableDeclarationExpression) condition = parser.InferLeftValueType(condition, Type.STRING);
                             if (condition.Valid && !(condition.types.Count == 1 && condition.types[0] == Type.STRING))
                                 collector.Add(condition.range, CErrorLevel.Error, "catch的目标表达式返回值类型必须是字符串");
-                            @try.catchBlocks.Add(new TryStatement.CatchBlock(condition, new BlockStatement() { range = line }));
+                            @try.catchBlocks.Add(new TryStatement.CatchBlock(condition, new BlockStatement(lexical.anchor,@try.group) { range = line }));
                         }
                         else collector.Add(lexical.anchor, CErrorLevel.Error, "catch语句必须在try或catch语句后面");
                     }
@@ -262,8 +262,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             if (block.statements[^1] is TryStatement @try)
                             {
-                                @try.tryBlock ??= new BlockStatement() { range = @try.range };
-                                block.statements.Add(new SubStatement(@try) { range = line });
+                                @try.tryBlock ??= new BlockStatement(lexical.anchor, @try.group) { range = @try.range };
+                                block.statements.Add(new SubStatement(@try.anchor, @try, @try.group) { range = line });
                                 goto label_finally_parse_success;
                             }
                         }
@@ -283,7 +283,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             block.Read(new ExpressionParameter(manager, collector));
         }
-        private void ParseBranch(ExpressionParser parser, Stack<BlockStatement> stack, TextLine line, Lexical lexical)
+        private void ParseBranch(ExpressionParser parser, Stack<BlockStatement> stack, TextLine line, Lexical lexical, List<TextRange> group)
         {
             var condition = parser.Parse(lexical.anchor.end & line.end);
             if (condition.Valid)
@@ -291,7 +291,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 if (!condition.attribute.ContainAny(ExpressionAttribute.Value)) collector.Add(condition.range, CErrorLevel.Error, "表达式返回值的不是一个有效值");
                 else if (condition.types[0] != Type.BOOL) collector.Add(condition.range, CErrorLevel.Error, "表达式返回值类型不是bool类型");
             }
-            stack.Peek().statements.Add(new BranchStatement(condition) { range = line });
+            stack.Peek().statements.Add(new BranchStatement(lexical.anchor, condition, group) { range = line });
         }
         private static bool TryGetLoopStatement(Stack<BlockStatement>.Enumerator iterator, out LoopStatement? loop)
         {

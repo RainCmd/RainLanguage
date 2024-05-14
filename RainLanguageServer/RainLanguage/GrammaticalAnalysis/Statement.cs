@@ -1,8 +1,9 @@
 ﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
-    internal class Statement
+    internal class Statement(TextRange anchor)
     {
         public TextRange range;
+        public readonly TextRange anchor = anchor;
         public virtual void Read(ExpressionParameter parameter) { }
         public virtual bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
