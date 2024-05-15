@@ -65,17 +65,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     newBlock.indent = line.indent;
                     stack.Push(newBlock);
                 }
-                else while (stack.Count > 0)//todo 这里应该解析的时候就重新这是range
+                else while (stack.Count > 0)
                     {
                         var block = stack.Peek();
                         if (block.indent > line.indent)
                         {
                             stack.Pop();
                             localContext.PopBlock();
-                            block.range = block.range.start & line.start;
-                            var statement = stack.Peek().statements[^1];
-                            statement.range = statement.range.start & line.start;
-                            if (statement is SubStatement sub) sub.parent.range = sub.parent.range.start & line.start;
                         }
                         else if (block.indent < line.indent)
                         {
@@ -252,7 +248,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (condition is BlurryVariableDeclarationExpression) condition = parser.InferLeftValueType(condition, Type.STRING);
                             if (condition.Valid && !(condition.types.Count == 1 && condition.types[0] == Type.STRING))
                                 collector.Add(condition.range, CErrorLevel.Error, "catch的目标表达式返回值类型必须是字符串");
-                            @try.catchBlocks.Add(new TryStatement.CatchBlock(condition, new BlockStatement(lexical.anchor,@try.group) { range = line }));
+                            @try.catchBlocks.Add(new TryStatement.CatchBlock(condition, new BlockStatement(lexical.anchor, @try.group) { range = line }));
                         }
                         else collector.Add(lexical.anchor, CErrorLevel.Error, "catch语句必须在try或catch语句后面");
                     }
@@ -281,7 +277,51 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                 }
             }
+            TidyRange(block);
             block.Read(new ExpressionParameter(manager, collector));
+        }
+        private static void TidyRange(BlockStatement block)
+        {
+            for (var i = block.statements.Count - 1; i >= 0; i--)
+            {
+                var statement = block.statements[i];
+                if (statement is BlockStatement blockStatement) TidyRange(blockStatement);
+                else if (statement is BranchStatement branch)
+                {
+                    if (branch.trueBranch != null) TidyRange(branch.trueBranch);
+                    if (branch.falseBranch != null)
+                    {
+                        TidyRange(branch.falseBranch);
+                        branch.range &= branch.falseBranch.range;
+                    }
+                    else if (branch.trueBranch != null) branch.range &= branch.trueBranch.range;
+                }
+                else if (statement is LoopStatement loop)
+                {
+                    if (loop.loopBlock != null) TidyRange(loop.loopBlock);
+                    if (loop.elseBlock != null)
+                    {
+                        TidyRange(loop.elseBlock);
+                        loop.range &= loop.elseBlock.range;
+                    }
+                    else if (loop.loopBlock != null) loop.range &= loop.loopBlock.range;
+                }
+                else if (statement is TryStatement @try)
+                {
+                    if (@try.tryBlock != null) TidyRange(@try.tryBlock);
+                    foreach (var catchBlock in @try.catchBlocks)
+                        TidyRange(catchBlock.block);
+                    if (@try.finallyBlock != null)
+                    {
+                        TidyRange(@try.finallyBlock);
+                        @try.range &= @try.finallyBlock.range;
+                    }
+                    else if (@try.catchBlocks.Count > 0) @try.range &= @try.catchBlocks[^1].block.range;
+                    else if (@try.tryBlock != null) @try.range &= @try.tryBlock.range;
+                }
+                else if (statement is SubStatement) block.statements.RemoveAt(i);
+            }
+            if (block.statements.Count > 0) block.range &= block.statements[^1].range;
         }
         private void ParseBranch(ExpressionParser parser, Stack<BlockStatement> stack, TextLine line, Lexical lexical, List<TextRange> group)
         {
