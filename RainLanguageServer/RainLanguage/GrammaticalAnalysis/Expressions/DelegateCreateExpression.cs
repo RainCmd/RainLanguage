@@ -46,6 +46,7 @@
     }
     internal class LambdaDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, Expression lambdaBody) : DelegateCreateExpression(range, type, callable)
     {
+        //todo 参数列表也是需要的
         public readonly Expression lambdaBody = lambdaBody;
         public override void Read(ExpressionParameter parameter)
         {

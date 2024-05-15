@@ -131,7 +131,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         {
                                             if (!tuple!.Valid || tuple.types.Count == 0)
                                             {
-                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, null, null, tuple);
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, typeExpression.typeWordRange, null, null, tuple);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                             }
@@ -141,7 +141,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                                 var members = new List<Type>();
                                                 foreach (var member in compiling.variables) members.Add(member.type);
                                                 tuple = AssignmentConvert(tuple, members);
-                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, null, null, tuple);
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, typeExpression.typeWordRange, null, null, tuple);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                             }
@@ -154,14 +154,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(typeExpression.range, constructors, tuple!, out var callable))
                                             {
                                                 if (destructor) collector.Add(typeExpression.range, CErrorLevel.Error, "析构函数中不能申请托管内存");
-                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, callable, null, tuple);
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple!.range, type, typeExpression.typeWordRange, callable, null, tuple);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                             }
                                             else
                                             {
                                                 collector.Add(typeExpression.range, CErrorLevel.Error, "未找到匹配的构造函数");
-                                                var expression = new ConstructorExpression(typeExpression.range & tuple.range, type, null, constructors, tuple);
+                                                var expression = new ConstructorExpression(typeExpression.range & tuple!.range, type, typeExpression.typeWordRange, null, constructors, tuple);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                             }
@@ -317,7 +317,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         if (tuple is TupleExpression tupleExpression && tupleExpression.expressions.Count == 0)
                                         {
                                             var expression = (TypeExpression)expressionStack.Pop();
-                                            expression = new TypeExpression(expression.range & tuple.range, expression.type.GetDimensionType(expression.type.dimension + 1));
+                                            expression = new TypeExpression(expression.range & tuple.range, expression.type.GetDimensionType(expression.type.dimension + 1), expression.typeWordRange);
                                             expressionStack.Push(expression);
                                             attribute = expression.attribute;
                                             goto label_next_lexical;
@@ -327,7 +327,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             tuple = AssignmentConvert(tuple, Type.INT);
                                             var typeExpression = (TypeExpression)expressionStack.Pop();
                                             if (destructor) collector.Add(typeExpression.range, CErrorLevel.Error, "析构函数中不能申请托管内存");
-                                            var expression = new ArrayCreateExpression(typeExpression.range & tuple.range, tuple, typeExpression.type.GetDimensionType(typeExpression.type.dimension + 1));
+                                            var expression = new ArrayCreateExpression(typeExpression.range & tuple.range, tuple, typeExpression.type.GetDimensionType(typeExpression.type.dimension + 1), typeExpression.typeWordRange);
                                             expressionStack.Push(expression);
                                             attribute = expression.attribute;
                                             goto label_next_lexical;
@@ -479,7 +479,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 index = lexical.anchor.end;
                                 if (lexical.type.TryConvertType(out var type))
                                 {
-                                    expressionStack.Push(new TypeExpression(lexical.anchor, type.GetDimensionType(Lexical.ExtractDimension(range, ref index))));
+                                    expressionStack.Push(new TypeExpression(lexical.anchor, type.GetDimensionType(Lexical.ExtractDimension(range, ref index)), lexical.anchor));
                                     attribute = ExpressionAttribute.Type;
                                 }
                                 else if (lexical.type == LexicalType.Word)
@@ -1203,7 +1203,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (lexical.type.TryConvertType(out var type))
                             {
                                 index = lexical.anchor.end;
-                                expressionStack.Push(new TypeExpression(lexical.anchor, type.GetDimensionType(Lexical.ExtractDimension(range, ref index))));
+                                expressionStack.Push(new TypeExpression(lexical.anchor, type.GetDimensionType(Lexical.ExtractDimension(range, ref index)), lexical.anchor));
                                 attribute = ExpressionAttribute.Type;
                                 goto label_next_lexical;
                             }
@@ -1242,13 +1242,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     {
                                         index = lexical.anchor.end;
                                         var local = localContext.Add(lexical.anchor, targetType);
-                                        var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType), sourceExpression, local);
+                                        var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType, name), sourceExpression, local);
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
                                     }
                                     else
                                     {
-                                        var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType), sourceExpression, null);
+                                        var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType, name), sourceExpression, null);
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
                                     }
@@ -1286,7 +1286,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 var targetType = declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index));
                                 if (targetType.Vaild && targetType.Managed)
                                 {
-                                    var expression = new CastExpression(sourceExpression.range & name, new TypeExpression(name, targetType), sourceExpression);
+                                    var expression = new CastExpression(sourceExpression.range & name, new TypeExpression(name, targetType, name), sourceExpression);
                                     expressionStack.Push(expression);
                                     attribute = expression.attribute;
                                     goto label_next_lexical;
@@ -1336,7 +1336,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 index = lexical.anchor.end;
             label_next_lexical:;
             }
-            if (attribute.ContainAny(ExpressionAttribute.Operator)) 
+            if (attribute.ContainAny(ExpressionAttribute.Operator))
                 expressionStack.Push(new InvalidExpression(tokenStack.Peek().lexical.anchor));
             while (tokenStack.Count > 0) PopToken(expressionStack, tokenStack.Pop());
             if (expressionStack.Count > 1)
@@ -1900,7 +1900,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)), anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
@@ -1914,7 +1914,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)), anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
@@ -1951,7 +1951,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)), anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
@@ -1989,7 +1989,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)), anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
@@ -2004,7 +2004,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)));
+                            var expression = new TypeExpression(anchor, declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index)), anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;

@@ -1,4 +1,5 @@
 ﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis;
+using System;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage
@@ -67,6 +68,36 @@ namespace RainLanguageServer.RainLanguage
         }
         public readonly List<Parameter> parameters = parameters;
         public readonly Tuple returns = returns;
+        public string ToString(string? declaration)
+        {
+            var sb = new StringBuilder();
+            for (var i = 0; i < returns.Count; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(returns[i].ToString(false, space));
+            }
+            if (returns.Count > 0) sb.Append(' ');
+            if (declaration != null)
+            {
+                sb.Append(declaration);
+                sb.Append('.');
+            }
+            sb.Append(name);
+            sb.Append('(');
+            for (var i = 0; i < parameters.Count; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                var param = parameters[i];
+                sb.Append(param.type.ToString(false, space));
+                if (param.name != null)
+                {
+                    sb.Append(' ');
+                    sb.Append(param.name);
+                }
+            }
+            sb.Append(')');
+            return sb.ToString();
+        }
     }
     internal class CompilingFunction(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns, LogicBlock logicBlock)
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)

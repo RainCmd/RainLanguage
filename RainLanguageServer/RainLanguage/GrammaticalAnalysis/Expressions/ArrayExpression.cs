@@ -1,12 +1,59 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿using LanguageServer;
+using Microsoft.Win32.SafeHandles;
+using System.Text;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal class ArrayCreateExpression : Expression
     {
+        public readonly TextRange typeWordRange;
         public readonly Expression length;
-        public ArrayCreateExpression(TextRange range, Expression length, Type type) : base(range, new Tuple([type]))
+        public ArrayCreateExpression(TextRange range, Expression length, Type type, TextRange typeWordRange) : base(range, new Tuple([type]))
         {
             this.length = length;
+            this.typeWordRange = typeWordRange;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (typeWordRange.Contain(position))
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                sb.AppendLine(types[0].ToString());
+                sb.AppendLine("```");
+                info = new HoverInfo(range, sb.ToString(), true);
+                return true;
+            }
+            else if (length.range.Contain(position)) return length.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (typeWordRange.Contain(position))
+            {
+                var source = manager.GetSourceDeclaration(types[0].Source);
+                if (source != null)
+                {
+                    infos.Add(new HighlightInfo(source.name, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                    foreach (var anchor in source.references)
+                        infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                }
+                else infos.Add(new HighlightInfo(typeWordRange, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                return true;
+            }
+            else if (length.range.Contain(position)) return length.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (typeWordRange.Contain(position))
+            {
+                result = manager.GetSourceDeclaration(types[0].Source);
+                return result != null;
+            }
+            else if (length.range.Contain(position)) return length.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter) => length.Read(parameter);
     }
@@ -20,7 +67,47 @@
             this.elements = elements;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
-
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (typeRange != null && typeRange.Value.Contain(position))
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                sb.AppendLine(types[0].ToString());
+                sb.AppendLine("```");
+                info = new HoverInfo(range, sb.ToString(), true);
+                return true;
+            }
+            else if (elements.range.Contain(position)) return elements.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (typeRange != null && typeRange.Value.Contain(position))
+            {
+                var source = manager.GetSourceDeclaration(types[0].Source);
+                if (source != null)
+                {
+                    infos.Add(new HighlightInfo(source.name, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                    foreach (var anchor in source.references)
+                        infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                }
+                else infos.Add(new HighlightInfo(typeRange.Value, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                return true;
+            }
+            else if (elements.range.Contain(position)) return elements.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (typeRange != null && typeRange.Value.Contain(position))
+            {
+                result = manager.GetSourceDeclaration(types[0].Source);
+                return result != null;
+            }
+            else if (elements.range.Contain(position)) return elements.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             if (typeRange != null) parameter.manager.GetSourceDeclaration(types[0])?.references.Add(typeRange.Value);
@@ -37,6 +124,24 @@
             this.index = index;
             attribute = ExpressionAttribute.Value | elementType.GetAttribute();
             if (assignable) attribute |= ExpressionAttribute.Assignable;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (array.range.Contain(position)) return array.OnHover(manager, position, out info);
+            else if (index.range.Contain(position)) return index.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (array.range.Contain(position)) return array.OnHighlight(manager, position, infos);
+            else if (index.range.Contain(position)) return index.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (array.range.Contain(position)) return array.TryGetDeclaration(manager, position, out result);
+            else if (index.range.Contain(position)) return index.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -75,7 +180,24 @@
             this.subRange = subRange;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
-
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (source.range.Contain(position)) return source.OnHover(manager, position, out info);
+            else if (subRange.range.Contain(position)) return subRange.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (source.range.Contain(position)) return source.OnHighlight(manager, position, infos);
+            else if (subRange.range.Contain(position)) return subRange.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
+            else if (subRange.range.Contain(position)) return subRange.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);

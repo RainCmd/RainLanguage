@@ -85,7 +85,7 @@ namespace RainLanguageServer.RainLanguage
             else if (type.Contain(position))
             {
                 var sb = new StringBuilder();
-                sb.AppendLine("``` csharp");
+                sb.AppendLine("``` cs");
                 sb.AppendLine($"{Compiling?.type}");
                 sb.AppendLine("```");
                 info = new HoverInfo(type.GetNameRange(), sb.ToString(), true);
@@ -157,34 +157,7 @@ namespace RainLanguageServer.RainLanguage
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("``` js");
-                if (compiling is CompilingCallable callable)
-                {
-                    for (var i = 0; i < callable.returns.Count; i++)
-                    {
-                        if (i > 0) sb.Append(", ");
-                        sb.Append(callable.returns[i].ToString(false, callable.space));
-                    }
-                    if (callable.returns.Count > 0) sb.Append(' ');
-                    if (declaration != null)
-                    {
-                        sb.Append(declaration.name);
-                        sb.Append('.');
-                    }
-                    sb.Append(name);
-                    sb.Append('(');
-                    for (var i = 0; i < callable.parameters.Count; i++)
-                    {
-                        if (i > 0) sb.Append(", ");
-                        var param = callable.parameters[i];
-                        sb.Append(param.type.ToString(false, callable.space));
-                        if (param.name != null)
-                        {
-                            sb.Append(' ');
-                            sb.Append(param.name);
-                        }
-                    }
-                    sb.Append(')');
-                }
+                if (compiling is CompilingCallable callable) sb.Append(callable.ToString(declaration?.name.ToString()));
                 else sb.Append(name.start.Line);
                 sb.AppendLine();
                 sb.AppendLine("```");

@@ -1,10 +1,26 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal abstract class ConstantExpression : Expression
     {
         protected ConstantExpression(TextRange range, Type type) : base(range, new Tuple([type]))
         {
             attribute = ExpressionAttribute.Constant;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("``` cs");
+            sb.AppendLine(types[0].ToString());
+            sb.AppendLine("```");
+            info = new HoverInfo(range, sb.ToString(), true);
+            return true;
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            result = manager.GetSourceDeclaration(types[0]);
+            return result != null;
         }
         public override void Read(ExpressionParameter parameter) { }
     }

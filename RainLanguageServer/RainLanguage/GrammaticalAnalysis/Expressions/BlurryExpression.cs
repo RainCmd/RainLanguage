@@ -91,6 +91,21 @@
             this.invoker = invoker;
             attribute = ExpressionAttribute.Value;
         }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (invoker.range.Contain(position)) return invoker.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (invoker.range.Contain(position)) return invoker.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (invoker.range.Contain(position)) return invoker.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter) => invoker.Read(parameter);
     }
     internal class BlurryLambdaExpression : Expression
@@ -115,6 +130,21 @@
         {
             this.tuple = tuple;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (tuple.range.Contain(position)) return tuple.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (tuple.range.Contain(position)) return tuple.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (tuple.range.Contain(position)) return tuple.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {
