@@ -66,8 +66,9 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override void Read(ExpressionParameter parameter)
         {
-            base.Read(parameter);
             source.Read(parameter);
+            if (callable is CompilingVirtualFunction function)
+                function.references.Add(methodRange);
         }
     }
     internal class VirtualFunctionDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable, Expression source, TextRange methodRange) : DelegateCreateExpression(range, type, callable)
@@ -108,20 +109,19 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override void Read(ExpressionParameter parameter)
         {
-            base.Read(parameter);
             source.Read(parameter);
             if (callable is CompilingVirtualFunction virtualFunction)
                 Reference(virtualFunction);
             if (callable is CompilingAbstractFunction abstractFunction)
             {
-                abstractFunction.references.Add(range);
+                abstractFunction.references.Add(methodRange);
                 foreach (var implement in abstractFunction.implements)
                     Reference(implement);
             }
         }
         private void Reference(CompilingVirtualFunction function)
         {
-            function.references.Add(range);
+            function.references.Add(methodRange);
             foreach (var implement in function.implements)
                 Reference(implement);
         }

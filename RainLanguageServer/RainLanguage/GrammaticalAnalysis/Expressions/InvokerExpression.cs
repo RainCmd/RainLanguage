@@ -125,7 +125,7 @@
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            callable.references.Add(range);
+            callable.references.Add(methodRange);
         }
     }
     internal class InvokerVirtualMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable, TextRange methodRange) : InvokerExpression(range, callable.returns, parameters)

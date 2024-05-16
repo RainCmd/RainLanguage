@@ -212,7 +212,16 @@ namespace RainLanguageServer.RainLanguage
                         else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
-                if (callable is CompilingFunction function) return function.logicBlock.block.OnHighlight(manager, position, infos);
+                if (callable is CompilingFunction function)
+                {
+                    foreach(var parameter in function.logicBlock.parameters)
+                        if(parameter.range.Contain(position))
+                        {
+                            parameter.OnHighlight(infos);
+                            return true;
+                        }
+                    return function.logicBlock.block.OnHighlight(manager, position, infos);
+                }
             }
             return false;
         }

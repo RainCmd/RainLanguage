@@ -41,7 +41,7 @@ namespace RainLanguageServer
                 var end = Count;
                 while (start < end && char.IsWhiteSpace(this[start])) start++;
                 while (end-- > start && char.IsWhiteSpace(this[end])) ;
-                if (start > end) start = end;
+                if (start > end) end = start;
                 return this[start..(end + 1)];
             }
         }

@@ -3,9 +3,11 @@
     internal class BlurryVariableDeclarationExpression : Expression
     {
         public readonly TextRange declarationRange;
-        public BlurryVariableDeclarationExpression(TextRange range, TextRange declarationRange) : base(range, new Tuple([BLURRY]))
+        public readonly TextRange identifierRange;
+        public BlurryVariableDeclarationExpression(TextRange range, TextRange declarationRange, TextRange identifierRange) : base(range, new Tuple([BLURRY]))
         {
             this.declarationRange = declarationRange;
+            this.identifierRange = identifierRange;
             attribute = ExpressionAttribute.Assignable;
         }
         public override void Read(ExpressionParameter parameter)
@@ -101,11 +103,11 @@
         }
         public override void Read(ExpressionParameter parameter)
         {
-            var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");
+            var msg = new CompileMessage(memberRange, CErrorLevel.Error, "语义不明确");
             target.Read(parameter);
             foreach (var declaration in declarations)
             {
-                declaration.references.Add(range);
+                declaration.references.Add(memberRange);
                 msg.related.Add(new RelatedInfo(declaration.name, "符合条件的函数"));
             }
             parameter.collector.Add(msg);
@@ -115,7 +117,7 @@
     {
         public override void Read(ExpressionParameter parameter)
         {
-            var msg = new CompileMessage(range, CErrorLevel.Error, "语义不明确");
+            var msg = new CompileMessage(memberRange, CErrorLevel.Error, "语义不明确");
             target.Read(parameter);
             foreach (var declaration in declarations)
             {
@@ -124,7 +126,7 @@
                     Reference(virtualFunction);
                 else if (declaration is CompilingAbstractFunction abstractFunction)
                 {
-                    abstractFunction.references.Add(range);
+                    abstractFunction.references.Add(memberRange);
                     foreach (var implement in abstractFunction.implements)
                         Reference(implement);
                 }
@@ -133,7 +135,7 @@
         }
         private void Reference(CompilingVirtualFunction function)
         {
-            function.references.Add(range);
+            function.references.Add(memberRange);
             foreach (var implement in function.implements)
                 Reference(implement);
         }

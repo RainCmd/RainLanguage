@@ -14,31 +14,30 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     internal class VariableLocalExpression : VariableExpression
     {
         public readonly Local local;
+        public readonly TextRange identifierRange;
         public readonly TextRange? declarationRange;
-        public VariableLocalExpression(TextRange range, Local local, TextRange declarationRange, ExpressionAttribute attribute) : base(range, local.type, attribute)
+        public VariableLocalExpression(TextRange range, Local local, TextRange identifierRange, TextRange declarationRange, ExpressionAttribute attribute) : base(range, local.type, attribute)
         {
             this.local = local;
+            this.identifierRange = identifierRange;
             this.declarationRange = declarationRange;
         }
-        public VariableLocalExpression(TextRange range, Local local, Type type, ExpressionAttribute attribute) : base(range, type, attribute)
+        public VariableLocalExpression(TextRange range, Local local, TextRange identifierRange, Type type, ExpressionAttribute attribute) : base(range, type, attribute)
         {
             this.local = local;
+            this.identifierRange = identifierRange;
             declarationRange = null;
         }
-        public VariableLocalExpression(TextRange range, Local local, ExpressionAttribute attribute) : base(range, local.type, attribute)
+        public VariableLocalExpression(TextRange range, Local local, TextRange identifierRange, ExpressionAttribute attribute) : base(range, local.type, attribute)
         {
             this.local = local;
+            this.identifierRange = identifierRange;
             declarationRange = null;
         }
         public override bool Valid => local.type.Vaild;
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (local.range.Contain(position))
-            {
-                info = new HoverInfo(local.range, local.ToString(null), true);
-                return true;
-            }
-            else if (declarationRange != null && declarationRange.Value.Contain(position))
+            if (declarationRange != null && declarationRange.Value.Contain(position))
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
@@ -47,45 +46,50 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                 info = new HoverInfo(declarationRange.Value, sb.ToString(), true);
                 return true;
             }
+            else if (identifierRange.Contain(position))
+            {
+                info = new HoverInfo(identifierRange, local.ToString(null), true);
+                return true;
+            }
             return base.OnHover(manager, position, out info);
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if (local.range.Contain(position))
-            {
-                local.OnHighlight(infos);
-                return true;
-            }
-            else if (declarationRange != null && declarationRange.Value.Contain(position))
+            if (declarationRange != null && declarationRange.Value.Contain(position))
             {
                 manager.GetSourceDeclaration(local.type)?.OnHighlight(manager, infos);
                 return infos.Count > 0;
+            }
+            else if (identifierRange.Contain(position))
+            {
+                local.OnHighlight(infos);
+                return true;
             }
             return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
-            if (local.range.Contain(position))
-            {
-                result = local.GetCompilingDeclaration();
-                return result != null;
-            }
-            else if (declarationRange != null && declarationRange.Value.Contain(position))
+            if (declarationRange != null && declarationRange.Value.Contain(position))
             {
                 result = manager.GetSourceDeclaration(local.type);
+                return result != null;
+            }
+            else if (identifierRange.Contain(position))
+            {
+                result = local.GetCompilingDeclaration();
                 return result != null;
             }
             return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {
-            local.read.Add(range);
+            local.read.Add(identifierRange);
             if (declarationRange != null)
                 parameter.manager.GetSourceDeclaration(local.type)?.references.Add(declarationRange.Value);
         }
         public override void Write(ExpressionParameter parameter)
         {
-            local.write.Add(range);
+            local.write.Add(identifierRange);
             if (declarationRange != null)
                 parameter.manager.GetSourceDeclaration(local.type)?.references.Add(declarationRange.Value);
         }
@@ -247,7 +251,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if(target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
+            if (target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
             else if (memberRange.Contain(position))
             {
                 member.OnHighlight(manager, infos);
@@ -268,12 +272,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         public override void Read(ExpressionParameter parameter)
         {
             target.Read(parameter);
-            member.read.Add(range);
+            member.read.Add(memberRange);
         }
         public override void Write(ExpressionParameter parameter)
         {
             target.Read(parameter);
-            member.write.Add(range);
+            member.write.Add(memberRange);
         }
     }
 }

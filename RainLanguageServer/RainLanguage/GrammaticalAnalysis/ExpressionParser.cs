@@ -486,7 +486,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 {
                                     if (localContext.TryGetLocal(lexical.anchor.ToString(), out var local))
                                     {
-                                        var variableExpression = new VariableLocalExpression(lexical.anchor, local, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
+                                        var variableExpression = new VariableLocalExpression(lexical.anchor, local, lexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
                                         if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                                         {
                                             expressionStack.Push(variableExpression);
@@ -1059,12 +1059,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             var typeExpression = (TypeExpression)expressionStack.Pop();
                             var local = localContext.Add(lexical.anchor, typeExpression.type);
-                            expressionStack.Push(new VariableLocalExpression(typeExpression.range & lexical.anchor, local, typeExpression.range, ExpressionAttribute.Assignable));
+                            expressionStack.Push(new VariableLocalExpression(typeExpression.range & lexical.anchor, local, lexical.anchor, typeExpression.range, ExpressionAttribute.Assignable));
                             attribute = expressionStack.Peek().attribute;
                         }
                         else if (localContext.TryGetLocal(lexical.anchor.ToString(), out var local))
                         {
-                            var variableExpression = new VariableLocalExpression(lexical.anchor, local, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
+                            var variableExpression = new VariableLocalExpression(lexical.anchor, local, lexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable);
                             if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                             {
                                 expressionStack.Push(variableExpression);
@@ -1082,6 +1082,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             index = lexical.anchor.start;
                             var declarations = FindDeclaration(lexical.anchor, ref index, out var name);
                             if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, name, declarations);
+                            else PushInvalidExpression(expressionStack, lexical.anchor, ref attribute);
                             goto label_next_lexical;
                         }
                         break;
@@ -1134,7 +1135,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (context.declaration is CompilingClass compiling)
                             {
                                 var type = compiling.parent.Vaild ? compiling.parent : Type.HANDLE;
-                                var expression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, type, ExpressionAttribute.Value);
+                                var expression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, lexical.anchor, type, ExpressionAttribute.Value);
                                 expressionStack.Push(expression);
                                 attribute = expression.attribute;
                                 break;
@@ -1144,7 +1145,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.KeyWord_this:
                         if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator) && localContext.thisValue != null)
                         {
-                            var expression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, ExpressionAttribute.Value);
+                            var expression = new VariableLocalExpression(lexical.anchor, localContext.thisValue.Value, lexical.anchor, ExpressionAttribute.Value);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             break;
@@ -1180,7 +1181,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             if (Lexical.TryAnalysis(range, lexical.anchor.end, out var identifier, collector) && identifier.type == LexicalType.Word)
                             {
                                 index = identifier.anchor.end;
-                                expressionStack.Push(new BlurryVariableDeclarationExpression(identifier.anchor, lexical.anchor));
+                                expressionStack.Push(new BlurryVariableDeclarationExpression(lexical.anchor & identifier.anchor, lexical.anchor, identifier.anchor));
                                 attribute = ExpressionAttribute.Assignable;
                                 goto label_next_lexical;
                             }
@@ -1348,7 +1349,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             else if (expressionStack.Count > 0) return expressionStack.Pop();
             else return TupleExpression.CreateEmpty(range);
         }
-
+        private static void PushInvalidExpression(Stack<Expression> expressionStack, TextRange anchor, ref ExpressionAttribute attribute)
+        {
+            if (attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple)) expressionStack.Push(new InvalidExpression([expressionStack.Pop(), new InvalidExpression(anchor)]));
+            else expressionStack.Push(new InvalidExpression(anchor));
+            attribute = ExpressionAttribute.Invalid;
+        }
         private void PushToken(Stack<Expression> expressionStack, Stack<Token> tokenStack, Token token, ExpressionAttribute attribute)
         {
             while (tokenStack.Count > 0 && token.Priority <= tokenStack.Peek().Priority) attribute = PopToken(expressionStack, tokenStack.Pop());
@@ -1673,6 +1679,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (!expression.Valid) return expression;
             if (expression is TupleExpression tuple)
             {
+                if (tuple.expressions.Count == 0) return expression;
                 var expressions = new List<Expression>();
                 var index = 0;
                 foreach (var item in tuple.expressions)
@@ -1928,7 +1935,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                            var thisValueExpression = new VariableLocalExpression(anchor.start & anchor.start, localContext.thisValue!.Value, anchor.start & anchor.start, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                             var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0], anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
@@ -1940,7 +1947,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case DeclarationCategory.StructFunction:
                     if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                        var thisValueExpression = new VariableLocalExpression(anchor.start & anchor.start, localContext.thisValue!.Value, anchor.start & anchor.start, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                         var expression = new MethodMemberExpression(anchor, thisValueExpression, anchor, declarations);
                         expressionStack.Push(expression);
                         attribute = expression.attribute;
@@ -1966,7 +1973,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (declarations.Count == 1)
                         {
-                            var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                            var thisValueExpression = new VariableLocalExpression(anchor.start & anchor.start, localContext.thisValue!.Value, anchor.start & anchor.start, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                             var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0], anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
@@ -1978,7 +1985,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case DeclarationCategory.ClassFunction:
                     if (attribute.ContainAny(ExpressionAttribute.None | ExpressionAttribute.Operator))
                     {
-                        var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                        var thisValueExpression = new VariableLocalExpression(anchor.start & anchor.start, localContext.thisValue!.Value, anchor.start & anchor.start, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                         var expression = new MethodVirtualExpression(anchor, thisValueExpression, anchor, declarations);
                         expressionStack.Push(expression);
                         attribute = expression.attribute;
@@ -2234,7 +2241,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             {
                 if (type == Expression.BLURRY || type == Expression.NULL) collector.Add(expression.range, CErrorLevel.Error, "表达式类型不明确");
                 else if (expression is BlurryVariableDeclarationExpression blurry)
-                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.range, type), blurry.declarationRange, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.identifierRange, type), blurry.identifierRange, blurry.declarationRange, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                 else collector.Add(expression.range, CErrorLevel.Error, "无效的操作");
                 return new InvalidExpression([type], expression);
             }
