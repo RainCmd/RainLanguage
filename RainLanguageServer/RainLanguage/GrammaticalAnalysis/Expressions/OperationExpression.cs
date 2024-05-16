@@ -2,14 +2,52 @@
 {
     internal class OperationExpression : Expression
     {
+        public readonly TextRange operatorRange;
         public readonly CompilingCallable callable;
         public readonly Expression[] parameters;
-        public OperationExpression(TextRange range, List<Type> returns, CompilingCallable callable, Expression[] parameters) : base(range, new Tuple(returns))
+        public OperationExpression(TextRange range, List<Type> returns, TextRange operatorRange, CompilingCallable callable, Expression[] parameters) : base(range, new Tuple(returns))
         {
+            this.operatorRange = operatorRange;
             this.callable = callable;
             this.parameters = parameters;
             if (returns.Count == 1) attribute = ExpressionAttribute.Value | returns[0].GetAttribute();
             else attribute = ExpressionAttribute.Value;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (operatorRange.Contain(position))
+            {
+                info = new HoverInfo(operatorRange, callable.ToString(manager), true);
+                return true;
+            }
+            else foreach (var parameter in parameters)
+                    if(parameter.range.Contain(position))
+                        return parameter.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (operatorRange.Contain(position))
+            {
+                callable.OnHighlight(manager, infos);
+                return true;
+            }
+            else foreach (var parameter in parameters)
+                    if (parameter.range.Contain(position))
+                        return parameter.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (operatorRange.Contain(position))
+            {
+                result = callable;
+                return true;
+            }
+            else foreach(var parameter in parameters)
+                    if (parameter.range.Contain(position))
+                        return parameter.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {

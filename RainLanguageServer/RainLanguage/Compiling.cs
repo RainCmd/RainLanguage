@@ -1,5 +1,5 @@
-﻿using RainLanguageServer.RainLanguage.GrammaticalAnalysis;
-using System;
+﻿using LanguageServer.Parameters.TextDocument;
+using RainLanguageServer.RainLanguage.GrammaticalAnalysis;
 using System.Text;
 
 namespace RainLanguageServer.RainLanguage
@@ -45,6 +45,12 @@ namespace RainLanguageServer.RainLanguage
             }
             return "";
         }
+        public virtual void OnHighlight(ASTManager manager, List<HighlightInfo> infos)
+        {
+            infos.Add(new HighlightInfo(name, DocumentHighlightKind.Text));
+            foreach (var range in references)
+                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+        }
     }
     internal class CompilingVariable(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, bool isReadonly, Type type, TextRange? expressionRange, HashSet<CompilingSpace> relies)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -57,6 +63,14 @@ namespace RainLanguageServer.RainLanguage
         public readonly HashSet<CompilingSpace> relies = relies;
         public readonly List<TextRange> read = [];
         public readonly List<TextRange> write = [];
+        public override void OnHighlight(ASTManager manager, List<HighlightInfo> infos)
+        {
+            base.OnHighlight(manager, infos);
+            foreach (var range in read)
+                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+            foreach (var range in write)
+                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+        }
     }
     internal class CompilingCallable(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, List<CompilingCallable.Parameter> parameters, Tuple returns)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -68,6 +82,11 @@ namespace RainLanguageServer.RainLanguage
         }
         public readonly List<Parameter> parameters = parameters;
         public readonly Tuple returns = returns;
+        public string ToString(ASTManager manager)
+        {
+            var compiling = manager.GetDeclaringDeclaration(declaration);
+            return ToString(compiling?.name.ToString());
+        }
         public string ToString(string? declaration)
         {
             var sb = new StringBuilder();
@@ -115,6 +134,12 @@ namespace RainLanguageServer.RainLanguage
             public readonly FileEnum.Element? file = file;
             public readonly List<TextRange> references = [];
             public long? value;
+            public void OnHighlight(List<HighlightInfo> infos)
+            {
+                infos.Add(new HighlightInfo(name, DocumentHighlightKind.Text));
+                foreach (var range in references)
+                    infos.Add(new HighlightInfo(range, DocumentHighlightKind.Read));
+            }
         }
         public readonly HashSet<CompilingSpace> relies = relies;
         public readonly List<Element> elements = [];
@@ -129,6 +154,12 @@ namespace RainLanguageServer.RainLanguage
         : CompilingCallable(name, declaration, attributes, space, file, parameters, returns)
     {
         public HashSet<CompilingVirtualFunction> implements = [];
+        public override void OnHighlight(ASTManager manager, List<HighlightInfo> infos)
+        {
+            base.OnHighlight(manager, infos);
+            foreach (var range in implements)
+                infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
+        }
     }
     internal class CompilingInterface(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file)
         : CompilingDeclaration(name, declaration, attributes, space, file)
@@ -142,6 +173,14 @@ namespace RainLanguageServer.RainLanguage
     {
         public HashSet<CompilingCallable> overrides = [];
         public HashSet<CompilingVirtualFunction> implements = [];
+        public override void OnHighlight(ASTManager manager, List<HighlightInfo> infos)
+        {
+            base.OnHighlight(manager, infos);
+            foreach (var range in overrides)
+                infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
+            foreach (var range in implements)
+                infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
+        }
     }
     internal class CompilingClass(TextRange name, Declaration declaration, List<TextRange> attributes, CompilingSpace space, FileDeclaration? file, Type parent)
         : CompilingDeclaration(name, declaration, attributes, space, file)

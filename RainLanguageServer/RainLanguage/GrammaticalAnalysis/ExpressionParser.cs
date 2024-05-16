@@ -16,12 +16,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (range.Count == 0) return TupleExpression.CreateEmpty(range);
             if (TryRemoveBracket(range, out var trim)) return Parse(trim);
             if (TryParseTuple(SplitFlag.Semicolon, LexicalType.Semicolon, range, out var result)) return result!;
-            var splitType = ExpressionSplit.Split(range, 0, SplitFlag.Lambda | SplitFlag.Assignment | SplitFlag.Question, out var left, out var right, collector);
-            if (splitType == LexicalType.Lambda) return ParseLambda(left, right);
-            else if (splitType == LexicalType.Question) return ParseQuestion(left, right);
-            else if (splitType != LexicalType.Unknow) return ParseAssignment(splitType, left, right);
+            var splitLexical = ExpressionSplit.Split(range, 0, SplitFlag.Lambda | SplitFlag.Assignment | SplitFlag.Question, out var left, out var right, collector);
+            if (splitLexical.type == LexicalType.Lambda) return ParseLambda(left, splitLexical.anchor, right);
+            else if (splitLexical.type == LexicalType.Question) return ParseQuestion(left, right);
+            else if (splitLexical.type != LexicalType.Unknow) return ParseAssignment(splitLexical.type, splitLexical.anchor, left, right);
             if (TryParseTuple(SplitFlag.Comma, LexicalType.Comma, range, out result)) return result!;
-            if (ExpressionSplit.Split(range, 0, SplitFlag.QuestionNull, out left, out right, collector) == LexicalType.QuestionNull) return ParseQuestionNull(left, right);
+            if (ExpressionSplit.Split(range, 0, SplitFlag.QuestionNull, out left, out right, collector).type == LexicalType.QuestionNull) return ParseQuestionNull(left, right);
 
             var expressionStack = new Stack<Expression>();
             var tokenStack = new Stack<Token>();
@@ -45,7 +45,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(methodExpression.range, methodExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.declaration.signature);
-                                                expression = new InvokerFunctionExpression(lexical.anchor & tuple.range, tuple, callable);
+                                                expression = new InvokerFunctionExpression(lexical.anchor & tuple.range, tuple, callable, methodExpression.range);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;
@@ -62,7 +62,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(methodMemberExpression.range, methodMemberExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.declaration.signature);
-                                                expression = new InvokerMemberExpression(lexical.anchor & tuple.range, tuple, methodMemberExpression.target, callable);
+                                                expression = new InvokerMemberExpression(lexical.anchor & tuple.range, tuple, methodMemberExpression.target, callable, methodMemberExpression.range);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;
@@ -79,7 +79,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(methodVirtualExpression.range, methodVirtualExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.declaration.signature);
-                                                expression = new InvokerVirtualMemberExpression(lexical.anchor & tuple.range, tuple, methodVirtualExpression.target, callable);
+                                                expression = new InvokerVirtualMemberExpression(lexical.anchor & tuple.range, tuple, methodVirtualExpression.target, callable, methodVirtualExpression.range);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;
@@ -107,21 +107,21 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     if (type == Type.REAL2)
                                     {
                                         tuple = ConvertVectorParameter(tuple!, 2);
-                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL2, tuple);
+                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL2, typeExpression.range, tuple);
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
                                     }
                                     else if (type == Type.REAL3)
                                     {
                                         tuple = ConvertVectorParameter(tuple!, 3);
-                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL3, tuple);
+                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL3, typeExpression.range, tuple);
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
                                     }
                                     else if (type == Type.REAL4)
                                     {
                                         tuple = ConvertVectorParameter(tuple!, 4);
-                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL4, tuple);
+                                        var expression = new VectorConstructorExpression(typeExpression.range & tuple.range, Type.REAL4, typeExpression.range, tuple);
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
                                     }
@@ -584,7 +584,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (attribute.ContainAll(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
                         {
                             var operationParameter = expressionStack.Pop();
-                            var operation = CreateOperation(operationParameter.range & lexical.anchor, "++", operationParameter);
+                            var operation = CreateOperation(operationParameter.range & lexical.anchor, "++", lexical.anchor, operationParameter);
                             expressionStack.Push(operation);
                             attribute = operation.attribute;
                         }
@@ -604,7 +604,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (attribute.ContainAll(ExpressionAttribute.Value | ExpressionAttribute.Assignable))
                         {
                             var operationParameter = expressionStack.Pop();
-                            var operation = CreateOperation(operationParameter.range & lexical.anchor, "--", operationParameter);
+                            var operation = CreateOperation(operationParameter.range & lexical.anchor, "--", lexical.anchor, operationParameter);
                             expressionStack.Push(operation);
                             attribute = operation.attribute;
                         }
@@ -747,7 +747,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     {
                                         var category = declarations[0].declaration.category;
                                         if (category == DeclarationCategory.StructVariable || category == DeclarationCategory.ClassVariable)
-                                            expression = new VariableMemberExpression(expression.range & identifierLexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, expression, (CompilingVariable)declarations[0]);
+                                            expression = new VariableMemberExpression(expression.range & identifierLexical.anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, expression, (CompilingVariable)declarations[0], identifierLexical.anchor);
                                         else if (category == DeclarationCategory.StructFunction || category == DeclarationCategory.ClassFunction || category == DeclarationCategory.InterfaceFunction)
                                             expression = new MethodVirtualExpression(expression.range & identifierLexical.anchor, expression, identifierLexical.anchor, declarations);
                                         else
@@ -1429,20 +1429,20 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 var parameters = new List<Expression>();
                 while (count-- > 0) parameters.Add(expressionStack.Pop());
                 parameters.Reverse();
-                var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), TupleExpression.Create(parameters));
+                var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), name, TupleExpression.Create(parameters));
                 expressionStack.Push(result);
                 return result.attribute;
             }
             else
             {
-                var result = CreateOperation(name, name.ToString(), TupleExpression.Empty);
+                var result = CreateOperation(name, name.ToString(), name, TupleExpression.Empty);
                 expressionStack.Push(result);
                 return result.attribute;
             }
         }
         private bool TryParseBracket(TextRange range, ref TextPosition index, SplitFlag flag, out Expression? result)
         {
-            if (ExpressionSplit.Split(range, index - range.start, flag, out var left, out var right, collector) != LexicalType.Unknow)
+            if (ExpressionSplit.Split(range, index - range.start, flag, out var left, out var right, collector).type != LexicalType.Unknow)
             {
                 index = right.end;
                 result = Parse(new TextRange(left.end, right.start));
@@ -1509,7 +1509,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 count += sources[i].types.Count;
             }
         }
-        private TupleAssignmentExpression ParseAssignment(LexicalType type, TextRange left, TextRange right)
+        private TupleAssignmentExpression ParseAssignment(LexicalType type, TextRange operatorRange, TextRange left, TextRange right)
         {
             var leftExpression = Parse(left);
             var rightExpression = Parse(right);
@@ -1535,52 +1535,52 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 case LexicalType.BitAnd:
                 case LexicalType.LogicAnd: goto case default;
                 case LexicalType.BitAndAssignment:
-                    rightExpression = CreateOperation(left & right, "&", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "&", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.BitOr:
                 case LexicalType.LogicOr: goto case default;
                 case LexicalType.BitOrAssignment:
-                    rightExpression = CreateOperation(left & right, "|", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "|", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.BitXor: goto case default;
                 case LexicalType.BitXorAssignment:
-                    rightExpression = CreateOperation(left & right, "^", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "^", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Less:
                 case LexicalType.LessEquals:
                 case LexicalType.ShiftLeft: goto case default;
                 case LexicalType.ShiftLeftAssignment:
-                    rightExpression = CreateOperation(left & right, "<<", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "<<", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Greater:
                 case LexicalType.GreaterEquals:
                 case LexicalType.ShiftRight: goto case default;
                 case LexicalType.ShiftRightAssignment:
-                    rightExpression = CreateOperation(left & right, ">>", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, ">>", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Plus:
                 case LexicalType.Increment: goto case default;
                 case LexicalType.PlusAssignment:
-                    rightExpression = CreateOperation(left & right, "+", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "+", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Minus:
                 case LexicalType.Decrement:
                 case LexicalType.RealInvoker: goto case default;
                 case LexicalType.MinusAssignment:
-                    rightExpression = CreateOperation(left & right, "-", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "-", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Mul: goto case default;
                 case LexicalType.MulAssignment:
-                    rightExpression = CreateOperation(left & right, "*", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "*", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Div: goto case default;
                 case LexicalType.DivAssignment:
-                    rightExpression = CreateOperation(left & right, "/", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "/", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Annotation:
                 case LexicalType.Mod: goto case default;
                 case LexicalType.ModAssignment:
-                    rightExpression = CreateOperation(left & right, "%", leftExpression, rightExpression);
+                    rightExpression = CreateOperation(left & right, "%", operatorRange, leftExpression, rightExpression);
                     goto case LexicalType.Assignment;
                 case LexicalType.Not:
                 case LexicalType.NotEquals:
@@ -1658,15 +1658,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     throw new Exception("语法类型错误");
             }
         }
-        private Expression CreateOperation(TextRange range, string operation, params Expression[] parameters)
+        private Expression CreateOperation(TextRange range, string operation, TextRange operatorRange, params Expression[] parameters)
         {
             if (TryGetFunction(range, context.FindOperator(manager, operation), TupleExpression.Create(new List<Expression>(parameters)), out var callable))
             {
                 AssignmentConvert(parameters, callable!.declaration.signature);
-                return new OperationExpression(range, callable.returns, callable, parameters);
+                return new OperationExpression(range, callable.returns, operatorRange, callable, parameters);
             }
             else collector.Add(range, CErrorLevel.Error, "操作未找到");
-            return new InvalidOperationExpression(range, null, parameters);
+            return new InvalidOperationExpression(range, operatorRange, null, parameters);
         }
         private Expression InferRightValueType(Expression expression, List<Type> types)
         {
@@ -1730,7 +1730,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (callable!.returns != compilingDelegate.returns)
                             collector.Add(expression.range, CErrorLevel.Error, "返回值类型不一致");
-                        return new MemberFunctionDelegateCreateExpression(expression.range, type, callable, methodMember.target);
+                        return new MemberFunctionDelegateCreateExpression(expression.range, type, callable, methodMember.target, methodMember.memberRange);
                     }
                 }
                 collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
@@ -1743,7 +1743,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     {
                         if (callable!.returns != compilingDelegate.returns)
                             collector.Add(expression.range, CErrorLevel.Error, "返回值类型不一致");
-                        return new VirtualFunctionDelegateCreateExpression(expression.range, type, callable, methodVirtual.target);
+                        return new VirtualFunctionDelegateCreateExpression(expression.range, type, callable, methodVirtual.target, methodVirtual.memberRange);
                     }
                 }
                 collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
@@ -1778,14 +1778,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     else foreach (var parameter in compilingDelegate.parameters)
                             collector.Add(blurryLambda.range, CErrorLevel.Error, "缺少参数:" + parameter.type.ToString());
                     localContext.PushBlock();
+                    var parameters = new List<Local>();
                     for (var i = 0; i < blurryLambda.parameters.Count; i++)
-                        localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
+                        parameters.Add(localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type));
                     var lambdaBodyExpression = Parse(blurryLambda.body);
                     localContext.PopBlock();
                     if (lambdaBodyExpression.Valid && compilingDelegate.returns.Count > 0)
                         if (compilingDelegate.returns != lambdaBodyExpression.types)
                             lambdaBodyExpression = AssignmentConvert(lambdaBodyExpression, compilingDelegate.returns);
-                    return new LambdaDelegateCreateExpression(expression.range, type, compilingDelegate, lambdaBodyExpression);
+                    return new LambdaDelegateCreateExpression(expression.range, type, compilingDelegate, parameters, blurryLambda.symbol, lambdaBodyExpression);
                 }
                 collector.Add(expression.range, CErrorLevel.Error, "无法转换为目标类型");
             }
@@ -1928,7 +1929,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (declarations.Count == 1)
                         {
                             var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                            var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0]);
+                            var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0], anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
@@ -1966,7 +1967,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (declarations.Count == 1)
                         {
                             var thisValueExpression = new VariableLocalExpression(anchor, localContext.thisValue!.Value, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
-                            var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0]);
+                            var expression = new VariableMemberExpression(anchor, ExpressionAttribute.Value | ExpressionAttribute.Assignable, thisValueExpression, (CompilingVariable)declarations[0], anchor);
                             expressionStack.Push(expression);
                             attribute = expression.attribute;
                             return;
@@ -2247,23 +2248,23 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 collector.Add(condition, CErrorLevel.Error, "表达式不是个值");
                 conditionExpression = conditionExpression.ToInvalid();
             }
-            if (ExpressionSplit.Split(expression, 0, SplitFlag.Colon, out var left, out var right, collector) != LexicalType.Unknow)
+            if (ExpressionSplit.Split(expression, 0, SplitFlag.Colon, out var left, out var right, collector).type != LexicalType.Unknow)
                 return new QuestionExpression(condition & expression, conditionExpression, Parse(left), Parse(right));
             else
                 return new QuestionExpression(condition & expression, conditionExpression, Parse(expression), null);
         }
-        private BlurryLambdaExpression ParseLambda(TextRange parameters, TextRange expression)
+        private BlurryLambdaExpression ParseLambda(TextRange parameters, TextRange lambdaSymbol, TextRange expression)
         {
             TextRange parameterRange;
             while (TryRemoveBracket(parameters, out parameterRange)) parameters = parameterRange;
             var list = new List<TextRange>();
-            while (ExpressionSplit.Split(parameterRange, 0, SplitFlag.Comma | SplitFlag.Semicolon, out var left, out var right, collector) != LexicalType.Unknow)
+            while (ExpressionSplit.Split(parameterRange, 0, SplitFlag.Comma | SplitFlag.Semicolon, out var left, out var right, collector).type != LexicalType.Unknow)
             {
                 if (TryParseLambdaParameter(left.Trim, out left)) list.Add(left);
                 parameterRange = right.Trim;
             }
             if (TryParseLambdaParameter(parameterRange.Trim, out parameterRange)) list.Add(parameterRange);
-            return new BlurryLambdaExpression(parameters & expression, list, expression);
+            return new BlurryLambdaExpression(parameters & expression, list, lambdaSymbol, expression);
         }
         private bool TryParseLambdaParameter(TextRange range, out TextRange parameter)
         {
@@ -2283,14 +2284,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private bool TryParseTuple(SplitFlag flag, LexicalType type, TextRange range, out Expression? result)
         {
-            if (ExpressionSplit.Split(range, 0, flag, out var left, out var right, collector) == type)
+            if (ExpressionSplit.Split(range, 0, flag, out var left, out var right, collector).type == type)
             {
                 var expressions = new List<Expression>();
                 do
                 {
                     expressions.Add(Parse(left));
                 }
-                while (ExpressionSplit.Split(right, 0, flag, out left, out right, collector) == type);
+                while (ExpressionSplit.Split(right, 0, flag, out left, out right, collector).type == type);
                 expressions.Add(Parse(right));
                 result = TupleExpression.Create(expressions);
                 return true;
@@ -2337,7 +2338,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         {
             result = range.Trim;
             if (result.Count == 0) return true;
-            if (ExpressionSplit.Split(result, 0, SplitFlag.Bracket0, out var left, out var right, collector) == LexicalType.BracketRight0 && left.start == result.start && right.end == result.end)
+            if (ExpressionSplit.Split(result, 0, SplitFlag.Bracket0, out var left, out var right, collector).type == LexicalType.BracketRight0 && left.start == result.start && right.end == result.end)
             {
                 result = new TextRange(left.end, right.start);
                 return true;

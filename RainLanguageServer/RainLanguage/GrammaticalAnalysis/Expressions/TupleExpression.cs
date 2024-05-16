@@ -11,6 +11,27 @@
             if (types.Count == 1) attribute |= ExpressionAttribute.Value;
             else attribute |= ExpressionAttribute.Tuple;
         }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            foreach (var expression in expressions)
+                if (expression.range.Contain(position))
+                    return expression.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            foreach (var expression in expressions)
+                if (expression.range.Contain(position))
+                    return expression.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            foreach (var expression in expressions)
+                if (expression.range.Contain(position))
+                    return expression.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var e in expressions) e.Read(parameter);
@@ -49,6 +70,24 @@
             if (types.Count == 1) attribute = ExpressionAttribute.Value | types[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (source.range.Contain(position)) return source.OnHover(manager, position, out info);
+            else if (indices.range.Contain(position)) return indices.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (source.range.Contain(position)) return source.OnHighlight(manager, position, infos);
+            else if (indices.range.Contain(position)) return indices.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
+            else if (indices.range.Contain(position)) return indices.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);
@@ -66,6 +105,24 @@
             attribute = left.attribute & ~ExpressionAttribute.Assignable;
         }
         public override bool Valid => left.Valid && left.attribute.ContainAll(ExpressionAttribute.Assignable);
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (left.range.Contain(position)) return left.OnHover(manager, position, out info);
+            else if (right.range.Contain(position)) return right.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (left.range.Contain(position)) return left.OnHighlight(manager, position, infos);
+            else if (right.range.Contain(position)) return right.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (left.range.Contain(position)) return left.TryGetDeclaration(manager, position, out result);
+            else if (right.range.Contain(position)) return right.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             if (Valid) left.Write(parameter);

@@ -150,11 +150,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     }
                     else if (lexical.type == LexicalType.KeyWord_for)
                     {
-                        if (ExpressionSplit.Split(line, lexical.anchor.end, SplitFlag.Semicolon, out var frontExpression, out var right, collector) == LexicalType.Semicolon)
+                        if (ExpressionSplit.Split(line, lexical.anchor.end, SplitFlag.Semicolon, out var frontExpression, out var right, collector).type == LexicalType.Semicolon)
                         {
                             var front = parser.Parse(frontExpression);
                             Expression? condition, back;
-                            if (ExpressionSplit.Split(right, 0, SplitFlag.Semicolon, out var conditionExpression, out var backExpression, collector) == LexicalType.Semicolon)
+                            if (ExpressionSplit.Split(right, 0, SplitFlag.Semicolon, out var conditionExpression, out var backExpression, collector).type == LexicalType.Semicolon)
                             {
                                 condition = parser.Parse(conditionExpression);
                                 back = parser.Parse(backExpression);

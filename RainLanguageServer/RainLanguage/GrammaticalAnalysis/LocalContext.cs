@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
     internal readonly struct Local(int index, TextRange range, Type type)
     {
@@ -7,6 +9,29 @@
         public readonly Type type = type;
         public readonly HashSet<TextRange> read = [];
         public readonly HashSet<TextRange> write = [];
+        public string ToString(CompilingSpace? space)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("``` cs");
+            sb.AppendLine($"(局部变量) {type.ToString(false, space)} {range}");
+            sb.AppendLine("```");
+            return sb.ToString();
+        }
+        public void OnHighlight(List<HighlightInfo> infos)
+        {
+            infos.Add(new HighlightInfo(range, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+            foreach (var range in read)
+                infos.Add(new HighlightInfo(range, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Read));
+            foreach (var range in write)
+                infos.Add(new HighlightInfo(range, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Write));
+        }
+        public CompilingDeclaration GetCompilingDeclaration()
+        {
+            var result = new CompilingVariable(range, default, default!, default!, default, false, type, default, default!);
+            result.read.AddRange(read);
+            result.write.AddRange(write);
+            return result;
+        }
     }
     internal class LocalContext
     {

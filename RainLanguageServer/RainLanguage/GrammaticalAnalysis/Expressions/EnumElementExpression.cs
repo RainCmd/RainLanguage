@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal class EnumElementExpression : Expression
     {
@@ -11,6 +13,27 @@
             this.element = element;
             this.elementRange = elementRange;
             attribute = ExpressionAttribute.Value;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (elementRange.Contain(position))
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                sb.AppendLine($"{compiling.name}.{element.name} = {element.value}");
+                sb.AppendLine("```");
+                info = new HoverInfo(elementRange, sb.ToString(), true);
+                return true;
+            }
+            else
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                info = new HoverInfo(range, $"enum {compiling.GetFullName()}", true);
+                sb.AppendLine("```");
+                info = new HoverInfo(range, $"enum {compiling.GetFullName()}", true);
+                return true;
+            }
         }
         public override void Read(ExpressionParameter parameter)
         {

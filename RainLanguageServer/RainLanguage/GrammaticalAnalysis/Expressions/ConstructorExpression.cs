@@ -43,12 +43,7 @@
             if (anchor.Contain(position))
             {
                 var source = manager.GetSourceDeclaration(types[0]);
-                if (source != null)
-                {
-                    infos.Add(new HighlightInfo(source.name, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
-                    foreach (var anchor in source.references)
-                        infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
-                }
+                if (source != null) source.OnHighlight(manager, infos);
                 else infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
                 return true;
             }

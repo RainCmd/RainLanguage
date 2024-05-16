@@ -46,10 +46,8 @@ namespace RainLanguageServer.RainLanguage
         {
             if (name.Contain(position))
             {
-                infos.Add(new HighlightInfo(name, DocumentHighlightKind.Text));
-                if (compiling != null)
-                    foreach (var range in compiling.references)
-                        infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
+                if (compiling != null) compiling.OnHighlight(manager, infos);
+                else infos.Add(new HighlightInfo(name, DocumentHighlightKind.Text));
                 return true;
             }
             return false;
@@ -102,30 +100,18 @@ namespace RainLanguageServer.RainLanguage
         {
             if (compiling is CompilingVariable variable)
             {
-                if (base.OnHighlight(manager, position, infos))
-                {
-                    foreach (var range in variable.read)
-                        infos.Add(new HighlightInfo(range, DocumentHighlightKind.Read));
-                    foreach (var range in variable.write)
-                        infos.Add(new HighlightInfo(range, DocumentHighlightKind.Write));
-                    return true;
-                }
-                if (type.Contain(position))
+                if (base.OnHighlight(manager, position, infos)) return true;
+                else if (type.Contain(position))
                 {
                     var source = manager.GetSourceDeclaration(variable.type);
-                    if (source != null)
-                    {
-                        infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                        foreach (var range in source.references)
-                            infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                    }
+                    if (source != null) source.OnHighlight(manager, infos);
                     else infos.Add(new HighlightInfo(type.GetNameRange(), DocumentHighlightKind.Text));
                     return true;
                 }
-                if (variable.expression != null && variable.expression.range.Contain(position))
+                else if (variable.expression != null && variable.expression.range.Contain(position))
                     return variable.expression.OnHighlight(manager, position, infos);
             }
-            return base.OnHighlight(manager, position, infos);
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -206,32 +192,14 @@ namespace RainLanguageServer.RainLanguage
         {
             if (compiling is CompilingCallable callable)
             {
-                if (base.OnHighlight(manager, position, infos))
-                {
-                    if (callable is CompilingVirtualFunction virtualFunction)
-                    {
-                        foreach (var range in virtualFunction.overrides)
-                            infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
-                        foreach (var range in virtualFunction.implements)
-                            infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
-                    }
-                    if (callable is CompilingAbstractFunction abstractFunction)
-                        foreach (var range in abstractFunction.implements)
-                            infos.Add(new HighlightInfo(range.name, DocumentHighlightKind.Text));
-                    return true;
-                }
+                if (base.OnHighlight(manager, position, infos)) return true;
                 for (var i = 0; i < parameters.Count; i++)
                 {
                     var param = parameters[i];
                     if (param.type.Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(callable.parameters[i].type);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(param.type.GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -240,18 +208,13 @@ namespace RainLanguageServer.RainLanguage
                     if (returns[i].Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(callable.returns[i].Source);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
                 if (callable is CompilingFunction function) return function.logicBlock.block.OnHighlight(manager, position, infos);
             }
-            return base.OnHighlight(manager, position, infos);
+            return false;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
@@ -344,9 +307,7 @@ namespace RainLanguageServer.RainLanguage
                 {
                     if (element.name.Contain(position))
                     {
-                        infos.Add(new HighlightInfo(element.name, DocumentHighlightKind.Text));
-                        foreach (var range in element.references)
-                            infos.Add(new HighlightInfo(range, DocumentHighlightKind.Read));
+                        element.OnHighlight(infos);
                         return true;
                     }
                     else if (element.expression != null && element.expression.range.Contain(position))
@@ -463,12 +424,7 @@ namespace RainLanguageServer.RainLanguage
                     if (inherits[i].Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(compilingInterface.inherits[i].Source);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(inherits[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -561,12 +517,7 @@ namespace RainLanguageServer.RainLanguage
                             source = manager.GetSourceDeclaration(compilingClass.inherits[i - 1].Source);
                         else
                             source = manager.GetSourceDeclaration(compilingClass.parent.Source);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(inherits[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -697,12 +648,7 @@ namespace RainLanguageServer.RainLanguage
                     if (param.type.Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(compilingDelegate.parameters[i].type);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(param.type.GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -711,12 +657,7 @@ namespace RainLanguageServer.RainLanguage
                     if (returns[i].Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(compilingDelegate.returns[i].Source);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -798,12 +739,7 @@ namespace RainLanguageServer.RainLanguage
                     if (returns[i].Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(compilingTask.returns[i].Source);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -911,12 +847,7 @@ namespace RainLanguageServer.RainLanguage
                     if (param.type.Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(compilingNative.parameters[i].type);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(param.type.GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }
@@ -925,12 +856,7 @@ namespace RainLanguageServer.RainLanguage
                     if (returns[i].Contain(position))
                     {
                         var source = manager.GetSourceDeclaration(compilingNative.returns[i].Source);
-                        if (source != null)
-                        {
-                            infos.Add(new HighlightInfo(source.name, DocumentHighlightKind.Text));
-                            foreach (var range in source.references)
-                                infos.Add(new HighlightInfo(range, DocumentHighlightKind.Text));
-                        }
+                        if (source != null) source.OnHighlight(manager, infos);
                         else infos.Add(new HighlightInfo(returns[i].GetNameRange(), DocumentHighlightKind.Text));
                         return true;
                     }

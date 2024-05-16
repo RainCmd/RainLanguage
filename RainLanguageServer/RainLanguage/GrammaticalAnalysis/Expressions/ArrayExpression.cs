@@ -33,12 +33,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (typeWordRange.Contain(position))
             {
                 var source = manager.GetSourceDeclaration(types[0].Source);
-                if (source != null)
-                {
-                    infos.Add(new HighlightInfo(source.name, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
-                    foreach (var anchor in source.references)
-                        infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
-                }
+                if (source != null) source.OnHighlight(manager, infos);
                 else infos.Add(new HighlightInfo(typeWordRange, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
                 return true;
             }
@@ -86,12 +81,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (typeRange != null && typeRange.Value.Contain(position))
             {
                 var source = manager.GetSourceDeclaration(types[0].Source);
-                if (source != null)
-                {
-                    infos.Add(new HighlightInfo(source.name, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
-                    foreach (var anchor in source.references)
-                        infos.Add(new HighlightInfo(anchor, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
-                }
+                if (source != null) source.OnHighlight(manager, infos);
                 else infos.Add(new HighlightInfo(typeRange.Value, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
                 return true;
             }
@@ -163,6 +153,24 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             this.source = source;
             this.index = index;
             attribute = ExpressionAttribute.Value;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (source.range.Contain(position)) return source.OnHover(manager, position, out info);
+            else if (index.range.Contain(position)) return index.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (source.range.Contain(position)) return source.OnHighlight(manager, position, infos);
+            else if (index.range.Contain(position)) return index.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
+            else if (index.range.Contain(position)) return index.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {

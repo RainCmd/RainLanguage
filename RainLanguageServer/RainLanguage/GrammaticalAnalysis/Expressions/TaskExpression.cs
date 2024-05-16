@@ -1,4 +1,5 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal class TaskCreateExpression : Expression
     {
@@ -8,6 +9,21 @@
         {
             this.source = source;
             attribute = ExpressionAttribute.Value | type.GetAttribute();
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (source.range.Contain(position)) return OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (source.range.Contain(position)) return source.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
     }
@@ -21,6 +37,24 @@
             this.indices = indices;
             if (types.Count == 1) attribute = ExpressionAttribute.Value | types[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (source.range.Contain(position)) return source.OnHover(manager, position, out info);
+            else if (indices != null && indices.range.Contain(position)) return indices.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (source.range.Contain(position)) return source.OnHighlight(manager, position, infos);
+            else if (indices != null && indices.range.Contain(position)) return indices.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
+            else if (indices != null && indices.range.Contain(position)) return indices.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {

@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal class InvalidExpression : Expression
     {
@@ -14,6 +16,27 @@
             this.expressions = expressions;
         }
         public InvalidExpression(List<Type> types, params Expression[] expressions) : this(expressions[0].range & expressions[^1].range, types, expressions) { }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            foreach (var expression in expressions)
+                if (expression.range.Contain(position))
+                    return expression.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            foreach (var expression in expressions)
+                if (expression.range.Contain(position))
+                    return expression.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            foreach (var expression in expressions)
+                if (expression.range.Contain(position))
+                    return expression.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var expression in expressions) expression.Read(parameter);
@@ -24,28 +47,74 @@
         public readonly List<CompilingDeclaration> declarations = declarations;
 
         public override bool Valid => false;
-
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (declarations.Count > 0)
+            {
+                info = new HoverInfo(range, declarations[0].GetFullName(), false);
+                return true;
+            }
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            foreach (var declaration in declarations)
+                declaration.OnHighlight(manager, infos);
+            return declarations.Count > 0;
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (declarations.Count > 0)
+            {
+                result = declarations[0];
+                return result != null;
+            }
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var declaration in declarations) declaration.references.Add(range);
         }
     }
-    internal class InvalidMemberExpression : Expression
+    internal class InvalidMemberExpression(TextRange range, Expression target, TextRange member, List<CompilingDeclaration>? declarations, LexicalType type) : Expression(range, new Tuple([]))
     {
-        public readonly Expression target;
-        public readonly TextRange member;
-        public readonly List<CompilingDeclaration>? declarations;
-        public readonly LexicalType type;
-        public InvalidMemberExpression(TextRange range, Expression target, TextRange member, List<CompilingDeclaration>? declarations, LexicalType type) : base(range, new Tuple([]))
-        {
-            this.target = target;
-            this.member = member;
-            this.declarations = declarations;
-            this.type = type;
-        }
+        public readonly Expression target = target;
+        public readonly TextRange member = member;
+        public readonly List<CompilingDeclaration>? declarations = declarations;
+        public readonly LexicalType type = type;
 
         public override bool Valid => false;
-
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (target.range.Contain(position)) return target.OnHover(manager, position, out info);
+            else if (member.Contain(position) && declarations?.Count > 0)
+            {
+                info = new HoverInfo(member, declarations[0].GetFullName(), false);
+                return true;
+            }
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
+            else if (member.Contain(position) && declarations?.Count > 0)
+            {
+                foreach (var declaration in declarations)
+                    declaration.OnHighlight(manager, infos);
+                return true;
+            }
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (target.range.Contain(position)) return target.TryGetDeclaration(manager, position, out result);
+            else if (!member.Contain(position) && declarations?.Count > 0)
+            {
+                result = declarations[0];
+                return result != null;
+            }
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             target.Read(parameter);
@@ -54,19 +123,39 @@
                     declaration.references.Add(range);
         }
     }
-    internal class InvalidOperationExpression : Expression
+    internal class InvalidOperationExpression(TextRange range, TextRange operatorRange, CompilingCallable? callable, Expression[]? parameters) : Expression(range, new Tuple([]))
     {
-        public readonly CompilingCallable? callable;
-        public readonly Expression[]? parameters;
-
-        public InvalidOperationExpression(TextRange range, CompilingCallable? callable, Expression[]? parameters) : base(range, new Tuple([]))
-        {
-            this.callable = callable;
-            this.parameters = parameters;
-        }
+        public readonly TextRange operatorRange = operatorRange;
+        public readonly CompilingCallable? callable = callable;
+        public readonly Expression[]? parameters = parameters;
 
         public override bool Valid => false;
-
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (operatorRange.Contain(position) && callable != null)
+            {
+                info = new HoverInfo(operatorRange, callable.ToString(manager), true);
+                return true;
+            }
+            else if (parameters != null)
+                foreach (var parameter in parameters)
+                    if (parameter.range.Contain(position))
+                        return parameter.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (operatorRange.Contain(position) && callable != null)
+            {
+                callable.OnHighlight(manager, infos);
+                return true;
+            }
+            else if (parameters != null)
+                foreach (var parameter in parameters)
+                    if (parameter.range.Contain(position))
+                        return parameter.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             callable?.references.Add(range);
@@ -74,23 +163,64 @@
                 foreach (var item in parameters) item.Read(parameter);
         }
     }
-    internal class InvalidCastExpression : Expression
+    internal class InvalidCastExpression(TextRange range, Expression source, TextRange typeRange, List<CompilingDeclaration>? declarations, TextRange? local) : Expression(range, new Tuple([]))
     {
-        public readonly Expression source;
-        public readonly TextRange typeRange;
-        public readonly List<CompilingDeclaration>? declarations;
-        public readonly TextRange? local;
-
-        public InvalidCastExpression(TextRange range, Expression source, TextRange typeRange, List<CompilingDeclaration>? declarations, TextRange? local) : base(range, new Tuple([]))
-        {
-            this.source = source;
-            this.typeRange = typeRange;
-            this.declarations = declarations;
-            this.local = local;
-        }
+        public readonly Expression source = source;
+        public readonly TextRange typeRange = typeRange;
+        public readonly List<CompilingDeclaration>? declarations = declarations;
+        public readonly TextRange? local = local;
 
         public override bool Valid => false;
-
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (local != null && local.Value.Contain(position))
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("``` cs");
+                sb.AppendLine($"(局部变量) {typeRange} {local.Value}");
+                sb.AppendLine("```");
+                info = new HoverInfo(local.Value, sb.ToString(), true);
+                return true;
+            }
+            else if (typeRange.Contain(position) && declarations?.Count > 0)
+            {
+                info = new HoverInfo(typeRange, declarations[0].GetFullName(), false);
+                return true;
+            }
+            else if (source.range.Contain(position)) return source.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (local != null && local.Value.Contain(position))
+            {
+                infos.Add(new HighlightInfo(local.Value, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                return true;
+            }
+            else if (typeRange.Contain(position) && declarations?.Count > 0)
+            {
+                foreach (var declaration in declarations)
+                    declaration.OnHighlight(manager, infos);
+                return true;
+            }
+            else if (!source.range.Contain(position)) return source.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (local != null && local.Value.Contain(position))
+            {
+                result = null;
+                return false;
+            }
+            else if (typeRange.Contain(position) && declarations?.Count > 0)
+            {
+                result = declarations[0];
+                return result != null;
+            }
+            else if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);

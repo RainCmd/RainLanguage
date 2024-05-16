@@ -9,40 +9,160 @@
             if (returns.Count == 1) attribute = ExpressionAttribute.Value | returns[0].GetAttribute();
             else attribute = ExpressionAttribute.Tuple;
         }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (parameters.range.Contain(position)) return parameters.OnHover(manager, position, out info);
+            else return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (parameters.range.Contain(position)) return base.OnHighlight(manager, position, infos);
+            else return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (parameters.range.Contain(position)) return parameters.TryGetDeclaration(manager, position, out result);
+            else return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter) => parameters.Read(parameter);
     }
     internal class InvokerDelegateExpression(TextRange range, List<Type> returns, Expression parameters, Expression invoker) : InvokerExpression(range, returns, parameters)
     {
         public readonly Expression invoker = invoker;
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (invoker.range.Contain(position)) return invoker.OnHover(manager, position, out info);
+            else return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (invoker.range.Contain(position)) return invoker.OnHighlight(manager, position, infos);
+            else return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (invoker.range.Contain(position)) return invoker.TryGetDeclaration(manager, position, out result);
+            else return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
             invoker.Read(parameter);
         }
     }
-    internal class InvokerFunctionExpression(TextRange range, Expression parameters, CompilingCallable callable) : InvokerExpression(range, callable.returns, parameters)
+    internal class InvokerFunctionExpression(TextRange range, Expression parameters, CompilingCallable callable, TextRange methodRange) : InvokerExpression(range, callable.returns, parameters)
     {
         public readonly CompilingCallable callable = callable;
-        public override void Read(ExpressionParameter parameter)
+        public readonly TextRange methodRange = methodRange;
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            base.Read(parameter);
-           callable.references.Add(range);
+            if (methodRange.Contain(position))
+            {
+                info = new HoverInfo(methodRange, callable.ToString(manager), true);
+                return true;
+            }
+            else return base.OnHover(manager, position, out info);
         }
-    }
-    internal class InvokerMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable) : InvokerExpression(range, callable.returns, parameters)
-    {
-        public readonly Expression target = target;
-        public readonly CompilingCallable callable = callable;
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (methodRange.Contain(position))
+            {
+                callable.OnHighlight(manager, infos);
+                return true;
+            }
+            else return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (methodRange.Contain(position))
+            {
+                result = callable;
+                return result != null;
+            }
+            else return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
             callable.references.Add(range);
         }
     }
-    internal class InvokerVirtualMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable) : InvokerExpression(range, callable.returns, parameters)
+    internal class InvokerMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable, TextRange methodRange) : InvokerExpression(range, callable.returns, parameters)
     {
         public readonly Expression target = target;
         public readonly CompilingCallable callable = callable;
+        public readonly TextRange methodRange = methodRange;
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if(target.range.Contain(position)) return target.OnHover(manager, position, out info);
+            else if (methodRange.Contain(position))
+            {
+                info = new HoverInfo(methodRange, callable.ToString(manager), true);
+                return true;
+            }
+            else return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
+            else if (methodRange.Contain(position))
+            {
+                callable.OnHighlight(manager, infos);
+                return true;
+            }
+            else return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (target.range.Contain(position)) return target.TryGetDeclaration(manager, position, out result);
+            else if (methodRange.Contain(position))
+            {
+                result = callable;
+                return result != null;
+            }
+            else return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void Read(ExpressionParameter parameter)
+        {
+            base.Read(parameter);
+            callable.references.Add(range);
+        }
+    }
+    internal class InvokerVirtualMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable, TextRange methodRange) : InvokerExpression(range, callable.returns, parameters)
+    {
+        public readonly Expression target = target;
+        public readonly CompilingCallable callable = callable;
+        public readonly TextRange methodRange = methodRange;
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (target.range.Contain(position)) return target.OnHover(manager, position, out info);
+            else if (methodRange.Contain(position))
+            {
+                info = new HoverInfo(methodRange, callable.ToString(manager), true);
+                return true;
+            }
+            else return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
+            else if (methodRange.Contain(position))
+            {
+                callable.OnHighlight(manager, infos);
+                return true;
+            }
+            else return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (target.range.Contain(position)) return target.TryGetDeclaration(manager, position, out result);
+            else if (methodRange.Contain(position))
+            {
+                result = callable;
+                return result != null;
+            }
+            else return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
@@ -59,15 +179,6 @@
             function.references.Add(range);
             foreach (var implement in function.implements)
                 Reference(implement, range);
-        }
-    }
-    internal class InvokerConstructorExpression(TextRange range, Type type, Expression parameters, Declaration declaration) : InvokerExpression(range, [type], parameters)
-    {
-        public readonly Declaration declaration = declaration;
-        public override void Read(ExpressionParameter parameter)
-        {
-            base.Read(parameter);
-            parameter.manager.GetDeclaration(declaration)?.references.Add(range);
         }
     }
 }

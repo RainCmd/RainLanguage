@@ -21,6 +21,30 @@
             this.declarations = declarations;
             attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
         }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (declarations.Count > 0)
+            {
+                info = new HoverInfo(range, declarations[0].GetFullName(), false);
+                return true;
+            }
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            foreach (var declaration in declarations)
+                declaration.OnHighlight(manager, infos);
+            return true;
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (declarations.Count > 0)
+            {
+                result = declarations[0];
+                return result != null;
+            }
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             var msg = new CompileMessage(range, CErrorLevel.Error, "目标函数不明确");
@@ -43,6 +67,37 @@
             this.memberRange = memberRange;
             this.declarations = declarations;
             attribute = ExpressionAttribute.Method | ExpressionAttribute.Value;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (target.range.Contain(position)) return target.OnHover(manager, position, out info);
+            else if (memberRange.Contain(position) && declarations.Count > 0)
+            {
+                info = new HoverInfo(memberRange, declarations[0].GetFullName(), false);
+                return true;
+            }
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
+            else if (memberRange.Contain(position))
+            {
+                foreach (var declaration in declarations)
+                    declaration.OnHighlight(manager, infos);
+                return true;
+            }
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (target.range.Contain(position)) return target.TryGetDeclaration(manager, position, out result);
+            else if (memberRange.Contain(position) && declarations.Count > 0)
+            {
+                result = declarations[0];
+                return true;
+            }
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -111,10 +166,12 @@
     internal class BlurryLambdaExpression : Expression
     {
         public readonly List<TextRange> parameters;
+        public readonly TextRange symbol;
         public readonly TextRange body;
-        public BlurryLambdaExpression(TextRange range, List<TextRange> parameters, TextRange body) : base(range, new Tuple([BLURRY]))
+        public BlurryLambdaExpression(TextRange range, List<TextRange> parameters, TextRange symbol, TextRange body) : base(range, new Tuple([BLURRY]))
         {
             this.parameters = parameters;
+            this.symbol = symbol;
             this.body = body;
             attribute = ExpressionAttribute.Value;
         }

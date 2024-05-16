@@ -26,11 +26,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         {
             return (flag & value) != 0;
         }
-        public static LexicalType Split(TextRange range, TextPosition start, SplitFlag flag, out TextRange left, out TextRange right, MessageCollector collector)
+        public static Lexical Split(TextRange range, TextPosition start, SplitFlag flag, out TextRange left, out TextRange right, MessageCollector collector)
         {
             return Split(range, start - range.start, flag, out left, out right, collector);
         }
-        public static LexicalType Split(TextRange range, int start, SplitFlag flag, out TextRange left, out TextRange right, MessageCollector collector)
+        public static Lexical Split(TextRange range, int start, SplitFlag flag, out TextRange left, out TextRange right, MessageCollector collector)
         {
             var stack = new Stack<Lexical>();
             for (var index = start; Lexical.TryAnalysis(range, index, out var lexical, collector); index = lexical.anchor.end - range.start)
@@ -53,7 +53,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 {
                                     left = bracket.anchor;
                                     right = lexical.anchor;
-                                    return lexical.type;
+                                    return lexical;
                                 }
                                 break;
                             }
@@ -71,7 +71,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 {
                                     left = bracket.anchor;
                                     right = lexical.anchor;
-                                    return lexical.type;
+                                    return lexical;
                                 }
                                 break;
                             }
@@ -89,7 +89,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 {
                                     left = bracket.anchor;
                                     right = lexical.anchor;
-                                    return lexical.type;
+                                    return lexical;
                                 }
                                 break;
                             }
@@ -102,7 +102,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         break;
                     case LexicalType.Semicolon:
@@ -110,7 +110,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         break;
                     case LexicalType.Assignment:
@@ -118,7 +118,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         break;
                     case LexicalType.Equals: break;
@@ -127,7 +127,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         break;
                     case LexicalType.BitAnd:
@@ -169,7 +169,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         break;
                     case LexicalType.QuestionDot:
@@ -183,7 +183,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         break;
                     case LexicalType.Colon:
@@ -195,7 +195,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
-                            return lexical.type;
+                            return lexical;
                         }
                         collector.Add(lexical.anchor, CErrorLevel.Error, "缺少配对的问号");
                         break;
@@ -265,7 +265,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             left = default;
             right = default;
-            return LexicalType.Unknow;
+            return default;
         }
     }
 }

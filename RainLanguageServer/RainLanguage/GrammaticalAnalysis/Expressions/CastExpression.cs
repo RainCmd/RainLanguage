@@ -45,6 +45,21 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else attribute = ExpressionAttribute.Tuple;
             attribute |= expression.attribute & ~ExpressionAttribute.Assignable;
         }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (expression.range.Contain(position)) return expression.OnHover(manager, position, out info);
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (expression.range.Contain(position)) return expression.OnHighlight(manager, position, infos);
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (expression.range.Contain(position)) return expression.TryGetDeclaration(manager, position, out result);
+            return base.TryGetDeclaration(manager, position, out result);
+        }
         public override void Read(ExpressionParameter parameter) => expression.Read(parameter);
     }
     internal class IsCastExpression : Expression
@@ -58,6 +73,39 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             this.expression = expression;
             this.local = local;
             attribute = ExpressionAttribute.Value;
+        }
+        public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
+        {
+            if (typeExpression.range.Contain(position)) return typeExpression.OnHover(manager, position, out info);
+            else if (expression.range.Contain(position)) return expression.OnHover(manager, position, out info);
+            else if (local != null && local.Value.range.Contain(position))
+            {
+                info = new HoverInfo(local.Value.range, local.Value.ToString(null), true);
+                return true;
+            }
+            return base.OnHover(manager, position, out info);
+        }
+        public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
+        {
+            if (typeExpression.range.Contain(position)) return typeExpression.OnHighlight(manager, position, infos);
+            else if (expression.range.Contain(position)) return expression.OnHighlight(manager, position, infos);
+            else if (local != null && local.Value.range.Contain(position))
+            {
+                local.Value.OnHighlight(infos);
+                return true;
+            }
+            return base.OnHighlight(manager, position, infos);
+        }
+        public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
+        {
+            if (typeExpression.range.Contain(position)) return typeExpression.TryGetDeclaration(manager, position, out result);
+            else if (expression.range.Contain(position)) return expression.TryGetDeclaration(manager, position, out result);
+            else if (local != null && local.Value.range.Contain(position))
+            {
+                result = local.Value.GetCompilingDeclaration();
+                return true;
+            }
+            return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
         {
