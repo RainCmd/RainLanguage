@@ -12,7 +12,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (source.range.Contain(position)) return OnHover(manager, position, out info);
+            if (source.range.Contain(position)) return source.OnHover(manager, position, out info);
             return base.OnHover(manager, position, out info);
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
