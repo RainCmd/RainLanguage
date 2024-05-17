@@ -154,6 +154,13 @@ namespace RainLanguageServer
                             foreach (var implement in virtualFunction.implements)
                                 locations.Add(TR2L(implement.name));
                         }
+                        else if(result is CompilingVariable variable)
+                        {
+                            foreach (var anchor in variable.read)
+                                locations.Add(TR2L(anchor));
+                            foreach(var anchor in variable.write)
+                                locations.Add(TR2L(anchor));
+                        }
                         return Result<Location[], ResponseError>.Success([.. locations]);
                     }
             }

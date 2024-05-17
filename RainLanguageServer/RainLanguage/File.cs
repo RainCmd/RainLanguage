@@ -214,8 +214,8 @@ namespace RainLanguageServer.RainLanguage
                     }
                 if (callable is CompilingFunction function)
                 {
-                    foreach(var parameter in function.logicBlock.parameters)
-                        if(parameter.range.Contain(position))
+                    foreach (var parameter in function.logicBlock.parameters)
+                        if (parameter.range.Contain(position))
                         {
                             parameter.OnHighlight(infos);
                             return true;
@@ -238,7 +238,15 @@ namespace RainLanguageServer.RainLanguage
                         result = manager.GetSourceDeclaration(callable.parameters[i].type.Source);
                         return result != null;
                     }
-                    else if (param.name != null && param.name.Value.Contain(position)) return false;
+                    else if (param.name != null && param.name.Value.Contain(position))
+                    {
+                        if (callable is CompilingFunction compilingFunction)
+                        {
+                            result = compilingFunction.logicBlock.parameters[i].GetCompilingDeclaration();
+                            return result != null;
+                        }
+                        return false;
+                    }
                 }
                 for (var i = 0; i < returns.Count; i++)
                     if (returns[i].Contain(position))

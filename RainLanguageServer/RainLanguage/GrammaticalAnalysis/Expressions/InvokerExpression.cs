@@ -16,7 +16,7 @@
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if (parameters.range.Contain(position)) return base.OnHighlight(manager, position, infos);
+            if (parameters.range.Contain(position)) return parameters.OnHighlight(manager, position, infos);
             else return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
@@ -84,7 +84,7 @@
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            callable.references.Add(range);
+            callable.references.Add(methodRange);
         }
     }
     internal class InvokerMemberExpression(TextRange range, Expression parameters, Expression target, CompilingCallable callable, TextRange methodRange) : InvokerExpression(range, callable.returns, parameters)
@@ -166,12 +166,12 @@
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
-            if (callable is CompilingVirtualFunction virtualFunction) Reference(virtualFunction, range);
+            if (callable is CompilingVirtualFunction virtualFunction) Reference(virtualFunction, methodRange);
             else if (callable is CompilingAbstractFunction abstractFunction)
             {
-                abstractFunction.references.Add(range);
+                abstractFunction.references.Add(methodRange);
                 foreach (var implement in abstractFunction.implements)
-                    Reference(implement, range);
+                    Reference(implement, methodRange);
             }
         }
         private static void Reference(CompilingVirtualFunction function, TextRange range)

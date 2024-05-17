@@ -45,7 +45,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(methodExpression.range, methodExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.declaration.signature);
-                                                expression = new InvokerFunctionExpression(lexical.anchor & tuple.range, tuple, callable, methodExpression.range);
+                                                expression = new InvokerFunctionExpression(methodExpression.range & tuple.range, tuple, callable, methodExpression.range);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;
@@ -62,7 +62,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(methodMemberExpression.range, methodMemberExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.declaration.signature);
-                                                expression = new InvokerMemberExpression(lexical.anchor & tuple.range, tuple, methodMemberExpression.target, callable, methodMemberExpression.range);
+                                                expression = new InvokerMemberExpression(methodMemberExpression.range & tuple.range, tuple, methodMemberExpression.target, callable, methodMemberExpression.memberRange);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;
@@ -79,7 +79,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             if (TryGetFunction(methodVirtualExpression.range, methodVirtualExpression.declarations, tuple, out var callable))
                                             {
                                                 tuple = AssignmentConvert(tuple, callable!.declaration.signature);
-                                                expression = new InvokerVirtualMemberExpression(lexical.anchor & tuple.range, tuple, methodVirtualExpression.target, callable, methodVirtualExpression.range);
+                                                expression = new InvokerVirtualMemberExpression(methodVirtualExpression.range & tuple.range, tuple, methodVirtualExpression.target, callable, methodVirtualExpression.memberRange);
                                                 expressionStack.Push(expression);
                                                 attribute = expression.attribute;
                                                 goto label_next_lexical;
@@ -1451,7 +1451,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (ExpressionSplit.Split(range, index - range.start, flag, out var left, out var right, collector).type != LexicalType.Unknow)
             {
                 index = right.end;
-                result = Parse(new TextRange(left.end, right.start));
+                result = Parse(left.end & right.start);
                 return true;
             }
             collector.Add(range[(index - range.start)..], CErrorLevel.Error, "意外的表达式");
