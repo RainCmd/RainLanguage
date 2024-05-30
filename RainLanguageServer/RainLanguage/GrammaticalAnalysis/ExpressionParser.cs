@@ -1474,7 +1474,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             rightExpression = AssignmentConvert(rightExpression, leftExpression.types);
             return new QuestionNullExpression(leftExpression, rightExpression);
         }
-        private Expression AssignmentConvert(Expression source, Type type)
+        public Expression AssignmentConvert(Expression source, Type type)
         {
             if (!source.Valid) return source;
             if (source.types.Count == 1)

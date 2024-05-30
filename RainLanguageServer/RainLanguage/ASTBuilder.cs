@@ -157,7 +157,7 @@ namespace RainLanguageServer.RainLanguage
                     var context = new Context(variable.space, variable.relies, null);
                     var localContext = new LocalContext(space.collector);
                     var parser = new ExpressionParser(manager, context, localContext, file.space.collector, false);
-                    variable.expression = parser.Parse(variable.expressionRange.Value);
+                    variable.expression = parser.AssignmentConvert(parser.Parse(variable.expressionRange.Value), variable.type);
                     variable.expression.Read(new ExpressionParameter(manager, space.collector));
                     if (variable.expression.Valid)
                     {

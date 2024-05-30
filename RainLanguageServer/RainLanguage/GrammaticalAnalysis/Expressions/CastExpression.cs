@@ -5,7 +5,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly TypeExpression typeExpression;
         public readonly Expression expression;
-        public CastExpression(TextRange range, TypeExpression typeExpression, Expression expression) : base(range, new Tuple([typeExpression.type]))
+        public CastExpression(TextRange range, TypeExpression typeExpression, Expression expression) : base(range, new Tuple([typeExpression.type]))//todo 源表达式是模糊类型时应该先明确后再传入
         {
             this.typeExpression = typeExpression;
             this.expression = expression;
