@@ -11,7 +11,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         {
             this.target = target;
             this.memberRange = memberRange;
-            attribute = ExpressionAttribute.Value | (target.attribute & ~ExpressionAttribute.Assignable);
+            attribute = ExpressionAttribute.Value | (target.attribute & ExpressionAttribute.Assignable);
         }
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
@@ -38,6 +38,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter) => target.Read(parameter);
+        public override void Write(ExpressionParameter parameter) => target.Read(parameter);
     }
     internal class VectorConstructorExpression : Expression
     {
