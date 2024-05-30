@@ -936,12 +936,17 @@ namespace RainLanguageServer.RainLanguage
                                 }
                                 else if (segment[index] == '{')
                                 {
-                                    index++;
-                                    if (index >= segment.Count) break;
-                                    if (segment[index] == '{') index++;
-                                    if (index >= segment.Count) break;
-                                    var block = MatchStringTemplateBlock(segment[index..], collector);
-                                    index += block.Count;
+                                    if (index + 1 > segment.Count)
+                                    {
+                                        index++;
+                                        break;
+                                    }
+                                    else if (segment[index + 1] == '{') index += 2;
+                                    else
+                                    {
+                                        var block = MatchStringTemplateBlock(segment[index..], collector);
+                                        index += block.Count;
+                                    }
                                 }
                                 else index++;
                             }

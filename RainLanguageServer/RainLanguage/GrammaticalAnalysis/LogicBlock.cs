@@ -209,7 +209,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (result.Valid)
                         {
                             if (result.types.Count != returns.Count) collector.Add(result.range, CErrorLevel.Error, "表达式返回值类型数量与函数返回值类型数量不一致");
-                            for (var i = 0; i < returns.Count; i++)
+                            for (int i = 0, count = Math.Min(result.types.Count, returns.Count); i < count; i++)
                                 if (ExpressionParser.Convert(manager, result.types[i], returns[i]) < 0)
                                     collector.Add(result.range, CErrorLevel.Error, $"表达式第{i + 1}个返回值类型无法转换为函数返回值类型");
                         }

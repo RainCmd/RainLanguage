@@ -662,6 +662,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 	if(expression->returns[0] == TYPE_Null)
 	{
 		if(type != TYPE_Entity && !IsHandleType(type)) return false;
+		types.Add(type);
 	}
 	else if(expression->returns[0] != TYPE_Blurry) types.Add(expression->returns[0]);
 	else

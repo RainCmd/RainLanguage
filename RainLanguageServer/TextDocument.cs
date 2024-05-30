@@ -74,6 +74,7 @@ namespace RainLanguageServer
         public static bool operator ==(string? left, TextRange right) => right == left;
         public static bool operator !=(string? left, TextRange right) => right != left;
         public static TextRange operator &(TextRange left, TextRange right) => new(left.start, right.end);
+        public static implicit operator bool(TextRange range) => range.start.document != null && range.end.document != null;
         public override readonly string ToString() => start.document.text[start.charactor..end.charactor];
         public override readonly bool Equals(object? obj) => obj is string value && this == value;
 

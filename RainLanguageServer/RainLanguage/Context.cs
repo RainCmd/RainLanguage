@@ -45,6 +45,7 @@ namespace RainLanguageServer.RainLanguage
                             if (define == this.declaration) return true;
                             if (IsVisiable(manager, define.declaration, false))
                                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
+                                else if (declaration.visibility.ContainAny(Visibility.Space)) return define.space.Contain(space);
                         }
                         return false;
                     case DeclarationCategory.Class:
@@ -57,6 +58,7 @@ namespace RainLanguageServer.RainLanguage
                             if (define == this.declaration) return true;
                             if (IsVisiable(manager, define.declaration, false))
                                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
+                                else if (declaration.visibility.ContainAny(Visibility.Space)) return define.space.Contain(space);
                                 else if (this.declaration?.declaration.category == DeclarationCategory.Class)
                                     if (declaration.visibility.ContainAny(Visibility.Protected))
                                     {
@@ -265,7 +267,8 @@ namespace RainLanguageServer.RainLanguage
             else if (type.code == TypeCode.Handle)
             {
                 var filter = new HashSet<CompilingDeclaration>();
-                for (var index = (CompilingClass)declaration; index != null; index = manager.GetSourceDeclaration(index.parent) as CompilingClass)
+                var index = (CompilingClass)declaration;
+                while (index != null)
                 {
                     foreach (var item in index.variables)
                         if (item.name == targetName && IsVisiable(manager, item.declaration))
@@ -279,6 +282,10 @@ namespace RainLanguageServer.RainLanguage
                             results.Add(item);
                             CollectOverideFunctions(filter, manager, index, item);
                         }
+                    if (index.parent.Vaild) index = manager.GetSourceDeclaration(index.parent) as CompilingClass;
+                    else if (index.declaration.GetDefineType() != Type.HANDLE)
+                        index = manager.GetSourceDeclaration(Type.HANDLE) as CompilingClass;
+                    else break;
                 }
             }
             else if (type.code == TypeCode.Interface) CollectFunctions(manager, targetName, (CompilingInterface)declaration, results);

@@ -2155,6 +2155,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             if (expression.types[0] == Expression.NULL)
             {
                 if (target != Type.ENTITY && !target.Managed) return false;
+                result.Add(target);
             }
             else if (expression.types[0] != Expression.BLURRY) result.Add(expression.types[0]);
             else
@@ -2292,13 +2293,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         {
             if (ExpressionSplit.Split(range, 0, flag, out var left, out var right, collector).type == type)
             {
+                TextRange remainder;
                 var expressions = new List<Expression>();
                 do
                 {
+                    remainder = right;
                     expressions.Add(Parse(left));
                 }
-                while (ExpressionSplit.Split(right, 0, flag, out left, out right, collector).type == type);
-                expressions.Add(Parse(right));
+                while (ExpressionSplit.Split(remainder, 0, flag, out left, out right, collector).type == type);
+                if (remainder) expressions.Add(Parse(remainder));
                 result = TupleExpression.Create(expressions);
                 return true;
             }

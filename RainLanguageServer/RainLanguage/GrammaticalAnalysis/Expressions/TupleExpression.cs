@@ -36,6 +36,10 @@
         {
             foreach (var e in expressions) e.Read(parameter);
         }
+        public override void Write(ExpressionParameter parameter)
+        {
+            foreach (var e in expressions) e.Write(parameter);
+        }
         public override bool TryEvaluateIndices(List<long> indices)
         {
             foreach (var expression in expressions)

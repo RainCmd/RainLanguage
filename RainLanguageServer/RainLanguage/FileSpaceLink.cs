@@ -78,7 +78,7 @@ namespace RainLanguageServer.RainLanguage
                 foreach (var variable in file.variables)
                 {
                     var type = GetType(context, manager, variable.type);
-                    var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
+                    var declaration = new Declaration(library.name, variable.visibility, DeclarationCategory.StructVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingStruct.variables.Add(compilingVariable);
                     variable.compiling = compilingVariable;
@@ -155,7 +155,7 @@ namespace RainLanguageServer.RainLanguage
                 foreach (var variable in file.variables)
                 {
                     var type = GetType(context, manager, variable.type);
-                    var declaration = new Declaration(library.name, file.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
+                    var declaration = new Declaration(library.name, variable.visibility, DeclarationCategory.ClassVariable, compiling.GetMemberName(file.name.ToString(), variable.name.ToString()), default);
                     var compilingVariable = new CompilingVariable(variable.name, declaration, variable.attributes, compiling, cite ? variable : null, variable.isReadonly, type, variable.expression, relies);
                     compilingClass.variables.Add(compilingVariable);
                     variable.compiling = compilingVariable;
