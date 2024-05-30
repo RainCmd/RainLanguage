@@ -70,8 +70,8 @@ function GetSocketServerOperation() {
 
 export async function StartServer(context: vscode.ExtensionContext) {
 
-    //const serverOptions = GetCPServerOptions(context)
-    const serverOptions = GetSocketServerOperation
+    const serverOptions = GetCPServerOptions(context)
+    //const serverOptions = GetSocketServerOperation
 
     const projectName = await GetProjectName()
     const imports = await CollectImports()

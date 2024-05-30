@@ -16,5 +16,6 @@
             result = default;
             return false;
         }
+        public virtual bool CollectCompletions(ASTManager manager, Context context, TextPosition position, List<CompletionInfo> infos) => false;
     }
 }

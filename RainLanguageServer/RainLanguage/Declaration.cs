@@ -1,4 +1,6 @@
-﻿namespace RainLanguageServer.RainLanguage
+﻿using System.Text;
+
+namespace RainLanguageServer.RainLanguage
 {
     enum DeclarationCategory
     {
@@ -84,6 +86,17 @@
             var result = HashCode.Combine(library, visibility, category, signature);
             foreach (var item in name) result = HashCode.Combine(item, result);
             return result;
+        }
+        public override string ToString()
+        {
+            if (!Vaild) return "无效的定义";
+            var sb = new StringBuilder(library);
+            foreach(var item in name)
+            {
+                sb.Append('.');
+                sb.Append(item);
+            }
+            return sb.ToString();
         }
         public static bool operator ==(Declaration lhs, Declaration rhs) => lhs.Equals(rhs);
         public static bool operator !=(Declaration lhs, Declaration rhs) => !lhs.Equals(rhs);

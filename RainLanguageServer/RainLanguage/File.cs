@@ -57,6 +57,7 @@ namespace RainLanguageServer.RainLanguage
             result = compiling;
             return name.Contain(position);
         }
+        public virtual bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos) => false;
     }
     internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
@@ -126,6 +127,13 @@ namespace RainLanguageServer.RainLanguage
                 else if (variable.expression != null) return variable.expression!.TryGetDeclaration(manager, position, out result);
             }
             return false;
+        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            if (compiling is CompilingVariable compilingVariable && compilingVariable.expression != null && compilingVariable.expression.range.Contain(position))
+                return compilingVariable.expression.CollectCompletions(manager, new Context(space.compiling, space.relies, null), position, infos);
+            var range = type.name[0].start & position;
+            return FileCollectCompletions.CollectDefines(manager, space, range, range.start, infos);
         }
     }
     internal class FileFunction(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns, List<TextLine> body) : FileDeclaration(name, visibility, space)
@@ -256,6 +264,19 @@ namespace RainLanguageServer.RainLanguage
                     }
                 if (callable is CompilingFunction function) return function.logicBlock.block.TryGetDeclaration(manager, position, out result);
             }
+            return false;
+        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            return CollectCompletions(manager, null, position, infos);
+        }
+        public bool CollectCompletions(ASTManager manager, FileDeclaration? declaration, TextPosition position, List<CompletionInfo> infos)
+        {
+            var line = position.Line;
+            if (line.line == name.start.Line.line)
+                return FileCollectCompletions.CollectDefines(manager, space, line.start & position, line.start, infos);
+            else if (compiling is CompilingFunction compilingFunction && compilingFunction.logicBlock != null)
+                return compilingFunction.logicBlock.block.CollectCompletions(manager, new Context(space.compiling, space.relies, declaration?.compiling), position, infos);
             return false;
         }
     }
@@ -395,6 +416,16 @@ namespace RainLanguageServer.RainLanguage
                     return function.TryGetDeclaration(manager, position, out result);
             return false;
         }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            foreach (var variable in variables)
+                if (variable.range != null && variable.range.Contain(position))
+                    return variable.CollectCompletions(manager, position, infos);
+            foreach (var function in functions)
+                if (function.range != null && function.range.Contain(position))
+                    return function.CollectCompletions(manager, this, position, infos);
+            return false;
+        }
     }
     internal class FileInterface(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
@@ -464,6 +495,13 @@ namespace RainLanguageServer.RainLanguage
             foreach (var function in functions)
                 if (function.range != null && function.range.Contain(position))
                     return function.TryGetDeclaration(manager, position, out result);
+            return false;
+        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            foreach (var function in functions)
+                if (function.range != null && function.range.Contain(position))
+                    return function.CollectCompletions(manager, this, position, infos);
             return false;
         }
     }
@@ -575,6 +613,16 @@ namespace RainLanguageServer.RainLanguage
                 if (constructor.range != null && constructor.range.Contain(position))
                     return constructor.TryGetDeclaration(manager, position, out result);
             return false;
+        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            foreach (var variable in variables)
+                if (variable.range != null && variable.range.Contain(position))
+                    return variable.CollectCompletions(manager, position, infos);
+            foreach (var function in constructors)
+                if (function.range != null && function.range.Contain(position))
+                    return function.CollectCompletions(manager, this, position, infos);
+            return base.CollectCompletions(manager, position, infos);
         }
     }
     internal class FileDelegate(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
@@ -705,6 +753,11 @@ namespace RainLanguageServer.RainLanguage
             }
             return false;
         }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            var line = position.Line.start & position;
+            return FileCollectCompletions.CollectDefines(manager, space, line, line.start, infos);
+        }
     }
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
@@ -774,6 +827,11 @@ namespace RainLanguageServer.RainLanguage
                         return result != null;
                     }
             return false;
+        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            var line = position.Line.start & position;
+            return FileCollectCompletions.CollectDefines(manager, space, line, line.start, infos);
         }
     }
     internal class FileNative(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
@@ -903,6 +961,11 @@ namespace RainLanguageServer.RainLanguage
                     }
             }
             return false;
+        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
+        {
+            var line = position.Line.start & position;
+            return FileCollectCompletions.CollectDefines(manager, space, line, line.start, infos);
         }
     }
     internal partial class FileSpace

@@ -48,23 +48,24 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         public readonly Tuple types = types;
         public ExpressionAttribute attribute = ExpressionAttribute.Invalid;
         public virtual bool Valid => true;
-        public InvalidExpression ToInvalid() 
+        public InvalidExpression ToInvalid()
         {
             if (this is InvalidExpression invalid) return invalid;
             return new InvalidExpression(this);
         }
 
-        public virtual bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)//todo 悬停信息
+        public virtual bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
             info = default;
             return false;
         }
-        public virtual bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos) => false;//todo 高亮
-        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)//todo 查找定义
+        public virtual bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos) => false;
+        public virtual bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
             result = default;
             return false;
         }
+        public virtual bool CollectCompletions(ASTManager manager, Context context, TextPosition position, List<CompletionInfo> infos) => false;
         public abstract void Read(ExpressionParameter parameter);
         public virtual void Write(ExpressionParameter parameter) => throw new NotImplementedException();
         public virtual bool TryEvaluate(out bool value)
