@@ -107,6 +107,7 @@ namespace RainLanguageServer
         }
         protected override Result<SignatureHelp, ResponseError> SignatureHelp(TextDocumentPositionParams param, CancellationToken token)
         {
+            //todo 符号帮助功能
             return Result<SignatureHelp, ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
 

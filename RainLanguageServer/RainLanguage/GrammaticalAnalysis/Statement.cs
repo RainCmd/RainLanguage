@@ -16,6 +16,6 @@
             result = default;
             return false;
         }
-        public virtual bool CollectCompletions(ASTManager manager, Context context, TextPosition position, List<CompletionInfo> infos) => false;
+        public virtual bool CollectCompletions(ASTManager manager, Context context, TextPosition position, List<CompletionInfo> infos) => false;//todo 语句和表达式补全
     }
 }
