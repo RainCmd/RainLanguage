@@ -1286,6 +1286,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 var targetType = declarations[0].declaration.GetDefineType().GetDimensionType(Lexical.ExtractDimension(range, ref index));
                                 if (targetType.Vaild && targetType.Managed)
                                 {
+                                    sourceExpression = InferRightValueType(sourceExpression, targetType);
                                     var expression = new CastExpression(sourceExpression.range & name, new TypeExpression(name, targetType, name), sourceExpression);
                                     expressionStack.Push(expression);
                                     attribute = expression.attribute;
@@ -1413,6 +1414,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                 collector.Add(right.range, CErrorLevel.Error, "无法进行类型强转");
                             else if (Convert(manager, right.types[0], typeExpression.type) < 0 && Convert(manager, typeExpression.type, right.types[0]) < 0)
                                 collector.Add(left.range & right.range, CErrorLevel.Error, $"无法从{right.types[0]}转换为{typeExpression.type}");
+                            right = InferRightValueType(right, typeExpression.type);
                             expressionStack.Push(new CastExpression(left.range & right.range, typeExpression, right));
                         }
                         else expressionStack.Push(new InvalidExpression(left, right));
