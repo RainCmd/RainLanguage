@@ -169,11 +169,17 @@ namespace RainLanguageServer.RainLanguage
                 }
             foreach (var file in space.functions)
                 if (file.compiling is CompilingFunction function)
+                {
                     function.logicBlock.Parse(manager);
+                    function.logicBlock.CheckReturn(function.name);
+                }
             foreach (var file in space.structs)
                 if (file.compiling is CompilingStruct compiling)
                     foreach (var member in compiling.functions)
+                    {
                         member.logicBlock.Parse(manager);
+                        member.logicBlock.CheckReturn(member.name);
+                    }
             foreach (var file in space.classes)
                 if (file.compiling is CompilingClass compiling)
                 {
@@ -189,7 +195,10 @@ namespace RainLanguageServer.RainLanguage
                     foreach (var member in compiling.constructors)
                         member.logicBlock.Parse(manager);
                     foreach (var member in compiling.functions)
+                    {
                         member.logicBlock.Parse(manager);
+                        member.logicBlock.CheckReturn(member.name);
+                    }
                     compiling.destructor?.Parse(manager);
                 }
         }

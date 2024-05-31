@@ -280,6 +280,40 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             TidyRange(block);
             block.Read(new ExpressionParameter(manager, collector));
         }
+        public void CheckReturn(TextRange name)
+        {
+            if (returns.Count > 0 && !CheckReturn(block))
+                collector.Add(name, CErrorLevel.Error, "不是所有的代码路径都有返回值");
+        }
+        private static bool CheckReturn(Statement? statement)
+        {
+            if (statement is ExitStatement || statement is ReturnStatement) return true;
+            else if (statement is BlockStatement blockStatement)
+            {
+                foreach (var subStatement in blockStatement.statements)
+                    if (CheckReturn(subStatement))
+                        return true;
+            }
+            else if (statement is BranchStatement branchStatement)
+                return CheckReturn(branchStatement.trueBranch) && CheckReturn(branchStatement.falseBranch);
+            else if (statement is LoopStatement loopStatement)
+            {
+                if (loopStatement.loopBlock != null)
+                {
+                    bool hasContinue = false;
+                    foreach (var subStatement in loopStatement.loopBlock.statements)
+                        if (subStatement is BreakStatement) return false;
+                        else if (!hasContinue)
+                        {
+                            if (subStatement is ContinueStatement) hasContinue = true;
+                            else if(CheckReturn(subStatement)) return true;
+                        }
+                }
+                return CheckReturn(loopStatement.elseBlock);
+            }
+            else if(statement is TryStatement tryStatement) return CheckReturn(tryStatement.tryBlock);
+            return false;
+        }
         private static void TidyRange(BlockStatement block)
         {
             for (var i = block.statements.Count - 1; i >= 0; i--)
