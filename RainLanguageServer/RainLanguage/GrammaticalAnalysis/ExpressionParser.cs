@@ -245,24 +245,29 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         var indices = new List<long>();
                                         if (tuple.TryEvaluateIndices(indices))
                                         {
-                                            var expression = expressionStack.Pop();
-                                            var types = new List<Type>();
-                                            for (var i = 0; i < indices.Count; i++)
+                                            if (indices.Count > 0)
                                             {
-                                                if (indices[i] < 0) indices[i] += expression.types.Count;
-                                                if (indices[i] < expression.types.Count) types.Add(expression.types[(int)indices[i]]);
-                                                else
+                                                var expression = expressionStack.Pop();
+                                                var types = new List<Type>();
+                                                for (var i = 0; i < indices.Count; i++)
                                                 {
-                                                    collector.Add(tuple.range, CErrorLevel.Error, $"第{i + 1}个索引超出了元组类型数量范围");
-                                                    goto label_tuple_indices_parse_fail;
+                                                    if (indices[i] < 0) indices[i] += expression.types.Count;
+                                                    if (indices[i] < expression.types.Count) types.Add(expression.types[(int)indices[i]]);
+                                                    else
+                                                    {
+                                                        collector.Add(tuple.range, CErrorLevel.Error, $"第{i + 1}个索引超出了元组类型数量范围");
+                                                        goto label_tuple_indices_parse_fail;
+                                                    }
                                                 }
+                                                expression = new TupleEvaluationExpression(expression.range & tuple.range, new Tuple(types), expression, tuple);
+                                                expressionStack.Push(expression);
+                                                attribute = expression.attribute;
+                                                goto label_next_lexical;
+                                            label_tuple_indices_parse_fail:;
+                                                expressionStack.Push(expression);
                                             }
-                                            expression = new TupleEvaluationExpression(expression.range & tuple.range, new Tuple(types), expression, tuple);
-                                            expressionStack.Push(expression);
-                                            attribute = expression.attribute;
+                                            else collector.Add(tuple.range, CErrorLevel.Error, "缺少索引");
                                             goto label_next_lexical;
-                                        label_tuple_indices_parse_fail:;
-                                            expressionStack.Push(expression);
                                         }
                                         else collector.Add(tuple.range, CErrorLevel.Error, "元组索引必须是常量");
                                     }
