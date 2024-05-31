@@ -165,12 +165,13 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     case LexicalType.Negate:
                     case LexicalType.Dot: break;
                     case LexicalType.Question:
-                        if (stack.Count > 0 && flag.ContainAny(SplitFlag.Question))
+                        if (stack.Count == 0 && flag.ContainAny(SplitFlag.Question))
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);
                             return lexical;
                         }
+                        stack.Push(lexical);
                         break;
                     case LexicalType.QuestionDot:
                     case LexicalType.QuestionRealInvoke: break;
@@ -179,7 +180,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         stack.Push(lexical);
                         break;
                     case LexicalType.QuestionNull:
-                        if (stack.Count > 0 && flag.ContainAny(SplitFlag.QuestionNull))
+                        if (stack.Count == 0 && flag.ContainAny(SplitFlag.QuestionNull))
                         {
                             left = range[start..index];
                             right = new TextRange(lexical.anchor.end, range.end);

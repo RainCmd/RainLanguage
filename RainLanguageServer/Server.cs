@@ -86,7 +86,7 @@ namespace RainLanguageServer
                 if (builder.manager.fileSpaces.TryGetValue(param.textDocument.uri, out var fileSpace))
                 {
                     var infos = new List<CompletionInfo>();
-                    FileCollectCompletions.CollectCompletions(builder.manager, fileSpace, GetFilePosition(fileSpace.document, param.position), infos);
+                    //FileCollectCompletions.CollectCompletions(builder.manager, fileSpace, GetFilePosition(fileSpace.document, param.position), infos);
                     if (infos.Count > 0)
                     {
                         var items = new CompletionItem[infos.Count];
