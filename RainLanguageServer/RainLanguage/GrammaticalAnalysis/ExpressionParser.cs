@@ -2057,15 +2057,10 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             parameter = AssignmentConvert(parameter, parameterTypes);
             for (var i = 0; i < parameter.types.Count; i++)
             {
-                if (parameter.types[i] == Type.REAL) count--;
-                else if (parameter.types[i] == Type.REAL2) count -= 2;
-                else if (parameter.types[i] == Type.REAL3) count -= 3;
-                else if (parameter.types[i] == Type.REAL4) count -= 4;
-                else
-                {
-                    collector.Add(parameter.range, CErrorLevel.Error, $"第{i + 1}个返回值不是实数也不是向量");
-                    count--;
-                }
+                if (parameterTypes[i] == Type.REAL) count--;
+                else if (parameterTypes[i] == Type.REAL2) count -= 2;
+                else if (parameterTypes[i] == Type.REAL3) count -= 3;
+                else if (parameterTypes[i] == Type.REAL4) count -= 4;
             }
             if (count < 0) collector.Add(parameter.range, CErrorLevel.Error, "参数数量过多");
             return parameter;
