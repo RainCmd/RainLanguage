@@ -1079,7 +1079,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         else
                         {
                             index = lexical.anchor.start;
-                            var declarations = FindDeclaration(lexical.anchor, ref index, out var name);
+                            var declarations = FindDeclaration(range, ref index, out var name);
                             if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, name, declarations);
                             else PushInvalidExpression(expressionStack, lexical.anchor, ref attribute);
                             goto label_next_lexical;
