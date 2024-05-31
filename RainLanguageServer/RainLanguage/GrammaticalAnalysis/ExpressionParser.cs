@@ -1816,7 +1816,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         return new EvaluateConstantCharExpression(value, expression);
                 }
             }
-            return new InvalidExpression([type], expression);
+            return expression;
         }
         private List<CompilingDeclaration>? FindDeclaration(TextRange range, ref TextPosition index, out TextRange name)
         {

@@ -109,7 +109,11 @@ namespace RainLanguageServer.RainLanguage
                             return $"task {sb}";
                     }
                 }
-                else return sb.ToString();
+                else
+                {
+                    for (var i = 0; i < dimension; i++) sb.Append("[]");
+                    return sb.ToString();
+                }
             }
             return "无效的类型";
         }
