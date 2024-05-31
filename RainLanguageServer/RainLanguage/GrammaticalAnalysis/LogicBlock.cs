@@ -70,8 +70,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         var block = stack.Peek();
                         if (block.indent > line.indent)
                         {
-                            stack.Pop();
-                            localContext.PopBlock();
+                            if (stack.Count > 1)
+                            {
+                                stack.Pop();
+                                localContext.PopBlock();
+                            }
+                            else
+                            {
+                                collector.Add(line, CErrorLevel.Error, "缩进错误");
+                                break;
+                            }
                         }
                         else if (block.indent < line.indent)
                         {
