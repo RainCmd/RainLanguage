@@ -125,6 +125,7 @@
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
+            target.Read(parameter);
             callable.references.Add(methodRange);
         }
     }

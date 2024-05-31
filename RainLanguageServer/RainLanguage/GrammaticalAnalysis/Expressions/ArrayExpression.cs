@@ -6,17 +6,17 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
 {
     internal class ArrayCreateExpression : Expression
     {
-        public readonly TextRange typeWordRange;
+        public readonly TypeExpression? typeExpression;
         public readonly Expression length;
-        public ArrayCreateExpression(TextRange range, Expression length, Type type, TextRange typeWordRange) : base(range, new Tuple([type]))
+        public ArrayCreateExpression(TextRange range, Expression length, Type type, TypeExpression? typeExpression) : base(range, new Tuple([type]))
         {
             this.length = length;
-            this.typeWordRange = typeWordRange;
+            this.typeExpression = typeExpression;
             attribute = ExpressionAttribute.Value | ExpressionAttribute.Array;
         }
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if (typeWordRange.Contain(position))
+            if (typeExpression != null && typeExpression.typeWordRange.Contain(position))
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
@@ -30,11 +30,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if (typeWordRange.Contain(position))
+            if (typeExpression != null && typeExpression.typeWordRange.Contain(position))
             {
                 var source = manager.GetSourceDeclaration(types[0].Source);
                 if (source != null) source.OnHighlight(manager, infos);
-                else infos.Add(new HighlightInfo(typeWordRange, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
+                else infos.Add(new HighlightInfo(typeExpression.typeWordRange, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
                 return true;
             }
             else if (length.range.Contain(position)) return length.OnHighlight(manager, position, infos);
@@ -42,7 +42,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
-            if (typeWordRange.Contain(position))
+            if (typeExpression != null && typeExpression.typeWordRange.Contain(position))
             {
                 result = manager.GetSourceDeclaration(types[0].Source);
                 return result != null;
@@ -50,7 +50,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (length.range.Contain(position)) return length.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
-        public override void Read(ExpressionParameter parameter) => length.Read(parameter);
+        public override void Read(ExpressionParameter parameter)
+        {
+            typeExpression?.Read(parameter);
+            length.Read(parameter);
+        }
     }
     internal class ArrayInitExpression : Expression
     {

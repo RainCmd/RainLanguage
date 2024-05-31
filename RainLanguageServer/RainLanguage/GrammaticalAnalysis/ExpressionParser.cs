@@ -326,7 +326,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             tuple = AssignmentConvert(tuple, Type.INT);
                                             var typeExpression = (TypeExpression)expressionStack.Pop();
                                             if (destructor) collector.Add(typeExpression.range, CErrorLevel.Error, "析构函数中不能申请托管内存");
-                                            var expression = new ArrayCreateExpression(typeExpression.range & tuple.range, tuple, typeExpression.type.GetDimensionType(typeExpression.type.dimension + 1), typeExpression.typeWordRange);
+                                            var expression = new ArrayCreateExpression(typeExpression.range & tuple.range, tuple, typeExpression.type.GetDimensionType(typeExpression.type.dimension + 1), typeExpression);
                                             expressionStack.Push(expression);
                                             attribute = expression.attribute;
                                             goto label_next_lexical;

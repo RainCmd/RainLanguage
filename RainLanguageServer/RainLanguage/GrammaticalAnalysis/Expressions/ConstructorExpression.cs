@@ -59,6 +59,7 @@
                 else if (declarations != null && declarations.Count > 0) result = declarations[0];
                 return result != null;
             }
+            else if(parameter.range.Contain(position)) return parameter.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
         public override void Read(ExpressionParameter parameter)
