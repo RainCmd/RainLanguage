@@ -163,6 +163,7 @@ namespace RainLanguageServer.RainLanguage
             }
             else if (declaration?.declaration.category == DeclarationCategory.Class)
             {
+                var filter = new HashSet<CompilingDeclaration>();
                 for (var index = declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
                 {
                     var @class = (CompilingClass)manager.GetSourceDeclaration(index)!;
@@ -173,8 +174,11 @@ namespace RainLanguageServer.RainLanguage
                             return true;
                         }
                     foreach (var function in @class.functions)
-                        if (function.name == targetName && IsVisiable(manager, function.declaration))
+                        if (function.name == targetName && IsVisiable(manager, function.declaration) && !filter.Contains(function))
+                        {
                             results.Add(function);
+                            CollectOverideFunctions(filter, manager, @class, function);
+                        }
                 }
                 if (results.Count > 0) return true;
             }
@@ -226,13 +230,12 @@ namespace RainLanguageServer.RainLanguage
         }
         private static void CollectOverideFunctions(HashSet<CompilingDeclaration> filter, ASTManager manager, CompilingClass @class, CompilingFunction function)
         {
-            while (@class.parent.Vaild)
-            {
-                @class = (CompilingClass)manager.GetSourceDeclaration(@class.parent)!;
-                foreach (var item in @class.functions)
-                    if (item.name == function.name && item.parameters == function.parameters)
-                        filter.Add(item);
-            }
+            var name = function.name.ToString();
+            for (var index = manager.GetParent(@class.declaration.GetDefineType()); index.Vaild; index = manager.GetParent(index))
+                if (manager.GetSourceDeclaration(index) is CompilingClass compiling)
+                    foreach (var item in compiling.functions)
+                        if (item.name == name && item.declaration.signature == function.declaration.signature)
+                            filter.Add(item);
         }
         private static void CollectFunctions(ASTManager manager, string name, CompilingInterface @interface, List<CompilingDeclaration> results)
         {
@@ -267,26 +270,22 @@ namespace RainLanguageServer.RainLanguage
             else if (type.code == TypeCode.Handle)
             {
                 var filter = new HashSet<CompilingDeclaration>();
-                var index = (CompilingClass)declaration;
-                while (index != null)
-                {
-                    foreach (var item in index.variables)
-                        if (item.name == targetName && IsVisiable(manager, item.declaration))
-                        {
-                            results.Add(item);
-                            return true;
-                        }
-                    foreach (var item in index.functions)
-                        if (item.name == targetName && IsVisiable(manager, item.declaration) && !filter.Contains(item))
-                        {
-                            results.Add(item);
-                            CollectOverideFunctions(filter, manager, index, item);
-                        }
-                    if (index.parent.Vaild) index = manager.GetSourceDeclaration(index.parent) as CompilingClass;
-                    else if (index.declaration.GetDefineType() != Type.HANDLE)
-                        index = manager.GetSourceDeclaration(Type.HANDLE) as CompilingClass;
-                    else break;
-                }
+                for (var index = declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
+                    if (manager.GetSourceDeclaration(index) is CompilingClass compiling)
+                    {
+                        foreach (var item in compiling.variables)
+                            if (item.name == targetName && IsVisiable(manager, item.declaration))
+                            {
+                                results.Add(item);
+                                return true;
+                            }
+                        foreach (var item in compiling.functions)
+                            if (item.name == targetName && IsVisiable(manager, item.declaration) && !filter.Contains(item))
+                            {
+                                results.Add(item);
+                                CollectOverideFunctions(filter, manager, compiling, item);
+                            }
+                    }
             }
             else if (type.code == TypeCode.Interface) CollectFunctions(manager, targetName, (CompilingInterface)declaration, results);
             return results.Count > 0;
