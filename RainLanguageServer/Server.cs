@@ -216,7 +216,6 @@ namespace RainLanguageServer
                             {
                                 foreach (var member in compilingStruct.variables)
                                 {
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("读取：" + member.read.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("写入：" + member.write.Count, "") });
                                 }
@@ -237,7 +236,6 @@ namespace RainLanguageServer
                                 list.Add(new CodeLens(TR2R(compilingClass.name)) { command = new Command("子类：" + compilingClass.implements.Count, "") });
                                 foreach (var member in compilingClass.variables)
                                 {
-                                    list.Add(new CodeLens(TR2R(member.name)) { command = new Command("引用：" + member.references.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("读取：" + member.read.Count, "") });
                                     list.Add(new CodeLens(TR2R(member.name)) { command = new Command("写入：" + member.write.Count, "") });
                                 }

@@ -2303,7 +2303,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     expressions.Add(Parse(left));
                 }
                 while (ExpressionSplit.Split(remainder, 0, flag, out left, out right, collector).type == type);
-                if (remainder) expressions.Add(Parse(remainder));
+                if (remainder.Valid) expressions.Add(Parse(remainder));
                 result = TupleExpression.Create(expressions);
                 return true;
             }

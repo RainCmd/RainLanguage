@@ -90,7 +90,7 @@ namespace RainLanguageServer.RainLanguage
                 info = new HoverInfo(type.GetNameRange(), sb.ToString(), true);
                 return true;
             }
-            else if (expression != null)
+            else if (expression != null && expression.Value.Contain(position))
             {
                 var expression = Compiling?.expression;
                 if (expression != null) return expression.OnHover(manager, position, out info);
