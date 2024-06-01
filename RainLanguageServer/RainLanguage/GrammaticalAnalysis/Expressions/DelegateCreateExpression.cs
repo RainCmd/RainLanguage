@@ -25,6 +25,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             result = callable;
             return result != null;
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            if (callable.declaration.category == DeclarationCategory.Function) collector.AddRange(SemanticTokenType.Function, range);
+            else collector.AddRange(SemanticTokenType.Method, range);
+        }
         public override void Read(ExpressionParameter parameter) => callable.references.Add(range);
     }
     internal class FunctionDelegateCreateExpression(TextRange range, Type type, CompilingCallable callable) : DelegateCreateExpression(range, type, callable) { }
@@ -63,6 +68,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             }
             result = default;
             return false;
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Method, methodRange);
+            base.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -107,6 +118,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             result = default;
             return false;
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Method, methodRange);
+            base.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);
@@ -148,14 +165,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                 info = new HoverInfo(symbol, callable.ToString(manager), true);
                 return true;
             }
-            else if(lambdaBody.range.Contain(position)) return lambdaBody.OnHover(manager, position, out info);
+            else if (lambdaBody.range.Contain(position)) return lambdaBody.OnHover(manager, position, out info);
             info = default;
             return false;
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            foreach(var local in parameters)
-                if(local.range.Contain(position))
+            foreach (var local in parameters)
+                if (local.range.Contain(position))
                 {
                     infos.Add(new HighlightInfo(local.range, LanguageServer.Parameters.TextDocument.DocumentHighlightKind.Text));
                     foreach (var range in local.read)
@@ -174,9 +191,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                 result = callable;
                 return result != null;
             }
-            else if(lambdaBody.range.Contain(position)) return lambdaBody.TryGetDeclaration(manager, position, out result);
+            else if (lambdaBody.range.Contain(position)) return lambdaBody.TryGetDeclaration(manager, position, out result);
             result = default;
             return false;
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            foreach (var parameter in parameters)
+                collector.AddRange(SemanticTokenType.Parameter, parameter.range);
+            lambdaBody.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {

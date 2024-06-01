@@ -42,6 +42,12 @@
             else if (elseBlock != null && elseBlock.range.Contain(position)) return elseBlock.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            condition?.CollectSemanticToken(collector);
+            loopBlock?.CollectSemanticToken(collector);
+            elseBlock?.CollectSemanticToken(collector);
+        }
     }
     internal class WhileStatement(TextRange anchor, Expression? condition) : LoopStatement(anchor, condition) { }
     internal class ForStatement(TextRange anchor, Expression? front, Expression? condition, Expression? back) : LoopStatement(anchor, condition)
@@ -70,6 +76,12 @@
             if (front != null && front.range.Contain(position)) return front.TryGetDeclaration(manager, position, out result);
             else if (back != null && back.range.Contain(position)) return back.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            front?.CollectSemanticToken(collector);
+            back?.CollectSemanticToken(collector);
+            base.CollectSemanticToken(collector);
         }
     }
 }

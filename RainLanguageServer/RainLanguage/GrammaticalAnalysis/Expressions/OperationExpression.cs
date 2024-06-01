@@ -49,6 +49,12 @@
                         return parameter.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Operator, operatorRange);
+            foreach(var parameter in parameters)
+                parameter.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             callable.references.Add(range);

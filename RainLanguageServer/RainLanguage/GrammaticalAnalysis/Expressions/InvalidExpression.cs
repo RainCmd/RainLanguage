@@ -37,6 +37,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                     return expression.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            foreach (var expression in expressions)
+                expression.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var expression in expressions) expression.Read(parameter);
@@ -114,6 +119,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                 return result != null;
             }
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            target.CollectSemanticToken(collector);
+            if (declarations != null && declarations.Count > 0)
+            {
+                var category = declarations[0].declaration.category;
+                if (category == DeclarationCategory.StructVariable || category == DeclarationCategory.ClassVariable) collector.AddRange(SemanticTokenType.Variable, member);
+                else collector.AddRange(SemanticTokenType.Method, member);
+            }
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -220,6 +235,15 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             }
             else if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            if (local != null)
+            {
+                collector.AddRange(SemanticTokenType.Variable, local.Value);
+                collector.AddRange(SemanticTokenType.Type, typeRange);
+            }
         }
         public override void Read(ExpressionParameter parameter)
         {

@@ -45,5 +45,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
             else if (falseBranch != null && falseBranch.range.Contain(position)) return falseBranch.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            condition.CollectSemanticToken(collector);
+            trueBranch?.CollectSemanticToken(collector);
+            falseBranch?.CollectSemanticToken(collector);
+        }
     }
 }

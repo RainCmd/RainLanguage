@@ -531,7 +531,7 @@
                 CompilingSpace space = compiling;
                 if (defaultNamespace) foreach (var name in names) space = space.GetChild(name.ToString());
                 else if (names.Count != 1 || names[0] != space.name) collector.Add(line, CErrorLevel.Error, "名称不匹配");
-                var child = new FileSpace(reader, space, true, defaultNamespace ? this : null, line.indent, allowKeywordType);
+                var child = new FileSpace(reader, space, true, defaultNamespace ? this : null, line.indent, allowKeywordType) { name = names };
                 children.Add(child);
                 child.compiling.attributes.AddRange(attributeCollector);
                 attributeCollector.Clear();

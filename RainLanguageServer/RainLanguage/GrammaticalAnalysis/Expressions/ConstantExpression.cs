@@ -37,6 +37,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
     internal class ConstantByteExpression(TextRange range, byte value) : ConstantExpression(range, Type.BYTE)
     {
@@ -71,6 +72,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
     internal class ConstantCharExpression(TextRange range, char value) : ConstantExpression(range, Type.CHAR)
     {
@@ -100,6 +102,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
     internal class ConstantIntegerExpression(TextRange range, long value) : ConstantExpression(range, Type.INT)
     {
@@ -124,6 +127,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
     internal class ConstantRealExpression(TextRange range, double value) : ConstantExpression(range, Type.REAL)
     {
@@ -138,6 +142,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
     internal class ConstantStringExpression : ConstantExpression
     {
@@ -157,6 +162,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     {
         public readonly Expression source = source;
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
     internal class ConstantTypeExpression(TextRange range, Type value) : ConstantExpression(range, Type.TYPE)
     {
@@ -170,6 +176,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             value = this.value;
             return true;
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => collector.AddRange(value, range);
     }
     internal class EvaluateConstantTypeExpression(Type value, Expression source) : ConstantTypeExpression(source.range, value)
     {
@@ -179,6 +186,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             base.Read(parameter);
             source.Read(parameter);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
     }
 
     internal class ConstantNullExpression(TextRange range) : ConstantExpression(range, NULL) { }

@@ -18,7 +18,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             localContext = new LocalContext(collector, declaration);
             foreach (var parameter in parameters)
                 if (parameter.name != null)
-                    this.parameters.Add(localContext.Add(parameter.name.Value, parameter.type));
+                    this.parameters.Add(localContext.Add(true, parameter.name.Value, parameter.type));
             this.returns = returns;
             context = new Context(space, relies, declaration);
             this.body = body;
@@ -314,12 +314,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         else if (!hasContinue)
                         {
                             if (subStatement is ContinueStatement) hasContinue = true;
-                            else if(CheckReturn(subStatement)) return true;
+                            else if (CheckReturn(subStatement)) return true;
                         }
                 }
                 return CheckReturn(loopStatement.elseBlock);
             }
-            else if(statement is TryStatement tryStatement) return CheckReturn(tryStatement.tryBlock);
+            else if (statement is TryStatement tryStatement) return CheckReturn(tryStatement.tryBlock);
             return false;
         }
         private static void TidyRange(BlockStatement block)

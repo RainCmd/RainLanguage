@@ -61,6 +61,20 @@
             return false;
         }
 
+        public void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            foreach (var child in children)
+                child.CollectSemanticToken(collector);
+            if (name != null)
+                foreach (var range in name)
+                    collector.AddRange(SemanticTokenType.Namespace, range);
+            foreach (var import in imports)
+                foreach (var range in import)
+                    collector.AddRange(SemanticTokenType.Namespace, range);
+            foreach (var declaration in SelfDeclarations)
+                declaration.CollectSemanticToken(collector);
+        }
+
         public FileSpace GetFileSpace(TextPosition position)
         {
             foreach (var child in children)

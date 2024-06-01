@@ -62,6 +62,11 @@
             else if(parameter.range.Contain(position)) return parameter.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(types[0], anchor);
+            parameter.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             callable?.references.Add(range);

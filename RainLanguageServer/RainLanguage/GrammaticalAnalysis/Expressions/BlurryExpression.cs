@@ -47,6 +47,10 @@
             }
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Function, range);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             var msg = new CompileMessage(range, CErrorLevel.Error, "目标函数不明确");
@@ -100,6 +104,11 @@
                 return true;
             }
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            target.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Method, memberRange);
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -163,6 +172,7 @@
             if (invoker.range.Contain(position)) return invoker.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => invoker.CollectSemanticToken(collector);
         public override void Read(ExpressionParameter parameter) => invoker.Read(parameter);
     }
     internal class BlurryLambdaExpression : Expression
@@ -205,6 +215,7 @@
             if (tuple.range.Contain(position)) return tuple.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => tuple.CollectSemanticToken(collector);
         public override void Read(ExpressionParameter parameter)
         {
             parameter.collector.Add(range, CErrorLevel.Error, "类型不明确");

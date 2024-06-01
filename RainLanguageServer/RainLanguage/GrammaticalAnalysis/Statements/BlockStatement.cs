@@ -1,4 +1,7 @@
-﻿namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
+﻿using LanguageServer.Parameters;
+using LanguageServer;
+
+namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
 {
     internal class BlockStatement : Statement
     {
@@ -42,6 +45,11 @@
                 if (statement.range.Contain(position))
                     return statement.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            foreach (var statement in statements)
+                statement.CollectSemanticToken(collector);
         }
     }
 }

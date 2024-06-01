@@ -81,6 +81,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             }
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            if (local.parameter) collector.AddRange(SemanticTokenType.Parameter, identifierRange);
+            else collector.AddRange(SemanticTokenType.Variable, identifierRange);
+            if (declarationRange != null) collector.AddRange(local.type, declarationRange.Value);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             local.read.Add(identifierRange);
@@ -106,7 +112,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         {
             var sb = new StringBuilder();
             sb.AppendLine("``` cs");
-            sb.AppendLine($"(全局变量) {types[0].ToString(false, variable.space)} {variable.name}");
+            if (variable.isReadonly)
+            {
+                if(variable.value != null) sb.AppendLine($"(常量) {types[0].ToString(false, variable.space)} {variable.name} = {variable.value}");
+                else sb.AppendLine($"(常量) {types[0].ToString(false, variable.space)} {variable.name}");
+            }
+            else sb.AppendLine($"(全局变量) {types[0].ToString(false, variable.space)} {variable.name}");
             sb.AppendLine("```");
             info = new HoverInfo(range, sb.ToString(), true);
             return true;
@@ -120,6 +131,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         {
             result = variable;
             return true;
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            if (variable.isReadonly) collector.AddRange(SemanticTokenType.Const, range);
+            else collector.AddRange(SemanticTokenType.Variable, range);
         }
         public override void Read(ExpressionParameter parameter) => variable.read.Add(range);
         public override void Write(ExpressionParameter parameter) => variable.write.Add(range);
@@ -268,6 +284,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                 return true;
             }
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            target.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Variable, memberRange);
         }
         public override void Read(ExpressionParameter parameter)
         {

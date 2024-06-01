@@ -29,6 +29,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (expression.range.Contain(position)) return expression.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            typeExpression.CollectSemanticToken(collector);
+            expression.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             typeExpression.Read(parameter);
@@ -60,6 +65,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (expression.range.Contain(position)) return expression.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => expression.CollectSemanticToken(collector);
         public override void Read(ExpressionParameter parameter) => expression.Read(parameter);
     }
     internal class IsCastExpression : Expression
@@ -106,6 +112,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
                 return true;
             }
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            typeExpression.CollectSemanticToken(collector);
+            expression.CollectSemanticToken(collector);
+            if (local != null) collector.AddRange(local.Value.type, local.Value.range);
         }
         public override void Read(ExpressionParameter parameter)
         {

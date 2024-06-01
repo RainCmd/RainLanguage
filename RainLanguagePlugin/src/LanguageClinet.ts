@@ -101,6 +101,13 @@ export async function StartServer(context: vscode.ExtensionContext) {
     })
 }
 
+export async function GetSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken) {
+    if (client) {
+        return await client.sendRequest<any>("rainlanguage/getSemanticTokens", { uri: document.uri.toString() }, token)
+    }
+    return undefined
+}
+
 export function StopServer() {
     if (client) {
         console.log("雨言服务客户端：终止")

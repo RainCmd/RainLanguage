@@ -25,6 +25,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => source.CollectSemanticToken(collector);
         public override void Read(ExpressionParameter parameter) => source.Read(parameter);
     }
     internal class TaskEvaluationExpression : Expression
@@ -55,6 +56,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
             else if (indices != null && indices.range.Contain(position)) return indices.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            indices?.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {

@@ -29,6 +29,11 @@
                     return expression.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            foreach(var expression in expressions)
+                expression.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var expression in expressions)

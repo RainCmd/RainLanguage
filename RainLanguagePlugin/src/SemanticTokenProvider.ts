@@ -1,13 +1,29 @@
 
 import * as vscode from 'vscode'
+import { GetSemanticTokens } from './LanguageClinet'
 
-const tokenTypes = ['namespace', 'type', 'enum', 'struct', 'class', 'interface', 'function', 'method', 'macro', 'variable', 'parameter', 'enumMember']
+const tokenTypes = ['namespace', 'type', 'enum', 'struct', 'class', 'interface', 'function', 'method', 'enumMember', 'variable', 'parameter', 'enumMember', 'operator']
 export const legend = new vscode.SemanticTokensLegend(tokenTypes)
-
+interface TokenType{
+    type: number
+    ranges: TokenRange[]
+}
+interface TokenRange{
+    line: number
+    index: number
+    length: number
+}
 export class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
-    provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.SemanticTokens> {
+    async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
         const builder = new vscode.SemanticTokensBuilder(legend)
-        builder.push(1, 1, 2, 0);
+        const tokens = await GetSemanticTokens(document, token)
+        if (tokens) {
+            tokens.forEach((type: TokenType) => {
+                type.ranges.forEach(element => {
+                    builder.push(element.line, element.index, element.length, type.type)
+                });
+            });
+        }
         return builder.build()
     }
 }

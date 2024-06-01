@@ -1062,7 +1062,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         if (attribute.ContainAny(ExpressionAttribute.Type))
                         {
                             var typeExpression = (TypeExpression)expressionStack.Pop();
-                            var local = localContext.Add(lexical.anchor, typeExpression.type);
+                            var local = localContext.Add(false, lexical.anchor, typeExpression.type);
                             expressionStack.Push(new VariableLocalExpression(typeExpression.range & lexical.anchor, local, lexical.anchor, typeExpression.range, ExpressionAttribute.Assignable));
                             attribute = expressionStack.Peek().attribute;
                         }
@@ -1246,7 +1246,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                     if (Lexical.TryAnalysis(range, index, out lexical, collector) && lexical.type == LexicalType.Word)
                                     {
                                         index = lexical.anchor.end;
-                                        var local = localContext.Add(lexical.anchor, targetType);
+                                        var local = localContext.Add(false, lexical.anchor, targetType);
                                         var expression = new IsCastExpression(sourceExpression.range & name, new TypeExpression(name, targetType, name), sourceExpression, local);
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
@@ -1793,7 +1793,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     localContext.PushBlock();
                     var parameters = new List<Local>();
                     for (var i = 0; i < blurryLambda.parameters.Count; i++)
-                        parameters.Add(localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type));
+                        parameters.Add(localContext.Add(true, blurryLambda.parameters[i], compilingDelegate.parameters[i].type));
                     var lambdaBodyExpression = Parse(blurryLambda.body);
                     localContext.PopBlock();
                     if (lambdaBodyExpression.Valid && compilingDelegate.returns.Count > 0)
@@ -2195,7 +2195,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     if (manager.GetSourceDeclaration(target) is not CompilingDelegate compilingDelegate) return false;
                     localContext.PushBlock();
                     for (var i = 0; i < compilingDelegate.parameters.Count; i++)
-                        localContext.Add(blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
+                        localContext.Add(true, blurryLambda.parameters[i], compilingDelegate.parameters[i].type);
                     var lambdaBodyExpression = Parse(blurryLambda.body);
                     localContext.PopBlock();
                     if (!lambdaBodyExpression.Valid) return false;
@@ -2243,7 +2243,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             {
                 if (type == Expression.BLURRY || type == Expression.NULL) collector.Add(expression.range, CErrorLevel.Error, "表达式类型不明确");
                 else if (expression is BlurryVariableDeclarationExpression blurry)
-                    return new VariableLocalExpression(blurry.range, localContext.Add(blurry.identifierRange, type), blurry.identifierRange, blurry.declarationRange, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
+                    return new VariableLocalExpression(blurry.range, localContext.Add(false, blurry.identifierRange, type), blurry.identifierRange, blurry.declarationRange, ExpressionAttribute.Assignable | ExpressionAttribute.Value);
                 else collector.Add(expression.range, CErrorLevel.Error, "无效的操作");
                 return new InvalidExpression([type], expression);
             }

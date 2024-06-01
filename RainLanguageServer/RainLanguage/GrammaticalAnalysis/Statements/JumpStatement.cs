@@ -26,6 +26,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
             if (condition.range.Contain(position)) return condition.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)=>condition.CollectSemanticToken(collector);
     }
     internal class BreakStatement(TextRange anchor, LoopStatement? loop, Expression condition) : JumpStatement(anchor, loop, condition) { }
     internal class ContinueStatement(TextRange anchor, LoopStatement? loop, Expression condition) : JumpStatement(anchor, loop, condition) { }

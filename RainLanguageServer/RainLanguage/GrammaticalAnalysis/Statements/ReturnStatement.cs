@@ -24,5 +24,6 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Statements
             return result.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result) => this.result.TryGetDeclaration(manager, position, out result);
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => result.CollectSemanticToken(collector);
     }
 }

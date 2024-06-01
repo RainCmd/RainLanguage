@@ -2,8 +2,9 @@
 
 namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
 {
-    internal readonly struct Local(int index, TextRange range, Type type)
+    internal readonly struct Local(bool parameter, int index, TextRange range, Type type)
     {
+        public readonly bool parameter = parameter;
         public readonly int index = index;
         public readonly TextRange range = range;
         public readonly Type type = type;
@@ -13,7 +14,8 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         {
             var sb = new StringBuilder();
             sb.AppendLine("``` cs");
-            sb.AppendLine($"(局部变量) {type.ToString(false, space)} {range}");
+            if (parameter) sb.AppendLine($"(参数) {type.ToString(false, space)} {range}");
+            else sb.AppendLine($"(局部变量) {type.ToString(false, space)} {range}");
             sb.AppendLine("```");
             return sb.ToString();
         }
@@ -43,14 +45,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         {
             this.collector = collector;
             if (declaration != null)
-                thisValue = Add("this", declaration.name, declaration.declaration.GetDefineType());
+                thisValue = Add(false, "this", declaration.name, declaration.declaration.GetDefineType());
         }
 
         public void PushBlock() => localStack.Add([]);
         public void PopBlock() => localStack.RemoveAt(localStack.Count - 1);
-        public Local Add(string name, TextRange range, Type type)
+        public Local Add(bool parameter, string name, TextRange range, Type type)
         {
-            var local = new Local(locals.Count, range, type);
+            var local = new Local(parameter, locals.Count, range, type);
             locals.Add(local);
             if (name != "_")
             {
@@ -64,7 +66,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             }
             return local;
         }
-        public Local Add(TextRange name, Type type) => Add(name.ToString(), name, type);
+        public Local Add(bool parameter, TextRange name, Type type) => Add(parameter, name.ToString(), name, type);
         public bool TryGetLocal(string name, out Local local)
         {
             for (var i = localStack.Count - 1; i >= 0; i--)

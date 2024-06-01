@@ -24,6 +24,7 @@
             if (parameters.range.Contain(position)) return parameters.TryGetDeclaration(manager, position, out result);
             else return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => parameters.CollectSemanticToken(collector);
         public override void Read(ExpressionParameter parameter) => parameters.Read(parameter);
     }
     internal class InvokerDelegateExpression(TextRange range, List<Type> returns, Expression parameters, Expression invoker) : InvokerExpression(range, returns, parameters)
@@ -81,6 +82,11 @@
             }
             else return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            if (callable.declaration.category == DeclarationCategory.Function) collector.AddRange(SemanticTokenType.Function, methodRange);
+            else collector.AddRange(SemanticTokenType.Method, methodRange);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             base.Read(parameter);
@@ -94,7 +100,7 @@
         public readonly TextRange methodRange = methodRange;
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
-            if(target.range.Contain(position)) return target.OnHover(manager, position, out info);
+            if (target.range.Contain(position)) return target.OnHover(manager, position, out info);
             else if (methodRange.Contain(position))
             {
                 info = new HoverInfo(methodRange, callable.ToString(manager), true);
@@ -121,6 +127,12 @@
                 return result != null;
             }
             else return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            target.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Method, methodRange);
+            base.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -163,6 +175,12 @@
                 return result != null;
             }
             else return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            target.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Method, methodRange);
+            base.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {

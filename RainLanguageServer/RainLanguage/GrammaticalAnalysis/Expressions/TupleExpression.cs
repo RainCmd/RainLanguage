@@ -32,6 +32,11 @@
                     return expression.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            foreach(var expression in expressions)
+                expression.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             foreach (var e in expressions) e.Read(parameter);
@@ -92,6 +97,11 @@
             else if (indices.range.Contain(position)) return indices.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            indices.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);
@@ -126,6 +136,11 @@
             if (left.range.Contain(position)) return left.TryGetDeclaration(manager, position, out result);
             else if (right.range.Contain(position)) return right.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            left.CollectSemanticToken(collector);
+            right.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {

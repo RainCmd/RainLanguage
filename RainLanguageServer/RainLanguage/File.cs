@@ -17,11 +17,22 @@ namespace RainLanguageServer.RainLanguage
         {
             return new TextRange(name[0].start, name[^1].end);
         }
+        public void CollectSemanticToken(Type type, SemanticTokenCollector collector)
+        {
+            for (int i = 0; i < name.Count - 1; i++)
+                collector.AddRange(SemanticTokenType.Namespace, name[i]);
+            collector.AddRange(type, name[^1]);
+        }
     }
     internal class FileParameter(TextRange? name, FileType type)
     {
         public readonly TextRange? name = name;
         public readonly FileType type = type;
+        public void CollectSemanticToken(Type type, SemanticTokenCollector collector)
+        {
+            if (name != null) collector.AddRange(SemanticTokenType.Parameter, name.Value);
+            this.type.CollectSemanticToken(type, collector);
+        }
     }
     internal class FileDeclaration(TextRange name, Visibility visibility, FileSpace space)
     {
@@ -58,6 +69,7 @@ namespace RainLanguageServer.RainLanguage
             return name.Contain(position);
         }
         public virtual bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos) => false;
+        public virtual void CollectSemanticToken(SemanticTokenCollector collector) { }
     }
     internal class FileVariable(TextRange name, Visibility visibility, FileSpace space, bool isReadonly, FileType type, TextRange? expression) : FileDeclaration(name, visibility, space)
     {
@@ -75,7 +87,17 @@ namespace RainLanguageServer.RainLanguage
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("``` cs");
-                if (declaration == null) sb.AppendLine($"(全局变量) {Compiling?.type.ToString(false, compiling?.space)} {name}");
+                if (declaration == null)
+                {
+                    if (isReadonly)
+                    {
+                        if (compiling is CompilingVariable variable && variable.value != null)
+                            sb.AppendLine($"(常量) {Compiling?.type.ToString(false, compiling?.space)} {name} = {variable.value}");
+                        else
+                            sb.AppendLine($"(常量) {Compiling?.type.ToString(false, compiling?.space)} {name}");
+                    }
+                    else sb.AppendLine($"(全局变量) {Compiling?.type.ToString(false, compiling?.space)} {name}");
+                }
                 else sb.AppendLine($"(字段) {Compiling?.type.ToString(false, compiling?.space)} {declaration.name}.{name}");
                 sb.AppendLine("```");
                 info = new HoverInfo(name, sb.ToString(), true);
@@ -134,6 +156,16 @@ namespace RainLanguageServer.RainLanguage
                 return compilingVariable.expression.CollectCompletions(manager, new Context(space.compiling, space.relies, null), position, infos);
             var range = type.name[0].start & position;
             return FileCollectCompletions.CollectDefines(manager, space, range, range.start, infos);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            if (compiling is CompilingVariable variable)
+            {
+                type.CollectSemanticToken(variable.type, collector);
+                if (isReadonly) collector.AddRange(SemanticTokenType.Const, name);
+                else collector.AddRange(SemanticTokenType.Variable, name);
+                variable.expression?.CollectSemanticToken(collector);
+            }
         }
     }
     internal class FileFunction(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns, List<TextLine> body) : FileDeclaration(name, visibility, space)
@@ -266,10 +298,7 @@ namespace RainLanguageServer.RainLanguage
             }
             return false;
         }
-        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
-        {
-            return CollectCompletions(manager, null, position, infos);
-        }
+        public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos) => CollectCompletions(manager, null, position, infos);
         public bool CollectCompletions(ASTManager manager, FileDeclaration? declaration, TextPosition position, List<CompletionInfo> infos)
         {
             var line = position.Line;
@@ -278,6 +307,21 @@ namespace RainLanguageServer.RainLanguage
             else if (compiling is CompilingFunction compilingFunction && compilingFunction.logicBlock != null)
                 return compilingFunction.logicBlock.block.CollectCompletions(manager, new Context(space.compiling, space.relies, declaration?.compiling), position, infos);
             return false;
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => CollectSemanticToken(collector, false);
+        public void CollectSemanticToken(SemanticTokenCollector collector, bool member, bool ctor = false)
+        {
+            if (member) collector.AddRange(ctor ? SemanticTokenType.Type : SemanticTokenType.Method, name);
+            else collector.AddRange(SemanticTokenType.Function, name);
+            if (compiling is CompilingCallable callable)
+            {
+                for (int i = 0; i < callable.parameters.Count; i++)
+                    parameters[i].CollectSemanticToken(callable.parameters[i].type, collector);
+                for (var i = 0; i < callable.returns.Count; i++)
+                    returns[i].CollectSemanticToken(callable.returns[i], collector);
+                if (callable is CompilingFunction function)
+                    function.logicBlock.block.CollectSemanticToken(collector);
+            }
         }
     }
     internal class FileEnum(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
@@ -366,6 +410,15 @@ namespace RainLanguageServer.RainLanguage
                 }
             return false;
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Enum, name);
+            foreach (var element in elements)
+                collector.AddRange(SemanticTokenType.EnumMember, element.name);
+            if (compiling is CompilingEnum compilingEnum)
+                foreach (var element in compilingEnum.elements)
+                    element.expression?.CollectSemanticToken(collector);
+        }
     }
     internal class FileStruct(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
     {
@@ -425,6 +478,14 @@ namespace RainLanguageServer.RainLanguage
                 if (function.range != null && function.range.Contain(position))
                     return function.CollectCompletions(manager, this, position, infos);
             return false;
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Struct, name);
+            foreach (var variable in variables)
+                variable.CollectSemanticToken(collector);
+            foreach (var function in functions)
+                function.CollectSemanticToken(collector, true);
         }
     }
     internal class FileInterface(TextRange name, Visibility visibility, FileSpace space) : FileDeclaration(name, visibility, space)
@@ -503,6 +564,15 @@ namespace RainLanguageServer.RainLanguage
                 if (function.range != null && function.range.Contain(position))
                     return function.CollectCompletions(manager, this, position, infos);
             return false;
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Interface, name);
+            if (compiling is CompilingInterface compilingInterface)
+                for (var i = 0; i < inherits.Count; i++)
+                    inherits[i].CollectSemanticToken(compilingInterface.inherits[i], collector);
+            foreach (var function in functions)
+                function.CollectSemanticToken(collector, true);
         }
     }
     internal class FileClass(TextRange name, Visibility visibility, FileSpace space) : FileInterface(name, visibility, space)
@@ -623,6 +693,27 @@ namespace RainLanguageServer.RainLanguage
                 if (function.range != null && function.range.Contain(position))
                     return function.CollectCompletions(manager, this, position, infos);
             return base.CollectCompletions(manager, position, infos);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            base.CollectSemanticToken(collector);
+            if (compiling is CompilingClass compilingClass)
+            {
+                if (compilingClass.parent.Vaild)
+                {
+                    inherits[0].CollectSemanticToken(compilingClass.parent, collector);
+                    for (var i = 1; i < inherits.Count; i++)
+                        inherits[i].CollectSemanticToken(compilingClass.inherits[i - 1], collector);
+                }
+                else
+                    for (var i = 0; i < inherits.Count; i++)
+                        inherits[i].CollectSemanticToken(compilingClass.inherits[i], collector);
+                compilingClass.destructor?.block.CollectSemanticToken(collector);
+            }
+            foreach (var variable in variables)
+                variable.CollectSemanticToken(collector);
+            foreach (var constructors in constructors)
+                constructors.CollectSemanticToken(collector, true, true);
         }
     }
     internal class FileDelegate(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
@@ -758,6 +849,17 @@ namespace RainLanguageServer.RainLanguage
             var line = position.Line.start & position;
             return FileCollectCompletions.CollectDefines(manager, space, line, line.start, infos);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Type, name);
+            if (compiling is CompilingDelegate compilingDelegate)
+            {
+                for (var i = 0; i < parameters.Count; i++)
+                    parameters[i].CollectSemanticToken(compilingDelegate.parameters[i].type, collector);
+                for (var i = 0; i < returns.Count; i++)
+                    returns[i].CollectSemanticToken(compilingDelegate.returns[i], collector);
+            }
+        }
     }
     internal class FileTask(TextRange name, Visibility visibility, FileSpace space, List<FileType> returns) : FileDeclaration(name, visibility, space)
     {
@@ -832,6 +934,13 @@ namespace RainLanguageServer.RainLanguage
         {
             var line = position.Line.start & position;
             return FileCollectCompletions.CollectDefines(manager, space, line, line.start, infos);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Type, name);
+            if (compiling is CompilingTask task)
+                for (var i = 0; i < returns.Count; i++)
+                    returns[i].CollectSemanticToken(task.returns[i], collector);
         }
     }
     internal class FileNative(TextRange name, Visibility visibility, FileSpace space, List<FileParameter> parameters, List<FileType> returns) : FileDeclaration(name, visibility, space)
@@ -967,6 +1076,17 @@ namespace RainLanguageServer.RainLanguage
             var line = position.Line.start & position;
             return FileCollectCompletions.CollectDefines(manager, space, line, line.start, infos);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            collector.AddRange(SemanticTokenType.Function, name);
+            if (compiling is CompilingNative compilingNative)
+            {
+                for (var i = 0; i < parameters.Count; i++)
+                    parameters[i].CollectSemanticToken(compilingNative.parameters[i].type, collector);
+                for (var i = 0; i < returns.Count; i++)
+                    returns[i].CollectSemanticToken(compilingNative.returns[i], collector);
+            }
+        }
     }
     internal partial class FileSpace
     {
@@ -975,6 +1095,7 @@ namespace RainLanguageServer.RainLanguage
         /// </summary>
         public int indent = -1;
         public readonly FileSpace? parent;
+        public List<TextRange>? name;
         public readonly CompilingSpace compiling;
         public readonly TextDocument document;
 

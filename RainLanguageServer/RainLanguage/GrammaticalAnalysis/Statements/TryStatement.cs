@@ -63,5 +63,15 @@
             }
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            tryBlock?.CollectSemanticToken(collector);
+            finallyBlock?.CollectSemanticToken(collector);
+            foreach (var catchBlock in catchBlocks)
+            {
+                catchBlock.condition.CollectSemanticToken(collector);
+                catchBlock.block.CollectSemanticToken(collector);
+            }
+        }
     }
 }

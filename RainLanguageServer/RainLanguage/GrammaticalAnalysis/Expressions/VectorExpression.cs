@@ -29,13 +29,18 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
-            if(target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
+            if (target.range.Contain(position)) return target.OnHighlight(manager, position, infos);
             return base.OnHighlight(manager, position, infos);
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
-            if(target.range.Contain(position)) return target.TryGetDeclaration(manager, position, out result);
+            if (target.range.Contain(position)) return target.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            target.CollectSemanticToken(collector);
+            collector.AddRange(SemanticTokenType.Variable, memberRange);
         }
         public override void Read(ExpressionParameter parameter) => target.Read(parameter);
         public override void Write(ExpressionParameter parameter) => target.Read(parameter);
@@ -84,6 +89,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (parameter.range.Contain(position)) return parameter.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => parameter.CollectSemanticToken(collector);
         public override void Read(ExpressionParameter parameter) => this.parameter.Read(parameter);
     }
 }

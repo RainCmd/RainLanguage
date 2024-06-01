@@ -254,6 +254,20 @@ namespace RainLanguageServer
             }
             return Result<CodeLens[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
+        [JsonRpcMethod("rainlanguage/getSemanticTokens")]
+        private Result<SemanticToken[], ResponseError> GetSemanticTokens(SemanticTokenParam param)
+        {
+            if (builder != null)
+            {
+                if (builder.manager.fileSpaces.TryGetValue(param.uri, out var fileSpace))
+                {
+                    var collector = new SemanticTokenCollector();
+                    fileSpace.CollectSemanticToken(collector);
+                    return Result<SemanticToken[], ResponseError>.Success(collector.GetResult());
+                }
+            }
+            return Result<SemanticToken[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
 
         #region 文档相关
         private readonly Dictionary<string, TextDocument> documents = [];

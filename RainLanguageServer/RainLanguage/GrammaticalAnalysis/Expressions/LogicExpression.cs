@@ -29,6 +29,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (right.range.Contain(position)) return right.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            left.CollectSemanticToken(collector);
+            right.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             left.Read(parameter);

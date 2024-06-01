@@ -66,6 +66,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             return false;
         }
         public virtual bool CollectCompletions(ASTManager manager, Context context, TextPosition position, List<CompletionInfo> infos) => false;//todo 表达式补全
+        public virtual void CollectSemanticToken(SemanticTokenCollector collector) { }
         public abstract void Read(ExpressionParameter parameter);
         public virtual void Write(ExpressionParameter parameter) => throw new NotImplementedException();
         public virtual bool TryEvaluate(out bool value)

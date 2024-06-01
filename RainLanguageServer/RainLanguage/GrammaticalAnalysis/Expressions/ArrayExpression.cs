@@ -50,6 +50,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (length.range.Contain(position)) return length.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            typeExpression?.CollectSemanticToken(collector);
+            length.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             typeExpression?.Read(parameter);
@@ -102,6 +107,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (elements.range.Contain(position)) return elements.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            if (typeRange != null) collector.AddRange(types[0], typeRange.Value);
+            elements.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             if (typeRange != null) parameter.manager.GetSourceDeclaration(types[0])?.references.Add(typeRange.Value);
@@ -136,6 +146,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (array.range.Contain(position)) return array.TryGetDeclaration(manager, position, out result);
             else if (index.range.Contain(position)) return index.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            array.CollectSemanticToken(collector);
+            index.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {
@@ -176,6 +191,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             else if (index.range.Contain(position)) return index.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            index.CollectSemanticToken(collector);
+        }
         public override void Read(ExpressionParameter parameter)
         {
             source.Read(parameter);
@@ -209,6 +229,11 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             if (source.range.Contain(position)) return source.TryGetDeclaration(manager, position, out result);
             else if (subRange.range.Contain(position)) return subRange.TryGetDeclaration(manager, position, out result);
             return base.TryGetDeclaration(manager, position, out result);
+        }
+        public override void CollectSemanticToken(SemanticTokenCollector collector)
+        {
+            source.CollectSemanticToken(collector);
+            subRange.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
         {

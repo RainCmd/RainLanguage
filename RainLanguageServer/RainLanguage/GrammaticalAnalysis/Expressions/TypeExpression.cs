@@ -31,6 +31,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
             result = manager.GetSourceDeclaration(type);
             return result != null;
         }
+        public override void CollectSemanticToken(SemanticTokenCollector collector) => collector.AddRange(type, typeWordRange);
         public override void Read(ExpressionParameter parameter) => parameter.manager.GetSourceDeclaration(type.Source)?.references.Add(range);
     }
 }
