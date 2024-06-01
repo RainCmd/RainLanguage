@@ -12,13 +12,13 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 {
 	uint32 parameterPoint = SIZE(Frame) + returnSize;
 	VariableGenerator variableGenerator = VariableGenerator(parameterPoint);
-	if (closure)
+	if(closure)
 	{
-		variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type);
+		variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type).reference->OnWrite();
 		variableGenerator.MemberParameterAlignment();
-		for (uint32 i = 1; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+		for(uint32 i = 1; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type).reference->OnWrite();
 	}
-	else for (uint32 i = 0; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+	else for(uint32 i = 0; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type).reference->OnWrite();
 	CodeValueReference<uint32> stackSize = CodeValueReference<uint32>();
 	CodeLocalAddressReference finallyAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::FUNCTION_Entrance);
@@ -27,11 +27,11 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	uint32 entryPoint = parameter.generator->GetPointer();
 	uint32 localPoint = variableGenerator.GetHoldMemory();
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
-	for (uint32 i = 0; i < statements.Count(); i++) statements[i]->Generator(statementGeneratorParameter);
+	for(uint32 i = 0; i < statements.Count(); i++) statements[i]->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator, localContext->GetLocalAnchors()), MEMORY_ALIGNMENT_MAX));
 	uint32 holdSize = variableGenerator.GetHoldMemory() - localPoint;
-	if (holdSize)
+	if(holdSize)
 	{
 		parameter.generator->BeginInsert(entryPoint);
 		parameter.generator->WriteCode(Instruct::BASE_Stackzero);
@@ -46,6 +46,6 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 LambdaGenerator::~LambdaGenerator()
 {
 	delete localContext;
-	for (uint32 i = 0; i < statements.Count(); i++) delete statements[i];
+	for(uint32 i = 0; i < statements.Count(); i++) delete statements[i];
 	statements.Clear();
 }
