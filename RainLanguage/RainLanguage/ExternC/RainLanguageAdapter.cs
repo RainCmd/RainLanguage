@@ -26,6 +26,7 @@ namespace RainLanguage
     {
         ERROR = RainErrorLevel.Error << 24,
         ERROR_MISSING_PAIRED_SYMBOL,            //缺少配对的符号
+        ERROR_INVALID_ESCAPE_CHARACTER,         //无效的转义符
         ERROR_UNKNOWN_SYMBOL,                   //未知的符号
         ERROR_INDENT,                           //缩进问题
         ERROR_INPUT_STRINGL,                    //输入字符串
@@ -66,6 +67,7 @@ namespace RainLanguage
         ERROR_STRUCT_CYCLIC_INCLUSION,          //结构体循环包含
         ERROR_CIRCULAR_INHERITANCE,             //循环继承
         ERROR_DUPLICATE_INHERITANCE,            //重复继承
+        ERROR_NONINHERITABLE_ARRAY,             //不能继承数组
         ERROR_INTERFACE_NOT_IMPLEMENTED,        //接口未实现
         ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT,       //实现的接口函数返回值类型不一致
         ERROR_OVERRIDE_FUNCTION_RETURN_TYPES_INCONSISTENT,          //重写的父类函数返回值类型不一致
@@ -76,6 +78,7 @@ namespace RainLanguage
         ERROR_TYPE_MISMATCH,                    //类型不匹配
         ERROR_NOT_HANDLE_TYPE,                  //不是句柄类型
         ERROR_NOT_DELEGATE_TYPE,                //不是委托类型
+        ERROR_NOT_INTERFACE_TYPE,               //不是接口类型
         ERROR_WRONG_NUMBER_OF_INDICES,          //索引数错误
         ERROR_NOT_MEMBER_METHOD,                //不在成员函数中
         ERROR_METHOD_NOT_FOUND,                 //函数未找到
@@ -97,13 +100,13 @@ namespace RainLanguage
         ERROR_ONLY_BE_USED_IN_LOOP,             //只能在循环中使用
         ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,               //不在循环中
         ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,                   //不支持用本地函数创建任务
-        ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,                       //不支持的特殊函数
+        ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
 
         WARRING_LEVEL1 = RainErrorLevel.WarringLevel1 << 24,
         WARRING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
         WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,   //析构函数属性将被丢弃
         WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,   //析构函数的可访问性修饰会被忽略
-        WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,  //单独的类型表达式
+        WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
 
         WARRING_LEVEL2 = RainErrorLevel.WarringLevel2 << 24,
 
