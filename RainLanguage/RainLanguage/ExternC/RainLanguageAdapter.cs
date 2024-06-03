@@ -2191,7 +2191,7 @@ namespace RainLanguage
                     {
                         var frames = new RainStackFrame[count];
                         for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(stackFrames[i].libName, stackFrames[i].functionName, stackFrames[i].address);
-                        startupParameter.onExceptionExit(new RainKernelCopy(kernel), frames, msg);
+                        startupParameter.onExceptionExit?.Invoke(new RainKernelCopy(kernel), frames, msg);
                     })));
         }
         private delegate void* ExternProgramDatabaseLoader(void* name);
