@@ -1217,10 +1217,10 @@ namespace RainLanguage
         }
         private class RainKernelMain : RainKernel
         {
-            private readonly ExternStartupParameter parameter;
-            public RainKernelMain(void* kernel, ExternStartupParameter parameter) : base(kernel)
+            private readonly object[] objects;
+            public RainKernelMain(void* kernel, params object[] objects) : base(kernel)
             {
-                this.parameter = parameter;
+                this.objects = objects;
             }
         }
         private class RainKernelCopy : RainKernel
@@ -2209,9 +2209,11 @@ namespace RainLanguage
                         startupParameter.onExceptionExit?.Invoke(new RainKernelCopy(kernel), frames, msg);
                     });
                 if (progressDatabaseLoader != null)
-                    return new RainKernelMain(CreateKernel(parameter,
-                        name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name))),
-                        RainProgramDatabase.DeleteRainProgramDatabase), parameter);
+                {
+                    ExternProgramDatabaseLoader loader = name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name)));
+                    return new RainKernelMain(CreateKernel(parameter, loader,
+                        RainProgramDatabase.DeleteRainProgramDatabase), parameter, loader);
+                }
                 else return new RainKernelMain(CreateKernel(parameter), parameter);
             }
         }
