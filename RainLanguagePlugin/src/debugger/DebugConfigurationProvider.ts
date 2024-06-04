@@ -44,11 +44,6 @@ async function CompletionConfiguration(configuration: RainDebugConfiguration) {
          vscode.window.showInformationMessage("获取当前工程名失败，将使用工作空间文件夹名作为工程名")
          configuration.projectName = path.dirname(configuration.projectPath)
     }
-    if (configuration.Fixed) {
-        configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/fixed/";
-    } else {
-        configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/float/";
-    }
     configuration.detectorName = "RainDebuggerDetector.dll";
 }
 
@@ -256,6 +251,11 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
             debuggedProcess = null
         }
         await CompletionConfiguration(configuration)
+        if (configuration.Fixed) {
+            configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/fixed/";
+        } else {
+            configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/float/";
+        }
         if (configuration.noDebug) {
             const launchParams = await GetLaunchParam(configuration)
             const outputChannel = GetOutputChannel(configuration.projectName + "[雨言]");
