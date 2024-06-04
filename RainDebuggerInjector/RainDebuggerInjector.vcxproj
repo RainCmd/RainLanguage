@@ -124,7 +124,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\
+xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -144,7 +145,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\
+xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

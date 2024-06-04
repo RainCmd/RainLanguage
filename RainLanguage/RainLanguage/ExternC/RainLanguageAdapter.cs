@@ -1137,7 +1137,7 @@ namespace RainLanguage
                 this.onExceptionExit = onExceptionExit;
             }
         }
-        public class RainKernel : IDisposable
+        public abstract class RainKernel : IDisposable
         {
             private void* kernel;
             public RainKernel(void* kernel)
@@ -1214,6 +1214,14 @@ namespace RainLanguage
                 return false;
             }
             public static bool operator !=(RainKernel left, RainKernel right) { return !(left == right); }
+        }
+        private class RainKernelMain : RainKernel
+        {
+            private readonly ExternStartupParameter parameter;
+            public RainKernelMain(void* kernel, ExternStartupParameter parameter) : base(kernel)
+            {
+                this.parameter = parameter;
+            }
         }
         private class RainKernelCopy : RainKernel
         {
@@ -2201,10 +2209,10 @@ namespace RainLanguage
                         startupParameter.onExceptionExit?.Invoke(new RainKernelCopy(kernel), frames, msg);
                     });
                 if (progressDatabaseLoader != null)
-                    return new RainKernel(CreateKernel(parameter,
+                    return new RainKernelMain(CreateKernel(parameter,
                         name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name))),
-                        RainProgramDatabase.DeleteRainProgramDatabase));
-                else return new RainKernel(CreateKernel(parameter));
+                        RainProgramDatabase.DeleteRainProgramDatabase), parameter);
+                else return new RainKernelMain(CreateKernel(parameter), parameter);
             }
         }
         private delegate void* ExternProgramDatabaseLoader(void* name);
