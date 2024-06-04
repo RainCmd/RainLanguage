@@ -1225,11 +1225,11 @@ void RainDebugger::OnException(uint64 task, const character* message, uint32 len
 RainDebugger::~RainDebugger()
 {
 	SetStepType(StepType::None);
+	Broken();
 	delete (MAP*)map;
 	map = NULL;
 	delete BREAKPOINTS;
 	breakpoints = NULL;
-	Broken();
 }
 
 struct DebuggerSlot
