@@ -12,10 +12,10 @@ protected:
 	void OnHitBreakpoint(uint64 task);
 	void OnTaskExit(uint64 task, const RainString& message);
 	void OnContinue();
-	void OnBroken();
 public:
 	std::wstring name;
 	Debugger(const RainString& name, const RainDebuggerParameter& parameter);
 	void SetDiagnose(uint32 frame);
 	void OnUpdate();
+	~Debugger();
 };

@@ -1,6 +1,7 @@
 ﻿#include "RuntimeLibrary.h"
 #include "Kernel.h"
 #include "LibraryAgency.h"
+#include "../Public/Debugger.h"
 
 #define GET_LIBRARY_STRING(target) kernel->stringAgency->Add(library->stringAgency->Get(target)).index
 
@@ -863,4 +864,10 @@ void RuntimeLibrary::InitRuntimeData(const Library* library, uint32 selfLibraryI
 		}
 		ASSERT_DEBUG(count > indices.Count(), "托管类存在循环继承");
 	}
+}
+
+RuntimeLibrary::~RuntimeLibrary()
+{
+	if(debugger) delete debugger;
+	debugger = NULL;
 }

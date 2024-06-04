@@ -1001,35 +1001,6 @@ void RainDebugger::SetStepType(StepType type)
 		stepType = type;
 	}
 }
-void RainDebugger::Broken()
-{
-	if(debugFrame)
-	{
-		DebugFrame* frame = FRAME;
-		frame->debugger = NULL;
-		frame->library = NULL;
-		frame->Release();
-		debugFrame = NULL;
-	}
-	if(share)
-	{
-		SetStepType(StepType::None);
-		currentTask = 0;
-		currentTraceDeep = INVALID;
-		ClearBreakpoints();
-		((MAP*)map)->Clear();
-		if(LIBRARY)
-		{
-			OnBroken();
-			LIBRARY->debugger = NULL;
-		}
-		SHARE->Release();
-		share = NULL;
-		library = NULL;
-		if(unloader && database) unloader(database);
-		database = NULL;
-	}
-}
 
 RainKernel* RainDebugger::GetKernel()
 {
@@ -1051,11 +1022,20 @@ RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& 
 		return;
 	}
 	breakpoints = new Set<uint32, true>(0);
-	if(LIBRARY->debugger) LIBRARY->debugger->Broken();
+	if(LIBRARY->debugger) delete LIBRARY->debugger;
 	LIBRARY->debugger = this;
 	share = kernel->share;
 	SHARE->Reference();
-	if(!InitMap(kernel, (Library*)source, (MAP*)map)) Broken();
+	if(!InitMap(kernel, (Library*)source, (MAP*)map))
+	{
+		((MAP*)map)->Clear();
+		LIBRARY->debugger = NULL;
+		SHARE->Release();
+		share = NULL;
+		library = NULL;
+		if(unloader) unloader(database);
+		database = NULL;
+	}
 	if(agency->libraryUnloader) agency->libraryUnloader(source);
 }
 
@@ -1225,7 +1205,28 @@ void RainDebugger::OnException(uint64 task, const character* message, uint32 len
 RainDebugger::~RainDebugger()
 {
 	SetStepType(StepType::None);
-	Broken();
+	if(debugFrame)
+	{
+		DebugFrame* frame = FRAME;
+		frame->debugger = NULL;
+		frame->library = NULL;
+		frame->Release();
+		debugFrame = NULL;
+	}
+	if(share)
+	{
+		SetStepType(StepType::None);
+		currentTask = 0;
+		currentTraceDeep = INVALID;
+		ClearBreakpoints();
+		((MAP*)map)->Clear();
+		if(library && LIBRARY->debugger == this) LIBRARY->debugger = NULL;
+		SHARE->Release();
+		share = NULL;
+		library = NULL;
+		if(unloader && database) unloader(database);
+		database = NULL;
+	}
 	delete (MAP*)map;
 	map = NULL;
 	delete BREAKPOINTS;
@@ -1328,7 +1329,7 @@ void OnLoadLibrary(Kernel* kernel, RuntimeLibrary* library)
 			//这里name的地址最终要传回虚拟机，因为虚拟机内部字符串的GC可能会导致地址内容改变，所以要复制一份
 			const String name = kernel->stringAgency->Get(library->spaces[0].name);
 			character buffer[256];
-			Mcopy(name.GetPointer(), buffer, name.GetLength());
+			Mcopy(name.GetPointer(), buffer, name.GetLength() + 1);
 			const RainString rainName = RainString(buffer, name.GetLength());
 			for(uint32 createrIndex = 0; createrIndex < debuggerCreaters.Count(); createrIndex++)
 			{

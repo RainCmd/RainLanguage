@@ -666,6 +666,7 @@ void OnBroken(Debugger* debugger)
 	{
 		if(cSocket != INVALID_SOCKET) closesocket(cSocket);
 		cSocket = INVALID_SOCKET;
+		::debugger = NULL;
 	}
 }
 

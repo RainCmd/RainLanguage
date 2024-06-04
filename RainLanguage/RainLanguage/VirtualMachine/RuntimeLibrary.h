@@ -26,4 +26,5 @@ public:
 	RuntimeLibrary(const RuntimeLibrary&) = delete;
 	RuntimeLibrary(const RuntimeLibrary&&) = delete;
 	void InitRuntimeData(const Library* library, uint32 selfLibraryIndex);
+	~RuntimeLibrary();
 };

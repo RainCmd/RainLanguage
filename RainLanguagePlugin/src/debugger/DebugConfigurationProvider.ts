@@ -14,29 +14,42 @@ export interface RainDebugConfiguration extends vscode.DebugConfiguration{
     detectorName: string
     projectPath: string
     projectName: string
+    EntryPoint: string
+    Timestep: number
+    ErrorLevel: number
+    Fixed: boolean
 }
 
 function IsNUllOrEmpty(value: string): boolean{
     return value == undefined || value == null || value == ""
 }
 
-async function GetProjectName(projectPath: string, name: string, type: string): Promise<string> {
-    if (IsNUllOrEmpty(name)) {
-        try {
-            const data = await fs.promises.readFile(projectPath + "/.vscode/launch.json", 'utf-8')
-            const cfgs = JSON.parse(data).configurations
-            cfgs.forEach((element: { type: string; ProjectName: string }) => {
-                if (element.type == type) {
-                    name = element.ProjectName
-                }
-            });
-        } catch (error) { }
-        if (IsNUllOrEmpty(name)) {
-            vscode.window.showInformationMessage("获取当前工程名失败，将使用工作空间文件夹名作为工程名")
-            name = path.dirname(projectPath)
-        }
+async function CompletionConfiguration(configuration: RainDebugConfiguration) {
+    try {
+        const data = await fs.promises.readFile(configuration.projectPath + "/.vscode/launch.json", 'utf-8')
+        const cfgs = JSON.parse(data).configurations
+        cfgs.forEach((element: RainDebugConfiguration) => {
+            if (element.type == configuration.type) {
+                configuration.projectName = element.ProjectName || configuration.projectName
+                configuration.EntryPoint = element.EntryPoint || configuration.EntryPoint
+                configuration.Timestep = element.Timestep || configuration.Timestep
+                configuration.ErrorLevel = element.ErrorLevel || configuration.ErrorLevel
+                configuration.Fixed = element.Fixed || configuration.Fixed
+            }
+        });
+    } catch (error) {
+        vscode.window.showErrorMessage("解析配置文件时出现错误：" + error)
+     }
+     if (IsNUllOrEmpty(configuration.projectName)) {
+         vscode.window.showInformationMessage("获取当前工程名失败，将使用工作空间文件夹名作为工程名")
+         configuration.projectName = path.dirname(configuration.projectPath)
     }
-    return name
+    if (configuration.Fixed) {
+        configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/fixed/";
+    } else {
+        configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/float/";
+    }
+    configuration.detectorName = "RainDebuggerDetector.dll";
 }
 
 let lastPicked: string = null;
@@ -146,31 +159,13 @@ async function Connect(port:number) {
     })
 }
 
-async function CompleteConfiguration(projectPath: string, entry: string, errLvl: number, timestep: number, type: string): Promise<{ entry: string, errLvl: number, timestep: number }> {
-    try {
-        const data = await fs.promises.readFile(projectPath + "/.vscode/launch.json", 'utf-8')
-        const cfgs = JSON.parse(data).configurations
-        cfgs.forEach((element: { type: string; EntryPoint: string, ErrorLevel: number, Timesnap: number }) => {
-            if (element.type == type) {
-                entry = element.EntryPoint || entry
-                timestep = element.Timesnap || timestep
-                errLvl = element.ErrorLevel || errLvl
-            }
-        });
-    } catch (error) { }
-    return {
-        entry: entry,
-        timestep: timestep,
-        errLvl: errLvl
-    }
-}
-
-
 async function GetLaunchParam(configuration: RainDebugConfiguration) {
     const exeFile = configuration.detectorPath + "/RainLauncher.exe";
     const name = configuration.projectName
-    const cfg = await CompleteConfiguration(configuration.projectPath, "Main", 4, 1, "雨言调试运行")
-
+    const errLvl = configuration.ErrorLevel || 4
+    const entry = configuration.EntryPoint || "Main"
+    const timestep = configuration.Timestep || 1
+    
     let result: string[] = [];
     result.push(exeFile);
     result.push("-path")
@@ -178,11 +173,11 @@ async function GetLaunchParam(configuration: RainDebugConfiguration) {
     result.push("-name")
     result.push(name)
     result.push("-errorlevel")
-    result.push(cfg.errLvl.toString())
+    result.push(errLvl.toString())
     result.push("-entry")
-    result.push(cfg.entry)
+    result.push(entry)
     result.push("-timestep")
-    result.push(cfg.timestep.toString())
+    result.push(timestep.toString())
     return result
 }
 
@@ -260,13 +255,7 @@ export class RainDebugConfigurationProvider implements vscode.DebugConfiguration
             debuggedProcess.kill()
             debuggedProcess = null
         }
-        configuration.projectName = await GetProjectName(configuration.projectPath, configuration.projectName, configuration.type)
-        if (configuration.Fixed) {
-            configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/fixed/";
-        } else {
-            configuration.detectorPath = this.context.extensionUri.fsPath + "/bin/float/";
-        }
-        configuration.detectorName = "RainDebuggerDetector.dll";
+        await CompletionConfiguration(configuration)
         if (configuration.noDebug) {
             const launchParams = await GetLaunchParam(configuration)
             const outputChannel = GetOutputChannel(configuration.projectName + "[雨言]");

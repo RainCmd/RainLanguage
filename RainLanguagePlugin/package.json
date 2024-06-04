@@ -73,7 +73,7 @@
                 },
                 {
                     "command": "cmd.debug.重启雨言服务",
-                    "when": "resourceLangId == 雨言"
+                    "when": "resourceLangId == 雨言 && false"
                 }
             ]
         },
@@ -119,7 +119,7 @@
                         "required": [
                             "ProjectName",
                             "EntryPoint",
-                            "Timesnap",
+                            "Timestep",
                             "ErrorLevel",
                             "Fixed"
                         ],
@@ -134,7 +134,7 @@
                                 "description": "入口函数",
                                 "default": "Main"
                             },
-                            "Timesnap": {
+                            "Timestep": {
                                 "type": "number",
                                 "description": "一帧的时长(毫秒)",
                                 "default": 100
