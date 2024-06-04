@@ -39,6 +39,8 @@ async function GetProjectName(projectPath: string, name: string, type: string): 
     return name
 }
 
+let lastPicked: string = null;
+
 async function pickPID(injector: string) {
     return new Promise<number>((resolve, reject) => {
         cp.exec(injector, { encoding: "buffer" }, (error, stdout, stderr) => {
@@ -67,6 +69,13 @@ async function pickPID(injector: string) {
             }
             if (cur != null) items.push(cur);
             if (items.length > 1) {
+                if (lastPicked != null) {
+                    let last = items.findIndex(value => value.detail == lastPicked)
+                    if (last >= 0) {
+                        let [item] = items.splice(last, 1)
+                        items.unshift(item)
+                    }
+                }
                 vscode.window.showQuickPick(items, {
                     matchOnDescription: true,
                     matchOnDetail: true,
@@ -78,12 +87,14 @@ async function pickPID(injector: string) {
                         if (item.detail) {
                             console.log("进程详情:" + item.detail);
                         }
+                        lastPicked = item.detail
                         resolve(item.pid)
                     } else {
                         reject()
                     }
                 })
             } else if (items.length > 0) {
+                lastPicked = items[0].detail
                 resolve(items[0].pid)
             } else {
                 vscode.window.showErrorMessage("没有可以附加的进程")
