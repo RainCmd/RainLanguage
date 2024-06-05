@@ -97,15 +97,15 @@ void HeapAgency::Free(Handle handle)
 	if(value->type.dimension > 1)
 	{
 		uint32 length = *(uint32*)pointer;
-		Handle* index = (Handle*)(pointer + 4);
+		Handle* index = (Handle*)(pointer + 8);
 		while(length--) WeakRelease(index[length]);
 	}
 	else if(value->type.dimension)
 	{
 		uint32 length = *(uint32*)pointer;
-		uint32 elementSize = GetElementSize(value);
+		uint32 elementSize = *(uint32*)(pointer + 4);
 		Type elementType = Type(value->type, value->type.dimension - 1);
-		pointer += 4;
+		pointer += 8;
 		if(elementType == TYPE_String)
 		{
 			for(uint32 i = 0; i < length; i++)
@@ -191,9 +191,9 @@ void HeapAgency::Mark(Handle handle)
 		{
 			uint8* pointer = heap.GetPointer() + value->pointer;
 			uint32 length = *(uint32*)pointer;
-			pointer += 4;
-			uint32 elementSize = GetElementSize(value);
+			uint32 elementSize = *(uint32*)(pointer + 4);
 			Type elementType = Type(value->type, value->type.dimension - 1);
+			pointer += 8;
 			if(IsHandleType(elementType))
 				for(uint32 i = 0; i < length; i++)
 					Mark(*(Handle*)(pointer + i * elementSize));
@@ -312,9 +312,13 @@ HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kerne
 
 Handle HeapAgency::Alloc(const Type& elementType, integer length)
 {
-	Handle result = Alloc(MemoryAlignment(kernel->libraryAgency->GetTypeStackSize(elementType), kernel->libraryAgency->GetTypeAlignment(elementType)) * (uint32)length + 4, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)));
-	heads[result].type = Type((Declaration)elementType, elementType.dimension + 1);
-	*(uint32*)(heap.GetPointer() + heads[result].pointer) = (uint32)length;
+	uint32 elementSize = MemoryAlignment(kernel->libraryAgency->GetTypeStackSize(elementType), kernel->libraryAgency->GetTypeAlignment(elementType));
+	Handle result = Alloc(elementSize * (uint32)length + 8, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)));
+	Head& value = heads[result];
+	value.type = Type((Declaration)elementType, elementType.dimension + 1);
+	uint32* pointer = (uint32*)(heap.GetPointer() + value.pointer);
+	pointer[0] = (uint32)length;
+	pointer[1] = elementSize;
 	return result;
 }
 
@@ -330,10 +334,10 @@ uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 	ASSERT_DEBUG(heads[handle].type.dimension, "不是个数组，可能编译器算法有问题");
 	uint8* pointer = heap.GetPointer() + heads[handle].pointer;
 	uint32 length = *(uint32*)pointer;
+	uint32 elementSize = *(uint32*)(pointer + 4);
 	if(index < 0) index += length;
 	if(index < 0 || index >= length) EXCEPTION("数组越界");
-	pointer += 4 + GetElementSize(&heads[handle]) * index;
-	return pointer;
+	return pointer + 8 + elementSize * index;
 }
 
 String HeapAgency::TryGetArrayLength(Handle handle, integer& length)
@@ -351,9 +355,10 @@ String HeapAgency::TryGetArrayPoint(Handle handle, integer index, uint8*& pointe
 		ASSERT_DEBUG(type.dimension, "不是个数组，可能编译器算法有问题");
 		pointer = heap.GetPointer() + heads[handle].pointer;
 		uint32 length = *(uint32*)pointer;
+		uint32 elementSize = *(uint32*)(pointer + 4);
 		if(index < 0) index += length;
 		if(index < 0 || index >= length) return kernel->stringAgency->Add(EXCEPTION_OUT_OF_RANGE);
-		pointer += 4 + GetElementSize(&heads[handle]) * index;
+		pointer += 8 + elementSize * index;
 		return String();
 	}
 	return kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);

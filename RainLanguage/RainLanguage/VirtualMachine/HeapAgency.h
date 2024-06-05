@@ -37,12 +37,6 @@ class HeapAgency
 	Handle Recycle(Handle handle);
 	void FullGC();
 	void FastGC();
-	inline uint32 GetElementSize(Head* value)
-	{
-		ASSERT_DEBUG(value->type.dimension, "不是个数组");
-		uint32 length = *(uint32*)(heap.GetPointer() + value->pointer);
-		return length ? (value->size - 4) / length : 0;
-	}
 public:
 	HeapAgency(Kernel* kernel, const StartupParameter* parameter);
 	Handle Alloc(const Type& elementType, integer length);
