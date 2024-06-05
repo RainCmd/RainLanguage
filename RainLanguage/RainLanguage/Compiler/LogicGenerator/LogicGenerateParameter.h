@@ -17,6 +17,6 @@ struct LogicGenerateParameter :GeneratorParameter
 	{
 		while(resultCount--) results.Add(LogicVariable());
 	}
-	LogicVariable GetResult(uint32 index, const Type& type);
+	const LogicVariable& GetResult(uint32 index, const Type& type);
 	void ClearVariables(const List<Type, true>& types);
 };

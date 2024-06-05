@@ -225,7 +225,7 @@ ArrayEvaluationExpression::~ArrayEvaluationExpression()
 
 void ArrayQuestionEvaluationExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& elementType)
 {
-	LogicVariable result = parameter.GetResult(0, elementType);
+	const LogicVariable& result = parameter.GetResult(0, elementType);
 	LogicGenerateParameter arrayParameter = LogicGenerateParameter(parameter, 1);
 	arrayExpression->Generator(arrayParameter);
 	CodeLocalAddressReference clearAddress = CodeLocalAddressReference();

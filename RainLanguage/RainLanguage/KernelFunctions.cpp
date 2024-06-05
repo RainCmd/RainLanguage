@@ -2230,7 +2230,6 @@ String task_Pause(KernelInvokerParameter parameter)//task.()
 	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Pause();
 	return String();
-
 }
 
 String task_Resume(KernelInvokerParameter parameter)//task.()

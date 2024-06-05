@@ -107,7 +107,7 @@ void GenerateTaskParameter(LogicGenerateParameter& parameter, Expression* parame
 
 void GenerateTaskParameter(LogicGenerateParameter& parameter, InvokerExpression* invoker, bool start, const Declaration& declaration)
 {
-	LogicVariable result = parameter.GetResult(0, Type(declaration, 0));
+	const LogicVariable& result = parameter.GetResult(0, Type(declaration, 0));
 	if (ContainAny(invoker->type, ExpressionType::InvokerDelegateExpression))
 	{
 		CodeLocalAddressReference endAddress = CodeLocalAddressReference();

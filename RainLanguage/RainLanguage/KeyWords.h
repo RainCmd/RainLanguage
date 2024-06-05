@@ -49,6 +49,8 @@ String KeyWord_continue();
 String KeyWord_return();
 String KeyWord_is();
 String KeyWord_as();
+String KeyWord_and();
+String KeyWord_or();
 String KeyWord_start();
 String KeyWord_new();
 String KeyWord_wait();

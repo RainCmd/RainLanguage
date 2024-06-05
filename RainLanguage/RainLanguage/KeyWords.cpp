@@ -52,6 +52,8 @@ KEY_WORLD(continue)
 KEY_WORLD(return)
 KEY_WORLD(is)
 KEY_WORLD(as)
+KEY_WORLD(and)
+KEY_WORLD(or)
 KEY_WORLD(start)
 KEY_WORLD(new)
 KEY_WORLD(wait)
@@ -109,6 +111,8 @@ bool IsKeyWord(const String & value)
 	if (value == KeyWord_return()) return true;
 	if (value == KeyWord_is()) return true;
 	if (value == KeyWord_as()) return true;
+	if (value == KeyWord_and()) return true;
+	if (value == KeyWord_or()) return true;
 	if (value == KeyWord_start()) return true;
 	if (value == KeyWord_new()) return true;
 	if (value == KeyWord_wait()) return true;

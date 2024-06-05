@@ -3248,6 +3248,16 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
+				else if(lexical.anchor.content == KeyWord_and())
+				{
+					PUSH_TOKEN(TokenType::LogicAnd, Attribute::Operator);
+					break;
+				}
+				else if(lexical.anchor.content == KeyWord_or())
+				{
+					PUSH_TOKEN(TokenType::LogicOr, Attribute::Operator);
+					break;
+				}
 				else if(lexical.anchor.content == KeyWord_start())
 				{
 					if(ContainAny(attribute, Attribute::None | Attribute::Operator))

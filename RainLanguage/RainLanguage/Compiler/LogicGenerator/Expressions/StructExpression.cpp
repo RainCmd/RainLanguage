@@ -55,7 +55,7 @@ void StructConstructorExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
 	parameters->Generator(parametersParameter);
-	LogicVariable result = parameter.GetResult(0, returns[0]);
+	const LogicVariable& result = parameter.GetResult(0, returns[0]);
 	if (parameters->returns.Count())
 	{
 		AbstractStruct* abstractStruct = parameter.manager->GetLibrary(declaration.library)->structs[declaration.index];
@@ -144,7 +144,7 @@ void VectorConstructorExpression::Generator(LogicGenerateParameter& parameter)
 {
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
 	parameters->Generator(parametersParameter);
-	LogicVariable result = parameter.GetResult(0, returns[0]);
+	const LogicVariable& result = parameter.GetResult(0, returns[0]);
 	for (uint32 i = 0, memberIndex = 0; i < parameters->returns.Count(); i++)
 	{
 		if (parameters->returns[i] == TYPE_Real)

@@ -720,6 +720,8 @@ namespace RainLanguageServer.RainLanguage
                 "return" => LexicalType.KeyWord_return,
                 "is" => LexicalType.KeyWord_is,
                 "as" => LexicalType.KeyWord_as,
+                "and" => LexicalType.LogicAnd,
+                "or" => LexicalType.LogicOr,
                 "start" => LexicalType.KeyWord_start,
                 "new" => LexicalType.KeyWord_new,
                 "wait" => LexicalType.KeyWord_wait,
