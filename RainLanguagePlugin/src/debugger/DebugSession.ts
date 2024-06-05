@@ -504,12 +504,10 @@ export class RainDebugSession extends LoggingDebugSession {
 			} else if(trace.globals.has(variable)) {
 				const req = new client.Writer(client.Proto.RRECV_Global)
 				req.WriteUint(request.seq)
-				req.WriteLong(trace.thread)
-				req.WriteUint(trace.index)
-				req.WriteString(variable.GetRoot().name)
 				const names = variable.GetRoot().space.GetNames()
 				req.WriteUint(names.length)
 				names.forEach(value => req.WriteString(value))
+				req.WriteString(variable.GetRoot().name)
 				const indices = variable.GetMemberIndices()
 				req.WriteUint(indices.length)
 				indices.forEach(value => req.WriteUint(value))

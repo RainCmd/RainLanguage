@@ -31,7 +31,7 @@ static wstring RS2WS(const RainString& src)
 static void WriteSummary(WritePackage& writer, const RainDebuggerVariable& variable)
 {
 	writer.WriteString(RS2WS(variable.GetName()));
-	writer.WriteBool(IsStructured(variable.GetRainType()));
+	writer.WriteBool(IsStructured(variable.GetRainType()) && variable.GetAddress() != NULL);
 	writer.WriteString(RS2WS(variable.GetTypeName()));
 	writer.WriteString(RS2WS(variable.GetValue()));
 }
