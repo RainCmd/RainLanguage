@@ -1217,10 +1217,10 @@ namespace RainLanguage
         }
         private class RainKernelMain : RainKernel
         {
-            private readonly object[] objects;
-            public RainKernelMain(void* kernel, params object[] objects) : base(kernel)
+            private readonly object[] references;
+            public RainKernelMain(void* kernel, params object[] references) : base(kernel)
             {
-                this.objects = objects;
+                this.references = references;
             }
         }
         private class RainKernelCopy : RainKernel
@@ -2190,31 +2190,42 @@ namespace RainLanguage
             for (int i = 0; i < startupParameter.libraries.Length; i++) libraries[i] = startupParameter.libraries[i].GetSource();
             fixed (void** plibraries = libraries)
             {
-                var parameter = new ExternStartupParameter(plibraries, (uint)startupParameter.libraries.Length, startupParameter.seed, startupParameter.stringCapacity, startupParameter.entityCapacity,
-                    (kernel, entity) => startupParameter.onReferenceEntity(new RainKernelCopy(kernel), entity),
-                    (kernel, entity) => startupParameter.onReleaseEntity(new RainKernelCopy(kernel), entity),
-                    libName => RainLibrary.InternalCreate(startupParameter.libraryLoader(NativeString.GetString(libName))),
-                    RainLibrary.DeleteRainLibrary,
-                    (kernel, fullName, parameters, parameterCount) =>
+                var references = new List<object>();
+                ExternEntityAction onReferenecEntity = (kernel, entity) => startupParameter.onReferenceEntity(new RainKernelCopy(kernel), entity);
+                references.Add(onReferenecEntity);
+                ExternEntityAction onReleaseEntity = (kernel, entity) => startupParameter.onReleaseEntity(new RainKernelCopy(kernel), entity);
+                references.Add(onReleaseEntity);
+                LibraryLoader libraryLoader = libName => RainLibrary.InternalCreate(startupParameter.libraryLoader(NativeString.GetString(libName)));
+                references.Add(libraryLoader);
+                ExternNativeCallerLoader nativeCallerLoader = (kernel, fullName, parameters, parameterCount) =>
                     {
                         var rainTypeParameters = new RainType[parameterCount];
                         for (int i = 0; i < parameterCount; i++) rainTypeParameters[i] = (RainType)parameters[i];
                         var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), fullName, rainTypeParameters);
-                        return (k, c) => onCaller(new RainKernelCopy(k), new RainCaller(c));
-                    }, 0x10000, 8, 0x10, 0x100,
-                    (kernel, stackFrames, count, msg) =>
+                        ExternOnCaller caller = (k, c) => onCaller(new RainKernelCopy(k), new RainCaller(c));
+                        references.Add(caller);
+                        return caller;
+                    };
+                references.Add(nativeCallerLoader);
+                ExternExceptionExit onExceptionExit = (kernel, stackFrames, count, msg) =>
                     {
                         var frames = new RainStackFrame[count];
                         for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(stackFrames[i].libName, stackFrames[i].functionName, stackFrames[i].address);
                         startupParameter.onExceptionExit?.Invoke(new RainKernelCopy(kernel), frames, msg);
-                    });
+                    };
+                references.Add(onExceptionExit);
+
+                var parameter = new ExternStartupParameter(plibraries, (uint)startupParameter.libraries.Length, startupParameter.seed, startupParameter.stringCapacity, startupParameter.entityCapacity,
+                    onReferenecEntity, onReleaseEntity, libraryLoader, RainLibrary.DeleteRainLibrary, nativeCallerLoader
+                    , 0x10000, 8, 0x10, 0x100, onExceptionExit);
                 if (progressDatabaseLoader != null)
                 {
+                    references.Add(progressDatabaseLoader);
                     ExternProgramDatabaseLoader loader = name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name)));
-                    return new RainKernelMain(CreateKernel(parameter, loader,
-                        RainProgramDatabase.DeleteRainProgramDatabase), parameter, loader);
+                    references.Add(loader);
+                    return new RainKernelMain(CreateKernel(parameter, loader, RainProgramDatabase.DeleteRainProgramDatabase), references);
                 }
-                else return new RainKernelMain(CreateKernel(parameter), parameter);
+                else return new RainKernelMain(CreateKernel(parameter), references);
             }
         }
         private delegate void* ExternProgramDatabaseLoader(void* name);
