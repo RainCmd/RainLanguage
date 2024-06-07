@@ -583,34 +583,31 @@ static void AcceptClient()
 	Queue<char> recvQueue(1024);
 	const int RECV_BUFFER_SIZE = 1024;
 	char buffer[RECV_BUFFER_SIZE];
-	while(wsaStartuped)
-	{
-		cSocket = accept(sSocket, nullptr, nullptr);
-		if(cSocket == INVALID_SOCKET) break;
-		recvQueue.Clear();
 
-		while(cSocket != INVALID_SOCKET)
+	cSocket = accept(sSocket, nullptr, nullptr);
+	if(cSocket == INVALID_SOCKET)  goto label_exit;
+	recvQueue.Clear();
+
+	while(cSocket != INVALID_SOCKET)
+	{
+		int len = recv(cSocket, buffer, RECV_BUFFER_SIZE, 0);
+		if(len == 0 || len == SOCKET_ERROR) break;
+		recvQueue.Add(buffer, len);
+		while(recvQueue.Count() >= PACKAGE_HEAD_SIZE)
 		{
-			int len = recv(cSocket, buffer, RECV_BUFFER_SIZE, 0);
-			if(len == 0 || len == SOCKET_ERROR) break;
-			recvQueue.Add(buffer, len);
-			while(recvQueue.Count() >= PACKAGE_HEAD_SIZE)
+			PackageHead size = *(PackageHead*)recvQueue.Peek(PACKAGE_HEAD_SIZE);
+			if(size < 8) goto label_exit;
+			if(recvQueue.Count() >= size)
 			{
-				PackageHead size = *(PackageHead*)recvQueue.Peek(PACKAGE_HEAD_SIZE);
-				if(size < 8) goto label_exit;
-				if(recvQueue.Count() >= size)
-				{
-					recvQueue.Discard(PACKAGE_HEAD_SIZE); size -= PACKAGE_HEAD_SIZE;
-					ReadPackage reader(recvQueue.De(size), size);
-					OnRecv(reader, cSocket, debugger);
-				}
-				else break;
+				recvQueue.Discard(PACKAGE_HEAD_SIZE); size -= PACKAGE_HEAD_SIZE;
+				ReadPackage reader(recvQueue.De(size), size);
+				OnRecv(reader, cSocket, debugger);
 			}
+			else break;
 		}
-	label_exit:
-		if(cSocket != INVALID_SOCKET) closesocket(cSocket);
-		cSocket = INVALID_SOCKET;
 	}
+label_exit:
+	CloseServer();
 }
 
 void OnHitBreakpoint(Debugger* debugger, uint64 task)
