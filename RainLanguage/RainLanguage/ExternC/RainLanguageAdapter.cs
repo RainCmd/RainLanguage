@@ -7,16 +7,46 @@ using System.Runtime.InteropServices;
 
 namespace RainLanguage
 {
+    /// <summary>
+    /// 错误等级
+    /// </summary>
     public enum RainErrorLevel : uint
     {
+        /// <summary>
+        /// 编译错误
+        /// </summary>
         Error,
+        /// <summary>
+        /// 编译警告 1
+        /// </summary>
         WarringLevel1,
+        /// <summary>
+        /// 编译警告 2
+        /// </summary>
         WarringLevel2,
+        /// <summary>
+        /// 编译警告 3
+        /// </summary>
         WarringLevel3,
+        /// <summary>
+        /// 编译警告 4
+        /// </summary>
         WarringLevel4,
+        /// <summary>
+        /// 编译日志 1
+        /// </summary>
         LoggerLevel1,
+        /// <summary>
+        /// 编译日志 2
+        /// </summary>
         LoggerLevel2,
+        /// <summary>
+        /// 编译日志 3
+        /// </summary>
         LoggerLevel3,
+        /// <summary>
+        /// 编译日志 4
+        /// </summary>
         LoggerLevel4,
     };
     /// <summary>
@@ -134,6 +164,9 @@ namespace RainLanguage
         INVALID = 0xFFFFFFFF
     }
 
+    /// <summary>
+    /// 雨言与外部交互时使用的变量类型
+    /// </summary>
     public enum RainType
     {
         /// <summary>
@@ -190,71 +223,187 @@ namespace RainLanguage
         /// </summary>
         ArrayFlag = 0x10,
     }
+    /// <summary>
+    /// 数据加载回调
+    /// </summary>
+    /// <param name="name">名称</param>
+    /// <returns>数据</returns>
     public delegate byte[] DataLoader(string name);
+    /// <summary>
+    /// 构建库的参数
+    /// </summary>
     public struct BuildParameter
     {
+        /// <summary>
+        /// 代码文件
+        /// </summary>
         public interface ICodeFile
         {
+            /// <summary>
+            /// 文件路径
+            /// </summary>
+            /// <remarks>
+            /// 错误信息的日志中使用的，
+            /// 生成pdb文件时也会记录代码的路径，
+            /// 建议使用相对路径
+            /// </remarks>
             string Path { get; }
+            /// <summary>
+            /// 代码文件内容
+            /// </summary>
             string Content { get; }
         }
-        public string name;
-        public bool debug;
-        public IEnumerable<ICodeFile> files;
-        public DataLoader liibraryLoader;
-        public RainErrorLevel errorLevel;
-        public BuildParameter(string name, bool debug, IEnumerable<ICodeFile> files, DataLoader liibraryLoader, RainErrorLevel errorLevel)
+        internal string name;
+        internal bool debug;
+        internal IEnumerable<ICodeFile> files;
+        internal DataLoader libraryLoader;
+        internal RainErrorLevel errorLevel;
+        /// <summary>
+        /// 构建库的参数
+        /// </summary>
+        /// <param name="name">库名，也是库最外层命名空间的名字，其他库引用当前库时import的也是这个名字</param>
+        /// <param name="debug">
+        /// 如果为true，则会额外生成一个pdb文件，并且执行指令中也会插入调试指令，
+        /// 只有该标记为true时编译出的dll才能被调试
+        /// </param>
+        /// <param name="files">代码文件迭代器</param>
+        /// <param name="libraryLoader">引用库的加载接口</param>
+        /// <param name="errorLevel">打印的错误日志等级（大于等级的日志会被直接忽略）</param>
+        public BuildParameter(string name, bool debug, IEnumerable<ICodeFile> files, DataLoader libraryLoader, RainErrorLevel errorLevel)
         {
             this.name = name;
             this.debug = debug;
             this.files = files;
-            this.liibraryLoader = liibraryLoader;
+            this.libraryLoader = libraryLoader;
             this.errorLevel = errorLevel;
         }
     }
+    /// <summary>
+    /// 错误详细信息
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ErrorMessageDetail
     {
+        /// <summary>
+        /// 信息类型
+        /// </summary>
         public MessageType messageType;
+        /// <summary>
+        /// 代码行数
+        /// </summary>
         public uint line;
+        /// <summary>
+        /// 起始字符
+        /// </summary>
         public uint start;
+        /// <summary>
+        /// 字符数量
+        /// </summary>
         public uint length;
     }
+    /// <summary>
+    /// 虚拟机状态信息
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct KernelState
     {
+        /// <summary>
+        /// 任务数量
+        /// </summary>
         public uint taskCount;
+        /// <summary>
+        /// 字符串数量
+        /// </summary>
         public uint stringCount;
+        /// <summary>
+        /// 实体数量
+        /// </summary>
         public uint entityCount;
+        /// <summary>
+        /// 句柄数量
+        /// </summary>
         public uint handleCount;
+        /// <summary>
+        /// 托管堆大小
+        /// </summary>
         public uint heapSize;
     }
+    /// <summary>
+    /// 栈帧
+    /// </summary>
     public struct RainStackFrame
     {
+        /// <summary>
+        /// 库名
+        /// </summary>
         public string libName;
+        /// <summary>
+        /// 函数名
+        /// </summary>
         public string funName;
+        /// <summary>
+        /// 地址
+        /// </summary>
         public uint address;
-        public RainStackFrame(string libName, string funName, uint address)
+        internal RainStackFrame(string libName, string funName, uint address)
         {
             this.libName = libName;
             this.funName = funName;
             this.address = address;
         }
     }
+    /// <summary>
+    /// 实体操作回调
+    /// </summary>
+    /// <param name="kernel">虚拟机</param>
+    /// <param name="entity">实体</param>
     public delegate void EntityAction(RainLanguageAdapter.RainKernel kernel, ulong entity);
+    /// <summary>
+    /// 虚拟机native函数调用
+    /// </summary>
+    /// <param name="kernel">虚拟机</param>
+    /// <param name="caller">调用</param>
     public delegate void OnCaller(RainLanguageAdapter.RainKernel kernel, RainLanguageAdapter.RainCaller caller);
+    /// <summary>
+    /// 虚拟机native函数调用加载器
+    /// </summary>
+    /// <param name="kernel">虚拟机</param>
+    /// <param name="fullName">native函数包含所在命名空间的完整名称路径</param>
+    /// <param name="parameters">native函数的参数列表</param>
+    /// <returns></returns>
     public delegate OnCaller CallerLoader(RainLanguageAdapter.RainKernel kernel, string fullName, RainType[] parameters);
+    /// <summary>
+    /// 异常消息回调
+    /// </summary>
+    /// <param name="kernel">虚拟机</param>
+    /// <param name="frames">栈帧</param>
+    /// <param name="msg">异常消息</param>
     public delegate void ExceptionExit(RainLanguageAdapter.RainKernel kernel, RainStackFrame[] frames, string msg);
+    /// <summary>
+    /// 虚拟机启动参数
+    /// </summary>
     public struct StartupParameter
     {
-        public RainLanguageAdapter.RainLibrary[] libraries;
-        public long seed;
-        public uint stringCapacity;
-        public uint entityCapacity;
-        public EntityAction onReferenceEntity, onReleaseEntity;
-        public DataLoader libraryLoader;
-        public CallerLoader callerLoader;
-        public ExceptionExit onExceptionExit;
+        internal RainLanguageAdapter.RainLibrary[] libraries;
+        internal long seed;
+        internal uint stringCapacity;
+        internal uint entityCapacity;
+        internal EntityAction onReferenceEntity, onReleaseEntity;
+        internal DataLoader libraryLoader;
+        internal CallerLoader callerLoader;
+        internal ExceptionExit onExceptionExit;
+        /// <summary>
+        /// 虚拟机启动参数
+        /// </summary>
+        /// <param name="libraries">初始默认加载的库</param>
+        /// <param name="seed">随机种子</param>
+        /// <param name="stringCapacity">初始化字符串堆容量</param>
+        /// <param name="entityCapacity">初始化实体堆容量</param>
+        /// <param name="onReferenceEntity">实体的引用回调</param>
+        /// <param name="onReleaseEntity">实体的释放回调</param>
+        /// <param name="libraryLoader">引用库的加载回调</param>
+        /// <param name="callerLoader">native调用的加载回调</param>
+        /// <param name="onExceptionExit">异常消息回调</param>
         public StartupParameter(RainLanguageAdapter.RainLibrary[] libraries, long seed, uint stringCapacity, uint entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, DataLoader libraryLoader, CallerLoader callerLoader, ExceptionExit onExceptionExit)
         {
             this.libraries = libraries;
@@ -268,17 +417,29 @@ namespace RainLanguage
             this.onExceptionExit = onExceptionExit;
         }
     }
+    /// <summary>
+    /// native调用自动绑定工具
+    /// </summary>
     public readonly struct CallerHelper
     {
-        public readonly object target;
-        public readonly MethodInfo method;
+        internal readonly object target;
+        internal readonly MethodInfo method;
         private readonly object[] parameters;
         private readonly Type[] parameterSourceTypes;
         private readonly RainType[] parameterTypes;
         private readonly FieldInfo[] returnValueFields;
         private readonly RainType[] returnTypes;
         private readonly OnCaller caller;
+        /// <summary>
+        /// 静态函数
+        /// </summary>
+        /// <param name="method">函数</param>
         public CallerHelper(MethodInfo method) : this(null, method) { }
+        /// <summary>
+        /// 实例函数
+        /// </summary>
+        /// <param name="instance">实例对象</param>
+        /// <param name="method">函数</param>
         public CallerHelper(object instance, MethodInfo method)
         {
             target = instance;
@@ -317,10 +478,23 @@ namespace RainLanguage
                 caller = null;
             }
         }
+        /// <summary>
+        /// 通过函数名字自动查找函数
+        /// </summary>
+        /// <typeparam name="T">目标类型</typeparam>
+        /// <param name="functionName">函数名</param>
+        /// <returns></returns>
         public static CallerHelper Create<T>(string functionName)
         {
             return Create<T>(null, functionName);
         }
+        /// <summary>
+        /// 通过函数名字自动查找函数
+        /// </summary>
+        /// <typeparam name="T">目标类型</typeparam>
+        /// <param name="instance">实例对象</param>
+        /// <param name="functionName">函数名</param>
+        /// <returns></returns>
         public static CallerHelper Create<T>(object instance, string functionName)
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
@@ -449,6 +623,11 @@ namespace RainLanguage
             }
             return null;
         }
+        /// <summary>
+        /// native函数调用
+        /// </summary>
+        /// <param name="kernel">虚拟机</param>
+        /// <param name="caller">调用</param>
         public void OnCaller(RainLanguageAdapter.RainKernel kernel, RainLanguageAdapter.RainCaller caller)
         {
             if (this.caller != null) this.caller(kernel, caller);
@@ -649,36 +828,103 @@ namespace RainLanguage
             return 0;
         }
     }
+    /// <summary>
+    /// 实数
+    /// </summary>
     [Serializable, StructLayout(LayoutKind.Sequential)]
     public readonly struct Real
     {
 #if FIXED_REAL
+        /// <summary>
+        /// 二进制值
+        /// </summary>
         public readonly long value;
+        /// <summary>
+        /// 根据二进制值创建实数
+        /// </summary>
+        /// <param name="value">值</param>
         public Real(long value) { this.value = value; }
+        /// <summary>
+        /// 根据浮点数值创建实数
+        /// </summary>
+        /// <param name="value">浮点数值</param>
         public Real(double value) { this.value = (long)(value * ratio); }
         const long ratio = 0x10000;
+        /// <summary>
+        /// 实数转浮点数
+        /// </summary>
+        /// <param name="value">实数</param>
         public static implicit operator double(Real value)
         {
             return (double)value.value / ratio;
         }
+        /// <summary>
+        /// 浮点数转实数
+        /// </summary>
+        /// <param name="value"></param>
         public static implicit operator Real(double value)
         {
             return new Real(value);
         }
 #else
+        /// <summary>
+        /// 值
+        /// </summary>
         public readonly double value;
+        /// <summary>
+        /// 实数
+        /// </summary>
+        /// <param name="value">值</param>
         public Real(double value) { this.value = value; }
+        /// <summary>
+        /// 实数到值的默认转换
+        /// </summary>
+        /// <param name="value">实数</param>
         public static implicit operator double(Real value) { return value.value; }
+        /// <summary>
+        /// 值到实数的默认转换
+        /// </summary>
+        /// <param name="value"></param>
         public static implicit operator Real(double value) { return new Real(value); }
 #endif
     }
+    /// <summary>
+    /// 二维向量
+    /// </summary>
     [Serializable, StructLayout(LayoutKind.Sequential)]
-    public struct Real2 { public Real x, y; }
+    public struct Real2
+    {
+        /// <summary>
+        /// 向量各坐标轴的值
+        /// </summary>
+        public Real x, y;
+    }
+    /// <summary>
+    /// 三维向量
+    /// </summary>
     [Serializable, StructLayout(LayoutKind.Sequential)]
-    public struct Real3 { public Real x, y, z; }
+    public struct Real3
+    {
+        /// <summary>
+        /// 向量各坐标轴的值
+        /// </summary>
+        public Real x, y, z;
+    }
+    /// <summary>
+    /// 四维向量
+    /// </summary>
     [Serializable, StructLayout(LayoutKind.Sequential)]
-    public struct Real4 { public Real x, y, z, w; }
-    public unsafe class RainLanguageAdapter
+    public struct Real4
+    {
+        /// <summary>
+        /// 向量各坐标轴的值
+        /// </summary>
+        public Real x, y, z, w;
+    }
+    /// <summary>
+    /// 雨言适配器
+    /// </summary>
+    public static unsafe class RainLanguageAdapter
     {
         private const string RainLanguageDLLName = "RainLanguage";
         private static T* AllocMemory<T>(int size) where T : unmanaged
@@ -733,15 +979,53 @@ namespace RainLanguage
                 this.errorLevel = errorLevel;
             }
         }
+        /// <summary>
+        /// 编译产物
+        /// </summary>
         public class Product : IDisposable
         {
             private void* product;
-            public Product(void* product) { this.product = product; }
+            internal Product(void* product) { this.product = product; }
+            /// <summary>
+            /// 错误等级
+            /// </summary>
             public RainErrorLevel ErrorLevel { get { return (RainErrorLevel)ProductGetErrorLevel(product); } }
+            /// <summary>
+            /// 获取错误信息数量
+            /// </summary>
+            /// <param name="level">错误等级</param>
+            /// <returns>数量</returns>
             public uint GetErrorCount(RainErrorLevel level) { return ProductGetErrorCount(product, (uint)level); }
+            /// <summary>
+            /// 获取错误信息
+            /// </summary>
+            /// <param name="level">错误等级</param>
+            /// <param name="index">错误信息下标</param>
+            /// <returns>错误信息</returns>
             public ErrorMessage GetErrorMessage(RainErrorLevel level, uint index) { return new ErrorMessage(ProductGetError(product, (uint)level, index)); }
-            public RainLibrary GetLibrary() { return new RainLibraryCopy(ProductGetLibrary(product)); }
-            public RainProgramDatabase GetProgramDatabase() { return new RainProgramDatabaseCopy(ProductGetRainProgramDatabase(product)); }
+            /// <summary>
+            /// 获取编译后的库
+            /// </summary>
+            /// <returns>库</returns>
+            public RainLibrary GetLibrary()
+            {
+                var pLib = ProductGetLibrary(product);
+                if (pLib == null) return null;
+                else return new RainLibraryCopy(pLib);
+            }
+            /// <summary>
+            /// 获取编译后的pdb数据
+            /// </summary>
+            /// <returns>pdb数据</returns>
+            public RainProgramDatabase GetProgramDatabase()
+            {
+                var pPdb = ProductGetRainProgramDatabase(product);
+                if (pPdb == null) return null;
+                else return new RainProgramDatabaseCopy(pPdb);
+            }
+            /// <summary>
+            /// 释放编译产物
+            /// </summary>
             public void Dispose()
             {
                 if (product == null) return;
@@ -780,13 +1064,19 @@ namespace RainLanguage
             }
             public static bool operator !=(Product left, Product right) { return !(left == right); }
         }
+        /// <summary>
+        /// 错误信息
+        /// </summary>
         public class ErrorMessage : IDisposable
         {
             private void* msg;
-            public ErrorMessage(void* msg)
+            internal ErrorMessage(void* msg)
             {
                 this.msg = msg;
             }
+            /// <summary>
+            /// 错误所在的代码路径
+            /// </summary>
             public string Path
             {
                 get
@@ -795,6 +1085,9 @@ namespace RainLanguage
                         return str.Value;
                 }
             }
+            /// <summary>
+            /// 错误详细信息
+            /// </summary>
             public ErrorMessageDetail Detail
             {
                 get
@@ -802,6 +1095,9 @@ namespace RainLanguage
                     return RainErrorMessageGetDetail(msg);
                 }
             }
+            /// <summary>
+            /// 额外信息
+            /// </summary>
             public string ExteraMsg
             {
                 get
@@ -810,6 +1106,9 @@ namespace RainLanguage
                         return str.Value;
                 }
             }
+            /// <summary>
+            /// 销毁信息
+            /// </summary>
             public void Dispose()
             {
                 if (msg == null) return;
@@ -844,18 +1143,27 @@ namespace RainLanguage
             }
             public static bool operator !=(ErrorMessage left, ErrorMessage right) { return !(left == right); }
         }
+        /// <summary>
+        /// 库
+        /// </summary>
         public class RainLibrary : IDisposable
         {
-            private void* library;
-            protected RainLibrary(void* library)
+            internal void* library;
+            internal RainLibrary(void* library)
             {
                 this.library = library;
             }
+            /// <summary>
+            /// 序列化
+            /// </summary>
+            /// <returns>序列化后的二进制数据</returns>
             public RainBuffer Serialize()
             {
                 return new RainBuffer(SerializeRainLibrary(library));
             }
-            internal void* GetSource() { return library; }
+            /// <summary>
+            /// 销毁库
+            /// </summary>
             public virtual void Dispose()
             {
                 if (library == null) return;
@@ -864,6 +1172,11 @@ namespace RainLanguage
                 GC.SuppressFinalize(this);
             }
             ~RainLibrary() { Dispose(); }
+            /// <summary>
+            /// 根据二进制数据创建库(反序列化)
+            /// </summary>
+            /// <param name="data">数据</param>
+            /// <returns>库</returns>
             public static RainLibrary Create(byte[] data)
             {
                 return new RainLibrary(InternalCreate(data));
@@ -902,24 +1215,39 @@ namespace RainLanguage
             internal RainLibraryCopy(void* library) : base(library) { }
             public override void Dispose() { }
         }
+        /// <summary>
+        /// 调试信息数据
+        /// </summary>
         public class RainProgramDatabase : IDisposable
         {
             private void* database;
-            protected RainProgramDatabase(void* database)
+            internal RainProgramDatabase(void* database)
             {
                 this.database = database;
             }
+            /// <summary>
+            /// 序列化
+            /// </summary>
+            /// <returns>序列化后的二进制数据</returns>
             public RainBuffer Serialize()
             {
                 return new RainBuffer(SerializeRainProgramDatabase(database));
             }
-            public void* GetSource() { return database; }
+            /// <summary>
+            /// 解析指令地址所在的文件和文件行数
+            /// </summary>
+            /// <param name="instructAddress">指令地址</param>
+            /// <param name="file">文件</param>
+            /// <param name="line">行数</param>
             public void GetPosition(uint instructAddress, out string file, out uint line)
             {
                 RainProgramDatabaseGetPosition(database, instructAddress, out var filePointer, out line);
                 using (var nativeString = new NativeString(filePointer))
                     file = nativeString.Value;
             }
+            /// <summary>
+            /// 销毁数据
+            /// </summary>
             public virtual void Dispose()
             {
                 if (database == null) return;
@@ -928,6 +1256,11 @@ namespace RainLanguage
                 GC.SuppressFinalize(this);
             }
             ~RainProgramDatabase() { Dispose(); }
+            /// <summary>
+            /// 根据二进制数据创建调试信息（反序列化）
+            /// </summary>
+            /// <param name="data">数据</param>
+            /// <returns>调试信息</returns>
             public static RainProgramDatabase Create(byte[] data)
             {
                 return new RainProgramDatabase(InternalCreate(data));
@@ -965,7 +1298,7 @@ namespace RainLanguage
         }
         private class RainProgramDatabaseCopy : RainProgramDatabase
         {
-            public RainProgramDatabaseCopy(void* database) : base(database) { }
+            internal RainProgramDatabaseCopy(void* database) : base(database) { }
             public override void Dispose() { }
         }
         [StructLayout(LayoutKind.Sequential)]
@@ -1036,15 +1369,21 @@ namespace RainLanguage
             }
             public static bool operator !=(NativeString left, NativeString right) { return !(left == right); }
         }
+        /// <summary>
+        /// 二进制数据
+        /// </summary>
         public class RainBuffer : IDisposable
         {
             private void* value;
             private byte[] result;
-            public RainBuffer(void* value)
+            internal RainBuffer(void* value)
             {
                 this.value = value;
                 result = null;
             }
+            /// <summary>
+            /// 数据
+            /// </summary>
             public byte[] Data
             {
                 get
@@ -1059,6 +1398,9 @@ namespace RainLanguage
                     return result;
                 }
             }
+            /// <summary>
+            /// 销毁数据
+            /// </summary>
             public void Dispose()
             {
                 if (value == null) return;
@@ -1068,11 +1410,11 @@ namespace RainLanguage
             }
             ~RainBuffer() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainBufferGetData", CallingConvention = CallingConvention.Cdecl)]
-            public extern static byte* RainBufferGetData(void* value);
+            internal extern static byte* RainBufferGetData(void* value);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainBufferGetCount", CallingConvention = CallingConvention.Cdecl)]
-            public extern static uint RainBufferGetCount(void* value);
+            internal extern static uint RainBufferGetCount(void* value);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainBuffer", CallingConvention = CallingConvention.Cdecl)]
-            public extern static void DeleteRainBuffer(void* value);
+            internal extern static void DeleteRainBuffer(void* value);
 
             public override bool Equals(object obj)
             {
@@ -1137,14 +1479,33 @@ namespace RainLanguage
                 this.onExceptionExit = onExceptionExit;
             }
         }
+        /// <summary>
+        /// 虚拟机
+        /// </summary>
         public abstract class RainKernel : IDisposable
         {
-            private void* kernel;
-            public RainKernel(void* kernel)
+            internal void* kernel;
+            internal RainKernel(void* kernel)
             {
                 this.kernel = kernel;
             }
-            public KernelState State { get { return KernelGetState(kernel); } }
+            /// <summary>
+            /// 获取虚拟机状态
+            /// </summary>
+            /// <returns>虚拟机状态</returns>
+            public KernelState GetState()
+            {
+                return KernelGetState(kernel);
+            }
+            /// <summary>
+            /// 查找函数
+            /// </summary>
+            /// <remarks>
+            /// 只能查找全局函数，函数名可以用‘.’来分割命名空间名从而实现更精确的查找
+            /// </remarks>
+            /// <param name="name">函数名</param>
+            /// <param name="allowNoPublic">允许查找非公开函数</param>
+            /// <returns>第一个找到的函数的句柄，如果没找到则返回null</returns>
             public RainFunction FindFunction(string name, bool allowNoPublic = false)
             {
                 fixed (char* pointer = name)
@@ -1154,6 +1515,15 @@ namespace RainLanguage
                     return new RainFunction(function);
                 }
             }
+            /// <summary>
+            /// 查找函数
+            /// </summary>
+            /// <remarks>
+            /// 只能查找全局函数，函数名可以用‘.’来分割命名空间名从而实现更精确的查找
+            /// </remarks>
+            /// <param name="name">函数名</param>
+            /// <param name="allowNoPublic">允许查找非公开函数</param>
+            /// <returns>包含找到的所有函数的句柄，如果没找到则返回null</returns>
             public RainFunctions FindFunctions(string name, bool allowNoPublic = false)
             {
                 fixed (char* pointer = name)
@@ -1163,20 +1533,30 @@ namespace RainLanguage
                     return new RainFunctions(function);
                 }
             }
+            /// <summary>
+            /// 触发虚拟机GC
+            /// </summary>
+            /// <param name="full">true:全量GC，false:执行快速GC（只回收年轻代）</param>
+            /// <returns>本次垃圾回收释放的托管堆大小</returns>
             public uint GC(bool full)
             {
                 return KernelGC(kernel, full);
             }
+            /// <summary>
+            /// 虚拟机的逻辑更新
+            /// </summary>
             public void Update()
             {
                 KernelUpdate(kernel);
             }
-            public void EnableDebug(DataLoader progressDatabaseLoader)
-            {
-                RegistDebugger(kernel,
-                    name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name))),
-                    RainProgramDatabase.DeleteRainProgramDatabase);
-            }
+            /// <summary>
+            /// 启用调试功能
+            /// </summary>
+            /// <param name="progressDatabaseLoader"></param>
+            public abstract void EnableDebug(DataLoader progressDatabaseLoader);
+            /// <summary>
+            /// 销毁虚拟机
+            /// </summary>
             public virtual void Dispose()
             {
                 if (kernel == null) return;
@@ -1217,37 +1597,70 @@ namespace RainLanguage
         }
         private class RainKernelMain : RainKernel
         {
-            private readonly object[] references;
-            public RainKernelMain(void* kernel, params object[] references) : base(kernel)
+            private readonly List<object> references;
+            internal RainKernelMain(void* kernel, List<object> references) : base(kernel)
             {
                 this.references = references;
+            }
+
+            public override void EnableDebug(DataLoader progressDatabaseLoader)
+            {
+                ExternProgramDatabaseLoader loader = name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name)));
+                references.Add(loader);
+                RegistDebugger(kernel, loader, RainProgramDatabase.DeleteRainProgramDatabase);
             }
         }
         private class RainKernelCopy : RainKernel
         {
-            public RainKernelCopy(void* kernel) : base(kernel) { }
+            internal RainKernelCopy(void* kernel) : base(kernel) { }
             public override void Dispose() { }
+
+            public override void EnableDebug(DataLoader progressDatabaseLoader)
+            {
+                throw new InvalidOperationException("不能通过虚拟机副本启用该功能，因为创建的lambda传给c++后在c#没有引用会被GC掉而导致空指针报错");
+            }
         }
+        /// <summary>
+        /// 函数句柄
+        /// </summary>
         public class RainFunction : IDisposable
         {
             private void* function;
-            public RainFunction(void* function)
+            internal RainFunction(void* function)
             {
                 this.function = function;
             }
+            /// <summary>
+            /// 判断是否是一个有效的函数
+            /// </summary>
             public bool IsValid { get { return RainFunctionIsValid(function); } }
+            /// <summary>
+            /// 获取参数类型列表
+            /// </summary>
+            /// <returns>类型列表</returns>
             public RainTypes GetParameters()
             {
                 return new RainTypes(RainFunctionGetParameters(function));
             }
+            /// <summary>
+            /// 获取返回值类型列表
+            /// </summary>
+            /// <returns>类型列表</returns>
             public RainTypes GetReturns()
             {
                 return new RainTypes(RainFunctionGetReturns(function));
             }
+            /// <summary>
+            /// 创建一个调用
+            /// </summary>
+            /// <returns>调用</returns>
             public RainInvoker CreateInvoker()
             {
                 return new RainInvoker(RainFunctionCreateInvoker(function));
             }
+            /// <summary>
+            /// 销毁函数句柄
+            /// </summary>
             public void Dispose()
             {
                 if (function == null) return;
@@ -1284,14 +1697,25 @@ namespace RainLanguage
             }
             public static bool operator !=(RainFunction left, RainFunction right) { return !(left == right); }
         }
+        /// <summary>
+        /// 函数句柄列表
+        /// </summary>
         public class RainFunctions : IDisposable
         {
             private void* functions;
-            public RainFunctions(void* functions)
+            internal RainFunctions(void* functions)
             {
                 this.functions = functions;
             }
+            /// <summary>
+            /// 句柄数量
+            /// </summary>
             public uint Count { get { return RainFunctionsGetCount(functions); } }
+            /// <summary>
+            /// 获取函数句柄
+            /// </summary>
+            /// <param name="index">句柄下标</param>
+            /// <returns>函数句柄</returns>
             public RainFunction this[uint index]
             {
                 get
@@ -1301,6 +1725,9 @@ namespace RainLanguage
                     return new RainFunction(function);
                 }
             }
+            /// <summary>
+            /// 销毁函数句柄列表
+            /// </summary>
             public void Dispose()
             {
                 if (functions == null) return;
@@ -1333,15 +1760,29 @@ namespace RainLanguage
             }
             public static bool operator !=(RainFunctions left, RainFunctions right) { return !(left == right); }
         }
+        /// <summary>
+        /// 类型列表
+        /// </summary>
         public class RainTypes : IDisposable
         {
             private void* types;
-            public RainTypes(void* types)
+            internal RainTypes(void* types)
             {
                 this.types = types;
             }
+            /// <summary>
+            /// 类型数量
+            /// </summary>
             public uint Count { get { return RainTypesGetCount(types); } }
+            /// <summary>
+            /// 类型
+            /// </summary>
+            /// <param name="index">索引</param>
+            /// <returns>类型</returns>
             public RainType this[uint index] { get { return (RainType)RainTypesGetType(types, index); } }
+            /// <summary>
+            /// 销毁类型列表
+            /// </summary>
             public void Dispose()
             {
                 if (types == null) return;
@@ -1374,89 +1815,276 @@ namespace RainLanguage
             }
             public static bool operator !=(RainTypes left, RainTypes right) { return !(left == right); }
         }
+        /// <summary>
+        /// 调用
+        /// </summary>
         public class RainInvoker : IDisposable
         {
+            /// <summary>
+            /// 调用状态
+            /// </summary>
+            public enum InvaokerState
+            {
+                /// <summary>
+                /// 未开始
+                /// </summary>
+                Unstart,
+                /// <summary>
+                /// 运行中
+                /// </summary>
+                Running,
+                /// <summary>
+                /// 已完成
+                /// </summary>
+                Completed,
+                /// <summary>
+                /// 正在异常退出
+                /// </summary>
+                Aborted,
+                /// <summary>
+                /// 无效
+                /// </summary>
+                Invalid,
+            }
             private void* invoker;
-            public RainInvoker(void* invoker)
+            internal RainInvoker(void* invoker)
             {
                 this.invoker = invoker;
             }
+            /// <summary>
+            /// 调用的实力id
+            /// </summary>
+            /// <remarks>
+            /// 雨言中kernel.System.GetCurrentTaskInstantID()返回的值
+            /// </remarks>
             public ulong InstanceID { get { return InvokerWrapperGetInstanceID(invoker); } }
+            /// <summary>
+            /// 是否是个有效的调用
+            /// </summary>
             public bool IsValid { get { return InvokerWrapperIsValid(invoker); } }
-            public byte State { get { return InvokerWrapperGetState(invoker); } }
-            public bool IsPause { get { return InvokerWrapperIsPause(invoker); } }
+            /// <summary>
+            /// 调用的状态
+            /// </summary>
+            /// <remarks>
+            /// 参考雨言中的kernel.TaskState枚举
+            /// </remarks>
+            public InvaokerState State { get { return (InvaokerState)InvokerWrapperGetState(invoker); } }
+            /// <summary>
+            /// 调用被暂停
+            /// </summary>
+            public bool IsPause
+            {
+                get
+                {
+                    if (State != InvaokerState.Running) throw new InvalidOperationException("当前调用的状态不是：Running");
+                    return InvokerWrapperIsPause(invoker);
+                }
+            }
+            /// <summary>
+            /// 获取异常信息
+            /// </summary>
+            /// <returns></returns>
             public string GetExitMessage()
             {
+                if (!IsValid) throw new InvalidOperationException("当前调用已失效");
                 using (var nativeString = new NativeString(Extern_InvokerWrapperGetExitMessage(invoker)))
                     return nativeString.Value;
             }
+            /// <summary>
+            /// 开始执行调用
+            /// </summary>
+            /// <param name="immediately"></param>
+            /// <param name="ignoreWait"></param>
             public void Start(bool immediately, bool ignoreWait)
             {
+                if (State != InvaokerState.Unstart) throw new InvalidOperationException("当前调用的状态不是：Unstart");
                 InvokerWrapperStart(invoker, immediately, ignoreWait);
             }
+            /// <summary>
+            /// 暂停
+            /// </summary>
             public void Pause()
             {
+                if (State != InvaokerState.Running) throw new InvalidOperationException("当前调用的状态不是：Running");
                 InvokerWrapperPause(invoker);
             }
+            /// <summary>
+            /// 恢复
+            /// </summary>
             public void Resume()
             {
+                if (State != InvaokerState.Running) throw new InvalidOperationException("当前调用的状态不是：Running");
                 InvokerWrapperResume(invoker);
             }
+            /// <summary>
+            /// 停止调用的执行
+            /// </summary>
+            /// <param name="error">停止执行时触发的异常信息（必须非空，否则操作无效）</param>
             public void Abort(string error)
             {
+                if (string.IsNullOrEmpty(error)) return;
+                if (State != InvaokerState.Running) throw new InvalidOperationException("当前调用的状态不是：Running");
                 fixed (char* pointer = error)
                 {
                     InvokerWrapperAbort(invoker, pointer);
                 }
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public bool GetBoolReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetBoolReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public byte GetByteReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetByteReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public char GetCharReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetCharReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public long GetIntegerReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetIntegerReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real GetRealReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetRealReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real2 GetReal2ReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetReal2ReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real3 GetReal3ReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetReal3ReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real4 GetReal4ReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetReal4ReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public long GetEnumReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetEnumValueReturnValue(invoker, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public string GetEnumNameReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 using (var nativeString = new NativeString(InvokerWrapperGetEnumNameReturnValue(invoker, index)))
                     return nativeString.Value;
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public string GetStringReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 using (var nativeString = new NativeString(InvokerWrapperGetStringReturnValue(invoker, index)))
                     return nativeString.Value;
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public ulong GetEntityReturnValue(uint index)
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 return InvokerWrapperGetEntityReturnValue(invoker, index);
             }
             private uint GetArrayReturnValueLength(uint index)
@@ -1466,48 +2094,129 @@ namespace RainLanguage
             private delegate T* ArrayReturnValueGetter<T>(void* invoker, uint index) where T : unmanaged;
             private T[] GetArrayReturnValue<T>(ArrayReturnValueGetter<T> getter, uint index) where T : unmanaged
             {
+                if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
                 var pointer = getter(invoker, index);
                 var result = new T[GetArrayReturnValueLength(index)];
                 for (var i = 0; i < result.Length; i++) result[i] = pointer[i];
                 FreeArray(pointer);
                 return result;
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public bool[] GetBoolsReturnValue(uint index)
             {
                 return GetArrayReturnValue<bool>(InvokerWapperGetBoolArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public byte[] GetBytesReturnValue(uint index)
             {
                 return GetArrayReturnValue<byte>(InvokerWapperGetByteArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public char[] GetCharsReturnValue(uint index)
             {
                 return GetArrayReturnValue<char>(InvokerWapperGetCharArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public long[] GetIntegersReturnValue(uint index)
             {
                 return GetArrayReturnValue<long>(InvokerWapperGetIntegerArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real[] GetRealsReturnValue(uint index)
             {
                 return GetArrayReturnValue<Real>(InvokerWapperGetRealArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real2[] GetReal2sReturnValue(uint index)
             {
                 return GetArrayReturnValue<Real2>(InvokerWapperGetReal2ArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real3[] GetReal3sReturnValue(uint index)
             {
                 return GetArrayReturnValue<Real3>(InvokerWapperGetReal3ArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public Real4[] GetReal4sReturnValue(uint index)
             {
                 return GetArrayReturnValue<Real4>(InvokerWapperGetReal4ArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public long[] GetEnumsReturnValue(uint index)
             {
                 return GetArrayReturnValue<long>(InvokerWapperGetEnumValueArrayReturnValue, index);
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public string[] GetEnumNamesReturnValue(uint index)
             {
                 var pointer = InvokerWapperGetEnumNameArrayReturnValue(invoker, index);
@@ -1516,6 +2225,14 @@ namespace RainLanguage
                 FreeArray(pointer);
                 return result;
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public string[] GetStringsReturnValue(uint index)
             {
                 var pointer = InvokerWapperGetStringArrayReturnValue(invoker, index);
@@ -1524,94 +2241,279 @@ namespace RainLanguage
                 FreeArray(pointer);
                 return result;
             }
+            /// <summary>
+            /// 获取返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">返回值索引</param>
+            /// <returns>值</returns>
             public ulong[] GetEntitysReturnValue(uint index)
             {
                 return GetArrayReturnValue<ulong>(InvokerWapperGetEntityArrayReturnValue, index);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetBoolParameter(uint index, bool value)
             {
+                if (State != InvaokerState.Unstart) throw new InvalidOperationException("当前调用的状态不是：Unstart");
                 InvokerWapperSetBoolParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetByteParameter(uint index, byte value)
             {
                 InvokerWapperSetByteParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetCharParameter(uint index, char value)
             {
                 InvokerWapperSetCharParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetIntegerParameter(uint index, long value)
             {
                 InvokerWapperSetIntegerParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetRealParameter(uint index, Real value)
             {
                 InvokerWapperSetRealParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetReal2Parameter(uint index, Real2 value)
             {
                 InvokerWapperSetReal2Parameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetReal3Parameter(uint index, Real3 value)
             {
                 InvokerWapperSetReal3Parameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetReal4Parameter(uint index, Real4 value)
             {
                 InvokerWapperSetReal4Parameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetEnumValueParameter(uint index, long value)
             {
                 InvokerWapperSetEnumValueParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetEnumNameParameter(uint index, string name)
             {
                 fixed (char* pname = name) InvokerWapperSetEnumNameParameter(invoker, index, pname);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetStringParameter(uint index, string value)
             {
                 fixed (char* pvalue = value) InvokerWapperSetStringParameter(invoker, index, pvalue);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetEntityParameter(uint index, ulong value)
             {
                 InvokerWapperSetEntityParameter(invoker, index, value);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetBoolParameters(uint index, bool[] value)
             {
                 fixed (bool* pvalue = value) InvokerWapperSetBoolParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetByteParameters(uint index, byte[] value)
             {
                 fixed (byte* pvalue = value) InvokerWapperSetByteParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetCharParameters(uint index, char[] value)
             {
                 fixed (char* pvalue = value) InvokerWapperSetCharParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetIntegerParameters(uint index, long[] value)
             {
                 fixed (long* pvalue = value) InvokerWapperSetIntegerParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetRealParameters(uint index, Real[] value)
             {
                 fixed (Real* pvalue = value) InvokerWapperSetRealParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetReal2Parameters(uint index, Real2[] value)
             {
                 fixed (Real2* pvalue = value) InvokerWapperSetReal2Parameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetReal3Parameters(uint index, Real3[] value)
             {
                 fixed (Real3* pvalue = value) InvokerWapperSetReal3Parameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetReal4Parameters(uint index, Real4[] value)
             {
                 fixed (Real4* pvalue = value) InvokerWapperSetReal4Parameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetEnumValueParameter(uint index, long[] value)
             {
                 fixed (long* pvalue = value) InvokerWapperSetEnumValueParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetEnumNameParameters(uint index, string[] value)
             {
                 char** values = (char**)Marshal.AllocHGlobal(value.Length * sizeof(char*));
@@ -1622,6 +2524,14 @@ namespace RainLanguage
                 for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
                 Marshal.FreeHGlobal((IntPtr)values);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetStringParameters(uint index, string[] value)
             {
                 char** values = (char**)Marshal.AllocHGlobal(value.Length * sizeof(char*));
@@ -1632,10 +2542,21 @@ namespace RainLanguage
                 for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
                 Marshal.FreeHGlobal((IntPtr)values);
             }
+            /// <summary>
+            /// 设置参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">参数索引</param>
+            /// <param name="value">参数值</param>
             public void SetEntityParameters(uint index, ulong[] value)
             {
                 fixed (ulong* pvalue = value) InvokerWapperSetEntityParameters(invoker, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 销毁调用
+            /// </summary>
             public void Dispose()
             {
                 if (invoker == null) return;
@@ -1787,66 +2708,165 @@ namespace RainLanguage
             }
             public static bool operator !=(RainInvoker left, RainInvoker right) { return !(left == right); }
         }
+        /// <summary>
+        /// native调用
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         public readonly struct RainCaller
         {
             private readonly void* caller;
-            public RainCaller(void* caller)
+            internal RainCaller(void* caller)
             {
                 this.caller = caller;
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public bool GetBoolParameter(uint index)
             {
                 return CallerWrapperGetBoolParameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public byte GetByteParameter(uint index)
             {
                 return CallerWrapperGetByteParameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public char GetCharParameter(uint index)
             {
                 return CallerWrapperGetCharParameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public long GetIntegerParameter(uint index)
             {
                 return CallerWrapperGetIntegerParameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real GetRealParameter(uint index)
             {
                 return CallerWrapperGetRealParameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real2 GetReal2Parameter(uint index)
             {
                 return CallerWrapperGetReal2Parameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real3 GetReal3Parameter(uint index)
             {
                 return CallerWrapperGetReal3Parameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real4 GetReal4Parameter(uint index)
             {
                 return CallerWrapperGetReal4Parameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public long GetEnumValueParameter(uint index)
             {
                 return CallerWrapperGetEnumValueParameter(caller, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public string GetEnumNameParameter(uint index)
             {
                 using (var name = new NativeString(CallerWrapperGetEnumNameParameter(caller, index)))
                     return name.Value;
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public string GetStringParameter(uint index)
             {
                 using (var value = new NativeString(CallerWrapperGetStringParameter(caller, index)))
                     return value.Value;
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public ulong GetEntityParameter(uint index)
             {
                 return CallerWrapperGetEntityParameter(caller, index);
             }
             private delegate T* CallerParametersGetter<T>(void* caller, uint index) where T : unmanaged;
-            public uint GetArrayParameterLength(uint index)
+            private uint GetArrayParameterLength(uint index)
             {
                 return CallerWrapperGetArrayParameterLength(caller, index);
             }
@@ -1858,42 +2878,122 @@ namespace RainLanguage
                 FreeArray(pointer);
                 return result;
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public bool[] GetBoolsParameter(uint index)
             {
                 return GetParameters<bool>(CallerWrapperGetBoolArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public byte[] GetBytesParameter(uint index)
             {
                 return GetParameters<byte>(CallerWrapperGetByteArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public char[] GetCharsParameter(uint index)
             {
                 return GetParameters<char>(CallerWrapperGetCharArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public long[] GetIntegersParameter(uint index)
             {
                 return GetParameters<long>(CallerWrapperGetIntegerArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real[] GetRealsParameter(uint index)
             {
                 return GetParameters<Real>(CallerWrapperGetRealArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real2[] GetReal2sParameter(uint index)
             {
                 return GetParameters<Real2>(CallerWrapperGetReal2ArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real3[] GetReal3sParameter(uint index)
             {
                 return GetParameters<Real3>(CallerWrapperGetReal3ArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public Real4[] GetReal4sParameter(uint index)
             {
                 return GetParameters<Real4>(CallerWrapperGetReal4ArrayParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public long[] GetEnumValuesParameter(uint index)
             {
                 return GetParameters<long>(CallerWrapperGetEnumArrayValueParameter, index);
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public string[] GetEnumNamesParameter(uint index)
             {
                 var result = new string[GetArrayParameterLength(index)];
@@ -1902,6 +3002,14 @@ namespace RainLanguage
                 FreeArray(values);
                 return result;
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public string[] GetStringsParameter(uint index)
             {
                 var result = new string[GetArrayParameterLength(index)];
@@ -1910,94 +3018,278 @@ namespace RainLanguage
                 FreeArray(values);
                 return result;
             }
+            /// <summary>
+            /// 获取参数
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <returns>参数值</returns>
             public ulong[] GetEntitysParameter(uint index)
             {
                 return GetParameters<ulong>(CallerWrapperGetEntityArrayParameter, index);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetBoolReturnValue(uint index, bool value)
             {
                 CallerWrapperSetBoolReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetByteReturnValue(uint index, byte value)
             {
                 CallerWrapperSetByteReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetCharReturnValue(uint index, char value)
             {
                 CallerWrapperSetCharReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetIntegerReturnValue(uint index, long value)
             {
                 CallerWrapperSetIntegerReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetRealReturnValue(uint index, Real value)
             {
                 CallerWrapperSetRealReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetReal2ReturnValue(uint index, Real2 value)
             {
                 CallerWrapperSetReal2ReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetReal3ReturnValue(uint index, Real3 value)
             {
                 CallerWrapperSetReal3ReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetReal4ReturnValue(uint index, Real4 value)
             {
                 CallerWrapperSetReal4ReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetEnumValueReturnValue(uint index, long value)
             {
                 CallerWrapperSetEnumValueReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetEnumNameReturnValue(uint index, string value)
             {
                 fixed (char* pvalue = value) CallerWrapperSetEnumNameReturnValue(caller, index, pvalue);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetStringReturnValue(uint index, string value)
             {
                 fixed (char* pvalue = value) CallerWrapperSetStringReturnValue(caller, index, pvalue);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetEntityReturnValue(uint index, ulong value)
             {
                 CallerWrapperSetEntityReturnValue(caller, index, value);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetBoolsReturnValue(uint index, bool[] value)
             {
                 fixed (bool* pvalue = value) CallerWrapperSetBoolReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetBytesReturnValue(uint index, byte[] value)
             {
                 fixed (byte* pvalue = value) CallerWrapperSetByteReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetCharsReturnValue(uint index, char[] value)
             {
                 fixed (char* pvalue = value) CallerWrapperSetCharReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetIntegersReturnValue(uint index, long[] value)
             {
                 fixed (long* pvalue = value) CallerWrapperSetIntegerReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetRealsReturnValue(uint index, Real[] value)
             {
                 fixed (Real* pvalue = value) CallerWrapperSetRealReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetReal2sReturnValue(uint index, Real2[] value)
             {
                 fixed (Real2* pvalue = value) CallerWrapperSetReal2ReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetReal3sReturnValue(uint index, Real3[] value)
             {
                 fixed (Real3* pvalue = value) CallerWrapperSetReal3ReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetReal4sReturnValue(uint index, Real4[] value)
             {
                 fixed (Real4* pvalue = value) CallerWrapperSetReal4ReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetEnumValuesReturnValue(uint index, long[] value)
             {
                 fixed (long* pvalue = value) CallerWrapperSetEnumValueReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetEnumNamesReturnValue(uint index, string[] names)
             {
                 var values = new char*[names.Length];
@@ -2005,6 +3297,14 @@ namespace RainLanguage
                 fixed (char** pvalues = values) CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)names.Length);
                 for (int i = 0; i < names.Length; i++) FreeMemory(values[i]);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetStringsReturnValue(uint index, string[] value)
             {
                 var values = new char*[value.Length];
@@ -2012,10 +3312,22 @@ namespace RainLanguage
                 fixed (char** pvalues = values) CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)value.Length);
                 for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
             }
+            /// <summary>
+            /// 设置返回值
+            /// </summary>
+            /// <remarks>
+            /// 注意：如果类型不对会导致程序直接崩溃
+            /// </remarks>
+            /// <param name="index">索引</param>
+            /// <param name="value">返回值</param>
             public void SetEntitysReturnValue(uint index, ulong[] value)
             {
                 fixed (ulong* pvalue = value) CallerWrapperSetEntityReturnValues(caller, index, pvalue, (uint)value.Length);
             }
+            /// <summary>
+            /// 设置异常信息
+            /// </summary>
+            /// <param name="message">异常信息（必须非空，否则操作会被忽略）</param>
             public void SetException(string message)
             {
                 fixed (char* pmsg = message) CallerWrapperSetException(caller, pmsg);
@@ -2126,6 +3438,9 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetException", CallingConvention = CallingConvention.Cdecl)]
             private extern static void CallerWrapperSetException(void* caller, char* value);
         }
+        /// <summary>
+        /// 清理虚拟机中所有缓存的静态数据
+        /// </summary>
 
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_ClearStaticCache", CallingConvention = CallingConvention.Cdecl)]
         public extern static void ClearStaticCache();
@@ -2165,13 +3480,18 @@ namespace RainLanguage
             }
             ~CodeLoadHelper() { Dispose(); }
         }
+        /// <summary>
+        /// 构建库
+        /// </summary>
+        /// <param name="parameter">参数</param>
+        /// <returns>编译产物</returns>
         public static Product BuildProduct(BuildParameter parameter)
         {
             fixed (char* name = parameter.name)
             {
                 return new Product(Build(new ExternBuildParameter(name, parameter.debug,
                     new CodeLoadHelper(parameter.files).LoadNext,
-                    libName => RainLibrary.InternalCreate(parameter.liibraryLoader(NativeString.GetString(libName))),
+                    libName => RainLibrary.InternalCreate(parameter.libraryLoader(NativeString.GetString(libName))),
                     RainLibrary.DeleteRainLibrary,
                     (uint)parameter.errorLevel)));
             }
@@ -2180,14 +3500,28 @@ namespace RainLanguage
         private extern static void* CreateKernel(ExternStartupParameter parameter);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CreateKernel2", CallingConvention = CallingConvention.Cdecl)]
         private extern static void* CreateKernel(ExternStartupParameter parameter, ExternProgramDatabaseLoader loader, ExternProgramDatabaseUnloader unloader);
+        /// <summary>
+        /// 创建虚拟机
+        /// </summary>
+        /// <param name="startupParameter">虚拟机启动参数</param>
+        /// <returns>虚拟机</returns>
         public static RainKernel CreateKernel(StartupParameter startupParameter)
         {
             return CreateKernel(startupParameter, null);
         }
+        /// <summary>
+        /// 创建虚拟机并启用调试功能
+        /// </summary>
+        /// <remarks>
+        /// 可以让调试器断点命中初始化逻辑
+        /// </remarks>
+        /// <param name="startupParameter">虚拟机启动参数</param>
+        /// <param name="progressDatabaseLoader">pdb文件加载器</param>
+        /// <returns>虚拟机</returns>
         public static RainKernel CreateKernel(StartupParameter startupParameter, DataLoader progressDatabaseLoader)
         {
             var libraries = new void*[startupParameter.libraries.Length];
-            for (int i = 0; i < startupParameter.libraries.Length; i++) libraries[i] = startupParameter.libraries[i].GetSource();
+            for (int i = 0; i < startupParameter.libraries.Length; i++) libraries[i] = startupParameter.libraries[i].library;
             fixed (void** plibraries = libraries)
             {
                 var references = new List<object>();
@@ -2198,21 +3532,21 @@ namespace RainLanguage
                 LibraryLoader libraryLoader = libName => RainLibrary.InternalCreate(startupParameter.libraryLoader(NativeString.GetString(libName)));
                 references.Add(libraryLoader);
                 ExternNativeCallerLoader nativeCallerLoader = (kernel, fullName, parameters, parameterCount) =>
-                    {
-                        var rainTypeParameters = new RainType[parameterCount];
-                        for (int i = 0; i < parameterCount; i++) rainTypeParameters[i] = (RainType)parameters[i];
-                        var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), fullName, rainTypeParameters);
-                        ExternOnCaller caller = (k, c) => onCaller(new RainKernelCopy(k), new RainCaller(c));
-                        references.Add(caller);
-                        return caller;
-                    };
+                {
+                    var rainTypeParameters = new RainType[parameterCount];
+                    for (int i = 0; i < parameterCount; i++) rainTypeParameters[i] = (RainType)parameters[i];
+                    var onCaller = startupParameter.callerLoader(new RainKernelCopy(kernel), fullName, rainTypeParameters);
+                    ExternOnCaller caller = (k, c) => onCaller(new RainKernelCopy(k), new RainCaller(c));
+                    references.Add(caller);
+                    return caller;
+                };
                 references.Add(nativeCallerLoader);
                 ExternExceptionExit onExceptionExit = (kernel, stackFrames, count, msg) =>
-                    {
-                        var frames = new RainStackFrame[count];
-                        for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(stackFrames[i].libName, stackFrames[i].functionName, stackFrames[i].address);
-                        startupParameter.onExceptionExit?.Invoke(new RainKernelCopy(kernel), frames, msg);
-                    };
+                {
+                    var frames = new RainStackFrame[count];
+                    for (int i = 0; i < count; i++) frames[i] = new RainStackFrame(stackFrames[i].libName, stackFrames[i].functionName, stackFrames[i].address);
+                    startupParameter.onExceptionExit?.Invoke(new RainKernelCopy(kernel), frames, msg);
+                };
                 references.Add(onExceptionExit);
 
                 var parameter = new ExternStartupParameter(plibraries, (uint)startupParameter.libraries.Length, startupParameter.seed, startupParameter.stringCapacity, startupParameter.entityCapacity,
@@ -2232,9 +3566,30 @@ namespace RainLanguage
         private delegate void ExternProgramDatabaseUnloader(void* database);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RegistDebugger", CallingConvention = CallingConvention.Cdecl)]
         private extern static void RegistDebugger(void* kernel, ExternProgramDatabaseLoader loader, ExternProgramDatabaseUnloader unloader);
+        /// <summary>
+        /// 分配内存
+        /// </summary>
+        /// <param name="size">字节数</param>
+        /// <returns>地址</returns>
         public delegate void* Alloc(uint size);
+        /// <summary>
+        /// 释放内存
+        /// </summary>
+        /// <param name="pointer">地址</param>
         public delegate void Free(void* pointer);
+        /// <summary>
+        /// 重新分配内存
+        /// </summary>
+        /// <param name="pointer">地址</param>
+        /// <param name="size">新的字节数</param>
+        /// <returns>新的内存地址</returns>
         public delegate void* Realloc(void* pointer, uint size);
+        /// <summary>
+        /// 设置内存分配器
+        /// </summary>
+        /// <param name="alloc">分配</param>
+        /// <param name="free">释放</param>
+        /// <param name="realloc">重新分配</param>
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SetMemoryAllocator", CallingConvention = CallingConvention.Cdecl)]
         public extern static void SetMemoryAllocator(Alloc alloc, Free free, Realloc realloc);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_FreeArray", CallingConvention = CallingConvention.Cdecl)]
