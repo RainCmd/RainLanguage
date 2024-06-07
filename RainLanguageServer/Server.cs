@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using RainLanguageServer.RainLanguage;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 
 namespace RainLanguageServer
 {
@@ -257,6 +258,54 @@ namespace RainLanguageServer
             }
             return Result<CodeLens[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
         }
+
+        private static readonly Regex regionRegex = new(@"^\s*//\s*region\b");
+        private static readonly Regex endregionRegex = new(@"^\s*//\s*endregion\b");
+        protected override Result<FoldingRange[], ResponseError> FoldingRange(FoldingRangeRequestParam param, CancellationToken token)
+        {
+            if (TryGetDoc(param.textDocument.uri, out var document))
+            {
+                var regions = new Stack<int>();
+                var result = new List<FoldingRange>();
+                var indents = new Stack<int>();
+                var lines = new Stack<int>();
+                var lastLine = -1;
+                for (var i = 0; i < document.LineCount; i++)
+                {
+                    var line = document[i];
+                    if (line.indent >= 0)
+                    {
+                        if (indents.Count > 0)
+                        {
+                            if (indents.Peek() < line.indent)
+                            {
+                                lines.Push(lastLine);
+                                indents.Push(line.indent);
+                            }
+                            else if (indents.Peek() > line.indent)
+                            {
+                                while (lines.Count > 0 && indents.Peek() > line.indent)
+                                {
+                                    result.Add(new FoldingRange() { startLine = lines.Pop(), endLine = lastLine });
+                                    indents.Pop();
+                                }
+                            }
+                        }
+                        else indents.Push(line.indent);
+                        lastLine = line.line;
+                    }
+                    else
+                    {
+                        var text = line.ToString();
+                        if (regionRegex.IsMatch(text)) regions.Push(line.line);
+                        else if (endregionRegex.IsMatch(text) && regions.Count > 0) result.Add(new FoldingRange() { endLine = line.line, startLine = regions.Pop() });
+                    }
+                }
+                while (lines.Count > 0) result.Add(new FoldingRange() { startLine = lines.Pop(), endLine = lastLine });
+                if (result.Count > 0) return Result<FoldingRange[], ResponseError>.Success([.. result]);
+            }
+            return Result<FoldingRange[], ResponseError>.Error(Message.ServerError(ErrorCodes.ServerCancelled));
+        }
         [JsonRpcMethod("rainlanguage/getSemanticTokens")]
         private Result<SemanticToken[], ResponseError> GetSemanticTokens(SemanticTokenParam param)
         {
@@ -340,11 +389,6 @@ namespace RainLanguageServer
                     }
                 }
             }
-        }
-
-        private static FoldingRange CreateFoldingRange(TextRange range)
-        {
-            return new FoldingRange() { startLine = range.start.Line.line, endLine = range.end.Line.line - 1, kind = FoldingRangeKind.Comment };
         }
 
         private readonly List<Diagnostic> diagnosticsHelper = [];
