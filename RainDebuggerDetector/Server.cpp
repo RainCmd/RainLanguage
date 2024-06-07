@@ -17,6 +17,7 @@ static SOCKET cSocket = INVALID_SOCKET;
 static sockaddr_in addr = {};
 static wstring projectName;
 static Debugger* debugger = nullptr;
+static thread::id threadId;
 static bool confirm = false;
 
 static RainString WS2RS(const wstring& src)
@@ -102,7 +103,9 @@ static bool OnCreateDebugger(const RainString& name, const RainDebuggerParameter
 	Send(cSocket, writer);
 	confirm = false;
 	Debugger* dbg = debugger;
-	while(!confirm && dbg && dbg == debugger) this_thread::sleep_for(chrono::milliseconds(10));
+	if(threadId != this_thread::get_id())
+		while(!confirm && dbg && dbg == debugger) 
+			this_thread::sleep_for(chrono::milliseconds(10));
 	return true;
 }
 
@@ -117,6 +120,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 	{
 		if(reader.ReadProto() == Proto::RRECV_Initialized)
 		{
+			threadId = this_thread::get_id();
 			CreateDebugger(WS2RS(projectName), OnCreateDebugger);
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Initialized);
@@ -131,9 +135,9 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RRECV_Initialized: break;
 		case Proto::RSEND_Initialized: break;
 		case Proto::SEND_Attached: break;
-		case Proto::RECV_Confirm: 
+		case Proto::RECV_Confirm:
 			confirm = true;
-		break;
+			break;
 		case Proto::RRECV_AddBreadks:
 		{
 			WritePackage writer;
