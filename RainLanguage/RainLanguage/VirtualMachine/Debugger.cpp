@@ -127,9 +127,20 @@ uint32 RainDebuggerVariable::MemberCount() const
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(!targetType.dimension)
 		{
-			RuntimeLibrary* library = FRAME->library->kernel->libraryAgency->GetLibrary(targetType.library);
+			LibraryAgency* libraryAgency = FRAME->library->kernel->libraryAgency;
+			RuntimeLibrary* library = libraryAgency->GetLibrary(targetType.library);
 			if(targetType.code == TypeCode::Struct) return library->structs[targetType.index].variables.Count();
-			else if(targetType.code == TypeCode::Handle) return library->classes[targetType.index].variables.Count();
+			else if(targetType.code == TypeCode::Handle)
+			{
+				const RuntimeClass& runtimeClass = library->classes[targetType.index];
+				uint32 count = runtimeClass.variables.Count();
+				for(uint32 i = 0; i < runtimeClass.parents.Count(); i++)
+				{
+					const Declaration& parent = runtimeClass.parents[i];
+					count += libraryAgency->GetLibrary(parent.library)->classes[parent.index].variables.Count();
+				}
+				return count;
+			}
 		}
 	}
 	return 0;
@@ -143,16 +154,34 @@ RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(!targetType.dimension)
 		{
-			RuntimeLibrary* library = FRAME->library->kernel->libraryAgency->GetLibrary(targetType.library);
+			Kernel* kernel = FRAME->library->kernel;
+			LibraryAgency* libraryAgency = kernel->libraryAgency;
+			RuntimeLibrary* library = kernel->libraryAgency->GetLibrary(targetType.library);
 			if(targetType.code == TypeCode::Struct)
 			{
 				const RuntimeMemberVariable& variable = library->structs[targetType.index].variables[index];
-				return RainDebuggerVariable(debugFrame, new String(FRAME->library->kernel->stringAgency->Get(variable.name)), variableAddress + variable.address, new Type(variable.type));
+				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(variable.name)), variableAddress + variable.address, new Type(variable.type));
 			}
 			else if(targetType.code == TypeCode::Handle)
 			{
-				const RuntimeMemberVariable& variable = library->classes[targetType.index].variables[index];
-				return RainDebuggerVariable(debugFrame, new String(FRAME->library->kernel->stringAgency->Get(variable.name)), variableAddress + library->classes[targetType.index].offset + variable.address, new Type(variable.type));
+				const RuntimeClass& runtimeClass = library->classes[targetType.index];
+				for(uint32 i = 0; i < runtimeClass.parents.Count(); i++)
+				{
+					const Declaration& parent = runtimeClass.parents[i];
+					const RuntimeClass& parentDeclaration = libraryAgency->GetLibrary(parent.library)->classes[parent.index];
+					if(index >= parentDeclaration.variables.Count()) index -= parentDeclaration.variables.Count();
+					else
+					{
+						const RuntimeMemberVariable& parentVariable = parentDeclaration.variables[index];
+						String fragments[3];
+						fragments[0] = kernel->stringAgency->Get(parentDeclaration.name);
+						fragments[1] = kernel->stringAgency->Add(TEXT(":"));
+						fragments[2] = kernel->stringAgency->Get(parentVariable.name);
+						return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Combine(fragments, 3)), variableAddress + parentDeclaration.offset + parentVariable.address, new Type(parentVariable.type));
+					}
+				}
+				const RuntimeMemberVariable& variable = runtimeClass.variables[index];
+				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(variable.name)), variableAddress + runtimeClass.offset + variable.address, new Type(variable.type));
 			}
 		}
 	}

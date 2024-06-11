@@ -849,6 +849,10 @@ namespace RainLanguage
         /// </summary>
         /// <param name="value">浮点数值</param>
         public Real(double value) { this.value = (long)(value * ratio); }
+        public override string ToString()
+        {
+            return ((double)value / ratio).ToString();
+        }
         const long ratio = 0x10000;
         /// <summary>
         /// 实数转浮点数
@@ -886,6 +890,10 @@ namespace RainLanguage
         /// </summary>
         /// <param name="value"></param>
         public static implicit operator Real(double value) { return new Real(value); }
+        public override string ToString()
+        {
+            return value.ToString();
+        }
 #endif
     }
     /// <summary>
@@ -898,6 +906,10 @@ namespace RainLanguage
         /// 向量各坐标轴的值
         /// </summary>
         public Real x, y;
+        public override string ToString()
+        {
+            return $"({x}, {y})";
+        }
     }
     /// <summary>
     /// 三维向量
@@ -909,6 +921,10 @@ namespace RainLanguage
         /// 向量各坐标轴的值
         /// </summary>
         public Real x, y, z;
+        public override string ToString()
+        {
+            return $"({x}, {y}, {z})";
+        }
     }
     /// <summary>
     /// 四维向量
@@ -920,6 +936,10 @@ namespace RainLanguage
         /// 向量各坐标轴的值
         /// </summary>
         public Real x, y, z, w;
+        public override string ToString()
+        {
+            return $"({x}, {y}, {z}, {w})";
+        }
     }
     /// <summary>
     /// 雨言适配器
