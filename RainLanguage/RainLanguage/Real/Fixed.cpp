@@ -39,9 +39,9 @@ Real Real::operator*(const Real& other) const { return CreateReal((value * other
 
 Real Real::operator*=(const Real& other) { return CreateReal(value = ((value * other.value) >> DECIMAL_POINT)); }
 
-Real Real::operator/(const Real& other) const { return CreateReal((value / other.value) << DECIMAL_POINT); }
+Real Real::operator/(const Real& other) const { return CreateReal((value << DECIMAL_POINT) / other.value); }
 
-Real Real::operator/=(const Real& other) { return CreateReal(value = ((value / other.value) << DECIMAL_POINT)); }
+Real Real::operator/=(const Real& other) { return CreateReal(value = ((value << DECIMAL_POINT) / other.value)); }
 
 Real Real::operator%(const Real& other) const { return CreateReal(value % other.value); }
 
