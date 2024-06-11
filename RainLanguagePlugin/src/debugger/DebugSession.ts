@@ -346,11 +346,12 @@ export class RainDebugSession extends LoggingDebugSession {
 			let cnt = res.ReadInt()
 			for (let index = 0; index < cnt; index++) {
 				const file = res.ReadString()
+				const name = res.ReadString()
 				const frameInfo = new FrameInfo(threadId, index + 1)
 				this.traceMap.set(frameInfo.id, frameInfo)
 				stacks.push({
 					id: frameInfo.id,
-					name: file,
+					name: name,
 					line: res.ReadInt(),
 					source: {
 						path: this.configuration.projectPath + "\\" + file

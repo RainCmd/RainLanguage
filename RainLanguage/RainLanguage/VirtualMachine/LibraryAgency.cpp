@@ -365,14 +365,19 @@ void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library
 void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library, uint32& function)
 {
 	GetInstructPosition(pointer, library);
-	function = INVALID;
-	uint32 start = 0, end = library->functions.Count();
-	while(start + 1 < end)
+	if(library->functions.Count() && pointer >= library->functions[0].entry)
 	{
-		uint32 middle = (start + end) >> 1;
-		if(library->functions[middle].entry > pointer) end = middle;
-		else function = start = middle;
+		function = 0;
+		uint32 start = 0, end = library->functions.Count();
+		while(start < end)
+		{
+			function = (start + end) >> 1;
+			if(pointer < library->functions[function].entry) end = function;
+			else if(start == function) break;
+			else start = function;
+		}
 	}
+	else function = INVALID;
 }
 
 bool LibraryAgency::AddBreakpoint(uint32 address)

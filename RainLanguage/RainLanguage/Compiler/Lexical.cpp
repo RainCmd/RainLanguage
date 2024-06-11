@@ -202,9 +202,9 @@ bool TryAnalysis(const Anchor& segment, uint32 index, Lexical& lexical, MessageC
 			case '.':
 				if (IsNumber(NEXT(1)))
 				{
-					uint32 i = index + 2;
+					uint32 i = 2;
 					while (IsDigit(NEXT(i))) i++;
-					LEXICAL(i - index, LexicalType::ConstReal);
+					LEXICAL(i, LexicalType::ConstReal);
 				}
 				else LEXICAL(1, LexicalType::Dot);
 				return true;
