@@ -32,14 +32,21 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 			GC(false);
 			gcLevel++;
 		}
-		if(!heads.Slack())
+		if(!free)
 		{
 			GC(true);
-			if(heads.Slack() < (heads.Count() >> 3)) heads.Grow(heads.Count() >> 3);
 			gcLevel++;
 		}
-		handle = heads.Count();
-		heads.SetCount(handle + 1);
+		if(free)
+		{
+			handle = free;
+			free = heads[free].next;
+		}
+		else
+		{
+			handle = heads.Count();
+			heads.SetCount(handle + 1);
+		}
 	}
 	heap.SetCount(MemoryAlignment(heap.Count(), alignment));
 	if(heap.Slack() < size)
