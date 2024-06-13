@@ -31,7 +31,7 @@ export default class FormatProvider implements DocumentRangeFormattingEditProvid
         return results;
     }
     public async provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[]> {
-        const line = document.lineAt(position.line - 1);
+        const line = document.lineAt(ch == '\n' ? position.line - 1 : position.line);
         const newText = this.FormatLine(line.text);
         if (line.text != newText) {
             return [

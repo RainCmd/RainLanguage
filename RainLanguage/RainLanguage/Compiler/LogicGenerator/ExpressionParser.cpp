@@ -64,7 +64,7 @@
 		List<Expression*, true> parameters(2);\
 		parameters.Add(expressionStack.Pop());\
 		parameters.Insert(0, expressionStack.Pop());\
-		Expression* result = Create##name##Operator(token.anchor, this, Combine(parameters));\
+		Expression* result = Create##name##Operator(token.anchor, this, Combine(token.anchor, parameters));\
 		if (result)\
 		{\
 			expressionStack.Add(result);\
@@ -1566,7 +1566,7 @@ bool ExpressionParser::TryParseLambda(const Anchor& parameterAnchor, const Ancho
 	return true;
 }
 
-bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, const Anchor& right, Expression*& result)
+bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& anchor, const Anchor& left, const Anchor& right, Expression*& result)
 {
 	Expression* leftExpression;
 	if(TryParse(left, leftExpression))
@@ -1615,7 +1615,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateBitAndOperator(left, this, Combine(parameters));
+						rightExpression = CreateBitAndOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1627,7 +1627,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateBitOrOperator(left, this, Combine(parameters));
+						rightExpression = CreateBitOrOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1638,7 +1638,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateBitXorOperator(left, this, Combine(parameters));
+						rightExpression = CreateBitXorOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1651,7 +1651,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateShiftLeftOperator(left, this, Combine(parameters));
+						rightExpression = CreateShiftLeftOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1664,7 +1664,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateShiftRightOperator(left, this, Combine(parameters));
+						rightExpression = CreateShiftRightOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1676,7 +1676,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreatePlusOperator(left, this, Combine(parameters));
+						rightExpression = CreatePlusOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1689,7 +1689,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateMinusOperator(left, this, Combine(parameters));
+						rightExpression = CreateMinusOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1700,7 +1700,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateMulOperator(left, this, Combine(parameters));
+						rightExpression = CreateMulOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1711,7 +1711,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateDivOperator(left, this, Combine(parameters));
+						rightExpression = CreateDivOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1723,7 +1723,7 @@ bool ExpressionParser::TryParseAssignment(LexicalType type, const Anchor& left, 
 						List<Expression*, true> parameters(2);
 						parameters.Add(leftExpression);
 						parameters.Add(rightExpression);
-						rightExpression = CreateModOperator(left, this, Combine(parameters));
+						rightExpression = CreateModOperator(left, this, Combine(anchor, parameters));
 						if(!rightExpression) return false;
 					}
 					goto label_reparse_left_and_assignment;
@@ -1832,6 +1832,7 @@ bool ExpressionParser::TryParseQuestionNull(const Anchor& left, const  Anchor& r
 bool ExpressionParser::TryParseTuple(SplitFlag flag, LexicalType type, Anchor anchor, Expression*& result)
 {
 	Anchor splitLeft, splitRight;
+	Anchor source = anchor;
 	if((Split(anchor, anchor.position, flag, splitLeft, splitRight, manager->messages) == type))
 	{
 		Expression* expression;
@@ -1849,7 +1850,7 @@ bool ExpressionParser::TryParseTuple(SplitFlag flag, LexicalType type, Anchor an
 		if(TryParse(anchor, expression))
 		{
 			expressions.Add(expression);
-			result = Combine(expressions);
+			result = Combine(source, expressions);
 			return true;
 		}
 	label_error:
@@ -1882,7 +1883,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 {
 	if(anchor.content.IsEmpty())
 	{
-		result = GetEmptyTupleExpression();
+		result = GetEmptyTupleExpression(anchor);
 		return true;
 	}
 	Anchor trim;
@@ -1892,7 +1893,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	LexicalType splitType = Split(anchor, anchor.position, SplitFlag::Lambda | SplitFlag::Assignment | SplitFlag::Question, splitLeft, splitRight, manager->messages);
 	if(splitType == LexicalType::Lambda) return TryParseLambda(splitLeft, splitRight, result);
 	else if(splitType == LexicalType::Question) return TryParseQuestion(splitLeft, splitRight, result);
-	else if(splitType != LexicalType::Unknow) return TryParseAssignment(splitType, splitLeft, splitRight, result);
+	else if(splitType != LexicalType::Unknow) return TryParseAssignment(splitType, anchor.Sub(splitLeft.position, splitRight.GetEnd() - splitLeft.position), splitLeft, splitRight, result);
 	if(TryParseTuple(SplitFlag::Comma, LexicalType::Comma, anchor, result)) return true;
 	if(Split(anchor, anchor.position, SplitFlag::QuestionNull, splitLeft, splitRight, manager->messages) == LexicalType::QuestionNull) return TryParseQuestionNull(splitLeft, splitRight, result);
 
@@ -3368,7 +3369,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 		result = new TupleExpression(anchor, resultReturns, expressionStack);
 	}
 	else if(expressionStack.Count()) result = expressionStack.Pop();
-	else result = GetEmptyTupleExpression();
+	else result = GetEmptyTupleExpression(anchor);
 	if(ContainAny(result->attribute, Attribute::Type)) MESSAGE2(manager->messages, result->anchor, MessageType::WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION);
 	return true;
 

@@ -8,8 +8,8 @@ public:
 	inline TupleExpression(const Anchor& anchor, const List<Type, true>& returns, const List<Expression*, true>& expressions) :Expression(ExpressionType::TupleExpression, anchor, returns), expressions(expressions)
 	{
 		attribute = Attribute::Assignable;
-		for (uint32 i = 0; i < expressions.Count(); i++) attribute &= expressions[i]->attribute;
-		if (returns.Count() == 1)attribute |= CombineType(Attribute::Value, returns.Peek());
+		for(uint32 i = 0; i < expressions.Count(); i++) attribute &= expressions[i]->attribute;
+		if(returns.Count() == 1)attribute |= CombineType(Attribute::Value, returns.Peek());
 		else attribute |= Attribute::Tuple;
 	}
 	void Generator(LogicGenerateParameter& parameter);
@@ -26,9 +26,9 @@ public:
 	~TupleExpression();
 };
 
-inline TupleExpression* GetEmptyTupleExpression()
+inline TupleExpression* GetEmptyTupleExpression(const Anchor& anchor)
 {
-	TupleExpression* result = new TupleExpression(Anchor(), List<Type, true>(0), List<Expression*, true>(0));
+	TupleExpression* result = new TupleExpression(anchor, List<Type, true>(0), List<Expression*, true>(0));
 	result->attribute = Attribute::Tuple;
 	return result;
 }
@@ -40,7 +40,7 @@ public:
 	List<integer, true>elementIndices;
 	inline TupleEvaluationExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source, const List<integer, true>& elementIndices) :Expression(ExpressionType::TupleEvaluationExpression, anchor, returns), source(source), elementIndices(elementIndices)
 	{
-		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns[0]);
+		if(returns.Count() == 1)attribute = CombineType(Attribute::Value, returns[0]);
 		else attribute = Attribute::Tuple;
 		attribute |= source->attribute & ~Attribute::Assignable;
 	}
