@@ -10,7 +10,7 @@ public:
 	List<integer, true> indices;
 	inline StructMemberExpression(const Anchor& anchor, Expression* target, const List<integer, true>& indices, const List<Type, true>& returns) :Expression(ExpressionType::StructMemberExpression, anchor, returns), logicVariables(0), target(target), indices(indices)
 	{
-		if (returns.Count() == 1) attribute = CombineType(Attribute::Value, returns.Peek());
+		if(returns.Count() == 1) attribute = CombineType(Attribute::Value, returns.Peek());
 		else attribute = Attribute::Tuple;
 		attribute |= target->attribute;
 	}
@@ -54,15 +54,11 @@ public:
 class VectorConstructorExpression :public Expression
 {
 public:
-	uint32 dimension;
 	Expression* parameters;
-	inline VectorConstructorExpression(const Anchor& anchor, uint32 dimension, Expression* parameters) :Expression(ExpressionType::VectorConstructorExpression, anchor, List<Type, true>(1)), dimension(dimension), parameters(parameters)
+	inline VectorConstructorExpression(const Anchor& anchor, const Type& type, Expression* parameters) :Expression(ExpressionType::VectorConstructorExpression, anchor, List<Type, true>(1)), parameters(parameters)
 	{
 		attribute = Attribute::Value;
-		if (dimension == 2)returns.Add(TYPE_Real2);
-		else if (dimension == 3)returns.Add(TYPE_Real3);
-		else if (dimension == 4)returns.Add(TYPE_Real4);
-		else EXCEPTION("目前只支持real2,real3,real4");
+		returns.Add(type);
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	~VectorConstructorExpression();

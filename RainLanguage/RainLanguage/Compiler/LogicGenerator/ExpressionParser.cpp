@@ -861,6 +861,7 @@ bool ExpressionParser::TryGetFunction(const Anchor& anchor, const List<Compiling
 
 bool ExpressionParser::CheckConvertVectorParameter(Expression*& parameters, uint32 dimension)
 {
+	if(!parameters->returns.Count()) return true;
 	List<Type, true> targetReturns(parameters->returns.Count());
 	for(uint32 i = 0; i < parameters->returns.Count(); i++)
 		if(parameters->returns[i] == TYPE_Real || parameters->returns[i] == TYPE_Real2 || parameters->returns[i] == TYPE_Real3 || parameters->returns[i] == TYPE_Real4) targetReturns.Add(parameters->returns[i]);
@@ -2003,7 +2004,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							if(CheckConvertVectorParameter(tuple, 2))
 							{
-								Expression* expression = new VectorConstructorExpression(lexical.anchor, 2, tuple);
+								Expression* expression = new VectorConstructorExpression(lexical.anchor, type, tuple);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
 								delete typeExpression; typeExpression = NULL;
@@ -2014,7 +2015,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							if(CheckConvertVectorParameter(tuple, 3))
 							{
-								Expression* expression = new VectorConstructorExpression(lexical.anchor, 3, tuple);
+								Expression* expression = new VectorConstructorExpression(lexical.anchor, type, tuple);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
 								delete typeExpression; typeExpression = NULL;
@@ -2025,7 +2026,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						{
 							if(CheckConvertVectorParameter(tuple, 4))
 							{
-								Expression* expression = new VectorConstructorExpression(lexical.anchor, 4, tuple);
+								Expression* expression = new VectorConstructorExpression(lexical.anchor, type, tuple);
 								expressionStack.Add(expression);
 								attribute = expression->attribute;
 								delete typeExpression; typeExpression = NULL;
