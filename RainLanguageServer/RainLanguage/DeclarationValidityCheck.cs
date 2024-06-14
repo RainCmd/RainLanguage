@@ -9,7 +9,7 @@
                 child.Value.DuplicationNameCheck(manager);
                 if (this.declarations.TryGetValue(child.Key, out var declarations))
                     foreach (var declaration in declarations)
-                            declaration.file?.space.collector.Add(declaration.name, CErrorLevel.Error, "当前命名空间下有同名子命名空间");
+                        declaration.file?.space.collector.Add(declaration.name, CErrorLevel.Error, "当前命名空间下有同名子命名空间");
             }
             var filter = new HashSet<Declaration>();
             var duplications = new List<CompilingDeclaration>();
@@ -72,6 +72,22 @@
     }
     internal partial class CompilingLibrary
     {
+        private static bool FindDeclaration(ASTManager manager, Type define, Type type)
+        {
+            if (type.dimension > 0 || type.code != TypeCode.Struct) return false;
+            else if (type.library == manager.library.name)
+            {
+                if (type == define) return true;
+                else
+                {
+                    if (manager.GetSourceDeclaration(type) is CompilingStruct compiling)
+                        foreach (var variable in compiling.variables)
+                            if (FindDeclaration(manager, define, variable.type))
+                                return true;
+                }
+            }
+            return false;
+        }
         public void DeclarationValidityCheck(ASTManager manager)
         {
             DuplicationNameCheck(manager);
@@ -140,6 +156,8 @@
                             }
                             duplications.Clear();
                         }
+                        if (variableX.file is FileVariable file && FindDeclaration(manager, compilingStruct.declaration.GetDefineType(), variableX.type))
+                            compilingStruct.file?.space.collector.Add(file.type.GetNameRange(), CErrorLevel.Error, "结构体循环包含");
                     }
                 }
                 filter.Clear();
@@ -217,7 +235,7 @@
             foreach (var compilingClass in classes)
             {
                 typeStack.Add(compilingClass.declaration.GetDefineType());
-                foreach(var index in manager.GetInheritIterator(compilingClass.parent))
+                foreach (var index in manager.GetInheritIterator(compilingClass.parent))
                     if (typeStack.Contains(index))
                     {
                         compilingClass.file?.space.collector.Add(compilingClass.name, CErrorLevel.Error, "存在循环继承");

@@ -75,7 +75,7 @@ List<CompilingFunctionDeclaration::Parameter>& GetParameters(DeclarationManager*
 	else EXCEPTION("类型错误");
 }
 
-void DuplicationNameCheck(DeclarationManager* manager, CompilingSpace* space, Set<CompilingDeclaration>& declarationSet)
+void DuplicationNameCheck(DeclarationManager* manager, CompilingSpace* space, Set<CompilingDeclaration, true>& declarationSet)
 {
 	List<CompilingDeclaration, true>* declarationList;
 	Dictionary<String, CompilingSpace*>::Iterator spaceIterator = space->children.GetIterator();
@@ -117,37 +117,35 @@ void DuplicationNameCheck(DeclarationManager* manager, CompilingSpace* space, Se
 	}
 }
 
-bool FindDeclaration(DeclarationManager* manager, const Type& type, const CompilingDeclaration& declaration)
+bool FindDeclaration(DeclarationManager* manager, Set<Type, true>& set, const Type& type, const CompilingDeclaration& declaration)
 {
-	if(type.dimension)return false;
+	if(type.dimension) return false;
 	if(type.library == LIBRARY_SELF && type.code == TypeCode::Struct)
 	{
-		if(type.index == declaration.index)return true;
-		else
+		if(type.index == declaration.index) return true;
+		else if(set.Add(type))
 		{
 			CompilingStruct* compiling = manager->compilingLibrary.structs[type.index];
 			for(uint32 i = 0; i < compiling->variables.Count(); i++)
-				if(FindDeclaration(manager, compiling->variables[i]->type, declaration))
+				if(FindDeclaration(manager, set, compiling->variables[i]->type, declaration))
 					return true;
 		}
 	}
 	return false;
 }
 
-bool HasCircularInheritance(DeclarationManager* manager, const List<Type, true>& inherits, List<Type, true>& stack)
+bool HasCircularInheritance(DeclarationManager* manager, const Type& type, const List<Type, true>& inherits, Set<Type, true>& set)
 {
-	for(uint32 x = 0; x < inherits.Count(); x++)
+	for(uint32 i = 0; i < inherits.Count(); i++)
 	{
-		const Type& type = inherits[x];
-		if(type.library == LIBRARY_SELF)
+		const Type& index = inherits[i];
+		if(index.library != LIBRARY_SELF) return false;
+		else if(index == type) return true;
+		else if(set.Add(index))
 		{
-			for(uint32 y = 0; y < stack.Count(); y++)
-				if(stack[y] == type)
-					return true;
-			stack.Add(type);
-			if(HasCircularInheritance(manager, manager->compilingLibrary.interfaces[type.index]->inherits, stack))
+			if(HasCircularInheritance(manager, type, manager->compilingLibrary.interfaces[index.index]->inherits, set))
 				return true;
-			stack.Pop();
+			set.Remove(index);
 		}
 	}
 	return false;
@@ -178,7 +176,7 @@ bool CheckOverride(DeclarationManager* manager, const Type& type, CompilingFunct
 void DeclarationValidityCheck(DeclarationManager* manager)
 {
 	CompilingLibrary* library = &manager->compilingLibrary;
-	Set<CompilingDeclaration> declarationSet = Set<CompilingDeclaration>(0);
+	Set<CompilingDeclaration, true> declarationSet = Set<CompilingDeclaration, true>(0);
 	DuplicationNameCheck(manager, library, declarationSet);
 	for(uint32 x = 0; x < library->variables.Count(); x++)
 	{
@@ -205,6 +203,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 					break;
 				}
 	}
+	Set<Type, true> typeSet(0);
 	for(uint32 x = 0; x < library->structs.Count(); x++)
 	{
 		CompilingStruct* compiling = library->structs[x];
@@ -214,8 +213,9 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		{
 			CompilingStruct::Variable* member = compiling->variables[y];
 			if(IsKeyWord(member->name.content)) MESSAGE2(manager->messages, member->name, MessageType::ERROR_NAME_IS_KEY_WORD)
-			else if(FindDeclaration(manager, member->type, compiling->declaration))
+			else if(FindDeclaration(manager, typeSet, member->type, compiling->declaration))
 				MESSAGE2(manager->messages, member->name, MessageType::ERROR_STRUCT_CYCLIC_INCLUSION);
+			typeSet.Clear();
 			if(declarationSet.Add(member->declaration))
 			{
 				bool duplication = false;
@@ -257,25 +257,24 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 			}
 		}
 	}
-	List<Type, true> typeStack(0);
 	for(uint32 x = 0; x < library->classes.Count(); x++)
 	{
 		CompilingClass* compiling = library->classes[x];
 		if(IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
-		typeStack.Add(compiling->declaration.DefineType());
+		bool circularInheritance = false;
 		for(Type index = manager->GetParent(compiling->declaration.DefineType()); index.library != INVALID; index = manager->GetParent(index))
-			if(index.library == LIBRARY_SELF)
+			if(index.library != LIBRARY_SELF) break;
+			else if(!typeSet.Add(index))
 			{
-				for(uint32 y = 0; y < typeStack.Count(); y++)
-					if(index == typeStack[y])
-					{
-						MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_CIRCULAR_INHERITANCE);
-						typeStack.Clear();
-						break;
-					}
-				if(!typeStack.Count()) break;
+				circularInheritance = true;
+				break;
 			}
-			else break;
+			else if(index.index == x)
+			{
+				MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_CIRCULAR_INHERITANCE);
+				circularInheritance = true;
+				break;
+			}
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->constructors.Count(); y++)
 		{
@@ -323,7 +322,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		for(uint32 y = 0; y < compiling->functions.Count(); y++)
 		{
 			CompilingFunction* member = library->functions[compiling->functions[y]];
-			if(typeStack.Count() && CheckOverride(manager, manager->GetParent(compiling->declaration.DefineType()), member))
+			if(!circularInheritance && CheckOverride(manager, manager->GetParent(compiling->declaration.DefineType()), member))
 				MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERRIDE);
 			if(declarationSet.Add(member->declaration))
 			{
@@ -340,15 +339,13 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERLOAD);
 			}
 		}
-		typeStack.Clear();
+		typeSet.Clear();
 	}
 	for(uint32 x = 0; x < library->interfaces.Count(); x++)
 	{
 		CompilingInterface* compiling = library->interfaces[x];
-		typeStack.Add(compiling->declaration.DefineType());
-		if(HasCircularInheritance(manager, compiling->inherits, typeStack))
+		if(HasCircularInheritance(manager, compiling->declaration.DefineType(), compiling->inherits, typeSet))
 			MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_CIRCULAR_INHERITANCE);
-		typeStack.Clear();
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->functions.Count(); y++)
 		{
