@@ -50,10 +50,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
     internal class InvalidDeclarationsExpression(TextRange range, List<CompilingDeclaration> declarations) : Expression(range, new Tuple([]))
     {
         public readonly List<CompilingDeclaration> declarations = declarations;
+        private readonly Expression? source;
 
         public override bool Valid => false;
+        public InvalidDeclarationsExpression(Expression source, List<CompilingDeclaration> declarations) : this(source.range, declarations)
+        {
+            this.source = source;
+        }
         public override bool OnHover(ASTManager manager, TextPosition position, out HoverInfo info)
         {
+            if (source != null) return source.OnHover(manager, position, out info);
             if (declarations.Count > 0)
             {
                 info = new HoverInfo(range, declarations[0].GetFullName(), false);
@@ -63,12 +69,14 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis.Expressions
         }
         public override bool OnHighlight(ASTManager manager, TextPosition position, List<HighlightInfo> infos)
         {
+            if (source != null) return source.OnHighlight(manager, position, infos);
             foreach (var declaration in declarations)
                 declaration.OnHighlight(manager, infos);
             return declarations.Count > 0;
         }
         public override bool TryGetDeclaration(ASTManager manager, TextPosition position, out CompilingDeclaration? result)
         {
+            if (source != null) return source.TryGetDeclaration(manager, position, out result);
             if (declarations.Count > 0)
             {
                 result = declarations[0];

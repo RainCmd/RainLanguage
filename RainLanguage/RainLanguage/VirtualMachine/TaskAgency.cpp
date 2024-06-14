@@ -109,6 +109,7 @@ TaskAgency::~TaskAgency()
 {
 	Dictionary<uint64, Invoker*, true>::Iterator iterator = invokerMap.GetIterator();
 	while (iterator.Next()) iterator.CurrentValue()->kernel = NULL;
+	invokerMap.Clear();
 	for (uint32 i = 0; i < invokerPool.Count(); i++) delete invokerPool[i];
 	invokerPool.Clear();
 	while (head)
@@ -118,10 +119,12 @@ TaskAgency::~TaskAgency()
 		delete task->invoker;
 		delete task;
 	}
+	head = NULL;
 	while (free)
 	{
 		Task* task = free;
 		free = free->next;
 		delete task;
 	}
+	free = NULL;
 }

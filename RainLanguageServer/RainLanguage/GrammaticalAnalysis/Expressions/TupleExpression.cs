@@ -34,7 +34,7 @@
         }
         public override void CollectSemanticToken(SemanticTokenCollector collector)
         {
-            foreach(var expression in expressions)
+            foreach (var expression in expressions)
                 expression.CollectSemanticToken(collector);
         }
         public override void Read(ExpressionParameter parameter)
@@ -53,13 +53,22 @@
             return true;
         }
 
-        public static Expression Create(List<Expression> expressions)
+        public static Expression Create(List<Expression> expressions, MessageCollector collector)
         {
             if (expressions.Count == 0) return Empty;
             var types = new List<Type>();
             foreach (var expression in expressions)
             {
-                if (expression.Valid) types.AddRange(expression.types);
+                if (expression.Valid)
+                {
+                    if (expression.attribute.ContainAny(ExpressionAttribute.Value | ExpressionAttribute.Tuple | ExpressionAttribute.Assignable))
+                        types.AddRange(expression.types);
+                    else
+                    {
+                        collector.Add(expression.range, CErrorLevel.Error, "无效的操作");
+                        return new InvalidExpression(expression);
+                    }
+                }
                 else return new InvalidExpression(expression);
             }
             return new TupleExpression(new TextRange(expressions[0].range.start, expressions[^1].range.end), new Tuple(types), expressions);

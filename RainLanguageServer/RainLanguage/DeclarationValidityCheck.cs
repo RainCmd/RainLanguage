@@ -72,7 +72,7 @@
     }
     internal partial class CompilingLibrary
     {
-        private static bool FindDeclaration(ASTManager manager, Type define, Type type)
+        private static bool FindDeclaration(ASTManager manager, HashSet<CompilingStruct> structSet, Type define, Type type)
         {
             if (type.dimension > 0 || type.code != TypeCode.Struct) return false;
             else if (type.library == manager.library.name)
@@ -80,9 +80,9 @@
                 if (type == define) return true;
                 else
                 {
-                    if (manager.GetSourceDeclaration(type) is CompilingStruct compiling)
+                    if (manager.GetSourceDeclaration(type) is CompilingStruct compiling && structSet.Add(compiling))
                         foreach (var variable in compiling.variables)
-                            if (FindDeclaration(manager, define, variable.type))
+                            if (FindDeclaration(manager, structSet, define, variable.type))
                                 return true;
                 }
             }
@@ -121,6 +121,7 @@
                 filter.Clear();
             }
             var duplications = new List<CompilingDeclaration>();
+            var structSet = new HashSet<CompilingStruct>();
             foreach (var compilingStruct in structs)
             {
                 for (var x = 0; x < compilingStruct.variables.Count; x++)
@@ -156,7 +157,7 @@
                             }
                             duplications.Clear();
                         }
-                        if (variableX.file is FileVariable file && FindDeclaration(manager, compilingStruct.declaration.GetDefineType(), variableX.type))
+                        if (variableX.file is FileVariable file && FindDeclaration(manager, structSet, compilingStruct.declaration.GetDefineType(), variableX.type))
                             compilingStruct.file?.space.collector.Add(file.type.GetNameRange(), CErrorLevel.Error, "结构体循环包含");
                     }
                 }

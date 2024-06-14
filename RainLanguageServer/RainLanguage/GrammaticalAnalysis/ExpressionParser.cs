@@ -51,7 +51,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             }
                                             else collector.Add(methodExpression.range, CErrorLevel.Error, "未找到匹配的函数");
                                         }
-                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodExpression.range, methodExpression.declarations), tuple));
+                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodExpression, methodExpression.declarations), tuple));
                                         attribute = ExpressionAttribute.Invalid;
                                     }
                                     else if (expression is MethodMemberExpression methodMemberExpression)
@@ -68,7 +68,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             }
                                             else collector.Add(methodMemberExpression.range, CErrorLevel.Error, "未找到匹配的函数");
                                         }
-                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodMemberExpression.range, methodMemberExpression.declarations), tuple));
+                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodMemberExpression, methodMemberExpression.declarations), tuple));
                                         attribute = ExpressionAttribute.Invalid;
                                     }
                                     else if (expression is MethodVirtualExpression methodVirtualExpression)
@@ -85,7 +85,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                             }
                                             else collector.Add(methodVirtualExpression.range, CErrorLevel.Error, "未找到匹配的函数");
                                         }
-                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodVirtualExpression.range, methodVirtualExpression.declarations), tuple));
+                                        expressionStack.Push(new InvalidExpression(new InvalidDeclarationsExpression(methodVirtualExpression, methodVirtualExpression.declarations), tuple));
                                         attribute = ExpressionAttribute.Invalid;
                                     }
                                     else throw new Exception("未知的调用");
@@ -1349,7 +1349,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
             {
                 var list = new List<Expression>(expressionStack);
                 list.Reverse();
-                return TupleExpression.Create(list);
+                return TupleExpression.Create(list, collector);
             }
             else if (expressionStack.Count > 0) return expressionStack.Pop();
             else return TupleExpression.CreateEmpty(range);
@@ -1441,7 +1441,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 var parameters = new List<Expression>();
                 while (count-- > 0) parameters.Add(expressionStack.Pop());
                 parameters.Reverse();
-                var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), name, TupleExpression.Create(parameters));
+                var result = CreateOperation(parameters[0].range.start & parameters[^1].range.end, name.ToString(), name, TupleExpression.Create(parameters, collector));
                 expressionStack.Push(result);
                 return result.attribute;
             }
@@ -1672,7 +1672,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         }
         private Expression CreateOperation(TextRange range, string operation, TextRange operatorRange, params Expression[] parameters)
         {
-            if (TryGetFunction(range, context.FindOperator(manager, operation), TupleExpression.Create(new List<Expression>(parameters)), out var callable))
+            if (TryGetFunction(range, context.FindOperator(manager, operation), TupleExpression.Create(new List<Expression>(parameters), collector), out var callable))
             {
                 AssignmentConvert(parameters, callable!.declaration.signature);
                 return new OperationExpression(range, callable.returns, operatorRange, callable, parameters);
@@ -1693,7 +1693,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     expressions.Add(InferRightValueType(item, types[index..(index + item.types.Count)]));
                     index += item.types.Count;
                 }
-                return TupleExpression.Create(expressions);
+                return TupleExpression.Create(expressions, collector);
             }
             else if (expression.types.Count == 1) return InferRightValueType(expression, types[0]);
             else if (IsBlurry(expression.types)) throw new Exception("表达式类型错误");
@@ -2231,7 +2231,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                     expressions.Add(InferLeftValueType(item, types[index..(index + item.types.Count)]));
                     index += item.types.Count;
                 }
-                return TupleExpression.Create(expressions);
+                return TupleExpression.Create(expressions, collector);
             }
             else if (IsBlurry(expression.types)) throw new Exception("表达式类型错误");
             return expression;
@@ -2304,7 +2304,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 }
                 while (ExpressionSplit.Split(remainder, 0, flag, out left, out right, collector).type == type);
                 if (remainder.Valid) expressions.Add(Parse(remainder));
-                result = TupleExpression.Create(expressions);
+                result = TupleExpression.Create(expressions, collector);
                 return true;
             }
             result = default;
