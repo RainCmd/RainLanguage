@@ -276,7 +276,6 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				if(!typeStack.Count()) break;
 			}
 			else break;
-		typeStack.Clear();
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->constructors.Count(); y++)
 		{
@@ -324,7 +323,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		for(uint32 y = 0; y < compiling->functions.Count(); y++)
 		{
 			CompilingFunction* member = library->functions[compiling->functions[y]];
-			if(CheckOverride(manager, manager->GetParent(compiling->declaration.DefineType()), member))
+			if(typeStack.Count() && CheckOverride(manager, manager->GetParent(compiling->declaration.DefineType()), member))
 				MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERRIDE);
 			if(declarationSet.Add(member->declaration))
 			{
@@ -341,6 +340,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERLOAD);
 			}
 		}
+		typeStack.Clear();
 	}
 	for(uint32 x = 0; x < library->interfaces.Count(); x++)
 	{
