@@ -73,7 +73,7 @@
                 },
                 {
                     "command": "cmd.debug.重启雨言服务",
-                    "when": "resourceLangId == 雨言 && false"
+                    "when": "resourceLangId == 雨言"
                 }
             ]
         },

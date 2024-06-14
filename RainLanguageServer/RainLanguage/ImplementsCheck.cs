@@ -46,7 +46,7 @@
             {
                 foreach (var function in compiling.functions)
                 {
-                    for (var index = compiling.parent; index.Vaild; index = manager.GetParent(index))
+                    foreach (var index in manager.GetInheritIterator(compiling.parent))
                     {
                         if (manager.GetSourceDeclaration(index) is CompilingClass parent && classSet.Add(parent))
                             foreach (var member in parent.functions)
@@ -73,7 +73,7 @@
                         var function = FindImplement(compiling, callable, null);
                         if (function == null)
                         {
-                            for (var index = compiling.parent; index.Vaild; index = manager.GetParent(index))
+                            foreach (var index in manager.GetInheritIterator(compiling.parent))
                                 if (manager.GetSourceDeclaration(index) is CompilingClass parent && classSet.Add(parent))
                                 {
                                     function = FindImplement(parent, callable, compiling.name);

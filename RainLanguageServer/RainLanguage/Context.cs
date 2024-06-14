@@ -63,7 +63,7 @@ namespace RainLanguageServer.RainLanguage
                                     if (declaration.visibility.ContainAny(Visibility.Protected))
                                     {
                                         var defineType = define.declaration.GetDefineType();
-                                        for (var index = this.declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
+                                        foreach (var index in manager.GetInheritIterator(this.declaration.declaration.GetDefineType()))
                                             if (index == defineType) return true;
                                     }
                         }
@@ -164,7 +164,7 @@ namespace RainLanguageServer.RainLanguage
             else if (declaration?.declaration.category == DeclarationCategory.Class)
             {
                 var filter = new HashSet<CompilingDeclaration>();
-                for (var index = declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
+                foreach (var index in manager.GetInheritIterator(declaration.declaration.GetDefineType()))
                 {
                     var @class = (CompilingClass)manager.GetSourceDeclaration(index)!;
                     foreach (var variable in @class.variables)
@@ -231,7 +231,7 @@ namespace RainLanguageServer.RainLanguage
         private static void CollectOverideFunctions(HashSet<CompilingDeclaration> filter, ASTManager manager, CompilingClass @class, CompilingFunction function)
         {
             var name = function.name.ToString();
-            for (var index = manager.GetParent(@class.declaration.GetDefineType()); index.Vaild; index = manager.GetParent(index))
+            foreach (var index in manager.GetInheritIterator(manager.GetParent(@class.declaration.GetDefineType())))
                 if (manager.GetSourceDeclaration(index) is CompilingClass compiling)
                     foreach (var item in compiling.functions)
                         if (item.name == name && item.declaration.signature == function.declaration.signature)
@@ -270,7 +270,7 @@ namespace RainLanguageServer.RainLanguage
             else if (type.code == TypeCode.Handle)
             {
                 var filter = new HashSet<CompilingDeclaration>();
-                for (var index = declaration.declaration.GetDefineType(); index.Vaild; index = manager.GetParent(index))
+                foreach (var index in manager.GetInheritIterator(declaration.declaration.GetDefineType()))
                     if (manager.GetSourceDeclaration(index) is CompilingClass compiling)
                     {
                         foreach (var item in compiling.variables)

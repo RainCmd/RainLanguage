@@ -217,7 +217,7 @@
             foreach (var compilingClass in classes)
             {
                 typeStack.Add(compilingClass.declaration.GetDefineType());
-                for (var index = compilingClass.parent; index.Vaild; index = manager.GetParent(index))
+                foreach(var index in manager.GetInheritIterator(compilingClass.parent))
                     if (typeStack.Contains(index))
                     {
                         compilingClass.file?.space.collector.Add(compilingClass.name, CErrorLevel.Error, "存在循环继承");

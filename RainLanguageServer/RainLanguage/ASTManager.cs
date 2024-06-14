@@ -283,6 +283,7 @@ namespace RainLanguageServer.RainLanguage
             }
             return default;
         }
+        public InheritIterator GetInheritIterator(Type type) => new InheritIterator(this, type);
         private int GetInterfaceInherit(Type baseType, Type subType)
         {
             if (baseType == subType) return 0;
