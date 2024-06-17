@@ -13,21 +13,21 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
         public readonly MessageCollector collector;
         public readonly bool destructor;
         public readonly BlockStatement block = new(default, []);
-        public LogicBlock(CompilingDeclaration? declaration, List<CompilingCallable.Parameter> parameters, List<Type> returns, CompilingSpace space, List<TextLine> body, HashSet<CompilingSpace> relies, MessageCollector collector)
+        public LogicBlock(TextDocument document, CompilingDeclaration? declaration, List<CompilingCallable.Parameter> parameters, List<Type> returns, CompilingSpace space, List<TextLine> body, HashSet<CompilingSpace> relies, MessageCollector collector)
         {
             localContext = new LocalContext(collector, declaration);
             foreach (var parameter in parameters)
                 if (parameter.name != null)
                     this.parameters.Add(localContext.Add(true, parameter.name.Value, parameter.type));
             this.returns = returns;
-            context = new Context(space, relies, declaration);
+            context = new Context(document, space, relies, declaration);
             this.body = body;
             this.collector = collector;
             destructor = false;
         }
         public LogicBlock(CompilingDeclaration declaration, List<TextLine> body, HashSet<CompilingSpace> relies, MessageCollector collector)
         {
-            context = new Context(declaration.space, relies, declaration);
+            context = new Context(declaration.name.start.document, declaration.space, relies, declaration);
             localContext = new LocalContext(collector, declaration);
             returns = [];
             this.body = body;

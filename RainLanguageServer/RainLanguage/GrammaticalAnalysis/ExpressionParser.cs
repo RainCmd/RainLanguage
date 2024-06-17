@@ -510,7 +510,12 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         index = lexical.anchor.end;
                                         declarations = FindDeclaration(range, ref index, out TextRange name, space!);
                                         if (declarations != null) PushDeclarationsExpression(range, ref index, ref attribute, expressionStack, lexical.anchor & name, declarations);
-                                        else expressionStack.Push(new InvalidExpression(name));
+                                        else expressionStack.Push(new InvalidExpression(operatorAnchor.end & index));
+                                    }
+                                    else
+                                    {
+                                        expressionStack.Push(new InvalidExpression(operatorAnchor.end & index));
+                                        collector.Add(operatorAnchor.end & index, CErrorLevel.Error, "声明未找到");
                                     }
                                 }
                                 else
@@ -535,7 +540,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                                         expressionStack.Push(expression);
                                         attribute = expression.attribute;
                                     }
-                                    else
+                                    else if (expressionStack.Peek().Valid)
                                     {
                                         collector.Add(expressionStack.Peek().range, CErrorLevel.Error, "不是类型表达式");
                                         if (expressionStack.Peek() is not InvalidExpression) expressionStack.Push(expressionStack.Pop().ToInvalid());
@@ -1111,7 +1116,7 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                             {
                                 if (lexical.type == LexicalType.Word)
                                 {
-                                    var globalContext = new Context(context.space, context.relies, null);
+                                    var globalContext = new Context(context.document, context.space, context.relies, null);
                                     if (globalContext.TryFindDeclaration(manager, lexical.anchor, out var results, collector))
                                     {
                                         index = lexical.anchor.end;
@@ -1831,10 +1836,18 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                 if (lexical.type == LexicalType.Word || lexical.type.IsTypeKeyWord())
                 {
                     name = lexical.anchor;
-                    if (context.TryFindDeclaration(manager, lexical.anchor, out var results, collector)) return results;
+                    if (context.TryFindDeclaration(manager, lexical.anchor, out var declarations, collector))
+                    {
+                        var results = new List<CompilingDeclaration>();
+                        foreach (var declaration in declarations)
+                            if (context.IsVisiable(manager, declaration.declaration))
+                                results.Add(declaration);
+                        if (results.Count > 0) return results;
+                        else collector.Add(lexical.anchor, CErrorLevel.Error, "申明未找到");
+                    }
                     else if (context.TryFindSpace(manager, lexical.anchor, out var space, collector))
                     {
-                        results = FindDeclaration(range, ref index, out var declarationRange, space!);
+                        var results = FindDeclaration(range, ref index, out var declarationRange, space!);
                         name &= declarationRange;
                         return results;
                     }
@@ -1861,8 +1874,16 @@ namespace RainLanguageServer.RainLanguage.GrammaticalAnalysis
                         {
                             if (space.declarations.TryGetValue(lexical.anchor.ToString(), out var declarations))
                             {
-                                name = start & index;
-                                return declarations;
+                                var results = new List<CompilingDeclaration>();
+                                foreach (var declaration in declarations)
+                                    if (context.IsVisiable(manager, declaration.declaration))
+                                        results.Add(declaration);
+                                if (results.Count > 0)
+                                {
+                                    name = start & index;
+                                    return results;
+                                }
+                                else collector.Add(lexical.anchor, CErrorLevel.Error, "未找到标识符的申明");
                             }
                             else if (space.children.TryGetValue(lexical.anchor.ToString(), out var child))
                             {

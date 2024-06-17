@@ -153,7 +153,7 @@ namespace RainLanguageServer.RainLanguage
         public override bool CollectCompletions(ASTManager manager, TextPosition position, List<CompletionInfo> infos)
         {
             if (compiling is CompilingVariable compilingVariable && compilingVariable.expression != null && compilingVariable.expression.range.Contain(position))
-                return compilingVariable.expression.CollectCompletions(manager, new Context(space.compiling, space.relies, null), position, infos);
+                return compilingVariable.expression.CollectCompletions(manager, new Context(name.start.document, space.compiling, space.relies, null), position, infos);
             var range = type.name[0].start & position;
             return FileCollectCompletions.CollectDefines(manager, space, range, range.start, infos);
         }
@@ -305,7 +305,7 @@ namespace RainLanguageServer.RainLanguage
             if (line.line == name.start.Line.line)
                 return FileCollectCompletions.CollectDefines(manager, space, line.start & position, line.start, infos);
             else if (compiling is CompilingFunction compilingFunction && compilingFunction.logicBlock != null)
-                return compilingFunction.logicBlock.block.CollectCompletions(manager, new Context(space.compiling, space.relies, declaration?.compiling), position, infos);
+                return compilingFunction.logicBlock.block.CollectCompletions(manager, new Context(name.start.document, space.compiling, space.relies, declaration?.compiling), position, infos);
             return false;
         }
         public override void CollectSemanticToken(SemanticTokenCollector collector) => CollectSemanticToken(collector, false);

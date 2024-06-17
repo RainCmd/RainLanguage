@@ -2,8 +2,9 @@
 
 namespace RainLanguageServer.RainLanguage
 {
-    internal class Context(CompilingSpace space, HashSet<CompilingSpace> relies, CompilingDeclaration? declaration)
+    internal class Context(TextDocument document, CompilingSpace space, HashSet<CompilingSpace> relies, CompilingDeclaration? declaration)
     {
+        public readonly TextDocument document = document;
         public readonly CompilingSpace space = space;
         public readonly HashSet<CompilingSpace> relies = relies;
         public readonly CompilingDeclaration? declaration = declaration;
@@ -19,7 +20,16 @@ namespace RainLanguageServer.RainLanguage
             else
             {
                 if (declaration.visibility.ContainAny(Visibility.Public | Visibility.Internal)) return true;
-                return manager.GetDeclaration(declaration)!.space.Contain(space);
+                else
+                {
+                    var compiling = manager.GetDeclaration(declaration)!;
+                    if (compiling.space.Contain(space))
+                    {
+                        if (declaration.visibility.ContainAny(Visibility.Space)) return true;
+                        else return compiling.name.start.document == document;
+                    }
+                    return false;
+                }
             }
         }
         public bool IsVisiable(ASTManager manager, Declaration declaration)
@@ -186,9 +196,10 @@ namespace RainLanguageServer.RainLanguage
             for (var index = space; index != null; index = index.parent)
                 if (index.declarations.TryGetValue(targetName, out var declarations))
                 {
-                    results.AddRange(declarations);
-                    var declaration = declarations[0].declaration;
-                    if (declaration.category != DeclarationCategory.Function && declaration.category != DeclarationCategory.Native) break;
+                    foreach (var item in declarations)
+                        if(IsVisiable(manager, item.declaration))
+                            results.Add(item);
+                    if (results.Count > 0 && results[0].declaration.category != DeclarationCategory.Function && results[0].declaration.category != DeclarationCategory.Native) break;
                 }
             if (results.Count == 1) return true;
             else if (results.Count > 1)
