@@ -4,9 +4,15 @@
 #include "../KernelDeclarations.h"
 #include "../Collections/Set.h"
 
-Context::Context(CompilingSpace* space, List<AbstractSpace*, true>* relies) : declaration(), compilingSpace(space), relies(relies) {}
+Context::Context(const String& source, CompilingSpace* space, List<AbstractSpace*, true>* relies) : source(source), declaration(), compilingSpace(space), relies(relies) {}
 
-Context::Context(CompilingDeclaration declaration, CompilingSpace* space, List<AbstractSpace*, true>* relies) : declaration(declaration), compilingSpace(space), relies(relies) {}
+Context::Context(const String& source, CompilingDeclaration declaration, CompilingSpace* space, List<AbstractSpace*, true>* relies) : source(source), declaration(declaration), compilingSpace(space), relies(relies) {}
+
+#define CHECK_VISIBILITY \
+	if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;\
+	else if(manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract))\
+		return ContainAny(target.visibility, Visibility::Space) || manager->compilingLibrary.GetName(target).source == source;\
+	return false;
 
 bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration& target)
 {
@@ -18,26 +24,21 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			case DeclarationCategory::Variable:
 			case DeclarationCategory::Function:
 			case DeclarationCategory::Enum:
-				if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
+				CHECK_VISIBILITY
 			case DeclarationCategory::EnumElement:
 				return IsVisible(manager, manager->compilingLibrary.enums[target.definition]->declaration);
 			case DeclarationCategory::Struct:
-				if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
+				CHECK_VISIBILITY
 			case DeclarationCategory::StructVariable:
 				return IsVisible(manager, manager->compilingLibrary.structs[target.definition]->declaration);
 			case DeclarationCategory::StructFunction:
 			{
 				CompilingDeclaration define = manager->compilingLibrary.structs[target.definition]->declaration;
 				if(define == declaration) return true;
-				if(IsVisible(manager, define))
-					if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
+				return IsVisible(manager, define) && ContainAny(target.visibility, Visibility::Public | Visibility::Internal);
 			}
-			return false;
 			case DeclarationCategory::Class:
-				if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
+				CHECK_VISIBILITY
 			case DeclarationCategory::Constructor:
 			case DeclarationCategory::ClassVariable:
 			case DeclarationCategory::ClassFunction:
@@ -57,15 +58,13 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 			}
 			return false;
 			case DeclarationCategory::Interface:
-				if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
+				CHECK_VISIBILITY
 			case DeclarationCategory::InterfaceFunction:
 				return IsVisible(manager, manager->compilingLibrary.interfaces[target.definition]->declaration);
 			case DeclarationCategory::Delegate:
 			case DeclarationCategory::Task:
 			case DeclarationCategory::Native:
-				if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
-				return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
+				CHECK_VISIBILITY
 			case DeclarationCategory::Lambda:
 			case DeclarationCategory::LambdaClosureValue:
 			case DeclarationCategory::LocalVariable:
@@ -216,7 +215,9 @@ bool Context::TryFindDeclaration(DeclarationManager* manager, const Anchor& name
 	for(AbstractSpace* index = compilingSpace->abstract; index; index = index->parent)
 		if(index->declarations.TryGet(name.content, declarations))
 		{
-			results.Add(*declarations);
+			for(uint32 i = 0; i < declarations->Count(); i++)
+				if(IsVisible(manager, (*declarations)[i]))
+					results.Add((*declarations)[i]);
 			if(results.Count() && results.Peek().category != DeclarationCategory::Function && results.Peek().category != DeclarationCategory::Native)
 				break;
 		}
@@ -258,7 +259,7 @@ void FindMember(DeclarationManager* manager, const String& name, AbstractInterfa
 	for(uint32 i = 0; i < abstractInterface->functions.Count(); i++)
 	{
 		AbstractFunction* member = abstractInterface->functions[i];
-		if(member->name == name)results.Add(member->declaration);
+		if(member->name == name) results.Add(member->declaration);
 	}
 	for(uint32 i = 0; i < abstractInterface->inherits.Count(); i++)
 	{
@@ -429,5 +430,5 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 		if(results[i].category != DeclarationCategory::Function)
 			EXCEPTION("操作类型必须是全局函数");
 #endif // DEBUG
-}
+	}
 

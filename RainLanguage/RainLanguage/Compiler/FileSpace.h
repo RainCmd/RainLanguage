@@ -148,6 +148,7 @@ struct FileNative :FileDeclaration
 struct DeclarationManager;
 struct FileSpace
 {
+	String source;
 	CompilingSpace* compiling;
 	List<Anchor> attributes;
 	List<FileSpace*, true> children;

@@ -1215,8 +1215,12 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& anchor, uint32& index, L
 					List<CompilingDeclaration, true>* results;
 					if(space->declarations.TryGet(lexical.anchor.content, results))
 					{
-						declarations = *results;
-						return true;
+						for(uint32 i = 0; i < results->Count(); i++)
+							if(context.IsVisible(manager, (*results)[i]))
+								declarations.Add((*results)[i]);
+						if(declarations.Count()) return true;
+						MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
+						return false;
 					}
 					else if(space->children.TryGet(lexical.anchor.content, space)) return TryFindDeclaration(anchor, index, lexical, space, declarations);
 					else
@@ -3022,7 +3026,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					{
 						List<CompilingDeclaration, true> declarations(0);
 						AbstractSpace* space = NULL;
-						Context globalContext = Context(context.compilingSpace, context.relies);
+						Context globalContext = Context(context.source, context.compilingSpace, context.relies);
 						index = lexical.anchor.GetEnd();
 						if(globalContext.TryFindDeclaration(manager, lexical.anchor, declarations))
 						{

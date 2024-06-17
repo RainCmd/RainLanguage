@@ -46,7 +46,7 @@ void FileSpace::Link(DeclarationManager* manager, List<List<AbstractSpace*, true
 	relies->Add(relySpaces);
 	for(uint32 i = 0; i < relyCompilingSpaces.Count(); i++)
 		relies->Add(relyCompilingSpaces[i]->abstract);
-	Context context = Context(compiling, relies);
+	Context context = Context(source, compiling, relies);
 	List<CompilingDeclaration, true> declarations = List<CompilingDeclaration, true>(0);
 	for(uint32 i = 0; i < variables.Count(); i++)
 	{

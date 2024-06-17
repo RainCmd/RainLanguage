@@ -103,8 +103,9 @@ Visibility ParseVisibility(const Line& line, uint32& index, MessageCollector* me
 		if(visibility == Visibility::None) break;
 		else
 		{
-			if(IsClash(result, visibility)) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY);
-			result |= visibility;
+			if(visibility == result) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY)
+			else if(result == Visibility::None) result = visibility;
+			else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_INVALID_VISIBILITY);
 			index = lexical.anchor.GetEnd();
 		}
 	}
@@ -283,7 +284,7 @@ void ParseGlobalFunction(FileSpace* space, const Line& line, uint32 index, Visib
 	ParseBlock(line.indent, function->body, parameter);
 }
 
-FileSpace::FileSpace(CompilingSpace* compiling, uint32 parentIndent, ParseParameter* parameter) :compiling(compiling), attributes(0), children(0), imports(0),
+FileSpace::FileSpace(CompilingSpace* compiling, uint32 parentIndent, ParseParameter* parameter) :source(parameter->reader->Source()), compiling(compiling), attributes(0), children(0), imports(0),
 variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), natives(0), relyCompilingSpaces(0), relySpaces(0)
 {
 	uint32 indent = INVALID;

@@ -160,7 +160,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		if(variable->constant)
 		{
 			ASSERT_DEBUG(!variable->expression.content.IsEmpty(), "常量没有赋值表达式，这个应该在定义解析时过滤");
-			Context context = Context(variable->space, variable->relies);
+			Context context = Context(variable->name.source, variable->space, variable->relies);
 			parameter.localContext->PushBlock();
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
@@ -181,7 +181,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			CompilingEnum::Element* element = enumerate->elements[y];
 			if(!element->expression.content.IsEmpty())
 			{
-				Context context = Context(enumerate->space, enumerate->relies);
+				Context context = Context(enumerate->name.source, enumerate->space, enumerate->relies);
 				parameter.localContext->PushBlock();
 				ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 				Expression* expression = NULL;
@@ -314,7 +314,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		CompilingVariable* variable = parameter.manager->compilingLibrary.variables[i];
 		if(!variable->constant && !variable->expression.content.IsEmpty())
 		{
-			Context context = Context(variable->space, variable->relies);
+			Context context = Context(variable->name.source, variable->space, variable->relies);
 			parameter.localContext->PushBlock();
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
@@ -340,14 +340,14 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	{
 		for(uint32 i = 0; i < function->parameters.Count(); i++)
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
-		ParseBody(parameter, Context(function->space, function->relies), function->body, false);
+		ParseBody(parameter, Context(function->name.source, function->space, function->relies), function->body, false);
 	}
 	else if(function->declaration.category == DeclarationCategory::StructFunction)
 	{
 		parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
 		for(uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
-		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->structs[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);
+		ParseBody(parameter, Context(function->name.source, parameter.manager->GetLibrary(function->declaration.library)->structs[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);
 	}
 	else if(function->declaration.category == DeclarationCategory::Constructor)
 	{
@@ -357,7 +357,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
 		const CompilingClass* compilingClass = parameter.manager->compilingLibrary.classes[function->declaration.definition];
 		const CompilingClass::Constructor* compilingConstructor = compilingClass->constructors[function->declaration.index];
-		Context context(compilingClass->space, compilingClass->relies);
+		Context context(compilingClass->name.source, compilingClass->space, compilingClass->relies);
 		if(!compilingConstructor->expression.content.IsEmpty())
 		{
 			Lexical lexical;
@@ -418,14 +418,14 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 				parameter.localContext->PopBlock();
 			}
 		}
-		ParseBody(parameter, Context(compilingClass->declaration, function->space, function->relies), function->body, false);
+		ParseBody(parameter, Context(compilingClass->name.source, compilingClass->declaration, function->space, function->relies), function->body, false);
 	}
 	else if(function->declaration.category == DeclarationCategory::ClassFunction)
 	{
 		parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
 		for(uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
-		ParseBody(parameter, Context(parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);
+		ParseBody(parameter, Context(function->name.source, parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);
 	}
 	else EXCEPTION("无效的函数类型");
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
@@ -436,7 +436,7 @@ FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, Generator
 {
 	const CompilingClass* compilingClass = parameter.manager->compilingLibrary.classes[declaration.definition];
 	parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), compilingClass->name, declaration.DefineType()));
-	ParseBody(parameter, Context(declaration, compilingClass->space, compilingClass->relies), compilingClass->destructor, true);
+	ParseBody(parameter, Context(compilingClass->name.source, declaration, compilingClass->space, compilingClass->relies), compilingClass->destructor, true);
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
 }
 

@@ -6,11 +6,12 @@
 struct AbstractSpace;
 struct Context
 {
+	String source;
 	CompilingDeclaration declaration;
 	CompilingSpace* compilingSpace;
 	List<AbstractSpace*, true>* relies;
-	Context(CompilingSpace* space, List<AbstractSpace*, true>* relies);
-	Context(CompilingDeclaration declaration, CompilingSpace* space, List<AbstractSpace*, true>* relies);
+	Context(const String& source, CompilingSpace* space, List<AbstractSpace*, true>* relies);
+	Context(const String& source, CompilingDeclaration declaration, CompilingSpace* space, List<AbstractSpace*, true>* relies);
 	bool IsVisible(DeclarationManager* manager, const CompilingDeclaration& declaration);
 	bool TryFindSpace(DeclarationManager* manager, const Anchor& name, AbstractSpace*& result);
 	bool TryFindDeclaration(DeclarationManager* manager, const Anchor& name, List<CompilingDeclaration, true>& results);
