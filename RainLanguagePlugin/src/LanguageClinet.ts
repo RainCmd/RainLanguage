@@ -3,7 +3,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as net from 'net'
-import { RegistRainLanguagePreviewDoc } from './extension';
+import { RegistRainLanguagePreviewDoc, extensionDebug } from './extension';
 
 let client: LanguageClient;
 
@@ -70,9 +70,8 @@ function GetSocketServerOperation() {
 
 export async function StartServer(context: vscode.ExtensionContext) {
 
-    const serverOptions = GetCPServerOptions(context)
-    //const serverOptions = GetSocketServerOperation
-
+    const serverOptions = extensionDebug ? GetSocketServerOperation : GetCPServerOptions(context)
+    
     const projectName = await GetProjectName()
     const imports = await CollectImports()
     const clientOptions: LanguageClientOptions = {

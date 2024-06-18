@@ -64,6 +64,8 @@ namespace RainLanguageServer
             var result = new InitializeResult() { capabilities = GetServerCapabilities() };
 
             result.capabilities.experimental = param.capabilities?.experimental;
+            if (result.capabilities.completionProvider != null)
+                result.capabilities.completionProvider.triggerCharacters = [".", ">"];
 
             return Result<InitializeResult, ResponseError<InitializeErrorData>>.Success(result);
         }

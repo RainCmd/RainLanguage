@@ -8,9 +8,11 @@ import * as rainLanguageClient from "./LanguageClinet";
 import { RainEvaluatableExpressionProvider } from "./EvaluatableExpressionProvider";
 import { SemanticTokenProvider, legend } from "./SemanticTokenProvider";
 
+export const extensionDebug = true
 export let kernelStateViewProvider: KernelStateViewProvider;
 
 export async function activate(context: vscode.ExtensionContext) {
+    vscode.commands.executeCommand("setContext", "extensionDebug", extensionDebug)
     const documentSelector: vscode.DocumentSelector = {
         language: '雨言',
     };
@@ -57,6 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.workspace.registerTextDocumentContentProvider("rain-language", {
             provideTextDocumentContent: function (uri: vscode.Uri) { return langugaePreviewDoc.get(uri.path) } 
         }),
+
         vscode.commands.registerCommand('cmd.debug.重启雨言服务', () => rainLanguageClient.RestartServer(context)),
 
         vscode.languages.registerDocumentSemanticTokensProvider(documentSelector,new SemanticTokenProvider(), legend)
