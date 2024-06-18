@@ -362,12 +362,19 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 				parameter.task->kernelInvoker = NULL;
 				return String();
 			}
-			case InvokerState::Aborted:
+			case InvokerState::Exceptional:
 			{
-				String exitMessage = invoker->exitMessage;
+				String error = invoker->error;
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
-				return exitMessage;
+				return error;
+			}
+			case InvokerState::Aborted:
+			{
+				parameter.task->invoker->Abort();
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default:  EXCEPTION("不应该进入的分支");
@@ -398,11 +405,17 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 				parameter.kernel->taskAgency->Release(invoker);
 				return String();
 			}
+			case InvokerState::Exceptional:
+			{
+				String error = invoker->error;
+				parameter.kernel->taskAgency->Release(invoker);
+				return error;
+			}
 			case InvokerState::Aborted:
 			{
-				String exitMessage = invoker->exitMessage;
+				parameter.task->invoker->Abort();
 				parameter.kernel->taskAgency->Release(invoker);
-				return exitMessage;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default:  EXCEPTION("不应该进入的分支");
@@ -474,12 +487,19 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 				parameter.task->kernelInvoker = NULL;
 				return String();
 			}
-			case InvokerState::Aborted:
+			case InvokerState::Exceptional:
 			{
-				String exitMessage = invoker->exitMessage;
+				String error = invoker->error;
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
-				return exitMessage;
+				return error;
+			}
+			case InvokerState::Aborted:
+			{
+				parameter.task->invoker->Abort();
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default:  EXCEPTION("不应该进入的分支");
@@ -510,11 +530,17 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 				parameter.kernel->taskAgency->Release(invoker);
 				return String();
 			}
+			case InvokerState::Exceptional:
+			{
+				String error = invoker->error;
+				parameter.kernel->taskAgency->Release(invoker);
+				return error;
+			}
 			case InvokerState::Aborted:
 			{
-				String exitMessage = invoker->exitMessage;
+				parameter.task->invoker->Abort();
 				parameter.kernel->taskAgency->Release(invoker);
-				return exitMessage;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default:  EXCEPTION("不应该进入的分支");
@@ -2179,13 +2205,12 @@ String task_Start(KernelInvokerParameter parameter)//task.(bool, bool)
 	return String();
 }
 
-String task_Abort(KernelInvokerParameter parameter)//task.(string)
+String task_Abort(KernelInvokerParameter parameter)//task.()
 {
 	GET_THIS_VALUE(0, uint64);
 	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
-	String message = parameter.kernel->stringAgency->Get(PARAMETER_VALUE(0, string, 4));
-	invoker->Abort(message);
+	if (invoker->state != InvokerState::Running) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	invoker->Abort();
 	return String();
 }
 
@@ -2209,7 +2234,7 @@ String task_GetExitCode(KernelInvokerParameter parameter)//string task.()
 	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
 	string& result = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(result);
-	result = invoker->exitMessage.index;
+	result = invoker->error.index;
 	parameter.kernel->stringAgency->Reference(result);
 	return String();
 }
@@ -2415,12 +2440,19 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
 				return String();
-			case InvokerState::Aborted:
+			case InvokerState::Exceptional:
 			{
-				String exitMessage = invoker->exitMessage;
+				String error = invoker->error;
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
-				return exitMessage;
+				return error;
+			}
+			case InvokerState::Aborted:
+			{
+				parameter.task->invoker->Abort();
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default: EXCEPTION("不该进入的分支");
@@ -2466,11 +2498,17 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 				case InvokerState::Completed:
 					parameter.kernel->taskAgency->Release(invoker);
 					return String();
+				case InvokerState::Exceptional:
+				{
+					String error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
 				case InvokerState::Aborted:
 				{
-					String exitMessage = invoker->exitMessage;
+					parameter.task->invoker->Abort();
 					parameter.kernel->taskAgency->Release(invoker);
-					return exitMessage;
+					return String();
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
@@ -2495,11 +2533,17 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 				case InvokerState::Completed:
 					parameter.kernel->taskAgency->Release(invoker);
 					return String();
+				case InvokerState::Exceptional:
+				{
+					String error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
 				case InvokerState::Aborted:
 				{
-					String exitMessage = invoker->exitMessage;
+					parameter.task->invoker->Abort();
 					parameter.kernel->taskAgency->Release(invoker);
-					return exitMessage;
+					return String();
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
@@ -2664,12 +2708,19 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
 				return String();
-			case InvokerState::Aborted:
+			case InvokerState::Exceptional:
 			{
-				String exitMessage = invoker->exitMessage;
+				String error = invoker->error;
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
-				return exitMessage;
+				return error;
+			}
+			case InvokerState::Aborted:
+			{
+				parameter.task->invoker->Abort();
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default: EXCEPTION("不该进入的分支");
@@ -2724,11 +2775,17 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 					invoker->GetReturns(result);
 					parameter.kernel->taskAgency->Release(invoker);
 					return String();
+				case InvokerState::Exceptional:
+				{
+					error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
 				case InvokerState::Aborted:
 				{
-					String exitMessage = invoker->exitMessage;
+					parameter.task->invoker->Abort();
 					parameter.kernel->taskAgency->Release(invoker);
-					return exitMessage;
+					return String();
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
@@ -2760,11 +2817,17 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 					invoker->GetReturns(result);
 					parameter.kernel->taskAgency->Release(invoker);
 					return String();
+				case InvokerState::Exceptional:
+				{
+					error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
 				case InvokerState::Aborted:
 				{
-					String exitMessage = invoker->exitMessage;
+					parameter.task->invoker->Abort();
 					parameter.kernel->taskAgency->Release(invoker);
-					return exitMessage;
+					return String();
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
@@ -2862,12 +2925,19 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
 				return String();
-			case InvokerState::Aborted:
+			case InvokerState::Exceptional:
 			{
-				String exitMessage = invoker->exitMessage;
+				String error = invoker->error;
 				parameter.kernel->taskAgency->Release(invoker);
 				parameter.task->kernelInvoker = NULL;
-				return exitMessage;
+				return error;
+			}
+			case InvokerState::Aborted:
+			{
+				parameter.task->invoker->Abort();
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return String();
 			}
 			case InvokerState::Invalid:
 			default: EXCEPTION("不该进入的分支");
@@ -2912,11 +2982,17 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 					invoker->GetReturns(result);
 					parameter.kernel->taskAgency->Release(invoker);
 					return String();
+				case InvokerState::Exceptional:
+				{
+					String error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
 				case InvokerState::Aborted:
 				{
-					String exitMessage = invoker->exitMessage;
+					parameter.task->invoker->Abort();
 					parameter.kernel->taskAgency->Release(invoker);
-					return exitMessage;
+					return String();
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");
@@ -2943,9 +3019,9 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 					return String();
 				case InvokerState::Aborted:
 				{
-					String exitMessage = invoker->exitMessage;
+					String error = invoker->error;
 					parameter.kernel->taskAgency->Release(invoker);
-					return exitMessage;
+					return error;
 				}
 				case InvokerState::Invalid:
 				default: EXCEPTION("不该进入的分支");

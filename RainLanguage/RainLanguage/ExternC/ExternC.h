@@ -98,12 +98,12 @@ extern "C"
 	RAINLANGUAGE uint64 Extern_InvokerWrapperGetInstanceID(InvokerWrapper* invoker);
 	RAINLANGUAGE bool Extern_InvokerWrapperIsValid(InvokerWrapper* invoker);
 	RAINLANGUAGE uint8 Extern_InvokerWrapperGetState(InvokerWrapper* invoker);
-	RAINLANGUAGE RainString* Extern_InvokerWrapperGetExitMessage(InvokerWrapper* invoker);
+	RAINLANGUAGE RainString* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker);
 	RAINLANGUAGE void Extern_InvokerWrapperStart(InvokerWrapper* invoker, bool immediately, bool ignoreWait);
 	RAINLANGUAGE bool Extern_InvokerWrapperIsPause(InvokerWrapper* invoker);
 	RAINLANGUAGE void Extern_InvokerWrapperPause(InvokerWrapper* invoker);
 	RAINLANGUAGE void Extern_InvokerWrapperResume(InvokerWrapper* invoker);
-	RAINLANGUAGE void Extern_InvokerWrapperAbort(InvokerWrapper* invoker, character* error);
+	RAINLANGUAGE void Extern_InvokerWrapperAbort(InvokerWrapper* invoker);
 	RAINLANGUAGE bool Extern_InvokerWrapperGetBoolReturnValue(InvokerWrapper* invoker, uint32 index);
 	RAINLANGUAGE uint8 Extern_InvokerWrapperGetByteReturnValue(InvokerWrapper* invoker, uint32 index);
 	RAINLANGUAGE character Extern_InvokerWrapperGetCharReturnValue(InvokerWrapper* invoker, uint32 index);

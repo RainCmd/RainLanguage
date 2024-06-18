@@ -14,7 +14,6 @@ public:
 	Invoker* invoker, * kernelInvoker;
 	Task* next;
 	bool ignoreWait, pause, flag;
-	String exitMessage;
 	uint32 size, top, bottom, pointer;
 	integer wait;
 	uint8* stack;
@@ -22,10 +21,10 @@ public:
 	Task(Kernel* kernel, uint32 capacity);
 	inline bool EnsureStackSize(uint32 stackSize)
 	{
-		if (stackSize > size)
+		if(stackSize > size)
 		{
-			while (stackSize > size) size += size >> 2;
-			if (size >= MAX_STACK_SIZE) return true;
+			while(stackSize > size) size += size >> 2;
+			if(size >= MAX_STACK_SIZE) return true;
 			uint32 offset = (uint32)(cacheData[1] - stack);
 			stack = Realloc<uint8>(stack, size);
 			cacheData[1] = stack + offset;
@@ -33,14 +32,13 @@ public:
 		return false;
 	}
 	void Initialize(Invoker* sourceInvoker, bool isIgnoreWait);
-	void Exit(const String& message, uint32 exitPointer);
+	void Exit(const String& error, uint32 exitPointer);
 	void Run();
 	inline void Update()
 	{
-		if (wait > 0)wait--;
+		if(wait > 0)wait--;
 		else Run();
 	}
-	inline bool IsRunning() const { return exitMessage.IsEmpty() && pointer != INVALID; }
 	void Abort();
 	void Recycle();
 	~Task();

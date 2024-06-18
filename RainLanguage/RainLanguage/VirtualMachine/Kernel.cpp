@@ -329,7 +329,9 @@ void Kernel::Update()
 
 Kernel::~Kernel()
 {
-	for(Task* index = taskAgency->GetHeadTask(); index; index = index->next) index->exitMessage = stringAgency->Add(EXCEPTION_KERNEL_EXIT);
+	for(Task* index = taskAgency->GetHeadTask(); index; index = index->next)
+		if(index->invoker->state == InvokerState::Running)
+			index->invoker->Abort();
 	taskAgency->Update();
 	share->kernel = NULL;
 	share->Release();

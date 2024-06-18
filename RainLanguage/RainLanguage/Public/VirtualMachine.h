@@ -66,7 +66,7 @@ public:
 	/// </summary>
 	/// <returns>信息</returns>
 	/// <exception>如果调用是无效状态会抛异常</exception>
-	const RainString GetExitMessage() const;
+	const RainString GetErrorMessage() const;
 	/// <summary>
 	/// 开始执行任务
 	/// </summary>
@@ -92,8 +92,7 @@ public:
 	/// <summary>
 	/// 触发异常
 	/// </summary>
-	/// <param name="error">异常信息</param>
-	void Abort(const RainString& error) const;
+	void Abort() const;
 
 	/// <summary>
 	/// 获取布尔类型的返回值

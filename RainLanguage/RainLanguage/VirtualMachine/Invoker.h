@@ -13,15 +13,15 @@ class Invoker
 public:
 	Kernel* kernel;
 	List<uint8, true> data;
-	List<uint32,true > exceptionStackFrames;
+	List<uint32, true> exceptionStackFrames;
 	uint64 instanceID;
 	InvokerState state;
 	const CallableInfo* info;
 	uint32 entry;
-	String exitMessage;
+	String error;
 	uint32 hold;
 	Task* task;
-	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), exitMessage(), hold(0), task(NULL) {}
+	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), error(), hold(0), task(NULL) {}
 	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "无效的操作"); }
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, Type type) const;
@@ -74,6 +74,6 @@ public:
 	void GetParameters(uint8* pointer);
 	void GetReturns(const Handle results);
 	void Start(bool immediately, bool ignoreWait);
-	void Abort(const character* chars, uint32 length);
-	void Abort(String message);
+	void Abort();
+	void Exception(const String& message);
 };

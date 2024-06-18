@@ -20,7 +20,7 @@
 #define EXCEPTION_EXIT(instructName,message) { Exit(kernel->stringAgency->Add(message), POINTER); goto label_exit_jump_##instructName; }
 #define EXCEPTION_JUMP(instructSize,instructName)\
 			label_exit_jump_##instructName:\
-			if (exitMessage.IsEmpty())instruct += 5 + (instructSize);\
+			if (invoker->state == InvokerState::Exceptional || invoker->state == InvokerState::Aborted) instruct += 5 + (instructSize);\
 			else instruct += INSTRUCT_VALUE(uint32,(instructSize) + 1);
 
 #define CLASS_VARIABLE(instructOffset, instructName)\
@@ -53,7 +53,7 @@ inline uint8* GetReturnPoint(Kernel* kernel, uint8* stack, uint8* functionStack,
 	else return kernel->libraryAgency->data.GetPointer() + pointer;
 }
 
-Task::Task(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), exitMessage(), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(INVALID), wait(0), stack(NULL)
+Task::Task(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invoker(NULL), kernelInvoker(NULL), next(NULL), ignoreWait(false), pause(false), flag(false), size(capacity > 4 ? capacity : 4), top(0), bottom(0), pointer(INVALID), wait(0), stack(NULL)
 {
 	stack = Malloc<uint8>(size);
 	cacheData[0] = kernel->libraryAgency->data.GetPointer();
@@ -63,7 +63,6 @@ Task::Task(Kernel* kernel, uint32 capacity) :kernel(kernel), instanceID(0), invo
 void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 {
 	pause = false;
-	exitMessage = String();
 	wait = 0;
 	this->invoker = sourceInvoker;
 	instanceID = invoker->instanceID;
@@ -80,10 +79,10 @@ void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 		returnAddress[i] = LOCAL(invoker->info->returns.GetOffsets()[i]);
 	invoker->GetParameters(stack + bottom + SIZE(Frame) + invoker->info->returns.Count() * 4);
 }
-void Task::Exit(const String& message, uint32 exitPointer)
+void Task::Exit(const String& error, uint32 exitPointer)
 {
 	pointer = exitPointer;
-	exitMessage = message;
+	invoker->Exception(error);
 	invoker->exceptionStackFrames.Add(pointer);
 	for(Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) invoker->exceptionStackFrames.Add(index->pointer);
 }
@@ -97,28 +96,31 @@ label_next_instruct:
 	{
 #pragma region Base
 		case Instruct::BASE_Exit:
-			exitMessage = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
-			if(!exitMessage.IsEmpty()) Exit(exitMessage, POINTER);
+		{
+			const String error = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
+			if(!error.IsEmpty()) Exit(error, POINTER);
 			instruct += 5;
-			goto label_next_instruct;
+		}
+		goto label_next_instruct;
 		case Instruct::BASE_PushExitMessage:
-			INSTRUCT_VARIABLE(string, 1) = exitMessage.index;
-			kernel->stringAgency->Reference(exitMessage.index);
-			exitMessage = String();
+			INSTRUCT_VARIABLE(string, 1) = invoker->error.index;
+			kernel->stringAgency->Reference(invoker->error.index);
+			invoker->error = String();
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_PopExitMessage:
-			exitMessage = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
+			invoker->error = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_ExitJump:
-			if(exitMessage.IsEmpty()) instruct += 5;
-			else
+			if(invoker->state == InvokerState::Exceptional)
 			{
 				pointer = POINTER;
-				kernel->libraryAgency->OnException(instanceID, exitMessage);
+				kernel->libraryAgency->OnException(instanceID, invoker->error);
 				instruct += INSTRUCT_VALUE(uint32, 1);
 			}
+			else if(invoker->state == InvokerState::Aborted) instruct += INSTRUCT_VALUE(uint32, 1);
+			else instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_Wait:
 			instruct++;
@@ -1130,17 +1132,19 @@ label_next_instruct:
 			{
 				if(kernelInvoker)
 				{
-					kernelInvoker->Abort(error);
+					kernelInvoker->Abort();
 					kernelInvoker->Release();
 					kernelInvoker = NULL;
 				}
 				Exit(error, POINTER);
 			}
-			if(kernelInvoker)
+			else if(invoker->state == InvokerState::Aborted && kernelInvoker)
 			{
-				pointer = POINTER;
-				goto label_exit;
+				kernelInvoker->Abort();
+				kernelInvoker->Release();
+				kernelInvoker = NULL;
 			}
+			if(kernelInvoker) goto label_exit;
 			instruct += 5;
 		}
 		goto label_next_instruct;
@@ -2652,6 +2656,12 @@ void Task::Abort()
 			Run();
 			break;
 		case (uint8)Instruct::FUNCTION_KernelCall:
+			if(kernelInvoker)
+			{
+				kernelInvoker->Abort();
+				kernelInvoker->Release();
+				kernelInvoker = NULL;
+			}
 			pointer += *(uint32*)(kernel->libraryAgency->code.GetPointer() + pointer + 5);
 			Run();
 			break;
@@ -2664,9 +2674,7 @@ void Task::Recycle()
 	if(invoker->instanceID == instanceID)
 	{
 		invoker->SetReturns(stack);
-		invoker->exitMessage = exitMessage;
-		invoker->state = InvokerState::Completed;
-		if(!exitMessage.IsEmpty() && kernel->taskAgency->onExceptionExit)
+		if(invoker->state == InvokerState::Exceptional && kernel->taskAgency->onExceptionExit)
 		{
 			List<RainStackFrame> frames(invoker->exceptionStackFrames.Count());
 			for(uint32 i = 0; i < invoker->exceptionStackFrames.Count(); i++)
@@ -2681,7 +2689,7 @@ void Task::Recycle()
 					new (frames.Add())RainStackFrame(RainString(libraryName.GetPointer(), libraryName.GetLength()), RainString(fullName.GetPointer(), fullName.GetLength()), address - library->codeOffset);
 				}
 			}
-			kernel->taskAgency->onExceptionExit(*kernel, frames.GetPointer(), frames.Count(), RainString(exitMessage.GetPointer(), exitMessage.GetLength()));
+			kernel->taskAgency->onExceptionExit(*kernel, frames.GetPointer(), frames.Count(), RainString(invoker->error.GetPointer(), invoker->error.GetLength()));
 		}
 		invoker->task = NULL;
 		invoker = NULL;

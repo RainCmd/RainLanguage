@@ -3,7 +3,8 @@
 		Unstart
 		Running
 		Completed
-		Aborted
+        Exceptional
+        Aborted
 		Invalid
 	public struct bool
 		public string ToString()
@@ -77,7 +78,7 @@
 	public class delegate handle
 	public class task handle
 		public Start(bool immediately, bool ignoreWait)
-		public Abort(string message)
+		public Abort()
 		public integer GetInstantID()
 		public TaskState GetState()
 		public string GetExitCode()

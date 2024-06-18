@@ -1907,7 +1907,7 @@ namespace RainLanguage
             public string GetExitMessage()
             {
                 if (!IsValid) throw new InvalidOperationException("当前调用已失效");
-                using (var nativeString = new NativeString(Extern_InvokerWrapperGetExitMessage(invoker)))
+                using (var nativeString = new NativeString(Extern_InvokerWrapperGetErrorMessage(invoker)))
                     return nativeString.Value;
             }
             /// <summary>
@@ -1939,15 +1939,10 @@ namespace RainLanguage
             /// <summary>
             /// 停止调用的执行
             /// </summary>
-            /// <param name="error">停止执行时触发的异常信息（必须非空，否则操作无效）</param>
-            public void Abort(string error)
+            public void Abort()
             {
-                if (string.IsNullOrEmpty(error)) return;
                 if (State != InvaokerState.Running) throw new InvalidOperationException("当前调用的状态不是：Running");
-                fixed (char* pointer = error)
-                {
-                    InvokerWrapperAbort(invoker, pointer);
-                }
+                InvokerWrapperAbort(invoker);
             }
             /// <summary>
             /// 获取返回值
@@ -2593,8 +2588,8 @@ namespace RainLanguage
             private extern static bool InvokerWrapperIsValid(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetState", CallingConvention = CallingConvention.Cdecl)]
             private extern static byte InvokerWrapperGetState(void* invoker);
-            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetExitMessage", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* Extern_InvokerWrapperGetExitMessage(void* invoker);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetErrorMessage", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* Extern_InvokerWrapperGetErrorMessage(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperStart", CallingConvention = CallingConvention.Cdecl)]
             private extern static void InvokerWrapperStart(void* invoker, bool immediately, bool ignoreWait);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperIsPause", CallingConvention = CallingConvention.Cdecl)]
@@ -2604,7 +2599,7 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperResume", CallingConvention = CallingConvention.Cdecl)]
             private extern static void InvokerWrapperResume(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperAbort", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWrapperAbort(void* invoker, char* error);
+            private extern static void InvokerWrapperAbort(void* invoker);
             //get return value
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetBoolReturnValue", CallingConvention = CallingConvention.Cdecl)]
             private extern static bool InvokerWrapperGetBoolReturnValue(void* invoker, uint index);

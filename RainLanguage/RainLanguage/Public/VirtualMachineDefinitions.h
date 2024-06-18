@@ -19,7 +19,11 @@ enum class InvokerState :uint8
 	/// </summary>
 	Completed,
 	/// <summary>
-	/// 正在异常退出
+	/// 发生异常退出
+	/// </summary>
+	Exceptional,
+	/// <summary>
+	/// 外部控制退出
 	/// </summary>
 	Aborted,
 	/// <summary>

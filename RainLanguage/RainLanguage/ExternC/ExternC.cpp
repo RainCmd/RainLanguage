@@ -241,9 +241,9 @@ uint8 Extern_InvokerWrapperGetState(InvokerWrapper* invoker)
 	return (uint8)invoker->GetState();
 }
 
-RainString* Extern_InvokerWrapperGetExitMessage(InvokerWrapper* invoker)
+RainString* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker)
 {
-	return new RainString(invoker->GetExitMessage());
+	return new RainString(invoker->GetErrorMessage());
 }
 
 void Extern_InvokerWrapperStart(InvokerWrapper* invoker, bool immediately, bool ignoreWait)
@@ -266,9 +266,9 @@ void Extern_InvokerWrapperResume(InvokerWrapper* invoker)
 	invoker->Resume();
 }
 
-void Extern_InvokerWrapperAbort(InvokerWrapper* invoker, character* error)
+void Extern_InvokerWrapperAbort(InvokerWrapper* invoker)
 {
-	invoker->Abort(ExternHelper_GetRainString(error));
+	invoker->Abort();
 }
 
 bool Extern_InvokerWrapperGetBoolReturnValue(InvokerWrapper* invoker, uint32 index)

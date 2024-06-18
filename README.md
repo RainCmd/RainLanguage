@@ -381,16 +381,16 @@ namespace kernel
         Unstart     //未开始执行
         Running     //执行中
         Completed   //已完成
-        Aborted     //因抛异常而终止
+        Exceptional //因抛异常而终止
+        Aborted     //因task.Abort被调用而终止
         Invalid     //任务已失效
 
     public class task
         //开始执行异步函数，如果是使用start创建的task会自动调用Start(true, false)
         //如果当前任务不是未运行状态则会抛异常
         public Start(bool immediately, bool ignoreWait)
-        //终止异步函数，会在异步函数当前执行的位置主动引发一次异常，参数为异常消息
-        //如果任务当前不是运行状态则会抛异常
-        public Abort(string message)
+        //终止异步函数
+        public Abort()
         //获取任务当前状态
         public TaskState GetState()
         //任务异常终止时获取终止信息

@@ -296,6 +296,7 @@ void Invoker::Recycle()
 			case InvokerState::Completed:
 				ClearReturns();
 				break;
+			case InvokerState::Exceptional:
 			case InvokerState::Aborted:
 			case InvokerState::Invalid:
 			default: return;
@@ -316,7 +317,7 @@ void Invoker::Initialize(uint32 codeEntry, const CallableInfo* callableInfo)
 	info = callableInfo;
 	entry = codeEntry;
 	state = InvokerState::Unstart;
-	exitMessage = String();
+	error = String();
 	hold = 0;
 	data.SetCount(info->parameters.size);
 	Mzero(data.GetPointer(), data.Count());
@@ -350,15 +351,15 @@ void Invoker::Start(bool immediately, bool ignoreWait)
 	kernel->taskAgency->Start(this, immediately, ignoreWait);
 }
 
-void Invoker::Abort(const character* chars, uint32 length)
+void Invoker::Abort()
 {
-	Abort(kernel->stringAgency->Add(chars, length));
+	StateAssert(InvokerState::Running);
+	state = InvokerState::Aborted;
 }
 
-void Invoker::Abort(String message)
+void Invoker::Exception(const String& message)
 {
-	if(message.IsEmpty()) return;
 	StateAssert(InvokerState::Running);
-	task->exitMessage = message;
-	state = InvokerState::Aborted;
+	error = message;
+	state = InvokerState::Exceptional;
 }

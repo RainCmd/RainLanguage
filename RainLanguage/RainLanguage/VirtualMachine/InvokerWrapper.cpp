@@ -69,10 +69,10 @@ InvokerState InvokerWrapper::GetState() const
 	else return InvokerState::Invalid;
 }
 
-const RainString InvokerWrapper::GetExitMessage() const
+const RainString InvokerWrapper::GetErrorMessage() const
 {
 	ValidAssert(*this);
-	return RainString(INVOKER->exitMessage.GetPointer(), INVOKER->exitMessage.GetLength());
+	return RainString(INVOKER->error.GetPointer(), INVOKER->error.GetLength());
 }
 
 void InvokerWrapper::Start(bool immediately, bool ignoreWait) const
@@ -98,9 +98,9 @@ void InvokerWrapper::Resume() const
 	INVOKER->Resume();
 }
 
-void InvokerWrapper::Abort(const RainString& error) const
+void InvokerWrapper::Abort() const
 {
-	INVOKER->Abort(error.value, error.length);
+	INVOKER->Abort();
 }
 
 bool InvokerWrapper::GetBoolReturnValue(uint32 index) const

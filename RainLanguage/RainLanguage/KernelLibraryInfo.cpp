@@ -299,6 +299,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISIER_ENUM_ELEMENT("Unstart", KERNEL_TASK_STATE_INDEX_Unstart, InvokerState::Unstart);
 		REGISIER_ENUM_ELEMENT("Running", KERNEL_TASK_STATE_INDEX_Running, InvokerState::Running);
 		REGISIER_ENUM_ELEMENT("Completed", KERNEL_TASK_STATE_INDEX_Completed, InvokerState::Completed);
+		REGISIER_ENUM_ELEMENT("Exceptional", KERNEL_TASK_STATE_INDEX_Exceptional, InvokerState::Exceptional);
 		REGISIER_ENUM_ELEMENT("Aborted", KERNEL_TASK_STATE_INDEX_Aborted, InvokerState::Aborted);
 		REGISIER_ENUM_ELEMENT("Invalid", KERNEL_TASK_STATE_INDEX_Invalid, InvokerState::Invalid);
 		REGISIER_ENUM(true, root, "TaskState", KERNEL_TYPE_ENUM_INDEX_TaskState, elements);
@@ -437,7 +438,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(7);
 		REGISTER_MEMBER_FUNCTIONS(true, "Start", TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_Bool, TYPE_Bool), task_Start);
-		REGISTER_MEMBER_FUNCTIONS(true, "Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_String), task_Abort);
+		REGISTER_MEMBER_FUNCTIONS(true, "Abort", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Abort);
 		REGISTER_MEMBER_FUNCTIONS(true, "InstantID", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Task), task_GetState);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetState", CreateTypeList(TYPE_TaskState), CreateTypeList(TYPE_Task), task_GetState);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetExitCode", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Task), task_GetExitCode);
