@@ -82,8 +82,12 @@ public:
 
 static void Print(RainKernel&, CallerWrapper& caller)
 {
-	wcout << caller.GetStringParameter(0).value;
-	wcout.flush();
+	const character* value = caller.GetStringParameter(0).value;
+	if(value)
+	{
+		wcout << value;
+		wcout.flush();
+	}
 }
 static void NativeHelper(RainKernel&, CallerWrapper&) {}
 static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, const RainType* parameterTypes, uint32 parameterCount)
