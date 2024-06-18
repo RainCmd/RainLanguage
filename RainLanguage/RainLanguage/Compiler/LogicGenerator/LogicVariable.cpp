@@ -253,7 +253,7 @@ void LogicVariabelAssignment(DeclarationManager* manager, Generator* generator, 
 	}
 	else
 	{
-		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_Bitwise);
+		generator->WriteCode(Instruct::ASSIGNMENT_Variable2Handle_Struct);
 		generator->WriteCode(left, VariableAccessType::Read);
 		generator->WriteCodeGlobalVariableReference(leftMember, offset);
 		generator->WriteCode(right, VariableAccessType::Read);
