@@ -20,7 +20,7 @@
 #define EXCEPTION_EXIT(instructName,message) { Exit(kernel->stringAgency->Add(message), POINTER); goto label_exit_jump_##instructName; }
 #define EXCEPTION_JUMP(instructSize,instructName)\
 			label_exit_jump_##instructName:\
-			if (invoker->state == InvokerState::Exceptional || invoker->state == InvokerState::Aborted) instruct += 5 + (instructSize);\
+			if (invoker->state == InvokerState::Running) instruct += 5 + (instructSize);\
 			else instruct += INSTRUCT_VALUE(uint32,(instructSize) + 1);
 
 #define CLASS_VARIABLE(instructOffset, instructName)\

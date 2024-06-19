@@ -53,13 +53,15 @@
 		public bool IsAssignable(type)											//判断当前类型的对象是否可赋值给目标类型的变量
 		public bool IsValid()
 		public integer[] GetEnumElements()
+		public string[] GetEnumElementNames()
 		public Reflection.ReadonlyTypes GetParameters()							//委托的参数类型列表
 		public Reflection.ReadonlyTypes GetReturns()							//委托或任务的返回值类型列表
 		public handle CreateDelegate(Reflection.Function)													//创建全局函数的委托对象，返回当前类型的委托对象
 		public handle CreateDelegate(Reflection.Native)														//创建本地函数的委托对象，返回当前类型的委托对象
 		public handle CreateDelegate(Reflection.MemberFunction, handle target)								//创建成员函数的委托对象，返回当前类型的委托对象
-		public handle StartTask(Reflection.Function function, handle[] parameters)							//创建并执行一个任务，返回当前类型的任务对象
-		public handle StartTask(Reflection.MemberFunction function, handle target, handle[] parameters)		//创建并执行一个任务，返回当前类型的任务对象
+		public handle CreateTask(Reflection.Function function, handle[] parameters)							//创建一个任务，返回当前类型的任务对象
+		public handle CreateTask(Reflection.MemberFunction function, handle target, handle[] parameters)	//创建一个任务，返回当前类型的任务对象
+		public handle CreateArray(integer legnth)
 		public integer GetArrayRank()
 		public type GetArrayElementType()
 	public struct string
