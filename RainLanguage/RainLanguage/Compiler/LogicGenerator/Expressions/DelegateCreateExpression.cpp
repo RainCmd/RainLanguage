@@ -133,7 +133,7 @@ void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& pa
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	parameter.generator->WriteCode((uint8)FunctionType::Reality);
 	parameter.generator->WriteCode(closureVariable, VariableAccessType::Read);
-	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Function, parameter.manager->selfLibaray->classes[closure.index]->functions[0], NULL);
+	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassFunction, 0, closure.index);
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
