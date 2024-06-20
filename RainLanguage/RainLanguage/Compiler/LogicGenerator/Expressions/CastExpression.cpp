@@ -72,7 +72,6 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(parameter.GetResult(0, TYPE_Bool), VariableAccessType::Write);
 	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(targetType);
-	parameter.generator->WriteCode(parameter.finallyAddress);
 	if (local)
 	{
 		CodeLocalAddressReference endAddress = CodeLocalAddressReference();
@@ -111,7 +110,6 @@ void AsCastExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCode(targetParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCodeGlobalReference(returns[0]);
-	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
 AsCastExpression::~AsCastExpression()

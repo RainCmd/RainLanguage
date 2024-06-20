@@ -241,8 +241,8 @@ enum class Instruct                         //可能会抛异常的指令
 
     #pragma region casting
     CASTING,                                //exception
-    CASTING_IS,                             //exception
-    CASTING_AS,                             //exception
+    CASTING_IS,
+    CASTING_AS,
     CASTING_R2I,
     CASTING_I2R,
     CASTING_B2I,

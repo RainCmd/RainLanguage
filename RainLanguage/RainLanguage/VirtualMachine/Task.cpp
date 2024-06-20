@@ -2529,8 +2529,8 @@ label_next_instruct:
 			bool& result = VARIABLE(bool, resultValue);
 			Handle& target = VARIABLE(Handle, targetValue);
 			if(kernel->heapAgency->IsValid(target)) result = flag = kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target));
-			else EXCEPTION_EXIT(CASTING_IS, EXCEPTION_NULL_REFERENCE);
-			EXCEPTION_JUMP(8 + SIZE(Type), CASTING_IS);
+			else result = flag = false;
+			instruct += 9 + SIZE(Type);
 		}
 		goto label_next_instruct;
 		case Instruct::CASTING_AS:
@@ -2539,22 +2539,18 @@ label_next_instruct:
 			uint32 targetValue = INSTRUCT_VALUE(uint32, 5);
 			Handle& result = VARIABLE(Handle, resultValue);
 			Handle& target = VARIABLE(Handle, targetValue);
-			if(kernel->heapAgency->IsValid(target))
+			if(kernel->heapAgency->IsValid(target)&&kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target)))
 			{
-				if(kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target)))
-				{
-					kernel->heapAgency->StrongReference(target);
-					kernel->heapAgency->StrongRelease(result);
-					result = target;
-				}
-				else
-				{
-					kernel->heapAgency->StrongRelease(result);
-					result = NULL;
-				}
+				kernel->heapAgency->StrongReference(target);
+				kernel->heapAgency->StrongRelease(result);
+				result = target;
 			}
-			else EXCEPTION_EXIT(CASTING_AS, EXCEPTION_NULL_REFERENCE);
-			EXCEPTION_JUMP(8 + SIZE(Type), CASTING_AS);
+			else
+			{
+				kernel->heapAgency->StrongRelease(result);
+				result = NULL;
+			}
+			instruct += 9 + SIZE(Type);
 		}
 		goto label_next_instruct;
 		case Instruct::CASTING_R2I:
