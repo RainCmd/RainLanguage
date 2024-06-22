@@ -608,6 +608,11 @@ static void AcceptClient()
 		}
 	}
 label_exit:
+	if(debugger)
+	{
+		debugger->ClearBreakpoints();
+		debugger->Continue(true);
+	}
 	CloseServer();
 }
 
