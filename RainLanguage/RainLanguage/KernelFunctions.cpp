@@ -18,9 +18,9 @@
 #define PARAMETER_VALUE(returnCount, type, offset) (*(type*)(parameter.stack + parameter.top + SIZE(Frame) + (returnCount << 2) + offset))
 
 #define GET_THIS_VALUE(returnCount, type)\
-		type thisValue;\
-		if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(returnCount, Handle, 0), thisValue))\
+		if(!parameter.kernel->heapAgency->IsValid(PARAMETER_VALUE(returnCount, Handle, 0)))\
 			return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);\
+		type& thisValue = *(type*)parameter.kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0));
 
 #define CREATE_READONLY_VALUES(field, readonlyValuesType, elementType, count, referenceType)\
 		field = parameter.kernel->heapAgency->Alloc((Declaration)readonlyValuesType);\
@@ -30,8 +30,6 @@
 		((ReflectionReadonlyValues*)parameter.kernel->heapAgency->GetPoint(field))->values = values;\
 		parameter.kernel->heapAgency->WeakReference(values);\
 		parameter.kernel->heapAgency->StrongRelease(field);
-
-#define THIS(returnCount,type) (*(type*)parameter.kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0)))
 
 #pragma region 运算符
 String Operation_Less_integer_integer(KernelInvokerParameter parameter)// bool < (integer, integer)
@@ -1579,6 +1577,7 @@ String type_GetConstructors(KernelInvokerParameter parameter)//Reflection.Readon
 		default:
 			break;
 	}
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
@@ -1647,9 +1646,9 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
 	else if (type.code == TypeCode::Task) type = TYPE_Task;
 
-	Handle* handle = &RETURN_VALUE(Handle, 0);
-	parameter.kernel->heapAgency->StrongRelease(*handle);
-	*handle = NULL;
+	Handle& handle = RETURN_VALUE(Handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(handle);
+	handle = NULL;
 	switch (type.code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
@@ -1667,7 +1666,7 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 					parameter.kernel->heapAgency->WeakReference(function);
 				}
 			}
-			*handle = runtimeStruct->reflectionFunctions;
+			handle = runtimeStruct->reflectionFunctions;
 		}
 		break;
 		case TypeCode::Enum:
@@ -1685,7 +1684,7 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 					parameter.kernel->heapAgency->WeakReference(function);
 				}
 			}
-			*handle = runtimeEnum->reflectionFunctions;
+			handle = runtimeEnum->reflectionFunctions;
 		}
 		break;
 		case TypeCode::Handle:
@@ -1703,7 +1702,7 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 					new ((ReflectionMemberConstructor*)parameter.kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
 				}
 			}
-			*handle = runtimeClass->reflectionFunctions;
+			handle = runtimeClass->reflectionFunctions;
 		}
 		break;
 		case TypeCode::Interface:
@@ -1720,14 +1719,14 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 					new ((MemberFunction*)parameter.kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
 				}
 			}
-			*handle = runtimeInterface->reflectionFunctions;
+			handle = runtimeInterface->reflectionFunctions;
 		}
 		break;
 		case TypeCode::Delegate:
 		case TypeCode::Task:
 			break;
 	}
-	parameter.kernel->heapAgency->StrongReference(*handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
@@ -2416,7 +2415,6 @@ String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter paramet
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
-		THIS(1, ReflectionMemberConstructor).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
@@ -2665,7 +2663,6 @@ String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
-		THIS(1, ReflectionMemberFunction).parameters = thisValue.parameters;
 		for (uint32 i = 1; i < info->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
@@ -2683,7 +2680,6 @@ String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter)//R
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->returns.Count(), Weak);
-		THIS(1, ReflectionMemberFunction).returns = thisValue.returns;
 		for (uint32 i = 0; i < info->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = info->returns.GetType(i);
 	}
@@ -2882,7 +2878,6 @@ String Reflection_Function_GetParameters(KernelInvokerParameter parameter)//Read
 	{
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->parameters.Count(), Weak);
-		THIS(1, ReflectionFunction).parameters = thisValue.parameters;
 		for (uint32 i = 0; i < runtimeFunction->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->parameters.GetType(i);
 	}
@@ -2900,7 +2895,6 @@ String Reflection_Function_GetReturns(KernelInvokerParameter parameter)//Readonl
 	{
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->returns.Count(), Weak);
-		THIS(1, ReflectionFunction).returns = thisValue.returns;
 		for (uint32 i = 0; i < runtimeFunction->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->returns.GetType(i);
 	}
@@ -3076,7 +3070,6 @@ String Reflection_Native_GetParameters(KernelInvokerParameter parameter)//Readon
 	{
 		RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->parameters.Count(), Weak);
-		THIS(1, ReflectionNative).parameters = thisValue.parameters;
 		for (uint32 i = 0; i < runtimeNative->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->parameters.GetType(i);
 	}
@@ -3094,7 +3087,6 @@ String Reflection_Native_GetReturns(KernelInvokerParameter parameter)//ReadonlyT
 	{
 		RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->returns.Count(), Weak);
-		THIS(1, ReflectionNative).returns = thisValue.returns;
 		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->returns.GetType(i);
 	}
@@ -3211,7 +3203,6 @@ String Reflection_Space_GetChildren(KernelInvokerParameter parameter)//ReadonlyS
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.children, TYPE_Reflection_ReadonlySpaces, TYPE_Reflection_Space, space.children.Count(), Weak);
-		THIS(1, ReflectionSpace).children = thisValue.children;
 		for (uint32 i = 0; i < space.children.Count(); i++)
 		{
 			Handle handle = library->spaces[space.children[i]].GetReflection(parameter.kernel, thisValue.library, space.children[i]);
@@ -3255,7 +3246,6 @@ String Reflection_Space_GetVariables(KernelInvokerParameter parameter)//Readonly
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.variables, TYPE_Reflection_ReadonlyVariables, TYPE_Reflection_Variable, space.variables.Count(), Weak);
-		THIS(1, ReflectionSpace).variables = thisValue.variables;
 		for (uint32 i = 0; i < space.variables.Count(); i++)
 		{
 			Handle handle = library->variables[space.variables[i]].GetReflection(parameter.kernel, thisValue.library, space.variables[i]);
@@ -3279,7 +3269,6 @@ String Reflection_Space_GetFunctions(KernelInvokerParameter parameter)//Readonly
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.functions, TYPE_Reflection_ReadonlyFunctions, TYPE_Reflection_Function, space.functions.Count(), Weak);
-		THIS(1, ReflectionSpace).functions = thisValue.functions;
 		for (uint32 i = 0; i < space.functions.Count(); i++)
 		{
 			Handle handle = library->functions[space.functions[i]].GetReflection(parameter.kernel, thisValue.library, space.functions[i]);
@@ -3303,7 +3292,6 @@ String Reflection_Space_GetNatives(KernelInvokerParameter parameter)//ReadonlyNa
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.natives, TYPE_Reflection_ReadonlyNatives, TYPE_Reflection_Native, space.natives.Count(), Weak);
-		THIS(1, ReflectionSpace).natives = thisValue.natives;
 		for (uint32 i = 0; i < space.natives.Count(); i++)
 		{
 			Handle handle = library->natives[space.natives[i]].GetReflection(parameter.kernel, thisValue.library, space.natives[i]);
@@ -3326,7 +3314,6 @@ String Reflection_Space_GetTypes(KernelInvokerParameter parameter)//ReadonlyType
 	{
 		RuntimeSpace& space = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.tasks.Count(), Weak);
-		THIS(1, ReflectionSpace).types = thisValue.types;
 		uint32 index = 0;
 		for (uint32 i = 0; i < space.enums.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, space.enums[i], 0);
