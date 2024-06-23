@@ -46,4 +46,5 @@ void Debugger::OnUpdate()
 Debugger::~Debugger()
 {
 	::OnBroken(this);
+	pause = false;
 }
