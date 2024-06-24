@@ -1897,7 +1897,7 @@ String type_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 String type_CreateUninitialized(KernelInvokerParameter parameter)//handle type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code == TypeCode::Delegate || type.code == TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if (type.dimension || type.code == TypeCode::Interface || type.code == TypeCode::Delegate || type.code == TypeCode::Task) return parameter.kernel->stringAgency->Add(EXCEPTION_CANT_CREATE_OF_THIS_TYPE);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);

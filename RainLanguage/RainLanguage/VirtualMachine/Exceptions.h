@@ -9,6 +9,7 @@ constexpr auto EXCEPTION_NOT_ARRAY = TEXT("不是数组");
 constexpr auto EXCEPTION_NOT_DELEGATE = TEXT("不是委托");
 constexpr auto EXCEPTION_NOT_TASK = TEXT("不是任务");
 constexpr auto EXCEPTION_NOT_DELEGATE_OR_TASK = TEXT("不是委托或任务");
+constexpr auto EXCEPTION_CANT_CREATE_OF_THIS_TYPE = TEXT("无法创建该类型的对象");
 constexpr auto EXCEPTION_TASK_NOT_UNSTART = TEXT("任务状态不是未执行");
 constexpr auto EXCEPTION_TASK_NOT_RUNNING = TEXT("任务状态不是执行中");
 constexpr auto EXCEPTION_TASK_NOT_COMPLETED = TEXT("任务状态不是已完成");

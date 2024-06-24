@@ -396,6 +396,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "GetEnumElementNames", CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Type), type_GetEnumElementNames);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetParameters", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetParameters);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetReturns", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetReturns);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateUninitialized", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type), type_CreateUninitialized);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function), type_CreateDelegate);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Native), type_CreateDelegate2);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle), type_CreateDelegate3);
@@ -529,12 +530,23 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_VARIABLE(true, exceptionSpace, "InvalidTask", TYPE_String, AddData(EXCEPTION_INVALID_TASK));
 			REGISTER_VARIABLE(true, exceptionSpace, "OutOfRange", TYPE_String, AddData(EXCEPTION_OUT_OF_RANGE));
 			REGISTER_VARIABLE(true, exceptionSpace, "InvalidType", TYPE_String, AddData(EXCEPTION_INVALID_TYPE));
+			REGISTER_VARIABLE(true, exceptionSpace, "NotEnum", TYPE_String, AddData(EXCEPTION_NOT_ENUM));
 			REGISTER_VARIABLE(true, exceptionSpace, "NotArray", TYPE_String, AddData(EXCEPTION_NOT_ARRAY));
 			REGISTER_VARIABLE(true, exceptionSpace, "NotDelegate", TYPE_String, AddData(EXCEPTION_NOT_DELEGATE));
+			REGISTER_VARIABLE(true, exceptionSpace, "NotTask", TYPE_String, AddData(EXCEPTION_NOT_TASK));
 			REGISTER_VARIABLE(true, exceptionSpace, "NotDelegateOrTask", TYPE_String, AddData(EXCEPTION_NOT_DELEGATE_OR_TASK));
+			REGISTER_VARIABLE(true, exceptionSpace, "CantCreateOfThisType", TYPE_String, AddData(EXCEPTION_CANT_CREATE_OF_THIS_TYPE));
+			REGISTER_VARIABLE(true, exceptionSpace, "TaskNotUnstart", TYPE_String, AddData(EXCEPTION_TASK_NOT_UNSTART));
+			REGISTER_VARIABLE(true, exceptionSpace, "TaskNotRunning", TYPE_String, AddData(EXCEPTION_TASK_NOT_RUNNING));
 			REGISTER_VARIABLE(true, exceptionSpace, "TaskNotCompleted", TYPE_String, AddData(EXCEPTION_TASK_NOT_COMPLETED));
 			REGISTER_VARIABLE(true, exceptionSpace, "DivideByZero", TYPE_String, AddData(EXCEPTION_DIVIDE_BY_ZERO));
 			REGISTER_VARIABLE(true, exceptionSpace, "InvalidCast", TYPE_String, AddData(EXCEPTION_INVALID_CAST));
+			REGISTER_VARIABLE(true, exceptionSpace, "StackOverflow", TYPE_String, AddData(EXCEPTION_STACK_OVERFLOW));
+			REGISTER_VARIABLE(true, exceptionSpace, "AssignmentReadonlyVariable", TYPE_String, AddData(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE));
+			REGISTER_VARIABLE(true, exceptionSpace, "ParameterListDoesNotMatch", TYPE_String, AddData(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH));
+			REGISTER_VARIABLE(true, exceptionSpace, "ReturnListDoesNotMatch", TYPE_String, AddData(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH));
+			REGISTER_VARIABLE(true, exceptionSpace, "IgnoreWaitButConditionNotValid", TYPE_String, AddData(EXCEPTION_IGNORE_WAIT_BUT_CONDITION_NOT_VAILD));
+			REGISTER_VARIABLE(true, exceptionSpace, "IgnoreWaitButTaskNotCompleted", TYPE_String, AddData(EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED));
 		}
 
 		REGISTER_FUNCTIONS(true, space, "Collect", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Bool), Collect);

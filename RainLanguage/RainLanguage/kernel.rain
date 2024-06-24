@@ -56,6 +56,7 @@
 		public string[] GetEnumElementNames()
 		public Reflection.ReadonlyTypes GetParameters()							//委托的参数类型列表
 		public Reflection.ReadonlyTypes GetReturns()							//委托或任务的返回值类型列表
+		public handle CreateUninitialized()										//创建该类型的未初始化对象
 		public handle CreateDelegate(Reflection.Function)													//创建全局函数的委托对象，返回当前类型的委托对象
 		public handle CreateDelegate(Reflection.Native)														//创建本地函数的委托对象，返回当前类型的委托对象
 		public handle CreateDelegate(Reflection.MemberFunction, handle target)								//创建成员函数的委托对象，返回当前类型的委托对象
@@ -252,10 +253,24 @@
 			public string NullReference
 			public string InvalidTask
 			public string OutOfRange
-			public string InvalidTypeCode
+			public string InvalidType
+			public string NotEnum
+			public string NotArray
+			public string NotDelegate
+			public string NotTask
+			public string NotDelegateOrTask
+			public string CantCreateOfThisType
+			public string TaskNotUnstart
+			public string TaskNotRunning
 			public string TaskNotCompleted
 			public string DivideByZero
 			public string InvalidCast
+			public string StackOverflow
+			public string AssignmentReadonlyVariable
+			public string ParameterListDoesNotMatch
+			public string ReturnListDoesNotMatch
+			public string IgnoreWaitButConditionNotValid
+			public string IgnoreWaitButTaskNotCompleted
 
 		public integer Collect(bool)
 		public integer HeapTotalMemory()
