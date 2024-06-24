@@ -251,7 +251,7 @@ uint32 HeapAgency::Tidy(Handle handle, uint32 top)
 		Mmove<uint8>(heap.GetPointer() + value->pointer, heap.GetPointer() + top, value->size);
 		value->pointer = top;
 	}
-	return value->size;
+	return top + value->size;
 }
 
 Handle HeapAgency::Recycle(Handle handle)
@@ -281,7 +281,7 @@ void HeapAgency::FullGC()
 		if(heads[*clearIndex].flag == flag)
 		{
 			tail = *clearIndex;
-			top += Tidy(*clearIndex, top);
+			top = Tidy(*clearIndex, top);
 			clearIndex = &heads[*clearIndex].next;
 		}
 		else *clearIndex = Recycle(*clearIndex);
@@ -302,7 +302,7 @@ void HeapAgency::FastGC()
 			{
 				if(heads[*index].generation++ > generation) active = tail;
 				tail = *index;
-				top += Tidy(*index, top);
+				top = Tidy(*index, top);
 				index = &heads[*index].next;
 			}
 			else *index = Recycle(*index);
