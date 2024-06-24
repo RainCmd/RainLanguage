@@ -308,21 +308,24 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 		case Proto::RSEND_SetGlobal: break;
 		case Proto::RRECV_Tasks:
 		{
-			if(!debugger->IsBreaking())
-			{
-				LogMsg(L"tasks: is not breaking");
-				return;
-			}
 			WritePackage writer;
 			writer.WriteProto(Proto::RSEND_Tasks);
 			writer.WriteUint32(reader.ReadUint32());
-
-			uint taskCountPtr = writer.WriteUint32(0);
-			RainTaskIterator taskIterator = debugger->GetTaskIterator();
-			while(taskIterator.Next())
+			if(debugger->IsBreaking())
 			{
-				writer.Get<uint32>(taskCountPtr)++;
-				writer.WriteUint64(taskIterator.Current().TaskID());
+				uint taskCountPtr = writer.WriteUint32(0);
+				RainTaskIterator taskIterator = debugger->GetTaskIterator();
+				while(taskIterator.Next())
+				{
+					writer.Get<uint32>(taskCountPtr)++;
+					writer.WriteUint64(taskIterator.Current().TaskID());
+				}
+			}
+			else
+			{
+				LogMsg(L"tasks: is not breaking");
+				writer.WriteUint32(1);
+				writer.WriteUint64(0);
 			}
 			Send(socket, writer);
 		}
