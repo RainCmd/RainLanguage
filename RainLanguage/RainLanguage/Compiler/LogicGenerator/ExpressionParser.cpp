@@ -137,7 +137,7 @@ bool CheckBlurry(const List<Type, true>& types)
 bool TryRemoveBracket(const Anchor& anchor, Anchor& result, MessageCollector* messages)
 {
 	result = anchor.Trim();
-	if(result.content.IsEmpty()) return true;
+	if(result.content.IsEmpty()) return false;
 	Anchor splitLeft, splitRight;
 	if(Split(result, result.position, SplitFlag::Bracket0, splitLeft, splitRight, messages) == LexicalType::BracketRight0 && splitLeft.position == result.position && splitRight.GetEnd() == result.GetEnd())
 	{
@@ -1561,12 +1561,12 @@ bool ExpressionParser::TryParseLambda(const Anchor& parameterAnchor, const Ancho
 	Anchor left, right;
 	while(Split(anchor, anchor.position, SplitFlag::Comma | SplitFlag::Semicolon, left, right, manager->messages) != LexicalType::Unknow)
 	{
-		if(TryParseLambdaParameter(left.Trim(), left, manager->messages) && !left.content.IsEmpty()) parameters.Add(left);
-		else return false;
+		if(!TryParseLambdaParameter(left.Trim(), left, manager->messages)) return false;
+		else if(!left.content.IsEmpty()) parameters.Add(left);
 		anchor = right.Trim();
 	}
-	if(TryParseLambdaParameter(anchor.Trim(), anchor, manager->messages) && !anchor.content.IsEmpty()) parameters.Add(anchor);
-	else return false;
+	if(!TryParseLambdaParameter(anchor.Trim(), anchor, manager->messages)) return false;
+	else if(!anchor.content.IsEmpty()) parameters.Add(anchor);
 	result = new BlurryLambdaExpression(parameterAnchor.content.IsEmpty() ? expressionAnchor : parameterAnchor, parameters, expressionAnchor);
 	return true;
 }
