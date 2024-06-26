@@ -104,7 +104,7 @@ static bool OnCreateDebugger(const RainString& name, const RainDebuggerParameter
 	confirm = false;
 	Debugger* dbg = debugger;
 	if(threadId != this_thread::get_id())
-		while(!confirm && dbg && dbg == debugger) 
+		while(!confirm && dbg && dbg == debugger)
 			this_thread::sleep_for(chrono::milliseconds(10));
 	return true;
 }
@@ -186,9 +186,11 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			debugger->ClearBreakpoints();
 			break;
 		case Proto::RECV_Pause:
-			if(debugger->IsBreaking()) OnHitBreakpoint(debugger, debugger->GetCurrentTaskID());
+		{
+			if(debugger->IsBreaking()) OnHitBreakpoint(debugger, reader.ReadUint64());
 			else debugger->Pause();
-			break;
+		}
+		break;
 		case Proto::RECV_Continue:
 			debugger->Continue(reader.ReadBool());
 			break;
@@ -620,14 +622,7 @@ void OnHitBreakpoint(Debugger* debugger, uint64 task)
 	if(socket == INVALID_SOCKET) return;
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_OnBreak);
-	RainTaskIterator iterator = debugger->GetTaskIterator();
-	uint taskCountPtr = writer.WriteUint32(0);
-	while(iterator.Next())
-	{
-		writer.Get<uint32>(taskCountPtr)++;
-		writer.WriteUint64(iterator.Current().TaskID());
-	}
-	writer.WriteUint64(debugger->GetCurrentTaskID());
+	writer.WriteUint64(task);
 	Send(socket, writer);
 }
 
@@ -638,14 +633,7 @@ void OnTaskExit(Debugger* debugger, uint64 task, const RainString& msg)
 	WritePackage writer;
 	writer.WriteProto(Proto::SEND_OnException);
 	writer.WriteString(RS2WS(msg));
-	RainTaskIterator iterator = debugger->GetTaskIterator();
-	uint taskCountPtr = writer.WriteUint32(0);
-	while(iterator.Next())
-	{
-		writer.Get<uint32>(taskCountPtr)++;
-		writer.WriteUint64(iterator.Current().TaskID());
-	}
-	writer.WriteUint64(debugger->GetCurrentTaskID());
+	writer.WriteUint64(task);
 	Send(socket, writer);
 }
 
