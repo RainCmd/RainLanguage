@@ -17,11 +17,6 @@
 #define RETURN_VALUE(type, index) (*(type*)(IS_LOCAL(RETURN_POINT[index]) ? (parameter.stack + LOCAL_ADDRESS(RETURN_POINT[index])) : (parameter.kernel->libraryAgency->data.GetPointer() + RETURN_POINT[index])))
 #define PARAMETER_VALUE(returnCount, type, offset) (*(type*)(parameter.stack + parameter.top + SIZE(Frame) + (returnCount << 2) + offset))
 
-#define GET_THIS_VALUE(returnCount, type)\
-		if(!parameter.kernel->heapAgency->IsValid(PARAMETER_VALUE(returnCount, Handle, 0)))\
-			return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);\
-		type& thisValue = *(type*)parameter.kernel->heapAgency->GetPoint(PARAMETER_VALUE(returnCount, Handle, 0));
-
 #define CREATE_READONLY_VALUES(field, readonlyValuesType, elementType, count, referenceType)\
 		field = parameter.kernel->heapAgency->Alloc((Declaration)readonlyValuesType);\
 		parameter.kernel->heapAgency->StrongReference(field);\
@@ -30,6 +25,13 @@
 		((ReflectionReadonlyValues*)parameter.kernel->heapAgency->GetPoint(field))->values = values;\
 		parameter.kernel->heapAgency->WeakReference(values);\
 		parameter.kernel->heapAgency->StrongRelease(field);
+#define CHECK_THIS_VALUE_NULL(returnCount) Handle thisHandle = PARAMETER_VALUE(returnCount, Handle, 0);\
+	if(!parameter.kernel->heapAgency->IsValid(thisHandle))\
+		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+
+#define THIS_VALUE(type) (*(type*)parameter.kernel->heapAgency->GetPoint(thisHandle))
+#define DECLARATION_THIS_VALUE(type) type thisValue = THIS_VALUE(type);
+
 
 #pragma region 运算符
 String Operation_Less_integer_integer(KernelInvokerParameter parameter)// bool < (integer, integer)
@@ -138,7 +140,7 @@ String Operation_Equals_delegate_delegate(KernelInvokerParameter parameter)// bo
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
-	if (left == right) RETURN_VALUE(bool, 0) = true;
+	if(left == right) RETURN_VALUE(bool, 0) = true;
 	else RETURN_VALUE(bool, 0) = *(Delegate*)parameter.kernel->heapAgency->GetPoint(left) == *(Delegate*)parameter.kernel->heapAgency->GetPoint(right);
 	return String();
 }
@@ -207,7 +209,7 @@ String Operation_Not_Equals_delegate_delegate(KernelInvokerParameter parameter)/
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
-	if (left == right)RETURN_VALUE(bool, 0) = false;
+	if(left == right)RETURN_VALUE(bool, 0) = false;
 	else RETURN_VALUE(bool, 0) = *(Delegate*)parameter.kernel->heapAgency->GetPoint(left) != *(Delegate*)parameter.kernel->heapAgency->GetPoint(right);
 	return String();
 }
@@ -343,10 +345,10 @@ String Operation_Plus_string_real(KernelInvokerParameter parameter)// string + (
 
 String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string + (string, handle)
 {
-	if (parameter.task->kernelInvoker)
+	if(parameter.task->kernelInvoker)
 	{
 		Invoker* invoker = parameter.task->kernelInvoker;
-		switch (invoker->state)
+		switch(invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running: return String();
@@ -382,13 +384,13 @@ String Operation_Plus_string_handle(KernelInvokerParameter parameter)// string +
 	{
 		Handle handle = PARAMETER_VALUE(1, Handle, SIZE(string));
 		Type type;
-		if (!parameter.kernel->heapAgency->TryGetType(handle, type))return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+		if(!parameter.kernel->heapAgency->TryGetType(handle, type))return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 		Function function = parameter.kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
 		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, handle);
 		invoker->Start(true, parameter.task->ignoreWait);
-		switch (invoker->state)
+		switch(invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running:
@@ -468,10 +470,10 @@ String Operation_Plus_real_string(KernelInvokerParameter parameter)// string + (
 
 String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string + (handle, string)
 {
-	if (parameter.task->kernelInvoker)
+	if(parameter.task->kernelInvoker)
 	{
 		Invoker* invoker = parameter.task->kernelInvoker;
-		switch (invoker->state)
+		switch(invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running: return String();
@@ -507,13 +509,13 @@ String Operation_Plus_handle_string(KernelInvokerParameter parameter)// string +
 	{
 		Handle handle = PARAMETER_VALUE(1, Handle, 0);
 		Type type;
-		if (!parameter.kernel->heapAgency->TryGetType(handle, type)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+		if(!parameter.kernel->heapAgency->TryGetType(handle, type)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 		Function function = parameter.kernel->libraryAgency->GetFunction(MEMBER_FUNCTION_Handle_ToString, type);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
 		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, handle);
 		invoker->Start(true, parameter.task->ignoreWait);
-		switch (invoker->state)
+		switch(invoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不应该进入的分支");
 			case InvokerState::Running:
@@ -654,7 +656,7 @@ String Operation_Mul_real4_real4(KernelInvokerParameter parameter)// real4 * (re
 String Operation_Div_integer_integer(KernelInvokerParameter parameter)// integer / (integer, integer)
 {
 	integer divisor = PARAMETER_VALUE(1, integer, SIZE(integer));
-	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) / divisor;
 	return String();
 }
@@ -662,7 +664,7 @@ String Operation_Div_integer_integer(KernelInvokerParameter parameter)// integer
 String Operation_Div_real_real(KernelInvokerParameter parameter)// real / (real, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(real));
-	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(real, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
@@ -670,7 +672,7 @@ String Operation_Div_real_real(KernelInvokerParameter parameter)// real / (real,
 String Operation_Div_real2_real(KernelInvokerParameter parameter)// real2 / (real2, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(Real2));
-	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) / divisor;
 	return String();
 }
@@ -678,7 +680,7 @@ String Operation_Div_real2_real(KernelInvokerParameter parameter)// real2 / (rea
 String Operation_Div_real3_real(KernelInvokerParameter parameter)// real3 / (real3, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(Real3));
-	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) / divisor;
 	return String();
 }
@@ -686,7 +688,7 @@ String Operation_Div_real3_real(KernelInvokerParameter parameter)// real3 / (rea
 String Operation_Div_real4_real(KernelInvokerParameter parameter)// real4 / (real4, real)
 {
 	real divisor = PARAMETER_VALUE(1, real, SIZE(Real4));
-	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) / divisor;
 	return String();
 }
@@ -694,7 +696,7 @@ String Operation_Div_real4_real(KernelInvokerParameter parameter)// real4 / (rea
 String Operation_Div_real_real2(KernelInvokerParameter parameter)// real2 / (real, real2)
 {
 	Real2 divisor = PARAMETER_VALUE(1, Real2, SIZE(real));
-	if (divisor.x == 0 || divisor.y == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor.x == 0 || divisor.y == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
@@ -702,7 +704,7 @@ String Operation_Div_real_real2(KernelInvokerParameter parameter)// real2 / (rea
 String Operation_Div_real_real3(KernelInvokerParameter parameter)// real3 / (real, real3)
 {
 	Real3 divisor = PARAMETER_VALUE(1, Real3, SIZE(real));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor.x == 0 || divisor.y == 0 || divisor.z == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
@@ -710,7 +712,7 @@ String Operation_Div_real_real3(KernelInvokerParameter parameter)// real3 / (rea
 String Operation_Div_real_real4(KernelInvokerParameter parameter)// real4 / (real, real4)
 {
 	Real4 divisor = PARAMETER_VALUE(1, Real4, SIZE(real));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, real, 0) / divisor;
 	return String();
 }
@@ -718,7 +720,7 @@ String Operation_Div_real_real4(KernelInvokerParameter parameter)// real4 / (rea
 String Operation_Div_real2_real2(KernelInvokerParameter parameter)// real2 / (real2, real2)
 {
 	Real2 divisor = PARAMETER_VALUE(1, Real2, SIZE(Real2));
-	if (divisor.x == 0 || divisor.y == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor.x == 0 || divisor.y == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real2, 0) = PARAMETER_VALUE(1, Real2, 0) / divisor;
 	return String();
 }
@@ -726,7 +728,7 @@ String Operation_Div_real2_real2(KernelInvokerParameter parameter)// real2 / (re
 String Operation_Div_real3_real3(KernelInvokerParameter parameter)// real3 / (real3, real3)
 {
 	Real3 divisor = PARAMETER_VALUE(1, Real3, SIZE(Real3));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor.x == 0 || divisor.y == 0 || divisor.z == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real3, 0) = PARAMETER_VALUE(1, Real3, 0) / divisor;
 	return String();
 }
@@ -734,7 +736,7 @@ String Operation_Div_real3_real3(KernelInvokerParameter parameter)// real3 / (re
 String Operation_Div_real4_real4(KernelInvokerParameter parameter)// real4 / (real4, real4)
 {
 	Real4 divisor = PARAMETER_VALUE(1, Real4, SIZE(Real4));
-	if (divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor.x == 0 || divisor.y == 0 || divisor.z == 0 || divisor.w == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(Real4, 0) = PARAMETER_VALUE(1, Real4, 0) / divisor;
 	return String();
 }
@@ -742,7 +744,7 @@ String Operation_Div_real4_real4(KernelInvokerParameter parameter)// real4 / (re
 String Operation_Mod_integer_integer(KernelInvokerParameter parameter)// integer % (integer, integer)
 {
 	integer divisor = PARAMETER_VALUE(1, integer, SIZE(integer));
-	if (divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
+	if(divisor == 0) parameter.kernel->stringAgency->Add(EXCEPTION_DIVIDE_BY_ZERO);
 	RETURN_VALUE(integer, 0) = PARAMETER_VALUE(1, integer, 0) % divisor;
 	return String();
 }
@@ -858,7 +860,7 @@ String BytesConvertString(KernelInvokerParameter parameter)//string (byte[])
 	Handle handle = PARAMETER_VALUE(1, Handle, 0);
 	integer length;
 	String error = parameter.kernel->heapAgency->TryGetArrayLength(handle, length);
-	if (!error.IsEmpty())return error;
+	if(!error.IsEmpty())return error;
 	character* chars = (character*)parameter.kernel->heapAgency->GetArrayPoint(handle, 0);
 	RETURN_VALUE(string, 0) = parameter.kernel->stringAgency->AddAndRef(chars, (uint32)length >> 1);
 	return String();
@@ -1253,7 +1255,7 @@ String LoadAssembly(KernelInvokerParameter parameter)//Reflection.Assembly (stri
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	RuntimeLibrary* library = parameter.kernel->libraryAgency->Load(PARAMETER_VALUE(1, string, 0), false);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	if (library)
+	if(library)
 	{
 		handle = library->spaces[0].GetReflection(parameter.kernel, library->index, 0);
 		parameter.kernel->heapAgency->StrongReference(handle);
@@ -1271,10 +1273,10 @@ String GetAssembles(KernelInvokerParameter parameter)//Reflection.Assembly[] ()
 
 	List<Handle, true> assembles = List<Handle, true>(parameter.kernel->libraryAgency->libraries.Count() + 1);
 	assembles.Add(parameter.kernel->libraryAgency->kernelLibrary->spaces[0].GetReflection(parameter.kernel, LIBRARY_KERNEL, 0));
-	for (uint32 i = 0; i < parameter.kernel->libraryAgency->libraries.Count(); i++)
+	for(uint32 i = 0; i < parameter.kernel->libraryAgency->libraries.Count(); i++)
 		assembles.Add(parameter.kernel->libraryAgency->libraries[i]->spaces[0].GetReflection(parameter.kernel, i, 0));
 
-	for (uint32 i = 0; i < assembles.Count(); i++)
+	for(uint32 i = 0; i < assembles.Count(); i++)
 	{
 		*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(handle, i) = assembles[i];
 		parameter.kernel->heapAgency->WeakReference(assembles[i]);
@@ -1409,8 +1411,8 @@ String enum_ToString(KernelInvokerParameter parameter)//string enum.() Declarati
 String type_IsPublic(KernelInvokerParameter parameter)//bool type.()
 {
 	Type* type = &PARAMETER_VALUE(1, Type, 0);
-	if (type->library == LIBRARY_KERNEL)RETURN_VALUE(bool, 0) = true;
-	else switch (type->code)
+	if(type->library == LIBRARY_KERNEL)RETURN_VALUE(bool, 0) = true;
+	else switch(type->code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
@@ -1429,8 +1431,8 @@ String type_IsPublic(KernelInvokerParameter parameter)//bool type.()
 String type_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings type.()
 {
 	Type* type = &PARAMETER_VALUE(1, Type, 0);
-	if (type->dimension) *type = TYPE_Array;
-	switch (type->code)
+	if(type->dimension) *type = TYPE_Array;
+	switch(type->code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
@@ -1465,9 +1467,9 @@ String type_GetParent(KernelInvokerParameter parameter)//type type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	Type& result = RETURN_VALUE(Type, 0);
-	if (type.dimension) result = TYPE_Array;
-	else if (type == TYPE_Handle) result = Type();
-	else switch (type.code)
+	if(type.dimension) result = TYPE_Array;
+	else if(type == TYPE_Handle) result = Type();
+	else switch(type.code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
@@ -1496,8 +1498,8 @@ String type_GetInherits(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
-	if (type.dimension)type = TYPE_Array;
-	switch (type.code)
+	if(type.dimension)type = TYPE_Array;
+	switch(type.code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
@@ -1506,12 +1508,12 @@ String type_GetInherits(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 		case TypeCode::Handle:
 		{
 			RuntimeClass* info = parameter.kernel->libraryAgency->GetClass(type);
-			if (!info->reflectionInherits)
+			if(!info->reflectionInherits)
 			{
 				CREATE_READONLY_VALUES(info->reflectionInherits, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->inherits.Count(), Strong);
 				Set<Declaration, true>::Iterator iterator = info->inherits.GetIterator();
 				uint32 index = 0;
-				while (iterator.Next()) *(Type*)parameter.kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
+				while(iterator.Next()) *(Type*)parameter.kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
 			}
 			handle = info->reflectionInherits;
 		}
@@ -1519,12 +1521,12 @@ String type_GetInherits(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 		case TypeCode::Interface:
 		{
 			RuntimeInterface* info = parameter.kernel->libraryAgency->GetInterface(type);
-			if (!info->reflectionInherits)
+			if(!info->reflectionInherits)
 			{
 				CREATE_READONLY_VALUES(info->reflectionInherits, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->inherits.Count(), Strong);
 				Set<Declaration, true>::Iterator iterator = info->inherits.GetIterator();
 				uint32 index = 0;
-				while (iterator.Next()) *(Type*)parameter.kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
+				while(iterator.Next()) *(Type*)parameter.kernel->heapAgency->GetArrayPoint(handle, index++) = Type(iterator.Current(), 0);
 			}
 			handle = info->reflectionInherits;
 		}
@@ -1543,11 +1545,11 @@ String type_GetConstructors(KernelInvokerParameter parameter)//Reflection.Readon
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
-	if (type.dimension)type = TYPE_Array;
-	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
-	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Task) type = TYPE_Task;
-	switch (type.code)
+	if(type.dimension)type = TYPE_Array;
+	else if(type.code == TypeCode::Enum) type = TYPE_Enum;
+	else if(type.code == TypeCode::Delegate) type = TYPE_Delegate;
+	else if(type.code == TypeCode::Task) type = TYPE_Task;
+	switch(type.code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
@@ -1557,10 +1559,10 @@ String type_GetConstructors(KernelInvokerParameter parameter)//Reflection.Readon
 		{
 			RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(type.library);
 			RuntimeClass* runtimeClass = &library->classes[type.index];
-			if (!runtimeClass->reflectionConstructors)
+			if(!runtimeClass->reflectionConstructors)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionConstructors, TYPE_Reflection_ReadonlyMemberConstructors, TYPE_Reflection_MemberConstructor, runtimeClass->constructors.Count(), Strong);
-				for (uint32 i = 0; i < runtimeClass->constructors.Count(); i++)
+				for(uint32 i = 0; i < runtimeClass->constructors.Count(); i++)
 				{
 					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberConstructor);
 					new ((ReflectionMemberConstructor*)parameter.kernel->heapAgency->GetPoint(function))ReflectionMemberConstructor(type, i);
@@ -1587,20 +1589,20 @@ String type_GetVariables(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
-	if (type.dimension)type = TYPE_Array;
-	else if (type.code == TypeCode::Enum) type = TYPE_Enum;
-	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Task) type = TYPE_Task;
-	switch (type.code)
+	if(type.dimension)type = TYPE_Array;
+	else if(type.code == TypeCode::Enum) type = TYPE_Enum;
+	else if(type.code == TypeCode::Delegate) type = TYPE_Delegate;
+	else if(type.code == TypeCode::Task) type = TYPE_Task;
+	switch(type.code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		{
 			RuntimeStruct* runtimeStruct = parameter.kernel->libraryAgency->GetStruct(type);
-			if (!runtimeStruct->reflectionVariables)
+			if(!runtimeStruct->reflectionVariables)
 			{
 				CREATE_READONLY_VALUES(runtimeStruct->reflectionVariables, TYPE_Reflection_ReadonlyMemberVariables, TYPE_Reflection_MemberVariable, runtimeStruct->variables.Count(), Strong);
-				for (uint32 i = 0; i < runtimeStruct->variables.Count(); i++)
+				for(uint32 i = 0; i < runtimeStruct->variables.Count(); i++)
 				{
 					Handle variable = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
 					new ((MemberVariable*)parameter.kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
@@ -1616,10 +1618,10 @@ String type_GetVariables(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 		case TypeCode::Handle:
 		{
 			RuntimeClass* runtimeClass = parameter.kernel->libraryAgency->GetClass(type);
-			if (!runtimeClass->reflectionVariables)
+			if(!runtimeClass->reflectionVariables)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionVariables, TYPE_Reflection_ReadonlyMemberVariables, TYPE_Reflection_MemberVariable, runtimeClass->variables.Count(), Strong);
-				for (uint32 i = 0; i < runtimeClass->variables.Count(); i++)
+				for(uint32 i = 0; i < runtimeClass->variables.Count(); i++)
 				{
 					Handle variable = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberVariable);
 					new ((MemberVariable*)parameter.kernel->heapAgency->GetPoint(variable))MemberVariable(type, i);
@@ -1642,23 +1644,23 @@ String type_GetVariables(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyMemberFunctions type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension)type = TYPE_Array;
-	else if (type.code == TypeCode::Delegate) type = TYPE_Delegate;
-	else if (type.code == TypeCode::Task) type = TYPE_Task;
+	if(type.dimension)type = TYPE_Array;
+	else if(type.code == TypeCode::Delegate) type = TYPE_Delegate;
+	else if(type.code == TypeCode::Task) type = TYPE_Task;
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = NULL;
-	switch (type.code)
+	switch(type.code)
 	{
 		case TypeCode::Invalid: return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 		case TypeCode::Struct:
 		{
 			RuntimeStruct* runtimeStruct = parameter.kernel->libraryAgency->GetStruct(type);
-			if (!runtimeStruct->reflectionFunctions)
+			if(!runtimeStruct->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeStruct->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeStruct->functions.Count(), Strong);
-				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
+				for(uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
 				{
 					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
 					new ((MemberFunction*)parameter.kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
@@ -1673,10 +1675,10 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 		{
 			RuntimeStruct* runtimeStruct = parameter.kernel->libraryAgency->GetStruct(TYPE_Enum);
 			RuntimeEnum* runtimeEnum = parameter.kernel->libraryAgency->GetEnum(type);
-			if (!runtimeEnum->reflectionFunctions)
+			if(!runtimeEnum->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeEnum->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeStruct->functions.Count(), Strong);
-				for (uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
+				for(uint32 i = 0; i < runtimeStruct->functions.Count(); i++)
 				{
 					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
 					new ((MemberFunction*)parameter.kernel->heapAgency->GetPoint(function))MemberFunction(type, i);
@@ -1691,10 +1693,10 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 		{
 			RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(type.library);
 			RuntimeClass* runtimeClass = &library->classes[type.index];
-			if (!runtimeClass->reflectionFunctions)
+			if(!runtimeClass->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeClass->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeClass->functions.Count(), Strong);
-				for (uint32 i = 0; i < runtimeClass->functions.Count(); i++)
+				for(uint32 i = 0; i < runtimeClass->functions.Count(); i++)
 				{
 					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
 					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
@@ -1708,10 +1710,10 @@ String type_GetFunctions(KernelInvokerParameter parameter)//Reflection.ReadonlyM
 		case TypeCode::Interface:
 		{
 			RuntimeInterface* runtimeInterface = parameter.kernel->libraryAgency->GetInterface(type);
-			if (!runtimeInterface->reflectionFunctions)
+			if(!runtimeInterface->reflectionFunctions)
 			{
 				CREATE_READONLY_VALUES(runtimeInterface->reflectionFunctions, TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Reflection_MemberFunction, runtimeInterface->functions.Count(), Strong);
-				for (uint32 i = 0; i < runtimeInterface->functions.Count(); i++)
+				for(uint32 i = 0; i < runtimeInterface->functions.Count(); i++)
 				{
 					Handle function = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_MemberFunction);
 					*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = function;
@@ -1734,7 +1736,7 @@ String type_GetSpace(KernelInvokerParameter parameter)//Reflection.Space type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	uint32 space;
-	if (!parameter.kernel->libraryAgency->TryGetSpace(type, space))return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
+	if(!parameter.kernel->libraryAgency->TryGetSpace(type, space))return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
 	Handle* handle = &RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(*handle);
 	*handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
@@ -1747,25 +1749,25 @@ String type_GetTypeCode(KernelInvokerParameter parameter)//Reflection.TypeCode t
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	integer& result = RETURN_VALUE(integer, 0);
-	if (type.dimension || type == TYPE_Array) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Array;
-	else switch (type.code)
+	if(type.dimension || type == TYPE_Array) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Array;
+	else switch(type.code)
 	{
 		case TypeCode::Invalid:
 			result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Invalid;
 			break;
 		case TypeCode::Struct:
-			if (type == TYPE_Bool) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Bool;
-			else if (type == TYPE_Byte) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Byte;
-			else if (type == TYPE_Char) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Char;
-			else if (type == TYPE_Integer) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Integer;
-			else if (type == TYPE_Real) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real;
-			else if (type == TYPE_Real2) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real2;
-			else if (type == TYPE_Real3) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real3;
-			else if (type == TYPE_Real4) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real4;
-			else if (type == TYPE_Enum) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Struct;
-			else if (type == TYPE_Type) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Type;
-			else if (type == TYPE_String) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_String;
-			else if (type == TYPE_Entity) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Entity;
+			if(type == TYPE_Bool) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Bool;
+			else if(type == TYPE_Byte) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Byte;
+			else if(type == TYPE_Char) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Char;
+			else if(type == TYPE_Integer) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Integer;
+			else if(type == TYPE_Real) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real;
+			else if(type == TYPE_Real2) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real2;
+			else if(type == TYPE_Real3) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real3;
+			else if(type == TYPE_Real4) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Real4;
+			else if(type == TYPE_Enum) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Struct;
+			else if(type == TYPE_Type) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Type;
+			else if(type == TYPE_String) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_String;
+			else if(type == TYPE_Entity) result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Entity;
 			else result = KERNEL_TYPE_CODE::KERNEL_TYPE_CODE_Struct;
 			break;
 		case TypeCode::Enum:
@@ -1806,13 +1808,13 @@ String type_IsValid(KernelInvokerParameter parameter)//bool type.()
 String type_GetEnumElements(KernelInvokerParameter parameter)//integer[] type.()
 {
 	Type& enumType = PARAMETER_VALUE(1, Type, 0);
-	if (enumType.dimension || enumType.code != TypeCode::Enum) return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	if(enumType.dimension || enumType.code != TypeCode::Enum) return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	RuntimeEnum* runtimeEnum = parameter.kernel->libraryAgency->GetEnum(enumType);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc(TYPE_Integer, runtimeEnum->values.Count());
 	parameter.kernel->heapAgency->StrongReference(handle);
-	for (uint32 i = 0; i < runtimeEnum->values.Count(); i++)
+	for(uint32 i = 0; i < runtimeEnum->values.Count(); i++)
 		*(integer*)parameter.kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].value;
 	return String();
 }
@@ -1820,13 +1822,13 @@ String type_GetEnumElements(KernelInvokerParameter parameter)//integer[] type.()
 String type_GetEnumElementNames(KernelInvokerParameter parameter)//string[] type.()
 {
 	Type& enumType = PARAMETER_VALUE(1, Type, 0);
-	if (enumType.dimension || enumType.code != TypeCode::Enum) return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
+	if(enumType.dimension || enumType.code != TypeCode::Enum) return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ENUM);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	RuntimeEnum* runtimeEnum = parameter.kernel->libraryAgency->GetEnum(enumType);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc(TYPE_String, runtimeEnum->values.Count());
 	parameter.kernel->heapAgency->StrongReference(handle);
-	for (uint32 i = 0; i < runtimeEnum->values.Count(); i++)
+	for(uint32 i = 0; i < runtimeEnum->values.Count(); i++)
 	{
 		*(string*)parameter.kernel->heapAgency->GetArrayPoint(handle, i) = runtimeEnum->values[i].name;
 		parameter.kernel->stringAgency->Reference(runtimeEnum->values[i].name);
@@ -1837,13 +1839,13 @@ String type_GetEnumElementNames(KernelInvokerParameter parameter)//string[] type
 String type_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (!type.dimension && type.code == TypeCode::Delegate)
+	if(!type.dimension && type.code == TypeCode::Delegate)
 	{
 		RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
-		if (!runtimeDelegate->reflectionParameters)
+		if(!runtimeDelegate->reflectionParameters)
 		{
 			CREATE_READONLY_VALUES(runtimeDelegate->reflectionParameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeDelegate->parameters.Count(), Strong);
-			for (uint32 i = 0; i < runtimeDelegate->parameters.Count(); i++)
+			for(uint32 i = 0; i < runtimeDelegate->parameters.Count(); i++)
 				*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeDelegate->parameters.GetType(i);
 		}
 		Handle* handle = &RETURN_VALUE(Handle, 0);
@@ -1858,15 +1860,15 @@ String type_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes type.
 String type_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (!type.dimension)
+	if(!type.dimension)
 	{
-		if (type.code == TypeCode::Delegate)
+		if(type.code == TypeCode::Delegate)
 		{
 			RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
-			if (!runtimeDelegate->reflectionReturns)
+			if(!runtimeDelegate->reflectionReturns)
 			{
 				CREATE_READONLY_VALUES(runtimeDelegate->reflectionReturns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeDelegate->returns.Count(), Strong);
-				for (uint32 i = 0; i < runtimeDelegate->returns.Count(); i++)
+				for(uint32 i = 0; i < runtimeDelegate->returns.Count(); i++)
 					*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeDelegate->returns.GetType(i);
 			}
 			Handle* handle = &RETURN_VALUE(Handle, 0);
@@ -1875,13 +1877,13 @@ String type_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 			parameter.kernel->heapAgency->StrongReference(*handle);
 			return String();
 		}
-		else if (type.code == TypeCode::Task)
+		else if(type.code == TypeCode::Task)
 		{
 			RuntimeTask* runtimeTask = parameter.kernel->libraryAgency->GetTask(type);
-			if (!runtimeTask->reflectionReturns)
+			if(!runtimeTask->reflectionReturns)
 			{
 				CREATE_READONLY_VALUES(runtimeTask->reflectionReturns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeTask->returns.Count(), Strong);
-				for (uint32 i = 0; i < runtimeTask->returns.Count(); i++)
+				for(uint32 i = 0; i < runtimeTask->returns.Count(); i++)
 					*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeTask->returns.GetType(i);
 			}
 			Handle* handle = &RETURN_VALUE(Handle, 0);
@@ -1897,7 +1899,7 @@ String type_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes type.()
 String type_CreateUninitialized(KernelInvokerParameter parameter)//handle type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code == TypeCode::Interface || type.code == TypeCode::Delegate || type.code == TypeCode::Task) return parameter.kernel->stringAgency->Add(EXCEPTION_CANT_CREATE_OF_THIS_TYPE);
+	if(type.dimension || type.code == TypeCode::Interface || type.code == TypeCode::Delegate || type.code == TypeCode::Task) return parameter.kernel->stringAgency->Add(EXCEPTION_CANT_CREATE_OF_THIS_TYPE);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);
@@ -1908,15 +1910,15 @@ String type_CreateUninitialized(KernelInvokerParameter parameter)//handle type.(
 String type_CreateDelegate(KernelInvokerParameter parameter)//handle type.(Reflection.Function)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	Function function;
-	if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
+	if(!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
 	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
-	if (runtimeFunction->parameters != runtimeDelegate->parameters)
+	if(runtimeFunction->parameters != runtimeDelegate->parameters)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
-	if (runtimeFunction->returns != runtimeDelegate->returns)
+	if(runtimeFunction->returns != runtimeDelegate->returns)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
@@ -1929,15 +1931,15 @@ String type_CreateDelegate(KernelInvokerParameter parameter)//handle type.(Refle
 String type_CreateDelegate2(KernelInvokerParameter parameter)//handle type.(Reflection.Native)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	Native native;
-	if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), native))
+	if(!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), native))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
 	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
-	if (runtimeNative->parameters != runtimeDelegate->parameters)
+	if(runtimeNative->parameters != runtimeDelegate->parameters)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
-	if (runtimeNative->returns != runtimeDelegate->returns)
+	if(runtimeNative->returns != runtimeDelegate->returns)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
@@ -1950,27 +1952,27 @@ String type_CreateDelegate2(KernelInvokerParameter parameter)//handle type.(Refl
 String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Reflection.MemberFunction, handle)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
+	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 
 	MemberFunction function;
-	if (!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
+	if(!parameter.kernel->heapAgency->TryGetValue(PARAMETER_VALUE(1, Handle, SIZE(Type)), function))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 
 	Handle thisParameter = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type thisParameterType;
-	if (!parameter.kernel->heapAgency->TryGetType(thisParameter, thisParameterType))
+	if(!parameter.kernel->heapAgency->TryGetType(thisParameter, thisParameterType))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!parameter.kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), thisParameterType))
+	if(!parameter.kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), thisParameterType))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	Function globalFunction = parameter.kernel->libraryAgency->GetFunction(function, thisParameterType);
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(globalFunction);
 	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
-	if (runtimeFunction->parameters.Count() != runtimeDelegate->parameters.Count() + 1)
+	if(runtimeFunction->parameters.Count() != runtimeDelegate->parameters.Count() + 1)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
-	for (uint32 i = 0; i < runtimeDelegate->parameters.Count(); i++)
-		if (runtimeFunction->parameters.GetType(i + 1) != runtimeDelegate->parameters.GetType(i))
+	for(uint32 i = 0; i < runtimeDelegate->parameters.Count(); i++)
+		if(runtimeFunction->parameters.GetType(i + 1) != runtimeDelegate->parameters.GetType(i))
 			return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
-	if (runtimeFunction->returns != runtimeDelegate->returns)
+	if(runtimeFunction->returns != runtimeDelegate->returns)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -1978,17 +1980,17 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Refl
 	handle = parameter.kernel->heapAgency->Alloc((Declaration)type);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	Delegate* pointer = (Delegate*)parameter.kernel->heapAgency->GetPoint(handle);
-	if (function.declaration.code == TypeCode::Struct)
+	if(function.declaration.code == TypeCode::Struct)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Box);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else if (function.declaration.code == TypeCode::Handle)
+	else if(function.declaration.code == TypeCode::Handle)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Virtual);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
 	}
-	else if (function.declaration.code == TypeCode::Interface)
+	else if(function.declaration.code == TypeCode::Interface)
 	{
 		new (pointer)Delegate(runtimeFunction->entry, thisParameter, globalFunction, FunctionType::Abstract);
 		parameter.kernel->heapAgency->WeakReference(thisParameter);
@@ -2000,23 +2002,23 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Refl
 String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflection.Function, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
+	if(type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + 4);
 	Function function;
-	if (!parameter.kernel->heapAgency->TryGetValue(functionHandle, function))
+	if(!parameter.kernel->heapAgency->TryGetValue(functionHandle, function))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
 	RuntimeTask* runtimeTask = parameter.kernel->libraryAgency->GetTask(type);
-	if (runtimeFunction->returns != runtimeTask->returns)
+	if(runtimeFunction->returns != runtimeTask->returns)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
-	if (parametersHandle)
+	if(parametersHandle)
 	{
 		uint32 count = parameter.kernel->heapAgency->GetArrayLength(parametersHandle);
-		if (count != runtimeFunction->parameters.Count())
+		if(count != runtimeFunction->parameters.Count())
 			return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-		for (uint32 i = 0; i < count; i++)
-			if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
+		for(uint32 i = 0; i < count; i++)
+			if(!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
 				return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
@@ -2024,10 +2026,10 @@ String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflectio
 		parameter.kernel->heapAgency->StrongReference(result);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
 		parameter.kernel->taskAgency->Reference(invoker);
-		for (uint32 i = 0; i < count; i++)
+		for(uint32 i = 0; i < count; i++)
 		{
 			String error = invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
-			if (!error.IsEmpty())
+			if(!error.IsEmpty())
 			{
 				parameter.kernel->taskAgency->Release(invoker);
 				return error;
@@ -2035,7 +2037,7 @@ String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflectio
 		}
 		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
-	else if (!runtimeFunction->parameters.Count())
+	else if(!runtimeFunction->parameters.Count())
 	{
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
@@ -2052,31 +2054,31 @@ String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflectio
 String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflection.MemberFunction, handle, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
+	if(type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
 	Handle functionHandle = PARAMETER_VALUE(1, Handle, SIZE(Type));
 	MemberFunction function;
-	if (!parameter.kernel->heapAgency->TryGetValue(functionHandle, function))
+	if(!parameter.kernel->heapAgency->TryGetValue(functionHandle, function))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	Handle targetHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle));
 	Type targetType;
-	if (!parameter.kernel->heapAgency->TryGetType(targetHandle, targetType))
+	if(!parameter.kernel->heapAgency->TryGetType(targetHandle, targetType))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
-	if (!parameter.kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), targetHandle))
+	if(!parameter.kernel->libraryAgency->IsAssignable(Type(function.declaration, 0), targetHandle))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetMemberFunction(function);
 	RuntimeTask* runtimeTask = parameter.kernel->libraryAgency->GetTask(type);
-	if (runtimeFunction->returns != runtimeTask->returns)
+	if(runtimeFunction->returns != runtimeTask->returns)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH);
 
 	Handle parametersHandle = PARAMETER_VALUE(1, Handle, SIZE(Type) + SIZE(Handle) * 2);
-	if (parametersHandle)
+	if(parametersHandle)
 	{
 		uint32 count = parameter.kernel->heapAgency->GetArrayLength(parametersHandle);
-		if (count != runtimeFunction->parameters.Count() - 1)
+		if(count != runtimeFunction->parameters.Count() - 1)
 			return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-		for (uint32 i = 0; i < count; i++)
-			if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
+		for(uint32 i = 0; i < count; i++)
+			if(!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i)))
 				return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
@@ -2085,10 +2087,10 @@ String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflecti
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(parameter.kernel->libraryAgency->GetFunction(function, targetType));
 		parameter.kernel->taskAgency->Reference(invoker);
 		invoker->SetHandleParameter(0, targetHandle);
-		for (uint32 i = 0; i < count; i++)
+		for(uint32 i = 0; i < count; i++)
 		{
 			String error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parametersHandle, i));
-			if (!error.IsEmpty())
+			if(!error.IsEmpty())
 			{
 				parameter.kernel->taskAgency->Release(invoker);
 				return error;
@@ -2096,7 +2098,7 @@ String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflecti
 		}
 		*(uint64*)parameter.kernel->heapAgency->GetPoint(result) = invoker->instanceID;
 	}
-	else if (runtimeFunction->parameters.Count() == 1)
+	else if(runtimeFunction->parameters.Count() == 1)
 	{
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
@@ -2131,7 +2133,7 @@ String type_GetArrayRank(KernelInvokerParameter parameter)
 String type_GetArrayElementType(KernelInvokerParameter parameter)//type type.()
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
-	if (type.dimension)RETURN_VALUE(Type, 0) = Type(type, type.dimension - 1);
+	if(type.dimension)RETURN_VALUE(Type, 0) = Type(type, type.dimension - 1);
 	else return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_ARRAY);
 	return String();
 }
@@ -2190,47 +2192,47 @@ String handle_GetHandleID(KernelInvokerParameter parameter)//integer handle.()
 
 String handle_GetType(KernelInvokerParameter parameter)
 {
-	if (!parameter.kernel->heapAgency->TryGetType(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(Type, 0)))
+	if(!parameter.kernel->heapAgency->TryGetType(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(Type, 0)))
 		return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	return String();
 }
 
 String task_Start(KernelInvokerParameter parameter)//task.(bool, bool)
 {
-	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Unstart) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_UNSTART);
+	CHECK_THIS_VALUE_NULL(0);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	if(invoker->state != InvokerState::Unstart) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_UNSTART);
 	invoker->Start(PARAMETER_VALUE(0, bool, SIZE(Handle)), PARAMETER_VALUE(0, bool, SIZE(Handle) + SIZE(bool)));
 	return String();
 }
 
 String task_Abort(KernelInvokerParameter parameter)//task.()
 {
-	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	CHECK_THIS_VALUE_NULL(0);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	if(invoker->state != InvokerState::Running) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Abort();
 	return String();
 }
 
 String task_GetInstantID(KernelInvokerParameter parameter)//integer task.()
 {
-	GET_THIS_VALUE(1, uint64);
-	RETURN_VALUE(integer, 0) = (integer)parameter.kernel->taskAgency->GetInvoker(thisValue)->instanceID;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(integer, 0) = (integer)parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64))->instanceID;
 	return String();
 }
 
 String task_GetState(KernelInvokerParameter parameter)//TaskState task.()
 {
-	GET_THIS_VALUE(1, uint64);
-	RETURN_VALUE(integer, 0) = (integer)parameter.kernel->taskAgency->GetInvoker(thisValue)->state;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(integer, 0) = (integer)parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64))->state;
 	return String();
 }
 
 String task_GetExitCode(KernelInvokerParameter parameter)//string task.()
 {
-	GET_THIS_VALUE(1, uint64);
-	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
+	CHECK_THIS_VALUE_NULL(1);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
 	string& result = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(result);
 	result = invoker->error.index;
@@ -2240,27 +2242,27 @@ String task_GetExitCode(KernelInvokerParameter parameter)//string task.()
 
 String task_IsPause(KernelInvokerParameter parameter)//bool task.()
 {
-	GET_THIS_VALUE(1, uint64);
-	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)RETURN_VALUE(bool, 0) = false;
+	CHECK_THIS_VALUE_NULL(1);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	if(invoker->state != InvokerState::Running)RETURN_VALUE(bool, 0) = false;
 	else RETURN_VALUE(bool, 0) = invoker->IsPause();
 	return String();
 }
 
 String task_Pause(KernelInvokerParameter parameter)//task.()
 {
-	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	CHECK_THIS_VALUE_NULL(0);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	if(invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Pause();
 	return String();
 }
 
 String task_Resume(KernelInvokerParameter parameter)//task.()
 {
-	GET_THIS_VALUE(0, uint64);
-	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(thisValue);
-	if (invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	CHECK_THIS_VALUE_NULL(0);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	if(invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Resume();
 	return String();
 }
@@ -2274,17 +2276,17 @@ String array_GetLength(KernelInvokerParameter parameter)//integer array.()
 #pragma region 反射
 String Reflection_ReadonlyValues_GetCount(KernelInvokerParameter parameter)//integer Reflection.ReadonlyValues.()
 {
-	GET_THIS_VALUE(1, ReflectionReadonlyValues);
-	return parameter.kernel->heapAgency->TryGetArrayLength(thisValue.values, RETURN_VALUE(integer, 0));
+	CHECK_THIS_VALUE_NULL(1);
+	return parameter.kernel->heapAgency->TryGetArrayLength(THIS_VALUE(ReflectionReadonlyValues).values, RETURN_VALUE(integer, 0));
 }
 
 String Reflection_ReadonlyValues_GetStringElement(KernelInvokerParameter parameter)//string Reflection.ReadonlyValues.(integer)
 {
-	GET_THIS_VALUE(1, ReflectionReadonlyValues);
+	CHECK_THIS_VALUE_NULL(1);
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
-	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
-	if (!exitMessage.IsEmpty()) return exitMessage;
+	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(THIS_VALUE(ReflectionReadonlyValues).values, index, pointer);
+	if(!exitMessage.IsEmpty()) return exitMessage;
 	string& result = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(result);
 	result = *(string*)pointer;
@@ -2294,22 +2296,22 @@ String Reflection_ReadonlyValues_GetStringElement(KernelInvokerParameter paramet
 
 String Reflection_ReadonlyValues_GetTypeElement(KernelInvokerParameter parameter)//type Reflection.ReadonlyValues.(integer)
 {
-	GET_THIS_VALUE(1, ReflectionReadonlyValues);
+	CHECK_THIS_VALUE_NULL(1);
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
-	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
-	if (!exitMessage.IsEmpty()) return exitMessage;
+	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(THIS_VALUE(ReflectionReadonlyValues).values, index, pointer);
+	if(!exitMessage.IsEmpty()) return exitMessage;
 	RETURN_VALUE(Type, 0) = *(Type*)pointer;
 	return String();
 }
 
 String Reflection_ReadonlyValues_GetHandleElement(KernelInvokerParameter parameter)//handle Reflection.ReadonlyValues.(integer)
 {
-	GET_THIS_VALUE(1, ReflectionReadonlyValues);
+	CHECK_THIS_VALUE_NULL(1);
 	integer index = PARAMETER_VALUE(1, integer, 4);
 	uint8* pointer;
-	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(thisValue.values, index, pointer);
-	if (!exitMessage.IsEmpty()) return exitMessage;
+	String exitMessage = parameter.kernel->heapAgency->TryGetArrayPoint(THIS_VALUE(ReflectionReadonlyValues).values, index, pointer);
+	if(!exitMessage.IsEmpty()) return exitMessage;
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	result = *(Handle*)pointer;
@@ -2319,52 +2321,54 @@ String Reflection_ReadonlyValues_GetHandleElement(KernelInvokerParameter paramet
 
 String Reflection_Variable_IsPublic(KernelInvokerParameter parameter)//integer Reflection.Variable.()
 {
-	GET_THIS_VALUE(1, Variable);
-	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetVariable(thisValue)->isPublic;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetVariable(THIS_VALUE(Variable))->isPublic;
 	return String();
 }
 
 String Reflection_Variable_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Variable.()
 {
-	GET_THIS_VALUE(1, Variable);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	handle = parameter.kernel->libraryAgency->GetVariable(thisValue)->GetReflectionAttributes(parameter.kernel);
+	handle = parameter.kernel->libraryAgency->GetVariable(THIS_VALUE(Variable))->GetReflectionAttributes(parameter.kernel);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
 String Reflection_Variable_GetSpace(KernelInvokerParameter parameter)//Reflection.Space Reflection.Variable.()
 {
-	GET_THIS_VALUE(1, Variable);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
 	parameter.kernel->heapAgency->StrongReference(handle);
+	DECLARATION_THIS_VALUE(Variable);
 	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetVariable(thisValue)->space);
 	return String();
 }
 
 String Reflection_Variable_GetName(KernelInvokerParameter parameter)//string Reflection.Variable.()
 {
-	GET_THIS_VALUE(1, Variable);
+	CHECK_THIS_VALUE_NULL(1);
 	string& name = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(name);
-	name = parameter.kernel->libraryAgency->GetVariable(thisValue)->name;
+	name = parameter.kernel->libraryAgency->GetVariable(THIS_VALUE(Variable))->name;
 	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
 String Reflection_Variable_GetVariableType(KernelInvokerParameter parameter)//type Reflection.Variable.()
 {
-	GET_THIS_VALUE(1, Variable);
-	RETURN_VALUE(Type, 0) = parameter.kernel->libraryAgency->GetVariable(thisValue)->type;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(Type, 0) = parameter.kernel->libraryAgency->GetVariable(THIS_VALUE(Variable))->type;
 	return String();
 }
 
 String Reflection_Variable_GetValue(KernelInvokerParameter parameter)//handle Reflection.Variable.()
 {
-	GET_THIS_VALUE(1, Variable);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(Variable);
 	RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 	RuntimeVariable& info = library->variables[thisValue.variable];
 	StrongBox(parameter.kernel, info.type, parameter.kernel->libraryAgency->data.GetPointer() + info.address, RETURN_VALUE(Handle, 0));
@@ -2373,16 +2377,18 @@ String Reflection_Variable_GetValue(KernelInvokerParameter parameter)//handle Re
 
 String Reflection_Variable_SetValue(KernelInvokerParameter parameter)//Reflection.Variable.(handle)
 {
-	GET_THIS_VALUE(0, Variable);
+	CHECK_THIS_VALUE_NULL(0);
+	DECLARATION_THIS_VALUE(Variable);
 	RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 	RuntimeVariable& info = library->variables[thisValue.variable];
-	if (info.readonly)return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
+	if(info.readonly)return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
 	return StrongUnbox(parameter.kernel, info.type, PARAMETER_VALUE(0, Handle, SIZE(Handle)), parameter.kernel->libraryAgency->data.GetPointer() + info.address);
 }
 
 String Reflection_MemberConstructor_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberConstructor.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberConstructor);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue)->isPublic;
 	return String();
@@ -2390,7 +2396,8 @@ String Reflection_MemberConstructor_IsPublic(KernelInvokerParameter parameter)//
 
 String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings Reflection.MemberConstructor.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberConstructor);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
@@ -2401,7 +2408,8 @@ String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter paramet
 
 String Reflection_MemberConstructor_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberConstructor.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberConstructor);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	RETURN_VALUE(Type, 0) = Type(thisValue.declaration, 0);
 	return String();
@@ -2409,13 +2417,15 @@ String Reflection_MemberConstructor_GetDeclaringType(KernelInvokerParameter para
 
 String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberConstructor.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberConstructor);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionMemberConstructor);
 	ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
-	if (!thisValue.parameters)
+	if(!thisValue.parameters)
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
-		for (uint32 i = 1; i < info->parameters.Count(); i++)
+		THIS_VALUE(ReflectionMemberConstructor).parameters = thisValue.parameters;
+		for(uint32 i = 1; i < info->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -2427,10 +2437,10 @@ String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter paramet
 
 String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//handle Reflection.MemberConstructor.(handle[])
 {
-	if (parameter.task->kernelInvoker)
+	if(parameter.task->kernelInvoker)
 	{
 		Invoker* invoker = parameter.task->kernelInvoker;
-		switch (parameter.task->kernelInvoker->state)
+		switch(parameter.task->kernelInvoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 			case InvokerState::Running: return String();
@@ -2458,16 +2468,17 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 	}
 	else
 	{
-		GET_THIS_VALUE(1, ReflectionMemberConstructor);
+		CHECK_THIS_VALUE_NULL(1);
+		DECLARATION_THIS_VALUE(ReflectionMemberConstructor);
 		ASSERT_DEBUG(thisValue.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 		Handle parameters = PARAMETER_VALUE(1, Handle, 4);
 		RuntimeFunction* constructor = parameter.kernel->libraryAgency->GetConstructorFunction(thisValue);
-		if (parameter.kernel->heapAgency->IsValid(parameters))
+		if(parameter.kernel->heapAgency->IsValid(parameters))
 		{
 			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
-			if (length != constructor->parameters.Count() - 1) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-			for (uint32 i = 0; i < length; i++)
-				if (!parameter.kernel->libraryAgency->IsAssignable(constructor->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+			if(length != constructor->parameters.Count() - 1) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			for(uint32 i = 0; i < length; i++)
+				if(!parameter.kernel->libraryAgency->IsAssignable(constructor->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
 					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 			Handle& result = RETURN_VALUE(Handle, 0);
@@ -2477,17 +2488,17 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 			result = parameter.kernel->heapAgency->Alloc(thisValue.declaration);
 			parameter.kernel->heapAgency->StrongReference(result);
 			invoker->SetHandleParameter(0, result);
-			for (uint32 i = 0; i < length; i++)
+			for(uint32 i = 0; i < length; i++)
 			{
 				String error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
-				if (!error.IsEmpty())
+				if(!error.IsEmpty())
 				{
 					parameter.kernel->taskAgency->Release(invoker);
 					return error;
 				}
 			}
 			invoker->Start(true, parameter.task->ignoreWait);
-			switch (invoker->state)
+			switch(invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
@@ -2512,7 +2523,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else if (constructor->parameters.Count() == 1)
+		else if(constructor->parameters.Count() == 1)
 		{
 			Handle& result = RETURN_VALUE(Handle, 0);
 			parameter.kernel->heapAgency->StrongRelease(result);
@@ -2522,7 +2533,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 			parameter.kernel->heapAgency->StrongReference(result);
 			invoker->SetHandleParameter(0, result);
 			invoker->Start(true, parameter.task->ignoreWait);
-			switch (invoker->state)
+			switch(invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
@@ -2553,54 +2564,55 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 
 String Reflection_MemberVariable_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberVariable.()
 {
-	GET_THIS_VALUE(1, MemberVariable);
-	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->isPublic;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetMemberVariable(THIS_VALUE(MemberVariable))->isPublic;
 	return String();
 }
 
 String Reflection_MemberVariable_GetAttributes(KernelInvokerParameter parameter)//Reflection.ReadonlyStrings Reflection.MemberVariable.()
 {
-	GET_THIS_VALUE(1, MemberVariable);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	handle = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->GetReflectionAttributes(parameter.kernel);
+	handle = parameter.kernel->libraryAgency->GetMemberVariable(THIS_VALUE(MemberVariable))->GetReflectionAttributes(parameter.kernel);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
 String Reflection_MemberVariable_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberVariable.()
 {
-	GET_THIS_VALUE(1, MemberVariable);
-	RETURN_VALUE(Type, 0) = Type(thisValue.declaration, 0);
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(Type, 0) = Type(THIS_VALUE(MemberVariable).declaration, 0);
 	return String();
 }
 
 String Reflection_MemberVariable_GetName(KernelInvokerParameter parameter)//string Reflection.MemberVariable.()
 {
-	GET_THIS_VALUE(1, MemberVariable);
+	CHECK_THIS_VALUE_NULL(1);
 	string& name = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(name);
-	name = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->name;
+	name = parameter.kernel->libraryAgency->GetMemberVariable(THIS_VALUE(MemberVariable))->name;
 	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
 String Reflection_MemberVariable_GetVariableType(KernelInvokerParameter parameter)//type Reflection.MemberVariable.()
 {
-	GET_THIS_VALUE(1, MemberVariable);
-	RETURN_VALUE(Type, 0) = parameter.kernel->libraryAgency->GetMemberVariable(thisValue)->type;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(Type, 0) = parameter.kernel->libraryAgency->GetMemberVariable(THIS_VALUE(MemberVariable))->type;
 	return String();
 }
 
 String Reflection_MemberVariable_GetValue(KernelInvokerParameter parameter)//handle Reflection.MemberVariable.(handle)
 {
-	GET_THIS_VALUE(1, MemberVariable);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(MemberVariable);
 	Handle& handle = PARAMETER_VALUE(1, Handle, SIZE(Handle));
-	if (!parameter.kernel->heapAgency->IsValid(handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if(!parameter.kernel->heapAgency->IsValid(handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	RuntimeMemberVariable* info = parameter.kernel->libraryAgency->GetMemberVariable(thisValue);
 	uint8* pointer = parameter.kernel->heapAgency->GetPoint(handle) + info->address;
-	if (thisValue.declaration.code == TypeCode::Handle)
+	if(thisValue.declaration.code == TypeCode::Handle)
 		pointer += parameter.kernel->libraryAgency->GetClass(Type(thisValue.declaration, 0))->offset;
 	StrongBox(parameter.kernel, info->type, pointer, RETURN_VALUE(Handle, 0));
 	return String();
@@ -2608,62 +2620,65 @@ String Reflection_MemberVariable_GetValue(KernelInvokerParameter parameter)//han
 
 String Reflection_MemberVariable_SetValue(KernelInvokerParameter parameter)//Reflection.MemberVariable.(handle, handle)
 {
-	GET_THIS_VALUE(0, MemberVariable);
+	CHECK_THIS_VALUE_NULL(0);
+	DECLARATION_THIS_VALUE(MemberVariable);
 	RuntimeMemberVariable* info = parameter.kernel->libraryAgency->GetMemberVariable(thisValue);
-	if (info->readonly) return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
+	if(info->readonly) return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
 	Handle handle = PARAMETER_VALUE(0, Handle, SIZE(Handle));
-	if (!parameter.kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	if(!parameter.kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	Handle value = PARAMETER_VALUE(0, Handle, SIZE(Handle) * 2);
-	if (!parameter.kernel->libraryAgency->IsAssignable(info->type, value)) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-	if (!parameter.kernel->heapAgency->IsValid(handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	if(!parameter.kernel->libraryAgency->IsAssignable(info->type, value)) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	if(!parameter.kernel->heapAgency->IsValid(handle)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	uint8* pointer = parameter.kernel->heapAgency->GetPoint(handle) + info->address;
-	if (thisValue.declaration.code == TypeCode::Handle)
+	if(thisValue.declaration.code == TypeCode::Handle)
 		pointer += parameter.kernel->libraryAgency->GetClass(Type(thisValue.declaration, 0))->offset;
 	return StrongUnbox(parameter.kernel, info->type, value, pointer);
 }
 
 String Reflection_MemberFunction_IsPublic(KernelInvokerParameter parameter)//bool Reflection.MemberFunction.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberFunction);
-	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetMemberFunction(thisValue)->isPublic;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetMemberFunction(THIS_VALUE(ReflectionMemberFunction))->isPublic;
 	return String();
 }
 
 String Reflection_MemberFunction_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.MemberFunction.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberFunction);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	handle = parameter.kernel->libraryAgency->GetMemberFunction(thisValue)->GetReflectionAttributes(parameter.kernel);
+	handle = parameter.kernel->libraryAgency->GetMemberFunction(THIS_VALUE(ReflectionMemberFunction))->GetReflectionAttributes(parameter.kernel);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
 String Reflection_MemberFunction_GetDeclaringType(KernelInvokerParameter parameter)//type Reflection.MemberFunction.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberFunction);
-	RETURN_VALUE(Type, 0) = Type(thisValue.declaration, 0);
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(Type, 0) = Type(THIS_VALUE(ReflectionMemberFunction).declaration, 0);
 	return String();
 }
 
 String Reflection_MemberFunction_GetName(KernelInvokerParameter parameter)//string Reflection.MemberFunction.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberFunction);
+	CHECK_THIS_VALUE_NULL(1);
 	string& name = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(name);
-	name = parameter.kernel->libraryAgency->GetMemberFunction(thisValue)->name;
+	name = parameter.kernel->libraryAgency->GetMemberFunction(THIS_VALUE(ReflectionMemberFunction))->name;
 	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
 String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberFunction.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberFunction);
-	if (!thisValue.parameters)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionMemberFunction);
+	if(!thisValue.parameters)
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->parameters.Count() - 1, Weak);
-		for (uint32 i = 1; i < info->parameters.Count(); i++)
+		THIS_VALUE(ReflectionMemberFunction).parameters = thisValue.parameters;
+		for(uint32 i = 1; i < info->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i - 1) = info->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -2675,12 +2690,14 @@ String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)
 
 String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter)//Reflection.ReadonlyTypes Reflection.MemberFunction.()
 {
-	GET_THIS_VALUE(1, ReflectionMemberFunction);
-	if (!thisValue.returns)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionMemberFunction);
+	if(!thisValue.returns)
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, info->returns.Count(), Weak);
-		for (uint32 i = 0; i < info->returns.Count(); i++)
+		THIS_VALUE(ReflectionMemberFunction).returns = thisValue.returns;
+		for(uint32 i = 0; i < info->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = info->returns.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -2692,10 +2709,10 @@ String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter)//R
 
 String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.MemberFunction.(handle, handle[])
 {
-	if (parameter.task->kernelInvoker)
+	if(parameter.task->kernelInvoker)
 	{
 		Invoker* invoker = parameter.task->kernelInvoker;
-		switch (parameter.task->kernelInvoker->state)
+		switch(parameter.task->kernelInvoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 			case InvokerState::Running: return String();
@@ -2724,18 +2741,19 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 	}
 	else
 	{
-		GET_THIS_VALUE(1, ReflectionMemberFunction);
+		CHECK_THIS_VALUE_NULL(1);
+		DECLARATION_THIS_VALUE(ReflectionMemberFunction);
 		Handle target = PARAMETER_VALUE(1, Handle, 4);
 		Handle parameters = PARAMETER_VALUE(1, Handle, 8);
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetMemberFunction(thisValue);
-		if (!parameter.kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), target))
+		if(!parameter.kernel->libraryAgency->IsAssignable(Type(thisValue.declaration, 0), target))
 			return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-		if (parameter.kernel->heapAgency->IsValid(parameters))
+		if(parameter.kernel->heapAgency->IsValid(parameters))
 		{
 			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
-			if (length != runtimeFunction->parameters.Count() - 1) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-			for (uint32 i = 0; i < length; i++)
-				if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+			if(length != runtimeFunction->parameters.Count() - 1) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			for(uint32 i = 0; i < length; i++)
+				if(!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i + 1), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
 					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 			Handle& result = RETURN_VALUE(Handle, 0);
@@ -2745,23 +2763,23 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
 			String error = invoker->SetBoxParameter(0, target);
-			if (!error.IsEmpty())
+			if(!error.IsEmpty())
 			{
 				parameter.kernel->taskAgency->Release(invoker);
 				return error;
 			}
-			for (uint32 i = 0; i < length; i++)
+			for(uint32 i = 0; i < length; i++)
 			{
 				error = invoker->SetBoxParameter(i + 1, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
-				if (!error.IsEmpty())
+				if(!error.IsEmpty())
 				{
 					parameter.kernel->taskAgency->Release(invoker);
 					return error;
 				}
 			}
-			if (thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
+			if(thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
 			invoker->Start(true, parameter.task->ignoreWait);
-			switch (invoker->state)
+			switch(invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
@@ -2787,7 +2805,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else if (runtimeFunction->parameters.Count() == 1)
+		else if(runtimeFunction->parameters.Count() == 1)
 		{
 			Handle result = RETURN_VALUE(Handle, 0);
 			parameter.kernel->heapAgency->StrongRelease(result);
@@ -2796,14 +2814,14 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
 			String error = invoker->SetBoxParameter(0, target);
-			if (!error.IsEmpty())
+			if(!error.IsEmpty())
 			{
 				parameter.kernel->taskAgency->Release(invoker);
 				return error;
 			}
-			if (thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
+			if(thisValue.declaration.code == TypeCode::Enum) invoker->AppendParameter(Type(thisValue.declaration, 0));
 			invoker->Start(true, parameter.task->ignoreWait);
-			switch (invoker->state)
+			switch(invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
@@ -2835,50 +2853,53 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 
 String Reflection_Function_IsPublic(KernelInvokerParameter parameter)//integer Reflection.Function.()
 {
-	GET_THIS_VALUE(1, Function);
-	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetFunction(thisValue)->isPublic;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetFunction(THIS_VALUE(Function))->isPublic;
 	return String();
 }
 
 String Reflection_Function_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Function.()
 {
-	GET_THIS_VALUE(1, ReflectionFunction);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	handle = parameter.kernel->libraryAgency->GetFunction(thisValue)->GetReflectionAttributes(parameter.kernel);
+	handle = parameter.kernel->libraryAgency->GetFunction(THIS_VALUE(ReflectionFunction))->GetReflectionAttributes(parameter.kernel);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
 String Reflection_Function_GetSpace(KernelInvokerParameter parameter)//Reflection.Space Reflection.Function.()
 {
-	GET_THIS_VALUE(1, Function);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
 	parameter.kernel->heapAgency->StrongReference(handle);
+	DECLARATION_THIS_VALUE(Function);
 	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetFunction(thisValue)->space);
 	return String();
 }
 
 String Reflection_Function_GetName(KernelInvokerParameter parameter)//string Reflection.Function.()
 {
-	GET_THIS_VALUE(1, Function);
+	CHECK_THIS_VALUE_NULL(1);
 	string& name = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(name);
-	name = parameter.kernel->libraryAgency->GetFunction(thisValue)->name;
+	name = parameter.kernel->libraryAgency->GetFunction(THIS_VALUE(Function))->name;
 	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
 String Reflection_Function_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Function.()
 {
-	GET_THIS_VALUE(1, ReflectionFunction);
-	if (!thisValue.parameters)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionFunction);
+	if(!thisValue.parameters)
 	{
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->parameters.Count(), Weak);
-		for (uint32 i = 0; i < runtimeFunction->parameters.Count(); i++)
+		THIS_VALUE(ReflectionFunction).parameters = thisValue.parameters;
+		for(uint32 i = 0; i < runtimeFunction->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -2890,12 +2911,14 @@ String Reflection_Function_GetParameters(KernelInvokerParameter parameter)//Read
 
 String Reflection_Function_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Function.()
 {
-	GET_THIS_VALUE(1, ReflectionFunction);
-	if (!thisValue.returns)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionFunction);
+	if(!thisValue.returns)
 	{
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeFunction->returns.Count(), Weak);
-		for (uint32 i = 0; i < runtimeFunction->returns.Count(); i++)
+		THIS_VALUE(ReflectionFunction).returns = thisValue.returns;
+		for(uint32 i = 0; i < runtimeFunction->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeFunction->returns.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -2907,10 +2930,10 @@ String Reflection_Function_GetReturns(KernelInvokerParameter parameter)//Readonl
 
 String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.Function.(handle[])
 {
-	if (parameter.task->kernelInvoker)
+	if(parameter.task->kernelInvoker)
 	{
 		Invoker* invoker = parameter.task->kernelInvoker;
-		switch (parameter.task->kernelInvoker->state)
+		switch(parameter.task->kernelInvoker->state)
 		{
 			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 			case InvokerState::Running: return String();
@@ -2939,15 +2962,16 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 	}
 	else
 	{
-		GET_THIS_VALUE(1, Function);
+		CHECK_THIS_VALUE_NULL(1);
+		DECLARATION_THIS_VALUE(ReflectionFunction);
 		Handle parameters = PARAMETER_VALUE(1, Handle, 4);
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue);
-		if (parameter.kernel->heapAgency->IsValid(parameters))
+		if(parameter.kernel->heapAgency->IsValid(parameters))
 		{
 			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
-			if (length != runtimeFunction->parameters.Count()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-			for (uint32 i = 0; i < length; i++)
-				if (!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+			if(length != runtimeFunction->parameters.Count()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			for(uint32 i = 0; i < length; i++)
+				if(!parameter.kernel->libraryAgency->IsAssignable(runtimeFunction->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
 					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 
 			Handle& result = RETURN_VALUE(Handle, 0);
@@ -2956,17 +2980,17 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 			parameter.kernel->heapAgency->StrongReference(result);
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
-			for (uint32 i = 0; i < length; i++)
+			for(uint32 i = 0; i < length; i++)
 			{
 				String error = invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
-				if (!error.IsEmpty())
+				if(!error.IsEmpty())
 				{
 					parameter.kernel->taskAgency->Release(invoker);
 					return error;
 				}
 			}
 			invoker->Start(true, parameter.task->ignoreWait);
-			switch (invoker->state)
+			switch(invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
@@ -2992,7 +3016,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 				default: EXCEPTION("不该进入的分支");
 			}
 		}
-		else if (!runtimeFunction->parameters.Count())
+		else if(!runtimeFunction->parameters.Count())
 		{
 			Handle& result = RETURN_VALUE(Handle, 0);
 			parameter.kernel->heapAgency->StrongRelease(result);
@@ -3001,7 +3025,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 			Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
 			parameter.kernel->taskAgency->Reference(invoker);
 			invoker->Start(true, parameter.task->ignoreWait);
-			switch (invoker->state)
+			switch(invoker->state)
 			{
 				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
 				case InvokerState::Running:
@@ -3027,50 +3051,53 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 
 String Reflection_Native_IsPublic(KernelInvokerParameter parameter)//integer Reflection.Native.()
 {
-	GET_THIS_VALUE(1, Native);
-	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetNative(thisValue)->isPublic;
+	CHECK_THIS_VALUE_NULL(1);
+	RETURN_VALUE(bool, 0) = parameter.kernel->libraryAgency->GetNative(THIS_VALUE(ReflectionNative))->isPublic;
 	return String();
 }
 
 String Reflection_Native_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Native.()
 {
-	GET_THIS_VALUE(1, ReflectionNative);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	handle = parameter.kernel->libraryAgency->GetNative(thisValue)->GetReflectionAttributes(parameter.kernel);
+	handle = parameter.kernel->libraryAgency->GetNative(THIS_VALUE(ReflectionNative))->GetReflectionAttributes(parameter.kernel);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
 }
 
 String Reflection_Native_GetSpace(KernelInvokerParameter parameter)//Reflection.Space Reflection.Native.()
 {
-	GET_THIS_VALUE(1, Native);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space);
 	parameter.kernel->heapAgency->StrongReference(handle);
+	DECLARATION_THIS_VALUE(ReflectionNative);
 	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetNative(thisValue)->space);
 	return String();
 }
 
 String Reflection_Native_GetName(KernelInvokerParameter parameter)//string Reflection.Native.()
 {
-	GET_THIS_VALUE(1, Native);
+	CHECK_THIS_VALUE_NULL(1);
 	string& name = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(name);
-	name = parameter.kernel->libraryAgency->GetNative(thisValue)->name;
+	name = parameter.kernel->libraryAgency->GetNative(THIS_VALUE(ReflectionNative))->name;
 	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 
 String Reflection_Native_GetParameters(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Native.()
 {
-	GET_THIS_VALUE(1, ReflectionNative);
-	if (!thisValue.parameters)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionNative);
+	if(!thisValue.parameters)
 	{
 		RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.parameters, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->parameters.Count(), Weak);
-		for (uint32 i = 0; i < runtimeNative->parameters.Count(); i++)
+		THIS_VALUE(ReflectionNative).parameters = thisValue.parameters;
+		for(uint32 i = 0; i < runtimeNative->parameters.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->parameters.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -3082,12 +3109,14 @@ String Reflection_Native_GetParameters(KernelInvokerParameter parameter)//Readon
 
 String Reflection_Native_GetReturns(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Native.()
 {
-	GET_THIS_VALUE(1, ReflectionNative);
-	if (!thisValue.returns)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionNative);
+	if(!thisValue.returns)
 	{
 		RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
 		CREATE_READONLY_VALUES(thisValue.returns, TYPE_Reflection_ReadonlyTypes, TYPE_Type, runtimeNative->returns.Count(), Weak);
-		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
+		THIS_VALUE(ReflectionNative).returns = thisValue.returns;
+		for(uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = runtimeNative->returns.GetType(i);
 	}
 	Handle& handle = RETURN_VALUE(Handle, 0);
@@ -3099,29 +3128,30 @@ String Reflection_Native_GetReturns(KernelInvokerParameter parameter)//ReadonlyT
 
 String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.Native.(handle[])
 {
-	GET_THIS_VALUE(1, Native);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionNative);
 	Handle parameters = PARAMETER_VALUE(1, Handle, 4);
 	uint32 nativeLocal = parameter.top + SIZE(Frame) + 12;//返回值 + 反射对象 + 参数数组
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(thisValue);
-	if (parameter.kernel->heapAgency->IsValid(parameters))
+	if(parameter.kernel->heapAgency->IsValid(parameters))
 	{
 		uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
-		if (length != runtimeNative->parameters.Count())return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
-		for (uint32 i = 0; i < length; i++)
-			if (!parameter.kernel->libraryAgency->IsAssignable(runtimeNative->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+		if(length != runtimeNative->parameters.Count())return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+		for(uint32 i = 0; i < length; i++)
+			if(!parameter.kernel->libraryAgency->IsAssignable(runtimeNative->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
 				return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 		uint32 nativeTop = nativeLocal + runtimeNative->returns.size;
 		uint32 stackSize = nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4 + runtimeNative->parameters.size;
-		if (parameter.task->EnsureStackSize(stackSize)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+		if(parameter.task->EnsureStackSize(stackSize)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
 		Mzero(parameter.stack + nativeLocal, stackSize - nativeLocal);
 		uint32* returnAddresses = (uint32*)(parameter.stack + nativeTop + SIZE(Frame));
-		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
+		for(uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			returnAddresses[i] = nativeLocal + runtimeNative->returns.GetOffset(i);
 		uint8* parameterAddress = parameter.stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4;
-		for (uint32 i = 0; i < length; i++)
+		for(uint32 i = 0; i < length; i++)
 		{
 			String error = StrongUnbox(parameter.kernel, runtimeNative->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i), parameterAddress + runtimeNative->parameters.GetOffset(i));
-			if (!error.IsEmpty())
+			if(!error.IsEmpty())
 			{
 				ReleaseTuple(parameter.kernel, parameterAddress, runtimeNative->parameters);
 				return error;
@@ -3133,19 +3163,19 @@ String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Refl
 		parameter.kernel->heapAgency->StrongRelease(result);
 		result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
 		parameter.kernel->heapAgency->StrongReference(result);
-		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
+		for(uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			WeakBox(parameter.kernel, runtimeNative->returns.GetType(i), parameter.stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(result, i));
 		ReleaseTuple(parameter.kernel, parameter.stack + nativeLocal, runtimeNative->returns);
 		return error;
 	}
-	else if (!runtimeNative->parameters.Count())
+	else if(!runtimeNative->parameters.Count())
 	{
 		uint32 nativeTop = nativeLocal + runtimeNative->returns.size;
 		uint32 stackSize = nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4 + runtimeNative->parameters.size;
-		if (parameter.task->EnsureStackSize(stackSize)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+		if(parameter.task->EnsureStackSize(stackSize)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
 		Mzero(parameter.stack + nativeLocal, stackSize - nativeLocal);
 		uint32* returnAddresses = (uint32*)(parameter.stack + nativeTop + SIZE(Frame));
-		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
+		for(uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			returnAddresses[i] = nativeLocal + runtimeNative->returns.GetOffset(i);
 		String error = parameter.kernel->libraryAgency->InvokeNative(thisValue, parameter.stack, nativeTop);
 		ReleaseTuple(parameter.kernel, parameter.stack + nativeTop + SIZE(Frame) + runtimeNative->returns.Count() * 4, runtimeNative->parameters);
@@ -3153,7 +3183,7 @@ String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Refl
 		parameter.kernel->heapAgency->StrongRelease(result);
 		result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtimeNative->returns.Count());
 		parameter.kernel->heapAgency->StrongReference(result);
-		for (uint32 i = 0; i < runtimeNative->returns.Count(); i++)
+		for(uint32 i = 0; i < runtimeNative->returns.Count(); i++)
 			WeakBox(parameter.kernel, runtimeNative->returns.GetType(i), parameter.stack + nativeLocal + runtimeNative->returns.GetOffset(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(result, i));
 		ReleaseTuple(parameter.kernel, parameter.stack + nativeLocal, runtimeNative->returns);
 		return error;
@@ -3163,12 +3193,14 @@ String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Refl
 
 String Reflection_Space_GetAttributes(KernelInvokerParameter parameter)//ReadonlyStrings Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
-	if (!thisValue.attributes)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
+	if(!thisValue.attributes)
 	{
 		RuntimeSpace* space = &parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.attributes, TYPE_Reflection_ReadonlyStrings, TYPE_String, space->attributes.Count(), Weak);
-		for (uint32 i = 0; i < space->attributes.Count(); i++)
+		THIS_VALUE(ReflectionSpace).attributes = thisValue.attributes;
+		for(uint32 i = 0; i < space->attributes.Count(); i++)
 		{
 			*(string*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = space->attributes[i];
 			parameter.kernel->stringAgency->Reference(space->attributes[i]);
@@ -3184,26 +3216,28 @@ String Reflection_Space_GetAttributes(KernelInvokerParameter parameter)//Readonl
 
 String Reflection_Space_GetParent(KernelInvokerParameter parameter)//Reflection.Space Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
 	RuntimeSpace& space = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
-	if (space.parent == INVALID)handle = NULL;
+	if(space.parent == INVALID)handle = NULL;
 	else handle = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[space.parent].GetReflection(parameter.kernel, thisValue.library, space.parent);
 	parameter.kernel->heapAgency->StrongReference(handle);
-	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(handle))ReflectionSpace(thisValue.library, parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].parent);
 	return String();
 }
 
 String Reflection_Space_GetChildren(KernelInvokerParameter parameter)//ReadonlySpaces Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
-	if (!thisValue.children)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
+	if(!thisValue.children)
 	{
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.children, TYPE_Reflection_ReadonlySpaces, TYPE_Reflection_Space, space.children.Count(), Weak);
-		for (uint32 i = 0; i < space.children.Count(); i++)
+		THIS_VALUE(ReflectionSpace).children = thisValue.children;
+		for(uint32 i = 0; i < space.children.Count(); i++)
 		{
 			Handle handle = library->spaces[space.children[i]].GetReflection(parameter.kernel, thisValue.library, space.children[i]);
 			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
@@ -3220,9 +3254,10 @@ String Reflection_Space_GetChildren(KernelInvokerParameter parameter)//ReadonlyS
 
 String Reflection_Space_GetAssembly(KernelInvokerParameter parameter)//Reflection.Assembly Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
+	CHECK_THIS_VALUE_NULL(1);
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
 	handle = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[0].GetReflection(parameter.kernel, thisValue.library, 0);
 	parameter.kernel->heapAgency->StrongReference(handle);
 	return String();
@@ -3230,9 +3265,10 @@ String Reflection_Space_GetAssembly(KernelInvokerParameter parameter)//Reflectio
 
 String Reflection_Space_GetName(KernelInvokerParameter parameter)//string Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
+	CHECK_THIS_VALUE_NULL(1);
 	string& name = RETURN_VALUE(string, 0);
 	parameter.kernel->stringAgency->Release(name);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
 	name = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index].name;
 	parameter.kernel->stringAgency->Reference(name);
 	return String();
@@ -3240,13 +3276,15 @@ String Reflection_Space_GetName(KernelInvokerParameter parameter)//string Reflec
 
 String Reflection_Space_GetVariables(KernelInvokerParameter parameter)//ReadonlyVariables Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
-	if (!thisValue.variables)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
+	if(!thisValue.variables)
 	{
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.variables, TYPE_Reflection_ReadonlyVariables, TYPE_Reflection_Variable, space.variables.Count(), Weak);
-		for (uint32 i = 0; i < space.variables.Count(); i++)
+		THIS_VALUE(ReflectionSpace).variables = thisValue.variables;
+		for(uint32 i = 0; i < space.variables.Count(); i++)
 		{
 			Handle handle = library->variables[space.variables[i]].GetReflection(parameter.kernel, thisValue.library, space.variables[i]);
 			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
@@ -3263,13 +3301,15 @@ String Reflection_Space_GetVariables(KernelInvokerParameter parameter)//Readonly
 
 String Reflection_Space_GetFunctions(KernelInvokerParameter parameter)//ReadonlyFunctions Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
-	if (!thisValue.functions)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
+	if(!thisValue.functions)
 	{
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.functions, TYPE_Reflection_ReadonlyFunctions, TYPE_Reflection_Function, space.functions.Count(), Weak);
-		for (uint32 i = 0; i < space.functions.Count(); i++)
+		THIS_VALUE(ReflectionSpace).functions = thisValue.functions;
+		for(uint32 i = 0; i < space.functions.Count(); i++)
 		{
 			Handle handle = library->functions[space.functions[i]].GetReflection(parameter.kernel, thisValue.library, space.functions[i]);
 			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
@@ -3286,13 +3326,15 @@ String Reflection_Space_GetFunctions(KernelInvokerParameter parameter)//Readonly
 
 String Reflection_Space_GetNatives(KernelInvokerParameter parameter)//ReadonlyNatives Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
-	if (!thisValue.natives)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
+	if(!thisValue.natives)
 	{
 		RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(thisValue.library);
 		RuntimeSpace& space = library->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.natives, TYPE_Reflection_ReadonlyNatives, TYPE_Reflection_Native, space.natives.Count(), Weak);
-		for (uint32 i = 0; i < space.natives.Count(); i++)
+		THIS_VALUE(ReflectionSpace).natives = thisValue.natives;
+		for(uint32 i = 0; i < space.natives.Count(); i++)
 		{
 			Handle handle = library->natives[space.natives[i]].GetReflection(parameter.kernel, thisValue.library, space.natives[i]);
 			*(Handle*)parameter.kernel->heapAgency->GetArrayPoint(values, i) = handle;
@@ -3309,23 +3351,25 @@ String Reflection_Space_GetNatives(KernelInvokerParameter parameter)//ReadonlyNa
 
 String Reflection_Space_GetTypes(KernelInvokerParameter parameter)//ReadonlyTypes Reflection.Space.()
 {
-	GET_THIS_VALUE(1, ReflectionSpace);
-	if (!thisValue.types)
+	CHECK_THIS_VALUE_NULL(1);
+	DECLARATION_THIS_VALUE(ReflectionSpace);
+	if(!thisValue.types)
 	{
 		RuntimeSpace& space = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[thisValue.index];
 		CREATE_READONLY_VALUES(thisValue.types, TYPE_Reflection_ReadonlyTypes, TYPE_Type, space.enums.Count() + space.structs.Count() + space.classes.Count() + space.interfaces.Count() + space.delegates.Count() + space.tasks.Count(), Weak);
+		THIS_VALUE(ReflectionSpace).types = thisValue.types;
 		uint32 index = 0;
-		for (uint32 i = 0; i < space.enums.Count(); i++)
+		for(uint32 i = 0; i < space.enums.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Enum, space.enums[i], 0);
-		for (uint32 i = 0; i < space.structs.Count(); i++)
+		for(uint32 i = 0; i < space.structs.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Struct, space.structs[i], 0);
-		for (uint32 i = 0; i < space.classes.Count(); i++)
+		for(uint32 i = 0; i < space.classes.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Handle, space.classes[i], 0);
-		for (uint32 i = 0; i < space.interfaces.Count(); i++)
+		for(uint32 i = 0; i < space.interfaces.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Interface, space.interfaces[i], 0);
-		for (uint32 i = 0; i < space.delegates.Count(); i++)
+		for(uint32 i = 0; i < space.delegates.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Delegate, space.delegates[i], 0);
-		for (uint32 i = 0; i < space.tasks.Count(); i++)
+		for(uint32 i = 0; i < space.tasks.Count(); i++)
 			new ((Type*)parameter.kernel->heapAgency->GetArrayPoint(values, index++))Type(thisValue.library, TypeCode::Task, space.tasks[i], 0);
 	}
 

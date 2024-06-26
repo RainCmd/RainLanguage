@@ -317,7 +317,7 @@ HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kerne
 	new (heads.Add())Head(0, 0, false, 0);
 }
 
-Handle HeapAgency::Alloc(const Type& elementType, integer length)
+Handle HeapAgency::Alloc(const Type elementType, integer length)
 {
 	uint32 elementSize = MemoryAlignment(kernel->libraryAgency->GetTypeStackSize(elementType), kernel->libraryAgency->GetTypeAlignment(elementType));
 	Handle result = Alloc(elementSize * (uint32)length + 8, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)));
@@ -329,7 +329,7 @@ Handle HeapAgency::Alloc(const Type& elementType, integer length)
 	return result;
 }
 
-Handle HeapAgency::Alloc(const Declaration& declaration)
+Handle HeapAgency::Alloc(const Declaration declaration)
 {
 	Handle result = Alloc(kernel->libraryAgency->GetTypeHeapSize(declaration), kernel->libraryAgency->GetTypeAlignment(Type(declaration, 0)));
 	heads[result].type = Type(declaration, 0);

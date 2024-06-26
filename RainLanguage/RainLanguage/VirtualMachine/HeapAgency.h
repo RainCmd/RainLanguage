@@ -39,8 +39,8 @@ class HeapAgency
 	void FastGC();
 public:
 	HeapAgency(Kernel* kernel, const StartupParameter* parameter);
-	Handle Alloc(const Type& elementType, integer length);
-	Handle Alloc(const Declaration& declaration);
+	Handle Alloc(const Type elementType, integer length);
+	Handle Alloc(const Declaration declaration);
 	void Alloc(const Type&) = delete;
 	inline bool IsValid(Handle handle) { return handle && handle < heads.Count() && heads[handle].type.IsValid(); }
 	inline void StrongReference(Handle handle)
