@@ -2215,6 +2215,24 @@ String task_Abort(KernelInvokerParameter parameter)//task.()
 	return String();
 }
 
+String task_SetName(KernelInvokerParameter parameter)//task.(string)
+{
+	CHECK_THIS_VALUE_NULL(0);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	invoker->name = parameter.kernel->stringAgency->Get(PARAMETER_VALUE(0, string, SIZE(Handle)));
+	return String();
+}
+
+String task_GetName(KernelInvokerParameter parameter)//string task.()
+{
+	CHECK_THIS_VALUE_NULL(1);
+	string& result = RETURN_VALUE(string, 0);
+	parameter.kernel->stringAgency->Release(result);
+	result = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64))->name.index;
+	parameter.kernel->stringAgency->Reference(result);
+	return String();
+}
+
 String task_GetInstantID(KernelInvokerParameter parameter)//integer task.()
 {
 	CHECK_THIS_VALUE_NULL(1);

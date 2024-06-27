@@ -246,6 +246,10 @@ public:
 	/// </summary>
 	uint64 TaskID();
 	/// <summary>
+	/// 当前调用对应任务的自定义名称
+	/// </summary>
+	RainString TaskName();
+	/// <summary>
 	/// 迭代下一个调用栈追踪
 	/// </summary>
 	bool Next();

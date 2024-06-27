@@ -83,6 +83,7 @@ enum class Proto : uint
 	//	uint32	requestId
 	//	uint32	taskCount
 	//		uint64	taskId
+	//		string	name
 	RSEND_Tasks,
 	//	uint32	requestId
 	//	uint64	taskId

@@ -317,6 +317,7 @@ void Invoker::Initialize(uint32 codeEntry, const CallableInfo* callableInfo)
 	info = callableInfo;
 	entry = codeEntry;
 	state = InvokerState::Unstart;
+	name = String();
 	error = String();
 	hold = 0;
 	data.SetCount(info->parameters.size);

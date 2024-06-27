@@ -321,6 +321,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 				{
 					writer.Get<uint32>(taskCountPtr)++;
 					writer.WriteUint64(taskIterator.Current().TaskID());
+					writer.WriteString(RS2WS(taskIterator.Current().TaskName()));
 				}
 			}
 			else
@@ -328,6 +329,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 				LogMsg(L"tasks: is not breaking");
 				writer.WriteUint32(1);
 				writer.WriteUint64(0);
+				writer.WriteString(wstring());
 			}
 			Send(socket, writer);
 		}

@@ -18,10 +18,11 @@ public:
 	InvokerState state;
 	const CallableInfo* info;
 	uint32 entry;
+	String name;
 	String error;
 	uint32 hold;
 	Task* task;
-	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), error(), hold(0), task(NULL) {}
+	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), name(), error(), hold(0), task(NULL) {}
 	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "无效的操作"); }
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, Type type) const;

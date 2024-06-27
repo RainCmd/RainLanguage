@@ -1901,6 +1901,23 @@ namespace RainLanguage
                 }
             }
             /// <summary>
+            /// 调用对应任务的自定义名
+            /// </summary>
+            public string Name
+            {
+                get
+                {
+                    if (!IsValid) throw new InvalidOperationException("当前调用已失效");
+                    using (var nativeString = new NativeString(Extern_InvokerWrapperGetName(invoker)))
+                        return nativeString.Value;
+                }
+                set
+                {
+                    if (!IsValid) throw new InvalidOperationException("当前调用已失效");
+                    fixed (char* pvalue = value) Extern_InvokerWrapperSetName(invoker, pvalue);
+                }
+            }
+            /// <summary>
             /// 获取异常信息
             /// </summary>
             /// <returns></returns>
@@ -2588,6 +2605,10 @@ namespace RainLanguage
             private extern static bool InvokerWrapperIsValid(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetState", CallingConvention = CallingConvention.Cdecl)]
             private extern static byte InvokerWrapperGetState(void* invoker);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetName", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* Extern_InvokerWrapperGetName(void* invoker);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperSetName", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void Extern_InvokerWrapperSetName(void* invoker, char* name);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetErrorMessage", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* Extern_InvokerWrapperGetErrorMessage(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperStart", CallingConvention = CallingConvention.Cdecl)]

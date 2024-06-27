@@ -779,6 +779,12 @@ uint64 RainTraceIterator::TaskID()
 	else return 0;
 }
 
+RainString RainTraceIterator::TaskName()
+{
+	if(IsValid()) return RainString(TASK->invoker->name.GetPointer(), TASK->invoker->name.GetLength());
+	return RainString(NULL, 0);
+}
+
 bool RainTraceIterator::Next()
 {
 	if(IsValid())

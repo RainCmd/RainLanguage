@@ -82,6 +82,8 @@
 	public class task handle
 		public Start(bool immediately, bool ignoreWait)
 		public Abort()
+		public SetName(string name)
+		public string GetName()
 		public integer GetInstantID()
 		public TaskState GetState()
 		public string GetExitCode()

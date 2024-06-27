@@ -241,6 +241,16 @@ uint8 Extern_InvokerWrapperGetState(InvokerWrapper* invoker)
 	return (uint8)invoker->GetState();
 }
 
+RainString* Extern_InvokerWrapperGetName(InvokerWrapper* invoker)
+{
+	return new RainString(invoker->GetName());
+}
+
+void Extern_InvokerWrapperSetName(InvokerWrapper* invoker, character* name)
+{
+	invoker->SetName(name);
+}
+
 RainString* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker)
 {
 	return new RainString(invoker->GetErrorMessage());

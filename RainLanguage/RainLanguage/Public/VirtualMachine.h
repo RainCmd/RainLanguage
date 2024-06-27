@@ -62,6 +62,21 @@ public:
 	/// <returns>当前调用状态</returns>
 	InvokerState GetState() const;
 	/// <summary>
+	/// 获取当前调用对应任务的自定义名称
+	/// </summary>
+	/// <returns>名称</returns>
+	const RainString GetName() const;
+	/// <summary>
+	/// 设置当前调用对应任务的自定义名称
+	/// </summary>
+	/// <param name="name">名称</param>
+	void SetName(const RainString& name) const;
+	/// <summary>
+	/// 设置当前调用对应任务的自定义名称
+	/// </summary>
+	/// <param name="name">名称</param>
+	void SetName(const character* name) const;
+	/// <summary>
 	/// 获取异常退出时的退出信息
 	/// </summary>
 	/// <returns>信息</returns>
@@ -90,7 +105,7 @@ public:
 	/// <exception>如果调用不是运行状态会抛异常</exception>
 	void Resume() const;
 	/// <summary>
-	/// 触发异常
+	/// 结束任务
 	/// </summary>
 	void Abort() const;
 

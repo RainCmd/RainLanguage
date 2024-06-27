@@ -69,6 +69,23 @@ InvokerState InvokerWrapper::GetState() const
 	else return InvokerState::Invalid;
 }
 
+const RainString InvokerWrapper::GetName() const
+{
+	return RainString(INVOKER->name.GetPointer(), INVOKER->name.GetLength());
+}
+
+void InvokerWrapper::SetName(const RainString& name) const
+{
+	INVOKER->name = INVOKER->kernel->stringAgency->Add(name.value, name.length);
+}
+
+void InvokerWrapper::SetName(const character* name) const
+{
+	uint32 length = 0;
+	while(name[length]) length++;
+	SetName(RainString(name, length));
+}
+
 const RainString InvokerWrapper::GetErrorMessage() const
 {
 	ValidAssert(*this);
