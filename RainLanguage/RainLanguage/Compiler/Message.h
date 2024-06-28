@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "../Language.h"
-#include "../String.h"
 #include "BuilderDefinitions.h"
 #include "Line.h"
 #include "Anchor.h"

@@ -1,11 +1,6 @@
 ﻿#pragma once
-#include "../../Language.h"
-#include "../../Collections/List.h"
 #include "../../Collections/Set.h"
-#include "../../String.h"
-#include "../../Collections/Dictionary.h"
 #include "../../Instruct.h"
-#include "../../DeclarationInfos.h"
 #include "GeneratorParameter.h"
 #include "LogicVariable.h"
 #include "LocalReference.h"

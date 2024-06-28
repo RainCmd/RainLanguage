@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include "../Language.h"
-#include "../String.h"
 #include "../Frame.h"
 #include "RuntimeLibrary.h"
 

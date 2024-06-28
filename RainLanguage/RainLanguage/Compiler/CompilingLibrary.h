@@ -1,8 +1,4 @@
 ﻿#pragma once
-#include "../String.h"
-#include "../Collections/Dictionary.h"
-#include "../Collections/List.h"
-#include "CompilingDeclaration.h"
 #include "AbstractLibrary.h"
 #include "Anchor.h"
 #include "Line.h"

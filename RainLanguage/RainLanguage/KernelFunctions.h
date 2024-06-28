@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "String.h"
 #include "KernelLibraryInfo.h"
 
 //Operation

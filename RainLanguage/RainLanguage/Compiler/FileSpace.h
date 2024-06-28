@@ -1,11 +1,6 @@
 ﻿#pragma once
-#include "../Collections/List.h"
-#include "../Language.h"
-#include "../String.h"
 #include "Message.h"
 #include "CompilingLibrary.h"
-#include "Anchor.h"
-#include "Visibility.h"
 
 class LineReader;
 struct ParseParameter

@@ -1,6 +1,5 @@
 ﻿#include "KernelFunctions.h"
 #include "Collections/List.h"
-#include "String.h"
 #include "Frame.h"
 #include "VirtualMachine.h"
 #include "VirtualMachine/Kernel.h"

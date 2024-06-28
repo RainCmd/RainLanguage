@@ -7,7 +7,7 @@ void* InternalMalloc(uint32 count)
 	if (count)
 	{
 		void* result = _alloc ? _alloc(count) : malloc((size_t)count);
-		ASSERT(result, "ƒ⁄¥Ê∑÷≈‰ ß∞‹");
+		ASSERT(result, "内存分配失败");
 		return result;
 	}
 	else return NULL;
@@ -33,7 +33,7 @@ void* InternalRealloc(void* pointer, uint32 count)
 	if (pointer)
 	{
 		void* result = _realloc ? _realloc(pointer, (size_t)count) : realloc(pointer, (size_t)count);
-		ASSERT(result, "ƒ⁄¥Ê∑÷≈‰ ß∞‹");
+		ASSERT(result, "内存分配失败");
 		return result;
 	}
 	else return InternalMalloc(count);

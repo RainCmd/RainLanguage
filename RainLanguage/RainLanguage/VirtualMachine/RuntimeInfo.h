@@ -1,9 +1,7 @@
 ﻿#pragma once
 #include "../Collections/Set.h"
-#include "../String.h"
 #include "../Library.h"
 #include "../ImportLibrary.h"
-#include "../DeclarationInfos.h"
 #include "VirtualMachineDefinitions.h"
 
 class Kernel;

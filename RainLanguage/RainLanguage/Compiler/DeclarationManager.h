@@ -1,8 +1,5 @@
 ﻿#pragma once
-#include "../Library.h"
-#include "../Collections/List.h"
 #include "CompilingLibrary.h"
-#include "../String.h"
 #include "Message.h"
 
 struct AbstractParameter;

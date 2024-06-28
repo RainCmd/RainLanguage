@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "../../Collections/Dictionary.h"
 #include "../../DeclarationInfos.h"
 #include "../CompilingDeclaration.h"
 

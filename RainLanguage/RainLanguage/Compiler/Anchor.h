@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "../Language.h"
 #include "../String.h"
 #include "Character.h"
 
