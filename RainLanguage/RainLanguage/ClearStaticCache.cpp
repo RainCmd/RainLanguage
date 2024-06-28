@@ -1,5 +1,5 @@
 ﻿#include "ClearStaticCache.h"
-#include "Public\Rain.h"
+#include "Rain.h"
 
 void ClearStaticCache()
 {

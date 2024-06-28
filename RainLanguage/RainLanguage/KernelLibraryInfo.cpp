@@ -1,6 +1,6 @@
 ﻿#include "KernelLibraryInfo.h"
 #include "KernelFunctions.h"
-#include "Public/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "Real/MathReal.h"
 #include "VirtualMachine/Exceptions.h"
 #include "ClearStaticCache.h"

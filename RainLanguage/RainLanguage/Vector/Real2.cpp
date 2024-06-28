@@ -1,4 +1,4 @@
-﻿#include "../Public/Vector.h"
+﻿#include "Vector.h"
 #include "../Real/MathReal.h"
 
 Real2::Real2(const real& x, const real& y) :x(x), y(y) {}

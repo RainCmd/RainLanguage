@@ -2,7 +2,7 @@
 #include "../KernelDeclarations.h"
 #include "../Library.h"
 #include "../ProgramDatabase.h"
-#include "../Public/Builder.h"
+#include "Builder.h"
 #include "LineReader.h"
 #include "Message.h"
 #include "FileSpace.h"

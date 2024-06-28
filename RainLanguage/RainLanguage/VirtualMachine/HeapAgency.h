@@ -5,7 +5,7 @@
 #include "../Type.h"
 #include "../DeclarationInfos.h"
 #include "../KernelDeclarations.h"
-#include "../Public/VirtualMachineDefinitions.h"
+#include "VirtualMachineDefinitions.h"
 
 struct StartupParameter;
 class Kernel;

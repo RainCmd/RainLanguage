@@ -4,7 +4,7 @@
 #include "../Collections/List.h"
 #include "../Collections/Dictionary.h"
 #include "../Library.h"
-#include "../Public/VirtualMachineDefinitions.h"
+#include "VirtualMachineDefinitions.h"
 #include "RuntimeLibrary.h"
 #include "KernelLibraryGenerator.h"
 

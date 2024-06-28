@@ -2,7 +2,7 @@
 #include "Collections/List.h"
 #include "String.h"
 #include "Frame.h"
-#include "Public/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "VirtualMachine/Kernel.h"
 #include "Real/MathReal.h"
 #include "VirtualMachine/Exceptions.h"

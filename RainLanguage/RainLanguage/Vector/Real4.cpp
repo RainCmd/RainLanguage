@@ -1,4 +1,4 @@
-﻿#include "../Public/Vector.h"
+﻿#include "Vector.h"
 #include "../Real/MathReal.h"
 
 Real4::Real4(const real& x, const real& y, const real& z, const real& w) : x(x), y(y), z(z), w(w) {}

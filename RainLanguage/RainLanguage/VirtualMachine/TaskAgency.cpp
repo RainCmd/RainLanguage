@@ -1,6 +1,6 @@
 ﻿#include "TaskAgency.h"
 #include "Task.h"
-#include "../Public/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "Exceptions.h"
 
 Invoker* TaskAgency::GetInvoker()

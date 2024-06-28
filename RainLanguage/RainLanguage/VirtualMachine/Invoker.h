@@ -2,8 +2,8 @@
 #include "../Language.h"
 #include "../String.h"
 #include "../Type.h"
-#include "../Public/Vector.h"
-#include "../Public/VirtualMachineDefinitions.h"
+#include "Vector.h"
+#include "VirtualMachineDefinitions.h"
 
 class Kernel;
 class Task;

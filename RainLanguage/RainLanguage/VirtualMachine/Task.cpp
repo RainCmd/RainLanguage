@@ -2,7 +2,7 @@
 #include "../Instruct.h"
 #include "../KernelLibraryInfo.h"
 #include "../KernelDeclarations.h"
-#include "../Public/Debugger.h"
+#include "Debugger.h"
 #include "Kernel.h"
 #include "LibraryAgency.h"
 #include "RuntimeLibrary.h"

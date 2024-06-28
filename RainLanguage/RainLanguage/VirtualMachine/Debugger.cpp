@@ -2,7 +2,7 @@
 #include "../String.h"
 #include "../ProgramDatabase.h"
 #include "../KeyWords.h"
-#include "../Public/Debugger.h"
+#include "Debugger.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
 #include "TaskAgency.h"

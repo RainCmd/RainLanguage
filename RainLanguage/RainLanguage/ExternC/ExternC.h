@@ -1,8 +1,8 @@
 ﻿#pragma once
-#include "../Public/Rain.h"
-#include "../Public/Builder.h"
-#include "../Public/VirtualMachine.h"
-#include "../Public/MemoryAllocator.h"
+#include "Rain.h"
+#include "Builder.h"
+#include "VirtualMachine.h"
+#include "MemoryAllocator.h"
 
 struct Extern_CodeLoaderResult
 {

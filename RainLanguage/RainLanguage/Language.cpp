@@ -1,5 +1,5 @@
 ﻿#include "Language.h"
-#include "Public/MemoryAllocator.h"
+#include "MemoryAllocator.h"
 #include <iostream>
 __alloc _alloc;
 void* InternalMalloc(uint32 count)

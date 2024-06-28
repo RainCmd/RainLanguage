@@ -2,7 +2,7 @@
 #include "../Language.h"
 #include "../Collections/List.h"
 #include "../Collections/Dictionary.h"
-#include "../Public/VirtualMachineDefinitions.h"
+#include "VirtualMachineDefinitions.h"
 
 struct StartupParameter;
 class Kernel;

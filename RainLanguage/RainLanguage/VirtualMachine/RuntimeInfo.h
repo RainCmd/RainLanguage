@@ -4,7 +4,7 @@
 #include "../Library.h"
 #include "../ImportLibrary.h"
 #include "../DeclarationInfos.h"
-#include "../Public/VirtualMachineDefinitions.h"
+#include "VirtualMachineDefinitions.h"
 
 class Kernel;
 struct RuntimeMemberVariable;

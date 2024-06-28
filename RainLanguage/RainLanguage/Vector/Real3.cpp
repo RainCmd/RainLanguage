@@ -1,4 +1,4 @@
-﻿#include "../Public/Vector.h"
+﻿#include "Vector.h"
 #include "../Real/MathReal.h"
 
 Real3::Real3(const real& x, const real& y, const real& z) : x(x), y(y), z(z) {}

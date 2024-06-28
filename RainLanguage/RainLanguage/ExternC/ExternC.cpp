@@ -1,5 +1,5 @@
 ﻿#include "ExternC.h"
-#include "../Public/Debugger.h"
+#include "Debugger.h"
 #include "../Language.h"
 #define CONVERT(type, value) *(type*)&value
 

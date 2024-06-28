@@ -1,6 +1,6 @@
 ﻿#include "CastExpression.h"
 #include "../../../Instruct.h"
-#include "../../../Public/Vector.h"
+#include "Vector.h"
 #include "../VariableGenerator.h"
 #include "VariableExpression.h"
 

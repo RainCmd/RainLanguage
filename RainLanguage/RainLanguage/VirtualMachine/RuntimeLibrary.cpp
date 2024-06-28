@@ -1,7 +1,7 @@
 ﻿#include "RuntimeLibrary.h"
 #include "Kernel.h"
 #include "LibraryAgency.h"
-#include "../Public/Debugger.h"
+#include "Debugger.h"
 
 #define GET_LIBRARY_STRING(target) kernel->stringAgency->Add(library->stringAgency->Get(target)).index
 

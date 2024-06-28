@@ -5,7 +5,7 @@
 #include "DeclarationInfos.h"
 #include "String.h"
 #include "ImportLibrary.h"
-#include "Public/RainLibrary.h"
+#include "RainLibrary.h"
 
 struct StringAddresses
 {

@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "../Language.h"
 #include "../Type.h"
-#include "../Public/Vector.h"
-#include "../Public/VirtualMachine.h"
+#include "Vector.h"
+#include "VirtualMachine.h"
 
 class Kernel;
 struct RuntimeNative;

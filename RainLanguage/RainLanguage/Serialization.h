@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Language.h"
 #include "Collections/List.h"
-#include "Public/RainLibrary.h"
+#include "RainLibrary.h"
 
 class StringAgency;
 class Serializer : public RainBuffer<uint8>

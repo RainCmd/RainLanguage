@@ -1,4 +1,4 @@
-﻿#include "../Public/VirtualMachine.h"
+﻿#include "VirtualMachine.h"
 #include "Invoker.h"
 #include "Kernel.h"
 #include "TaskAgency.h"

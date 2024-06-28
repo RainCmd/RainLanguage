@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../Public/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "../Collections/Set.h"
 #include "../Real/Random.h"
 #include "../KernelDeclarations.h"

@@ -1,6 +1,6 @@
 ﻿#include "HeapAgency.h"
 #include "../KernelDeclarations.h"
-#include "../Public/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "RuntimeInfo.h"
 #include "Kernel.h"
 #include "LibraryAgency.h"

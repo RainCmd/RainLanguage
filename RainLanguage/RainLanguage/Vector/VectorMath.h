@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../Public/Vector.h"
+#include "Vector.h"
 #include "../Real/MathReal.h"
 
 inline Real2 Lerp(const Real2& a, const Real2& b, const real& l)
