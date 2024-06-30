@@ -966,7 +966,14 @@ struct RAINLANGUAGE StartupParameter
 		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), libraryUnloader(libraryUnloader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapGeneration(heapGeneration), taskCapacity(taskCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit)
 	{
 	}
-	StartupParameter(const RainLibrary** libraries, uint32 libraryCount, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit) : libraries(libraries), libraryCount(libraryCount), seed(0), stringCapacity(8), entityCapacity(8), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), libraryUnloader(libraryUnloader), nativeCallerLoader(nativeCallerLoader), heapCapacity(0xff), heapGeneration(8), taskCapacity(8), executeStackCapacity(0xff), onExceptionExit(onExceptionExit) {}
+	StartupParameter(const RainLibrary** libraries, uint32 libraryCount, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit)
+		: StartupParameter(libraries, libraryCount, 0, 8, 8, onReferenceEntity, onReleaseEntity, libraryLoader, libraryUnloader, nativeCallerLoader, 0xff, 8, 8, 0xff, onExceptionExit)
+	{
+	}
+	StartupParameter(const RainLibrary* library, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit)
+		:StartupParameter(&library, 1, onReferenceEntity, onReleaseEntity, libraryLoader, libraryUnloader, nativeCallerLoader, onExceptionExit)
+	{
+	}
 };
 
 /// <summary>
