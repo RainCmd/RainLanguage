@@ -114,7 +114,7 @@ public:
 	/// <summary>
 	/// 获取编译结果
 	/// </summary>
-	/// <returns>编译来的库 </returns>
+	/// <returns>编译的库</returns>
 	virtual const RainLibrary* GetLibrary() = 0;
 	/// <summary>
 	/// 获取调试信息

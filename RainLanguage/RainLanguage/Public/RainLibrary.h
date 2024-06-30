@@ -43,14 +43,14 @@ typedef void (*RainLibraryUnloader)(const RainLibrary* library);
 /// </summary>
 /// <param name="library">库</param>
 /// <returns>序列化后的数据</returns>
-RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainLibrary& library);
+RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainLibrary& library);
 /// <summary>
 /// 反序列化库
 /// </summary>
 /// <param name="data">字节数据</param>
 /// <param name="size">字节数</param>
 /// <returns>库</returns>
-RAINLANGUAGE const RainLibrary* DeserializeLibrary(const uint8* data, uint32 size);
+RAINLANGUAGE RainLibrary* DeserializeLibrary(const uint8* data, uint32 size);
 
 /// <summary>
 /// 调试数据
@@ -80,11 +80,11 @@ typedef void (*RainProgramDatabaseUnloader)(const RainProgramDatabase* database)
 /// <summary>
 /// 序列化调试数据
 /// </summary>
-RAINLANGUAGE const RainBuffer<uint8>* Serialize(const RainProgramDatabase& database);
+RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database);
 /// <summary>
 /// 反序列化调试数据
 /// </summary>
-RAINLANGUAGE const RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size);
+RAINLANGUAGE RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size);
 
 RAINLANGUAGE void Delete(RainBuffer<uint8>*& buffer);
 RAINLANGUAGE void Delete(RainLibrary*& library);

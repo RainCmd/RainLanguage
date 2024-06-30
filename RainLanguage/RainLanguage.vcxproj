@@ -256,6 +256,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
@@ -276,6 +277,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
@@ -301,6 +303,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
@@ -327,6 +330,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
@@ -339,7 +343,6 @@
   <ItemGroup>
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.h" />
     <ClInclude Include="RainLanguage\ClearStaticCache.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="RainLanguage\Collections\Dictionary.h" />
     <ClInclude Include="RainLanguage\Collections\Hash.h" />
     <ClInclude Include="RainLanguage\Collections\List.h" />
@@ -454,7 +457,6 @@
   <ItemGroup>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.cpp" />
     <ClCompile Include="RainLanguage\ClearStaticCache.cpp" />
-    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="RainLanguage\Collections\Hash.cpp" />
     <ClCompile Include="RainLanguage\Compiler\AbstractLibrary.cpp" />
     <ClCompile Include="RainLanguage\Compiler\AbstractLibraryCompiling.cpp" />
