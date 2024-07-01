@@ -1048,7 +1048,7 @@ RainDebugger::RainDebugger(const RainString& name, const RainDebuggerParameter& 
 	library = GetLibrary(kernel, name);
 	if(!library) return;
 	LibraryAgency* agency = kernel->libraryAgency;
-	const RainLibrary* source = agency->libraryLoader(name);
+	RainLibrary* source = agency->libraryLoader(name);
 	if(!source) return;
 	database = parameter.loader(name);
 	if(!database)

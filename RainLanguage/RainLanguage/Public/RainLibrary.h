@@ -33,11 +33,11 @@ public:
 /// 库加载器
 /// </summary>
 /// <param name="name">库名</param>
-typedef const RainLibrary* (*RainLibraryLoader)(const RainString& name);
+typedef RainLibrary* (*RainLibraryLoader)(const RainString& name);
 /// <summary>
 /// 库卸载器
 /// </summary>
-typedef void (*RainLibraryUnloader)(const RainLibrary* library);
+typedef void (*RainLibraryUnloader)(RainLibrary* library);
 /// <summary>
 /// 序列化库
 /// </summary>

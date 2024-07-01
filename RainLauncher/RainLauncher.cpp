@@ -125,7 +125,7 @@ static bool IsName(const RainString& name)
 		if(name.value[i] != ::name.c_str()[i])return false;
 	return true;
 }
-static const RainLibrary* LibraryLoader(const RainString& name)
+static RainLibrary* LibraryLoader(const RainString& name)
 {
 	if(IsName(name)) return product->GetLibrary();
 	return nullptr;
@@ -184,7 +184,7 @@ int main(int cnt, char** _args)
 			}
 		}
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(&library, 1, nullptr, nullptr, LibraryLoader, nullptr, NativeLoader, OnExceptionExitFunc);
+		StartupParameter parameter(library, nullptr, nullptr, LibraryLoader, nullptr, NativeLoader, OnExceptionExitFunc);
 		RainKernel* kernel = CreateKernel(parameter, ProgramDatabaseLoader, nullptr);
 		RainFunction entry = kernel->FindFunction(args.entry.c_str(), true);
 		if(entry.IsValid())
