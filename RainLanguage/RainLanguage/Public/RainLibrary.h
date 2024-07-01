@@ -72,11 +72,11 @@ public:
 /// 调试数据加载器
 /// </summary>
 /// <param name="name">库名</param>
-typedef const RainProgramDatabase* (*RainProgramDatabaseLoader)(const RainString& name);
+typedef RainProgramDatabase* (*RainProgramDatabaseLoader)(const RainString& name);
 /// <summary>
 /// 调试器使用完成后释放调试数据的回调
 /// </summary>
-typedef void (*RainProgramDatabaseUnloader)(const RainProgramDatabase* database);
+typedef void (*RainProgramDatabaseUnloader)(RainProgramDatabase* database);
 /// <summary>
 /// 序列化调试数据
 /// </summary>

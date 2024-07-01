@@ -330,7 +330,7 @@ protected:
 	/// </summary>
 	virtual void OnContinue() = 0;
 public:
-	const RainProgramDatabase* database;
+	RainProgramDatabase* database;
 	inline StepType GetStepType() const { return stepType; }
 	RainKernel* GetKernel();
 	/// <summary>
