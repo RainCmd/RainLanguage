@@ -150,8 +150,8 @@ const class Product :public RainProduct
 {
 public:
 	const MessageCollector* messageCollector;
-	const Library* library;
-	const ProgramDatabase* programDatabase;
+	Library* library;
+	ProgramDatabase* programDatabase;
 	inline Product(MessageCollector* messageCollector) :messageCollector(messageCollector), library(NULL), programDatabase(NULL) {}
 	inline Product(MessageCollector* messageCollector, Library* library, ProgramDatabase* programDatabase) : messageCollector(messageCollector), library(library), programDatabase(programDatabase) {}
 	inline ErrorLevel GetLevel() { return messageCollector->GetLevel(); }
@@ -161,8 +161,8 @@ public:
 		const Message& message = (*messageCollector->GetMessages(level))[index];
 		return RainErrorMessage(RainString(message.source.GetPointer(), message.source.GetLength()), message.type, message.line, message.start, message.length, RainString(message.message.GetPointer(), message.message.GetLength()));
 	}
-	inline const RainLibrary* GetLibrary() { return library; }
-	inline const RainProgramDatabase* GetRainProgramDatabase() { return programDatabase; }
+	inline RainLibrary* GetLibrary() { return library; }
+	inline RainProgramDatabase* GetRainProgramDatabase() { return programDatabase; }
 	inline ~Product()
 	{
 		delete messageCollector; messageCollector = NULL;

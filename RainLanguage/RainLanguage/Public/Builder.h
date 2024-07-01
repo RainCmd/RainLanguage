@@ -115,12 +115,12 @@ public:
 	/// 获取编译结果
 	/// </summary>
 	/// <returns>编译的库</returns>
-	virtual const RainLibrary* GetLibrary() = 0;
+	virtual RainLibrary* GetLibrary() = 0;
 	/// <summary>
 	/// 获取调试信息
 	/// </summary>
 	/// <returns>调试信息</returns>
-	virtual const RainProgramDatabase* GetRainProgramDatabase() = 0;
+	virtual RainProgramDatabase* GetRainProgramDatabase() = 0;
 };
 
 /// <summary>

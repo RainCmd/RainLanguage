@@ -130,7 +130,7 @@ static const RainLibrary* LibraryLoader(const RainString& name)
 	if(IsName(name)) return product->GetLibrary();
 	return nullptr;
 }
-static const RainProgramDatabase* ProgramDatabaseLoader(const RainString& name)
+static RainProgramDatabase* ProgramDatabaseLoader(const RainString& name)
 {
 	if(IsName(name)) return product->GetRainProgramDatabase();
 	return nullptr;
