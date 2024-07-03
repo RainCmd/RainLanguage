@@ -434,8 +434,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_CLASS(true, root, "handle", KERNEL_TYPE_CLASS_INDEX_Handle, Declaration(), EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	REGISTER_CLASS(true, root, "interface", KERNEL_TYPE_CLASS_INDEX_Interface, TYPE_Handle, EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
-	REGISTER_CLASS(true, root, "delegate", KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
-	//class task
+	REGISTER_CLASS(true, root, "Delegate", KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
+	//class Task
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(7);
 		REGISTER_MEMBER_FUNCTIONS(true, "Start", TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_Bool, TYPE_Bool), task_Start);
@@ -448,7 +448,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "IsPause", CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Task), task_IsPause);
 		REGISTER_MEMBER_FUNCTIONS(true, "Pause", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Pause);
 		REGISTER_MEMBER_FUNCTIONS(true, "Resume", TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Resume);
-		REGISTER_CLASS(true, root, "task", KERNEL_TYPE_CLASS_INDEX_Task, TYPE_Handle, EMPTY_DECLARATIONS, 8, MEMORY_ALIGNMENT_8, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
+		REGISTER_CLASS(true, root, "Task", KERNEL_TYPE_CLASS_INDEX_Task, TYPE_Handle, EMPTY_DECLARATIONS, 8, MEMORY_ALIGNMENT_8, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//class array
 	{

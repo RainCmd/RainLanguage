@@ -56,7 +56,7 @@ const struct RAINLANGUAGE BuildParameter
 	/// </summary>
 	ErrorLevel messageLevel;
 
-	inline BuildParameter(const RainString& name, bool debug, CodeLoader* codeLoader, const RainLibraryLoader& libraryLoader, const RainLibraryUnloader libraryUnloader, ErrorLevel messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), libraryUnloader(libraryUnloader), messageLevel(messageLevel) {}
+	inline BuildParameter(const RainString& name, bool debug, CodeLoader* codeLoader, const RainLibraryLoader libraryLoader, const RainLibraryUnloader libraryUnloader, ErrorLevel messageLevel) : name(name), debug(debug), codeLoader(codeLoader), libraryLoader(libraryLoader), libraryUnloader(libraryUnloader), messageLevel(messageLevel) {}
 };
 
 /// <summary>

@@ -3308,6 +3308,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
+				else if(lexical.anchor.content == KeyWord_interface()) goto label_error_unexpected_lexcal;
 				else
 				{
 					Type type = MatchBaseType(lexical.anchor);

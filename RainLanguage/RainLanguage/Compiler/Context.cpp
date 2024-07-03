@@ -422,7 +422,7 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 	for(uint32 x = 0; x < relies->Count(); x++)
 	{
 		AbstractSpace* space = (*relies)[x];
-		if(space->declarations.TryGet(name, declarations))
+		if(space != manager->kernelLibaray && space->declarations.TryGet(name, declarations))
 			results.Add(*declarations);
 	}
 #ifdef DEBUG
@@ -430,5 +430,5 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 		if(results[i].category != DeclarationCategory::Function)
 			EXCEPTION("操作类型必须是全局函数");
 #endif // DEBUG
-	}
+}
 
