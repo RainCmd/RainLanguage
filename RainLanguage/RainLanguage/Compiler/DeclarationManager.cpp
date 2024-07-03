@@ -291,14 +291,9 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 		}
 		else if(subType.code == TypeCode::Interface)
 		{
-			if(baseType == TYPE_Interface)
+			if(baseType == TYPE_Handle)
 			{
 				depth = 1;
-				return true;
-			}
-			else if(baseType == TYPE_Handle)
-			{
-				depth = 2;
 				return true;
 			}
 			else if(baseType.code == TypeCode::Interface)

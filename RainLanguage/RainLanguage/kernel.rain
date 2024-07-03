@@ -77,9 +77,8 @@
 		public string ToString()
 		public integer GetHandleID()
 		public type GetType()
-	public class interface handle
-	public class delegate handle
-	public class task handle
+	public class Delegate handle
+	public class Task handle
 		public Start(bool immediately, bool ignoreWait)
 		public Abort()
 		public SetName(string name)

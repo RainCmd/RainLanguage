@@ -23,7 +23,6 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_STRUCT_COUNT,
 
 	KERNEL_TYPE_CLASS_INDEX_Handle = 0,
-	KERNEL_TYPE_CLASS_INDEX_Interface,
 	KERNEL_TYPE_CLASS_INDEX_Delegate,
 	KERNEL_TYPE_CLASS_INDEX_Task,
 	KERNEL_TYPE_CLASS_INDEX_Array,
@@ -253,7 +252,6 @@ const Type TYPE_Entity = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRU
 const Type TYPE_Reflection_TypeCode = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNEL_TYPE_ENUM_INDEX_TypeCode, 0);
 
 const Type TYPE_Handle = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Handle, 0);
-const Type TYPE_Interface = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Interface, 0);
 const Type TYPE_Delegate = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Delegate, 0);
 const Type TYPE_Task = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Task, 0);
 const Type TYPE_Array = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Array, 0);

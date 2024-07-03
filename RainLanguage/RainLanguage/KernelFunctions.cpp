@@ -1479,7 +1479,7 @@ String type_GetParent(KernelInvokerParameter parameter)//type type.()
 			result = Type(parameter.kernel->libraryAgency->GetClass(type)->parents.Peek(), 0);
 			break;
 		case TypeCode::Interface:
-			result = TYPE_Interface;
+			result = TYPE_Handle;
 			break;
 		case TypeCode::Delegate:
 			result = TYPE_Delegate;

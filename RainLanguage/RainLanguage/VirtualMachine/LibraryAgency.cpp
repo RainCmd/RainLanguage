@@ -53,7 +53,7 @@ uint32 LibraryAgency::GetTypeHeapSize(const Declaration& declaration)
 			const RuntimeClass* runtimeClass = &GetLibrary(declaration.library)->classes[declaration.index];
 			return runtimeClass->offset + runtimeClass->size;
 		}
-		case TypeCode::Interface: return GetKernelLibrary()->classes[TYPE_Interface.index].size;
+		case TypeCode::Interface: return GetKernelLibrary()->classes[TYPE_Handle.index].size;
 		case TypeCode::Delegate: return GetKernelLibrary()->classes[TYPE_Delegate.index].size;
 		case TypeCode::Task: return GetKernelLibrary()->classes[TYPE_Task.index].size;
 	}
@@ -237,7 +237,6 @@ bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectTyp
 		else if(objectType.code == TypeCode::Handle)
 		{
 			if(variableType == TYPE_Handle) return true;
-			else if(variableType == TYPE_Interface) return (bool)GetClass(objectType)->inherits.Count();
 			else if(variableType.code == TypeCode::Handle)
 			{
 				const RuntimeClass* baseInfo = GetClass(variableType);
@@ -248,7 +247,7 @@ bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectTyp
 		}
 		else if(objectType.code == TypeCode::Interface)
 		{
-			if(variableType == TYPE_Handle || variableType == TYPE_Interface) return true;
+			if(variableType == TYPE_Handle) return true;
 			else if(variableType.code == TypeCode::Interface)
 				return GetLibrary(objectType.library)->interfaces[objectType.index].inherits.Contains(variableType);
 		}

@@ -343,7 +343,6 @@ void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& n
 		else if(name == KeyWord_string()) new (results.Add())CompilingDeclaration(TYPE_String.library, Visibility::Public, DeclarationCategory::Struct, TYPE_String.index, NULL);
 		else if(name == KeyWord_entity()) new (results.Add())CompilingDeclaration(TYPE_Entity.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Entity.index, NULL);
 		else if(name == KeyWord_handle()) new (results.Add())CompilingDeclaration(TYPE_Handle.library, Visibility::Public, DeclarationCategory::Class, TYPE_Handle.index, NULL);
-		else if(name == KeyWord_interface()) new (results.Add())CompilingDeclaration(TYPE_Interface.library, Visibility::Public, DeclarationCategory::Class, TYPE_Interface.index, NULL);
 		else if(name == KeyWord_delegate()) new (results.Add())CompilingDeclaration(TYPE_Delegate.library, Visibility::Public, DeclarationCategory::Class, TYPE_Delegate.index, NULL);
 		else if(name == KeyWord_task()) new (results.Add())CompilingDeclaration(TYPE_Task.library, Visibility::Public, DeclarationCategory::Class, TYPE_Task.index, NULL);
 		else if(name == KeyWord_array()) new (results.Add())CompilingDeclaration(TYPE_Array.library, Visibility::Public, DeclarationCategory::Class, TYPE_Array.index, NULL);

@@ -1880,7 +1880,6 @@ Type MatchBaseType(const Anchor& anchor)
 	else if(anchor == KeyWord_handle()) return TYPE_Handle;
 	else if(anchor == KeyWord_entity()) return TYPE_Entity;
 	else if(anchor == KeyWord_array()) return TYPE_Array;
-	else if(anchor == KeyWord_interface()) return TYPE_Interface;
 	return Type();
 }
 
