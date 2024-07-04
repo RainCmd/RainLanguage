@@ -397,12 +397,12 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "GetParameters", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetParameters);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetReturns", CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetReturns);
 		REGISTER_MEMBER_FUNCTIONS(true, "CreateUninitialized", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type), type_CreateUninitialized);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function), type_CreateDelegate);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Native), type_CreateDelegate2);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle), type_CreateDelegate3);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateTask", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_Function, Type(TYPE_Handle, 1)), type_CreateTask);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateTask", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), type_CreateTask2);
-		REGISTER_MEMBER_FUNCTIONS(true, "CreateArray", CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type, TYPE_Integer), type_CreateArray);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Delegate), CreateTypeList(TYPE_Type, TYPE_Reflection_Function), type_CreateDelegate);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Delegate), CreateTypeList(TYPE_Type, TYPE_Reflection_Native), type_CreateDelegate2);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateDelegate", CreateTypeList(TYPE_Delegate), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle), type_CreateDelegate3);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateTask", CreateTypeList(TYPE_Task), CreateTypeList(TYPE_Type, TYPE_Reflection_Function, Type(TYPE_Handle, 1)), type_CreateTask);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateTask", CreateTypeList(TYPE_Task), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), type_CreateTask2);
+		REGISTER_MEMBER_FUNCTIONS(true, "CreateArray", CreateTypeList(TYPE_Array), CreateTypeList(TYPE_Type, TYPE_Integer), type_CreateArray);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetArrayRank", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Type), type_GetArrayRank);
 		REGISTER_MEMBER_FUNCTIONS(true, "GetArrayElementType", CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Type), type_GetArrayElementType);
 		REGISTER_STRUCT(true, root, "type", KERNEL_TYPE_STRUCT_INDEX_Type, SIZE(Type), MEMORY_ALIGNMENT_4, EMPTY_VARIABLES, memberFunctions);

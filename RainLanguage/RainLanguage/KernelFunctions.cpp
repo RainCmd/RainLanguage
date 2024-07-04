@@ -135,7 +135,7 @@ String Operation_Equals_entity_entity(KernelInvokerParameter parameter)// bool =
 	return String();
 }
 
-String Operation_Equals_delegate_delegate(KernelInvokerParameter parameter)// bool == (delegate, delegate)
+String Operation_Equals_delegate_delegate(KernelInvokerParameter parameter)// bool == (Delegate, Delegate)
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
@@ -204,7 +204,7 @@ String Operation_Not_Equals_entity_entity(KernelInvokerParameter parameter)// bo
 	return String();
 }
 
-String Operation_Not_Equals_delegate_delegate(KernelInvokerParameter parameter)// bool != (delegate, delegate)
+String Operation_Not_Equals_delegate_delegate(KernelInvokerParameter parameter)// bool != (Delegate, Delegate)
 {
 	Handle left = PARAMETER_VALUE(1, Handle, 0);
 	Handle right = PARAMETER_VALUE(1, Handle, SIZE(Handle));
@@ -1906,7 +1906,7 @@ String type_CreateUninitialized(KernelInvokerParameter parameter)//handle type.(
 	return String();
 }
 
-String type_CreateDelegate(KernelInvokerParameter parameter)//handle type.(Reflection.Function)
+String type_CreateDelegate(KernelInvokerParameter parameter)//Delegate type.(Reflection.Function)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
@@ -1927,7 +1927,7 @@ String type_CreateDelegate(KernelInvokerParameter parameter)//handle type.(Refle
 	return String();
 }
 
-String type_CreateDelegate2(KernelInvokerParameter parameter)//handle type.(Reflection.Native)
+String type_CreateDelegate2(KernelInvokerParameter parameter)//Delegate type.(Reflection.Native)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
@@ -1948,7 +1948,7 @@ String type_CreateDelegate2(KernelInvokerParameter parameter)//handle type.(Refl
 	return String();
 }
 
-String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Reflection.MemberFunction, handle)
+String type_CreateDelegate3(KernelInvokerParameter parameter)//Delegate type.(Reflection.MemberFunction, handle)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
@@ -1998,7 +1998,7 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//handle type.(Refl
 	return String();
 }
 
-String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflection.Function, handle[])
+String type_CreateTask(KernelInvokerParameter parameter)//Task type.(Reflection.Function, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
@@ -2050,7 +2050,7 @@ String type_CreateTask(KernelInvokerParameter parameter)//handle type.(Reflectio
 	return String();
 }
 
-String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflection.MemberFunction, handle, handle[])
+String type_CreateTask2(KernelInvokerParameter parameter)//Task type.(Reflection.MemberFunction, handle, handle[])
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
@@ -2112,7 +2112,7 @@ String type_CreateTask2(KernelInvokerParameter parameter)//handle type.(Reflecti
 	return String();
 }
 
-String type_CreateArray(KernelInvokerParameter parameter)//handle type.(integer)
+String type_CreateArray(KernelInvokerParameter parameter)//array type.(integer)
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	integer length = PARAMETER_VALUE(1, integer, SIZE(Type));

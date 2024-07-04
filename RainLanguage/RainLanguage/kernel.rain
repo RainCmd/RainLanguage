@@ -57,12 +57,12 @@
 		public Reflection.ReadonlyTypes GetParameters()							//委托的参数类型列表
 		public Reflection.ReadonlyTypes GetReturns()							//委托或任务的返回值类型列表
 		public handle CreateUninitialized()										//创建该类型的未初始化对象
-		public handle CreateDelegate(Reflection.Function)													//创建全局函数的委托对象，返回当前类型的委托对象
-		public handle CreateDelegate(Reflection.Native)														//创建本地函数的委托对象，返回当前类型的委托对象
-		public handle CreateDelegate(Reflection.MemberFunction, handle target)								//创建成员函数的委托对象，返回当前类型的委托对象
-		public handle CreateTask(Reflection.Function function, handle[] parameters)							//创建一个任务，返回当前类型的任务对象
-		public handle CreateTask(Reflection.MemberFunction function, handle target, handle[] parameters)	//创建一个任务，返回当前类型的任务对象
-		public handle CreateArray(integer legnth)
+		public Delegate CreateDelegate(Reflection.Function)													//创建全局函数的委托对象，返回当前类型的委托对象
+		public Delegate CreateDelegate(Reflection.Native)													//创建本地函数的委托对象，返回当前类型的委托对象
+		public Delegate CreateDelegate(Reflection.MemberFunction, handle target)							//创建成员函数的委托对象，返回当前类型的委托对象
+		public Task CreateTask(Reflection.Function function, handle[] parameters)							//创建一个任务，返回当前类型的任务对象
+		public Task CreateTask(Reflection.MemberFunction function, handle target, handle[] parameters)		//创建一个任务，返回当前类型的任务对象
+		public array CreateArray(integer legnth)
 		public integer GetArrayRank()
 		public type GetArrayElementType()
 	public struct string
@@ -109,7 +109,7 @@
 	public bool == (string, string)
 	public bool == (handle, handle)
 	public bool == (entity, entity)
-	public bool == (delegate, delegate)
+	public bool == (Delegate, Delegate)
 	public bool == (type, type)
 	public bool != (bool, bool)
 	public bool != (integer, integer)
@@ -120,7 +120,7 @@
 	public bool != (string, string)
 	public bool != (handle, handle)
 	public bool != (entity, entity)
-	public bool != (delegate, delegate)
+	public bool != (Delegate, Delegate)
 	public bool != (type, type)
 	public bool & (bool, bool)
 	public integer & (integer, integer)
