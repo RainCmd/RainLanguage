@@ -479,11 +479,13 @@ Anchor MatchStringTemplateBlock(const Anchor& segment, uint32 index, MessageColl
 	ASSERT_DEBUG(segment.content[index - segment.position] == '{', "需要保留前后花括号");
 	uint32 start = index; index++;
 	Lexical lexical;
+	uint32 deep = 1;
 	while (TryAnalysis(segment, index, lexical, message))
 	{
 		index = lexical.anchor.GetEnd();
-		if (lexical.type == LexicalType::BracketRight2)
-			return segment.Sub(start, index - start);
+		if(lexical.type == LexicalType::BracketLeft2) deep++;
+		else if(lexical.type == LexicalType::BracketRight2)
+			if(!(--deep)) return segment.Sub(start, index - start);
 	}
 	MESSAGE2(message, segment.Sub(index, 1), MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 	return segment.Sub(index);
