@@ -332,7 +332,7 @@ variables(0), functions(0), enums(0), structs(0), classes(0), interfaces(0), del
 			}
 			else if(IsReloadable(lexical.type))
 			{
-				ParseGlobalFunction(this, line, 0, Visibility::Space, attributeCollector, parameter);
+				ParseGlobalFunction(this, line, 0, Visibility::Private, attributeCollector, parameter);
 				goto label_parse;
 			}
 			else MESSAGE2(parameter->messages, line, MessageType::ERROR_UNEXPECTED_LEXCAL);
@@ -464,6 +464,7 @@ bool FileSpace::ParseEnum(const Line& line, uint32 index, Visibility visibility,
 		Line current = parameter->reader->CurrentLine();
 		if(!TryAnalysis(current, 0, lexical, parameter->messages)) continue;
 		if(!CheckIndent(current, indent, line.indent)) break;
+		if(TryParseAttributes(line, attributeCollector, parameter->messages)) continue;
 
 		if(TryGetNextLexical(current, 0, LexicalType::Word, MessageType::ERROR_MISSING_NAME, lexical, parameter->messages))
 		{
