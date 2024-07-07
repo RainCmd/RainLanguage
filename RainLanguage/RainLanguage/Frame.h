@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Language.h"
 
-// Ö¡£ºstack + bottom
+// 帧：stack + bottom
 struct Frame
 {
 	uint32 bottom;

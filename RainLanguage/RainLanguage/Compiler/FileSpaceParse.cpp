@@ -26,7 +26,7 @@ bool TryGetNextLexical(const Line& line, uint32 startIndex, LexicalType type, Me
 	if(TryAnalysis(line, startIndex, lexical, messages))
 	{
 		if(lexical.type == type) return true;
-		else MESSAGE2(messages, line, MessageType::ERROR_UNEXPECTED_LEXCAL);
+		else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
 	}
 	else if(message != MessageType::INVALID) MESSAGE2(messages, line, message);
 	return false;
@@ -365,9 +365,18 @@ bool FileSpace::ParseDeclaration(const Line& line, List<Anchor>& attributeCollec
 	uint32 index;
 	Visibility visibility = ParseVisibility(line, index, parameter->messages);
 	Lexical lexical;
-	if(!TryGetNextLexical(line, index, LexicalType::Word, MessageType::ERROR_UNEXPECTED_LINE_END, lexical, parameter->messages)) return false;
+	if(!TryAnalysis(line, index, lexical, parameter->messages))
+	{
+		MESSAGE2(parameter->messages, Anchor(line.source, line.content.Sub(line.indent, index - line.indent), line.number, line.indent), MessageType::ERROR_UNEXPECTED_LINE_END);
+		return false;
+	}
+	if(lexical.type != LexicalType::Word && !IsReloadable(lexical.type))
+	{
+		MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_UNEXPECTED_LEXCAL);
+		return false;
+	}
 
-	CHECK_VISIABLE(line, Space);
+	CHECK_VISIABLE(line, Private);
 	Anchor name, expression; FileType type;
 	if(lexical.anchor == KeyWord_const())
 	{
