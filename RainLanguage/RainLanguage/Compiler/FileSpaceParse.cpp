@@ -574,14 +574,13 @@ bool FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 		{
 			if(lexical.type == LexicalType::Negate)//析构函数
 			{
-				if(visibility != Visibility::None) MESSAGE2(parameter->messages, current, MessageType::ERROR_INVALID_VISIBILITY);
 				if(attributeCollector.Count())
 				{
 					MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES);
 					DISCARD_ATTRIBUTE;
 				}
-				if(visibility != Visibility::None)
-					MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_VISIBILITY);
+				if(visibility != Visibility::None) MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_VISIBILITY);
+				if(fileClass->destructor.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_DUPLICATE_DECLARATION);
 				ParseBlock(current.indent, fileClass->destructor, parameter);
 				goto label_parse;
 			}
