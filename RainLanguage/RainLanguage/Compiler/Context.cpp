@@ -331,22 +331,7 @@ void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& n
 	if(names.Count() == 1)
 	{
 		String name = names[0].content;
-		if(name == KeyWord_bool()) new (results.Add())CompilingDeclaration(TYPE_Bool.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Bool.index, NULL);
-		else if(name == KeyWord_byte()) new (results.Add())CompilingDeclaration(TYPE_Byte.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Byte.index, NULL);
-		else if(name == KeyWord_char()) new (results.Add())CompilingDeclaration(TYPE_Char.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Char.index, NULL);
-		else if(name == KeyWord_integer()) new (results.Add())CompilingDeclaration(TYPE_Integer.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Integer.index, NULL);
-		else if(name == KeyWord_real()) new (results.Add())CompilingDeclaration(TYPE_Real.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real.index, NULL);
-		else if(name == KeyWord_real2()) new (results.Add())CompilingDeclaration(TYPE_Real2.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real2.index, NULL);
-		else if(name == KeyWord_real3()) new (results.Add())CompilingDeclaration(TYPE_Real3.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real3.index, NULL);
-		else if(name == KeyWord_real4()) new (results.Add())CompilingDeclaration(TYPE_Real4.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Real4.index, NULL);
-		else if(name == KeyWord_type()) new (results.Add())CompilingDeclaration(TYPE_Type.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Type.index, NULL);
-		else if(name == KeyWord_string()) new (results.Add())CompilingDeclaration(TYPE_String.library, Visibility::Public, DeclarationCategory::Struct, TYPE_String.index, NULL);
-		else if(name == KeyWord_entity()) new (results.Add())CompilingDeclaration(TYPE_Entity.library, Visibility::Public, DeclarationCategory::Struct, TYPE_Entity.index, NULL);
-		else if(name == KeyWord_handle()) new (results.Add())CompilingDeclaration(TYPE_Handle.library, Visibility::Public, DeclarationCategory::Class, TYPE_Handle.index, NULL);
-		else if(name == KeyWord_delegate()) new (results.Add())CompilingDeclaration(TYPE_Delegate.library, Visibility::Public, DeclarationCategory::Class, TYPE_Delegate.index, NULL);
-		else if(name == KeyWord_task()) new (results.Add())CompilingDeclaration(TYPE_Task.library, Visibility::Public, DeclarationCategory::Class, TYPE_Task.index, NULL);
-		else if(name == KeyWord_array()) new (results.Add())CompilingDeclaration(TYPE_Array.library, Visibility::Public, DeclarationCategory::Class, TYPE_Array.index, NULL);
-		else if(declaration.category == DeclarationCategory::Struct)
+		if(declaration.category == DeclarationCategory::Struct)
 		{
 			AbstractStruct* abstractStruct = manager->selfLibaray->structs[declaration.index];
 			for(uint32 x = 0; x < abstractStruct->variables.Count(); x++)
