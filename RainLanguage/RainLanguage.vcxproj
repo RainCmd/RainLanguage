@@ -259,7 +259,8 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -280,7 +281,8 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -306,7 +308,8 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -333,7 +336,8 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>
@@ -552,7 +556,7 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="RainLanguage\ExternC\RainLanguageAdapter.cs" />
-    <None Include="RainLanguage\kernel.rain" />
+    <None Include="kernel.rain" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Rain.natvis" />

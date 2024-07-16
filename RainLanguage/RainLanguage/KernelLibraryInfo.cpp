@@ -50,7 +50,7 @@
 
 KernelLibraryInfo::Space::~Space()
 {
-	for (uint32 i = 0; i < children.Count(); i++) delete children[i];
+	for(uint32 i = 0; i < children.Count(); i++) delete children[i];
 	children.Clear();
 }
 KernelLibraryInfo::~KernelLibraryInfo()
@@ -60,7 +60,7 @@ KernelLibraryInfo::~KernelLibraryInfo()
 static KernelLibraryInfo* kernelLibraryInfo = NULL;
 const KernelLibraryInfo* KernelLibraryInfo::GetKernelLibraryInfo()
 {
-	if (kernelLibraryInfo == NULL) kernelLibraryInfo = new KernelLibraryInfo();
+	if(kernelLibraryInfo == NULL) kernelLibraryInfo = new KernelLibraryInfo();
 	return kernelLibraryInfo;
 }
 
@@ -106,8 +106,8 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 
 inline void GetStackSize(KernelLibraryInfo& library, Type type, uint32& size, uint8& alignment)
 {
-	if (type.dimension) type = TYPE_Handle;
-	switch (type.code)
+	if(type.dimension) type = TYPE_Handle;
+	switch(type.code)
 	{
 		case TypeCode::Invalid:
 			break;
@@ -135,7 +135,7 @@ inline void GetStackSize(KernelLibraryInfo& library, Type type, uint32& size, ui
 inline void CalculateTupleInfo(KernelLibraryInfo& library, TupleInfo& info)
 {
 	uint32 size = 0; uint8 alignment = 0;
-	for (uint32 i = 0; i < info.Count(); i++)
+	for(uint32 i = 0; i < info.Count(); i++)
 	{
 		GetStackSize(library, info.GetType(i), size, alignment);
 		MemoryAlignment(info.size, info.GetOffset(i), alignment, size);
@@ -147,7 +147,7 @@ inline void CalculateMemberFunctionParameterTupleInfo(KernelLibraryInfo& library
 	uint32 size = 0; uint8 alignment = 0;
 	GetStackSize(library, info.GetType(0), size, alignment);
 	info.size += MemoryAlignment(size, MEMORY_ALIGNMENT_MAX);
-	for (uint32 i = 1; i < info.Count(); i++)
+	for(uint32 i = 1; i < info.Count(); i++)
 	{
 		GetStackSize(library, info.GetType(i), size, alignment);
 		MemoryAlignment(info.size, info.GetOffset(i), alignment, size);
@@ -156,32 +156,32 @@ inline void CalculateMemberFunctionParameterTupleInfo(KernelLibraryInfo& library
 
 inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 {
-	for (uint32 x = 0; x < kernel.structs.Count(); x++)
-		for (uint32 y = 0; y < kernel.structs[x].functions.Count(); y++)
+	for(uint32 x = 0; x < kernel.structs.Count(); x++)
+		for(uint32 y = 0; y < kernel.structs[x].functions.Count(); y++)
 			CalculateMemberFunctionParameterTupleInfo(kernel, kernel.functions[kernel.structs[x].functions[y]].parameters);
-	for (uint32 x = 0; x < kernel.classes.Count(); x++)
+	for(uint32 x = 0; x < kernel.classes.Count(); x++)
 	{
-		for (uint32 y = 0; y < kernel.classes[x].constructors.Count(); y++)
+		for(uint32 y = 0; y < kernel.classes[x].constructors.Count(); y++)
 			CalculateMemberFunctionParameterTupleInfo(kernel, kernel.functions[kernel.classes[x].constructors[y]].parameters);
-		for (uint32 y = 0; y < kernel.classes[x].functions.Count(); y++)
+		for(uint32 y = 0; y < kernel.classes[x].functions.Count(); y++)
 			CalculateMemberFunctionParameterTupleInfo(kernel, kernel.functions[kernel.classes[x].functions[y]].parameters);
 	}
-	for (uint32 x = 0; x < kernel.interfaces.Count(); x++)
-		for (uint32 y = 0; y < kernel.interfaces[x].functions.Count(); y++)
+	for(uint32 x = 0; x < kernel.interfaces.Count(); x++)
+		for(uint32 y = 0; y < kernel.interfaces[x].functions.Count(); y++)
 		{
 			CalculateMemberFunctionParameterTupleInfo(kernel, kernel.interfaces[x].functions[y].parameters);
 			CalculateTupleInfo(kernel, kernel.interfaces[x].functions[y].returns);
 		}
-	for (uint32 x = 0; x < kernel.delegates.Count(); x++)
+	for(uint32 x = 0; x < kernel.delegates.Count(); x++)
 	{
 		CalculateTupleInfo(kernel, kernel.delegates[x].parameters);
 		CalculateTupleInfo(kernel, kernel.delegates[x].returns);
 	}
-	for (uint32 x = 0; x < kernel.tasks.Count(); x++)
+	for(uint32 x = 0; x < kernel.tasks.Count(); x++)
 		CalculateTupleInfo(kernel, kernel.tasks[x].returns);
-	for (uint32 x = 0; x < kernel.functions.Count(); x++)
+	for(uint32 x = 0; x < kernel.functions.Count(); x++)
 	{
-		if (!kernel.functions[x].parameters.size) CalculateTupleInfo(kernel, kernel.functions[x].parameters);
+		if(!kernel.functions[x].parameters.size) CalculateTupleInfo(kernel, kernel.functions[x].parameters);
 		CalculateTupleInfo(kernel, kernel.functions[x].returns);
 	}
 }
@@ -416,6 +416,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, "ToBool", CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_String), string_ToBool);
 		REGISTER_MEMBER_FUNCTIONS(true, "ToInteger", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_String), string_ToInteger);
 		REGISTER_MEMBER_FUNCTIONS(true, "ToReal", CreateTypeList(TYPE_Real), CreateTypeList(TYPE_String), string_ToReal);
+		REGISTER_MEMBER_FUNCTIONS(true, "ToChars", CreateTypeList(Type(TYPE_Char, 1)), CreateTypeList(TYPE_String), string_ToChars);
 		REGISTER_STRUCT(true, root, "string", KERNEL_TYPE_STRUCT_INDEX_String, SIZE(string), MEMORY_ALIGNMENT_4, memberVariables, memberFunctions);
 	}
 	//struct entity
@@ -459,7 +460,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		Space* space = new KernelLibraryInfo::Space(KERNEL_STRING("BitConvert"), root);
 		TupleInfo byte_x8(8, 8);
-		for (uint32 i = 0; i < 8; i++)
+		for(uint32 i = 0; i < 8; i++)
 			byte_x8.AddElement(TYPE_Byte, i);
 
 		REGISTER_FUNCTIONS(true, space, "BytesConvertInteger", CreateTypeList(TYPE_Integer), byte_x8, BytesConvertInteger);
@@ -560,6 +561,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_FUNCTIONS(true, space, "LoadAssembly", CreateTypeList(TYPE_Reflection_Assembly), CreateTypeList(TYPE_String), LoadAssembly);
 		REGISTER_FUNCTIONS(true, space, "GetAssembles", CreateTypeList(Type(TYPE_Reflection_Assembly, 1)), TupleInfo_EMPTY, GetAssembles);
 		REGISTER_FUNCTIONS(true, space, "GetCurrentTaskInstantID", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, GetCurrentTaskInstantID);
+		REGISTER_FUNCTIONS(true, space, "CreateString", CreateTypeList(TYPE_String), CreateTypeList(Type(TYPE_Char, 1), TYPE_Integer, TYPE_Integer), CreateString);
 	}
 	//space Reflection
 	{
@@ -782,8 +784,8 @@ uint32 KernelLibraryInfo::AddData(const character* value)
 {
 	uint32 address = data.Count();
 	string result = stringAgency.AddAndRef(value);
-	for (uint32 i = 0; i < dataStrings.Count(); i++)
-		if (dataStrings[i].value == result)
+	for(uint32 i = 0; i < dataStrings.Count(); i++)
+		if(dataStrings[i].value == result)
 		{
 			dataStrings[i].addresses.Add(address);
 			return address;

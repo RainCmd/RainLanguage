@@ -166,6 +166,7 @@ String SetRandomSeed(KernelInvokerParameter parameter);											//(integer)
 String LoadAssembly(KernelInvokerParameter parameter);											//Reflection.Assembly (string)
 String GetAssembles(KernelInvokerParameter parameter);											//Reflection.Assembly[] ()
 String GetCurrentTaskInstantID(KernelInvokerParameter parameter);								//integer ()
+String CreateString(KernelInvokerParameter parameter);											//string (char[], integer, integer)
 
 //成员函数
 String bool_ToString(KernelInvokerParameter parameter);											//string bool.()
@@ -215,6 +216,7 @@ String string_GetStringID(KernelInvokerParameter parameter);									//integer s
 String string_ToBool(KernelInvokerParameter parameter);											//bool string.()
 String string_ToInteger(KernelInvokerParameter parameter);										//integer string.()
 String string_ToReal(KernelInvokerParameter parameter);											//real string.()
+String string_ToChars(KernelInvokerParameter parameter);										//char[] string.()
 
 String entity_GetEntityID(KernelInvokerParameter parameter);									//integer entity.()
 

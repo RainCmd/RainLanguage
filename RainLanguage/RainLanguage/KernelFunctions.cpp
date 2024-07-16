@@ -1288,6 +1288,23 @@ String GetCurrentTaskInstantID(KernelInvokerParameter parameter)//integer ()
 	RETURN_VALUE(integer, 0) = (integer)parameter.task->instanceID;
 	return String();
 }
+
+String CreateString(KernelInvokerParameter parameter)//string (char[], integer, integer)
+{
+	Handle& source = PARAMETER_VALUE(1, Handle, 0);
+	integer start = PARAMETER_VALUE(1, integer, SIZE(Handle));
+	integer count = PARAMETER_VALUE(1, integer, SIZE(Handle) + SIZE(integer));
+	StringAgency* agency = parameter.kernel->stringAgency;
+	if(!source) return agency->Add(EXCEPTION_NULL_REFERENCE);
+	uint32 length = parameter.kernel->heapAgency->GetArrayLength(source);
+	if(count < 0) return agency->Add(EXCEPTION_OUT_OF_RANGE);
+	if(start < 0) start += length;
+	if(start < 0 || start + count > length) return agency->Add(EXCEPTION_OUT_OF_RANGE);
+	string result = RETURN_VALUE(string, 0);
+	agency->Release(result);
+	result = agency->AddAndRef((character*)parameter.kernel->heapAgency->GetArrayPoint(source, 0), (uint32)count);
+	return String();
+}
 #pragma endregion 系统函数
 
 #pragma region 基础类型成员函数
@@ -2164,6 +2181,18 @@ String string_ToInteger(KernelInvokerParameter parameter)//integer string.()
 String string_ToReal(KernelInvokerParameter parameter)//real string.()
 {
 	RETURN_VALUE(real, 0) = ParseReal(parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0)));
+	return String();
+}
+
+String string_ToChars(KernelInvokerParameter parameter)//char[] string.()
+{
+	String source = parameter.kernel->stringAgency->Get(PARAMETER_VALUE(1, string, 0));
+	Handle& result = RETURN_VALUE(Handle, 0);
+	HeapAgency* agency = parameter.kernel->heapAgency;
+	agency->StrongRelease(result);
+	result = agency->Alloc(TYPE_Char, source.GetLength());
+	if(source.GetLength()) Mcopy(source.GetPointer(), (character*)agency->GetArrayPoint(result, 0), source.GetLength());
+	agency->StrongReference(result);
 	return String();
 }
 

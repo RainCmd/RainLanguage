@@ -634,7 +634,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="RainLanguage\kernel.rain" />
+    <None Include="kernel.rain" />
     <None Include="cpp.hint" />
     <None Include="RainLanguage\ExternC\RainLanguageAdapter.cs" />
   </ItemGroup>

@@ -71,6 +71,7 @@
 		public bool ToBool()
 		public integer ToInteger()
 		public real ToReal()
+		public char[] ToChars()
 	public struct entity
 		public integer GetEntityID()
 	public class handle
@@ -282,6 +283,7 @@
 		public SetRandomSeed(integer)
 		public Reflection.Assembly[] GetAssembles()
 		public integer GetCurrentTaskInstantID()
+		public string CreateString(char[], integer start, integer count)
 
 	namespace Reflection
 		public enum TypeCode
