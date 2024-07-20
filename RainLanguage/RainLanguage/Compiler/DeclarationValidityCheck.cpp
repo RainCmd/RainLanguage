@@ -398,6 +398,26 @@ void CollectInherits(DeclarationManager* manager, const List<Type, true>& inheri
 	}
 }
 
+void CheckFunction(DeclarationManager* manager, Set<Type, true>& inherits, CompilingInterface::Function* compilingFunction)
+{
+	AbstractFunction* function = manager->selfLibaray->interfaces[compilingFunction->declaration.definition]->functions[compilingFunction->declaration.index];
+	Set<Type, true>::Iterator iterator = inherits.GetIterator();
+	while(iterator.Next())
+	{
+		AbstractInterface* inheritInterface = manager->GetLibrary(iterator.Current().library)->interfaces[iterator.Current().index];
+		for(uint32 i = 0; i < inheritInterface->functions.Count(); i++)
+		{
+			AbstractFunction* member = inheritInterface->functions[i];
+			if(member->name == function->name && IsEquals(member->parameters.GetTypes(), 1, function->parameters.GetTypes(), 1))
+			{
+				if(!IsEquals(member->returns.GetTypes(), function->returns.GetTypes()))
+					MESSAGE2(manager->messages, compilingFunction->name, MessageType::ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT);
+				return;
+			}
+		}
+	}
+}
+
 bool TryFindFunction(DeclarationManager* manager, CompilingClass* define, AbstractFunction* function)
 {
 	for(uint32 i = 0; i < define->functions.Count(); i++)
@@ -416,6 +436,14 @@ bool TryFindFunction(DeclarationManager* manager, CompilingClass* define, Abstra
 void ImplementsCheck(DeclarationManager* manager)
 {
 	Set<Type, true> set = Set<Type, true>(0);
+	for(uint32 x = 0; x < manager->compilingLibrary.interfaces.Count(); x++)
+	{
+		CompilingInterface* define = manager->compilingLibrary.interfaces[x];
+		CollectInherits(manager, define->inherits, set);
+		for(uint32 y = 0; y < define->functions.Count(); y++)
+			CheckFunction(manager, set, define->functions[y]);
+		set.Clear();
+	}
 	for(uint32 x = 0; x < manager->compilingLibrary.classes.Count(); x++)
 	{
 		CompilingClass* define = manager->compilingLibrary.classes[x];
@@ -435,7 +463,6 @@ void ImplementsCheck(DeclarationManager* manager)
 				}
 			}
 		}
-		set.Clear();
 		CollectInherits(manager, define->inherits, set);
 		Set<Type, true>::Iterator iterator = set.GetIterator();
 		while(iterator.Next())
@@ -445,5 +472,6 @@ void ImplementsCheck(DeclarationManager* manager)
 				if(!TryFindFunction(manager, define, inheritInterface->functions[y]))
 					MESSAGE3(manager->messages, define->name, MessageType::ERROR_INTERFACE_NOT_IMPLEMENTED, inheritInterface->functions[y]->GetFullName(manager->stringAgency));
 		}
+		set.Clear();
 	}
 }
