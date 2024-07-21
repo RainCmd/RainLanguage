@@ -393,8 +393,8 @@ void CollectInherits(DeclarationManager* manager, const List<Type, true>& inheri
 	for(uint32 i = 0; i < inherits.Count(); i++)
 	{
 		Type type = inherits[i];
-		set.Add(type);
-		CollectInherits(manager, manager->GetLibrary(type.library)->interfaces[type.index]->inherits, set);
+		if(set.Add(type))
+			CollectInherits(manager, manager->GetLibrary(type.library)->interfaces[type.index]->inherits, set);
 	}
 }
 
@@ -411,8 +411,10 @@ void CheckFunction(DeclarationManager* manager, Set<Type, true>& inherits, Compi
 			if(member->name == function->name && IsEquals(member->parameters.GetTypes(), 1, function->parameters.GetTypes(), 1))
 			{
 				if(!IsEquals(member->returns.GetTypes(), function->returns.GetTypes()))
+				{
 					MESSAGE2(manager->messages, compilingFunction->name, MessageType::ERROR_IMPLEMENTED_FUNCTION_RETURN_TYPES_INCONSISTENT);
-				return;
+					return;
+				}
 			}
 		}
 	}
@@ -451,10 +453,10 @@ void ImplementsCheck(DeclarationManager* manager)
 		{
 			AbstractLibrary* parentLibrary = manager->GetLibrary(typeIndex.library);
 			AbstractClass* parent = parentLibrary->classes[typeIndex.index];
-			for(uint32 y = 1; y < define->functions.Count(); y++)
+			for(uint32 y = 0; y < define->functions.Count(); y++)
 			{
 				AbstractFunction* member = manager->selfLibaray->functions[define->functions[y]];
-				for(uint32 z = 1; z < parent->functions.Count(); z++)
+				for(uint32 z = 0; z < parent->functions.Count(); z++)
 				{
 					AbstractFunction* parentMember = parentLibrary->functions[parent->functions[z]];
 					if(member->name == parentMember->name && IsEquals(member->parameters.GetTypes(), 1, parentMember->parameters.GetTypes(), 1))
