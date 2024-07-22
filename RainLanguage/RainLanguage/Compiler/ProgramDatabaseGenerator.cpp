@@ -3,34 +3,30 @@
 #include "LogicGenerator/LocalContext.h"
 #include "LogicGenerator/Generator.h"
 
-ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : database(NULL), currentFile(NULL), localMap(0)
+ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : debug(debug), database(new ProgramDatabase(name)), currentFile(NULL), localMap(0)
 {
-	if(debug) database = new ProgramDatabase(name);
 }
 
 void ProgramDatabaseGenerator::AddFunction(const String& file)
 {
-	if(database)
+	localMap.Clear();
+	DebugFunction* function = new DebugFunction();
+	function->file = database->agency->Add(file);
+	if(!database->files.TryGet(function->file, currentFile))
 	{
-		localMap.Clear();
-		DebugFunction* function = new DebugFunction();
-		function->file = database->agency->Add(file);
-		if(!database->files.TryGet(function->file, currentFile))
-		{
-			currentFile = new DebugFile();
-			database->files.Set(function->file, currentFile);
-		}
-		currentFile->functions.Add(database->functions.Count());
-		database->functions.Add(function);
+		currentFile = new DebugFile();
+		database->files.Set(function->file, currentFile);
 	}
+	currentFile->functions.Add(database->functions.Count());
+	database->functions.Add(function);
 }
 
 void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line)
 {
-	if(database && database->functions.Count())
+	if(database->functions.Count())
 	{
 		currentFile->statements.Set(line, database->statements.Count());
-		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->AddCodeReference(generator->WriteCode(Instruct::BREAK)));
+		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, debug ? generator->AddCodeReference(generator->WriteCode(Instruct::BREAK)) : generator->GetPointer());
 	}
 }
 
@@ -41,7 +37,7 @@ void ProgramDatabaseGenerator::AddLocal(Local* local, uint32 address, GlobalRefe
 
 void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
 {
-	if(database && database->functions.Count())
+	if(database->functions.Count())
 	{
 		DebugFunction* function = database->functions.Peek();
 		uint32 localIndex;
@@ -57,17 +53,14 @@ void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, cons
 
 void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uint32 index, GlobalReference* globalReference)
 {
-	if(database)
+	DebugFile* file;
+	if(!database->files.TryGet(name.source, file))
 	{
-		DebugFile* file;
-		if(!database->files.TryGet(name.source, file))
-		{
-			file = new DebugFile();
-			database->files.Set(database->agency->Add(name.source), file);
-		}
-		CompilingDeclaration variable = globalReference->AddReference(CompilingDeclaration(library, Visibility::None, DeclarationCategory::Variable, index, NULL));
-		file->globalAnchors.Set(DebugAnchor(name.line, name.position), DebugGlobal(variable.library, variable.index));
+		file = new DebugFile();
+		database->files.Set(database->agency->Add(name.source), file);
 	}
+	CompilingDeclaration variable = globalReference->AddReference(CompilingDeclaration(library, Visibility::None, DeclarationCategory::Variable, index, NULL));
+	file->globalAnchors.Set(DebugAnchor(name.line, name.position), DebugGlobal(variable.library, variable.index));
 }
 
 ProgramDatabase* ProgramDatabaseGenerator::GetResult(Generator* generator)

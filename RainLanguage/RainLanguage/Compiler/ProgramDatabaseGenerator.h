@@ -10,6 +10,7 @@ struct DebugFile;
 class ProgramDatabase;
 class ProgramDatabaseGenerator
 {
+	bool debug;
 	ProgramDatabase* database;
 	DebugFile* currentFile;
 	Dictionary<uint32, uint32, true> localMap;
