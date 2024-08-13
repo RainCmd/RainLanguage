@@ -1,5 +1,6 @@
 ﻿#include "ExpressionParser.h"
 #include "../../KeyWords.h"
+#include "../FileSpace.h"
 #include "Expression.h"
 #include "Expressions/TupleExpression.h"
 #include "Expressions/VariableExpression.h"
@@ -2400,62 +2401,25 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				}
 				else
 				{
-					Anchor operatorAnchor = lexical.anchor;
-					index = lexical.anchor.GetEnd();
-					if(TryAnalysis(anchor, index, lexical, manager->messages))
+					List<Anchor> names = List<Anchor>(0);
+					if(TryExtractName(anchor, lexical.anchor.GetEnd(), index, &names, manager->messages))
 					{
-						if(lexical.type != LexicalType::Word) goto label_error_unexpected_lexcal;
-						Type type = MatchBaseType(lexical.anchor);
-						if(type.IsValid())
+						uint32 dimesnion = ExtractDimension(anchor, index);
+						Lexical rightBracket;
+						if(TryAnalysis(anchor, index, rightBracket, manager->messages))
 						{
-							index = lexical.anchor.GetEnd();
-							type.dimension = ExtractDimension(anchor, index);
-							expressionStack.Add(new TypeExpression(lexical.anchor, type));
-							attribute = Attribute::Type;
-						}
-						else
-						{
-							List<CompilingDeclaration, true> declarations(0);
-							if(!TryFindDeclaration(lexical.anchor, declarations))
-							{
-								AbstractSpace* space = NULL;
-								if(!context.TryFindSpace(manager, lexical.anchor, space))
-								{
-									MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
-									goto label_parse_fail;
-								}
-								if(!TryFindDeclaration(anchor, index, lexical, space, declarations))
-									goto label_parse_fail;
-							}
-							if(!TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
-								goto label_parse_fail;
-						}
-						if(TryMatchNext(anchor, index, LexicalType::Greater, lexical))
-						{
-							Expression* expression = expressionStack.Pop();
-							if(ContainAny(expression->type, ExpressionType::TypeExpression))
-							{
-								TypeExpression* typeExpression = (TypeExpression*)expression;
-								expression = new ConstantTypeExpression(typeExpression->anchor, typeExpression->customType);
-								attribute = expression->attribute;
-								expressionStack.Add(expression);
-								delete typeExpression;
-								break;
-							}
-							else
-							{
-								expressionStack.Add(expression);
-								MESSAGE2(manager->messages, expression->anchor, MessageType::ERROR_NOT_TYPE_DECLARATION);
-							}
+							FileType file(names, dimesnion);
+							List<CompilingDeclaration, true> declarations = List<CompilingDeclaration, true>(0);
+							context.FindDeclaration(manager, names, declarations);
+							expressionStack.Add(new ConstantTypeExpression(names[names.Count() - 1], file.GetType(manager, declarations)));
+							attribute = expressionStack.Peek()->attribute;
+							index = rightBracket.anchor.GetEnd();
+							goto label_next_lexical;
 						}
 						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
-						goto label_parse_fail;
 					}
-					else
-					{
-						MESSAGE2(manager->messages, operatorAnchor, MessageType::ERROR_MISSING_TYPE);
-						goto label_parse_fail;
-					}
+					else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_INVALID_OPERATOR);
+					goto label_parse_fail;
 				}
 			case LexicalType::LessEquals:
 				PUSH_TOKEN(TokenType::LessEquals, Attribute::Operator);

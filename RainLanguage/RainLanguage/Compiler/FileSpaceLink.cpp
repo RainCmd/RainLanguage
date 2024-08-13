@@ -4,7 +4,7 @@
 
 #define FIND_DECLARATION(type) declarations.Clear();context.FindDeclaration(manager, type.name, declarations); Type findType = type.GetType(manager, declarations);
 
-Type FileType::GetType(DeclarationManager* manager, const List<CompilingDeclaration, true>& declarations)
+Type FileType::GetType(DeclarationManager* manager, const List<CompilingDeclaration, true>& declarations) const
 {
 	if(declarations.Count() == 0)MESSAGE2(manager->messages, name, MessageType::ERROR_DECLARATION_NOT_FOUND)
 	else if(declarations.Count() == 1)

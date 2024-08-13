@@ -23,7 +23,7 @@ struct FileType
 	uint32 dimension;
 	inline FileType() :name(0), dimension(INVALID) {}
 	inline FileType(const List<Anchor> name, uint32 dimension) : name(name), dimension(dimension) {}
-	Type GetType(DeclarationManager* manager, const List<CompilingDeclaration, true>& declarations);
+	Type GetType(DeclarationManager* manager, const List<CompilingDeclaration, true>& declarations) const;
 };
 
 struct FileParameter
