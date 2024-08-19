@@ -49,7 +49,7 @@ public:
 	{
 		this->attribute = CombineType(attribute, type);
 		if (declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))
-			this->attribute & ~Attribute::Assignable;
+			this->attribute &= ~Attribute::Assignable;
 	}
 	bool IsReferenceMember();
 	void Generator(LogicGenerateParameter& parameter);
