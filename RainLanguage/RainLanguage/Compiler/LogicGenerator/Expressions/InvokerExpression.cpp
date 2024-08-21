@@ -276,6 +276,7 @@ void InvokerConstructorExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 
 	LogicGenerateParameter parametersParameter = LogicGenerateParameter(parameter, parameters->returns.Count());
 	parameters->Generator(parametersParameter);

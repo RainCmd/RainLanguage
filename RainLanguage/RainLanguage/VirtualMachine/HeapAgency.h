@@ -27,7 +27,7 @@ class HeapAgency
 	uint32 free, head, tail, active, generation;
 	bool flag, gc;
 	CallableInfo destructorCallable;
-	Handle Alloc(uint32 size, uint8 alignment);
+	Handle Alloc(uint32 size, uint8 alignment, String& error);
 	bool IsUnrecoverableTask(Handle handle);
 	void Free(Handle handle, RuntimeClass* runtimeClass, uint8* address);
 	void Free(Handle handle);
@@ -39,17 +39,17 @@ class HeapAgency
 	void FastGC();
 public:
 	HeapAgency(Kernel* kernel, const StartupParameter* parameter);
-	Handle Alloc(const Type elementType, integer length);
-	Handle Alloc(const Declaration declaration);
+	Handle Alloc(const Type elementType, integer length, String& error);
+	Handle Alloc(const Declaration declaration, String& error);
 	void Alloc(const Type&) = delete;
 	inline bool IsValid(Handle handle) { return handle && handle < heads.Count() && heads[handle].type.IsValid(); }
 	inline void StrongReference(Handle handle)
 	{
-		if (IsValid(handle)) heads[handle].strong++;
+		if(IsValid(handle)) heads[handle].strong++;
 	}
 	inline void StrongRelease(Handle handle)
 	{
-		if (IsValid(handle))
+		if(IsValid(handle))
 		{
 			Head& value = heads[handle];
 			ASSERT_DEBUG(value.strong, "当前引用计数为0!");
@@ -58,11 +58,11 @@ public:
 	}
 	inline void WeakReference(Handle handle)
 	{
-		if (IsValid(handle))heads[handle].weak++;
+		if(IsValid(handle))heads[handle].weak++;
 	}
 	inline void WeakRelease(Handle handle)
 	{
-		if (IsValid(handle))
+		if(IsValid(handle))
 		{
 			Head& value = heads[handle];
 			ASSERT_DEBUG(value.weak, "当前引用计数为0!");
@@ -72,7 +72,7 @@ public:
 	inline void GC(bool full)
 	{
 		gc = true;
-		if (full) FullGC();
+		if(full) FullGC();
 		else FastGC();
 		gc = false;
 	}
@@ -95,7 +95,7 @@ public:
 	String TryGetArrayPoint(Handle handle, integer index, uint8*& pointer);
 	inline bool TryGetPoint(Handle handle, uint8*& value)
 	{
-		if (IsValid(handle))
+		if(IsValid(handle))
 		{
 			value = GetPoint(handle);
 			return true;
@@ -106,7 +106,7 @@ public:
 	inline bool TryGetValue(Handle handle, T& value)
 	{
 		uint8* address;
-		if (TryGetPoint(handle, address))
+		if(TryGetPoint(handle, address))
 		{
 			value = *(T*)address;
 			return true;
@@ -115,7 +115,7 @@ public:
 	}
 	inline bool TryGetType(Handle handle, Type& type)
 	{
-		if (IsValid(handle))
+		if(IsValid(handle))
 		{
 			type = heads[handle].type;
 			return true;
@@ -129,7 +129,7 @@ public:
 	~HeapAgency();
 };
 
-void StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);
-void WeakBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);
+String StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);
+String WeakBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);//todo 处理错误信息
 String StrongUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* result);
 String WeakUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* result);

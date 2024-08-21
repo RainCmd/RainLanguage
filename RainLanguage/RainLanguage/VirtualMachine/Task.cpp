@@ -213,9 +213,11 @@ label_next_instruct:
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& handle = VARIABLE(Handle, handleValue);
 			kernel->heapAgency->StrongRelease(handle);
-			handle = kernel->heapAgency->Alloc(INSTRUCT_VALUE(Declaration, 5));
+			String error;
+			handle = kernel->heapAgency->Alloc(INSTRUCT_VALUE(Declaration, 5), error);
+			if(!handle) EXCEPTION_EXIT(BASE_CreateObject, error);
 			kernel->heapAgency->StrongReference(handle);
-			instruct += 5 + SIZE(Declaration);
+			EXCEPTION_JUMP(4 + SIZE(Declaration), BASE_CreateObject);
 		}
 		goto label_next_instruct;
 		case Instruct::BASE_CreateDelegate:
@@ -242,74 +244,97 @@ label_next_instruct:
 			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
 			Handle& result = VARIABLE(Handle, reaultValue);
 			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(INSTRUCT_VALUE(Declaration, 5));
+			String error;
+			result = kernel->heapAgency->Alloc(INSTRUCT_VALUE(Declaration, 5), error);
 			kernel->heapAgency->StrongReference(result);
-			Delegate* delegateInfo = (Delegate*)kernel->heapAgency->GetPoint(result);
+			Delegate* delegateInfo = result ? (Delegate*)kernel->heapAgency->GetPoint(result) : NULL;
 			switch(INSTRUCT_VALUE(FunctionType, 5 + SIZE(Declaration)))
 			{
 				case FunctionType::Global:
-					new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration)));
-					instruct += 10 + SIZE(Declaration);
-					goto label_next_instruct;
+				{
+					if(error.IsEmpty()) new (delegateInfo)Delegate(INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration)));
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Global, error);
+					EXCEPTION_JUMP(9 + SIZE(Declaration), BASE_CreateDelegate_Global);
+				}
+				goto label_next_instruct;
 				case FunctionType::Native:
-					new (delegateInfo)Delegate(INSTRUCT_VALUE(Native, 6 + SIZE(Declaration)));
-					instruct += 6 + SIZE(Declaration) + SIZE(Native);
-					goto label_next_instruct;
+				{
+					if(error.IsEmpty()) new (delegateInfo)Delegate(INSTRUCT_VALUE(Native, 6 + SIZE(Declaration)));
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Native, error);
+					EXCEPTION_JUMP(5 + SIZE(Declaration) + SIZE(Native), BASE_CreateDelegate_Native);
+				}
+				goto label_next_instruct;
 				case FunctionType::Box:
 				{
-					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					Handle target = VARIABLE(Handle, targetValue);
-					if(kernel->heapAgency->IsValid(target))
+					if(error.IsEmpty())
 					{
-						Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)));
-						new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Box);
-						kernel->heapAgency->WeakReference(target);
+						uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						Handle target = VARIABLE(Handle, targetValue);
+						if(kernel->heapAgency->IsValid(target))
+						{
+							Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)));
+							new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Box);
+							kernel->heapAgency->WeakReference(target);
+						}
+						else EXCEPTION_EXIT(BASE_CreateDelegate_Box, EXCEPTION_NULL_REFERENCE);
 					}
-					else EXCEPTION_EXIT(BASE_CreateDelegate_Box, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Box, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Box);
 				}
 				goto label_next_instruct;
 				case FunctionType::Reality:
 				{
-					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					Handle target = VARIABLE(Handle, targetValue);
-					if(kernel->heapAgency->IsValid(target))
+					if(error.IsEmpty())
 					{
-						Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)));
-						new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Reality);
-						kernel->heapAgency->WeakReference(target);
+						uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						Handle target = VARIABLE(Handle, targetValue);
+						if(kernel->heapAgency->IsValid(target))
+						{
+							Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)));
+							new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Reality);
+							kernel->heapAgency->WeakReference(target);
+						}
+						else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, EXCEPTION_NULL_REFERENCE);
 					}
-					else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Reality);
 				}
 				goto label_next_instruct;
 				case FunctionType::Virtual:
 				{
-					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					Handle target = VARIABLE(Handle, targetValue);
-					Type type;
-					if(kernel->heapAgency->TryGetType(target, type))
+					if(error.IsEmpty())
 					{
-						Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type);
-						new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Virtual);
-						kernel->heapAgency->WeakReference(target);
+						uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						Handle target = VARIABLE(Handle, targetValue);
+						Type type;
+						if(kernel->heapAgency->TryGetType(target, type))
+						{
+							Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type);
+							new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Virtual);
+							kernel->heapAgency->WeakReference(target);
+						}
+						else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, EXCEPTION_NULL_REFERENCE);
 					}
-					else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Virtual);
 				}
 				goto label_next_instruct;
 				case FunctionType::Abstract:
 				{
-					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					Handle target = VARIABLE(Handle, targetValue);
-					Type type;
-					if(kernel->heapAgency->TryGetType(target, type))
+					if(error.IsEmpty())
 					{
-						Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type);
-						new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Abstract);
-						kernel->heapAgency->WeakReference(target);
+						uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						Handle target = VARIABLE(Handle, targetValue);
+						Type type;
+						if(kernel->heapAgency->TryGetType(target, type))
+						{
+							Function function = kernel->libraryAgency->GetFunction(INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration)), type);
+							new (delegateInfo)Delegate(kernel->libraryAgency->GetFunctionEntry(function), target, function, FunctionType::Abstract);
+							kernel->heapAgency->WeakReference(target);
+						}
+						else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, EXCEPTION_NULL_REFERENCE);
 					}
-					else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Abstract);
 				}
 				goto label_next_instruct;
@@ -341,72 +366,89 @@ label_next_instruct:
 			Handle& result = VARIABLE(Handle, reaultValue);
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
 			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(declaration);
+			String error;
+			result = kernel->heapAgency->Alloc(declaration, error);
 			kernel->heapAgency->StrongReference(result);
-			uint64& task = *(uint64*)kernel->heapAgency->GetPoint(result);
+			uint64* task = result ? (uint64*)kernel->heapAgency->GetPoint(result) : NULL;
 			switch(INSTRUCT_VALUE(FunctionType, 5 + SIZE(Declaration)))
 			{
 				case FunctionType::Global:
 				{
-					Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
-					Invoker* newInvoker = kernel->taskAgency->CreateInvoker(function);
-					newInvoker->Reference();
-					task = newInvoker->instanceID;
-					flag = false;
-					instruct += 6 + SIZE(Declaration) + SIZE(Function);
+					if(error.IsEmpty())
+					{
+						Function& function = INSTRUCT_VALUE(Function, 6 + SIZE(Declaration));
+						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(function);
+						newInvoker->Reference();
+						*task = newInvoker->instanceID;
+						flag = false;
+					}
+					else EXCEPTION_EXIT(BASE_CreateTask_Global, error);
+					EXCEPTION_JUMP(5 + SIZE(Declaration) + SIZE(Function), BASE_CreateTask_Global);
 				}
 				goto label_next_instruct;
 				case FunctionType::Native: EXCEPTION("无效的函数类型");
 				case FunctionType::Box:
 				{
-					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					Handle target = VARIABLE(Handle, targetValue);
-					Type targetType;
-					if(kernel->heapAgency->TryGetType(target, targetType))
+					if(error.IsEmpty())
 					{
-						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-						ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
-						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
-						newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
-						newInvoker->Reference();
-						task = newInvoker->instanceID;
-						flag = true;
+						uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						Handle target = VARIABLE(Handle, targetValue);
+						Type targetType;
+						if(kernel->heapAgency->TryGetType(target, targetType))
+						{
+							MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
+							ASSERT_DEBUG((Declaration)targetType == member.declaration, "对象类型与调用类型不一致！");
+							Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+							newInvoker->SetStructParameter(0, kernel->heapAgency->GetPoint(target), targetType);
+							newInvoker->Reference();
+							*task = newInvoker->instanceID;
+							flag = true;
+						}
+						else EXCEPTION_EXIT(BASE_CreateTask_Box, EXCEPTION_NULL_REFERENCE);
 					}
-					else EXCEPTION_EXIT(BASE_CreateTask_Box, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateTask_Box, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask_Box);
 				}
 				goto label_next_instruct;
 				case FunctionType::Reality:
 				{
-					uint32 addressValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					uint8* address = &VARIABLE(uint8, addressValue);
-					MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-					Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
-					Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
-					if(IsHandleType(targetType)) newInvoker->SetHandleParameter(0, *(Handle*)address);
-					else newInvoker->SetStructParameter(0, address, targetType);
-					newInvoker->Reference();
-					task = newInvoker->instanceID;
-					flag = true;
-					instruct += 10 + SIZE(Declaration) + SIZE(MemberFunction) + SIZE(Type);
+					if(error.IsEmpty())
+					{
+						uint32 addressValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						uint8* address = &VARIABLE(uint8, addressValue);
+						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
+						Type& targetType = INSTRUCT_VALUE(Type, 10 + SIZE(Declaration) + SIZE(MemberFunction));
+						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member));
+						if(IsHandleType(targetType)) newInvoker->SetHandleParameter(0, *(Handle*)address);
+						else newInvoker->SetStructParameter(0, address, targetType);
+						newInvoker->Reference();
+						*task = newInvoker->instanceID;
+						flag = true;
+					}
+					else EXCEPTION_EXIT(BASE_CreateTask_Reality, error);
+					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction) + SIZE(Type), BASE_CreateTask_Reality);
 				}
 				goto label_next_instruct;
 				case FunctionType::Virtual:
 				case FunctionType::Abstract:
 				{
-					uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
-					Handle target = VARIABLE(Handle, targetValue);
-					Type type;
-					if(kernel->heapAgency->TryGetType(target, type))
+					if(error.IsEmpty())
 					{
-						MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
-						Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
-						newInvoker->SetHandleParameter(0, target);
-						newInvoker->Reference();
-						task = newInvoker->instanceID;
-						flag = true;
+						uint32 targetValue = INSTRUCT_VALUE(uint32, 6 + SIZE(Declaration));
+						Handle target = VARIABLE(Handle, targetValue);
+						Type type;
+						if(kernel->heapAgency->TryGetType(target, type))
+						{
+							MemberFunction& member = INSTRUCT_VALUE(MemberFunction, 10 + SIZE(Declaration));
+							Invoker* newInvoker = kernel->taskAgency->CreateInvoker(kernel->libraryAgency->GetFunction(member, type));
+							newInvoker->SetHandleParameter(0, target);
+							newInvoker->Reference();
+							*task = newInvoker->instanceID;
+							flag = true;
+						}
+						else EXCEPTION_EXIT(BASE_CreateTask, EXCEPTION_NULL_REFERENCE);
 					}
-					else EXCEPTION_EXIT(BASE_CreateTask, EXCEPTION_NULL_REFERENCE);
+					else EXCEPTION_EXIT(BASE_CreateTask, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask);
 				}
 				goto label_next_instruct;
@@ -423,10 +465,11 @@ label_next_instruct:
 			Declaration& declaration = INSTRUCT_VALUE(Declaration, 5);
 			uint32 delegateHandleValue = INSTRUCT_VALUE(uint32, 5 + SIZE(Declaration));
 			Handle delegateHandle = VARIABLE(Handle, delegateHandleValue);
-			Delegate delegateInfo; uint64* task;
+			Delegate delegateInfo; uint64* task; String error;
 			if(!kernel->heapAgency->TryGetValue(delegateHandle, delegateInfo)) EXCEPTION_EXIT(BASE_CreateDelegateTask, EXCEPTION_NULL_REFERENCE);
 			kernel->heapAgency->StrongRelease(result);
-			result = kernel->heapAgency->Alloc(declaration);
+			result = kernel->heapAgency->Alloc(declaration, error);
+			if(!error.IsEmpty()) EXCEPTION_EXIT(BASE_CreateDelegateTask, error);
 			kernel->heapAgency->StrongReference(result);
 			task = (uint64*)kernel->heapAgency->GetPoint(result);
 			switch(delegateInfo.type)
@@ -483,8 +526,10 @@ label_next_instruct:
 			else
 			{
 				kernel->heapAgency->StrongRelease(result);
-				result = kernel->heapAgency->Alloc(elementType, (uint32)length);
-				kernel->heapAgency->StrongReference(result);
+				String error;
+				result = kernel->heapAgency->Alloc(elementType, (uint32)length, error);
+				if(!result) EXCEPTION_EXIT(BASE_CreateArray, error)
+					kernel->heapAgency->StrongReference(result);
 			}
 			EXCEPTION_JUMP(SIZE(Type) + 8, BASE_CreateArray);
 		}
@@ -1154,8 +1199,9 @@ label_next_instruct:
 		{
 			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
 			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
-			StrongBox(kernel, INSTRUCT_VALUE(Type, 9), &VARIABLE(uint8, sourceValue), VARIABLE(Handle, resultValue));
-			instruct += SIZE(Type) + 9;
+			String error = StrongBox(kernel, INSTRUCT_VALUE(Type, 9), &VARIABLE(uint8, sourceValue), VARIABLE(Handle, resultValue));
+			if(!error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Box, error);
+			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Box);
 		}
 		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Unbox:
@@ -2383,15 +2429,17 @@ label_next_instruct:
 				integer end = VARIABLE(integer, endValue);
 				if(start < 0)start += length;
 				if(end < 0)end += length;
-				if(start < 0 || end < start || length <= end)EXCEPTION_EXIT(HANDLE_ArrayCut, EXCEPTION_OUT_OF_RANGE)
+				if(start < 0 || end < start || length <= end) EXCEPTION_EXIT(HANDLE_ArrayCut, EXCEPTION_OUT_OF_RANGE)
 				else
 				{
 					uint32 count = (uint32)(end - start + 1);
 					Type type = kernel->heapAgency->GetType(array);
 					kernel->heapAgency->StrongRelease(result);
 					Type elementType = Type(type, type.dimension - 1);
-					result = kernel->heapAgency->Alloc(elementType, count);
-					kernel->heapAgency->StrongReference(result);
+					String error;
+					result = kernel->heapAgency->Alloc(elementType, count, error);
+					if(!error.IsEmpty()) EXCEPTION_EXIT(HANDLE_ArrayCut, error)
+						kernel->heapAgency->StrongReference(result);
 					if(IsHandleType(elementType))
 					{
 						for(uint32 i = 0; i < count; i++)
@@ -2539,7 +2587,7 @@ label_next_instruct:
 			uint32 targetValue = INSTRUCT_VALUE(uint32, 5);
 			Handle& result = VARIABLE(Handle, resultValue);
 			Handle& target = VARIABLE(Handle, targetValue);
-			if(kernel->heapAgency->IsValid(target)&&kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target)))
+			if(kernel->heapAgency->IsValid(target) && kernel->libraryAgency->IsAssignable(INSTRUCT_VALUE(Type, 9), kernel->heapAgency->GetType(target)))
 			{
 				kernel->heapAgency->StrongReference(target);
 				kernel->heapAgency->StrongRelease(result);

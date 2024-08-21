@@ -273,6 +273,8 @@
 			public string ReturnListDoesNotMatch
 			public string IgnoreWaitButConditionNotValid
 			public string IgnoreWaitButTaskNotCompleted
+			public string AllocHeapMemoryOnGC
+			public string HeapOverflow
 
 		public integer Collect(bool)
 		public integer HeapTotalMemory()

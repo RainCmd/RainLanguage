@@ -260,6 +260,7 @@ void TupleCastExpression::Generator(LogicGenerateParameter& parameter)
 			parameter.generator->WriteCode(parameter.GetResult(i, returns[i]), VariableAccessType::Write);
 			parameter.generator->WriteCode(sourceParameter.results[i], VariableAccessType::Read);
 			parameter.generator->WriteCodeGlobalReference(source->returns[i]);
+			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
 		else EXCEPTION("未知的转换类型");
 }

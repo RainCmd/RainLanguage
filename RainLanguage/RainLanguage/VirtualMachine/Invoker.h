@@ -72,7 +72,7 @@ public:
 	void Initialize(uint32 codeEntry, const CallableInfo* callableInfo);
 	void SetReturns(const uint8* pointer);
 	void GetParameters(uint8* pointer);
-	void GetReturns(const Handle results);
+	String GetReturns(const Handle results);
 	void Start(bool immediately, bool ignoreWait);
 	void Abort();
 	void Exception(const String& message);

@@ -16,7 +16,7 @@
 typedef uint32 string;
 typedef uint32 Handle;
 typedef uint32 Entity;
-constexpr uint32 MAX_STACK_SIZE = 0x3FFFFFFF;
+constexpr uint32 MAX_STACK_SIZE = 0x400000;
 constexpr uint32 MAX_HEAP_SIZE = 0x3FFFFFFF;
 
 constexpr uint32 INVALID = 0xFFFFFFFF;

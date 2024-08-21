@@ -549,6 +549,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_VARIABLE(true, exceptionSpace, "ReturnListDoesNotMatch", TYPE_String, AddData(EXCEPTION_RETURN_LIST_DOES_NOT_MATCH));
 			REGISTER_VARIABLE(true, exceptionSpace, "IgnoreWaitButConditionNotValid", TYPE_String, AddData(EXCEPTION_IGNORE_WAIT_BUT_CONDITION_NOT_VAILD));
 			REGISTER_VARIABLE(true, exceptionSpace, "IgnoreWaitButTaskNotCompleted", TYPE_String, AddData(EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED));
+			REGISTER_VARIABLE(true, exceptionSpace, "AllocHeapMemoryOnGC", TYPE_String, AddData(EXCEPTION_ALLOC_HEAP_MEMORY_ON_GC));
+			REGISTER_VARIABLE(true, exceptionSpace, "HeapOverflow", TYPE_String, AddData(EXCEPTION_HEAP_OVERFLOW));
 		}
 
 		REGISTER_FUNCTIONS(true, space, "Collect", CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Bool), Collect);

@@ -11,12 +11,14 @@ void FunctionDelegateCreateExpression::Generator(LogicGenerateParameter& paramet
 	{
 		parameter.generator->WriteCode((uint8)FunctionType::Global);
 		parameter.generator->WriteCodeGlobalAddressReference(declaration);
+		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	else if (declaration.category == DeclarationCategory::Native)
 	{
 		parameter.generator->WriteCode((uint8)FunctionType::Native);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode(Native(declaration.library, declaration.index));
+		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	else EXCEPTION("其他定义类型不应该走到这");
 }
@@ -35,6 +37,7 @@ void MemberFunctionDelegateCreateExpression::Generator(LogicGenerateParameter& p
 		parameter.generator->WriteCode(sourceVariable, VariableAccessType::Write);
 		parameter.generator->WriteCode(sourceParameter.results[0], VariableAccessType::Read);
 		parameter.generator->WriteCodeGlobalReference(source->returns[0]);
+		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	else if (declaration.category == DeclarationCategory::ClassFunction)
 	{
@@ -125,6 +128,8 @@ void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& pa
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
 	parameter.generator->WriteCode(closureVariable, VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference(Declaration(LIBRARY_SELF, TypeCode::Handle, closure.index));
+	parameter.generator->WriteCode(parameter.finallyAddress);
+
 	AbstractClass* abstractClass = parameter.manager->selfLibaray->classes[closure.index];
 	for (uint32 i = 0; i < abstractClass->variables.Count(); i++)
 		LogicVariabelAssignment(parameter.manager, parameter.generator, closureVariable, abstractClass->variables[i]->declaration, 0, GetVariable(parameter, sourceVariables[i], abstractClass->variables[i]->type), parameter.finallyAddress);
@@ -146,4 +151,5 @@ void LambdaDelegateCreateExpression::Generator(LogicGenerateParameter& parameter
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	parameter.generator->WriteCode((uint8)FunctionType::Global);
 	parameter.generator->WriteCodeGlobalAddressReference(CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Function, lambda.index, NULL));
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }

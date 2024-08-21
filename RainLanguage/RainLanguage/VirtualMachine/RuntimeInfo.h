@@ -21,7 +21,7 @@ struct RuntimeInfo :DeclarationInfo
 	Handle reflectionAttributes;
 	uint32 space;
 	inline RuntimeInfo(bool isPublic, const List<string, true>& attributes, string name, uint32 space) :DeclarationInfo(isPublic, attributes, name), reflectionAttributes(NULL), space(space) {}
-	Handle GetReflectionAttributes(Kernel* kernel);
+	Handle GetReflectionAttributes(Kernel* kernel, String& error);
 	String GetFullName(Kernel* kernel, uint32 library);
 };
 
@@ -32,7 +32,7 @@ struct RuntimeVariable :RuntimeInfo
 	uint32 address;
 	bool readonly;
 	inline RuntimeVariable(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const Type& type, uint32 address, bool readonly) :RuntimeInfo(isPublic, attributes, name, space), reflection(NULL), type(type), address(address), readonly(readonly) {}
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 variableIndex);
+	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 variableIndex, String& error);
 };
 
 struct RuntimeEnum :RuntimeInfo
@@ -128,7 +128,7 @@ struct RuntimeFunction :RuntimeInfo, CallableInfo
 	Handle reflection;
 	uint32 entry;
 	inline RuntimeFunction(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters, uint32 entry) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), entry(entry) {}
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex);
+	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex, String& error);
 };
 
 struct RuntimeNative :RuntimeInfo, CallableInfo
@@ -136,8 +136,10 @@ struct RuntimeNative :RuntimeInfo, CallableInfo
 	Handle reflection;
 	OnCaller caller;
 	inline RuntimeNative(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters)
-		:RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), caller(NULL) {}
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex);
+		:RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), caller(NULL)
+	{
+	}
+	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex, String& error);
 };
 
 struct RuntimeSpace
@@ -157,5 +159,5 @@ struct RuntimeSpace
 	List<uint32, true> functions;
 	List<uint32, true> natives;
 	RuntimeSpace(StringAgency* agency, const Library* library, const Space* space, const List<string, true>& attributes);
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex);
+	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex, String& error);
 };

@@ -9,9 +9,9 @@
 
 inline bool TryMatch(const Type& source, const Type& target)
 {
-	if (source == target) return true;
-	else if (source == TYPE_Array) return (bool)target.dimension;
-	else if (source == TYPE_Handle) return IsHandleType(target);
+	if(source == target) return true;
+	else if(source == TYPE_Array) return (bool)target.dimension;
+	else if(source == TYPE_Handle) return IsHandleType(target);
 	return false;
 }
 
@@ -256,17 +256,17 @@ void Invoker::AppendParameter(Type type)
 
 void Invoker::Reference()
 {
-	if (kernel) kernel->taskAgency->Reference(this);
+	if(kernel) kernel->taskAgency->Reference(this);
 	else hold++;
 }
 
 void Invoker::Release()
 {
-	if (kernel) kernel->taskAgency->Release(this);
+	if(kernel) kernel->taskAgency->Release(this);
 	else
 	{
 		hold--;
-		if (!hold) delete this;
+		if(!hold) delete this;
 	}
 }
 
@@ -285,9 +285,9 @@ void Invoker::ClearReturns()
 void Invoker::Recycle()
 {
 	ASSERT_DEBUG(instanceID >> 32, "回收逻辑可能有问题");
-	if (kernel)
+	if(kernel)
 	{
-		switch (state)
+		switch(state)
 		{
 			case InvokerState::Unstart:
 				ClearParameters();
@@ -335,14 +335,16 @@ void Invoker::GetParameters(uint8* pointer)
 	Mcopy(data.GetPointer(), pointer, info->parameters.size);
 }
 
-void Invoker::GetReturns(const Handle results)
+String Invoker::GetReturns(const Handle results)
 {
 	uint8* address;
-	for (uint32 i = 0; i < info->returns.Count(); i++)
+	for(uint32 i = 0; i < info->returns.Count(); i++)
 	{
-		kernel->heapAgency->TryGetArrayPoint(results, i, address);
-		WeakBox(kernel, info->returns.GetType(i), data.GetPointer() + info->returns.GetOffset(i), *(Handle*)address);
+		address = kernel->heapAgency->GetArrayPoint(results, i);
+		String message = WeakBox(kernel, info->returns.GetType(i), data.GetPointer() + info->returns.GetOffset(i), *(Handle*)address);
+		if(!message.IsEmpty()) return message;
 	}
+	return String();
 }
 
 void Invoker::Start(bool immediately, bool ignoreWait)

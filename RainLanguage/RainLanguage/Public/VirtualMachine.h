@@ -32,6 +32,7 @@ class RAINLANGUAGE InvokerWrapper
 private:
 	uint64 instanceID;
 	void* invoker;
+	void* error;
 public:
 	InvokerWrapper();
 	InvokerWrapper(void* invoker);
@@ -81,6 +82,11 @@ public:
 	/// </summary>
 	/// <returns>信息</returns>
 	/// <exception>如果调用是无效状态会抛异常</exception>
+	const RainString GetExceptionMessage() const;
+	/// <summary>
+	/// 对当前调用操作失败时可以通过该接口获取详细的错误信息
+	/// </summary>
+	/// <returns>信息</returns>
 	const RainString GetErrorMessage() const;
 	/// <summary>
 	/// 开始执行任务
@@ -391,112 +397,126 @@ public:
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const bool* values, uint32 length) const;
+	bool SetParameter(uint32 index, const bool* values, uint32 length) const;
 	/// <summary>
 	/// 设置字节数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const uint8* values, uint32 length) const;
+	bool SetParameter(uint32 index, const uint8* values, uint32 length) const;
 	/// <summary>
 	/// 设置字符数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const character* values, uint32 length) const;
+	bool SetParameter(uint32 index, const character* values, uint32 length) const;
 	/// <summary>
 	/// 设置整数数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const integer* values, uint32 length) const;
+	bool SetParameter(uint32 index, const integer* values, uint32 length) const;
 	/// <summary>
 	/// 设置实数数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const real* values, uint32 length) const;
+	bool SetParameter(uint32 index, const real* values, uint32 length) const;
 	/// <summary>
 	/// 设置二维向量数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const Real2* values, uint32 length) const;
+	bool SetParameter(uint32 index, const Real2* values, uint32 length) const;
 	/// <summary>
 	/// 设置三维向量数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const Real3* values, uint32 length) const;
+	bool SetParameter(uint32 index, const Real3* values, uint32 length) const;
 	/// <summary>
 	/// 设置四维向量数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const Real4* values, uint32 length) const;
+	bool SetParameter(uint32 index, const Real4* values, uint32 length) const;
 	/// <summary>
 	/// 设置枚举值数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetEnumValueParameter(uint32 index, const integer* values, uint32 length) const;
+	bool SetEnumValueParameter(uint32 index, const integer* values, uint32 length) const;
 	/// <summary>
 	/// 设置枚举名数组参数，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetEnumNameParameter(uint32 index, const RainString* values, uint32 length) const;
+	bool SetEnumNameParameter(uint32 index, const RainString* values, uint32 length) const;
 	/// <summary>
 	/// 设置枚举名数组参数，名称需要以\0结尾，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetEnumNameParameter(uint32 index, const character** values, uint32 length) const;
+	bool SetEnumNameParameter(uint32 index, const character** values, uint32 length) const;
 	/// <summary>
 	/// 设置字符串数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const RainString* values, uint32 length) const;
+	bool SetParameter(uint32 index, const RainString* values, uint32 length) const;
 	/// <summary>
 	/// 设置字符串数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetParameter(uint32 index, const character** values, uint32 length) const;
+	bool SetParameter(uint32 index, const character** values, uint32 length) const;
 	/// <summary>
 	/// 设置实体数组参数
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="values">参数数组</param>
 	/// <param name="length">参数数组长度</param>
+	/// <returns>如果操作失败则返回false，可以通过GetErrorMessage接口获取详细错误信息</returns>
 	/// <exception>如果调用不是未调用状态或参数类型不正确会抛异常</exception>
-	void SetEntityParameter(uint32 index, const uint64* values, uint32 length) const;
+	bool SetEntityParameter(uint32 index, const uint64* values, uint32 length) const;
 };
 
 /// <summary>
@@ -790,118 +810,137 @@ public:
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, bool* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, bool* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, uint8* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, uint8* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, character* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, character* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, integer* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, integer* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, real* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, real* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, Real2* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, Real2* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, Real3* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, Real3* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, Real4* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, Real4* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length) = 0;
+	virtual bool SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值，名称需要以\0结尾，名称未找到会赋值为0
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetEnumNameReturnValue(uint32 index, character** values, uint32 length) = 0;
+	virtual bool SetEnumNameReturnValue(uint32 index, character** values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetEnumValueReturnValue(uint32 index, integer* values, uint32 length) = 0;
+	virtual bool SetEnumValueReturnValue(uint32 index, integer* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, RainString* values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, RainString* values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetReturnValue(uint32 index, character** values, uint32 length) = 0;
+	virtual bool SetReturnValue(uint32 index, character** values, uint32 length) = 0;
 	/// <summary>
 	/// 设置数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="values">返回值首地址</param>
 	/// <param name="length">返回值数量</param>
+	/// <returns>如果为false表示操作失败，GetError可以获取详细信息</returns>
 	/// <exception>如果返回值类型不正确会抛异常</exception>
-	virtual void SetEntityReturnValue(uint32 index, uint64* values, uint32 length) = 0;
+	virtual bool SetEntityReturnValue(uint32 index, uint64* values, uint32 length) = 0;
 
 	/// <summary>
 	/// 设置异常信息
 	/// </summary>
 	/// <param name="error">异常信息字符串 </param>
 	virtual void SetException(const RainString& error) = 0;
+	/// <summary>
+	/// 获取错误信息
+	/// </summary>
+	/// <returns>操作失败的详细错误信息</returns>
+	virtual const RainString GetError() = 0;
 };
 
 /// <summary>

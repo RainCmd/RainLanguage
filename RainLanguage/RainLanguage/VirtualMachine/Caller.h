@@ -13,13 +13,14 @@ private:
 	RuntimeNative* info;
 	uint8* stack;
 	uint32 top;
+	string exception;
 	string error;
 	void ParameterTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, TypeCode typeCode) const;
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ReturnTypeAssert(uint32 index, TypeCode typeCode) const;
 public:
-	inline Caller(Kernel* kernel, RuntimeNative* info, uint8* stack, uint32 top) :kernel(kernel), info(info), stack(stack), top(top), error(NULL) {}
+	inline Caller(Kernel* kernel, RuntimeNative* info, uint8* stack, uint32 top) :kernel(kernel), info(info), stack(stack), top(top), exception(NULL), error(NULL) {}
 	~Caller();
 	Caller(const Caller&) = delete;
 	Caller(const Caller&&) = delete;
@@ -64,7 +65,7 @@ public:
 	inline void SetEnumNameReturnValue(uint32 index, const character* elementName)
 	{
 		uint32 length = 0;
-		while (elementName[length])length++;
+		while(elementName[length])length++;
 		SetEnumNameReturnValue(index, RainString(elementName, length));
 	}
 	void SetEnumValueReturnValue(uint32 index, integer value);
@@ -72,29 +73,30 @@ public:
 	inline void SetReturnValue(uint32 index, const character* value)
 	{
 		uint32 length = 0;
-		while (value[length])length++;
+		while(value[length])length++;
 		SetReturnValue(index, RainString(value, length));
 	}
 	void SetEntityReturnValue(uint32 index, uint64 value);
 
 	Handle GetArrayReturnValue(uint32 index, Type elementType, uint32 length);
 
-	void SetReturnValue(uint32 index, bool* values, uint32 length);
-	void SetReturnValue(uint32 index, uint8* values, uint32 length);
-	void SetReturnValue(uint32 index, character* values, uint32 length);
-	void SetReturnValue(uint32 index, integer* values, uint32 length);
-	void SetReturnValue(uint32 index, real* values, uint32 length);
-	void SetReturnValue(uint32 index, Real2* values, uint32 length);
-	void SetReturnValue(uint32 index, Real3* values, uint32 length);
-	void SetReturnValue(uint32 index, Real4* values, uint32 length);
-	void SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length);
-	void SetEnumNameReturnValue(uint32 index, character** values, uint32 length);
-	void SetEnumValueReturnValue(uint32 index, integer* values, uint32 length);
-	void SetReturnValue(uint32 index, RainString* values, uint32 length);
-	void SetReturnValue(uint32 index, character** values, uint32 length);
-	void SetEntityReturnValue(uint32 index, uint64* values, uint32 length);
+	bool SetReturnValue(uint32 index, bool* values, uint32 length);
+	bool SetReturnValue(uint32 index, uint8* values, uint32 length);
+	bool SetReturnValue(uint32 index, character* values, uint32 length);
+	bool SetReturnValue(uint32 index, integer* values, uint32 length);
+	bool SetReturnValue(uint32 index, real* values, uint32 length);
+	bool SetReturnValue(uint32 index, Real2* values, uint32 length);
+	bool SetReturnValue(uint32 index, Real3* values, uint32 length);
+	bool SetReturnValue(uint32 index, Real4* values, uint32 length);
+	bool SetEnumNameReturnValue(uint32 index, RainString* values, uint32 length);
+	bool SetEnumNameReturnValue(uint32 index, character** values, uint32 length);
+	bool SetEnumValueReturnValue(uint32 index, integer* values, uint32 length);
+	bool SetReturnValue(uint32 index, RainString* values, uint32 length);
+	bool SetReturnValue(uint32 index, character** values, uint32 length);
+	bool SetEntityReturnValue(uint32 index, uint64* values, uint32 length);
 
-	void SetException(const RainString& error);
+	void SetException(const RainString& message);
 	string GetException() const;
+	const RainString GetError();
 };
 

@@ -15,9 +15,13 @@ inline bool IsTask(const Type& type)
 	else return false;
 }
 
-Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
+Handle HeapAgency::Alloc(uint32 size, uint8 alignment, String& error)
 {
-	ASSERT(!gc, "不能在GC时创建新对象");
+	if(gc)
+	{
+		error = kernel->stringAgency->Add(EXCEPTION_ALLOC_HEAP_MEMORY_ON_GC);
+		return NULL;
+	}
 	Handle handle;
 	uint8 gcLevel = 0;
 	if(free)
@@ -59,7 +63,13 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 				GC(true);
 				if(heap.Slack() < (heap.Count() >> 3)) heap.Grow(heap.Count() >> 3);
 			}
-			if(heap.Count() + size >= MAX_HEAP_SIZE) EXCEPTION("堆内存超过可用上限！");
+			if(heap.Count() + size >= MAX_HEAP_SIZE)
+			{
+				heads[handle].next = free;
+				free = handle;
+				error = kernel->stringAgency->Add(EXCEPTION_HEAP_OVERFLOW);
+				return NULL;
+			}
 		}
 	}
 	heads[handle] = HeapAgency::Head(heap.Count(), size, flag, alignment);
@@ -68,6 +78,7 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment)
 	if(tail) heads[tail].next = handle;
 	else this->head = active = handle;
 	tail = handle;
+	error = String();
 	return handle;
 }
 
@@ -317,10 +328,11 @@ HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kerne
 	new (heads.Add())Head(0, 0, false, 0);
 }
 
-Handle HeapAgency::Alloc(const Type elementType, integer length)
+Handle HeapAgency::Alloc(const Type elementType, integer length, String& error)
 {
 	uint32 elementSize = MemoryAlignment(kernel->libraryAgency->GetTypeStackSize(elementType), kernel->libraryAgency->GetTypeAlignment(elementType));
-	Handle result = Alloc(elementSize * (uint32)length + 8, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)));
+	Handle result = Alloc(elementSize * (uint32)length + 8, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)), error);
+	if(!result) return NULL;
 	Head& value = heads[result];
 	value.type = Type((Declaration)elementType, elementType.dimension + 1);
 	uint32* pointer = (uint32*)(heap.GetPointer() + value.pointer);
@@ -329,10 +341,10 @@ Handle HeapAgency::Alloc(const Type elementType, integer length)
 	return result;
 }
 
-Handle HeapAgency::Alloc(const Declaration declaration)
+Handle HeapAgency::Alloc(const Declaration declaration, String& error)
 {
-	Handle result = Alloc(kernel->libraryAgency->GetTypeHeapSize(declaration), kernel->libraryAgency->GetTypeAlignment(Type(declaration, 0)));
-	heads[result].type = Type(declaration, 0);
+	Handle result = Alloc(kernel->libraryAgency->GetTypeHeapSize(declaration), kernel->libraryAgency->GetTypeAlignment(Type(declaration, 0)), error);
+	if(result) heads[result].type = Type(declaration, 0);
 	return result;
 }
 
@@ -343,7 +355,7 @@ uint8* HeapAgency::GetArrayPoint(Handle handle, integer index)
 	uint32 length = *(uint32*)pointer;
 	uint32 elementSize = *(uint32*)(pointer + 4);
 	if(index < 0) index += length;
-	if(index < 0 || index >= length) EXCEPTION("数组越界");
+	ASSERT_DEBUG(index >= 0 && index < length, "数组越界");
 	return pointer + 8 + elementSize * index;
 }
 
@@ -390,31 +402,39 @@ HeapAgency::~HeapAgency()
 	}
 }
 
-inline void Box(Kernel* kernel, const Type& type, uint8* address, Handle& result)
+inline String Box(Kernel* kernel, const Type& type, uint8* address, Handle& result)
 {
 	if(IsHandleType(type))result = *(Handle*)address;
 	if(type == TYPE_Entity && !*(Entity*)address) result = NULL;
 	else
 	{
-		result = kernel->heapAgency->Alloc((Declaration)type);
-		Mcopy(address, kernel->heapAgency->GetPoint(result), kernel->libraryAgency->GetTypeStackSize(type));
-		if(type.code == TypeCode::Struct)
-			kernel->libraryAgency->GetStruct(type)->WeakReference(kernel, address);
+		String error;
+		result = kernel->heapAgency->Alloc((Declaration)type, error);
+		if(result)
+		{
+			Mcopy(address, kernel->heapAgency->GetPoint(result), kernel->libraryAgency->GetTypeStackSize(type));
+			if(type.code == TypeCode::Struct)
+				kernel->libraryAgency->GetStruct(type)->WeakReference(kernel, address);
+		}
+		else return error;
 	}
+	return String();
 }
 
-void StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result)
+String StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result)
 {
 	kernel->heapAgency->StrongRelease(result);
-	Box(kernel, type, address, result);
+	String error = Box(kernel, type, address, result);
 	kernel->heapAgency->StrongReference(result);
+	return error;
 }
 
-void WeakBox(Kernel* kernel, const Type& type, uint8* address, Handle& result)
+String WeakBox(Kernel* kernel, const Type& type, uint8* address, Handle& result)
 {
 	kernel->heapAgency->WeakRelease(result);
-	Box(kernel, type, address, result);
+	String error = Box(kernel, type, address, result);
 	kernel->heapAgency->WeakReference(result);
+	return error;
 }
 
 String StrongUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* result)

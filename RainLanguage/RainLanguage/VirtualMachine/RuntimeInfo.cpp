@@ -5,19 +5,23 @@
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 
-#define GC_FIELDS(type,function)	for (uint32 i = 0; i < handleFields.Count(); i++)\
+#define GC_FIELDS(type, function)	for (uint32 i = 0; i < handleFields.Count(); i++)\
 										kernel->heapAgency->type##function(*(Handle*)(address + handleFields[i]));\
 									for (uint32 i = 0; i < stringFields.Count(); i++)\
 										kernel->stringAgency->function(*(string*)(address + stringFields[i]));\
 									for (uint32 i = 0; i < entityFields.Count(); i++)\
 										kernel->entityAgency->function(*(Entity*)(address + entityFields[i]));
 
-#define CREATE_REFLECTION(declaration,type,library,index)	if (!reflection)\
-															{\
-																reflection = kernel->heapAgency->Alloc(declaration);\
-																kernel->heapAgency->StrongReference(reflection);\
-																new ((type*)kernel->heapAgency->GetPoint(reflection))type(library, index);\
-															}
+#define CREATE_REFLECTION(declaration, type, library, index, error)	\
+	if (!reflection)\
+	{\
+		reflection = kernel->heapAgency->Alloc(declaration, error);\
+		if(error.IsEmpty())\
+		{\
+			kernel->heapAgency->StrongReference(reflection); \
+			new ((type*)kernel->heapAgency->GetPoint(reflection))type(library, index); \
+		}\
+	}
 
 void GCFieldInfo::StrongReference(Kernel* kernel, const uint8* address) const
 {
@@ -41,35 +45,41 @@ void GCFieldInfo::WeakRelease(Kernel* kernel, const uint8* address) const
 
 void GCFieldInfo::ColletcGCFields(Kernel* kernel, const List<RuntimeMemberVariable>& variables)
 {
-	for (uint32 x = 0; x < variables.Count(); x++)
+	for(uint32 x = 0; x < variables.Count(); x++)
 	{
 		const RuntimeMemberVariable* variable = &variables[x];
-		if (IsHandleType(variable->type)) handleFields.Add(variable->address);
-		else if (variable->type == TYPE_String) stringFields.Add(variable->address);
-		else if (variable->type == TYPE_Entity) entityFields.Add(variable->address);
-		else if (variable->type.code == TypeCode::Struct)
+		if(IsHandleType(variable->type)) handleFields.Add(variable->address);
+		else if(variable->type == TYPE_String) stringFields.Add(variable->address);
+		else if(variable->type == TYPE_Entity) entityFields.Add(variable->address);
+		else if(variable->type.code == TypeCode::Struct)
 		{
 			RuntimeStruct* runtimeStruct = kernel->libraryAgency->GetStruct(variable->type);
-			for (uint32 y = 0; y < runtimeStruct->handleFields.Count(); y++)
+			for(uint32 y = 0; y < runtimeStruct->handleFields.Count(); y++)
 				handleFields.Add(variable->address + runtimeStruct->handleFields[y]);
-			for (uint32 y = 0; y < runtimeStruct->stringFields.Count(); y++)
+			for(uint32 y = 0; y < runtimeStruct->stringFields.Count(); y++)
 				stringFields.Add(variable->address + runtimeStruct->stringFields[y]);
-			for (uint32 y = 0; y < runtimeStruct->entityFields.Count(); y++)
+			for(uint32 y = 0; y < runtimeStruct->entityFields.Count(); y++)
 				entityFields.Add(variable->address + runtimeStruct->entityFields[y]);
 		}
 	}
 }
 
-Handle RuntimeInfo::GetReflectionAttributes(Kernel* kernel)
+Handle RuntimeInfo::GetReflectionAttributes(Kernel* kernel, String& error)
 {
-	if (!reflectionAttributes)
+	if(!reflectionAttributes)
 	{
-		reflectionAttributes = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_ReadonlyStrings);
+		reflectionAttributes = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_ReadonlyStrings, error);
+		if(!error.IsEmpty()) return NULL;
 		kernel->heapAgency->StrongReference(reflectionAttributes);
-		Handle result = kernel->heapAgency->Alloc(TYPE_String, attributes.Count());
+		Handle result = kernel->heapAgency->Alloc(TYPE_String, attributes.Count(), error);
+		if(!error.IsEmpty())
+		{
+			kernel->heapAgency->StrongRelease(reflectionAttributes);
+			return NULL;
+		}
 		*(Handle*)kernel->heapAgency->GetPoint(reflectionAttributes) = result;
 		kernel->heapAgency->WeakReference(result);
-		for (uint32 i = 0; i < attributes.Count(); i++)
+		for(uint32 i = 0; i < attributes.Count(); i++)
 		{
 			*(string*)kernel->heapAgency->GetArrayPoint(result, i) = attributes[i];
 			kernel->stringAgency->Reference(attributes[i]);
@@ -84,7 +94,7 @@ String RuntimeInfo::GetFullName(Kernel* kernel, uint32 library)
 	String combine[3];
 	combine[1] = kernel->stringAgency->Add(TEXT("."));
 	combine[2] = kernel->stringAgency->Get(name);
-	for (uint32 index = space; index; index = runtimeLibrary->spaces[index].parent)
+	for(uint32 index = space; index; index = runtimeLibrary->spaces[index].parent)
 	{
 		combine[0] = kernel->stringAgency->Get(runtimeLibrary->spaces[index].name);
 		combine[2] = kernel->stringAgency->Combine(combine, 3);
@@ -100,26 +110,26 @@ RuntimeSpace::RuntimeSpace(StringAgency* agency, const Library* library, const S
 {
 }
 
-Handle RuntimeVariable::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 variableIndex)
+Handle RuntimeVariable::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 variableIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Variable, Variable, libraryIndex, variableIndex);
+	CREATE_REFLECTION((Declaration)TYPE_Reflection_Variable, Variable, libraryIndex, variableIndex, error);
 	return reflection;
 }
 
 String RuntimeEnum::ToString(integer value, StringAgency* agency)
 {
-	for (uint32 i = 0; i < values.Count(); i++)
-		if (value == values[i].value)
+	for(uint32 i = 0; i < values.Count(); i++)
+		if(value == values[i].value)
 			return agency->Get(values[i].name);
 
 	String combine[3];
 	combine[1] = agency->Add(TEXT(" | "));
 	integer contain = 0;
 	String result;
-	for (uint32 i = 0; i < values.Count(); i++)
-		if ((values[i].value & value) == values[i].value)
+	for(uint32 i = 0; i < values.Count(); i++)
+		if((values[i].value & value) == values[i].value)
 		{
-			if (result.IsEmpty()) result = agency->Get(values[i].name);
+			if(result.IsEmpty()) result = agency->Get(values[i].name);
 			else
 			{
 				combine[0] = result;
@@ -129,8 +139,8 @@ String RuntimeEnum::ToString(integer value, StringAgency* agency)
 			contain |= values[i].value;
 		}
 	value &= ~contain;
-	if (result.IsEmpty()) return ::ToString(agency, value);
-	else if (value)
+	if(result.IsEmpty()) return ::ToString(agency, value);
+	else if(value)
 	{
 		combine[0] = result;
 		combine[2] = ::ToString(agency, value);
@@ -139,20 +149,20 @@ String RuntimeEnum::ToString(integer value, StringAgency* agency)
 	return result;
 }
 
-Handle RuntimeFunction::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex)
+Handle RuntimeFunction::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Function, ReflectionFunction, libraryIndex, functionIndex);
+	CREATE_REFLECTION((Declaration)TYPE_Reflection_Function, ReflectionFunction, libraryIndex, functionIndex, error);
 	return reflection;
 }
 
-Handle RuntimeNative::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex)
+Handle RuntimeNative::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Native, ReflectionNative, libraryIndex, nativeIndex);
+	CREATE_REFLECTION((Declaration)TYPE_Reflection_Native, ReflectionNative, libraryIndex, nativeIndex, error);
 	return reflection;
 }
 
-Handle RuntimeSpace::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex)
+Handle RuntimeSpace::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)(spaceIndex ? TYPE_Reflection_Space : TYPE_Reflection_Assembly), ReflectionSpace, libraryIndex, spaceIndex);
+	CREATE_REFLECTION((Declaration)(spaceIndex ? TYPE_Reflection_Space : TYPE_Reflection_Assembly), ReflectionSpace, libraryIndex, spaceIndex, error);
 	return reflection;
 }
