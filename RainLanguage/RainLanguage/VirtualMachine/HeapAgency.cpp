@@ -76,7 +76,7 @@ Handle HeapAgency::Alloc(uint32 size, uint8 alignment, String& error)
 	heap.SetCount(heap.Count() + size);
 	Mzero(heap.GetPointer() + heap.Count() - size, size);
 	if(tail) heads[tail].next = handle;
-	else this->head = active = handle;
+	else this->head = handle;
 	tail = handle;
 	error = String();
 	return handle;
@@ -287,7 +287,7 @@ void HeapAgency::FullGC()
 	}
 	Handle* clearIndex = &head;
 	uint32 top = 0;
-	tail = active = NULL;
+	tail = NULL;
 	while(*clearIndex)
 		if(heads[*clearIndex].flag == flag)
 		{
@@ -296,34 +296,69 @@ void HeapAgency::FullGC()
 			clearIndex = &heads[*clearIndex].next;
 		}
 		else *clearIndex = Recycle(*clearIndex);
-	active = tail;
 	heap.SetCount(top);
+	for(uint32 i = 0; i < maxGeneration; i++) generations[i] = tail;
 }
 
 void HeapAgency::FastGC()
 {
-	if(active)
+	if(head)
 	{
-		uint32 top = heads[active].pointer + heads[active].size;
-		tail = active;
-		Handle* index = &heads[active].next;
-		while(*index)
+		if(maxGeneration && generations[youngGeneration])
 		{
-			if(heads[*index].strong || heads[*index].weak || IsUnrecoverableTask(*index))
+			tail = generations[youngGeneration];
+			uint32* current = generations + youngGeneration - 1;
+			Handle* index = &heads[tail].next;
+			uint32 top = heads[tail].pointer + heads[tail].size;
+			while(*index)
 			{
-				if(heads[*index].generation++ > generation) active = tail;
-				tail = *index;
-				top = Tidy(*index, top);
-				index = &heads[*index].next;
+				if(heads[*index].strong || heads[*index].weak || *current == *index || IsUnrecoverableTask(*index))
+				{
+					while(*current == *index && current != generations) current--;
+					tail = *index;
+					top = Tidy(*index, top);
+					index = &heads[*index].next;
+				}
+				else *index = Recycle(*index);
 			}
-			else *index = Recycle(*index);
+			heap.SetCount(top);
+			GenerationGrow();
 		}
-		heap.SetCount(top);
+		else
+		{
+			tail = head;
+			Handle* index = &heads[tail].next;
+			uint32 top = heads[tail].pointer + heads[tail].size;
+			while(*index)
+			{
+				if(heads[*index].strong || heads[*index].weak || IsUnrecoverableTask(*index))
+				{
+					tail = *index;
+					top = Tidy(*index, top);
+					index = &heads[*index].next;
+				}
+				else *index = Recycle(*index);
+			}
+			heap.SetCount(top);
+		}
 	}
 }
 
-HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), heap(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), free(NULL), head(NULL), tail(NULL), active(NULL), generation(parameter->heapGeneration), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
+void HeapAgency::GenerationGrow()
 {
+	if(youngGeneration && maxGeneration)
+	{
+		for(uint32 i = maxGeneration - 1; i > 0; i--)
+			if(i) generations[i] = generations[i - 1];
+		generations[0] = tail;
+	}
+}
+
+HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), heads(64), heap(parameter->heapCapacity > 4 ? parameter->heapCapacity : 4), free(NULL), head(NULL), tail(NULL), youngGeneration(parameter->heapYoungGeneration), maxGeneration(parameter->heapMaxGeneration), generations(NULL), flag(false), gc(false), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
+{
+	if(maxGeneration && youngGeneration >= maxGeneration) youngGeneration = maxGeneration - 1;
+	generations = Malloc<uint32>(maxGeneration);
+	for(uint32 i = 0; i < maxGeneration; i++) generations[i] = 0;
 	destructorCallable.parameters.AddElement(TYPE_Handle, 0);
 	new (heads.Add())Head(0, 0, false, 0);
 }
@@ -400,6 +435,8 @@ HeapAgency::~HeapAgency()
 		else if(!value.type.dimension && value.type.code == TypeCode::Handle)
 			Free(index, kernel->libraryAgency->GetClass(value.type), heap.GetPointer() + value.pointer);
 	}
+	delete generations;
+	generations = NULL;
 }
 
 inline String Box(Kernel* kernel, const Type& type, uint8* address, Handle& result)

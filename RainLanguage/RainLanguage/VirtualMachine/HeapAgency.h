@@ -14,17 +14,19 @@ class HeapAgency
 {
 	struct Head
 	{
-		uint32 pointer, strong, weak, generation, size;
+		uint32 pointer, weak, size;
 		Handle next;
 		Type type;
+		uint16 strong;
 		bool flag;
 		uint8 alignment;
-		inline Head(uint32 pointer, uint32 size, bool flag, uint8 alignment) :pointer(pointer), strong(0), weak(0), generation(0), size(size), next(NULL), type(), flag(flag), alignment(alignment) {}
+		inline Head(uint32 pointer, uint32 size, bool flag, uint8 alignment) :pointer(pointer), weak(0), size(size), next(NULL), type(), strong(0), flag(flag), alignment(alignment) {}
 	};
 	Kernel* kernel;
 	List<Head, true> heads;
 	List<uint8, true> heap;
-	uint32 free, head, tail, active, generation;
+	uint32 free, head, tail, youngGeneration, maxGeneration;
+	uint32* generations;
 	bool flag, gc;
 	CallableInfo destructorCallable;
 	Handle Alloc(uint32 size, uint8 alignment, String& error);
@@ -37,6 +39,7 @@ class HeapAgency
 	Handle Recycle(Handle handle);
 	void FullGC();
 	void FastGC();
+	void GenerationGrow();
 public:
 	HeapAgency(Kernel* kernel, const StartupParameter* parameter);
 	Handle Alloc(const Type elementType, integer length, String& error);
