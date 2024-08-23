@@ -91,10 +91,14 @@ bool CheckFunctionReturn(MessageCollector* collector, Statement* statement)
 					else if(CheckFunctionReturn(collector, loopStatement->loopBlock->statements[i]))
 					{
 						if(i < loopStatement->loopBlock->statements.Count() - 1) MESSAGE2(collector, loopStatement->loopBlock->statements[i + 1]->anchor, MessageType::LOGGER_LEVEL2_INACCESSIBLE_STATEMENT);
-						return true;
+						return !loopStatement->condition;
 					}
 				}
-		return CheckFunctionReturn(collector, loopStatement->elseBlock);
+		if(loopStatement->elseBlock)
+		{
+			if(loopStatement->condition) return CheckFunctionReturn(collector, loopStatement->elseBlock);
+			else MESSAGE2(collector, loopStatement->elseBlock->statements[0]->anchor, MessageType::LOGGER_LEVEL2_INACCESSIBLE_STATEMENT);
+		}
 	}
 	else if(ContainAny(statement->type, StatementType::Try))
 	{
