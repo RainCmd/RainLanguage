@@ -133,6 +133,6 @@ public:
 };
 
 String StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);
-String WeakBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);//todo 处理错误信息
+String WeakBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);
 String StrongUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* result);
 String WeakUnbox(Kernel* kernel, const Type& type, Handle handle, uint8* result);
