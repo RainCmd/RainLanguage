@@ -433,7 +433,16 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	}
 	else EXCEPTION("无效的函数类型");
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
-	if(function->declaration.category != DeclarationCategory::Constructor && returns.Count() && !CheckFunctionReturn(parameter.manager->messages, statements)) MESSAGE2(parameter.manager->messages, function->name, MessageType::ERROR_MISSING_RETURN);
+	if(MESSAGE_CONDITION(parameter.manager->messages, MessageType::LOGGER_LEVEL2_INACCESSIBLE_STATEMENT))
+	{
+		if(!CheckFunctionReturn(parameter.manager->messages, statements) && function->declaration.category != DeclarationCategory::Constructor && returns.Count())
+			MESSAGE2(parameter.manager->messages, function->name, MessageType::ERROR_MISSING_RETURN);
+	}
+	else
+	{
+		if(function->declaration.category != DeclarationCategory::Constructor && returns.Count() && !CheckFunctionReturn(parameter.manager->messages, statements))
+			MESSAGE2(parameter.manager->messages, function->name, MessageType::ERROR_MISSING_RETURN);
+	}
 }
 
 FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(parameter.manager->compilingLibrary.GetName(declaration)), declaration(declaration), parameters(1), returns(0), statements(new BlockStatement(Anchor()))
@@ -442,6 +451,7 @@ FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, Generator
 	parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), compilingClass->name, declaration.DefineType()));
 	ParseBody(parameter, Context(compilingClass->name.source, declaration, compilingClass->space, compilingClass->relies), compilingClass->destructor, true);
 	CheckFunctionStatementValidity(parameter.manager->messages, statements, StatementType::Statement);
+	if(MESSAGE_CONDITION(parameter.manager->messages, MessageType::LOGGER_LEVEL2_INACCESSIBLE_STATEMENT)) CheckFunctionReturn(parameter.manager->messages, statements);
 }
 
 CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParameter& parameter, Context* context, const Anchor& anchor, const Anchor& expression, List<CompilingDeclaration, true>& declarations, Local* thisValue)

@@ -72,8 +72,8 @@ public:
 		Add(line, type, String());
 	}
 };
-
-#define MESSAGE6(collector,source,type,line,start,length,message) {if (GetLevel(type) <= collector->GetLevel())collector->Add(source, type, line, start, length, message);}
-#define MESSAGE5(collector,source,type,line,start,length) {if (GetLevel(type) <= collector->GetLevel())collector->Add(source, type, line, start, length);}
-#define MESSAGE3(collector,anchor,type,message) {if (GetLevel(type) <= collector->GetLevel())collector->Add(anchor, type, message);}
-#define MESSAGE2(collector,anchor,type) {if (GetLevel(type) <= collector->GetLevel())collector->Add(anchor, type);}
+#define MESSAGE_CONDITION(collector, type) (GetLevel(type) <= collector->GetLevel())
+#define MESSAGE6(collector,source,type,line,start,length,message) {if (MESSAGE_CONDITION(collector, type))collector->Add(source, type, line, start, length, message);}
+#define MESSAGE5(collector,source,type,line,start,length) {if (MESSAGE_CONDITION(collector, type))collector->Add(source, type, line, start, length);}
+#define MESSAGE3(collector,anchor,type,message) {if (MESSAGE_CONDITION(collector, type))collector->Add(anchor, type, message);}
+#define MESSAGE2(collector,anchor,type) {if (MESSAGE_CONDITION(collector, type))collector->Add(anchor, type);}
