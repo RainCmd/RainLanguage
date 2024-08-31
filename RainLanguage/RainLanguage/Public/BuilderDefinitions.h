@@ -96,7 +96,7 @@ enum class MessageType :uint32
 	ERROR_MISSING_RETURN,					//缺少返回值
 	ERROR_TYPE_NUMBER_ERROR,				//类型数量错误
 	ERROR_ONLY_BE_USED_IN_LOOP,				//只能在循环中使用
-	ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,				//不在循环中
+	ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,				//不能在catch和finally中使用return语句
 	ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,					//不支持用本地函数创建任务
 	ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
 
