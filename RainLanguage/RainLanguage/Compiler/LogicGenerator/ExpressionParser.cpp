@@ -162,9 +162,9 @@ bool TryCreateVectorMemberExpression(const Anchor& anchor, Expression* target, V
 	else if(target->returns.Peek() == TYPE_Real3)
 	{
 		for(uint32 i = 0; i < anchor.content.GetLength(); i++)
-			if(anchor.content[i] == 'x')indices.Add(0);
-			else if(anchor.content[i] == 'y')indices.Add(1);
-			else if(anchor.content[i] == 'z')indices.Add(2);
+			if(anchor.content[i] == 'x' || anchor.content[i] == 'r')indices.Add(0);
+			else if(anchor.content[i] == 'y' || anchor.content[i] == 'g')indices.Add(1);
+			else if(anchor.content[i] == 'z' || anchor.content[i] == 'b')indices.Add(2);
 			else return false;
 	}
 	else if(target->returns.Peek() == TYPE_Real4)

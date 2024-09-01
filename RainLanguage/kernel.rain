@@ -202,10 +202,10 @@
 		public byte[] StringConvertBytes(string)
 
 	namespace Math
-		public real PI
-		public real E
-		public real Rad2Deg
-		public real Deg2Rad
+		public const real PI
+		public const real E
+		public const real Rad2Deg
+		public const real Deg2Rad
 
 		public integer Abs(integer)
 		public integer Clamp(integer, integer, integer)
