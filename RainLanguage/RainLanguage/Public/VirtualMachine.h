@@ -951,7 +951,7 @@ struct RAINLANGUAGE StartupParameter
 	/// <summary>
 	/// 启动加载的库列表
 	/// </summary>
-	const RainLibrary** libraries;
+	const RainLibrary* const* libraries;
 	/// <summary>
 	/// 启动加载的库数量
 	/// </summary>
@@ -1001,15 +1001,15 @@ struct RAINLANGUAGE StartupParameter
 	/// </summary>
 	OnExceptionExit onExceptionExit;
 
-	StartupParameter(const RainLibrary** libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapYoungGeneration, uint32 heapMaxGeneration, uint32 taskCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit)
+	StartupParameter(const RainLibrary* const* libraries, uint32 libraryCount, integer seed, uint32 stringCapacity, uint32 entityCapacity, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, uint32 heapCapacity, uint32 heapYoungGeneration, uint32 heapMaxGeneration, uint32 taskCapacity, uint32 executeStackCapacity, OnExceptionExit onExceptionExit)
 		: libraries(libraries), libraryCount(libraryCount), seed(seed), stringCapacity(stringCapacity), entityCapacity(entityCapacity), onReferenceEntity(onReferenceEntity), onReleaseEntity(onReleaseEntity), libraryLoader(libraryLoader), libraryUnloader(libraryUnloader), nativeCallerLoader(nativeCallerLoader), heapCapacity(heapCapacity), heapYoungGeneration(heapYoungGeneration), heapMaxGeneration(heapMaxGeneration), taskCapacity(taskCapacity), executeStackCapacity(executeStackCapacity), onExceptionExit(onExceptionExit)
 	{
 	}
-	StartupParameter(const RainLibrary** libraries, uint32 libraryCount, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit)
+	StartupParameter(const RainLibrary* const* libraries, uint32 libraryCount, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit)
 		: StartupParameter(libraries, libraryCount, 0, 8, 8, onReferenceEntity, onReleaseEntity, libraryLoader, libraryUnloader, nativeCallerLoader, 0xff, 4, 8, 8, 0xff, onExceptionExit)
 	{
 	}
-	StartupParameter(const RainLibrary*& library, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit)
+	StartupParameter(const RainLibrary* const& library, EntityAction onReferenceEntity, EntityAction onReleaseEntity, RainLibraryLoader libraryLoader, RainLibraryUnloader libraryUnloader, NativeCallerLoader nativeCallerLoader, OnExceptionExit onExceptionExit)
 		:StartupParameter(&library, 1, onReferenceEntity, onReleaseEntity, libraryLoader, libraryUnloader, nativeCallerLoader, onExceptionExit)
 	{
 	}
