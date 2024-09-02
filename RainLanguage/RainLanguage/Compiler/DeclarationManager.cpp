@@ -43,7 +43,7 @@ AbstractDeclaration* DeclarationManager::GetDeclaration(const CompilingDeclarati
 
 AbstractDeclaration* DeclarationManager::GetDeclaration(Type type)
 {
-	if(type.dimension)type = TYPE_Array;
+	if(type.dimension) type = TYPE_Array;
 	switch(type.code)
 	{
 		case TypeCode::Invalid: EXCEPTION("无效的类型");

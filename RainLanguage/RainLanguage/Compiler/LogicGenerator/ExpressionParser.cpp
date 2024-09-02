@@ -1866,24 +1866,6 @@ bool ExpressionParser::TryParseTuple(SplitFlag flag, LexicalType type, Anchor an
 	return false;
 }
 
-Type MatchBaseType(const Anchor& anchor)
-{
-	if(anchor == KeyWord_bool()) return TYPE_Bool;
-	else if(anchor == KeyWord_byte()) return TYPE_Byte;
-	else if(anchor == KeyWord_char()) return TYPE_Char;
-	else if(anchor == KeyWord_integer()) return TYPE_Integer;
-	else if(anchor == KeyWord_real()) return TYPE_Real;
-	else if(anchor == KeyWord_real2()) return TYPE_Real2;
-	else if(anchor == KeyWord_real3()) return TYPE_Real3;
-	else if(anchor == KeyWord_real4()) return TYPE_Real4;
-	else if(anchor == KeyWord_type()) return TYPE_Type;
-	else if(anchor == KeyWord_string()) return TYPE_String;
-	else if(anchor == KeyWord_handle()) return TYPE_Handle;
-	else if(anchor == KeyWord_entity()) return TYPE_Entity;
-	else if(anchor == KeyWord_array()) return TYPE_Array;
-	return Type();
-}
-
 bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 {
 	if(anchor.content.IsEmpty())
@@ -3273,7 +3255,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				}
 				else
 				{
-					Type type = MatchBaseType(lexical.anchor);
+					Type type = MatchBaseType(lexical.anchor.content);
 					if(type.IsValid())
 					{
 						if(ContainAny(attribute, Attribute::None | Attribute::Operator))

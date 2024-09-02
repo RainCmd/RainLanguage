@@ -4,6 +4,7 @@
 #include "DeclarationManager.h"
 
 struct AbstractSpace;
+Type MatchBaseType(const String& name);
 struct Context
 {
 	String source;

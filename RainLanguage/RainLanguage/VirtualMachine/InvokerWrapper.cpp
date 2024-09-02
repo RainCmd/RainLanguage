@@ -15,12 +15,12 @@ void ValidAssert(const InvokerWrapper& wrapper)
 #define ERROR ((String*)error)
 InvokerWrapper::InvokerWrapper() :instanceID(0), invoker(NULL), error(new String()) {}
 
-InvokerWrapper::InvokerWrapper(void* invoker) : instanceID(invoker ? INVOKER->instanceID : NULL), invoker(invoker)
+InvokerWrapper::InvokerWrapper(void* invoker) : instanceID(invoker ? INVOKER->instanceID : NULL), invoker(invoker), error(new String())
 {
 	if(IsValid()) INVOKER->Reference();
 }
 
-InvokerWrapper::InvokerWrapper(const InvokerWrapper& other) : instanceID(other.instanceID), invoker(other.invoker)
+InvokerWrapper::InvokerWrapper(const InvokerWrapper& other) : instanceID(other.instanceID), invoker(other.invoker), error(new String())
 {
 	if(IsValid()) INVOKER->Reference();
 }

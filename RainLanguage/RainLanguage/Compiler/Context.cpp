@@ -4,6 +4,24 @@
 #include "../KernelDeclarations.h"
 #include "../Collections/Set.h"
 
+Type MatchBaseType(const String& name)
+{
+	if(name == KeyWord_bool()) return TYPE_Bool;
+	else if(name == KeyWord_byte()) return TYPE_Byte;
+	else if(name == KeyWord_char()) return TYPE_Char;
+	else if(name == KeyWord_integer()) return TYPE_Integer;
+	else if(name == KeyWord_real()) return TYPE_Real;
+	else if(name == KeyWord_real2()) return TYPE_Real2;
+	else if(name == KeyWord_real3()) return TYPE_Real3;
+	else if(name == KeyWord_real4()) return TYPE_Real4;
+	else if(name == KeyWord_type()) return TYPE_Type;
+	else if(name == KeyWord_string()) return TYPE_String;
+	else if(name == KeyWord_handle()) return TYPE_Handle;
+	else if(name == KeyWord_entity()) return TYPE_Entity;
+	else if(name == KeyWord_array()) return TYPE_Array;
+	return Type();
+}
+
 Context::Context(const String& source, CompilingSpace* space, List<AbstractSpace*, true>* relies) : source(source), declaration(), compilingSpace(space), relies(relies) {}
 
 Context::Context(const String& source, CompilingDeclaration declaration, CompilingSpace* space, List<AbstractSpace*, true>* relies) : source(source), declaration(declaration), compilingSpace(space), relies(relies) {}
@@ -375,7 +393,10 @@ void Context::FindDeclaration(DeclarationManager* manager, const List<Anchor>& n
 			if(space->declarations.TryGet(name, declarations))
 				results.Add(*declarations);
 		}
-		if(results.Count())return;
+		if(results.Count()) return;
+		Type type = MatchBaseType(name);
+		if(type.IsValid())
+			results.Add(manager->GetDeclaration(type)->declaration);
 	}
 	else if(names.Count() > 1)
 	{
@@ -414,5 +435,5 @@ void Context::FindOperators(DeclarationManager* manager, const String& name, Lis
 		if(results[i].category != DeclarationCategory::Function)
 			EXCEPTION("操作类型必须是全局函数");
 #endif // DEBUG
-}
+	}
 
