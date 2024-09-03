@@ -1,9 +1,17 @@
-# 雨言2.0
+
+<div align="center">
+
+# 雨言
+
+![GitHub Release](https://img.shields.io/github/v/release/RainCmd/RainLanguage)[![GitHub Code License](https://img.shields.io/github/license/RainCmd/RainLanguage)](LICENSE)
+
+</div>
+
 **雨言（RainLanguage）是一门专为游戏开发而设计的编程语言，是面向对象和面向过程的混合型语言，拥有极简的语法和安全的类型检查，编译器还具有强大的类型推导能力，只要是通过表达式能推导出类型的地方都可以让编译器推导，而不用手动显式声明，熟悉C语言系列的程序员几乎可以无成本上手。**
 
 **如果宿主语言是c++则可以直接使用Public文件夹下的头文件来调用，c语言可以使用ExternC文件夹下的ExternC.h中的接口，csharp可以使用ExternC中RainLanguageAdapter.cs已经封装好的接口。**
 
-## Hello World
+## 🙋Hello World
 下面是使用`雨言`输出"Hello World"的示例代码：
 ``` rs
 native Print(string)
@@ -15,7 +23,7 @@ native声明说明Print函数是在宿主语言中的实现的函数，它只有
 
 Main函数是定义在声明缩进空间的，所以它是一个全局函数，成员函数需要创建实例才能访问，而全局函数可以直接访问。雨言在虚拟机启动后没有默认的函数入口点，所以实际上是需要启动虚拟机后手动查找函数并调用。
 
-## 功能和特性
+## 🎖️功能和特性
 - 通过缩进确定代码块，使代码更加整齐整洁。
 - 统一的元组概念，元组之间可以任意组合，函数的参数和返回值本质上都是元组。
 - 统一的类型系统，所有类型的基类都是handle类型，通过装箱拆箱操作，值类型也可以赋值给句柄类型
