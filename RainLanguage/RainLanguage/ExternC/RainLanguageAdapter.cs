@@ -128,7 +128,7 @@ namespace RainLanguage
         ERROR_MISSING_RETURN,                   //缺少返回值
         ERROR_TYPE_NUMBER_ERROR,                //类型数量错误
         ERROR_ONLY_BE_USED_IN_LOOP,             //只能在循环中使用
-        ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,               //不在循环中
+        ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,               //不能在catch和finally中使用return语句
         ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,                   //不支持用本地函数创建任务
         ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
 
@@ -1921,7 +1921,17 @@ namespace RainLanguage
             /// 获取异常信息
             /// </summary>
             /// <returns></returns>
-            public string GetExitMessage()
+            public string GetExceptionMessage()
+            {
+                if (!IsValid) throw new InvalidOperationException("当前调用已失效");
+                using (var nativeString = new NativeString(Extern_InvokerWrapperGetExceptionMessage(invoker)))
+                    return nativeString.Value;
+            }
+            /// <summary>
+            /// 获取错误信息
+            /// </summary>
+            /// <returns></returns>
+            public string GetError()
             {
                 if (!IsValid) throw new InvalidOperationException("当前调用已失效");
                 using (var nativeString = new NativeString(Extern_InvokerWrapperGetErrorMessage(invoker)))
@@ -2438,9 +2448,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetBoolParameters(uint index, bool[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetBoolParameters(uint index, bool[] value)
             {
-                fixed (bool* pvalue = value) InvokerWapperSetBoolParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (bool* pvalue = value) return InvokerWapperSetBoolParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2450,9 +2461,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetByteParameters(uint index, byte[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetByteParameters(uint index, byte[] value)
             {
-                fixed (byte* pvalue = value) InvokerWapperSetByteParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (byte* pvalue = value) return InvokerWapperSetByteParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2462,9 +2474,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetCharParameters(uint index, char[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetCharParameters(uint index, char[] value)
             {
-                fixed (char* pvalue = value) InvokerWapperSetCharParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (char* pvalue = value) return InvokerWapperSetCharParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2474,9 +2487,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetIntegerParameters(uint index, long[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetIntegerParameters(uint index, long[] value)
             {
-                fixed (long* pvalue = value) InvokerWapperSetIntegerParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (long* pvalue = value) return InvokerWapperSetIntegerParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2486,9 +2500,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetRealParameters(uint index, Real[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetRealParameters(uint index, Real[] value)
             {
-                fixed (Real* pvalue = value) InvokerWapperSetRealParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (Real* pvalue = value) return InvokerWapperSetRealParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2498,9 +2513,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetReal2Parameters(uint index, Real2[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetReal2Parameters(uint index, Real2[] value)
             {
-                fixed (Real2* pvalue = value) InvokerWapperSetReal2Parameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (Real2* pvalue = value) return InvokerWapperSetReal2Parameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2510,9 +2526,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetReal3Parameters(uint index, Real3[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetReal3Parameters(uint index, Real3[] value)
             {
-                fixed (Real3* pvalue = value) InvokerWapperSetReal3Parameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (Real3* pvalue = value) return InvokerWapperSetReal3Parameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2522,9 +2539,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetReal4Parameters(uint index, Real4[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetReal4Parameters(uint index, Real4[] value)
             {
-                fixed (Real4* pvalue = value) InvokerWapperSetReal4Parameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (Real4* pvalue = value) return InvokerWapperSetReal4Parameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2534,9 +2552,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetEnumValueParameter(uint index, long[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetEnumValueParameter(uint index, long[] value)
             {
-                fixed (long* pvalue = value) InvokerWapperSetEnumValueParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (long* pvalue = value) return InvokerWapperSetEnumValueParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置参数
@@ -2546,15 +2565,17 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetEnumNameParameters(uint index, string[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetEnumNameParameters(uint index, string[] value)
             {
                 char** values = (char**)Marshal.AllocHGlobal(value.Length * sizeof(char*));
                 for (int i = 0; i < value.Length; i++) values[i] = GetEctype(value[i]);
 
-                InvokerWapperSetEnumNameParameters(invoker, index, values, (uint)value.Length);
+                var result = InvokerWapperSetEnumNameParameters(invoker, index, values, (uint)value.Length);
 
                 for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
                 Marshal.FreeHGlobal((IntPtr)values);
+                return result;
             }
             /// <summary>
             /// 设置参数
@@ -2564,15 +2585,17 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetStringParameters(uint index, string[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetStringParameters(uint index, string[] value)
             {
                 char** values = (char**)Marshal.AllocHGlobal(value.Length * sizeof(char*));
                 for (int i = 0; i < value.Length; i++) values[i] = GetEctype(value[i]);
 
-                InvokerWapperSetStringParameters(invoker, index, values, (uint)value.Length);
+                var result = InvokerWapperSetStringParameters(invoker, index, values, (uint)value.Length);
 
                 for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
                 Marshal.FreeHGlobal((IntPtr)values);
+                return result;
             }
             /// <summary>
             /// 设置参数
@@ -2582,9 +2605,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">参数索引</param>
             /// <param name="value">参数值</param>
-            public void SetEntityParameters(uint index, ulong[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetEntityParameters(uint index, ulong[] value)
             {
-                fixed (ulong* pvalue = value) InvokerWapperSetEntityParameters(invoker, index, pvalue, (uint)value.Length);
+                fixed (ulong* pvalue = value) return InvokerWapperSetEntityParameters(invoker, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 销毁调用
@@ -2609,6 +2633,8 @@ namespace RainLanguage
             private extern static void* Extern_InvokerWrapperGetName(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperSetName", CallingConvention = CallingConvention.Cdecl)]
             private extern static void Extern_InvokerWrapperSetName(void* invoker, char* name);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetExceptionMessage", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* Extern_InvokerWrapperGetExceptionMessage(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetErrorMessage", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* Extern_InvokerWrapperGetErrorMessage(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperStart", CallingConvention = CallingConvention.Cdecl)]
@@ -2700,29 +2726,29 @@ namespace RainLanguage
             private extern static void InvokerWapperSetEntityParameter(void* invoker, uint index, ulong value);
             //set parameters
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetBoolParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetBoolParameters(void* invoker, uint index, bool* value, uint count);
+            private extern static bool InvokerWapperSetBoolParameters(void* invoker, uint index, bool* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetByteParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetByteParameters(void* invoker, uint index, byte* value, uint count);
+            private extern static bool InvokerWapperSetByteParameters(void* invoker, uint index, byte* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetCharParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetCharParameters(void* invoker, uint index, char* value, uint count);
+            private extern static bool InvokerWapperSetCharParameters(void* invoker, uint index, char* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetIntegerParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetIntegerParameters(void* invoker, uint index, long* value, uint count);
+            private extern static bool InvokerWapperSetIntegerParameters(void* invoker, uint index, long* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetRealParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetRealParameters(void* invoker, uint index, Real* value, uint count);
+            private extern static bool InvokerWapperSetRealParameters(void* invoker, uint index, Real* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal2Parameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetReal2Parameters(void* invoker, uint index, Real2* value, uint count);
+            private extern static bool InvokerWapperSetReal2Parameters(void* invoker, uint index, Real2* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal3Parameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetReal3Parameters(void* invoker, uint index, Real3* value, uint count);
+            private extern static bool InvokerWapperSetReal3Parameters(void* invoker, uint index, Real3* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetReal4Parameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetReal4Parameters(void* invoker, uint index, Real4* value, uint count);
+            private extern static bool InvokerWapperSetReal4Parameters(void* invoker, uint index, Real4* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEnumValueParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetEnumValueParameters(void* invoker, uint index, long* value, uint count);
+            private extern static bool InvokerWapperSetEnumValueParameters(void* invoker, uint index, long* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEnumNameParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetEnumNameParameters(void* invoker, uint index, char** value, uint count);
+            private extern static bool InvokerWapperSetEnumNameParameters(void* invoker, uint index, char** value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetStringParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetStringParameters(void* invoker, uint index, char** value, uint count);
+            private extern static bool InvokerWapperSetStringParameters(void* invoker, uint index, char** value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWapperSetEntityParameters", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void InvokerWapperSetEntityParameters(void* invoker, uint index, ulong* value, uint count);
+            private extern static bool InvokerWapperSetEntityParameters(void* invoker, uint index, ulong* value, uint count);
 
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteInvokerWrapper", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteInvokerWrapper(void* invoker);
@@ -3218,9 +3244,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetBoolsReturnValue(uint index, bool[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetBoolsReturnValue(uint index, bool[] value)
             {
-                fixed (bool* pvalue = value) CallerWrapperSetBoolReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (bool* pvalue = value) return CallerWrapperSetBoolReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3230,9 +3257,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetBytesReturnValue(uint index, byte[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetBytesReturnValue(uint index, byte[] value)
             {
-                fixed (byte* pvalue = value) CallerWrapperSetByteReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (byte* pvalue = value) return CallerWrapperSetByteReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3242,9 +3270,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetCharsReturnValue(uint index, char[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetCharsReturnValue(uint index, char[] value)
             {
-                fixed (char* pvalue = value) CallerWrapperSetCharReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (char* pvalue = value) return CallerWrapperSetCharReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3254,9 +3283,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetIntegersReturnValue(uint index, long[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetIntegersReturnValue(uint index, long[] value)
             {
-                fixed (long* pvalue = value) CallerWrapperSetIntegerReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (long* pvalue = value) return CallerWrapperSetIntegerReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3266,9 +3296,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetRealsReturnValue(uint index, Real[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetRealsReturnValue(uint index, Real[] value)
             {
-                fixed (Real* pvalue = value) CallerWrapperSetRealReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (Real* pvalue = value) return CallerWrapperSetRealReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3278,9 +3309,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetReal2sReturnValue(uint index, Real2[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetReal2sReturnValue(uint index, Real2[] value)
             {
-                fixed (Real2* pvalue = value) CallerWrapperSetReal2ReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (Real2* pvalue = value) return CallerWrapperSetReal2ReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3290,9 +3322,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetReal3sReturnValue(uint index, Real3[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetReal3sReturnValue(uint index, Real3[] value)
             {
-                fixed (Real3* pvalue = value) CallerWrapperSetReal3ReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (Real3* pvalue = value) return CallerWrapperSetReal3ReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3302,9 +3335,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetReal4sReturnValue(uint index, Real4[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetReal4sReturnValue(uint index, Real4[] value)
             {
-                fixed (Real4* pvalue = value) CallerWrapperSetReal4ReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (Real4* pvalue = value) return CallerWrapperSetReal4ReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3314,9 +3348,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetEnumValuesReturnValue(uint index, long[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetEnumValuesReturnValue(uint index, long[] value)
             {
-                fixed (long* pvalue = value) CallerWrapperSetEnumValueReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (long* pvalue = value) return CallerWrapperSetEnumValueReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置返回值
@@ -3326,12 +3361,15 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetEnumNamesReturnValue(uint index, string[] names)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetEnumNamesReturnValue(uint index, string[] names)
             {
                 var values = new char*[names.Length];
                 for (int i = 0; i < names.Length; i++) values[i] = GetEctype(names[i]);
-                fixed (char** pvalues = values) CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)names.Length);
+                bool result;
+                fixed (char** pvalues = values) result = CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)names.Length);
                 for (int i = 0; i < names.Length; i++) FreeMemory(values[i]);
+                return result;
             }
             /// <summary>
             /// 设置返回值
@@ -3341,12 +3379,15 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetStringsReturnValue(uint index, string[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetStringsReturnValue(uint index, string[] value)
             {
                 var values = new char*[value.Length];
                 for (int i = 0; i < value.Length; i++) values[i] = GetEctype(value[i]);
-                fixed (char** pvalues = values) CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)value.Length);
+                bool result;
+                fixed (char** pvalues = values) result = CallerWrapperSetEnumNameReturnValues(caller, index, pvalues, (uint)value.Length);
                 for (int i = 0; i < value.Length; i++) FreeMemory(values[i]);
+                return result;
             }
             /// <summary>
             /// 设置返回值
@@ -3356,9 +3397,10 @@ namespace RainLanguage
             /// </remarks>
             /// <param name="index">索引</param>
             /// <param name="value">返回值</param>
-            public void SetEntitysReturnValue(uint index, ulong[] value)
+            /// <returns>返回false表示操作失败，通过<see cref="GetError"/>接口可以获取错误的详细信息</returns>
+            public bool SetEntitysReturnValue(uint index, ulong[] value)
             {
-                fixed (ulong* pvalue = value) CallerWrapperSetEntityReturnValues(caller, index, pvalue, (uint)value.Length);
+                fixed (ulong* pvalue = value) return CallerWrapperSetEntityReturnValues(caller, index, pvalue, (uint)value.Length);
             }
             /// <summary>
             /// 设置异常信息
@@ -3367,6 +3409,15 @@ namespace RainLanguage
             public void SetException(string message)
             {
                 fixed (char* pmsg = message) CallerWrapperSetException(caller, pmsg);
+            }
+            /// <summary>
+            /// 获取错误信息
+            /// </summary>
+            /// <returns>错误信息</returns>
+            public string GetError()
+            {
+                using (var name = new NativeString(CallerWrapperGetError(caller)))
+                    return name.Value;
             }
             //get parameter
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetBoolParameter", CallingConvention = CallingConvention.Cdecl)]
@@ -3447,32 +3498,34 @@ namespace RainLanguage
             private extern static void CallerWrapperSetEntityReturnValue(void* caller, uint index, ulong value);
             //set return values
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetBoolReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetBoolReturnValues(void* caller, uint index, bool* value, uint count);
+            private extern static bool CallerWrapperSetBoolReturnValues(void* caller, uint index, bool* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetByteReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetByteReturnValues(void* caller, uint index, byte* value, uint count);
+            private extern static bool CallerWrapperSetByteReturnValues(void* caller, uint index, byte* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetCharReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetCharReturnValues(void* caller, uint index, char* value, uint count);
+            private extern static bool CallerWrapperSetCharReturnValues(void* caller, uint index, char* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetIntegerReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetIntegerReturnValues(void* caller, uint index, long* value, uint count);
+            private extern static bool CallerWrapperSetIntegerReturnValues(void* caller, uint index, long* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetRealReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetRealReturnValues(void* caller, uint index, Real* value, uint count);
+            private extern static bool CallerWrapperSetRealReturnValues(void* caller, uint index, Real* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal2ReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetReal2ReturnValues(void* caller, uint index, Real2* value, uint count);
+            private extern static bool CallerWrapperSetReal2ReturnValues(void* caller, uint index, Real2* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal3ReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetReal3ReturnValues(void* caller, uint index, Real3* value, uint count);
+            private extern static bool CallerWrapperSetReal3ReturnValues(void* caller, uint index, Real3* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetReal4ReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetReal4ReturnValues(void* caller, uint index, Real4* value, uint count);
+            private extern static bool CallerWrapperSetReal4ReturnValues(void* caller, uint index, Real4* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEnumValueReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetEnumValueReturnValues(void* caller, uint index, long* value, uint count);
+            private extern static bool CallerWrapperSetEnumValueReturnValues(void* caller, uint index, long* value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEnumNameReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetEnumNameReturnValues(void* caller, uint index, char** value, uint count);
+            private extern static bool CallerWrapperSetEnumNameReturnValues(void* caller, uint index, char** value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetStringReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetStringReturnValues(void* caller, uint index, char** value, uint count);
+            private extern static bool CallerWrapperSetStringReturnValues(void* caller, uint index, char** value, uint count);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetEntityReturnValues", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void CallerWrapperSetEntityReturnValues(void* caller, uint index, ulong* value, uint count);
+            private extern static bool CallerWrapperSetEntityReturnValues(void* caller, uint index, ulong* value, uint count);
 
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetException", CallingConvention = CallingConvention.Cdecl)]
             private extern static void CallerWrapperSetException(void* caller, char* value);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetError", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* CallerWrapperGetError(void* caller);
         }
         /// <summary>
         /// 清理虚拟机中所有缓存的静态数据

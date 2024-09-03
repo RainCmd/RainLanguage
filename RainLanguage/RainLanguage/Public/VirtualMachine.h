@@ -935,7 +935,7 @@ public:
 	/// 设置异常信息
 	/// </summary>
 	/// <param name="error">异常信息字符串 </param>
-	virtual void SetException(const RainString& error) = 0;
+	virtual void SetException(const RainString& message) = 0;
 	/// <summary>
 	/// 获取错误信息
 	/// </summary>

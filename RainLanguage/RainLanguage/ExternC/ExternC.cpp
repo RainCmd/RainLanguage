@@ -251,6 +251,11 @@ void Extern_InvokerWrapperSetName(InvokerWrapper* invoker, character* name)
 	invoker->SetName(name);
 }
 
+RainString* Extern_InvokerWrapperGetExceptionMessage(InvokerWrapper* invoker)
+{
+	return new RainString(invoker->GetExceptionMessage());
+}
+
 RainString* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker)
 {
 	return new RainString(invoker->GetErrorMessage());
@@ -501,64 +506,64 @@ void Extern_InvokerWapperSetEntityParameter(InvokerWrapper* invoker, uint32 inde
 	invoker->SetEntityParameter(index, value);
 }
 
-void Extern_InvokerWapperSetBoolParameters(InvokerWrapper* invoker, uint32 index, bool* value, uint32 count)
+bool Extern_InvokerWapperSetBoolParameters(InvokerWrapper* invoker, uint32 index, bool* value, uint32 count)
 {
-	invoker->SetParameter(index, value, count);
+	return invoker->SetParameter(index, value, count);
 }
 
-void Extern_InvokerWapperSetByteParameters(InvokerWrapper* invoker, uint32 index, uint8* value, uint32 count)
+bool Extern_InvokerWapperSetByteParameters(InvokerWrapper* invoker, uint32 index, uint8* value, uint32 count)
 {
-	invoker->SetParameter(index, value, count);
+	return invoker->SetParameter(index, value, count);
 }
 
-void Extern_InvokerWapperSetCharParameters(InvokerWrapper* invoker, uint32 index, character* value, uint32 count)
+bool Extern_InvokerWapperSetCharParameters(InvokerWrapper* invoker, uint32 index, character* value, uint32 count)
 {
-	invoker->SetParameter(index, value, count);
+	return invoker->SetParameter(index, value, count);
 }
 
-void Extern_InvokerWapperSetIntegerParameters(InvokerWrapper* invoker, uint32 index, integer* value, uint32 count)
+bool Extern_InvokerWapperSetIntegerParameters(InvokerWrapper* invoker, uint32 index, integer* value, uint32 count)
 {
-	invoker->SetParameter(index, value, count);
+	return invoker->SetParameter(index, value, count);
 }
 
-void Extern_InvokerWapperSetRealParameters(InvokerWrapper* invoker, uint32 index, Extern_Real* value, uint32 count)
+bool Extern_InvokerWapperSetRealParameters(InvokerWrapper* invoker, uint32 index, Extern_Real* value, uint32 count)
 {
-	invoker->SetParameter(index, (real*)value, count);
+	return invoker->SetParameter(index, (real*)value, count);
 }
 
-void Extern_InvokerWapperSetReal2Parameters(InvokerWrapper* invoker, uint32 index, Extern_Real2* value, uint32 count)
+bool Extern_InvokerWapperSetReal2Parameters(InvokerWrapper* invoker, uint32 index, Extern_Real2* value, uint32 count)
 {
-	invoker->SetParameter(index, (Real2*)value, count);
+	return invoker->SetParameter(index, (Real2*)value, count);
 }
 
-void Extern_InvokerWapperSetReal3Parameters(InvokerWrapper* invoker, uint32 index, Extern_Real3* value, uint32 count)
+bool Extern_InvokerWapperSetReal3Parameters(InvokerWrapper* invoker, uint32 index, Extern_Real3* value, uint32 count)
 {
-	invoker->SetParameter(index, (Real3*)value, count);
+	return invoker->SetParameter(index, (Real3*)value, count);
 }
 
-void Extern_InvokerWapperSetReal4Parameters(InvokerWrapper* invoker, uint32 index, Extern_Real4* value, uint32 count)
+bool Extern_InvokerWapperSetReal4Parameters(InvokerWrapper* invoker, uint32 index, Extern_Real4* value, uint32 count)
 {
-	invoker->SetParameter(index, (Real4*)value, count);
+	return invoker->SetParameter(index, (Real4*)value, count);
 }
 
-void Extern_InvokerWapperSetEnumValueParameters(InvokerWrapper* invoker, uint32 index, integer* value, uint32 count)
+bool Extern_InvokerWapperSetEnumValueParameters(InvokerWrapper* invoker, uint32 index, integer* value, uint32 count)
 {
-	invoker->SetEnumValueParameter(index, value, count);
+	return invoker->SetEnumValueParameter(index, value, count);
 }
 
-void Extern_InvokerWapperSetEnumNameParameters(InvokerWrapper* invoker, uint32 index, const character** name, uint32 count)
+bool Extern_InvokerWapperSetEnumNameParameters(InvokerWrapper* invoker, uint32 index, const character** name, uint32 count)
 {
-	invoker->SetEnumNameParameter(index, name, count);
+	return invoker->SetEnumNameParameter(index, name, count);
 }
 
-void Extern_InvokerWapperSetStringParameters(InvokerWrapper* invoker, uint32 index, const character** value, uint32 count)
+bool Extern_InvokerWapperSetStringParameters(InvokerWrapper* invoker, uint32 index, const character** value, uint32 count)
 {
-	invoker->SetParameter(index, value, count);
+	return invoker->SetParameter(index, value, count);
 }
 
-void Extern_InvokerWapperSetEntityParameters(InvokerWrapper* invoker, uint32 index, uint64* value, uint32 count)
+bool Extern_InvokerWapperSetEntityParameters(InvokerWrapper* invoker, uint32 index, uint64* value, uint32 count)
 {
-	invoker->SetEntityParameter(index, value, count);
+	return invoker->SetEntityParameter(index, value, count);
 }
 
 void Extern_DeleteInvokerWrapper(InvokerWrapper* invoker)
@@ -787,69 +792,74 @@ void Extern_CallerWrapperSetEntityReturnValue(CallerWrapper* caller, uint32 inde
 	caller->SetEntityReturnValue(index, value);
 }
 
-void Extern_CallerWrapperSetBoolReturnValues(CallerWrapper* caller, uint32 index, bool* values, uint32 length)
+bool Extern_CallerWrapperSetBoolReturnValues(CallerWrapper* caller, uint32 index, bool* values, uint32 length)
 {
-	caller->SetReturnValue(index, values, length);
+	return caller->SetReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetByteReturnValues(CallerWrapper* caller, uint32 index, uint8* values, uint32 length)
+bool Extern_CallerWrapperSetByteReturnValues(CallerWrapper* caller, uint32 index, uint8* values, uint32 length)
 {
-	caller->SetReturnValue(index, values, length);
+	return caller->SetReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetCharReturnValues(CallerWrapper* caller, uint32 index, character* values, uint32 length)
+bool Extern_CallerWrapperSetCharReturnValues(CallerWrapper* caller, uint32 index, character* values, uint32 length)
 {
-	caller->SetReturnValue(index, values, length);
+	return caller->SetReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetIntegerReturnValues(CallerWrapper* caller, uint32 index, integer* values, uint32 length)
+bool Extern_CallerWrapperSetIntegerReturnValues(CallerWrapper* caller, uint32 index, integer* values, uint32 length)
 {
-	caller->SetReturnValue(index, values, length);
+	return caller->SetReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetRealReturnValues(CallerWrapper* caller, uint32 index, Extern_Real* values, uint32 length)
+bool Extern_CallerWrapperSetRealReturnValues(CallerWrapper* caller, uint32 index, Extern_Real* values, uint32 length)
 {
-	caller->SetReturnValue(index, CONVERT(real*, values), length);
+	return caller->SetReturnValue(index, CONVERT(real*, values), length);
 }
 
-void Extern_CallerWrapperSetReal2ReturnValues(CallerWrapper* caller, uint32 index, Extern_Real2* values, uint32 length)
+bool Extern_CallerWrapperSetReal2ReturnValues(CallerWrapper* caller, uint32 index, Extern_Real2* values, uint32 length)
 {
-	caller->SetReturnValue(index, CONVERT(Real2*, values), length);
+	return caller->SetReturnValue(index, CONVERT(Real2*, values), length);
 }
 
-void Extern_CallerWrapperSetReal3ReturnValues(CallerWrapper* caller, uint32 index, Extern_Real3* values, uint32 length)
+bool Extern_CallerWrapperSetReal3ReturnValues(CallerWrapper* caller, uint32 index, Extern_Real3* values, uint32 length)
 {
-	caller->SetReturnValue(index, CONVERT(Real3*, values), length);
+	return caller->SetReturnValue(index, CONVERT(Real3*, values), length);
 }
 
-void Extern_CallerWrapperSetReal4ReturnValues(CallerWrapper* caller, uint32 index, Extern_Real4* values, uint32 length)
+bool Extern_CallerWrapperSetReal4ReturnValues(CallerWrapper* caller, uint32 index, Extern_Real4* values, uint32 length)
 {
-	caller->SetReturnValue(index, CONVERT(Real4*, values), length);
+	return caller->SetReturnValue(index, CONVERT(Real4*, values), length);
 }
 
-void Extern_CallerWrapperSetEnumNameReturnValues(CallerWrapper* caller, uint32 index, character** values, uint32 length)
+bool Extern_CallerWrapperSetEnumNameReturnValues(CallerWrapper* caller, uint32 index, character** values, uint32 length)
 {
-	caller->SetEnumNameReturnValue(index, values, length);
+	return caller->SetEnumNameReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetEnumValueReturnValues(CallerWrapper* caller, uint32 index, integer* values, uint32 length)
+bool Extern_CallerWrapperSetEnumValueReturnValues(CallerWrapper* caller, uint32 index, integer* values, uint32 length)
 {
-	caller->SetEnumValueReturnValue(index, values, length);
+	return caller->SetEnumValueReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetStringReturnValues(CallerWrapper* caller, uint32 index, character** values, uint32 length)
+bool Extern_CallerWrapperSetStringReturnValues(CallerWrapper* caller, uint32 index, character** values, uint32 length)
 {
-	caller->SetReturnValue(index, values, length);
+	return caller->SetReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetEntityReturnValues(CallerWrapper* caller, uint32 index, uint64* values, uint32 length)
+bool Extern_CallerWrapperSetEntityReturnValues(CallerWrapper* caller, uint32 index, uint64* values, uint32 length)
 {
-	caller->SetEntityReturnValue(index, values, length);
+	return caller->SetEntityReturnValue(index, values, length);
 }
 
-void Extern_CallerWrapperSetException(CallerWrapper* caller, character* error)
+void Extern_CallerWrapperSetException(CallerWrapper* caller, character* message)
 {
-	caller->SetException(ExternHelper_GetRainString(error));
+	caller->SetException(ExternHelper_GetRainString(message));
+}
+
+RainString* Extern_CallerWrapperGetError(CallerWrapper* caller)
+{
+	return new RainString(caller->GetError());
 }
 
 const uint8* Extern_RainBufferGetData(RainBuffer<uint8>* buffer)
