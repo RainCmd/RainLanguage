@@ -84,11 +84,11 @@ void TaskAgency::Update()
 		}
 		else
 		{
-			if(prev) prev->next = index->next;
-			else head = index->next;
 			Task* task = index;
-			Invoker* invoker = task->invoker;
 			index = index->next;
+			if(prev) prev->next = index;
+			else head = index;
+			Invoker* invoker = task->invoker;
 			if(invoker->state == InvokerState::Exceptional || invoker->state == InvokerState::Aborted) task->Abort();
 			else invoker->state = InvokerState::Completed;
 			Recycle(task);

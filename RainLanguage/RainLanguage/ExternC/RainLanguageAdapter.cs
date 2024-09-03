@@ -1476,11 +1476,11 @@ namespace RainLanguage
             readonly LibraryLoader libraryLoader;
             readonly LibraryUnloader libraryUnloader;
             readonly ExternNativeCallerLoader nativeCallerLoader;
-            readonly uint heapCapacity, heapGeneration;
+            readonly uint heapCapacity, heapGeneration, heapMaxGeneration;
             readonly uint taskCapacity;
             readonly uint executeStackCapacity;
             readonly ExternExceptionExit onExceptionExit;
-            public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, LibraryUnloader libraryUnloader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit)
+            public ExternStartupParameter(void** libraries, uint libraryCount, long seed, uint stringCapacity, uint entityCapacity, ExternEntityAction onReferenecEntity, ExternEntityAction onReleaseEntity, LibraryLoader libraryLoader, LibraryUnloader libraryUnloader, ExternNativeCallerLoader nativeCallerLoader, uint heapCapacity, uint heapGeneration, uint heapMaxGeneration, uint taskCapacity, uint executeStackCapacity, ExternExceptionExit onExceptionExit)
             {
                 this.libraries = libraries;
                 this.libraryCount = libraryCount;
@@ -1494,6 +1494,7 @@ namespace RainLanguage
                 this.nativeCallerLoader = nativeCallerLoader;
                 this.heapCapacity = heapCapacity;
                 this.heapGeneration = heapGeneration;
+                this.heapMaxGeneration = heapMaxGeneration;
                 this.taskCapacity = taskCapacity;
                 this.executeStackCapacity = executeStackCapacity;
                 this.onExceptionExit = onExceptionExit;
@@ -3640,7 +3641,7 @@ namespace RainLanguage
 
                 var parameter = new ExternStartupParameter(plibraries, (uint)startupParameter.libraries.Length, startupParameter.seed, startupParameter.stringCapacity, startupParameter.entityCapacity,
                     onReferenecEntity, onReleaseEntity, libraryLoader, RainLibrary.DeleteRainLibrary, nativeCallerLoader
-                    , 0x10000, 8, 0x10, 0x100, onExceptionExit);
+                    , 0x10000, 4, 8, 0x10, 0x100, onExceptionExit);
                 if (progressDatabaseLoader != null)
                 {
                     references.Add(progressDatabaseLoader);
