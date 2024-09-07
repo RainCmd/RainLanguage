@@ -564,6 +564,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_FUNCTIONS(true, space, "GetAssembles", CreateTypeList(Type(TYPE_Reflection_Assembly, 1)), TupleInfo_EMPTY, GetAssembles);
 		REGISTER_FUNCTIONS(true, space, "GetCurrentTaskInstantID", CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, GetCurrentTaskInstantID);
 		REGISTER_FUNCTIONS(true, space, "CreateString", CreateTypeList(TYPE_String), CreateTypeList(Type(TYPE_Char, 1), TYPE_Integer, TYPE_Integer), CreateString);
+		ASSERT(functions.Count() == SYSTEM_GetName.function, "获取类型名函数索引错误");
+		REGISTER_FUNCTIONS(true, space, "GetName", CreateTypeList(TYPE_String), CreateTypeList(TYPE_Type), GetName);
 	}
 	//space Reflection
 	{

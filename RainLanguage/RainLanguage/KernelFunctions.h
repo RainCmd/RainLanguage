@@ -167,6 +167,7 @@ String LoadAssembly(KernelInvokerParameter parameter);											//Reflection.As
 String GetAssembles(KernelInvokerParameter parameter);											//Reflection.Assembly[] ()
 String GetCurrentTaskInstantID(KernelInvokerParameter parameter);								//integer ()
 String CreateString(KernelInvokerParameter parameter);											//string (char[], integer, integer)
+String GetName(KernelInvokerParameter parameter);												//string (type)
 
 //成员函数
 String bool_ToString(KernelInvokerParameter parameter);											//string bool.()

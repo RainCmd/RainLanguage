@@ -11,6 +11,7 @@
 #include "VirtualMachine/TaskAgency.h"
 #include "VirtualMachine/EntityAgency.h"
 #include "Vector/VectorMath.h"
+#include "KeyWords.h"
 
 #define RETURN_POINT ((uint32*)(parameter.stack + parameter.top + SIZE(Frame)))
 #define RETURN_VALUE(type, index) (*(type*)(IS_LOCAL(RETURN_POINT[index]) ? (parameter.stack + LOCAL_ADDRESS(RETURN_POINT[index])) : (parameter.kernel->libraryAgency->data.GetPointer() + RETURN_POINT[index])))
@@ -1336,6 +1337,16 @@ String CreateString(KernelInvokerParameter parameter)//string (char[], integer, 
 	result = agency->AddAndRef((character*)parameter.kernel->heapAgency->GetArrayPoint(source, 0), (uint32)count);
 	return String();
 }
+
+String GetName(KernelInvokerParameter parameter)//string (type)
+{
+	Type& type = PARAMETER_VALUE(1, Type, 0);
+	string& name = RETURN_VALUE(string, 0);
+	parameter.kernel->stringAgency->Release(name);
+	name = GetTypeName(parameter.kernel, type);
+	parameter.kernel->stringAgency->Reference(name);
+	return String();
+}
 #pragma endregion 系统函数
 
 #pragma region 基础类型成员函数
@@ -2336,11 +2347,17 @@ String entity_GetEntityID(KernelInvokerParameter parameter)//integer entity.()
 
 String handle_ToString(KernelInvokerParameter parameter)//string handle.()
 {
-	String result = ToString(parameter.kernel->stringAgency, PARAMETER_VALUE(1, Handle, 0));
-	parameter.kernel->stringAgency->Reference(result.index);
-	string& returnValue = RETURN_VALUE(string, 0);
-	parameter.kernel->stringAgency->Release(returnValue);
-	returnValue = result.index;
+	Handle handle = PARAMETER_VALUE(1, Handle, 0);
+	string& result = RETURN_VALUE(string, 0);
+	parameter.kernel->stringAgency->Release(result);
+	if(handle)
+	{
+		Type type = parameter.kernel->heapAgency->GetType(handle);
+		if(type == TYPE_String) result = *(string*)parameter.kernel->heapAgency->GetPoint(handle);
+		else result = GetTypeName(parameter.kernel, type);
+		parameter.kernel->stringAgency->Reference(result);
+	}
+	else result = parameter.kernel->stringAgency->AddAndRef(KeyWord_null());
 	return String();
 }
 

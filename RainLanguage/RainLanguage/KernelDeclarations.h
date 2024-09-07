@@ -335,3 +335,4 @@ inline bool IsHandleType(const Type& type)
 
 const MemberFunction MEMBER_FUNCTION_Enum_ToString = MemberFunction(TYPE_Enum, 0);
 const MemberFunction MEMBER_FUNCTION_Handle_ToString = MemberFunction(TYPE_Handle, 1);
+const Function SYSTEM_GetName = Function(LIBRARY_KERNEL, 220);

@@ -1,6 +1,7 @@
 #include "ComplexStringExpression.h"
 #include "InvokerExpression.h"
 #include "TupleExpression.h"
+#include "ConstantExpression.h"
 
 void ComplexStringExpression::Generator(LogicGenerateParameter& parameter)
 {
@@ -39,15 +40,23 @@ void ComplexStringExpression::Generator(LogicGenerateParameter& parameter)
 		}
 		else if(parameter.manager->IsInherit(TYPE_Handle, elementType))
 		{
-			AbstractFunction* toStringFunction = parameter.manager->kernelLibaray->functions[parameter.manager->kernelLibaray->classes[TYPE_Handle.index]->functions[0]];
+			AbstractFunction* toStringFunction = parameter.manager->kernelLibaray->functions[parameter.manager->kernelLibaray->classes[TYPE_Handle.index]->functions[MEMBER_FUNCTION_Handle_ToString.function]];
 			element = new InvokerVirtualMemberExpression(element->anchor, toStringFunction->returns.GetTypes(), GetEmptyTupleExpression(element->anchor), element, toStringFunction->declaration, false);
 		}
 		else if(elementType != TYPE_String)
 		{
-			AbstractFunction* getTypeFunction = parameter.manager->kernelLibaray->functions[parameter.manager->kernelLibaray->classes[TYPE_Handle.index]->functions[2]];
-			element = new InvokerVirtualMemberExpression(element->anchor, getTypeFunction->returns.GetTypes(), GetEmptyTupleExpression(element->anchor), element, getTypeFunction->declaration, false);
-			AbstractFunction* getNameFunction = parameter.manager->kernelLibaray->functions[parameter.manager->kernelLibaray->structs[TYPE_Type.index]->functions[2]];
-			element = new InvokerMemberExpression(element->anchor, getNameFunction->returns.GetTypes(), GetEmptyTupleExpression(element->anchor), element, getNameFunction->declaration, false);
+			AbstractFunction* system_getNameFunction = parameter.manager->kernelLibaray->functions[SYSTEM_GetName.function];
+			List<Expression*, true> expressions(2);
+			expressions.Add(element);
+			expressions.Add(new ConstantTypeExpression(element->anchor, elementType));
+			List<Type, true> returns(2);
+			returns.Add(elementType);
+			returns.Add(TYPE_Type);
+			element = new TupleExpression(element->anchor, returns, expressions);
+			List<integer, true> elementIndices(1);
+			elementIndices.Add(1);
+			element = new TupleEvaluationExpression(element->anchor, expressions[1]->returns, element, elementIndices);
+			element = new InvokerFunctionExpression(element->anchor, system_getNameFunction->returns.GetTypes(), element, system_getNameFunction->declaration);
 		}
 		LogicGenerateParameter elementParameter = LogicGenerateParameter(parameter, 1);
 		element->Generator(elementParameter);

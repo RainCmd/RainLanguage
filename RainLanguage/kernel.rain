@@ -286,6 +286,7 @@
 		public Reflection.Assembly[] GetAssembles()
 		public integer GetCurrentTaskInstantID()
 		public string CreateString(char[], integer start, integer count)
+		public string GetName(type)
 
 	namespace Reflection
 		public enum TypeCode
