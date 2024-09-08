@@ -45,14 +45,14 @@ void ComplexStringExpression::Generator(LogicGenerateParameter& parameter)
 		}
 		else if(elementType != TYPE_String)
 		{
-			AbstractFunction* system_getNameFunction = parameter.manager->kernelLibaray->functions[SYSTEM_GetName.function];
+			AbstractFunction* system_getNameFunction = parameter.manager->kernelLibaray->functions[KERNEL_SPECIAL_FUNCTION_System_GetName];
 			List<Expression*, true> expressions(2);
 			expressions.Add(element);
 			expressions.Add(new ConstantTypeExpression(element->anchor, elementType));
-			List<Type, true> returns(2);
-			returns.Add(elementType);
-			returns.Add(TYPE_Type);
-			element = new TupleExpression(element->anchor, returns, expressions);
+			List<Type, true> tuple(2);
+			tuple.Add(elementType);
+			tuple.Add(TYPE_Type);
+			element = new TupleExpression(element->anchor, tuple, expressions);
 			List<integer, true> elementIndices(1);
 			elementIndices.Add(1);
 			element = new TupleEvaluationExpression(element->anchor, expressions[1]->returns, element, elementIndices);
