@@ -24,7 +24,7 @@ static bool CheckCmd(const char* left, const char* right)
 }
 Args Parse(int cnt, char** args)
 {
-	Args result = Args(L"雨言测试工程", L".\\", L"Main", 4, 0, false, false);
+	Args result = Args(L"雨言测试工程", L".\\", L"Main", 4, 0, false, false, L"");
 	for(size_t i = 0; i < cnt; i++)
 	{
 		char* arg = args[i];
@@ -60,6 +60,11 @@ Args Parse(int cnt, char** args)
 		}
 		else if(CheckCmd(arg, "debug")) result.debug = true;
 		else if(CheckCmd(arg, "silent")) result.silent = true;
+		else if(CheckCmd(arg, "out"))
+		{
+			if(++i >= cnt) break;
+			result.out = S2WS(args[i]);
+		}
 	}
 	return result;
 }

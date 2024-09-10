@@ -10,6 +10,7 @@ struct Args
 	int timestep;//ms
 	bool debug;
 	bool silent;
-	Args(const wstring& name, const wstring& path, const wstring& entry, int errorLevel, int timestep, bool debug, bool silent) : name(name), path(path), entry(entry), errorLevel(errorLevel), timestep(timestep), debug(debug), silent(silent) {}
+	wstring out;
+	Args(const wstring& name, const wstring& path, const wstring& entry, int errorLevel, int timestep, bool debug, bool silent, wstring out) : name(name), path(path), entry(entry), errorLevel(errorLevel), timestep(timestep), debug(debug), silent(silent), out(out) {}
 };
 Args Parse(int cnt, char** args);

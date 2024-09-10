@@ -10,6 +10,13 @@
 #include <vector>
 #include <thread>
 
+static void Save(RainBuffer<uint8>* buffer, wstring path)
+{
+	fstream file(path, ios::out | ios::trunc);
+	file.write((char*)buffer->Data(), buffer->Count());
+	file.close();
+}
+
 static bool EndWidth(wstring src, wstring suffix)
 {
 	if(src.size() < suffix.size()) return false;
@@ -28,13 +35,13 @@ class CodeLoadHelper : public CodeLoader
 	void LoadFiles(wstring dir)
 	{
 		_wfinddata_t data;
-		auto handle = _wfindfirst(wstring(dir).append(L"*").c_str(), &data);
+		auto handle = _wfindfirst((dir + L"*").c_str(), &data);
 		if(handle != -1)
 		{
 			do
 			{
 				if(EndWidth(data.name, L".") || EndWidth(data.name, L"..")) continue;
-				wstring path = wstring(dir).append(data.name);
+				wstring path = dir + data.name;
 				if(data.attrib & _A_SUBDIR)
 					LoadFiles(path.append(L"\\"));
 				else if(EndWidth(path, L".rain"))
@@ -78,7 +85,6 @@ public:
 		return RainString(content.c_str(), (uint32)content.length());
 	}
 };
-
 
 static void Print(RainKernel&, CallerWrapper& caller)
 {
@@ -170,6 +176,16 @@ int main(int cnt, char** _args)
 	}
 	else
 	{
+		if(args.out.size())
+		{
+			_wmkdir(args.out.c_str());
+			RainBuffer<uint8>* buffer = Serialize(*product->GetLibrary());
+			Save(buffer, args.out + L"\\" + name + L".rdll");
+			Delete(buffer); 
+			buffer = Serialize(*product->GetRainProgramDatabase());
+			Save(buffer, args.out + L"\\" + name + L".rpdb");
+			Delete(buffer);
+		}
 		if(args.debug)
 		{
 			wcout << L"<ready to connect debugger>";

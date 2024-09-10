@@ -7,11 +7,11 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>-path $(SolutionDir)\\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-path $(SolutionDir)RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug -out $(SolutionDir)RainLanguagePlugin\test\lib</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
-    <LocalDebuggerCommandArguments>-path $(SolutionDir)\\RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-path E:\Proj-path $(SolutionDir)RainLanguagePlugin\\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug -out $(SolutionDir)RainLanguagePlugin\test\lib</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
