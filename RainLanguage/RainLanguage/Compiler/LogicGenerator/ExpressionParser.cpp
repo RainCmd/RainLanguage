@@ -3253,6 +3253,17 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					}
 					else goto label_error_unexpected_lexcal;
 				}
+				else if(lexical.anchor.content == DiscardVariable())
+				{
+					if(ContainAny(attribute, Attribute::None))
+					{
+						index = lexical.anchor.GetEnd();
+						expressionStack.Add(new BlurryVariableDeclarationExpression(lexical.anchor));
+						attribute = Attribute::Assignable;
+						goto label_next_lexical;
+					}
+					goto label_error_unexpected_lexcal;
+				}
 				else
 				{
 					Type type = MatchBaseType(lexical.anchor.content);
