@@ -28,6 +28,7 @@ Context::Context(const String& source, CompilingDeclaration declaration, Compili
 
 #define CHECK_VISIBILITY \
 	if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;\
+	else if(ContainAny(target.visibility, Visibility::Protected)) return manager->compilingLibrary.GetName(target).source == source;\
 	else if(manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract))\
 		return ContainAny(target.visibility, Visibility::Space) || manager->compilingLibrary.GetName(target).source == source;\
 	return false;
