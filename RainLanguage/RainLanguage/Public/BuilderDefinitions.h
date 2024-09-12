@@ -99,6 +99,7 @@ enum class MessageType :uint32
 	ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,				//不能在catch和finally中使用return语句
 	ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,					//不支持用本地函数创建任务
 	ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
+	ERROR_ACCESSIBILITY_IS_INCONSISTENT,						//可访问性不一致
 
 	WARRING_LEVEL1 = ((uint32)ErrorLevel::WarringLevel1) << 24,
 	WARRING_LEVEL1_REPEATED_VISIBILITY,		//重复的可访问性修饰

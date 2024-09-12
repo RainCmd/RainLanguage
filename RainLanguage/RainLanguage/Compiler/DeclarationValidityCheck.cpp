@@ -173,6 +173,62 @@ bool CheckOverride(DeclarationManager* manager, const Type& type, CompilingFunct
 	return CheckOverride(manager, manager->GetParent(type), member);
 }
 
+void CheckVisiable(DeclarationManager* manager, Visibility visibility, const Anchor& name, const Type& type)
+{
+	if(ContainAll(visibility, Visibility::Private)) return;
+	if(type.library != LIBRARY_SELF) return;
+	AbstractDeclaration* declaration = manager->GetDeclaration(type);
+	switch(visibility)
+	{
+		case Visibility::Public:
+			switch(declaration->declaration.visibility)
+			{
+				case Visibility::Public: return;
+				case Visibility::Internal:
+				case Visibility::Space:
+				case Visibility::Protected:
+				case Visibility::Private: break;
+			}
+			break;
+		case Visibility::Internal:
+			switch(declaration->declaration.visibility)
+			{
+				case Visibility::Public:
+				case Visibility::Internal: return;
+				case Visibility::Space:
+				case Visibility::Protected:
+				case Visibility::Private: break;
+			}
+			break;
+		case Visibility::Space:
+			switch(declaration->declaration.visibility)
+			{
+				case Visibility::Public:
+				case Visibility::Internal:
+				case Visibility::Space: return;
+				case Visibility::Protected:
+				case Visibility::Private: break;
+			}
+			break;
+		case Visibility::Protected:
+			switch(declaration->declaration.visibility)
+			{
+				case Visibility::Public:
+				case Visibility::Internal: return;
+				case Visibility::Space: break;
+				case Visibility::Protected: return;
+				case Visibility::Private: break;
+			}
+			break;
+	}
+	MESSAGE3(manager->messages, name, MessageType::ERROR_ACCESSIBILITY_IS_INCONSISTENT, declaration->GetFullName(manager->stringAgency));
+}
+
+Visibility GetMoreStringent(Visibility a, Visibility b)
+{
+	return a > b ? a : b;
+}
+
 void DeclarationValidityCheck(DeclarationManager* manager)
 {
 	CompilingLibrary* library = &manager->compilingLibrary;
@@ -182,6 +238,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 	{
 		CompilingVariable* compiling = library->variables[x];
 		if(IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->type);
 	}
 	for(uint32 x = 0; x < library->functions.Count(); x++)
 	{
@@ -189,7 +246,13 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		if(IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD)
 		else for(uint32 y = 0; y < compiling->parameters.Count(); y++)
 			if(IsKeyWord(compiling->parameters[y].name.content))
-				MESSAGE2(manager->messages, compiling->parameters[y].name, MessageType::ERROR_NAME_IS_KEY_WORD)
+				MESSAGE2(manager->messages, compiling->parameters[y].name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		for(uint32 y = 0; y < compiling->parameters.Count(); y++)
+			if(compiling->declaration.category == DeclarationCategory::Function || y > 0)
+				CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->parameters[y].type);
+		if(compiling->declaration.category != DeclarationCategory::Constructor)
+			for(uint32 y = 0; y < compiling->returns.Count(); y++)
+				CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->returns[y]);
 	}
 	for(uint32 x = 0; x < library->enums.Count(); x++)
 	{
@@ -234,6 +297,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 					}
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_DUPLICATION_NAME);
 			}
+			CheckVisiable(manager, compiling->declaration.visibility, member->name, member->type);
 		}
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->functions.Count(); y++)
@@ -255,6 +319,11 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				}
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERLOAD);
 			}
+			Visibility visibility = GetMoreStringent(compiling->declaration.visibility, member->declaration.visibility);
+			for(uint32 z = 0; z < member->parameters.Count(); z++)
+				CheckVisiable(manager, visibility, member->name, member->parameters[z].type);
+			for(uint32 z = 0; z < member->returns.Count(); z++)
+				CheckVisiable(manager, visibility, member->name, member->returns[z]);
 		}
 	}
 	for(uint32 x = 0; x < library->classes.Count(); x++)
@@ -275,6 +344,9 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				circularInheritance = true;
 				break;
 			}
+		CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->parent);
+		for(uint32 y = 0; y < compiling->inherits.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->inherits[y]);
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->constructors.Count(); y++)
 		{
@@ -293,6 +365,9 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				}
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERLOAD);
 			}
+			Visibility visibility = GetMoreStringent(compiling->declaration.visibility, member->declaration.visibility);
+			for(uint32 z = 0; z < member->parameters.Count(); z++)
+				CheckVisiable(manager, visibility, member->name, member->parameters[z].type);
 		}
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->variables.Count(); y++)
@@ -317,6 +392,7 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 					}
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_DUPLICATION_NAME);
 			}
+			CheckVisiable(manager, GetMoreStringent(compiling->declaration.visibility, member->declaration.visibility), member->name, member->type);
 		}
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->functions.Count(); y++)
@@ -338,6 +414,11 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				}
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_INVALID_OVERLOAD);
 			}
+			Visibility visibility = GetMoreStringent(compiling->declaration.visibility, member->declaration.visibility);
+			for(uint32 z = 0; z < member->parameters.Count(); z++)
+				CheckVisiable(manager, visibility, member->name, member->parameters[z].type);
+			for(uint32 z = 0; z < member->returns.Count(); z++)
+				CheckVisiable(manager, visibility, member->name, member->returns[z]);
 		}
 		typeSet.Clear();
 	}
@@ -346,6 +427,8 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		CompilingInterface* compiling = library->interfaces[x];
 		if(HasCircularInheritance(manager, compiling->declaration.DefineType(), compiling->inherits, typeSet))
 			MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_CIRCULAR_INHERITANCE);
+		for(uint32 y = 0; y < compiling->inherits.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->inherits[y]);
 		declarationSet.Clear();
 		for(uint32 y = 0; y < compiling->functions.Count(); y++)
 		{
@@ -365,17 +448,35 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 				}
 				if(duplication) MESSAGE2(manager->messages, member->name, MessageType::ERROR_DUPLICATE_DECLARATION);
 			}
+			Visibility visibility = GetMoreStringent(compiling->declaration.visibility, member->declaration.visibility);
+			for(uint32 z = 0; z < member->parameters.Count(); z++)
+			{
+				if(IsKeyWord(member->parameters[z].name.content))
+					MESSAGE2(manager->messages, member->parameters[z].name, MessageType::ERROR_NAME_IS_KEY_WORD);
+				CheckVisiable(manager, visibility, member->name, member->parameters[z].type);
+			}
+			for(uint32 z = 0; z < member->returns.Count(); z++)
+				CheckVisiable(manager, visibility, member->name, member->returns[z]);
 		}
 	}
 	for(uint32 x = 0; x < library->delegates.Count(); x++)
 	{
 		CompilingDelegate* compiling = library->delegates[x];
-		if(IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		if(IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD)
+		else for(uint32 y = 0; y < compiling->parameters.Count(); y++)
+			if(IsKeyWord(compiling->parameters[y].name.content))
+				MESSAGE2(manager->messages, compiling->parameters[y].name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		for(uint32 y = 0; y < compiling->parameters.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->parameters[y].type);
+		for(uint32 y = 0; y < compiling->returns.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->returns[y]);
 	}
 	for(uint32 x = 0; x < library->tasks.Count(); x++)
 	{
 		CompilingTask* compiling = library->tasks[x];
 		if(IsKeyWord(compiling->name.content))MESSAGE2(manager->messages, compiling->name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		for(uint32 y = 0; y < compiling->returns.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->returns[y]);
 	}
 	for(uint32 x = 0; x < library->natives.Count(); x++)
 	{
@@ -384,6 +485,10 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		else for(uint32 y = 0; y < compiling->parameters.Count(); y++)
 			if(IsKeyWord(compiling->parameters[y].name.content))
 				MESSAGE2(manager->messages, compiling->parameters[y].name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		for(uint32 y = 0; y < compiling->parameters.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->parameters[y].type);
+		for(uint32 y = 0; y < compiling->returns.Count(); y++)
+			CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->returns[y]);
 	}
 }
 
