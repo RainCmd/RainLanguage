@@ -1,4 +1,5 @@
 ﻿namespace kernel
+	public const type InvalidType
 	public enum TaskState
 		Unstart
 		Running
@@ -252,29 +253,29 @@
 
 	namespace System
 		namespace Exceptions
-			public string NullReference
-			public string InvalidTask
-			public string OutOfRange
-			public string InvalidType
-			public string NotEnum
-			public string NotArray
-			public string NotDelegate
-			public string NotTask
-			public string NotDelegateOrTask
-			public string CantCreateOfThisType
-			public string TaskNotUnstart
-			public string TaskNotRunning
-			public string TaskNotCompleted
-			public string DivideByZero
-			public string InvalidCast
-			public string StackOverflow
-			public string AssignmentReadonlyVariable
-			public string ParameterListDoesNotMatch
-			public string ReturnListDoesNotMatch
-			public string IgnoreWaitButConditionNotValid
-			public string IgnoreWaitButTaskNotCompleted
-			public string AllocHeapMemoryOnGC
-			public string HeapOverflow
+			public const string NullReference
+			public const string InvalidTask
+			public const string OutOfRange
+			public const string InvalidType
+			public const string NotEnum
+			public const string NotArray
+			public const string NotDelegate
+			public const string NotTask
+			public const string NotDelegateOrTask
+			public const string CantCreateOfThisType
+			public const string TaskNotUnstart
+			public const string TaskNotRunning
+			public const string TaskNotCompleted
+			public const string DivideByZero
+			public const string InvalidCast
+			public const string StackOverflow
+			public const string AssignmentReadonlyVariable
+			public const string ParameterListDoesNotMatch
+			public const string ReturnListDoesNotMatch
+			public const string IgnoreWaitButConditionNotValid
+			public const string IgnoreWaitButTaskNotCompleted
+			public const string AllocHeapMemoryOnGC
+			public const string HeapOverflow
 
 		public integer Collect(bool)
 		public integer HeapTotalMemory()

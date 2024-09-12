@@ -143,5 +143,12 @@ private:
 		data.Add((uint8*)&value, 8);
 		return result;
 	}
+	inline uint32 AddData(Type value)
+	{
+		uint32 result = MemoryAlignment(data.Count(), MEMORY_ALIGNMENT_4);
+		data.SetCount(result);
+		data.Add((uint8*)&value, SIZE(Type));
+		return result;
+	}
 	uint32 AddData(const character* value);
 };

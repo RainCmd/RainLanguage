@@ -189,6 +189,9 @@ inline void CalculateTupleInfo(KernelLibraryInfo& kernel)
 KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enums(KERNEL_TYPE_ENUM_COUNT), structs(KERNEL_TYPE_STRUCT_COUNT), classes(KERNEL_TYPE_CLASS_COUNT), interfaces(0), delegates(0), tasks(0), functions(0), dataStrings(0), stringAgency(1024)
 {
 	root = new KernelLibraryInfo::Space(KERNEL_STRING("kernel"));
+
+	REGISTER_VARIABLE(true, root, "InvalidType", TYPE_Type, Type(NULL, TypeCode::Invalid, NULL, NULL));
+
 	//Operation
 	{
 		REGISTER_SPECIAL_FUNCTIONS(true, root, "<", KERNEL_SPECIAL_FUNCTION_Less_integer_integer, CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Integer, TYPE_Integer), Operation_Less_integer_integer);
