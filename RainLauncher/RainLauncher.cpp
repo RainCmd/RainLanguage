@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include <thread>
+#include <codecvt>
 
 static void Save(RainBuffer<uint8>* buffer, wstring path)
 {
@@ -74,14 +75,43 @@ public:
 	}
 	const RainString CurrentContent()
 	{
-		wfstream file(path);
 		content.clear();
-		wstring line;
-		while(getline(file, line))
+		ifstream file(path, ios::binary);
+		if(file.is_open())
 		{
-			content.append(line);
-			content.append(L"\n");
+			string buffer = string(istreambuf_iterator<char>(file), istreambuf_iterator<char>());
+			file.close();
+
+			if(buffer.substr(0, 3) == "\xEF\xBB\xBF")//utf-8-sig
+			{
+				buffer.erase(0, 3);
+				wstring_convert<codecvt_utf8<wchar_t>> converter;
+				content = converter.from_bytes(buffer);
+			}
+			else if(buffer.substr(0, 2) == "\xFF\xFE")//utf-16-le
+			{
+				buffer.erase(0, 2);
+				for(size_t i = 0, size = buffer.size() / 2; i < size; i++)
+				{
+					uint16& value = *(uint16*)&buffer[i << 1];
+					value = (value << 8) | (value >> 8);
+				}
+				wstring_convert<codecvt_utf16<wchar_t>> converter;
+				content = converter.from_bytes(buffer);
+			}
+			else if(buffer.substr(0, 2) == "\xFE\xFF")//utf-16-be
+			{
+				buffer.erase(0, 2);
+				wstring_convert<codecvt_utf16<wchar_t>> converter;
+				content = converter.from_bytes(buffer);
+			}
+			else//默认当做utf8处理
+			{
+				wstring_convert<codecvt_utf8<wchar_t>> converter;
+				content = converter.from_bytes(buffer);
+			}
 		}
+		else wcout << "文件打开失败：" << path << endl;
 		return RainString(content.c_str(), (uint32)content.length());
 	}
 };
@@ -181,7 +211,7 @@ int main(int cnt, char** _args)
 			_wmkdir(args.out.c_str());
 			RainBuffer<uint8>* buffer = Serialize(*product->GetLibrary());
 			Save(buffer, args.out + L"\\" + name + L".rdll");
-			Delete(buffer); 
+			Delete(buffer);
 			buffer = Serialize(*product->GetRainProgramDatabase());
 			Save(buffer, args.out + L"\\" + name + L".rpdb");
 			Delete(buffer);
