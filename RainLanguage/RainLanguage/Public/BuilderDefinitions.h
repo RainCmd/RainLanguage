@@ -7,10 +7,10 @@
 enum class  ErrorLevel :uint32
 {
 	Error,
-	WarringLevel1,
-	WarringLevel2,
-	WarringLevel3,
-	WarringLevel4,
+	WarningLevel1,
+	WarningLevel2,
+	WarningLevel3,
+	WarningLevel4,
 	LoggerLevel1,
 	LoggerLevel2,
 	LoggerLevel3,
@@ -101,17 +101,17 @@ enum class MessageType :uint32
 	ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
 	ERROR_ACCESSIBILITY_IS_INCONSISTENT,						//可访问性不一致
 
-	WARRING_LEVEL1 = ((uint32)ErrorLevel::WarringLevel1) << 24,
-	WARRING_LEVEL1_REPEATED_VISIBILITY,		//重复的可访问性修饰
-	WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,	//析构函数属性将被丢弃
-	WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,	//析构函数的可访问性修饰会被忽略
-	WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
+	WARNING_LEVEL1 = ((uint32)ErrorLevel::WarningLevel1) << 24,
+	WARNING_LEVEL1_REPEATED_VISIBILITY,		//重复的可访问性修饰
+	WARNING_LEVEL1_DESTRUCTOR_ATTRIBUTES,	//析构函数属性将被丢弃
+	WARNING_LEVEL1_DESTRUCTOR_VISIBILITY,	//析构函数的可访问性修饰会被忽略
+	WARNING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
 
-	WARRING_LEVEL2 = ((uint32)ErrorLevel::WarringLevel2) << 24,
+	WARNING_LEVEL2 = ((uint32)ErrorLevel::WarningLevel2) << 24,
 
-	WARRING_LEVEL3 = ((uint32)ErrorLevel::WarringLevel3) << 24,
+	WARNING_LEVEL3 = ((uint32)ErrorLevel::WarningLevel3) << 24,
 
-	WARRING_LEVEL4 = ((uint32)ErrorLevel::WarringLevel4) << 24,
+	WARNING_LEVEL4 = ((uint32)ErrorLevel::WarningLevel4) << 24,
 
 	LOGGER_LEVEL1 = ((uint32)ErrorLevel::LoggerLevel1) << 24,
 	LOGGER_LEVEL1_DISCARD_ATTRIBUTE,		//被丢弃的属性

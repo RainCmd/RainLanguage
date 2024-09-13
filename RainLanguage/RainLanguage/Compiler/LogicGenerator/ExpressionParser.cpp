@@ -3331,7 +3331,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	}
 	else if(expressionStack.Count()) result = expressionStack.Pop();
 	else result = GetEmptyTupleExpression(anchor);
-	if(ContainAny(result->attribute, Attribute::Type)) MESSAGE2(manager->messages, result->anchor, MessageType::WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION);
+	if(ContainAny(result->attribute, Attribute::Type)) MESSAGE2(manager->messages, result->anchor, MessageType::WARNING_LEVEL1_SINGLE_TYPE_EXPRESSION);
 	return true;
 
 label_parse_fail:

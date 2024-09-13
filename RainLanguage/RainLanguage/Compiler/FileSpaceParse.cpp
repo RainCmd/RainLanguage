@@ -103,7 +103,7 @@ Visibility ParseVisibility(const Line& line, uint32& index, MessageCollector* me
 		if(visibility == Visibility::None) break;
 		else
 		{
-			if(visibility == result) MESSAGE2(messages, lexical.anchor, MessageType::WARRING_LEVEL1_REPEATED_VISIBILITY)
+			if(visibility == result) MESSAGE2(messages, lexical.anchor, MessageType::WARNING_LEVEL1_REPEATED_VISIBILITY)
 			else if(result == Visibility::None) result = visibility;
 			else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_INVALID_VISIBILITY);
 			index = lexical.anchor.GetEnd();
@@ -576,10 +576,10 @@ bool FileSpace::ParseClass(const Line& line, uint32 index, Visibility visibility
 			{
 				if(attributeCollector.Count())
 				{
-					MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES);
+					MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARNING_LEVEL1_DESTRUCTOR_ATTRIBUTES);
 					DISCARD_ATTRIBUTE;
 				}
-				if(visibility != Visibility::None) MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARRING_LEVEL1_DESTRUCTOR_VISIBILITY);
+				if(visibility != Visibility::None) MESSAGE2(parameter->messages, lexical.anchor, MessageType::WARNING_LEVEL1_DESTRUCTOR_VISIBILITY);
 				if(fileClass->destructor.Count()) MESSAGE2(parameter->messages, lexical.anchor, MessageType::ERROR_DUPLICATE_DECLARATION);
 				ParseBlock(current.indent, fileClass->destructor, parameter);
 				goto label_parse;

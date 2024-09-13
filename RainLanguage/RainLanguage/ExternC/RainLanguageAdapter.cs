@@ -19,19 +19,19 @@ namespace RainLanguage
         /// <summary>
         /// 编译警告 1
         /// </summary>
-        WarringLevel1,
+        WarningLevel1,
         /// <summary>
         /// 编译警告 2
         /// </summary>
-        WarringLevel2,
+        WarningLevel2,
         /// <summary>
         /// 编译警告 3
         /// </summary>
-        WarringLevel3,
+        WarningLevel3,
         /// <summary>
         /// 编译警告 4
         /// </summary>
-        WarringLevel4,
+        WarningLevel4,
         /// <summary>
         /// 编译日志 1
         /// </summary>
@@ -132,17 +132,17 @@ namespace RainLanguage
         ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,                   //不支持用本地函数创建任务
         ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
 
-        WARRING_LEVEL1 = RainErrorLevel.WarringLevel1 << 24,
-        WARRING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
-        WARRING_LEVEL1_DESTRUCTOR_ATTRIBUTES,   //析构函数属性将被丢弃
-        WARRING_LEVEL1_DESTRUCTOR_VISIBILITY,   //析构函数的可访问性修饰会被忽略
-        WARRING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
+        WARNING_LEVEL1 = RainErrorLevel.WarningLevel1 << 24,
+        WARNING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
+        WARNING_LEVEL1_DESTRUCTOR_ATTRIBUTES,   //析构函数属性将被丢弃
+        WARNING_LEVEL1_DESTRUCTOR_VISIBILITY,   //析构函数的可访问性修饰会被忽略
+        WARNING_LEVEL1_SINGLE_TYPE_EXPRESSION,	//单独的类型表达式
 
-        WARRING_LEVEL2 = RainErrorLevel.WarringLevel2 << 24,
+        WARNING_LEVEL2 = RainErrorLevel.WarningLevel2 << 24,
 
-        WARRING_LEVEL3 = RainErrorLevel.WarringLevel3 << 24,
+        WARNING_LEVEL3 = RainErrorLevel.WarningLevel3 << 24,
 
-        WARRING_LEVEL4 = RainErrorLevel.WarringLevel4 << 24,
+        WARNING_LEVEL4 = RainErrorLevel.WarningLevel4 << 24,
 
         LOGGER_LEVEL1 = RainErrorLevel.LoggerLevel1 << 24,
         LOGGER_LEVEL1_DISCARD_ATTRIBUTE,        //被丢弃的属性
