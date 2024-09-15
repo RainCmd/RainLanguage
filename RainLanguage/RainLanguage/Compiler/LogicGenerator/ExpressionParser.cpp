@@ -2420,7 +2420,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 			case LexicalType::ShiftRight:
 				PUSH_TOKEN(TokenType::ShiftRight, Attribute::Operator);
 				break;
-			case LexicalType::ShiftRightAssignment:goto label_error_unexpected_lexcal;
+			case LexicalType::ShiftRightAssignment: goto label_error_unexpected_lexcal;
 			case LexicalType::Plus:
 				if(ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
@@ -2429,7 +2429,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				else PUSH_TOKEN(TokenType::Plus, Attribute::Operator);
 				break;
 			case LexicalType::Increment:
-				if(ContainAll(attribute, Attribute::Assignable | Attribute::Value))
+				if(ContainAll(attribute, Attribute::Value))
 				{
 					Expression* operatorExpression = CreateIncrementRightOperator(lexical.anchor, this, expressionStack.Pop());
 					if(operatorExpression)
@@ -2450,7 +2450,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 				else PUSH_TOKEN(TokenType::Minus, Attribute::Operator);
 				break;
 			case LexicalType::Decrement:
-				if(ContainAll(attribute, Attribute::Assignable | Attribute::Value))
+				if(ContainAll(attribute, Attribute::Value))
 				{
 					Expression* operatorExpression = CreateDecrementRightOperator(lexical.anchor, this, expressionStack.Pop());
 					if(operatorExpression)
