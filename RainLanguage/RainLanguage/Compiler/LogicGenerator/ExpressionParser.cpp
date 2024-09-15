@@ -267,6 +267,7 @@ bool ExpressionParser::TryGetThisValueExpression(const Anchor& anchor, Expressio
 		{
 			expression = new VariableLocalExpression(anchor, CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, 0, NULL), Attribute::Value, Type(LIBRARY_SELF, TypeCode::Handle, declaration.definition, 0));
 			expression = new VariableMemberExpression(anchor, declaration, Attribute::Value, expression, GetVariableType(declaration));
+			return true;
 		}
 		EXCEPTION("类型错误");
 	}
