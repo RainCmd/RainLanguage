@@ -47,9 +47,10 @@ class LambdaClosureDelegateCreateExpression :public Expression
 {
 public:
 	CompilingDeclaration closure;
-	List<CompilingDeclaration, true> sourceVariables;
-	inline LambdaClosureDelegateCreateExpression(const Anchor& anchor, const Type& delegateType, const CompilingDeclaration& closure, const List<CompilingDeclaration, true>& sourceVariables)
-		:Expression(ExpressionType::VirtualFunctionDelegateCreateExpression, anchor, List<Type, true>(1)), closure(closure), sourceVariables(sourceVariables)
+	Type closureType;
+	uint32 functionIndex;
+	inline LambdaClosureDelegateCreateExpression(const Anchor& anchor, const Type& delegateType, const CompilingDeclaration& closure, const Type& closureType, uint32 functionIndex)
+		:Expression(ExpressionType::VirtualFunctionDelegateCreateExpression, anchor, List<Type, true>(1)), closure(closure), closureType(closureType), functionIndex(functionIndex)
 	{
 		returns.Add(delegateType);
 		attribute = Attribute::Value | Attribute::Callable;

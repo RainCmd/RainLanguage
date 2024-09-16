@@ -19,6 +19,7 @@ enum class StatementType :uint32
 	Return = 0x1u << 11,
 	Wait = 0x1u << 12,
 	Exit = 0x1u << 13,
+	InitClosure = 0x1u << 14,
 };
 ENUM_FLAG_OPERATOR(StatementType)
 

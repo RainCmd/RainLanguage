@@ -124,21 +124,13 @@ LogicVariable GetVariable(LogicGenerateParameter& parameter, const CompilingDecl
 
 void LambdaClosureDelegateCreateExpression::Generator(LogicGenerateParameter& parameter)
 {
-	LogicVariable closureVariable = parameter.variableGenerator->DecareTemporary(parameter.manager, Type(LIBRARY_SELF, TypeCode::Handle, closure.index, 0));
-	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
-	parameter.generator->WriteCode(closureVariable, VariableAccessType::Write);
-	parameter.generator->WriteCodeGlobalReference(Declaration(LIBRARY_SELF, TypeCode::Handle, closure.index));
-	parameter.generator->WriteCode(parameter.finallyAddress);
-
-	AbstractClass* abstractClass = parameter.manager->selfLibaray->classes[closure.index];
-	for (uint32 i = 0; i < abstractClass->variables.Count(); i++)
-		LogicVariabelAssignment(parameter.manager, parameter.generator, closureVariable, abstractClass->variables[i]->declaration, 0, GetVariable(parameter, sourceVariables[i], abstractClass->variables[i]->type), parameter.finallyAddress);
 	parameter.generator->WriteCode(Instruct::BASE_CreateDelegate);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)returns[0]);
 	parameter.generator->WriteCode((uint8)FunctionType::Reality);
+	LogicVariable closureVariable = parameter.variableGenerator->GetLocal(parameter.manager, closure.index, closureType);
 	parameter.generator->WriteCode(closureVariable, VariableAccessType::Read);
-	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassFunction, 0, closure.index);
+	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassFunction, functionIndex, closure.index);
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);

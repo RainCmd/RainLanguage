@@ -19,6 +19,7 @@
 #include "Statements/ReturnStatement.h"
 #include "Statements/WaitStatement.h"
 #include "Statements/ExitStatement.h"
+#include "Statements/InitClosureStatement.h"
 #include "Expression.h"
 #include "Expressions/VariableExpression.h"
 #include "Expressions/TupleExpression.h"
@@ -824,6 +825,11 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	uint32 entryPoint = parameter.generator->GetPointer();
 	uint32 localPoint = variableGenerator.GetHoldMemory();
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
+	if(parameter.localContext->GetClosure())
+	{
+		//todo 初始化闭包对象
+		statements->statements.Add(new InitClosureStatement());
+	}
 	statements->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator, parameter.localContext->GetLocalAnchors()), MEMORY_ALIGNMENT_MAX));

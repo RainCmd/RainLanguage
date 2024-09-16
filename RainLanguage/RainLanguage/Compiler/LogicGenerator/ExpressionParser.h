@@ -6,7 +6,6 @@
 #include "LogicGenerateParameter.h"
 
 class Expression;
-class LambdaClosure;
 class LocalContext;
 //类型推导（只推导模糊类型TYPE_Blurry、TYPE_Null）推导失败会打印报错信息
 bool HasBlurryResult(Expression* expression);
@@ -16,9 +15,10 @@ struct ExpressionParser
 	DeclarationManager* manager;
 	Context context;
 	LocalContext* localContext;
-	LambdaClosure* closure;
+	ExpressionParser* environment;
+	bool closured;
 	bool destructor;
-	inline ExpressionParser(const LogicGenerateParameter& evaluationParameter, const Context context, LocalContext* localContext, LambdaClosure* closure, bool destructor) :evaluationParameter(evaluationParameter), manager(evaluationParameter.manager), context(context), localContext(localContext), closure(closure), destructor(destructor) {}
+	inline ExpressionParser(const LogicGenerateParameter& evaluationParameter, const Context context, LocalContext* localContext, ExpressionParser* environment, bool destructor) :evaluationParameter(evaluationParameter), manager(evaluationParameter.manager), context(context), localContext(localContext), environment(environment), closured(false), destructor(destructor) {}
 	Attribute GetVariableAttribute(const CompilingDeclaration& declaration);
 	Type GetVariableType(const CompilingDeclaration& declaration);
 	bool TryGetThisValueDeclaration(CompilingDeclaration& declaration);

@@ -168,7 +168,7 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.h">
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\_LambdaClosure.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.h">
@@ -351,6 +351,9 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RainLanguage\KernelFunctions.cpp">
@@ -482,7 +485,7 @@
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.cpp">
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\_LambdaClosure.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.cpp">
@@ -630,6 +633,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

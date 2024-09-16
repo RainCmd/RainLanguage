@@ -1,4 +1,4 @@
-﻿#include "LambdaClosure.h"
+﻿#include "_LambdaClosure.h"
 #include "ExpressionParser.h"
 
 CompilingClass* LambdaClosure::GetClosure()
