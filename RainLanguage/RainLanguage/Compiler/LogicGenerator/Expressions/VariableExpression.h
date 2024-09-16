@@ -50,7 +50,7 @@ public:
 	inline VariableMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, Expression* target, const Type& type) :VariableExpression(ExpressionType::VariableMemberExpression, anchor, type), logicVariable(), targetVariable(), target(target), declaration(declaration)
 	{
 		this->attribute = CombineType(attribute, type);
-		if(declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))
+		if(declaration.category != DeclarationCategory::ClassVariable && declaration.category != DeclarationCategory::LambdaClosureValue && !ContainAny(target->attribute, Attribute::Assignable))
 			this->attribute &= ~Attribute::Assignable;
 	}
 	bool IsReferenceMember();

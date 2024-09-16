@@ -42,7 +42,7 @@ void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& paramet
 {
 	uint32 closureMemberIndex;
 	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
-		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.results[index], GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.finallyAddress);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(index, returns[0]), GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.finallyAddress);
 	else
 	{
 		parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);

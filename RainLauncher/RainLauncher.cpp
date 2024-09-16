@@ -173,7 +173,7 @@ static RainProgramDatabase* ProgramDatabaseLoader(const RainString& name)
 }
 int main(int cnt, char** _args)
 {
-	wcout.imbue(locale("zh_CN.UTF-8"));
+	wcout.imbue(locale("zh_CN"));
 	Args args = Parse(cnt, _args);
 
 	name = args.name;
