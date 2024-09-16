@@ -30,7 +30,7 @@ public:
 	ClosureVariable(DeclarationManager* manager, Context& context, uint32 index);
 	inline uint32 LocalIndex() const { return index; }
 	inline CompilingClass* Closure() const { return closure; }
-	inline bool IsClosureVariable(uint32 localIndex) const { return variables.Contains(localIndex); }
+	inline const Dictionary<uint32, uint32, true>& GetVariables() const { return variables; }
 	CompilingDeclaration GetClosureDeclaration(const Local& local);
 };
 class MessageCollector;
@@ -58,7 +58,7 @@ public:
 	inline const Dictionary<uint32, Anchor>* GetLocalAnchors() const { return &localAnchors; }
 
 	inline const ClosureVariable* GetClosure() const { return closure; }
-	inline bool IsClosureVariable(uint32 localIndex) const { return closure && closure->IsClosureVariable(localIndex); }
+	inline bool TryGetClosureMemberIndex(uint32 localIndex, uint32& closureMemberIndex) const { return closure && closure->GetVariables().TryGet(localIndex, closureMemberIndex); }
 	CompilingDeclaration MakeClosure(DeclarationManager* manager, Context& context, uint32 localIndex);
 
 	void Reset();

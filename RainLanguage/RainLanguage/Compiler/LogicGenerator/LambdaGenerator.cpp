@@ -10,6 +10,7 @@
 
 void LambdaGenerator::Generator(GeneratorParameter& parameter)
 {
+	parameter.localContext = localContext;
 	uint32 parameterPoint = SIZE(Frame) + returnSize;
 	VariableGenerator variableGenerator = VariableGenerator(parameterPoint);
 	if(closure)
@@ -41,6 +42,7 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	}
 	parameter.generator->WriteCode(Instruct::FUNCTION_Return);
 	parameter.generator->CodeMemoryAlignment(MEMORY_ALIGNMENT_MAX);
+	parameter.localContext = NULL;
 }
 
 LambdaGenerator::~LambdaGenerator()

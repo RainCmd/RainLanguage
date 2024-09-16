@@ -1,16 +1,36 @@
 ﻿#include "VariableExpression.h"
 #include "../VariableGenerator.h"
+#include "../LocalContext.h"
 #include "ArrayExpression.h"
+
+LogicVariable VariableLocalExpression::GetClosure(LogicGenerateParameter& parameter)
+{
+	return parameter.variableGenerator->GetLocal(parameter.manager, parameter.localContext->GetClosure()->LocalIndex(), parameter.localContext->GetClosure()->Closure()->declaration.DefineType());
+}
+
+CompilingDeclaration VariableLocalExpression::GetClosureMember(LogicGenerateParameter& parameter, uint32 closureMemberIndex)
+{
+	return CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, closureMemberIndex, parameter.localContext->GetClosure()->Closure()->declaration.index);
+}
 
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
-	parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
-	parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[0].address, parameter.generator->globalReference);
+	uint32 closureMemberIndex;
+	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.finallyAddress);
+	else
+	{
+		parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[0].address, parameter.generator->globalReference);
+	}
 }
 
 void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	if (parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
+	uint32 closureMemberIndex;
+	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
+		LogicVariabelAssignment(parameter.manager, parameter.generator, GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.results[0], parameter.finallyAddress);
+	else if(parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
 	{
 		LogicVariable local = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
 		LogicVariabelAssignment(parameter.manager, parameter.generator, local, parameter.results[0]);
@@ -20,8 +40,14 @@ void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parame
 
 void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
-	parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
-	parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[index].address, parameter.generator->globalReference);
+	uint32 closureMemberIndex;
+	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.results[index], GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.finallyAddress);
+	else
+	{
+		parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[index].address, parameter.generator->globalReference);
+	}
 }
 
 void VariableGlobalExpression::Generator(LogicGenerateParameter& parameter)
@@ -32,7 +58,7 @@ void VariableGlobalExpression::Generator(LogicGenerateParameter& parameter)
 
 void VariableGlobalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	if (parameter.results[0] != LogicVariable(declaration, returns[0], 0))
+	if(parameter.results[0] != LogicVariable(declaration, returns[0], 0))
 	{
 		LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(declaration, returns[0], 0), parameter.results[0]);
 		parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
@@ -47,10 +73,10 @@ void VariableGlobalExpression::FillResultVariable(LogicGenerateParameter& parame
 
 bool VariableGlobalExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
 			value = *(bool*)parameter.generator->GetConstantPointer(abstractVariable->address);
 			return true;
@@ -61,10 +87,10 @@ bool VariableGlobalExpression::TryEvaluation(bool& value, LogicGenerateParameter
 
 bool VariableGlobalExpression::TryEvaluation(uint8& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
 			value = *parameter.generator->GetConstantPointer(abstractVariable->address);
 			return true;
@@ -75,10 +101,10 @@ bool VariableGlobalExpression::TryEvaluation(uint8& value, LogicGenerateParamete
 
 bool VariableGlobalExpression::TryEvaluation(character& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
 			value = *(character*)parameter.generator->GetConstantPointer(abstractVariable->address);
 			return true;
@@ -89,10 +115,10 @@ bool VariableGlobalExpression::TryEvaluation(character& value, LogicGeneratePara
 
 bool VariableGlobalExpression::TryEvaluation(integer& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
 			value = *(integer*)parameter.generator->GetConstantPointer(abstractVariable->address);
 			return true;
@@ -103,10 +129,10 @@ bool VariableGlobalExpression::TryEvaluation(integer& value, LogicGenerateParame
 
 bool VariableGlobalExpression::TryEvaluation(real& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
 			value = *(real*)parameter.generator->GetConstantPointer(abstractVariable->address);
 			return true;
@@ -117,10 +143,10 @@ bool VariableGlobalExpression::TryEvaluation(real& value, LogicGenerateParameter
 
 bool VariableGlobalExpression::TryEvaluation(String& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
 			value = parameter.generator->GetDataConstantString(abstractVariable->address, parameter.manager->stringAgency);
 			return true;
@@ -131,33 +157,33 @@ bool VariableGlobalExpression::TryEvaluation(String& value, LogicGenerateParamet
 
 bool VariableGlobalExpression::TryEvaluationIndices(List<integer, true>& value, LogicGenerateParameter& parameter)
 {
-	if (declaration.library == LIBRARY_SELF)
+	if(declaration.library == LIBRARY_SELF)
 	{
 		AbstractVariable* abstractVariable = parameter.manager->selfLibaray->variables[declaration.index];
-		if (abstractVariable->readonly)
+		if(abstractVariable->readonly)
 		{
-			if (returns[0] == TYPE_Byte)
+			if(returns[0] == TYPE_Byte)
 			{
 				uint8 result;
-				if (TryEvaluation(result, parameter))
+				if(TryEvaluation(result, parameter))
 				{
 					value.Add(result);
 					return true;
 				}
 			}
-			else if (returns[0] == TYPE_Char)
+			else if(returns[0] == TYPE_Char)
 			{
 				character result;
-				if (TryEvaluation(result, parameter))
+				if(TryEvaluation(result, parameter))
 				{
 					value.Add(result);
 					return true;
 				}
 			}
-			else if (returns[0] == TYPE_Integer)
+			else if(returns[0] == TYPE_Integer)
 			{
 				integer result;
-				if (TryEvaluation(result, parameter))
+				if(TryEvaluation(result, parameter))
 				{
 					value.Add(result);
 					return true;
@@ -170,7 +196,7 @@ bool VariableGlobalExpression::TryEvaluationIndices(List<integer, true>& value, 
 
 LogicVariable& VariableMemberExpression::GetTargetVariable(LogicGenerateParameter& parameter)
 {
-	if (targetVariable.IsInvalid())
+	if(targetVariable.IsInvalid())
 	{
 		LogicGenerateParameter targetParameter = LogicGenerateParameter(parameter, 1);
 		target->Generator(targetParameter);
@@ -181,45 +207,45 @@ LogicVariable& VariableMemberExpression::GetTargetVariable(LogicGenerateParamete
 
 void VariableMemberExpression::Generator(LogicGenerateParameter& parameter, uint32 offset, const Type& targetType)
 {
-	if (declaration.category == DeclarationCategory::StructVariable)
+	if(declaration.category == DeclarationCategory::StructVariable)
 	{
 		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->address;
-		if (ContainAny(target->type, ExpressionType::VariableMemberExpression)) ((VariableMemberExpression*)target)->Generator(parameter, offset, targetType);
-		else if (ContainAny(target->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)target)->Generator(parameter, offset, targetType);
+		if(ContainAny(target->type, ExpressionType::VariableMemberExpression)) ((VariableMemberExpression*)target)->Generator(parameter, offset, targetType);
+		else if(ContainAny(target->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)target)->Generator(parameter, offset, targetType);
 		else parameter.results[0] = LogicVariable(GetTargetVariable(parameter), targetType, offset);
 	}
-	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, targetType), GetTargetVariable(parameter), declaration, offset, parameter.finallyAddress);
+	else if(declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, targetType), GetTargetVariable(parameter), declaration, offset, parameter.finallyAddress);
 	else EXCEPTION("无效的声明类型");
 }
 
 void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset)
 {
-	if (declaration.category == DeclarationCategory::StructVariable)
+	if(declaration.category == DeclarationCategory::StructVariable)
 	{
-		if (parameter.results[0] == logicVariable) return;
+		if(parameter.results[0] == logicVariable) return;
 		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->address;
-		if (ContainAny(target->type, ExpressionType::VariableMemberExpression)) ((VariableMemberExpression*)target)->GeneratorAssignment(parameter, offset);
-		else if (ContainAny(target->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)target)->GeneratorAssignment(parameter, offset);
+		if(ContainAny(target->type, ExpressionType::VariableMemberExpression)) ((VariableMemberExpression*)target)->GeneratorAssignment(parameter, offset);
+		else if(ContainAny(target->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)target)->GeneratorAssignment(parameter, offset);
 		else LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(GetTargetVariable(parameter), parameter.results[0].type, offset), parameter.results[0]);
 	}
-	else if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) LogicVariabelAssignment(parameter.manager, parameter.generator, GetTargetVariable(parameter), declaration, offset, parameter.results[0], parameter.finallyAddress);
+	else if(declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) LogicVariabelAssignment(parameter.manager, parameter.generator, GetTargetVariable(parameter), declaration, offset, parameter.results[0], parameter.finallyAddress);
 	else EXCEPTION("无效的声明类型");
 }
 
 void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index, uint32 offset, const Type& targetType)
 {
-	if (declaration.category == DeclarationCategory::StructVariable)
+	if(declaration.category == DeclarationCategory::StructVariable)
 	{
 		offset += parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition]->variables[declaration.index]->address;
-		if (ContainAny(target->type, ExpressionType::VariableMemberExpression)) ((VariableMemberExpression*)target)->FillResultVariable(parameter, index, offset, targetType);
-		else if (ContainAny(target->type, ExpressionType::VariableLocalExpression | ExpressionType::VariableGlobalExpression)) parameter.results[index] = logicVariable = LogicVariable(GetTargetVariable(parameter), targetType, offset);
+		if(ContainAny(target->type, ExpressionType::VariableMemberExpression)) ((VariableMemberExpression*)target)->FillResultVariable(parameter, index, offset, targetType);
+		else if(ContainAny(target->type, ExpressionType::VariableLocalExpression | ExpressionType::VariableGlobalExpression)) parameter.results[index] = logicVariable = LogicVariable(GetTargetVariable(parameter), targetType, offset);
 	}
 }
 
 bool VariableMemberExpression::IsReferenceMember()
 {
-	if (declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) return true;
-	else if (ContainAny(target->type, ExpressionType::VariableMemberExpression)) return ((VariableMemberExpression*)target)->IsReferenceMember();
+	if(declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue) return true;
+	else if(ContainAny(target->type, ExpressionType::VariableMemberExpression)) return ((VariableMemberExpression*)target)->IsReferenceMember();
 	return ContainAny(target->type, ExpressionType::ArrayEvaluationExpression);
 }
 

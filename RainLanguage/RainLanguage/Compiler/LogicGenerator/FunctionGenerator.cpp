@@ -826,10 +826,7 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	uint32 localPoint = variableGenerator.GetHoldMemory();
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
 	if(parameter.localContext->GetClosure())
-	{
-		//todo 初始化闭包对象
-		statements->statements.Add(new InitClosureStatement());
-	}
+		statements->statements.Add(new InitClosureStatement(parameter.localContext));
 	statements->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator, parameter.localContext->GetLocalAnchors()), MEMORY_ALIGNMENT_MAX));

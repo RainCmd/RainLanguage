@@ -18,7 +18,7 @@ CompilingDeclaration ClosureVariable::GetClosureDeclaration(const Local& local)
 	uint32 memberIndex;
 	if(!variables.TryGet(local.index, memberIndex))
 	{
-		memberIndex = index++;
+		memberIndex = closure->variables.Count();
 		variables.Set(local.index, memberIndex);
 		AbstractClass* abstractClosure = manager->selfLibaray->classes[closure->declaration.index];
 		CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, memberIndex, closure->declaration.index);

@@ -28,6 +28,7 @@ private:
 public:
 	VariableGenerator(uint32 localAddress);
 	void MemberParameterAlignment();
+	inline bool IsLocalAdded(uint32 index) const { return locals.Contains(index); }
 	LogicVariable GetLocal(DeclarationManager* manager, uint32 index, const Type& type);
 	LogicVariable DecareTemporary(DeclarationManager* manager, const Type& type);
 	void ResetTemporary(DeclarationManager* manager, Generator* generator, uint32 address, CodeLocalAddressReference* finallyAddress);

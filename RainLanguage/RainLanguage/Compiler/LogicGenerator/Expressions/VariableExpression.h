@@ -9,6 +9,8 @@ public:
 
 class VariableLocalExpression :public VariableExpression
 {
+	LogicVariable GetClosure(LogicGenerateParameter& parameter);
+	CompilingDeclaration GetClosureMember(LogicGenerateParameter& parameter, uint32 closureMemberIndex);
 public:
 	CompilingDeclaration declaration;
 	inline VariableLocalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableLocalExpression, anchor, type), declaration(declaration) { this->attribute = CombineType(attribute, type); }
@@ -48,7 +50,7 @@ public:
 	inline VariableMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, Expression* target, const Type& type) :VariableExpression(ExpressionType::VariableMemberExpression, anchor, type), logicVariable(), targetVariable(), target(target), declaration(declaration)
 	{
 		this->attribute = CombineType(attribute, type);
-		if (declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))
+		if(declaration.category != DeclarationCategory::ClassVariable && !ContainAny(target->attribute, Attribute::Assignable))
 			this->attribute &= ~Attribute::Assignable;
 	}
 	bool IsReferenceMember();

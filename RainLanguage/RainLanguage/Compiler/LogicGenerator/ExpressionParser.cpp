@@ -601,11 +601,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					}
 					lambdaFunction->returns = abstractDelegate->returns.GetTypes();
 					List<Statement*, true> statements(0);
-					if(parser.localContext->GetClosure())
-					{
-						//todo 初始化闭包对象
-						statements.Add(new InitClosureStatement());
-					}
+					if(lambdaLocalContext->GetClosure()) statements.Add(new InitClosureStatement(lambdaLocalContext));
 					if(abstractDelegate->returns.Count()) statements.Add(new ReturnStatement(lambdaBody->anchor, lambdaBody));
 					else statements.Add(new ExpressionStatement(lambdaBody->anchor, lambdaBody));
 					LambdaGenerator* lambdaGenerator = new LambdaGenerator(lambdaExpression->anchor, parser.closured, abstractDelegate->returns.Count(), lambdaParameters, lambdaLocalContext, statements);
