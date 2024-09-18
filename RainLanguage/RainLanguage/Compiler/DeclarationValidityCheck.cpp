@@ -247,12 +247,15 @@ void DeclarationValidityCheck(DeclarationManager* manager)
 		else for(uint32 y = 0; y < compiling->parameters.Count(); y++)
 			if(IsKeyWord(compiling->parameters[y].name.content))
 				MESSAGE2(manager->messages, compiling->parameters[y].name, MessageType::ERROR_NAME_IS_KEY_WORD);
+		Visibility visibility = compiling->declaration.visibility;
+		if(compiling->declaration.category != DeclarationCategory::Function)
+			visibility = GetMoreStringent(visibility, manager->GetDeclaration(compiling->declaration)->declaration.visibility);
 		for(uint32 y = 0; y < compiling->parameters.Count(); y++)
 			if(compiling->declaration.category == DeclarationCategory::Function || y > 0)
-				CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->parameters[y].type);
+				CheckVisiable(manager, visibility, compiling->name, compiling->parameters[y].type);
 		if(compiling->declaration.category != DeclarationCategory::Constructor)
 			for(uint32 y = 0; y < compiling->returns.Count(); y++)
-				CheckVisiable(manager, compiling->declaration.visibility, compiling->name, compiling->returns[y]);
+				CheckVisiable(manager, visibility, compiling->name, compiling->returns[y]);
 	}
 	for(uint32 x = 0; x < library->enums.Count(); x++)
 	{
