@@ -50,31 +50,55 @@ bool TryConvert(DeclarationManager* manager, const Type& source, const Type& tar
 		if(source == TYPE_Byte)
 		{
 			convert = true;
-			measure = 0xff;
+			measure = 0xf;
 			return true;
 		}
 	}
 	else if(target == TYPE_Integer)
 	{
-		if(source == TYPE_Byte || source == TYPE_Char)
+		if(source == TYPE_Byte)
 		{
 			convert = true;
 			measure = 0xff;
+			return true;
+		}
+		else if(source == TYPE_Char)
+		{
+			convert = true;
+			measure = 0xf;
 			return true;
 		}
 		else if(!source.dimension && source.code == TypeCode::Enum)
 		{
 			convert = false;
-			measure = 0xfff;
+			measure = 0xffff;
 			return true;
 		}
 	}
 	else if(target == TYPE_Real)
 	{
-		if(source == TYPE_Byte || source == TYPE_Char || source == TYPE_Integer)
+		if(source == TYPE_Byte)
+		{
+			convert = true;
+			measure = 0xfff;
+			return true;
+		}
+		else if(source == TYPE_Char)
 		{
 			convert = true;
 			measure = 0xff;
+			return true;
+		}
+		else if(source == TYPE_Integer)
+		{
+			convert = true;
+			measure = 0xf;
+			return true;
+		}
+		else if(!source.dimension && source.code == TypeCode::Enum)
+		{
+			convert = true;
+			measure = 0xfffff;
 			return true;
 		}
 	}
