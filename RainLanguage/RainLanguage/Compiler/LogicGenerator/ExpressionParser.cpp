@@ -1207,10 +1207,17 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& name, List<CompilingDecl
 	}
 	if(environment && environment->TryFindDeclaration(name, result))
 	{
-		if(result.Count() == 1 && (result.Peek().category == DeclarationCategory::LocalVariable || result.Peek().category == DeclarationCategory::LambdaClosureValue))
+		if(result.Count() == 1)
 		{
-			result.Peek() = environment->localContext->MakeClosure(manager, environment->context, result.Peek().index);
-			closured = true;
+			if(result.Peek().category == DeclarationCategory::LocalVariable)
+			{
+				result.Peek() = environment->localContext->MakeClosure(manager, environment->context, result.Peek().index);
+				closured = true;
+			}
+			else if(result.Peek().category == DeclarationCategory::LambdaClosureValue)
+			{
+
+			}
 		}
 		return true;
 	}
