@@ -245,7 +245,7 @@ public:
 		if(count) version++;
 		count = 0;
 	}
-	uint32 Count() { return count; }
+	uint32 Count() const { return count; }
 	Iterator GetIterator() const { return Iterator(this); }
 	~Dictionary()
 	{

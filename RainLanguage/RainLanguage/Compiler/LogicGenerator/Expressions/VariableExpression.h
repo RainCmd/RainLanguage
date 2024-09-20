@@ -60,6 +60,22 @@ public:
 	~VariableMemberExpression();
 };
 
+class VariableClosureExpression :public VariableExpression
+{
+	uint32 localIndex;
+	List<uint32, true> memberIndices;
+	VariableMemberExpression* memberExpression;
+public:
+	inline VariableClosureExpression(const Anchor& anchor, uint32 localIndex, List<uint32, true> memberIndices, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableClosureExpression, anchor, type), localIndex(localIndex), memberIndices(memberIndices), memberExpression(NULL)
+	{
+		this->attribute = CombineType(attribute, type);
+	}
+	void Generator(LogicGenerateParameter& parameter);
+	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
+	~VariableClosureExpression();
+};
+
 class VariableQuestionMemberExpression :public Expression
 {
 public:

@@ -269,6 +269,26 @@ VariableMemberExpression::~VariableMemberExpression()
 	delete target; target = NULL;
 }
 
+void VariableClosureExpression::Generator(LogicGenerateParameter& parameter)
+{
+	//todo 闭包变量取值
+}
+
+void VariableClosureExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
+{
+	//todo 闭包变量赋值
+}
+
+void VariableClosureExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	//todo 填充值
+}
+
+VariableClosureExpression::~VariableClosureExpression()
+{
+	delete memberExpression; memberExpression = NULL;
+}
+
 void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	ASSERT_DEBUG(IsHandleType(target->returns[0]), "语义解析可能有bug");

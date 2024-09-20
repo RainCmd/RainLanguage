@@ -166,7 +166,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		{
 			ASSERT_DEBUG(!variable->expression.content.IsEmpty(), "常量没有赋值表达式，这个应该在定义解析时过滤");
 			Context context = Context(variable->name.source, variable->space, variable->relies);
-			parameter.localContext->PushBlock();
+			parameter.localContext->PushBlock(context);
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
 			if(parser.TryParse(variable->expression, expression))
@@ -187,7 +187,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			if(!element->expression.content.IsEmpty())
 			{
 				Context context = Context(enumerate->name.source, enumerate->space, enumerate->relies);
-				parameter.localContext->PushBlock();
+				parameter.localContext->PushBlock(context);
 				ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 				Expression* expression = NULL;
 				if(parser.TryParse(element->expression, expression))
@@ -320,7 +320,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		if(!variable->constant && !variable->expression.content.IsEmpty())
 		{
 			Context context = Context(variable->name.source, variable->space, variable->relies);
-			parameter.localContext->PushBlock();
+			parameter.localContext->PushBlock(context);
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
 			if(parser.TryParse(variable->expression, expression))
@@ -408,7 +408,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 			const CompilingClass::Variable* variable = compilingClass->variables[i];
 			if(!variable->expression.content.IsEmpty())
 			{
-				parameter.localContext->PushBlock();
+				parameter.localContext->PushBlock(context);
 				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, false);
 				Expression* expression = NULL;
 				if(parser.TryParse(variable->expression, expression))
@@ -506,7 +506,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 			if(blockIndent < line.indent)
 			{
 				BlockStatement* newBlock = NULL;
-				parameter.localContext->PushBlock();
+				parameter.localContext->PushBlock(context);
 				if(blockStack.Peek()->statements.Count())
 				{
 					Statement* statement = blockStack.Peek()->statements.Peek();
@@ -584,7 +584,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 							statement->falseBranch = new BlockStatement(lexical.anchor);
 							statement->falseBranch->indent = line.indent;
 							blockStack.Add(statement->falseBranch);
-							parameter.localContext->PushBlock();
+							parameter.localContext->PushBlock(context);
 							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, destructor);
 						}
 						else if(ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
@@ -594,7 +594,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 							statement->elseBlock = new BlockStatement(lexical.anchor);
 							statement->elseBlock->indent = line.indent;
 							blockStack.Add(statement->elseBlock);
-							parameter.localContext->PushBlock();
+							parameter.localContext->PushBlock(context);
 							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, destructor);
 						}
 						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);

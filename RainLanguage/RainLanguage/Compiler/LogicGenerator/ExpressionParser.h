@@ -16,12 +16,11 @@ struct ExpressionParser
 	Context context;
 	LocalContext* localContext;
 	ExpressionParser* environment;
-	bool closured;
+	bool referencesExternalLocal;
 	bool destructor;
-	inline ExpressionParser(const LogicGenerateParameter& evaluationParameter, const Context context, LocalContext* localContext, ExpressionParser* environment, bool destructor) :evaluationParameter(evaluationParameter), manager(evaluationParameter.manager), context(context), localContext(localContext), environment(environment), closured(false), destructor(destructor) {}
+	inline ExpressionParser(const LogicGenerateParameter& evaluationParameter, const Context context, LocalContext* localContext, ExpressionParser* environment, bool destructor) :evaluationParameter(evaluationParameter), manager(evaluationParameter.manager), context(context), localContext(localContext), environment(environment), referencesExternalLocal(false), destructor(destructor) {}
 	Attribute GetVariableAttribute(const CompilingDeclaration& declaration);
 	Type GetVariableType(const CompilingDeclaration& declaration);
-	bool TryGetThisValueDeclaration(CompilingDeclaration& declaration);
 	bool TryGetThisValueExpression(const Anchor& anchor, Expression*& expression);
 	bool TryAssignmentConvert(Expression*& source, const Type& type);
 	bool TryAssignmentConvert(Expression*& source, const Span<Type, true>& types);
