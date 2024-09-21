@@ -13,7 +13,7 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	parameter.localContext = localContext;
 	uint32 parameterPoint = SIZE(Frame) + returnSize;
 	VariableGenerator variableGenerator = VariableGenerator(parameterPoint);
-	if(closure)
+	if(referencesExternalLocal)
 	{
 		variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type).reference->OnWrite();
 		variableGenerator.MemberParameterAlignment();

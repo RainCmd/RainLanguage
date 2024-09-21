@@ -13,7 +13,8 @@ public:
 	List<Local> parameters;
 	LocalContext* localContext;
 	List<Statement*, true> statements;
-	inline LambdaGenerator(const Anchor& anchor, bool closreferencesExternalLocalure, uint32 returnCount, const List<Local>& parameters, LocalContext* localContext, const List<Statement*, true>& statements) :anchor(anchor), referencesExternalLocal(referencesExternalLocal), returnSize(returnCount * 4), parameters(parameters), localContext(localContext), statements(statements) {}
+	inline LambdaGenerator(const Anchor& anchor, bool referencesExternalLocal, uint32 returnCount, const List<Local>& parameters, LocalContext* localContext, const List<Statement*, true>& statements)
+		:anchor(anchor), referencesExternalLocal(referencesExternalLocal), returnSize(returnCount * 4), parameters(parameters), localContext(localContext), statements(statements) {}
 	void Generator(GeneratorParameter& parameter);
 	~LambdaGenerator();
 };

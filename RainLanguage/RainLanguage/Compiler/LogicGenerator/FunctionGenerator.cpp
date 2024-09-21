@@ -166,7 +166,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		{
 			ASSERT_DEBUG(!variable->expression.content.IsEmpty(), "常量没有赋值表达式，这个应该在定义解析时过滤");
 			Context context = Context(variable->name.source, variable->space, variable->relies);
-			parameter.localContext->PushBlock(context);
+			parameter.localContext->PushBlock();
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
 			if(parser.TryParse(variable->expression, expression))
@@ -187,7 +187,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 			if(!element->expression.content.IsEmpty())
 			{
 				Context context = Context(enumerate->name.source, enumerate->space, enumerate->relies);
-				parameter.localContext->PushBlock(context);
+				parameter.localContext->PushBlock();
 				ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 				Expression* expression = NULL;
 				if(parser.TryParse(element->expression, expression))
@@ -320,7 +320,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		if(!variable->constant && !variable->expression.content.IsEmpty())
 		{
 			Context context = Context(variable->name.source, variable->space, variable->relies);
-			parameter.localContext->PushBlock(context);
+			parameter.localContext->PushBlock();
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
 			if(parser.TryParse(variable->expression, expression))
@@ -373,7 +373,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 				for(uint32 i = 0; i < compilingClass->constructors.Count(); i++)
 					if(i != function->declaration.index)
 						new (constructorInvokerDeclarations.Add())CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Constructor, i, function->declaration.definition);
-				if(ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), constructorInvokerDeclarations, &thisValue) == function->declaration)
+				if(ParseConstructorInvoker(parameter, context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), constructorInvokerDeclarations, &thisValue) == function->declaration)
 					MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_CONSTRUCTOR_CALL_ITSELF);
 			}
 			else if(lexical.anchor == KeyWord_base())
@@ -386,7 +386,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 					if(context.IsVisible(parameter.manager, parentConstructor->declaration))
 						constructorInvokerDeclarations.Add(parentConstructor->declaration);
 				}
-				ParseConstructorInvoker(parameter, &context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), constructorInvokerDeclarations, &thisValue);
+				ParseConstructorInvoker(parameter, context, lexical.anchor, compilingConstructor->expression.Sub(lexical.anchor.GetEnd()).Trim(), constructorInvokerDeclarations, &thisValue);
 			}
 			else EXCEPTION("无效的词汇");
 		}
@@ -401,14 +401,14 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 				if(context.IsVisible(parameter.manager, parentConstructor->declaration))
 					constructorInvokerDeclarations.Add(parentConstructor->declaration);
 			}
-			ParseConstructorInvoker(parameter, &context, compilingClass->name, compilingConstructor->expression, constructorInvokerDeclarations, &thisValue);
+			ParseConstructorInvoker(parameter, context, compilingClass->name, compilingConstructor->expression, constructorInvokerDeclarations, &thisValue);
 		}
 		for(uint32 i = 0; i < compilingClass->variables.Count(); i++)
 		{
 			const CompilingClass::Variable* variable = compilingClass->variables[i];
 			if(!variable->expression.content.IsEmpty())
 			{
-				parameter.localContext->PushBlock(context);
+				parameter.localContext->PushBlock();
 				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, false);
 				Expression* expression = NULL;
 				if(parser.TryParse(variable->expression, expression))
@@ -455,9 +455,9 @@ FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, Generator
 	if(MESSAGE_CONDITION(parameter.manager->messages, MessageType::LOGGER_LEVEL2_INACCESSIBLE_STATEMENT)) CheckFunctionReturn(parameter.manager->messages, statements);
 }
 
-CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParameter& parameter, Context* context, const Anchor& anchor, const Anchor& expression, List<CompilingDeclaration, true>& declarations, Local* thisValue)
+CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParameter& parameter, const Context& context, const Anchor& anchor, const Anchor& expression, List<CompilingDeclaration, true>& declarations, Local* thisValue)
 {
-	ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), *context, parameter.localContext, NULL, false);
+	ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, false);
 	Expression* constructorParameters = NULL;
 	if(parser.TryParse(expression, constructorParameters))
 	{
@@ -478,7 +478,7 @@ CompilingDeclaration FunctionGenerator::ParseConstructorInvoker(GeneratorParamet
 	return CompilingDeclaration();
 }
 
-void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statement*, true>& block, const Anchor& anchor, Context context, bool destructor)
+void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statement*, true>& block, const Anchor& anchor, const Context& context, bool destructor)
 {
 	ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, destructor);
 	Expression* condition = NULL;
@@ -490,7 +490,7 @@ void FunctionGenerator::ParseBranch(GeneratorParameter& parameter, List<Statemen
 	}
 }
 
-void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context, const List<Line>& body, bool destructor)
+void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& context, const List<Line>& body, bool destructor)
 {
 	if(body.Count())
 	{
@@ -506,7 +506,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 			if(blockIndent < line.indent)
 			{
 				BlockStatement* newBlock = NULL;
-				parameter.localContext->PushBlock(context);
+				parameter.localContext->PushBlock();
 				if(blockStack.Peek()->statements.Count())
 				{
 					Statement* statement = blockStack.Peek()->statements.Peek();
@@ -584,7 +584,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 							statement->falseBranch = new BlockStatement(lexical.anchor);
 							statement->falseBranch->indent = line.indent;
 							blockStack.Add(statement->falseBranch);
-							parameter.localContext->PushBlock(context);
+							parameter.localContext->PushBlock();
 							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, destructor);
 						}
 						else if(ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
@@ -594,7 +594,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, Context context
 							statement->elseBlock = new BlockStatement(lexical.anchor);
 							statement->elseBlock->indent = line.indent;
 							blockStack.Add(statement->elseBlock);
-							parameter.localContext->PushBlock(context);
+							parameter.localContext->PushBlock();
 							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, destructor);
 						}
 						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
@@ -825,8 +825,11 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	uint32 entryPoint = parameter.generator->GetPointer();
 	uint32 localPoint = variableGenerator.GetHoldMemory();
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
-	if(parameter.localContext->GetClosure())
-		statements->statements.Insert(0, new InitClosureStatement(parameter.localContext));
+
+	//todo 这块应该放到语句解析那去，每个块开头都应该有这个语句
+	if(parameter.localContext->GetClosure(0)->hold)
+		statements->statements.Insert(0, new InitClosureStatement(parameter.localContext->GetClosure(0)));
+
 	statements->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator, parameter.localContext->GetLocalAnchors()), MEMORY_ALIGNMENT_MAX));

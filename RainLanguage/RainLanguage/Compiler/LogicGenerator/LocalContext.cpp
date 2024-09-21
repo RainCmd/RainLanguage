@@ -4,68 +4,81 @@
 #include "../DeclarationManager.h"
 #include "../Context.h"
 
-void ClosureVariable::GetClosureDeclaration(const Local& local, uint32 deep, List<uint32, true>& path)
+void ClosureVariable::Init(Context& context)
 {
+	if(compiling) return;
+	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Private, DeclarationCategory::Class, manager->compilingLibrary.classes.Count(), 0);
+	manager->compilingLibrary.classes.Add(compiling = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
+	compiling->parent = TYPE_Handle;
+	compiling->relies = context.relies;
+	manager->selfLibaray->classes.Add(abstract = new AbstractClass(compiling->name.content, declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
+	if(prevClosure)
+	{
+		prevMember = compiling->variables.Count();
+		declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, prevMember, compiling->declaration.index);
+		CompilingClass::Variable* variable = new CompilingClass::Variable(Anchor(), declaration, List<Anchor>(0), Anchor());
+		variable->type = prevClosure->Compiling()->declaration.DefineType();
+		compiling->variables.Add(variable);
+		uint8 alignment;
+		uint32 size = manager->GetStackSize(variable->type, alignment);
+		abstract->size = MemoryAlignment(abstract->size, alignment);
+		abstract->variables.Add(new AbstractVariable(String(), declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
+		abstract->size += size;
+		if(alignment > abstract->alignment) abstract->alignment = alignment;
+	}
+}
+
+void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path)
+{
+	Init(context);
 	if(--deep)
 	{
 		path.Add(prevMember);
-		prevClosure->GetClosureDeclaration(local, deep, path);
+		if(prevClosure->localContent != localContent) hold = true;
+		return prevClosure->MakeClosure(context, local, deep, path);
 	}
 	else
 	{
-		uint32 memberIndex;
-		if(variables.TryGet(local.index, memberIndex)) path.Add(memberIndex);
+		CaptureInfo info;
+		if(localContent->captures.TryGet(local.index, info)) path.Add(info.member);
 		else
 		{
-			memberIndex = closure->variables.Count();
-			AbstractClass* abstractClosure = manager->selfLibaray->classes[closure->declaration.index];
-			CompilingDeclaration declaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassVariable, memberIndex, closure->declaration.index);
+			info.closure = localIndex;
+			info.member = compiling->variables.Count();
+			CompilingDeclaration declaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassVariable, info.member, compiling->declaration.index);
 			CompilingClass::Variable* variable = new CompilingClass::Variable(local.anchor, declaration, List<Anchor>(0), Anchor());
 			variable->type = local.type;
-			closure->variables.Add(variable);
+			compiling->variables.Add(variable);
 			uint8 alignment;
 			uint32 size = manager->GetStackSize(variable->type, alignment);
-			abstractClosure->size = MemoryAlignment(abstractClosure->size, alignment);
-			abstractClosure->variables.Add(new AbstractVariable(local.anchor.content, declaration, List<String>(0), closure->space->abstract, false, variable->type, abstractClosure->size));
-			abstractClosure->size += size;
-			if(alignment > abstractClosure->alignment) abstractClosure->alignment = alignment;
-			path.Add(memberIndex);
-			variables.Set(local.index, memberIndex);
+			abstract->size = MemoryAlignment(abstract->size, alignment);
+			abstract->variables.Add(new AbstractVariable(local.anchor.content, declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
+			abstract->size += size;
+			if(alignment > abstract->alignment) abstract->alignment = alignment;
+			path.Add(info.member);
+			new(variables.Add())ClosureMemberVariable(local.index, info.member);
 			hold = true;
+			localContent->captures.Set(local.index, info);
 		}
 	}
 }
 
-ClosureVariable::ClosureVariable(DeclarationManager* manager, Context& context, uint32 id, uint32 local, ClosureVariable* prevClosure)
-	:manager(manager), id(id), local(local), prevMember(INVALID), paths(0), variables(0), closure(NULL), prevClosure(prevClosure), hold(false)
-{
-	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Private, DeclarationCategory::Class, manager->compilingLibrary.classes.Count(), 0);
-	manager->compilingLibrary.classes.Add(closure = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
-	closure->parent = TYPE_Handle;
-	closure->relies = context.relies;
-	manager->selfLibaray->classes.Add(new AbstractClass(closure->name.content, declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
-	if(prevClosure)
-	{
-		prevMember = closure->variables.Count();
-		AbstractClass* abstractClosure = manager->selfLibaray->classes[closure->declaration.index];
-		CompilingDeclaration declaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, prevMember, closure->declaration.index);
-		CompilingClass::Variable* variable = new CompilingClass::Variable(Anchor(), declaration, List<Anchor>(0), Anchor());
-		variable->type = prevClosure->closure->declaration.DefineType();
-		closure->variables.Add(variable);
-		uint8 alignment;
-		uint32 size = manager->GetStackSize(variable->type, alignment);
-		abstractClosure->size = MemoryAlignment(abstractClosure->size, alignment);
-		abstractClosure->variables.Add(new AbstractVariable(String(), declaration, List<String>(0), closure->space->abstract, false, variable->type, abstractClosure->size));
-		abstractClosure->size += size;
-		if(alignment > abstractClosure->alignment) abstractClosure->alignment = alignment;
-	}
-}
-
-uint32 ClosureVariable::GetClosureDeclaration(const Local& local, uint32 deep)
+void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep)
 {
 	List<uint32, true> path(deep);
-	GetClosureDeclaration(local, deep, path);
+	MakeClosure(context, local, deep, path);
 	paths.Set(local.index, path);
+}
+
+void LocalContext::PushBlock()
+{
+	localDeclarations.Add(new Dictionary<String, Local>(0));
+	ClosureVariable* prev = NULL;
+	if(closureStack.Count()) prev = closureStack.Peek();
+	ClosureVariable* closure = new ClosureVariable(this, manager, closures.Count(), index, prev);
+	closureStack.Add(closure);
+	closures.Add(closure);
+	AddLocal(Anchor(), closure->Compiling()->declaration.DefineType());
 }
 
 Local LocalContext::AddLocal(const String& name, const Anchor& anchor, const Type& type)
@@ -119,10 +132,9 @@ bool LocalContext::TryGetLocalAndDeep(const String& name, Local& local, uint32& 
 	return false;
 }
 
-CompilingDeclaration LocalContext::MakeClosure(LocalContext* context, const Local& local, uint32 deep)
+CompilingDeclaration LocalContext::MakeClosure(Context& context, const Local& local, uint32 deep)
 {
-	uint32 memberIndex = closureStack.Peek()->GetClosureDeclaration(local, deep);
-	captures.Set(local.index, CaptureInfo(closureStack.Peek()->LocalIndex(), memberIndex));
+	closureStack.Peek()->MakeClosure(context, local, deep);
 	return CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, local.index, closureStack.Peek()->ID());
 }
 
@@ -138,19 +150,19 @@ void LocalContext::Reset(bool deleteClosureDeclaration)
 		if(deleteClosureDeclaration)
 		{
 			CompilingClass* compilingClass = manager->compilingLibrary.classes.Pop();
-			ASSERT_DEBUG(compilingClass == closure->closure, "销毁的不是闭包类的定义");
-			AbstractClass* abstractClass = manager->selfLibaray->classes.Pop();
-			ASSERT_DEBUG(abstractClass->declaration == compilingClass->declaration, "抽象类型和编译类型对不上");
+			ASSERT_DEBUG(compilingClass == closure->Compiling(), "销毁的不是闭包类的定义");
 			while(compilingClass->functions.Count())
 			{
-				uint32 index = compilingClass->functions.Pop();
-				ASSERT_DEBUG(manager->compilingLibrary.functions.Count() == index + 1, "lambda函数索引错误");
+				uint32 function = compilingClass->functions.Pop();
+				ASSERT_DEBUG(manager->compilingLibrary.functions.Count() == function + 1, "lambda函数索引错误");
 				delete manager->compilingLibrary.functions.Pop();
 			}
+			AbstractClass* abstractClass = manager->selfLibaray->classes.Pop();
+			ASSERT_DEBUG(abstractClass == closure->Abstract(), "抽象类型和编译类型对不上");
 			while(abstractClass->functions.Count())
 			{
-				uint32 index = abstractClass->functions.Pop();
-				ASSERT_DEBUG(manager->selfLibaray->functions.Count() == index + 1, "lambda函数索引错误");
+				uint32 function = abstractClass->functions.Pop();
+				ASSERT_DEBUG(manager->selfLibaray->functions.Count() == function + 1, "lambda函数索引错误");
 				delete manager->selfLibaray->functions.Pop();
 			}
 			delete compilingClass;

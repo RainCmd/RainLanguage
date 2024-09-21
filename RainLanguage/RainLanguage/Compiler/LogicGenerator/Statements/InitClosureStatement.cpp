@@ -27,24 +27,25 @@ LogicVariable GetVariable(LogicGenerateParameter& parameter, const CompilingDecl
 
 void InitClosureStatement::Generator(StatementGeneratorParameter& parameter)
 {
+	//需要检查 closure.hold 来确定是否要创建闭包对象
 	TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
-
-	LogicVariable localClosure = parameter.variableGenerator->GetLocal(parameter.manager, localContext->GetClosure()->LocalIndex(), localContext->GetClosure()->Closure()->declaration.DefineType());
+	LogicVariable localClosure = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
 	parameter.generator->WriteCode(localClosure, VariableAccessType::Write);
 	parameter.generator->WriteCodeGlobalReference((Declaration)localClosure.type);
 	parameter.generator->WriteCode(parameter.finallyAddress);
 
-	AbstractClass* abstractClass = parameter.manager->selfLibaray->classes[localClosure.type.index];
+	AbstractClass* abstractClass = closure->Abstract();
 	LogicGenerateParameter logicGenerateParameter(parameter, 0);
-	Dictionary<uint32, uint32, true>::Iterator iterator = localContext->GetClosure()->GetVariables().GetIterator();
-	while(iterator.Next())
-		if(parameter.variableGenerator->IsLocalAdded(iterator.CurrentKey()))
+	for(uint32 i = 0; i < closure->variables.Count(); i++)
+	{
+		ClosureMemberVariable info = closure->variables[i];
+		if(parameter.variableGenerator->IsLocalAdded(info.local))
 		{
-			CompilingDeclaration localDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, iterator.CurrentKey(), NULL);
-			LogicVariable sourceLocal = GetVariable(logicGenerateParameter, localDeclaration, abstractClass->variables[iterator.CurrentValue()]->type);
-			LogicVariabelAssignment(parameter.manager, parameter.generator, localClosure, abstractClass->variables[iterator.CurrentValue()]->declaration, 0, sourceLocal, parameter.finallyAddress);
+			CompilingDeclaration localDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, info.local, NULL);
+			LogicVariable sourceLocal = GetVariable(logicGenerateParameter, localDeclaration, abstractClass->variables[info.member]->type);
+			LogicVariabelAssignment(parameter.manager, parameter.generator, localClosure, abstractClass->variables[info.member]->declaration, 0, sourceLocal, parameter.finallyAddress);
 		}
-
+	}
 	block.Finish();
 }

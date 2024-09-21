@@ -1,12 +1,12 @@
 #pragma once
 #include "../Statement.h"
 
-class LocalContext;
+class ClosureVariable;
 class InitClosureStatement : public Statement
 {
-	LocalContext* localContext;
+	ClosureVariable* closure;
 public:
-	inline InitClosureStatement(LocalContext* localContext) :Statement(StatementType::InitClosure, Anchor()), localContext(localContext) {}
+	inline InitClosureStatement(ClosureVariable* closure) :Statement(StatementType::InitClosure, Anchor()), closure(closure) {}
 	void Generator(StatementGeneratorParameter& parameter);
 };
 

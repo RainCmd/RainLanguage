@@ -3,21 +3,16 @@
 #include "../LocalContext.h"
 #include "ArrayExpression.h"
 
-LogicVariable VariableLocalExpression::GetClosure(LogicGenerateParameter& parameter)
-{
-	return parameter.variableGenerator->GetLocal(parameter.manager, parameter.localContext->GetClosure()->LocalIndex(), parameter.localContext->GetClosure()->Closure()->declaration.DefineType());
-}
-
-CompilingDeclaration VariableLocalExpression::GetClosureMember(LogicGenerateParameter& parameter, uint32 closureMemberIndex)
-{
-	return CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, closureMemberIndex, parameter.localContext->GetClosure()->Closure()->declaration.index);
-}
-
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
-	uint32 closureMemberIndex;
-	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
-		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.finallyAddress);
+	CaptureInfo info;
+	if(parameter.localContext->TryGetCaptureInfo(declaration.index, info))
+	{
+		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
+		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
+		CompilingDeclaration member(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, info.member, closure->Compiling()->declaration.index);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), variable, member, 0, parameter.finallyAddress);
+	}
 	else
 	{
 		parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
@@ -27,9 +22,14 @@ void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 
 void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	uint32 closureMemberIndex;
-	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
-		LogicVariabelAssignment(parameter.manager, parameter.generator, GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.results[0], parameter.finallyAddress);
+	CaptureInfo info;
+	if(parameter.localContext->TryGetCaptureInfo(declaration.index, info))
+	{
+		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
+		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
+		CompilingDeclaration member(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, info.member, closure->Compiling()->declaration.index);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, variable, member, 0, parameter.results[0], parameter.finallyAddress);
+	}
 	else if(parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
 	{
 		LogicVariable local = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
@@ -40,9 +40,14 @@ void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parame
 
 void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
-	uint32 closureMemberIndex;
-	if(parameter.localContext->TryGetClosureMemberIndex(declaration.index, closureMemberIndex))
-		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(index, returns[0]), GetClosure(parameter), GetClosureMember(parameter, closureMemberIndex), 0, parameter.finallyAddress);
+	CaptureInfo info;
+	if(parameter.localContext->TryGetCaptureInfo(declaration.index, info))
+	{
+		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
+		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
+		CompilingDeclaration member(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, info.member, closure->Compiling()->declaration.index);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(index, returns[0]), variable, member, 0, parameter.finallyAddress);
+	}
 	else
 	{
 		parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);

@@ -47,7 +47,7 @@ void Generator::WriteDataString(String& value, uint32 address)
 void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
 	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
-	parameter.localContext = new LocalContext(parameter.manager->messages);
+	parameter.localContext = new LocalContext(parameter.manager);
 	FunctionGenerator(parameter).Generator(parameter);
 	delete parameter.localContext; parameter.localContext = NULL;
 	codeStartReference = codeReferenceAddresses.Count();
@@ -57,7 +57,7 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 		if(compiling->destructor.Count())
 		{
 			compiling->destructorEntry = GetPointer();
-			parameter.localContext = new LocalContext(parameter.manager->messages);
+			parameter.localContext = new LocalContext(parameter.manager);
 			FunctionGenerator(compiling->declaration, parameter).Generator(parameter);
 			delete parameter.localContext; parameter.localContext = NULL;
 			codeStartReference = codeReferenceAddresses.Count();
@@ -68,7 +68,7 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 		CompilingFunction* compiling = parameter.manager->compilingLibrary.functions[i];
 		parameter.databaseGenerator->AddFunction(compiling->name.source);
 		compiling->entry = GetPointer();
-		parameter.localContext = new LocalContext(parameter.manager->messages);
+		parameter.localContext = new LocalContext(parameter.manager);
 		FunctionGenerator(compiling, parameter).Generator(parameter);
 		delete parameter.localContext; parameter.localContext = NULL;
 		codeStartReference = codeReferenceAddresses.Count();

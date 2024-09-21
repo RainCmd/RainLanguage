@@ -9,8 +9,6 @@ public:
 
 class VariableLocalExpression :public VariableExpression
 {
-	LogicVariable GetClosure(LogicGenerateParameter& parameter);
-	CompilingDeclaration GetClosureMember(LogicGenerateParameter& parameter, uint32 closureMemberIndex);
 public:
 	CompilingDeclaration declaration;
 	inline VariableLocalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableLocalExpression, anchor, type), declaration(declaration) { this->attribute = CombineType(attribute, type); }

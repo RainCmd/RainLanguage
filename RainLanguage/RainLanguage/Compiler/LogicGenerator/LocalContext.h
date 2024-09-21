@@ -18,37 +18,52 @@ struct Local
 	}
 };
 struct CompilingClass;
+struct AbstractClass;
 struct DeclarationManager;
 struct Context;
+class LocalContext;
+struct ClosureMemberVariable
+{
+	uint32 local;
+	uint32 member;
+	ClosureMemberVariable(uint32 local, uint32 member) :local(local), member(member) {}
+};
 class ClosureVariable
 {
+	LocalContext* localContent;
 	DeclarationManager* manager;
 	uint32 id;
-	uint32 local;
+	uint32 localIndex;
 	uint32 prevMember;
 	Dictionary<uint32, List<uint32, true>> paths;// curr => prev
-	Dictionary<uint32, uint32, true> variables;// localIndex => memberIndex
-	void GetClosureDeclaration(const Local& local, uint32 deep, List<uint32, true>& path);
+	CompilingClass* compiling;
+	AbstractClass* abstract;
+	void Init(Context& context);
+	void MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path);
 public:
-	CompilingClass* closure;
+	List<ClosureMemberVariable, true> variables;
 	ClosureVariable* prevClosure;
 	bool hold;
-	ClosureVariable(DeclarationManager* manager, Context& context, uint32 id, uint32 local, ClosureVariable* prevClosure);
+	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, uint32 localIndex, ClosureVariable* prevClosure)
+		:localContent(localContent), manager(manager), id(id), localIndex(localIndex), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure), hold(false)
+	{
+	}
 	inline uint32 ID() const { return id; }
-	inline uint32 LocalIndex() const { return local; }
-	inline CompilingClass* Closure() const { return closure; }
-	inline List<uint32, true> GetPath(uint32 localIndex) const
+	inline uint32 LocalIndex() const { return localIndex; }
+	inline CompilingClass* Compiling() const { return compiling; }
+	inline AbstractClass* Abstract() const { return abstract; }
+	inline List<uint32, true> GetPath(uint32 local) const
 	{
 		List<uint32, true> path(0);
-		if(paths.TryGet(localIndex, path)) return path;
+		if(paths.TryGet(local, path)) return path;
 		EXCEPTION("局部变量访问路径不存在");
 	}
-	uint32 GetClosureDeclaration(const Local& local, uint32 deep);
+	void MakeClosure(Context& context, const Local& local, uint32 deep);
 };
 struct CaptureInfo
 {
-	uint32 closure;
-	uint32 member;
+	uint32 closure;//存局部变量的那个闭包对象的局部变量id
+	uint32 member;//存局部变量的那个成员字段索引
 	CaptureInfo() :closure(INVALID), member(INVALID) {}
 	CaptureInfo(uint32 closure, uint32 member) :closure(closure), member(member) {}
 };
@@ -60,23 +75,14 @@ class LocalContext
 	Dictionary<uint32, Anchor> localAnchors;
 	uint32 index;
 	List<ClosureVariable*, true> closureStack;
-	List<ClosureVariable*, true> closures;
-	Dictionary<uint32, CaptureInfo, true> captures;// localIndex => captureInfo
+	List<ClosureVariable*, true> closures;// id => closure
 public:
-	inline LocalContext(DeclarationManager* manager, Context& context) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0)
+	Dictionary<uint32, CaptureInfo, true> captures;// localIndex => captureInfo
+	inline LocalContext(DeclarationManager* manager) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0)
 	{
-		PushBlock(context);
+		PushBlock();
 	}
-	inline void PushBlock(Context& context)
-	{
-		localDeclarations.Add(new Dictionary<String, Local>(0));
-		ClosureVariable* prev = NULL;
-		if(closureStack.Count()) prev = closureStack.Peek();
-		ClosureVariable* closure = new ClosureVariable(manager, context, closures.Count(), index, prev);
-		closureStack.Add(closure);
-		closures.Add(closure);
-		AddLocal(Anchor(), closure->Closure()->declaration.DefineType());
-	}
+	void PushBlock();
 	inline void PopBlock()
 	{
 		delete localDeclarations.Pop();
@@ -93,10 +99,10 @@ public:
 
 	inline uint32 CurrentDeep() const { return localDeclarations.Count(); }
 	bool TryGetLocalAndDeep(const String& name, Local& local, uint32& deep);
-	inline const ClosureVariable* GetClosure(uint32 closureIndex) const { return closures[closureIndex]; }
+	inline ClosureVariable* CurrentClosure() { return closureStack.Peek(); }
 	inline ClosureVariable* GetClosure(uint32 closureIndex) { return closures[closureIndex]; }
 	inline bool TryGetCaptureInfo(uint32 localIndex, CaptureInfo& capture) const { return captures.TryGet(localIndex, capture); }
-	CompilingDeclaration MakeClosure(LocalContext* context, const Local& local, uint32 deep);
+	CompilingDeclaration MakeClosure(Context& context, const Local& local, uint32 deep);
 
 	void Reset(bool deleteClosureDeclaration);
 	~LocalContext();
