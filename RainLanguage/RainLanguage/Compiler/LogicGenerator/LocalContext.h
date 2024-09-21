@@ -32,6 +32,7 @@ class ClosureVariable
 {
 	LocalContext* localContent;
 	DeclarationManager* manager;
+	bool hold;
 	uint32 id;
 	uint32 localIndex;
 	uint32 prevMember;
@@ -43,11 +44,11 @@ class ClosureVariable
 public:
 	List<ClosureMemberVariable, true> variables;
 	ClosureVariable* prevClosure;
-	bool hold;
 	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, uint32 localIndex, ClosureVariable* prevClosure)
-		:localContent(localContent), manager(manager), id(id), localIndex(localIndex), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure), hold(false)
+		:localContent(localContent), manager(manager), hold(false), id(id), localIndex(localIndex), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
 	{
 	}
+	inline bool Hold() const { return hold || paths.Count(); }
 	inline uint32 ID() const { return id; }
 	inline uint32 LocalIndex() const { return localIndex; }
 	inline CompilingClass* Compiling() const { return compiling; }

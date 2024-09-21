@@ -274,24 +274,49 @@ VariableMemberExpression::~VariableMemberExpression()
 	delete target; target = NULL;
 }
 
+void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, LogicVariable& variable, CompilingDeclaration& member) const
+{
+	ClosureVariable* closure = parameter.localContext->GetClosure(closureId);
+	variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
+	List<uint32, true> path = closure->GetPath(localIndex);
+	AbstractClass* abstractClass = closure->Abstract();
+	//todo 这边遍历的时候还需要注意剔除不必要的闭包节点
+	for(uint32 i = 0; i < path.Count(); i++)
+	{
+		member = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, path[i], abstractClass->declaration.index);
+		if(i < path.Count() - 1)
+		{
+			const Type& memberType = abstractClass->variables[member.index]->type;
+			abstractClass = parameter.manager->selfLibaray->classes[memberType.index];
+			LogicGenerateParameter transitional(parameter, 1);
+			LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
+			variable = transitional.results[0];
+		}
+	}
+}
+
 void VariableClosureExpression::Generator(LogicGenerateParameter& parameter)
 {
-	//todo 闭包变量取值
+	LogicVariable variable;
+	CompilingDeclaration member;
+	GetVariable(parameter, variable, member);
+	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), variable, member, 0, parameter.finallyAddress);
 }
 
 void VariableClosureExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
-	//todo 闭包变量赋值
+	LogicVariable variable;
+	CompilingDeclaration member;
+	GetVariable(parameter, variable, member);
+	LogicVariabelAssignment(parameter.manager, parameter.generator, variable, member, 0, parameter.results[0], parameter.finallyAddress);
 }
 
 void VariableClosureExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
-	//todo 填充值
-}
-
-VariableClosureExpression::~VariableClosureExpression()
-{
-	delete memberExpression; memberExpression = NULL;
+	LogicVariable variable;
+	CompilingDeclaration member;
+	GetVariable(parameter, variable, member);
+	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(index, returns[0]), variable, member, 0, parameter.finallyAddress);
 }
 
 void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& parameter)

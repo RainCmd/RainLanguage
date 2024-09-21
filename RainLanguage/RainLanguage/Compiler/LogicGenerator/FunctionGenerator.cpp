@@ -827,7 +827,7 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
 
 	//todo 这块应该放到语句解析那去，每个块开头都应该有这个语句
-	if(parameter.localContext->GetClosure(0)->hold)
+	if(parameter.localContext->GetClosure(0)->Hold())
 		statements->statements.Insert(0, new InitClosureStatement(parameter.localContext->GetClosure(0)));
 
 	statements->Generator(statementGeneratorParameter);

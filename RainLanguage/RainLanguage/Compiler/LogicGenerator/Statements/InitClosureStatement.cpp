@@ -27,7 +27,7 @@ LogicVariable GetVariable(LogicGenerateParameter& parameter, const CompilingDecl
 
 void InitClosureStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	//需要检查 closure.hold 来确定是否要创建闭包对象
+	//todo 需要检查 closure.hold 来确定是否要创建闭包对象
 	TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 	LogicVariable localClosure = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
 	parameter.generator->WriteCode(Instruct::BASE_CreateObject);
