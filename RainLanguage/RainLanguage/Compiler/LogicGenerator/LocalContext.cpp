@@ -6,14 +6,16 @@
 
 void ClosureVariable::Init(Context& context)
 {
-	if(compiling) return;
+	if(Inited()) return;
 	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Private, DeclarationCategory::Class, manager->compilingLibrary.classes.Count(), 0);
+	localContent->AddLocal(Anchor(), declaration.DefineType());
 	manager->compilingLibrary.classes.Add(compiling = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
 	compiling->parent = TYPE_Handle;
 	compiling->relies = context.relies;
 	manager->selfLibaray->classes.Add(abstract = new AbstractClass(compiling->name.content, declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
 	if(prevClosure)
 	{
+		prevClosure->Init(context);
 		prevMember = compiling->variables.Count();
 		declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, prevMember, compiling->declaration.index);
 		CompilingClass::Variable* variable = new CompilingClass::Variable(Anchor(), declaration, List<Anchor>(0), Anchor());
@@ -30,7 +32,6 @@ void ClosureVariable::Init(Context& context)
 
 void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path)
 {
-	Init(context);
 	if(--deep)
 	{
 		path.Add(prevMember);
@@ -65,20 +66,19 @@ void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 d
 
 void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep)
 {
+	Init(context);
 	List<uint32, true> path(deep);
 	MakeClosure(context, local, deep, path);
 	paths.Set(local.index, path);
 }
 
-void LocalContext::PushBlock()
+void LocalContext::PushBlock(ClosureVariable* prevClosure)
 {
 	localDeclarations.Add(new Dictionary<String, Local>(0));
-	ClosureVariable* prev = NULL;
-	if(closureStack.Count()) prev = closureStack.Peek();
-	ClosureVariable* closure = new ClosureVariable(this, manager, closures.Count(), index, prev);
+	if(closureStack.Count()) prevClosure = closureStack.Peek();
+	ClosureVariable* closure = new ClosureVariable(this, manager, closures.Count(), prevClosure);
 	closureStack.Add(closure);
 	closures.Add(closure);
-	AddLocal(Anchor(), closure->Compiling()->declaration.DefineType());
 }
 
 Local LocalContext::AddLocal(const String& name, const Anchor& anchor, const Type& type)

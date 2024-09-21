@@ -216,13 +216,6 @@ Attribute ExpressionParser::GetVariableAttribute(const CompilingDeclaration& dec
 			if(manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->readonly)return Attribute::Value;
 			else return Attribute::Assignable | Attribute::Value;
 		case DeclarationCategory::LambdaClosureValue:
-		{
-			const ClosureVariable* index = localContext->GetClosure(declaration.definition);
-			List<uint32, true> path = index->GetPath(declaration.index);
-			for(uint32 i = 1; i < path.Count(); i++)
-				index = index->prevClosure;
-
-		}
 		case DeclarationCategory::LocalVariable:
 			return Attribute::Assignable | Attribute::Value;
 	}
@@ -270,7 +263,11 @@ bool ExpressionParser::TryGetThisValueExpression(const Anchor& anchor, Expressio
 				index->referencesExternalLocal = true;
 				return true;
 			}
-			else deep += index->localContext->CurrentDeep();
+			else
+			{
+				deep += index->localContext->CurrentDeep();
+				index = index->environment;
+			}
 	}
 	MESSAGE2(manager->messages, anchor, MessageType::ERROR_NOT_MEMBER_METHOD);
 	return false;
@@ -521,7 +518,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if(lambdaExpression->parameters.Count() == abstractDelegate->parameters.Count())
 			{
-				LocalContext* lambdaLocalContext = new LocalContext(manager);
+				LocalContext* lambdaLocalContext = new LocalContext(manager, localContext->CurrentClosure());
 				List<Local> lambdaParameters = List<Local>(0);
 				for(uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
 					lambdaParameters.Add(lambdaLocalContext->AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
@@ -719,7 +716,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			if(type.dimension || type.code != TypeCode::Delegate) return false;
 			AbstractDelegate* abstractDelegate = manager->GetLibrary(type.library)->delegates[type.index];
 			if(lambdaExpression->parameters.Count() != abstractDelegate->parameters.Count()) return false;
-			LocalContext lambdaLocalContext = LocalContext(manager);
+			LocalContext lambdaLocalContext = LocalContext(manager, localContext->CurrentClosure());
 			for(uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
 				lambdaLocalContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
 			ExpressionParser parser = ExpressionParser(evaluationParameter, context, &lambdaLocalContext, this, false);
@@ -1213,7 +1210,11 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& name, List<CompilingDecl
 				index->referencesExternalLocal = true;
 				return true;
 			}
-			else deep += index->localContext->CurrentDeep();
+			else
+			{
+				deep += index->localContext->CurrentDeep();
+				index = index->environment;
+			}
 	}
 	return context.TryFindDeclaration(manager, name, result);
 }

@@ -44,13 +44,18 @@ class ClosureVariable
 public:
 	List<ClosureMemberVariable, true> variables;
 	ClosureVariable* prevClosure;
-	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, uint32 localIndex, ClosureVariable* prevClosure)
-		:localContent(localContent), manager(manager), hold(false), id(id), localIndex(localIndex), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
+	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, ClosureVariable* prevClosure)
+		:localContent(localContent), manager(manager), hold(false), id(id), localIndex(INVALID), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
 	{
 	}
+	inline bool Inited() const { return localIndex != INVALID; }
 	inline bool Hold() const { return hold || paths.Count(); }
 	inline uint32 ID() const { return id; }
-	inline uint32 LocalIndex() const { return localIndex; }
+	inline uint32 LocalIndex() const
+	{
+		ASSERT_DEBUG(Inited(), "未初始化");
+		return localIndex;
+	}
 	inline CompilingClass* Compiling() const { return compiling; }
 	inline AbstractClass* Abstract() const { return abstract; }
 	inline List<uint32, true> GetPath(uint32 local) const
@@ -79,11 +84,12 @@ class LocalContext
 	List<ClosureVariable*, true> closures;// id => closure
 public:
 	Dictionary<uint32, CaptureInfo, true> captures;// localIndex => captureInfo
-	inline LocalContext(DeclarationManager* manager) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0)
+	inline LocalContext(DeclarationManager* manager, ClosureVariable* prevClosure) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0)
 	{
-		PushBlock();
+		PushBlock(prevClosure);
 	}
-	void PushBlock();
+	void PushBlock(ClosureVariable* prevClosure);
+	inline void PushBlock() { PushBlock(NULL); }
 	inline void PopBlock()
 	{
 		delete localDeclarations.Pop();

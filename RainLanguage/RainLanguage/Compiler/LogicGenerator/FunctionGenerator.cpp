@@ -155,8 +155,14 @@ void CheckFunctionStatementValidity(MessageCollector* collector, Statement* stat
 	}
 }
 
+void AddInitClosureStatement(BlockStatement* block, LocalContext* context)
+{
+	block->statements.Add(new InitClosureStatement(context->CurrentClosure()));
+}
+
 FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(), declaration(), parameters(0), returns(0), statements(new BlockStatement(Anchor()))
 {
+	AddInitClosureStatement(statements, parameter.localContext);
 	List<ConstantExpressionPair, true> pairs = List<ConstantExpressionPair, true>(0);
 	LogicGenerateParameter logicGenerateParameter = LogicGenerateParameter(parameter);
 	for(uint32 i = 0; i < parameter.manager->compilingLibrary.variables.Count(); i++)
@@ -321,6 +327,7 @@ FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(
 		{
 			Context context = Context(variable->name.source, variable->space, variable->relies);
 			parameter.localContext->PushBlock();
+			AddInitClosureStatement(statements, parameter.localContext);
 			ExpressionParser parser = ExpressionParser(logicGenerateParameter, context, parameter.localContext, NULL, false);
 			Expression* expression = NULL;
 			if(parser.TryParse(variable->expression, expression))
@@ -341,6 +348,7 @@ label_collect_const_fail:
 
 FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(function->name), declaration(function->declaration), parameters(function->parameters.Count()), returns(function->returns), statements(new BlockStatement(function->name))
 {
+	AddInitClosureStatement(statements, parameter.localContext);
 	if(function->declaration.category == DeclarationCategory::Function)
 	{
 		for(uint32 i = 0; i < function->parameters.Count(); i++)
@@ -409,6 +417,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 			if(!variable->expression.content.IsEmpty())
 			{
 				parameter.localContext->PushBlock();
+				AddInitClosureStatement(statements, parameter.localContext);
 				ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, false);
 				Expression* expression = NULL;
 				if(parser.TryParse(variable->expression, expression))
@@ -448,6 +457,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 
 FunctionGenerator::FunctionGenerator(CompilingDeclaration declaration, GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(parameter.manager->compilingLibrary.GetName(declaration)), declaration(declaration), parameters(1), returns(0), statements(new BlockStatement(Anchor()))
 {
+	AddInitClosureStatement(statements, parameter.localContext);
 	const CompilingClass* compilingClass = parameter.manager->compilingLibrary.classes[declaration.definition];
 	parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), compilingClass->name, declaration.DefineType()));
 	ParseBody(parameter, Context(compilingClass->name.source, declaration, compilingClass->space, compilingClass->relies), compilingClass->destructor, true);
@@ -507,6 +517,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 			{
 				BlockStatement* newBlock = NULL;
 				parameter.localContext->PushBlock();
+				AddInitClosureStatement(blockStack.Peek(), parameter.localContext);
 				if(blockStack.Peek()->statements.Count())
 				{
 					Statement* statement = blockStack.Peek()->statements.Peek();
@@ -585,6 +596,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 							statement->falseBranch->indent = line.indent;
 							blockStack.Add(statement->falseBranch);
 							parameter.localContext->PushBlock();
+							AddInitClosureStatement(blockStack.Peek(), parameter.localContext);
 							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, destructor);
 						}
 						else if(ContainAll(blockStack.Peek()->statements.Peek()->type, StatementType::Loop))
@@ -595,6 +607,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 							statement->elseBlock->indent = line.indent;
 							blockStack.Add(statement->elseBlock);
 							parameter.localContext->PushBlock();
+							AddInitClosureStatement(blockStack.Peek(), parameter.localContext);
 							ParseBranch(parameter, blockStack.Peek()->statements, lineAnchor.Sub(lexical.anchor.GetEnd()).Trim(), context, destructor);
 						}
 						else MESSAGE2(parameter.manager->messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
@@ -825,11 +838,6 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	uint32 entryPoint = parameter.generator->GetPointer();
 	uint32 localPoint = variableGenerator.GetHoldMemory();
 	StatementGeneratorParameter statementGeneratorParameter = StatementGeneratorParameter(parameter, &variableGenerator, &finallyAddress);
-
-	//todo 这块应该放到语句解析那去，每个块开头都应该有这个语句
-	if(parameter.localContext->GetClosure(0)->Hold())
-		statements->statements.Insert(0, new InitClosureStatement(parameter.localContext->GetClosure(0)));
-
 	statements->Generator(statementGeneratorParameter);
 	finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.generator->SetValue(&stackSize, MemoryAlignment(variableGenerator.Generate(parameter.manager, parameter.generator, parameter.localContext->GetLocalAnchors()), MEMORY_ALIGNMENT_MAX));
