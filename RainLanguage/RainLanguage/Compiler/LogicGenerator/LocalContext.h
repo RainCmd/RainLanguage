@@ -39,6 +39,7 @@ class ClosureVariable
 	List<List<uint32, true>> paths;// curr -> prev
 	CompilingClass* compiling;
 	AbstractClass* abstract;
+	void Init(Context& context);
 	void MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path);
 public:
 	List<ClosureMemberVariable, true> variables;
@@ -47,8 +48,8 @@ public:
 		:localContent(localContent), manager(manager), hold(false), id(id), localIndex(INVALID), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
 	{
 	}
-	void Init(Context& context);
 	inline bool Inited() const { return localIndex != INVALID; }
+	inline const LocalContext* GetLocalContext() const { return localContent; }
 	inline bool Hold() const { return hold || paths.Count(); }
 	inline uint32 ID() const { return id; }
 	inline uint32 LocalIndex() const
@@ -56,6 +57,7 @@ public:
 		ASSERT_DEBUG(Inited(), "未初始化");
 		return localIndex;
 	}
+	inline uint32 PrevMember() const { return prevMember; }
 	inline CompilingClass* Compiling() const { return compiling; }
 	inline AbstractClass* Abstract() const { return abstract; }
 	inline List<uint32, true> GetPath(uint32 pathIndex) const { return paths[pathIndex]; }
@@ -64,10 +66,8 @@ public:
 };
 struct CaptureInfo
 {
-	uint32 closure;//存局部变量的那个闭包对象的局部变量id
+	uint32 closure;//存局部变量的那个闭包id
 	uint32 member;//存局部变量的那个成员字段索引
-	CaptureInfo() :closure(INVALID), member(INVALID) {}
-	CaptureInfo(uint32 closure, uint32 member) :closure(closure), member(member) {}
 };
 class MessageCollector;
 class LocalContext
@@ -103,7 +103,6 @@ public:
 	bool TryGetLocalAndDeep(const String& name, Local& local, uint32& deep);
 	inline ClosureVariable* CurrentClosure() { return closureStack.Peek(); }
 	inline ClosureVariable* GetClosure(uint32 closureIndex) { return closures[closureIndex]; }
-	inline bool TryGetCaptureInfo(uint32 localIndex, CaptureInfo& capture) const { return captures.TryGet(localIndex, capture); }
 	CompilingDeclaration MakeClosure(Context& context, const Local& local, uint32 deep);
 
 	void Reset(bool deleteClosureDeclaration);

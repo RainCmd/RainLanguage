@@ -4,40 +4,6 @@
 #include "../DeclarationManager.h"
 #include "../Context.h"
 
-void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path)
-{
-	if(--deep)
-	{
-		path.Add(prevMember);
-		if(prevClosure->localContent != localContent) hold = true;
-		return prevClosure->MakeClosure(context, local, deep, path);
-	}
-	else
-	{
-		CaptureInfo info;
-		if(localContent->captures.TryGet(local.index, info)) path.Add(info.member);
-		else
-		{
-			info.closure = localIndex;
-			info.member = compiling->variables.Count();
-			CompilingDeclaration declaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassVariable, info.member, compiling->declaration.index);
-			CompilingClass::Variable* variable = new CompilingClass::Variable(local.anchor, declaration, List<Anchor>(0), Anchor());
-			variable->type = local.type;
-			compiling->variables.Add(variable);
-			uint8 alignment;
-			uint32 size = manager->GetStackSize(variable->type, alignment);
-			abstract->size = MemoryAlignment(abstract->size, alignment);
-			abstract->variables.Add(new AbstractVariable(local.anchor.content, declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
-			abstract->size += size;
-			if(alignment > abstract->alignment) abstract->alignment = alignment;
-			path.Add(info.member);
-			new(variables.Add())ClosureMemberVariable(local.index, info.member);
-			hold = true;
-			localContent->captures.Set(local.index, info);
-		}
-	}
-}
-
 void ClosureVariable::Init(Context& context)
 {
 	if(Inited()) return;
@@ -61,6 +27,40 @@ void ClosureVariable::Init(Context& context)
 		abstract->variables.Add(new AbstractVariable(String(), declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
 		abstract->size += size;
 		if(alignment > abstract->alignment) abstract->alignment = alignment;
+	}
+}
+
+void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path)
+{
+	if(--deep)
+	{
+		path.Add(prevMember);
+		if(prevClosure->localContent != localContent) hold = true;
+		return prevClosure->MakeClosure(context, local, deep, path);
+	}
+	else
+	{
+		CaptureInfo info;
+		if(localContent->captures.TryGet(local.index, info)) path.Add(info.member);
+		else
+		{
+			info.closure = id;
+			info.member = compiling->variables.Count();
+			CompilingDeclaration declaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::ClassVariable, info.member, compiling->declaration.index);
+			CompilingClass::Variable* variable = new CompilingClass::Variable(local.anchor, declaration, List<Anchor>(0), Anchor());
+			variable->type = local.type;
+			compiling->variables.Add(variable);
+			uint8 alignment;
+			uint32 size = manager->GetStackSize(variable->type, alignment);
+			abstract->size = MemoryAlignment(abstract->size, alignment);
+			abstract->variables.Add(new AbstractVariable(local.anchor.content, declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
+			abstract->size += size;
+			if(alignment > abstract->alignment) abstract->alignment = alignment;
+			path.Add(info.member);
+			new(variables.Add())ClosureMemberVariable(local.index, info.member);
+			hold = true;
+			localContent->captures.Set(local.index, info);
+		}
 	}
 }
 

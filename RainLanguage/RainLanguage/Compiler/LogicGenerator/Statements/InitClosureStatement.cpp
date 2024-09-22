@@ -39,14 +39,23 @@ void InitClosureStatement::Generator(StatementGeneratorParameter& parameter)
 
 	AbstractClass* abstractClass = closure->Abstract();
 	LogicGenerateParameter logicGenerateParameter(parameter, 0);
+	if(closure->prevClosure)
+	{
+		CompilingDeclaration localDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, closure->prevClosure->LocalIndex(), NULL);
+		if(closure->GetLocalContext() != closure->prevClosure->GetLocalContext()) localDeclaration.index = thisIndex;
+		const AbstractVariable* member = abstractClass->variables[closure->PrevMember()];
+		LogicVariable sourceLocal = GetVariable(logicGenerateParameter, localDeclaration, member->type);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, localClosure, member->declaration, 0, sourceLocal, parameter.finallyAddress);
+	}
 	for(uint32 i = 0; i < closure->variables.Count(); i++)
 	{
 		ClosureMemberVariable info = closure->variables[i];
 		if(parameter.variableGenerator->IsLocalAdded(info.local))
 		{
 			CompilingDeclaration localDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LocalVariable, info.local, NULL);
-			LogicVariable sourceLocal = GetVariable(logicGenerateParameter, localDeclaration, abstractClass->variables[info.member]->type);
-			LogicVariabelAssignment(parameter.manager, parameter.generator, localClosure, abstractClass->variables[info.member]->declaration, 0, sourceLocal, parameter.finallyAddress);
+			const AbstractVariable* member = abstractClass->variables[info.member];
+			LogicVariable sourceLocal = GetVariable(logicGenerateParameter, localDeclaration, member->type);
+			LogicVariabelAssignment(parameter.manager, parameter.generator, localClosure, member->declaration, 0, sourceLocal, parameter.finallyAddress);
 		}
 	}
 	block.Finish();

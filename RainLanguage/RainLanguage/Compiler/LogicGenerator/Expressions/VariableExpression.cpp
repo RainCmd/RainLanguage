@@ -6,7 +6,7 @@
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
 	CaptureInfo info;
-	if(parameter.localContext->TryGetCaptureInfo(declaration.index, info))
+	if(parameter.localContext->captures.TryGet(declaration.index, info))
 	{
 		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
 		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
@@ -23,7 +23,7 @@ void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
 	CaptureInfo info;
-	if(parameter.localContext->TryGetCaptureInfo(declaration.index, info))
+	if(parameter.localContext->captures.TryGet(declaration.index, info))
 	{
 		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
 		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
@@ -40,15 +40,7 @@ void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parame
 
 void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
-	CaptureInfo info;
-	if(parameter.localContext->TryGetCaptureInfo(declaration.index, info))
-	{
-		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
-		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
-		CompilingDeclaration member(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, info.member, closure->Compiling()->declaration.index);
-		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(index, returns[0]), variable, member, 0, parameter.finallyAddress);
-	}
-	else
+	if(!parameter.localContext->captures.Contains(declaration.index))
 	{
 		parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
 		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[index].address, parameter.generator->globalReference);

@@ -157,7 +157,7 @@ void CheckFunctionStatementValidity(MessageCollector* collector, Statement* stat
 
 void AddInitClosureStatement(BlockStatement* block, LocalContext* context)
 {
-	block->statements.Add(new InitClosureStatement(context->CurrentClosure()));
+	block->statements.Add(new InitClosureStatement(context->CurrentClosure(), INVALID));
 }
 
 FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(), declaration(), parameters(0), returns(0), statements(new BlockStatement(Anchor()))
