@@ -3,6 +3,7 @@
 #include "VariableExpression.h"
 #include "ArrayExpression.h"
 #include "ExpressionReferenceExpression.h"
+#include "../LocalContext.h"
 
 void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 {
@@ -10,8 +11,8 @@ void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 	expression->Generator(expressionParameter);
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(parameter.GetResult(0, returns[0]), VariableAccessType::Write);
-	for (uint32 i = 0; i < expressionParameter.results.Count(); i++) parameter.generator->WriteCode(expressionParameter.results[i], VariableAccessType::Read);
-	switch (instruct)
+	for(uint32 i = 0; i < expressionParameter.results.Count(); i++) parameter.generator->WriteCode(expressionParameter.results[i], VariableAccessType::Read);
+	switch(instruct)
 	{
 		case Instruct::INTEGER_Divide:
 		case Instruct::INTEGER_Mod:
@@ -45,13 +46,20 @@ void OperationPostIncrementExpression::Generator(LogicGenerateParameter& paramet
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(variableParameter.results[0], VariableAccessType::ReadWrite);
 	Expression* variable = variableExpression;
-	if (ContainAny(variable->type, ExpressionType::ExpressionReferenceExpression)) variable = ((ExpressionReferenceExpression*)variableExpression)->expression;
-	if (ContainAny(variable->type, ExpressionType::VariableMemberExpression))
+	if(ContainAny(variable->type, ExpressionType::ExpressionReferenceExpression)) variable = ((ExpressionReferenceExpression*)variableExpression)->expression;
+	if(ContainAny(variable->type, ExpressionType::VariableMemberExpression))
 	{
 		VariableMemberExpression* target = (VariableMemberExpression*)variable;
-		if (target->IsReferenceMember()) target->GeneratorAssignment(variableParameter);
+		if(target->IsReferenceMember()) target->GeneratorAssignment(variableParameter);
 	}
-	else if (ContainAny(variable->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)variable)->GeneratorAssignment(variableParameter);
+	else if(ContainAny(variable->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)variable)->GeneratorAssignment(variableParameter);
+	else if(ContainAny(variable->type, ExpressionType::VariableClosureExpression)) ((VariableClosureExpression*)variable)->GeneratorAssignment(variableParameter);
+	else if(ContainAny(variable->type, ExpressionType::VariableLocalExpression))
+	{
+		VariableLocalExpression* local = (VariableLocalExpression*)variable;
+		if(parameter.localContext->captures.Contains(local->declaration.index))
+			local->GeneratorAssignment(variableParameter);
+	}
 }
 
 OperationPostIncrementExpression::~OperationPostIncrementExpression()
@@ -65,13 +73,20 @@ void OperationPrevIncrementExpression::Generator(LogicGenerateParameter& paramet
 	parameter.generator->WriteCode(instruct);
 	parameter.generator->WriteCode(parameter.results[0], VariableAccessType::ReadWrite);
 	Expression* variable = variableExpression;
-	if (ContainAny(variable->type, ExpressionType::ExpressionReferenceExpression)) variable = ((ExpressionReferenceExpression*)variableExpression)->expression;
-	if (ContainAny(variable->type, ExpressionType::VariableMemberExpression))
+	if(ContainAny(variable->type, ExpressionType::ExpressionReferenceExpression)) variable = ((ExpressionReferenceExpression*)variableExpression)->expression;
+	if(ContainAny(variable->type, ExpressionType::VariableMemberExpression))
 	{
 		VariableMemberExpression* memberExpression = (VariableMemberExpression*)variable;
-		if (memberExpression->IsReferenceMember()) memberExpression->GeneratorAssignment(parameter);
+		if(memberExpression->IsReferenceMember()) memberExpression->GeneratorAssignment(parameter);
 	}
-	else if (ContainAny(variable->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)variable)->GeneratorAssignment(parameter);
+	else if(ContainAny(variable->type, ExpressionType::ArrayEvaluationExpression)) ((ArrayEvaluationExpression*)variable)->GeneratorAssignment(parameter);
+	else if(ContainAny(variable->type, ExpressionType::VariableClosureExpression)) ((VariableClosureExpression*)variable)->GeneratorAssignment(parameter);
+	else if(ContainAny(variable->type, ExpressionType::VariableLocalExpression))
+	{
+		VariableLocalExpression* local = (VariableLocalExpression*)variable;
+		if(parameter.localContext->captures.Contains(local->declaration.index))
+			local->GeneratorAssignment(parameter);
+	}
 }
 
 OperationPrevIncrementExpression::~OperationPrevIncrementExpression()
