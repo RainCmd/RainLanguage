@@ -525,24 +525,9 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					lambdaParameters.Add(lambdaLocalContext->AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
 				ExpressionParser parser = ExpressionParser(evaluationParameter, context, lambdaLocalContext, this, false);
 				Expression* lambdaBody;
+				uint32 lambdaCount = manager->lambdaGenerators.Count();
 				if(parser.TryParse(lambdaExpression->body, lambdaBody))
 				{
-					if(parser.referencesExternalLocal)
-					{
-						lambdaLocalContext->Reset(true);
-						lambdaLocalContext->PushBlock(localContext->CurrentClosure());
-						lambdaLocalContext->CurrentClosure()->Init(context);
-						lambdaParameters.Clear();
-						lambdaParameters.Add(lambdaLocalContext->GetLocal(lambdaLocalContext->CurrentClosure()->LocalIndex()));
-						for(uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
-							lambdaParameters.Add(lambdaLocalContext->AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
-						delete lambdaBody; lambdaBody = NULL;
-						if(!parser.TryParse(lambdaExpression->body, lambdaBody))
-						{
-							delete lambdaLocalContext;
-							return false;
-						}
-					}
 					if(!abstractDelegate->returns.Count())
 					{
 						if(HasBlurryResult(lambdaBody))
@@ -558,6 +543,34 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 						delete lambdaBody;
 						delete lambdaLocalContext;
 						return false;
+					}
+					if(parser.referencesExternalLocal)
+					{
+						while(manager->lambdaGenerators.Count() > lambdaCount)
+						{
+							LambdaGenerator* index = manager->lambdaGenerators.Pop();
+							index->localContext->Reset(true);
+							delete index;
+						}
+						lambdaLocalContext->Reset(true);
+						lambdaLocalContext->PushBlock(localContext->CurrentClosure());
+						lambdaLocalContext->CurrentClosure()->Init(context);
+						lambdaParameters.Clear();
+						lambdaParameters.Add(lambdaLocalContext->GetLocal(lambdaLocalContext->CurrentClosure()->LocalIndex()));
+						for(uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
+							lambdaParameters.Add(lambdaLocalContext->AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
+						delete lambdaBody; lambdaBody = NULL;
+						if(!parser.TryParse(lambdaExpression->body, lambdaBody))
+						{
+							delete lambdaLocalContext;
+							return false;
+						}
+						if(abstractDelegate->returns.Count() && !parser.TryAssignmentConvert(lambdaBody, abstractDelegate->returns.GetTypesSpan()))
+						{
+							delete lambdaBody;
+							delete lambdaLocalContext;
+							return false;
+						}
 					}
 					CompilingDeclaration lambdaDeclaration = CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::Lambda, manager->selfLibaray->functions.Count(), manager->lambdaGenerators.Count());
 					CompilingFunction* lambdaFunction = new CompilingFunction(lambdaExpression->anchor, lambdaDeclaration, List<Anchor>(0), context.compilingSpace, abstractDelegate->parameters.Count(), abstractDelegate->returns.Count(), List<Line>(0));

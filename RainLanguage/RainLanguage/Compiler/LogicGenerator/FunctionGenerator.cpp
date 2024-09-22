@@ -516,8 +516,6 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 			if(blockIndent < line.indent)
 			{
 				BlockStatement* newBlock = NULL;
-				parameter.localContext->PushBlock(NULL);
-				AddInitClosureStatement(blockStack.Peek(), parameter.localContext);
 				if(blockStack.Peek()->statements.Count())
 				{
 					Statement* statement = blockStack.Peek()->statements.Peek();
@@ -552,6 +550,8 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 				if(!newBlock) blockStack.Peek()->statements.Add(newBlock = new BlockStatement(lineAnchor));
 				newBlock->indent = line.indent;
 				blockStack.Add(newBlock);
+				parameter.localContext->PushBlock(NULL);
+				AddInitClosureStatement(newBlock, parameter.localContext);
 			}
 			else while(blockStack.Count())
 			{
