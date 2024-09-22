@@ -26,7 +26,7 @@ void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line)
 	if(database->functions.Count())
 	{
 		currentFile->statements.Set(line, database->statements.Count());
-		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, debug ? generator->AddCodeReference(generator->WriteCode(Instruct::BREAK)) : generator->GetPointer());
+		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->AddCodeReference(debug ? generator->WriteCode(Instruct::BREAK) : generator->GetPointer()));
 	}
 }
 
