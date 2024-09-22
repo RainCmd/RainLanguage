@@ -61,10 +61,10 @@ public:
 class VariableClosureExpression :public VariableExpression
 {
 	uint32 closureId;
-	uint32 localIndex;
+	uint32 pathIndex;
 	void GetVariable(LogicGenerateParameter& parameter, LogicVariable& variable, CompilingDeclaration& member) const;
 public:
-	inline VariableClosureExpression(const Anchor& anchor, uint32 closureId, uint32 localIndex, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableClosureExpression, anchor, type), closureId(closureId), localIndex(localIndex)
+	inline VariableClosureExpression(const Anchor& anchor, uint32 closureId, uint32 pathIndex, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableClosureExpression, anchor, type), closureId(closureId), pathIndex(pathIndex)
 	{
 		this->attribute = CombineType(attribute, type);
 	}

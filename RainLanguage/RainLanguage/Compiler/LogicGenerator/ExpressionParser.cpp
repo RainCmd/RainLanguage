@@ -233,6 +233,7 @@ Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
 		case DeclarationCategory::ClassVariable:
 			return manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
 		case DeclarationCategory::LambdaClosureValue:
+			return localContext->GetClosure(declaration.definition)->GetClosureType(declaration.index);
 		case DeclarationCategory::LocalVariable:
 			return localContext->GetLocal(declaration.index).type;
 	}
@@ -529,9 +530,10 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					if(parser.referencesExternalLocal)
 					{
 						lambdaLocalContext->Reset(true);
-						lambdaLocalContext->PushBlock();
+						lambdaLocalContext->PushBlock(localContext->CurrentClosure());
+						lambdaLocalContext->CurrentClosure()->Init(context);
 						lambdaParameters.Clear();
-						lambdaParameters.Add(lambdaLocalContext->GetLocal(lambdaLocalContext->GetClosure(0)->LocalIndex()));
+						lambdaParameters.Add(lambdaLocalContext->GetLocal(lambdaLocalContext->CurrentClosure()->LocalIndex()));
 						for(uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
 							lambdaParameters.Add(lambdaLocalContext->AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i)));
 						delete lambdaBody; lambdaBody = NULL;
@@ -593,7 +595,7 @@ bool ExpressionParser::TryInferRightValueType(Expression*& expression, const Typ
 					}
 					lambdaFunction->returns = abstractDelegate->returns.GetTypes();
 					List<Statement*, true> statements(0);
-					if(lambdaLocalContext->GetClosure(0)->Hold()) statements.Add(new InitClosureStatement(lambdaLocalContext->CurrentClosure()));
+					if(lambdaLocalContext->CurrentClosure()->Hold()) statements.Add(new InitClosureStatement(lambdaLocalContext->CurrentClosure()));
 					if(abstractDelegate->returns.Count()) statements.Add(new ReturnStatement(lambdaBody->anchor, lambdaBody));
 					else statements.Add(new ExpressionStatement(lambdaBody->anchor, lambdaBody));
 					LambdaGenerator* lambdaGenerator = new LambdaGenerator(lambdaExpression->anchor, parser.referencesExternalLocal, abstractDelegate->returns.Count(), lambdaParameters, lambdaLocalContext, statements);
@@ -725,7 +727,7 @@ bool ExpressionParser::TryExplicitTypes(Expression* expression, Type type, List<
 			if(parser.referencesExternalLocal)
 			{
 				lambdaLocalContext.Reset(true);
-				lambdaLocalContext.PushBlock();
+				lambdaLocalContext.PushBlock(localContext->CurrentClosure());
 				for(uint32 i = 0; i < lambdaExpression->parameters.Count(); i++)
 					lambdaLocalContext.AddLocal(lambdaExpression->parameters[i], abstractDelegate->parameters.GetType(i));
 				delete lambdaBody; lambdaBody = NULL;

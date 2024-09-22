@@ -36,10 +36,9 @@ class ClosureVariable
 	uint32 id;
 	uint32 localIndex;
 	uint32 prevMember;
-	Dictionary<uint32, List<uint32, true>> paths;// curr => prev
+	List<List<uint32, true>> paths;// curr -> prev
 	CompilingClass* compiling;
 	AbstractClass* abstract;
-	void Init(Context& context);
 	void MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path);
 public:
 	List<ClosureMemberVariable, true> variables;
@@ -48,6 +47,7 @@ public:
 		:localContent(localContent), manager(manager), hold(false), id(id), localIndex(INVALID), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
 	{
 	}
+	void Init(Context& context);
 	inline bool Inited() const { return localIndex != INVALID; }
 	inline bool Hold() const { return hold || paths.Count(); }
 	inline uint32 ID() const { return id; }
@@ -58,13 +58,9 @@ public:
 	}
 	inline CompilingClass* Compiling() const { return compiling; }
 	inline AbstractClass* Abstract() const { return abstract; }
-	inline List<uint32, true> GetPath(uint32 local) const
-	{
-		List<uint32, true> path(0);
-		if(paths.TryGet(local, path)) return path;
-		EXCEPTION("局部变量访问路径不存在");
-	}
-	void MakeClosure(Context& context, const Local& local, uint32 deep);
+	inline List<uint32, true> GetPath(uint32 pathIndex) const { return paths[pathIndex]; }
+	Type GetClosureType(uint32 pathIndex);
+	uint32 MakeClosure(Context& context, const Local& local, uint32 deep);
 };
 struct CaptureInfo
 {
@@ -89,7 +85,6 @@ public:
 		PushBlock(prevClosure);
 	}
 	void PushBlock(ClosureVariable* prevClosure);
-	inline void PushBlock() { PushBlock(NULL); }
 	inline void PopBlock()
 	{
 		delete localDeclarations.Pop();

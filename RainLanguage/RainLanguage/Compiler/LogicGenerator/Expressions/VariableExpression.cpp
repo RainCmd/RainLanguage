@@ -278,7 +278,7 @@ void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, L
 {
 	ClosureVariable* closure = parameter.localContext->GetClosure(closureId);
 	variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
-	List<uint32, true> path = closure->GetPath(localIndex);
+	List<uint32, true> path = closure->GetPath(pathIndex);
 	AbstractClass* abstractClass = closure->Abstract();
 	//todo 这边遍历的时候还需要注意剔除不必要的闭包节点
 	for(uint32 i = 0; i < path.Count(); i++)

@@ -4,32 +4,6 @@
 #include "../DeclarationManager.h"
 #include "../Context.h"
 
-void ClosureVariable::Init(Context& context)
-{
-	if(Inited()) return;
-	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Private, DeclarationCategory::Class, manager->compilingLibrary.classes.Count(), 0);
-	localContent->AddLocal(Anchor(), declaration.DefineType());
-	manager->compilingLibrary.classes.Add(compiling = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
-	compiling->parent = TYPE_Handle;
-	compiling->relies = context.relies;
-	manager->selfLibaray->classes.Add(abstract = new AbstractClass(compiling->name.content, declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
-	if(prevClosure)
-	{
-		prevClosure->Init(context);
-		prevMember = compiling->variables.Count();
-		declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, prevMember, compiling->declaration.index);
-		CompilingClass::Variable* variable = new CompilingClass::Variable(Anchor(), declaration, List<Anchor>(0), Anchor());
-		variable->type = prevClosure->Compiling()->declaration.DefineType();
-		compiling->variables.Add(variable);
-		uint8 alignment;
-		uint32 size = manager->GetStackSize(variable->type, alignment);
-		abstract->size = MemoryAlignment(abstract->size, alignment);
-		abstract->variables.Add(new AbstractVariable(String(), declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
-		abstract->size += size;
-		if(alignment > abstract->alignment) abstract->alignment = alignment;
-	}
-}
-
 void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path)
 {
 	if(--deep)
@@ -64,12 +38,54 @@ void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 d
 	}
 }
 
-void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep)
+void ClosureVariable::Init(Context& context)
+{
+	if(Inited()) return;
+	if(prevClosure) prevClosure->Init(context);
+	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Private, DeclarationCategory::Class, manager->compilingLibrary.classes.Count(), 0);
+	localIndex = localContent->AddLocal(Anchor(), declaration.DefineType()).index;
+	manager->compilingLibrary.classes.Add(compiling = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
+	compiling->parent = TYPE_Handle;
+	compiling->relies = context.relies;
+	manager->selfLibaray->classes.Add(abstract = new AbstractClass(compiling->name.content, declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
+	if(prevClosure)
+	{
+		prevMember = compiling->variables.Count();
+		declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, prevMember, compiling->declaration.index);
+		CompilingClass::Variable* variable = new CompilingClass::Variable(Anchor(), declaration, List<Anchor>(0), Anchor());
+		variable->type = prevClosure->Compiling()->declaration.DefineType();
+		compiling->variables.Add(variable);
+		uint8 alignment;
+		uint32 size = manager->GetStackSize(variable->type, alignment);
+		abstract->size = MemoryAlignment(abstract->size, alignment);
+		abstract->variables.Add(new AbstractVariable(String(), declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
+		abstract->size += size;
+		if(alignment > abstract->alignment) abstract->alignment = alignment;
+	}
+}
+
+Type ClosureVariable::GetClosureType(uint32 pathIndex)
+{
+	//todo 这里需要根据Hold()优化
+	List<uint32, true> path = paths[pathIndex];
+	AbstractClass* index = abstract;
+	Type result = index->declaration.DefineType();
+	for(uint32 i = 0; i < path.Count() - 1; i++)
+	{
+		result = index->variables[path[i]]->type;
+		index = manager->selfLibaray->classes[result.index];
+	}
+	result = index->variables[path[path.Count() - 1]]->type;
+	return result;
+}
+
+uint32 ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 deep)
 {
 	Init(context);
 	List<uint32, true> path(deep);
 	MakeClosure(context, local, deep, path);
-	paths.Set(local.index, path);
+	paths.Add(path);
+	return paths.Count() - 1;
 }
 
 void LocalContext::PushBlock(ClosureVariable* prevClosure)
@@ -134,8 +150,8 @@ bool LocalContext::TryGetLocalAndDeep(const String& name, Local& local, uint32& 
 
 CompilingDeclaration LocalContext::MakeClosure(Context& context, const Local& local, uint32 deep)
 {
-	closureStack.Peek()->MakeClosure(context, local, deep);
-	return CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, local.index, closureStack.Peek()->ID());
+	uint32 path = closureStack.Peek()->MakeClosure(context, local, deep);
+	return CompilingDeclaration(LIBRARY_SELF, Visibility::None, DeclarationCategory::LambdaClosureValue, path, closureStack.Peek()->ID());
 }
 
 void LocalContext::Reset(bool deleteClosureDeclaration)

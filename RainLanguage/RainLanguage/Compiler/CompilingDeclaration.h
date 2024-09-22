@@ -25,7 +25,7 @@ enum class DeclarationCategory
 	Task,				  //库				任务类型索引        NULL
 	Native,				  //库				内部方法索引        NULL
 	Lambda,               //LIBRARY_SELF	方法列表索引        匿名函数索引
-	LambdaClosureValue,   //LIBRARY_SELF	局部变量id			所属闭包id
+	LambdaClosureValue,   //LIBRARY_SELF	成员路径索引		所属闭包id
 	LocalVariable,        //LIBRARY_SELF	局部变量id          NULL
 };
 
