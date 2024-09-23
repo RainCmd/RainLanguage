@@ -268,10 +268,9 @@ VariableMemberExpression::~VariableMemberExpression()
 
 void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, LogicVariable& variable, CompilingDeclaration& member) const
 {
-	ClosureVariable* closure = parameter.localContext->GetClosure(closureId);
-	variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
-	List<uint32, true> path = closure->GetPath(pathIndex);
 	AbstractClass* abstractClass = closure->Abstract();
+	variable = parameter.variableGenerator->GetLocal(parameter.manager, localIndex, abstractClass->declaration.DefineType());
+	List<uint32, true> path = closure->GetPath(pathIndex);
 	//todo 这边遍历的时候还需要注意剔除不必要的闭包节点
 	for(uint32 i = 0; i < path.Count(); i++)
 	{

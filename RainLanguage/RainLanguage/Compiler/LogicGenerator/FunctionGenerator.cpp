@@ -357,7 +357,9 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	}
 	else if(function->declaration.category == DeclarationCategory::StructFunction)
 	{
-		parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
+		Local thisValue = parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type);
+		parameter.localContext->thisLocalIndex = thisValue.index;
+		parameters.Add(thisValue);
 		for(uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
 		ParseBody(parameter, Context(function->name.source, parameter.manager->GetLibrary(function->declaration.library)->structs[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);
@@ -365,6 +367,7 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	else if(function->declaration.category == DeclarationCategory::Constructor)
 	{
 		Local thisValue = parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type);
+		parameter.localContext->thisLocalIndex = thisValue.index;
 		parameters.Add(thisValue);
 		for(uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
@@ -436,7 +439,9 @@ FunctionGenerator::FunctionGenerator(CompilingFunction* function, GeneratorParam
 	}
 	else if(function->declaration.category == DeclarationCategory::ClassFunction)
 	{
-		parameters.Add(parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type));
+		Local thisValue = parameter.localContext->AddLocal(KeyWord_this(), function->parameters[0].name, function->parameters[0].type);
+		parameter.localContext->thisLocalIndex = thisValue.index;
+		parameters.Add(thisValue);
 		for(uint32 i = 1; i < function->parameters.Count(); i++)
 			parameters.Add(parameter.localContext->AddLocal(function->parameters[i].name, function->parameters[i].type));
 		ParseBody(parameter, Context(function->name.source, parameter.manager->GetLibrary(function->declaration.library)->classes[function->declaration.definition]->declaration, function->space, function->relies), function->body, false);

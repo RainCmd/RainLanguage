@@ -1,9 +1,9 @@
 ﻿#include "OperationExpression.h"
 #include "../VariableGenerator.h"
+#include "../LocalContext.h"
 #include "VariableExpression.h"
 #include "ArrayExpression.h"
 #include "ExpressionReferenceExpression.h"
-#include "../LocalContext.h"
 
 void InstructOperationExpression::Generator(LogicGenerateParameter& parameter)
 {

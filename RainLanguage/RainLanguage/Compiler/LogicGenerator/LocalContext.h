@@ -80,7 +80,8 @@ class LocalContext
 	List<ClosureVariable*, true> closures;// id => closure
 public:
 	Dictionary<uint32, CaptureInfo, true> captures;// localIndex => captureInfo
-	inline LocalContext(DeclarationManager* manager, ClosureVariable* prevClosure) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0)
+	uint32 thisLocalIndex;
+	inline LocalContext(DeclarationManager* manager, ClosureVariable* prevClosure) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0), thisLocalIndex(INVALID)
 	{
 		PushBlock(prevClosure);
 	}

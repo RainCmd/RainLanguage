@@ -163,7 +163,7 @@ void LocalContext::Reset(bool deleteClosureDeclaration)
 	while(closures.Count())
 	{
 		ClosureVariable* closure = closures.Pop();
-		if(deleteClosureDeclaration)
+		if(deleteClosureDeclaration && closure->Inited())
 		{
 			CompilingClass* compilingClass = manager->compilingLibrary.classes.Pop();
 			ASSERT_DEBUG(compilingClass == closure->Compiling(), "销毁的不是闭包类的定义");
