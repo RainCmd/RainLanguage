@@ -168,16 +168,23 @@ void LocalContext::Reset(bool deleteClosureDeclaration)
 			ASSERT_DEBUG(compilingClass == closure->Compiling(), "销毁的不是闭包类的定义");
 			while(compilingClass->functions.Count())
 			{
-				uint32 function = compilingClass->functions.Pop();
-				ASSERT_DEBUG(manager->compilingLibrary.functions.Count() == function + 1, "lambda函数索引错误");
+#ifdef _DEBUG
+				ASSERT_DEBUG(manager->compilingLibrary.functions.Count() == compilingClass->functions.Pop() + 1, "lambda函数索引错误");
+#else
+				compilingClass->functions.Pop();
+#endif // DEBUG
+
 				delete manager->compilingLibrary.functions.Pop();
 			}
 			AbstractClass* abstractClass = manager->selfLibaray->classes.Pop();
 			ASSERT_DEBUG(abstractClass == closure->Abstract(), "抽象类型和编译类型对不上");
 			while(abstractClass->functions.Count())
 			{
-				uint32 function = abstractClass->functions.Pop();
-				ASSERT_DEBUG(manager->selfLibaray->functions.Count() == function + 1, "lambda函数索引错误");
+#ifdef _DEBUG
+				ASSERT_DEBUG(manager->selfLibaray->functions.Count() == abstractClass->functions.Pop() + 1, "lambda函数索引错误");
+#else
+				abstractClass->functions.Pop();
+#endif // DEBUG
 				delete manager->selfLibaray->functions.Pop();
 			}
 			delete compilingClass;
