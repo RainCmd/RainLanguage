@@ -233,7 +233,7 @@ Type ExpressionParser::GetVariableType(const CompilingDeclaration& declaration)
 		case DeclarationCategory::ClassVariable:
 			return manager->GetLibrary(declaration.library)->classes[declaration.definition]->variables[declaration.index]->type;
 		case DeclarationCategory::LambdaClosureValue:
-			return localContext->GetClosure(declaration.definition)->GetClosureType(declaration.index);
+			return environment->localContext->GetClosure(declaration.definition)->GetClosureType(declaration.index);
 		case DeclarationCategory::LocalVariable:
 			return localContext->GetLocal(declaration.index).type;
 	}
