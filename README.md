@@ -525,5 +525,5 @@ catch Func Exception!!
 
 
 ## 其他
-* [kernel命名空间中的定义](./RainLanguage/kernel.rain)
-* [vscode雨言语法高亮插件](./RainLanguagePlugin/readme.md)
+* [kernel命名空间中的定义](https://github.com/RainCmd/RainLanguageVSCode/blob/main/kernel.rain)
+* [vscode雨言语法高亮插件](https://github.com/RainCmd/RainLanguageVSCode)

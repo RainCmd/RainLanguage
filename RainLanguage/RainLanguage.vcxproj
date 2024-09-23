@@ -259,8 +259,7 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -281,8 +280,7 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -308,8 +306,7 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -336,8 +333,7 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>
@@ -556,7 +552,6 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="RainLanguage\ExternC\RainLanguageAdapter.cs" />
-    <None Include="kernel.rain" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Rain.natvis" />
