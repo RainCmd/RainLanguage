@@ -231,7 +231,7 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
+xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
@@ -249,7 +249,7 @@ xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
+xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -270,7 +270,7 @@ xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
+xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
@@ -291,7 +291,7 @@ xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\</Command>
+xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -259,8 +259,8 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -281,8 +281,8 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -308,8 +308,8 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\float\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -336,8 +336,8 @@ xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\bin\fixed\
-xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)RainLanguagePlugin\kernel.rain</Command>
+      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\
+xcopy /y $(ProjectDir)kernel.rain $(SolutionDir)..\kernel.rain</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>
