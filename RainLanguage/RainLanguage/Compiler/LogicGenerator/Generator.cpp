@@ -44,13 +44,27 @@ void Generator::WriteDataString(String& value, uint32 address)
 	*(string*)&data[address] = value.index;
 }
 
+void Generator::GeneratorLambdaFunction(GeneratorParameter& parameter, uint32 functionCount, uint32& lambdaIndex)
+{
+	LocalContext* localContext = parameter.localContext;
+	for(lambdaIndex; lambdaIndex < parameter.manager->lambdaGenerators.Count(); lambdaIndex++)
+	{
+		parameter.databaseGenerator->AddFunction(parameter.manager->lambdaGenerators[lambdaIndex]->anchor.source);
+		parameter.manager->compilingLibrary.functions[functionCount + lambdaIndex]->entry = GetPointer();
+		parameter.manager->lambdaGenerators[lambdaIndex]->Generator(parameter);
+		codeStartReference = codeReferenceAddresses.Count();
+	}
+	delete localContext;
+}
+
 void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
 	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
+	uint32 lambdaIndex = 0;
 	parameter.localContext = new LocalContext(parameter.manager, NULL);
 	FunctionGenerator(parameter).Generator(parameter);
-	delete parameter.localContext; parameter.localContext = NULL;
 	codeStartReference = codeReferenceAddresses.Count();
+	GeneratorLambdaFunction(parameter, functionCount, lambdaIndex);
 	for(uint32 i = 0; i < parameter.manager->compilingLibrary.classes.Count(); i++)
 	{
 		CompilingClass* compiling = parameter.manager->compilingLibrary.classes[i];
@@ -59,8 +73,8 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 			compiling->destructorEntry = GetPointer();
 			parameter.localContext = new LocalContext(parameter.manager, NULL);
 			FunctionGenerator(compiling->declaration, parameter).Generator(parameter);
-			delete parameter.localContext; parameter.localContext = NULL;
 			codeStartReference = codeReferenceAddresses.Count();
+			GeneratorLambdaFunction(parameter, functionCount, lambdaIndex);
 		}
 	}
 	for(uint32 i = 0; i < functionCount; i++)
@@ -70,15 +84,8 @@ void Generator::GeneratorFunction(GeneratorParameter& parameter)
 		compiling->entry = GetPointer();
 		parameter.localContext = new LocalContext(parameter.manager, NULL);
 		FunctionGenerator(compiling, parameter).Generator(parameter);
-		delete parameter.localContext; parameter.localContext = NULL;
 		codeStartReference = codeReferenceAddresses.Count();
-	}
-	for(uint32 i = 0; i < parameter.manager->lambdaGenerators.Count(); i++)
-	{
-		parameter.databaseGenerator->AddFunction(parameter.manager->lambdaGenerators[i]->anchor.source);
-		parameter.manager->compilingLibrary.functions[functionCount + i]->entry = GetPointer();
-		parameter.manager->lambdaGenerators[i]->Generator(parameter);
-		codeStartReference = codeReferenceAddresses.Count();
+		GeneratorLambdaFunction(parameter, functionCount, lambdaIndex);
 	}
 }
 

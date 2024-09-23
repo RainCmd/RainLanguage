@@ -268,21 +268,20 @@ VariableMemberExpression::~VariableMemberExpression()
 
 void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, LogicVariable& variable, CompilingDeclaration& member) const
 {
-	AbstractClass* abstractClass = closure->Abstract();
-	variable = parameter.variableGenerator->GetLocal(parameter.manager, localIndex, abstractClass->declaration.DefineType());
+	const ClosureVariable* index = closure;
+	variable = parameter.variableGenerator->GetLocal(parameter.manager, localIndex, index->Abstract()->declaration.DefineType());
 	List<uint32, true> path = closure->GetPath(pathIndex);
-	//todo 这边遍历的时候还需要注意剔除不必要的闭包节点
 	for(uint32 i = 0; i < path.Count(); i++)
 	{
-		member = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, path[i], abstractClass->declaration.index);
-		if(i < path.Count() - 1)
+		member = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, path[i], index->Abstract()->declaration.index);
+		if(i < path.Count() - 1 && index->Hold())
 		{
-			const Type& memberType = abstractClass->variables[member.index]->type;
-			abstractClass = parameter.manager->selfLibaray->classes[memberType.index];
+			const Type& memberType = index->Abstract()->variables[member.index]->type;
 			LogicGenerateParameter transitional(parameter, 1);
 			LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
 			variable = transitional.results[0];
 		}
+		index = index->prevClosure;
 	}
 }
 

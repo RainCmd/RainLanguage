@@ -190,6 +190,7 @@ public:
 	{
 		code.SetCount(MemoryAlignment(code.Count(), alignment));
 	}
+	void GeneratorLambdaFunction(GeneratorParameter& parameter, uint32 functionCount, uint32& lambdaIndex);
 	void GeneratorFunction(GeneratorParameter& parameter);
 	Library* GeneratorLibrary(DeclarationManager& manager);
 	~Generator();

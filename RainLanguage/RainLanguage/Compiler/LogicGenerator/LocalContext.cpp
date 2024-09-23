@@ -66,7 +66,6 @@ void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 d
 
 Type ClosureVariable::GetClosureType(uint32 pathIndex)
 {
-	//todo 这里需要根据Hold()优化
 	List<uint32, true> path = paths[pathIndex];
 	AbstractClass* index = abstract;
 	Type result = index->declaration.DefineType();
