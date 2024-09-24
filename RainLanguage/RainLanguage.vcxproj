@@ -177,7 +177,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguageVSCode\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|Win32'">
@@ -195,7 +195,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguageVSCode\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -217,7 +217,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguageVSCode\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|Win32'">
@@ -239,7 +239,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguagePlugin\$(TargetFileName)</Command>
+      <Command>copy /y $(TargetPath) $(SolutionDir)RainLanguageVSCode\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
