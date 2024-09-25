@@ -187,8 +187,8 @@ void OnExce(RainKernel&, const RainStackFrame* stackFrames, uint32 stackFrameCou
 	}
 }
 
-const RainLibrary* test2Lib;
-const RainLibrary* OnLibraryLoader(const RainString& libName)
+RainLibrary* test2Lib;
+RainLibrary* OnLibraryLoader(const RainString& libName)
 {
 	return test2Lib;
 }
@@ -227,7 +227,7 @@ void TestFunc()
 	if(!product->GetLevelMessageCount(ErrorLevel::Error))
 	{
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(&library, 1, 0, 0x10, 0xf, nullptr, nullptr, OnLibraryLoader, nullptr, NativeLoader, 0xff, 8, 8, 0xff, OnExce);
+		StartupParameter parameter(library, nullptr, nullptr, OnLibraryLoader, nullptr, NativeLoader, OnExce);
 		RainKernel* kernel = CreateKernel(parameter);
 		RainFunction rf = kernel->FindFunction(L"Main", true);
 		if(rf.IsValid())
