@@ -89,7 +89,7 @@ public:
 	inline void PopBlock()
 	{
 		delete localDeclarations.Pop();
-		closures.Pop();
+		closureStack.Pop();
 	}
 	Local AddLocal(const String& name, const Anchor& anchor, const Type& type);
 	inline Local AddLocal(const Anchor& anchor, const Type& type)
