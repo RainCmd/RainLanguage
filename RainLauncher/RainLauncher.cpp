@@ -1,7 +1,7 @@
 ﻿#include "Args.h"
-#include <Builder.h>
-#include <VirtualMachine.h>
-#include <Debugger.h>
+#include "Builder.h"
+#include "VirtualMachine.h"
+#include "Debugger.h"
 
 #include <iostream>
 #include <string>
