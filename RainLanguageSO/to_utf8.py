@@ -19,4 +19,4 @@ for root, dirs, files in os.walk(sys.argv[1]):
             data = f.read()
             ct = chardet.detect(data)['encoding']
             convert(path, ct)
-print("转换完成! ╰(*°▽°*)╯")
+print("recode complete!")
