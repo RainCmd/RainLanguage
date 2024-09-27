@@ -39,7 +39,6 @@
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Generator.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GeneratorLibrary.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.cpp" />
-    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LocalContext.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\LocalReference.cpp" />
@@ -95,6 +94,7 @@
     <ClCompile Include="RainLanguage\String.cpp" />
     <ClCompile Include="RainLanguage\Type.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RainLanguageSO.h" />
@@ -140,7 +140,6 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Generator.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GeneratorParameter.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\GlobalReference.h" />
-    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaClosure.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LambdaGenerator.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LocalContext.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\LocalReference.h" />
@@ -209,6 +208,7 @@
     <ClInclude Include="RainLanguage\String.h" />
     <ClInclude Include="RainLanguage\Type.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Expressions\ComplexStringExpression.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="to_utf8.py" />
