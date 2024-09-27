@@ -125,23 +125,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
-    <IncludePath>$(SolutionDir)RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
-    <IncludePath>$(SolutionDir)RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -230,8 +230,8 @@
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
@@ -248,8 +248,8 @@ xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -269,8 +269,8 @@ xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
@@ -290,8 +290,8 @@ xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(SolutionDir)RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
-xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

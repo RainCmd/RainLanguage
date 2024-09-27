@@ -259,7 +259,7 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
+      <Command>xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -280,7 +280,7 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
+      <Command>xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -306,7 +306,7 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\float\</Command>
+      <Command>xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -333,7 +333,7 @@
       <NoEntryPoint>false</NoEntryPoint>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetPath) $(SolutionDir)..\bin\fixed\</Command>
+      <Command>xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
       <Message>将产物复制到雨言支持插件的目录中</Message>
     </PostBuildEvent>
     <Bscmake>

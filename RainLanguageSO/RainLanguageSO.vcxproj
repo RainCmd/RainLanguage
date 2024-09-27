@@ -501,7 +501,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </Link>
     <PreBuildEvent>
       <Command>md $(ProjectDir)RainLanguage
-xcopy $(SolutionDir)RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
+xcopy $$(ProjectDir)..\RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
 python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -519,7 +519,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </Link>
     <PreBuildEvent>
       <Command>md $(ProjectDir)RainLanguage
-xcopy $(SolutionDir)RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
+xcopy $$(ProjectDir)..\RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
 python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -536,7 +536,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </Link>
     <PreBuildEvent>
       <Command>md $(ProjectDir)RainLanguage
-xcopy $(SolutionDir)RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
+xcopy $$(ProjectDir)..\RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
 python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -553,7 +553,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </Link>
     <PreBuildEvent>
       <Command>md $(ProjectDir)RainLanguage
-xcopy $(SolutionDir)RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
+xcopy $$(ProjectDir)..\RainLanguage\RainLanguage $(ProjectDir)RainLanguage /y /e
 python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
