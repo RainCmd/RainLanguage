@@ -138,22 +138,22 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

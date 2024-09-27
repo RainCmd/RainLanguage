@@ -126,22 +126,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x64'">
     <IncludePath>$(ProjectDir)..\RainLanguage\RainLanguage\Public;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\RainLanguage\$(IntDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -230,7 +230,7 @@
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\RainLanguage.dll $(IntDirFullPath)
 xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -248,7 +248,7 @@ xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\RainLanguage.dll $(IntDirFullPath)
 xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -269,7 +269,7 @@ xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\RainLanguage.dll $(IntDirFullPath)
 xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -290,7 +290,7 @@ xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\float\</Command>
       <AdditionalDependencies>RainLanguage.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(IntDir)RainLanguage.dll $(IntDirFullPath)
+      <Command>xcopy /y $(ProjectDir)..\RainLanguage\$(Platform)\$(Configuration)\RainLanguage.dll $(IntDirFullPath)
 xcopy /y $(TargetPath) $(ProjectDir)..\..\bin\fixed\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
