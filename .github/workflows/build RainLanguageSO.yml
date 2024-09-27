@@ -14,11 +14,9 @@ jobs:
     - name: 安装MSBuild
       uses: microsoft/setup-msbuild@v2
     - name: 安装py依赖
-      run: |
-        pip install codecs
-        pip install chardet
+      run: pip install chardet
     - name: 构建 RainLanguageSO
-      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release -property:Platform=x64
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     - name: 上传.so文件
       if: success()
       uses: actions/upload-artifact@v4
