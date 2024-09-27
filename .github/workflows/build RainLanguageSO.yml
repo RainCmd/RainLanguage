@@ -10,7 +10,7 @@ jobs:
     steps:
     
     - name: 拉取仓库
-      run: actions/checkout@v4
+      uses: actions/checkout@v4
     - name: 安装MSBuild
       uses: microsoft/setup-msbuild@v2
     - name: 安装py依赖
