@@ -16,7 +16,7 @@ void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 	else
 	{
 		parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
-		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[0].address, parameter.generator->globalReference);
+		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[0].address, parameter.generator->globalReference, parameter.localContext);
 	}
 }
 
@@ -34,7 +34,7 @@ void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parame
 	{
 		LogicVariable local = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
 		LogicVariabelAssignment(parameter.manager, parameter.generator, local, parameter.results[0]);
-		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], local.address, parameter.generator->globalReference);
+		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], local.address, parameter.generator->globalReference, parameter.localContext);
 	}
 }
 
@@ -43,7 +43,7 @@ void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& paramet
 	if(!parameter.localContext->captures.Contains(declaration.index))
 	{
 		parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
-		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[index].address, parameter.generator->globalReference);
+		parameter.databaseGenerator->AddLocal(anchor, declaration.index, returns[0], parameter.results[index].address, parameter.generator->globalReference, parameter.localContext);
 	}
 }
 

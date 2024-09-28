@@ -27,7 +27,7 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 			CatchExpressionBlock* catchBlock = &catchBlocks[i];
 			if(catchBlock->exitcode)
 			{
-				parameter.databaseGenerator->AddStatement(parameter.generator, catchBlock->exitcode->anchor.line, parameter.localContext);
+				parameter.databaseGenerator->AddStatement(parameter.generator, catchBlock->exitcode->anchor.line);
 				if(ContainAny(catchBlock->exitcode->attribute, Attribute::Value))
 				{
 					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);

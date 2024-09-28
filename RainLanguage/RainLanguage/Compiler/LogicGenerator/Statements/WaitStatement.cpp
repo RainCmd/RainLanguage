@@ -4,7 +4,7 @@
 
 void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line, parameter.localContext);
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	if(expression)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);

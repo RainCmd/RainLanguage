@@ -175,6 +175,8 @@ private:
 	uint32 function;
 	void* file;
 	uint32 line;
+	void* locals;
+	void InitLocals();
 public:
 	RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line);
 	RainTrace(const RainTrace& other);

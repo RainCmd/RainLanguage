@@ -6,7 +6,7 @@
 
 void BranchStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line, parameter.localContext);
+	parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line);
 	TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 	LogicGenerateParameter conditionParameter = LogicGenerateParameter(parameter, 1);
 	condition->Generator(conditionParameter);

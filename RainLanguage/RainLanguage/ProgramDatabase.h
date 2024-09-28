@@ -42,7 +42,7 @@ struct DebugLocal
 	uint32 start;
 	uint32 end;
 	inline DebugLocal() : name(), address(INVALID), type(), start(), end() {}
-	inline DebugLocal(const String& name, uint32 address, const Type& type, uint32 start) : name(name), address(address), type(type), start(start), end() {}
+	inline DebugLocal(const String& name, uint32 address, const Type& type, uint32 start, uint32 end) : name(name), address(address), type(type), start(start), end(end) {}
 };
 
 struct DebugMember

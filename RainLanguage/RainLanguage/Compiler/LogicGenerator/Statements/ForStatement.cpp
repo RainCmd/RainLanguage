@@ -6,7 +6,7 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 {
 	if(front)
 	{
-		if(!condition) parameter.databaseGenerator->AddStatement(parameter.generator, front->anchor.line, parameter.localContext);
+		if(!condition) parameter.databaseGenerator->AddStatement(parameter.generator, front->anchor.line);
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, front->returns.Count());
 		front->Generator(logicParameter);
@@ -19,7 +19,7 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 	loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	if(condition)
 	{
-		parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line, parameter.localContext);
+		parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line);
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 		condition->Generator(logicParameter);

@@ -34,6 +34,7 @@ class ClosureVariable
 	DeclarationManager* manager;
 	bool hold;
 	uint32 id;
+	uint32 level;
 	uint32 localIndex;
 	uint32 prevMember;
 	List<List<uint32, true>> paths;// curr -> prev
@@ -44,8 +45,8 @@ class ClosureVariable
 public:
 	List<ClosureMemberVariable, true> variables;
 	ClosureVariable* prevClosure;
-	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, ClosureVariable* prevClosure)
-		:localContent(localContent), manager(manager), hold(false), id(id), localIndex(INVALID), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
+	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, uint32 level, ClosureVariable* prevClosure)
+		:localContent(localContent), manager(manager), hold(false), id(id), level(level), localIndex(INVALID), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
 	{
 	}
 	inline bool Inited() const { return localIndex != INVALID; }
@@ -75,22 +76,24 @@ class LocalContext
 	DeclarationManager* manager;
 	List<Dictionary<String, Local>*, true> localDeclarations;
 	Dictionary<uint32, Anchor> localAnchors;
+	Dictionary<uint32, uint32, true> localEndLine;
 	uint32 index;
 	List<ClosureVariable*, true> closureStack;
 	List<ClosureVariable*, true> closures;// id => closure
 public:
 	Dictionary<uint32, CaptureInfo, true> captures;// localIndex => captureInfo
 	uint32 thisLocalIndex;
-	inline LocalContext(DeclarationManager* manager, ClosureVariable* prevClosure) :manager(manager), localDeclarations(1), localAnchors(0), index(0), closureStack(0), closures(0), captures(0), thisLocalIndex(INVALID)
+	inline LocalContext(DeclarationManager* manager, ClosureVariable* prevClosure) :manager(manager), localDeclarations(1), localAnchors(0), localEndLine(0), index(0), closureStack(0), closures(0), captures(0), thisLocalIndex(INVALID)
 	{
 		PushBlock(prevClosure);
 	}
 	void PushBlock(ClosureVariable* prevClosure);
 	inline void PopBlock()
 	{
-		delete localDeclarations.Pop();
+		delete localDeclarations.Pop();//todo 出栈的局部变量需要记录一下结束位置的行号
 		closureStack.Pop();
 	}
+	Local AddClosureLocal(uint32 level, const Type& type);
 	Local AddLocal(const String& name, const Anchor& anchor, const Type& type);
 	inline Local AddLocal(const Anchor& anchor, const Type& type)
 	{
@@ -100,6 +103,12 @@ public:
 	Local GetLocal(uint32 localIndex);
 	bool IsExist(uint32 localIndex);
 	inline const Dictionary<uint32, Anchor>* GetLocalAnchors() const { return &localAnchors; }
+	inline uint32 GetLocalEndLine(uint32 localIndex) const
+	{
+		uint32 result;
+		if(localEndLine.TryGet(localIndex, result)) return result;
+		return INVALID;
+	}
 
 	inline uint32 CurrentDeep() const { return localDeclarations.Count(); }
 	bool TryGetLocalAndDeep(const String& name, Local& local, uint32& deep);

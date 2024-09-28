@@ -18,20 +18,20 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	{
 		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type);
 		parameterVariable.reference->OnWrite();
-		parameter.databaseGenerator->AddLocal(ClosureName(), parameters[0].index, parameters[0].type, parameterVariable.address, parameter.generator->globalReference);
+		parameter.databaseGenerator->AddLocal(ClosureName(), 0, parameters[0].index, parameters[0].type, parameterVariable.address, parameter.generator->globalReference, parameter.localContext);
 		variableGenerator.MemberParameterAlignment();
 		for(uint32 i = 1; i < parameters.Count(); i++)
 		{
 			parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
 			parameterVariable.reference->OnWrite();
-			parameter.databaseGenerator->AddLocal(parameters[i], parameterVariable.address, parameter.generator->globalReference);
+			parameter.databaseGenerator->AddLocal(parameters[i], parameterVariable.address, parameter.generator->globalReference, parameter.localContext);
 		}
 	}
 	else for(uint32 i = 0; i < parameters.Count(); i++)
 	{
 		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
 		parameterVariable.reference->OnWrite();
-		parameter.databaseGenerator->AddLocal(parameters[i], parameterVariable.address, parameter.generator->globalReference);
+		parameter.databaseGenerator->AddLocal(parameters[i], parameterVariable.address, parameter.generator->globalReference, parameter.localContext);
 	}
 	CodeValueReference<uint32> stackSize = CodeValueReference<uint32>();
 	CodeLocalAddressReference finallyAddress = CodeLocalAddressReference();

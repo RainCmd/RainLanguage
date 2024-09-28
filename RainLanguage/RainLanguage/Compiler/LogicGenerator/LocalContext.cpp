@@ -9,7 +9,7 @@ void ClosureVariable::Init(Context& context)
 	if(Inited()) return;
 	if(prevClosure) prevClosure->Init(context);
 	CompilingDeclaration declaration = CompilingDeclaration(LIBRARY_SELF, Visibility::Private, DeclarationCategory::Class, manager->compilingLibrary.classes.Count(), 0);
-	localIndex = localContent->AddLocal(Anchor(), declaration.DefineType()).index;
+	localIndex = localContent->AddClosureLocal(level, declaration.DefineType()).index;
 	manager->compilingLibrary.classes.Add(compiling = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
 	compiling->parent = TYPE_Handle;
 	compiling->relies = context.relies;
@@ -89,11 +89,18 @@ uint32 ClosureVariable::MakeClosure(Context& context, const Local& local, uint32
 
 void LocalContext::PushBlock(ClosureVariable* prevClosure)
 {
-	localDeclarations.Add(new Dictionary<String, Local>(0));
 	if(closureStack.Count()) prevClosure = closureStack.Peek();
-	ClosureVariable* closure = new ClosureVariable(this, manager, closures.Count(), prevClosure);
+	ClosureVariable* closure = new ClosureVariable(this, manager, closures.Count(), localDeclarations.Count(), prevClosure);
 	closureStack.Add(closure);
 	closures.Add(closure);
+	localDeclarations.Add(new Dictionary<String, Local>(0));
+}
+
+Local LocalContext::AddClosureLocal(uint32 level, const Type& type)
+{
+	Local local = Local(Anchor(), index++, type);
+	localDeclarations[level]->Set(ClosureName(), local);
+	return local;
 }
 
 Local LocalContext::AddLocal(const String& name, const Anchor& anchor, const Type& type)

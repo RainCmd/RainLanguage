@@ -3,7 +3,7 @@
 #include "LogicGenerator/LocalContext.h"
 #include "LogicGenerator/Generator.h"
 
-ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : debug(debug), database(new ProgramDatabase(name)), currentFile(NULL), localMap(0), currentLine()
+ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : debug(debug), database(new ProgramDatabase(name)), currentFile(NULL), localMap(0)
 {
 }
 
@@ -21,27 +21,12 @@ void ProgramDatabaseGenerator::AddFunction(const String& file)
 	database->functions.Add(function);
 }
 
-void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line, LocalContext* localContext)
+void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line)
 {
-	currentLine = line;
 	if(database->functions.Count())
 	{
 		currentFile->statements.Set(line, database->statements.Count());
 		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->AddCodeReference(debug ? generator->WriteCode(Instruct::BREAK) : generator->GetPointer()));
-
-		List<uint32, true> removes(0);
-		Dictionary<uint32, uint32, true>::Iterator iterator = localMap.GetIterator();
-		while(iterator.Next())
-			if(!localContext->IsExist(iterator.CurrentKey()))
-				removes.Add(iterator.CurrentKey());
-		DebugFunction* function = database->functions.Peek();
-		for(uint32 i = 0; i < removes.Count(); i++)
-		{
-			uint32 localIndex;
-			if(localMap.TryGet(removes[i], localIndex))
-				function->locals[localIndex].end = line;
-			localMap.Remove(removes[i]);
-		}
 	}
 }
 
@@ -63,19 +48,19 @@ void ProgramDatabaseGenerator::AddLocalMember(const Anchor& anchor, uint32 local
 	}
 }
 
-void ProgramDatabaseGenerator::AddLocal(Local& local, uint32 address, GlobalReference* globalReference)
+void ProgramDatabaseGenerator::AddLocal(Local& local, uint32 address, GlobalReference* globalReference, LocalContext* context)
 {
-	AddLocal(local.anchor, local.index, local.type, address, globalReference);
+	AddLocal(local.anchor, local.index, local.type, address, globalReference, context);
 }
 
-void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
+void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference, LocalContext* context)
 {
-	index = AddLocal(anchor.content, index, type, address, globalReference);
+	index = AddLocal(anchor.content, anchor.line, index, type, address, globalReference, context);
 	if(index != INVALID)
 		database->functions.Peek()->localAnchors.Set(DebugAnchor(anchor.line, anchor.position), index);
 }
 
-uint32 ProgramDatabaseGenerator::AddLocal(const String& name, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
+uint32 ProgramDatabaseGenerator::AddLocal(const String& name, uint32 line, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference, LocalContext* context)
 {
 	if(database->functions.Count())
 	{
@@ -84,7 +69,7 @@ uint32 ProgramDatabaseGenerator::AddLocal(const String& name, uint32 index, cons
 		if(!localMap.TryGet(index, localIndex))
 		{
 			localIndex = function->locals.Count();
-			new (function->locals.Add())DebugLocal(database->agency->Add(name), address, globalReference->AddReference(type), currentLine);
+			new (function->locals.Add())DebugLocal(database->agency->Add(name), address, globalReference->AddReference(type), line, context->GetLocalEndLine(index));
 			localMap.Set(index, localIndex);
 		}
 		return localIndex;

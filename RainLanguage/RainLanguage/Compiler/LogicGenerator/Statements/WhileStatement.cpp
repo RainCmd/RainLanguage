@@ -10,7 +10,7 @@ void WhileStatement::Generator(StatementGeneratorParameter& parameter)
 	CodeLocalAddressReference breakAddress = CodeLocalAddressReference();
 	if(loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
 	loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line, parameter.localContext);
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
 	if(condition)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);

@@ -568,12 +568,27 @@ RainDebuggerSpace::~RainDebuggerSpace()
 }
 
 #define TASK ((Task*)task)
-RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line) : debugFrame(debugFrame), stack(stack), name(name), function(function), file(file), line(line)
+#define LOCALS ((Dictionary<String, uint32>*)locals)
+void RainTrace::InitLocals()
+{
+	if(IsValid() && function != INVALID && !locals)
+	{
+		locals = new Dictionary<String, uint32>(0);
+		List<DebugLocal>& debugLocals = ((ProgramDatabase*)FRAME->debugger->database)->functions[function]->locals;
+		for(uint32 i = 0; i < debugLocals.Count(); i++)
+		{
+			DebugLocal& local = debugLocals[i];
+			if(local.start <= line && local.end > line)
+				LOCALS->Set(local.name, i);
+		}
+	}
+}
+RainTrace::RainTrace(void* debugFrame, uint8* stack, void* name, uint32 function, void* file, uint32 line) : debugFrame(debugFrame), stack(stack), name(name), function(function), file(file), line(line), locals(NULL)
 {
 	FRAME->Reference();
 }
 
-RainTrace::RainTrace(const RainTrace& other) : debugFrame(debugFrame), stack(other.stack), name(other.name), function(other.function), file(other.file), line(other.line)
+RainTrace::RainTrace(const RainTrace& other) : debugFrame(debugFrame), stack(other.stack), name(other.name), function(other.function), file(other.file), line(other.line), locals(NULL)
 {
 	if(debugFrame) FRAME->Reference();
 	if(name) name = new String(*(String*)name);
@@ -585,6 +600,7 @@ RainTrace& RainTrace::operator=(const RainTrace& other) noexcept
 	if(debugFrame) FRAME->Release();
 	if(name) delete (String*)name;
 	if(file) delete (String*)file;
+	if(locals) delete LOCALS;
 
 	debugFrame = other.debugFrame;
 	if(debugFrame) FRAME->Reference();
@@ -595,6 +611,7 @@ RainTrace& RainTrace::operator=(const RainTrace& other) noexcept
 	file = other.file;
 	if(file) file = new String(*(String*)file);
 	line = other.line;
+	locals = NULL;
 
 	return *this;
 }
@@ -604,6 +621,7 @@ RainTrace& RainTrace::operator=(RainTrace&& other) noexcept
 	if(debugFrame) FRAME->Release();
 	if(name) delete (String*)name;
 	if(file) delete (String*)file;
+	if(locals) delete LOCALS;
 
 	debugFrame = other.debugFrame;
 	if(debugFrame) FRAME->Reference();
@@ -614,6 +632,7 @@ RainTrace& RainTrace::operator=(RainTrace&& other) noexcept
 	file = other.file;
 	if(file) file = new String(*(String*)file);
 	line = other.line;
+	locals = other.locals;
 
 	other.debugFrame = NULL;
 	other.stack = NULL;
@@ -621,6 +640,7 @@ RainTrace& RainTrace::operator=(RainTrace&& other) noexcept
 	other.function = INVALID;
 	other.file = NULL;
 	other.line = 0;
+	other.locals = NULL;
 	return *this;
 }
 
@@ -643,7 +663,8 @@ RainString RainTrace::FileName()
 
 uint32 RainTrace::LocalCount()
 {
-	if(IsValid() && function != INVALID) return ((ProgramDatabase*)FRAME->debugger->database)->functions[function]->locals.Count();
+	InitLocals();
+	if(locals) return LOCALS->Count();
 	return 0;
 }
 
@@ -658,10 +679,14 @@ static Type DebugToKernel(uint32 index, MAP* map, const Type& type)
 
 RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 {
-	if(IsValid() && function != INVALID)
+	InitLocals();
+	if(locals)
 	{
+		Dictionary<String, uint32>::Iterator iterator = LOCALS->GetIterator();
+		iterator.Next();
+		while(index--) iterator.Next();
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
-		DebugLocal& local = database->functions[function]->locals[index];
+		DebugLocal& local = database->functions[function]->locals[iterator.CurrentValue()];
 		return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
 	}
 	return RainDebuggerVariable();
@@ -669,16 +694,18 @@ RainDebuggerVariable RainTrace::GetLocal(uint32 index)
 
 RainDebuggerVariable RainTrace::GetLocal(const RainString& localName)
 {
-	if(IsValid() && function != INVALID)
+	InitLocals();
+	if(locals)
 	{
 		ProgramDatabase* database = (ProgramDatabase*)FRAME->debugger->database;
 		String local_name = database->agency->Add(localName.value, localName.length);
-		for(uint32 i = 0; i < database->functions[function]->locals.Count(); i++)
-		{
-			DebugLocal& local = database->functions[function]->locals[i];
-			if(local.name == local_name)
+		Dictionary<String, uint32>::Iterator iterator = LOCALS->GetIterator();
+		while(iterator.Next())
+			if(local_name == iterator.CurrentKey())
+			{
+				DebugLocal& local = database->functions[function]->locals[iterator.CurrentValue()];
 				return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
-		}
+			}
 	}
 	return RainDebuggerVariable();
 }
@@ -721,6 +748,8 @@ RainTrace::~RainTrace()
 	name = NULL;
 	if(file) delete (String*)file;
 	file = NULL;
+	if(locals) delete LOCALS;
+	locals = NULL;
 }
 
 RainTraceIterator::RainTraceIterator(void* debugFrame, void* task) : debugFrame(debugFrame), task(task), stack(NULL), pointer(INVALID)
