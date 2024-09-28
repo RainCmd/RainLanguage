@@ -135,6 +135,19 @@ Local LocalContext::GetLocal(uint32 localIndex)
 	EXCEPTION("无效的局部变量索引");
 }
 
+bool LocalContext::IsExist(uint32 localIndex)
+{
+	uint32 i = localDeclarations.Count();
+	while(i--)
+	{
+		Dictionary<String, Local>::Iterator iterator = localDeclarations[i]->GetIterator();
+		while(iterator.Next())
+			if(iterator.CurrentValue().index == localIndex)
+				return true;
+	}
+	return false;
+}
+
 bool LocalContext::TryGetLocalAndDeep(const String& name, Local& local, uint32& deep)
 {
 	uint32 i = localDeclarations.Count();

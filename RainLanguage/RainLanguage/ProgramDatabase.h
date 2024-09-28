@@ -17,12 +17,21 @@ struct DebugAnchor
 
 inline uint32 GetHash(const DebugAnchor& anchor) { return anchor.line ^ anchor.index; }
 
+struct DebugMemberIndex
+{
+	Declaration declaration;
+	String member;
+	DebugAnchor index;
+	inline DebugMemberIndex(const Declaration& declaration, const String& member, const DebugAnchor& index) : declaration(declaration), member(member), index(index) {}
+};
+
 struct DebugGlobal
 {
 	uint32 library;
 	uint32 index;
+	List<DebugMemberIndex> members;
 	DebugGlobal() = default;
-	DebugGlobal(const uint32& library, const uint32& index) : library(library), index(index) {}
+	DebugGlobal(const uint32& library, const uint32& index, const List<DebugMemberIndex>& members) : library(library), index(index), members(members) {}
 };
 
 struct DebugLocal
@@ -30,8 +39,17 @@ struct DebugLocal
 	String name;
 	uint32 address;
 	Type type;
-	inline DebugLocal() : name(), address(INVALID), type() {}
-	inline DebugLocal(const String& name, uint32 address, const Type& type) : name(name), address(address), type(type) {}
+	uint32 start;
+	uint32 end;
+	inline DebugLocal() : name(), address(INVALID), type(), start(), end() {}
+	inline DebugLocal(const String& name, uint32 address, const Type& type, uint32 start) : name(name), address(address), type(type), start(start), end() {}
+};
+
+struct DebugMember
+{
+	uint32 local;
+	List<DebugMemberIndex> members;
+	inline DebugMember(uint32 local, const List<DebugMemberIndex>& members) :local(local), members(members) {}
 };
 
 struct DebugFunction
@@ -39,7 +57,8 @@ struct DebugFunction
 	String file;
 	List<DebugLocal> locals;
 	Dictionary<DebugAnchor, uint32, true> localAnchors; //anchor => localIndex
-	inline DebugFunction() : file(), locals(0), localAnchors(0) {}
+	Dictionary<DebugAnchor, DebugMember> members;
+	inline DebugFunction() : file(), locals(0), localAnchors(0), members(0) {}
 };
 
 struct DebugStatement
@@ -53,7 +72,7 @@ struct DebugStatement
 struct DebugFile
 {
 	List<uint32, true> functions;
-	Dictionary<DebugAnchor, DebugGlobal, true> globalAnchors;
+	Dictionary<DebugAnchor, DebugGlobal> globalAnchors;
 	Dictionary<uint32, uint32, true> statements; //line => statement
 	inline DebugFile() : functions(0), globalAnchors(0), statements(0) {}
 };

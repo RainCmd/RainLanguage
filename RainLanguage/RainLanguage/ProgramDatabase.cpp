@@ -81,7 +81,7 @@ RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) /
 		DebugFile* file = fileIterator.CurrentValue();
 		serializer->SerializeList(file->functions);
 		serializer->Serialize(file->globalAnchors.Count());
-		Dictionary<DebugAnchor, DebugGlobal, true>::Iterator globalIterator = file->globalAnchors.GetIterator();
+		Dictionary<DebugAnchor, DebugGlobal>::Iterator globalIterator = file->globalAnchors.GetIterator();
 		while(globalIterator.Next())
 		{
 			serializer->Serialize(globalIterator.CurrentKey());

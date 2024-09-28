@@ -3,7 +3,7 @@
 #include "LogicGenerator/LocalContext.h"
 #include "LogicGenerator/Generator.h"
 
-ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : debug(debug), database(new ProgramDatabase(name)), currentFile(NULL), localMap(0)
+ProgramDatabaseGenerator::ProgramDatabaseGenerator(const String& name, bool debug) : debug(debug), database(new ProgramDatabase(name)), currentFile(NULL), localMap(0), currentLine()
 {
 }
 
@@ -21,18 +21,51 @@ void ProgramDatabaseGenerator::AddFunction(const String& file)
 	database->functions.Add(function);
 }
 
-void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line)
+void ProgramDatabaseGenerator::AddStatement(Generator* generator, uint32 line, LocalContext* localContext)
 {
+	currentLine = line;
 	if(database->functions.Count())
 	{
 		currentFile->statements.Set(line, database->statements.Count());
 		new (database->statements.Add())DebugStatement(database->functions.Count() - 1, line, generator->AddCodeReference(debug ? generator->WriteCode(Instruct::BREAK) : generator->GetPointer()));
+
+		List<uint32, true> removes(0);
+		Dictionary<uint32, uint32, true>::Iterator iterator = localMap.GetIterator();
+		while(iterator.Next())
+			if(!localContext->IsExist(iterator.CurrentKey()))
+				removes.Add(iterator.CurrentKey());
+		DebugFunction* function = database->functions.Peek();
+		for(uint32 i = 0; i < removes.Count(); i++)
+		{
+			uint32 localIndex;
+			if(localMap.TryGet(removes[i], localIndex))
+				function->locals[localIndex].end = line;
+			localMap.Remove(removes[i]);
+		}
 	}
 }
 
-void ProgramDatabaseGenerator::AddLocal(Local* local, uint32 address, GlobalReference* globalReference)
+void ProgramDatabaseGenerator::AddLocalMember(const Anchor& anchor, uint32 localIndex, const List<MemberIndex>& indices, GlobalReference* globalReference)
 {
-	AddLocal(local->anchor, local->index, local->type, address, globalReference);
+	if(database->functions.Count())
+	{
+		uint32 index;
+		if(localMap.TryGet(localIndex, index))
+		{
+			List<DebugMemberIndex> members(indices.Count());
+			for(uint32 i = 0; i < indices.Count(); i++)
+			{
+				const MemberIndex& member = indices[i];
+				new (members.Add())DebugMemberIndex(globalReference->AddReference(member.declaration), database->agency->Add(member.member), DebugAnchor(member.line, member.index));
+			}
+			database->functions.Peek()->members.Set(DebugAnchor(anchor.line, anchor.position), DebugMember(index, members));
+		}
+	}
+}
+
+void ProgramDatabaseGenerator::AddLocal(Local& local, uint32 address, GlobalReference* globalReference)
+{
+	AddLocal(local.anchor, local.index, local.type, address, globalReference);
 }
 
 void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
@@ -44,14 +77,14 @@ void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, cons
 		if(!localMap.TryGet(index, localIndex))
 		{
 			localIndex = function->locals.Count();
-			new (function->locals.Add())DebugLocal(database->agency->Add(anchor.content), address, globalReference->AddReference(type));
+			new (function->locals.Add())DebugLocal(database->agency->Add(anchor.content), address, globalReference->AddReference(type), currentLine);
 			localMap.Set(index, localIndex);
 		}
 		function->localAnchors.Set(DebugAnchor(anchor.line, anchor.position), localIndex);
 	}
 }
 
-void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uint32 index, GlobalReference* globalReference)
+void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uint32 index, const List<MemberIndex>& indices, GlobalReference* globalReference)
 {
 	DebugFile* file;
 	if(!database->files.TryGet(name.source, file))
@@ -59,8 +92,14 @@ void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uin
 		file = new DebugFile();
 		database->files.Set(database->agency->Add(name.source), file);
 	}
+	List<DebugMemberIndex> members(indices.Count());
+	for(uint32 i = 0; i < indices.Count(); i++)
+	{
+		const MemberIndex& member = indices[i];
+		new (members.Add())DebugMemberIndex(globalReference->AddReference(member.declaration), database->agency->Add(member.member), DebugAnchor(member.line, member.index));
+	}
 	CompilingDeclaration variable = globalReference->AddReference(CompilingDeclaration(library, Visibility::None, DeclarationCategory::Variable, index, NULL));
-	file->globalAnchors.Set(DebugAnchor(name.line, name.position), DebugGlobal(variable.library, variable.index));
+	file->globalAnchors.Set(DebugAnchor(name.line, name.position), DebugGlobal(variable.library, variable.index, members));
 }
 
 ProgramDatabase* ProgramDatabaseGenerator::GetResult(Generator* generator)

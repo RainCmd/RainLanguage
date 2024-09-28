@@ -97,7 +97,8 @@ public:
 		return AddLocal(anchor.content, anchor, type);
 	}
 	bool TryGetLocal(const String& name, Local& local);
-	Local GetLocal(uint32 index);
+	Local GetLocal(uint32 localIndex);
+	bool IsExist(uint32 localIndex);
 	inline const Dictionary<uint32, Anchor>* GetLocalAnchors() const { return &localAnchors; }
 
 	inline uint32 CurrentDeep() const { return localDeclarations.Count(); }
