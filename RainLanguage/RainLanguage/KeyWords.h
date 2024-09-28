@@ -62,3 +62,4 @@ String KeyWord_finally();
 bool IsKeyWord(const String& value);
 
 String DiscardVariable();
+String ClosureName();

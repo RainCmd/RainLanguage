@@ -24,7 +24,7 @@ void ClosureVariable::Init(Context& context)
 		uint8 alignment;
 		uint32 size = manager->GetStackSize(variable->type, alignment);
 		abstract->size = MemoryAlignment(abstract->size, alignment);
-		abstract->variables.Add(new AbstractVariable(String(), declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
+		abstract->variables.Add(new AbstractVariable(ClosureName(), declaration, List<String>(0), compiling->space->abstract, false, variable->type, abstract->size));
 		abstract->size += size;
 		if(alignment > abstract->alignment) abstract->alignment = alignment;
 	}

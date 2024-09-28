@@ -134,3 +134,9 @@ String DiscardVariable()
 	if(!KeyWordPool) KeyWordPool = new StringAgency(0xff); 
 	return KeyWordPool->Add(TEXT("_"));
 }
+
+String ClosureName()
+{
+	if(!KeyWordPool) KeyWordPool = new StringAgency(0xff);
+	return KeyWordPool->Add(TEXT("@"));
+}

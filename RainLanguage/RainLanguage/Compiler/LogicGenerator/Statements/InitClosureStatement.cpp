@@ -1,4 +1,5 @@
 #include "InitClosureStatement.h"
+#include "../../../KeyWords.h"
 #include "../../../Instruct.h"
 #include "../VariableGenerator.h"
 #include "../LocalContext.h"
@@ -32,6 +33,7 @@ void InitClosureStatement::Generator(StatementGeneratorParameter& parameter)
 	if(closure->Hold())
 	{
 		LogicVariable localClosure = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
+		parameter.databaseGenerator->AddLocal(ClosureName(), closure->LocalIndex(), localClosure.type, localClosure.address, parameter.generator->globalReference);
 		parameter.generator->WriteCode(Instruct::BASE_CreateObject);
 		parameter.generator->WriteCode(localClosure, VariableAccessType::Write);
 		parameter.generator->WriteCodeGlobalReference((Declaration)localClosure.type);
