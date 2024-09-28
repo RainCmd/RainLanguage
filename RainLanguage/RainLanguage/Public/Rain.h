@@ -1,11 +1,7 @@
 ﻿#pragma once
 
-#ifdef __arm__
-#ifdef RAINLANGUAGE_EXPORTS
-#define RAINLANGUAGE __attribute__(visibility("default"))
-#else
+#ifdef SHARE_OBJECT
 #define RAINLANGUAGE
-#endif
 #else
 #ifdef RAINLANGUAGE_EXPORTS
 #define RAINLANGUAGE _declspec(dllexport)

@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Rain.h"
-#ifdef __arm__
+#ifdef SHARE_OBJECT
 #include <unistd.h>
 #endif
 #define TEXT(value) L ## value

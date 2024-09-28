@@ -171,7 +171,7 @@
     </LibraryWPath>
     <SourcePath>
     </SourcePath>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <PublicIncludeDirectories>
     </PublicIncludeDirectories>
@@ -185,7 +185,7 @@
     <LibraryPath />
     <LibraryWPath />
     <SourcePath />
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <PublicIncludeDirectories />
     <PublicModuleDirectories />
@@ -202,7 +202,7 @@
     </LibraryWPath>
     <SourcePath>
     </SourcePath>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <PublicIncludeDirectories>
     </PublicIncludeDirectories>
@@ -216,7 +216,7 @@
     <LibraryPath />
     <LibraryWPath />
     <SourcePath />
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <PublicIncludeDirectories />
     <PublicModuleDirectories />
@@ -224,27 +224,35 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x86'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|x86'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFixed|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)RainLanguage\Public\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ExternalIncludePath>
@@ -276,7 +284,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -296,7 +304,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -316,7 +324,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -336,7 +344,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -355,7 +363,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -372,7 +380,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -389,7 +397,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -406,7 +414,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -423,7 +431,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -440,7 +448,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -457,7 +465,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -474,7 +482,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -491,7 +499,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -509,7 +517,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;FIXED_REAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;FIXED_REAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -527,7 +535,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAINLANGUAGE_EXPORTS;SHARE_OBJECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
@@ -544,7 +552,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>SHARE_OBJECT;FIXED_REAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FIXED_REAL;RAINLANGUAGE_EXPORTS;SHARE_OBJECT;FIXED_REAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
