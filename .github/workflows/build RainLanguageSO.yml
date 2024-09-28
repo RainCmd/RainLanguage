@@ -16,13 +16,23 @@ jobs:
     - name: 安装py依赖
       run: pip install chardet
     - name: 构建 RainLanguageSO
-      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+      run: |
+        msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+        msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM
     - name: 上传.so文件
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: libRainLanguageSO.so
+        name: RL.so-arm
         path: RainLanguageSO\ARM\Release\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+    - name: 上传.so文件
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-x64
+        path: RainLanguageSO\x64\Release\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
 
