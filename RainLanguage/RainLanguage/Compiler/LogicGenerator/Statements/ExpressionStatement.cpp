@@ -5,7 +5,7 @@
 
 void ExpressionStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	parameter.databaseGenerator->AddStatement(parameter.generator, expression->anchor.line);
+	parameter.databaseGenerator->AddStatement(parameter.generator, expression->anchor.line, parameter.localContext);
 	TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 	LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, expression->returns.Count());
 	expression->Generator(logicParameter);

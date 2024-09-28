@@ -5,8 +5,8 @@
 void JumpStatement::Generator(StatementGeneratorParameter& parameter)
 {
 	ASSERT_DEBUG(targetAddress, "跳转目标未赋值，前面的语法检查算法可能有问题");
-	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
-	if (condition)
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line, parameter.localContext);
+	if(condition)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);

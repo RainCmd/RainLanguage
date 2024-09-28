@@ -5,23 +5,23 @@
 
 void ReturnStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
-	if (expression)
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line, parameter.localContext);
+	if(expression)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParmeter = LogicGenerateParameter(parameter, expression->returns.Count());
 		expression->Generator(logicParmeter);
 		uint32 returnPoint = SIZE(Frame);
-		for (uint32 i = 0; i < logicParmeter.results.Count(); i++, returnPoint += 4)
+		for(uint32 i = 0; i < logicParmeter.results.Count(); i++, returnPoint += 4)
 		{
 			LogicVariable& variable = logicParmeter.results[i];
-			if (variable.type == TYPE_Bool || variable.type == TYPE_Byte) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_1);
-			else if (variable.type == TYPE_Char) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_2);
-			else if (variable.type == TYPE_Integer || variable.type == TYPE_Real || (variable.type.code == TypeCode::Enum && !variable.type.dimension)) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_8);
-			else if (variable.type == TYPE_String) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_String);
-			else if (IsHandleType(variable.type)) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Handle);
-			else if (variable.type == TYPE_Entity) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Entity);
-			else if (parameter.manager->IsBitwise(variable.type))
+			if(variable.type == TYPE_Bool || variable.type == TYPE_Byte) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_1);
+			else if(variable.type == TYPE_Char) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_2);
+			else if(variable.type == TYPE_Integer || variable.type == TYPE_Real || (variable.type.code == TypeCode::Enum && !variable.type.dimension)) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_8);
+			else if(variable.type == TYPE_String) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_String);
+			else if(IsHandleType(variable.type)) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Handle);
+			else if(variable.type == TYPE_Entity) parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Entity);
+			else if(parameter.manager->IsBitwise(variable.type))
 			{
 				uint8 aglignment;
 				parameter.generator->WriteCode(Instruct::FUNCTION_ReturnPoint_Bitwise);

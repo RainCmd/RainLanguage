@@ -4,12 +4,12 @@
 
 void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line);
-	if (expression)
+	parameter.databaseGenerator->AddStatement(parameter.generator, anchor.line, parameter.localContext);
+	if(expression)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParamter = LogicGenerateParameter(parameter, 1);
-		if (expression->returns.Peek() == TYPE_Bool)
+		if(expression->returns.Peek() == TYPE_Bool)
 		{
 			CodeLocalAddressReference loopAddress = CodeLocalAddressReference();
 			loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
@@ -20,7 +20,7 @@ void WaitStatement::Generator(StatementGeneratorParameter& parameter)
 			parameter.generator->WriteCode(&loopAddress);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
-		else if (expression->returns.Peek() == TYPE_Integer)
+		else if(expression->returns.Peek() == TYPE_Integer)
 		{
 			expression->Generator(logicParamter);
 			parameter.generator->WriteCode(Instruct::BASE_WaitFrame);

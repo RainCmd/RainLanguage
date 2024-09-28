@@ -1,4 +1,5 @@
 ﻿#include "LambdaGenerator.h"
+#include "../../KeyWords.h"
 #include "../../Frame.h"
 #include "../../Instruct.h"
 #include "../../KernelDeclarations.h"
@@ -15,11 +16,23 @@ void LambdaGenerator::Generator(GeneratorParameter& parameter)
 	VariableGenerator variableGenerator = VariableGenerator(parameterPoint);
 	if(referencesExternalLocal)
 	{
-		variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type).reference->OnWrite();
+		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type);
+		parameterVariable.reference->OnWrite();
+		parameter.databaseGenerator->AddLocal(DiscardVariable(), parameters[0].index, parameters[0].type, parameterVariable.address, parameter.generator->globalReference);
 		variableGenerator.MemberParameterAlignment();
-		for(uint32 i = 1; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type).reference->OnWrite();
+		for(uint32 i = 1; i < parameters.Count(); i++)
+		{
+			parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+			parameterVariable.reference->OnWrite();
+			parameter.databaseGenerator->AddLocal(parameters[i], parameterVariable.address, parameter.generator->globalReference);
+		}
 	}
-	else for(uint32 i = 0; i < parameters.Count(); i++) variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type).reference->OnWrite();
+	else for(uint32 i = 0; i < parameters.Count(); i++)
+	{
+		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[i].index, parameters[i].type);
+		parameterVariable.reference->OnWrite();
+		parameter.databaseGenerator->AddLocal(parameters[i], parameterVariable.address, parameter.generator->globalReference);
+	}
 	CodeValueReference<uint32> stackSize = CodeValueReference<uint32>();
 	CodeLocalAddressReference finallyAddress = CodeLocalAddressReference();
 	parameter.generator->WriteCode(Instruct::FUNCTION_Entrance);

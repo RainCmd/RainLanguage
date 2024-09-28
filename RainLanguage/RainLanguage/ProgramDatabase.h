@@ -30,8 +30,8 @@ struct DebugGlobal
 	uint32 library;
 	uint32 index;
 	List<DebugMemberIndex> members;
-	DebugGlobal() = default;
-	DebugGlobal(const uint32& library, const uint32& index, const List<DebugMemberIndex>& members) : library(library), index(index), members(members) {}
+	inline DebugGlobal() :library(INVALID), index(INVALID), members(0) {}
+	inline DebugGlobal(const uint32& library, const uint32& index, const List<DebugMemberIndex>& members) : library(library), index(index), members(members) {}
 };
 
 struct DebugLocal
@@ -86,7 +86,7 @@ public:
 	List<DebugStatement, true> statements;
 	Dictionary<String, DebugFile*> files;
 	ProgramDatabase(const String& name);
-	ProgramDatabase(StringAgency* agency) : agency(agency), functions(0), statements(0), files(0) {}
+	inline ProgramDatabase(StringAgency* agency) : agency(agency), functions(0), statements(0), files(0) {}
 	const uint32 GetStatement(const RainString& file, uint32 line) const;
 	uint32 GetStatement(uint32 instructAddress) const;
 	const RainString GetPosition(uint32 instructAddress, uint32& line) const;

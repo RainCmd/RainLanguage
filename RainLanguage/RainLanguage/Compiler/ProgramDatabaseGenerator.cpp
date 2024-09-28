@@ -70,6 +70,13 @@ void ProgramDatabaseGenerator::AddLocal(Local& local, uint32 address, GlobalRefe
 
 void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
 {
+	index = AddLocal(anchor.content, index, type, address, globalReference);
+	if(index != INVALID)
+		database->functions.Peek()->localAnchors.Set(DebugAnchor(anchor.line, anchor.position), index);
+}
+
+uint32 ProgramDatabaseGenerator::AddLocal(const String& name, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference)
+{
 	if(database->functions.Count())
 	{
 		DebugFunction* function = database->functions.Peek();
@@ -77,11 +84,12 @@ void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, cons
 		if(!localMap.TryGet(index, localIndex))
 		{
 			localIndex = function->locals.Count();
-			new (function->locals.Add())DebugLocal(database->agency->Add(anchor.content), address, globalReference->AddReference(type), currentLine);
+			new (function->locals.Add())DebugLocal(database->agency->Add(name), address, globalReference->AddReference(type), currentLine);
 			localMap.Set(index, localIndex);
 		}
-		function->localAnchors.Set(DebugAnchor(anchor.line, anchor.position), localIndex);
+		return localIndex;
 	}
+	return INVALID;
 }
 
 void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uint32 index, const List<MemberIndex>& indices, GlobalReference* globalReference)

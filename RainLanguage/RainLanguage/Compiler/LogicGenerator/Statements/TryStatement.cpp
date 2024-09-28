@@ -17,18 +17,18 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 	LogicVariable exitCode = parameter.variableGenerator->GetLocal(parameter.manager, localExitCode, TYPE_String);
 	parameter.generator->WriteCode(Instruct::BASE_PushExitMessage);
 	parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
-	if (catchBlocks.Count())
+	if(catchBlocks.Count())
 	{
 		StatementGeneratorParameter catchBlockParameter = StatementGeneratorParameter(parameter);
 		catchBlockParameter.finallyAddress = finallyAddress;
-		for (uint32 i = 0; i < catchBlocks.Count(); i++)
+		for(uint32 i = 0; i < catchBlocks.Count(); i++)
 		{
 			CodeLocalAddressReference nextCatchAddress = CodeLocalAddressReference();
 			CatchExpressionBlock* catchBlock = &catchBlocks[i];
-			if (catchBlock->exitcode)
+			if(catchBlock->exitcode)
 			{
-				parameter.databaseGenerator->AddStatement(parameter.generator, catchBlock->exitcode->anchor.line);
-				if (ContainAny(catchBlock->exitcode->attribute, Attribute::Value))
+				parameter.databaseGenerator->AddStatement(parameter.generator, catchBlock->exitcode->anchor.line, parameter.localContext);
+				if(ContainAny(catchBlock->exitcode->attribute, Attribute::Value))
 				{
 					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);
 					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
@@ -45,7 +45,7 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 					parameter.generator->WriteCode(&nextCatchAddress);
 					catchBlock->catchBlock->Generator(catchBlockParameter);
 				}
-				else if (ContainAny(catchBlock->exitcode->attribute, Attribute::Assignable))
+				else if(ContainAny(catchBlock->exitcode->attribute, Attribute::Assignable))
 				{
 					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);
 					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
@@ -72,8 +72,8 @@ TryStatement::TryStatement(const Anchor& anchor, LocalContext* localContext) :St
 
 void TryStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	if (!tryBlock) return;
-	if (this->breakAddress && this->loopAddress)
+	if(!tryBlock) return;
+	if(this->breakAddress && this->loopAddress)
 	{
 		CodeLocalAddressReference tryBreakAddress = CodeLocalAddressReference();
 		CodeLocalAddressReference tryLoopAddress = CodeLocalAddressReference();
@@ -118,7 +118,7 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 
 		finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-		if (finallyBlock) finallyBlock->Generator(parameter);
+		if(finallyBlock) finallyBlock->Generator(parameter);
 		parameter.generator->WriteCode(Instruct::BASE_PopExitMessage);
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 		parameter.generator->WriteCode(Instruct::BASE_ExitJump);
@@ -127,7 +127,7 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Read);
 		tryEndAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
-	else if (!this->breakAddress && !this->loopAddress)
+	else if(!this->breakAddress && !this->loopAddress)
 	{
 		CodeLocalAddressReference finallyAddress = CodeLocalAddressReference();
 		StatementGeneratorParameter tryBlockParameter = StatementGeneratorParameter(parameter);
@@ -146,7 +146,7 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 
 		finallyAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-		if (finallyBlock) finallyBlock->Generator(parameter);
+		if(finallyBlock) finallyBlock->Generator(parameter);
 		parameter.generator->WriteCode(Instruct::BASE_PopExitMessage);
 		parameter.generator->WriteCode(exitCode, VariableAccessType::Write);
 		parameter.generator->WriteCode(Instruct::BASE_ExitJump);

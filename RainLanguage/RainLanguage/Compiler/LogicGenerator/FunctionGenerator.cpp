@@ -820,7 +820,7 @@ void FunctionGenerator::Generator(GeneratorParameter& parameter)
 	{
 		LogicVariable parameterVariable = variableGenerator.GetLocal(parameter.manager, parameters[0].index, parameters[0].type);
 		parameterVariable.reference->OnWrite();
-		parameter.databaseGenerator->AddLocal(parameters[0], parameterVariable.address, parameter.generator->globalReference);
+		parameter.databaseGenerator->AddLocal(KeyWord_this(), parameters[0].index, parameters[0].type, parameterVariable.address, parameter.generator->globalReference);
 		variableGenerator.MemberParameterAlignment();
 		for(uint32 i = 1; i < parameters.Count(); i++)
 		{

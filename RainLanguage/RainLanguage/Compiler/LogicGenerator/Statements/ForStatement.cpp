@@ -4,9 +4,9 @@
 
 void ForStatement::Generator(StatementGeneratorParameter& parameter)
 {
-	if (front)
+	if(front)
 	{
-		if(!condition) parameter.databaseGenerator->AddStatement(parameter.generator, front->anchor.line);
+		if(!condition) parameter.databaseGenerator->AddStatement(parameter.generator, front->anchor.line, parameter.localContext);
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, front->returns.Count());
 		front->Generator(logicParameter);
@@ -15,11 +15,11 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 	CodeLocalAddressReference loopAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference elseAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference breakAddress = CodeLocalAddressReference();
-	if (loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
+	if(loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
 	loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	if (condition)
+	if(condition)
 	{
-		parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line);
+		parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line, parameter.localContext);
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, 1);
 		condition->Generator(logicParameter);
@@ -29,8 +29,8 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 		parameter.generator->WriteCode(&elseAddress);
 	}
-	if (loopBlock) loopBlock->Generator(parameter);
-	if (back)
+	if(loopBlock) loopBlock->Generator(parameter);
+	if(back)
 	{
 		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
 		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, back->returns.Count());
@@ -40,7 +40,7 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&loopAddress);
 	elseAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	if (elseBlock) elseBlock->Generator(parameter);
+	if(elseBlock) elseBlock->Generator(parameter);
 	breakAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
