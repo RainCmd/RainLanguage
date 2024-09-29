@@ -3329,12 +3329,12 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						AbstractSpace* space = NULL;
 						if(TryFindDeclaration(lexical.anchor, declarations))
 						{
-							if(TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							if(TryPushDeclarationsExpression(lexical.anchor, index, expressionStack, lexical, declarations, attribute))
 								goto label_next_lexical;
 						}
 						else if(context.TryFindSpace(manager, lexical.anchor, space))
 						{
-							if(TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(anchor, index, expressionStack, lexical, declarations, attribute))
+							if(TryFindDeclaration(lexical.anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(lexical.anchor, index, expressionStack, lexical, declarations, attribute))
 								goto label_next_lexical;
 						}
 						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);

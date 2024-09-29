@@ -280,18 +280,24 @@ void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, L
 	const ClosureVariable* index = closure;
 	variable = parameter.variableGenerator->GetLocal(parameter.manager, localIndex, index->Abstract()->declaration.DefineType());
 	List<uint32, true> path = closure->GetPath(pathIndex);
+	List<MemberIndex> indices(path.Count());
 	for(uint32 i = 0; i < path.Count(); i++)
 	{
 		member = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, path[i], index->Abstract()->declaration.index);
-		if(i < path.Count() - 1 && index->Hold())
+		if(index->Hold())
 		{
-			const Type& memberType = index->Abstract()->variables[member.index]->type;
-			LogicGenerateParameter transitional(parameter, 1);
-			LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
-			variable = transitional.results[0];
+			indices.Add(MemberIndex(path[i]));
+			if(i < path.Count() - 1)
+			{
+				const Type& memberType = index->Abstract()->variables[member.index]->type;
+				LogicGenerateParameter transitional(parameter, 1);
+				LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
+				variable = transitional.results[0];
+			}
 		}
 		index = index->prevClosure;
 	}
+	parameter.databaseGenerator->AddLocalMember(anchor, localIndex, indices, parameter.generator->globalReference);
 }
 
 void VariableClosureExpression::Generator(LogicGenerateParameter& parameter)
