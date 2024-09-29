@@ -38,27 +38,27 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: 构建RL real
-      if: success() && ${{ real-dlls == true }}
+      if: success() && ${{ inputs.real-dlls }}
       run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     - name: 构建Launcher real
-      if: success() && ${{ real-dlls == true && launcher == true }}
+      if: success() && ${{ inputs.real-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     - name: 构建Detector real
-      if: success() && ${{ real-dlls == true && debugger == true }}
+      if: success() && ${{ inputs.real-dlls && inputs.debugger }}
       run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
 
     - name: 构建RL fixed
-      if: success() && ${{ fixed-dlls == true }}
+      if: success() && ${{ inputs.fixed-dlls }}
       run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
     - name: 构建Launcher fixed
-      if: success() && ${{ fixed-dlls == true && launcher == true }}
+      if: success() && ${{ inputs.fixed-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
     - name: 构建Detector fixed
-      if: success() && ${{ fixed-dlls == true && debugger == true }}
+      if: success() && ${{ inputs.fixed-dlls && inputs.debugger }}
       run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
 
     - name: 构建Injector
-      if: success() && ${{ debugger == true }}
+      if: success() && ${{ inputs.debugger }}
       run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     
     - name: 复制Public和ExternC文件夹
