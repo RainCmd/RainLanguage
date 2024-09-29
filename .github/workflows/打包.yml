@@ -67,15 +67,14 @@ jobs:
         xcopy /y /i RainLanguage\RainLanguage\Public ..\bin\Public
         xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\
         xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\
-        cd ..
-        dir "./bin" /s
+        xcopy /y /i /e ..\bin out
     
     - name: 上传
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: RainLanguagePackage
-        path: bin
+        path: out
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
       
