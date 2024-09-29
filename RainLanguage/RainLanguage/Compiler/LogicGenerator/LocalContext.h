@@ -88,11 +88,7 @@ public:
 		PushBlock(prevClosure);
 	}
 	void PushBlock(ClosureVariable* prevClosure);
-	inline void PopBlock()
-	{
-		delete localDeclarations.Pop();//todo 出栈的局部变量需要记录一下结束位置的行号
-		closureStack.Pop();
-	}
+	void PopBlock(uint32 line);
 	Local AddClosureLocal(uint32 level, const Type& type);
 	Local AddLocal(const String& name, const Anchor& anchor, const Type& type);
 	inline Local AddLocal(const Anchor& anchor, const Type& type)

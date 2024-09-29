@@ -578,7 +578,7 @@ void RainTrace::InitLocals()
 		for(uint32 i = 0; i < debugLocals.Count(); i++)
 		{
 			DebugLocal& local = debugLocals[i];
-			if(local.start <= line && local.end > line)
+			if(local.start <= line && local.end >= line)
 				LOCALS->Set(local.name, i);
 		}
 	}

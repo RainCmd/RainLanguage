@@ -96,6 +96,16 @@ void LocalContext::PushBlock(ClosureVariable* prevClosure)
 	localDeclarations.Add(new Dictionary<String, Local>(0));
 }
 
+void LocalContext::PopBlock(uint32 line)
+{
+	Dictionary<String, Local>* locals = localDeclarations.Pop();
+	Dictionary<String, Local>::Iterator iterator = locals->GetIterator();
+	while(iterator.Next())
+		localEndLine.Set(iterator.CurrentValue().index, line);
+	delete locals;
+	closureStack.Pop();
+}
+
 Local LocalContext::AddClosureLocal(uint32 level, const Type& type)
 {
 	Local local = Local(Anchor(), index++, type);
@@ -179,6 +189,7 @@ void LocalContext::Reset(bool deleteClosureDeclaration)
 		delete localDeclarations[i];
 	localDeclarations.Clear();
 	localAnchors.Clear();
+	localEndLine.Clear();
 	while(closures.Count())
 	{
 		ClosureVariable* closure = closures.Pop();
