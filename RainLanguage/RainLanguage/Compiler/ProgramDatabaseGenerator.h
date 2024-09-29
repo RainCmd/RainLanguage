@@ -9,14 +9,20 @@ struct Generator;
 struct DebugFile;
 class ProgramDatabase;
 class LocalContext;
+//					declaration		member		memberIndex		line			index
+//按字段名称查找	字段所属声明	字段名		INVALID			-				-
+//按字段索引查找	-				Empty		字段索引		-				-
+//按数组索引查找	-				Empty		INVALID			索引变量所在行	索引变量所在列
 struct MemberIndex
 {
 	Declaration declaration;
 	String member;
+	uint32 memberIndex;
 	uint32 line;
 	uint32 index;
-	inline MemberIndex(const Declaration& declaration, const String& member) :declaration(declaration), member(member), line(INVALID), index(INVALID) {}
-	inline MemberIndex(const Declaration& declaration, const String& member, uint32 line, uint32 index) : declaration(declaration), member(member), line(line), index(index) {}
+	inline MemberIndex(const Declaration& declaration, const String& member) :declaration(declaration), member(member), memberIndex(INVALID), line(INVALID), index(INVALID) {}
+	inline MemberIndex(uint32 member) : declaration(), member(), memberIndex(member), line(INVALID), index(INVALID) {}
+	inline MemberIndex(uint32 line, uint32 index) : declaration(), member(), memberIndex(INVALID), line(line), index(index) {}
 };
 class ProgramDatabaseGenerator
 {

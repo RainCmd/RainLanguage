@@ -17,12 +17,17 @@ struct DebugAnchor
 
 inline uint32 GetHash(const DebugAnchor& anchor) { return anchor.line ^ anchor.index; }
 
+//					declaration		member		memberIndex		index
+//按字段名称查找	字段所属声明	字段名称	INVALID			-
+//按字段索引查找	-				Empty		字段索引		-
+//按数组索引查找	-				Empty		INVALID			索引变量
 struct DebugMemberIndex
 {
 	Declaration declaration;
 	String member;
+	uint32 memberIndex;
 	DebugAnchor index;
-	inline DebugMemberIndex(const Declaration& declaration, const String& member, const DebugAnchor& index) : declaration(declaration), member(member), index(index) {}
+	inline DebugMemberIndex(const Declaration& declaration, const String& member, uint32 memberIndex, const DebugAnchor& index) : declaration(declaration), member(member), memberIndex(memberIndex), index(index) {}
 };
 
 struct DebugGlobal
@@ -45,12 +50,12 @@ struct DebugLocal
 	inline DebugLocal(const String& name, uint32 address, const Type& type, uint32 start, uint32 end) : name(name), address(address), type(type), start(start), end(end) {}
 };
 
-struct DebugMember
+struct DebugLocalMember
 {
 	uint32 local;
 	List<DebugMemberIndex> members;
-	inline DebugMember() : local(INVALID), members(0) {}
-	inline DebugMember(uint32 local, const List<DebugMemberIndex>& members) : local(local), members(members) {}
+	inline DebugLocalMember() : local(INVALID), members(0) {}
+	inline DebugLocalMember(uint32 local, const List<DebugMemberIndex>& members) : local(local), members(members) {}
 };
 
 struct DebugFunction
@@ -58,8 +63,8 @@ struct DebugFunction
 	String file;
 	List<DebugLocal> locals;
 	Dictionary<DebugAnchor, uint32, true> localAnchors; //anchor => localIndex
-	Dictionary<DebugAnchor, DebugMember> members;
-	inline DebugFunction() : file(), locals(0), localAnchors(0), members(0) {}
+	Dictionary<DebugAnchor, DebugLocalMember> localMembers;
+	inline DebugFunction() : file(), locals(0), localAnchors(0), localMembers(0) {}
 };
 
 struct DebugStatement

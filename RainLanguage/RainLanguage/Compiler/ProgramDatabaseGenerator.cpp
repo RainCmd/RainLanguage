@@ -41,9 +41,9 @@ void ProgramDatabaseGenerator::AddLocalMember(const Anchor& anchor, uint32 local
 			for(uint32 i = 0; i < indices.Count(); i++)
 			{
 				const MemberIndex& member = indices[i];
-				new (members.Add())DebugMemberIndex(globalReference->AddReference(member.declaration), database->agency->Add(member.member), DebugAnchor(member.line, member.index));
+				new (members.Add())DebugMemberIndex(globalReference->AddReference(member.declaration), database->agency->Add(member.member), member.memberIndex, DebugAnchor(member.line, member.index));
 			}
-			database->functions.Peek()->members.Set(DebugAnchor(anchor.line, anchor.position), DebugMember(index, members));
+			database->functions.Peek()->localMembers.Set(DebugAnchor(anchor.line, anchor.position), DebugLocalMember(index, members));
 		}
 	}
 }
@@ -89,7 +89,7 @@ void ProgramDatabaseGenerator::AddGlobal(const Anchor& name, uint32 library, uin
 	for(uint32 i = 0; i < indices.Count(); i++)
 	{
 		const MemberIndex& member = indices[i];
-		new (members.Add())DebugMemberIndex(globalReference->AddReference(member.declaration), database->agency->Add(member.member), DebugAnchor(member.line, member.index));
+		new (members.Add())DebugMemberIndex(globalReference->AddReference(member.declaration), database->agency->Add(member.member), member.memberIndex, DebugAnchor(member.line, member.index));
 	}
 	CompilingDeclaration variable = globalReference->AddReference(CompilingDeclaration(library, Visibility::None, DeclarationCategory::Variable, index, NULL));
 	file->globalAnchors.Set(DebugAnchor(name.line, name.position), DebugGlobal(variable.library, variable.index, members));

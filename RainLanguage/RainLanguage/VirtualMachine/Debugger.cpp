@@ -668,13 +668,17 @@ uint32 RainTrace::LocalCount()
 	return 0;
 }
 
+static Declaration DebugToKernel(uint32 index, MAP* map, const Declaration& declaration)
+{
+	if(declaration.library == LIBRARY_KERNEL) return declaration;
+	else if(declaration.library == LIBRARY_SELF) return Declaration(index, declaration.code, declaration.index);
+	Declaration result;
+	if(map->TryGet(declaration, result)) return result;
+	EXCEPTION("映射逻辑可能有BUG");
+}
 static Type DebugToKernel(uint32 index, MAP* map, const Type& type)
 {
-	if(type.library == LIBRARY_KERNEL) return type;
-	else if(type.library == LIBRARY_SELF) return Type(index, type.code, type.index, type.dimension);
-	Declaration result;
-	if(map->TryGet(type, result)) return Type(result, type.dimension);
-	EXCEPTION("映射逻辑可能有BUG");
+	return Type(DebugToKernel(index, map, (Declaration)type), type.dimension);
 }
 
 RainDebuggerVariable RainTrace::GetLocal(uint32 index)
@@ -710,6 +714,50 @@ RainDebuggerVariable RainTrace::GetLocal(const RainString& localName)
 	return RainDebuggerVariable();
 }
 
+static void GetMember(RainTrace* trace, DebugFrame* frame, const RainString& fileName, RainDebuggerVariable& variable, const List<DebugMemberIndex>& members)
+{
+	for(uint32 i = 0; i < members.Count(); i++)
+	{
+		if(variable.IsValid())
+		{
+			const DebugMemberIndex& member = members[i];
+			if(!member.member.IsEmpty())
+			{
+				Declaration declaration = DebugToKernel(frame->library->index, frame->map, member.declaration);
+				Kernel* kernel = (Kernel*)frame->debugger->GetKernel();
+				String name = kernel->stringAgency->Add(member.member);
+				RuntimeClass* runtime = kernel->libraryAgency->GetClass(Type(declaration, 0));
+				uint32 index = 0;
+				while(index < runtime->variables.Count())
+					if(runtime->variables[index].name == name.index)
+						break;
+				if(index >= runtime->variables.Count()) goto label_fail;
+				RuntimeMemberVariable& runtimeVariable = runtime->variables[index];
+				uint8* address = variable.GetAddress();
+				if(!address) goto label_fail;
+				variable = RainDebuggerVariable(frame, new String(member.member), address + runtimeVariable.address, new Type(runtimeVariable.type));
+			}
+			else if(member.memberIndex != INVALID)
+			{
+				if(variable.MemberCount() > member.memberIndex) variable = variable.GetMember(member.memberIndex);
+				else goto label_fail;
+			}
+			else
+			{
+				RainDebuggerVariable index = trace->GetVariable(fileName, member.index.line, member.index.index);
+				if(index.GetRainType() != RainType::Integer) goto label_fail;
+				uint8* indexAddress = index.GetAddress();
+				if(!indexAddress || *(integer*)indexAddress >= variable.ArrayLength()) goto label_fail;
+				variable = variable.GetElement((uint32)*(integer*)indexAddress);
+			}
+		}
+		else goto label_fail;
+	}
+	return;
+label_fail:
+	variable = RainDebuggerVariable();
+}
+
 RainDebuggerVariable RainTrace::GetVariable(const RainString& fileName, uint32 lineNumber, uint32 characterIndex)
 {
 	if(IsValid())
@@ -719,12 +767,23 @@ RainDebuggerVariable RainTrace::GetVariable(const RainString& fileName, uint32 l
 		DebugAnchor anchor(lineNumber, characterIndex);
 		if(function != INVALID)
 		{
-			uint32 localIndex;
 			DebugFunction* debugFunction = database->functions[function];
-			if(debugFunction->file == file_name && debugFunction->localAnchors.TryGet(anchor, localIndex))
+			if(debugFunction->file == file_name)
 			{
-				DebugLocal& local = database->functions[function]->locals[localIndex];
-				return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
+				uint32 localIndex;
+				if(debugFunction->localAnchors.TryGet(anchor, localIndex))
+				{
+					DebugLocal& local = database->functions[function]->locals[localIndex];
+					return RainDebuggerVariable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
+				}
+				DebugLocalMember member;
+				if(debugFunction->localMembers.TryGet(anchor, member))
+				{
+					DebugLocal& local = database->functions[function]->locals[member.local];
+					RainDebuggerVariable variable(debugFrame, new String(local.name), stack + local.address, new Type(DebugToKernel(FRAME->library->index, FRAME->map, local.type)));
+					GetMember(this, FRAME, fileName, variable, member.members);
+					return variable;
+				}
 			}
 		}
 		DebugFile* debugFile;
@@ -734,7 +793,9 @@ RainDebuggerVariable RainTrace::GetVariable(const RainString& fileName, uint32 l
 			RuntimeLibrary* library = FRAME->library;
 			Type globalVariablDeclaration = DebugToKernel(library->index, FRAME->map, Type(globalVariable.library, TypeCode::Invalid, globalVariable.index, 0));
 			RuntimeVariable& runtimeVariable = library->kernel->libraryAgency->GetLibrary(globalVariablDeclaration.library)->variables[globalVariablDeclaration.index];
-			return RainDebuggerVariable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
+			RainDebuggerVariable variable(debugFrame, new String(library->kernel->stringAgency->Get(runtimeVariable.name)), library->kernel->libraryAgency->data.GetPointer() + runtimeVariable.address, new Type(runtimeVariable.type));
+			GetMember(this, FRAME, fileName, variable, globalVariable.members);
+			return variable;
 		}
 	}
 	return RainDebuggerVariable();

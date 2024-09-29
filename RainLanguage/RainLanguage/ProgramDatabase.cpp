@@ -52,6 +52,7 @@ void SerializeMembers(Serializer* serializer, List<DebugMemberIndex>& members)
 	{
 		serializer->Serialize(members[i].declaration);
 		serializer->Serialize(members[i].member.index);
+		serializer->Serialize(members[i].memberIndex);
 		serializer->Serialize(members[i].index);
 	}
 }
@@ -84,8 +85,8 @@ RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) /
 			serializer->Serialize(localIterator.CurrentKey());
 			serializer->Serialize(localIterator.CurrentValue());
 		}
-		serializer->Serialize(function->members.Count());
-		Dictionary<DebugAnchor, DebugMember>::Iterator memberIterator = function->members.GetIterator();
+		serializer->Serialize(function->localMembers.Count());
+		Dictionary<DebugAnchor, DebugLocalMember>::Iterator memberIterator = function->localMembers.GetIterator();
 		while(memberIterator.Next())
 		{
 			serializer->Serialize(memberIterator.CurrentKey());
@@ -128,8 +129,9 @@ void DeserializeMembers(Deserializer& deserializer, List<DebugMemberIndex>& memb
 	{
 		Declaration declaration = deserializer.Deserialize<Declaration>();
 		String member = agency->Get(deserializer.Deserialize<string>());
+		uint32 memberIndex = deserializer.Deserialize<uint32>();
 		DebugAnchor index = deserializer.Deserialize<DebugAnchor>();
-		new (members.Add())DebugMemberIndex(declaration, member, index);
+		new (members.Add())DebugMemberIndex(declaration, member, memberIndex, index);
 	}
 }
 
@@ -164,10 +166,10 @@ RAINLANGUAGE RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 
 		while(memberCount--)
 		{
 			DebugAnchor anchor = deserializer.Deserialize<DebugAnchor>();
-			DebugMember member;
+			DebugLocalMember member;
 			member.local = deserializer.Deserialize<uint32>();
 			DeserializeMembers(deserializer, member.members, agency);
-			function->members.Set(anchor, member);
+			function->localMembers.Set(anchor, member);
 		}
 		result->functions.Add(function);
 	}

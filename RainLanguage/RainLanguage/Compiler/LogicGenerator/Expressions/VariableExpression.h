@@ -9,6 +9,7 @@ public:
 
 class VariableLocalExpression :public VariableExpression
 {
+	void DatabaseAddClosure(LogicGenerateParameter& parameter, uint32 localIndex, uint32 memberIndex) const;
 public:
 	CompilingDeclaration declaration;
 	inline VariableLocalExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::VariableLocalExpression, anchor, type), declaration(declaration) { this->attribute = CombineType(attribute, type); }

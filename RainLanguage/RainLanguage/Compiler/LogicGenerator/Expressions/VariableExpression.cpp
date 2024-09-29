@@ -3,6 +3,13 @@
 #include "../LocalContext.h"
 #include "ArrayExpression.h"
 
+void VariableLocalExpression::DatabaseAddClosure(LogicGenerateParameter& parameter, uint32 localIndex, uint32 memberIndex) const
+{
+	List<MemberIndex> indices(1);
+	new (indices.Add())MemberIndex(memberIndex);
+	parameter.databaseGenerator->AddLocalMember(anchor, localIndex, indices, parameter.generator->globalReference);
+}
+
 void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 {
 	CaptureInfo info;
@@ -12,6 +19,7 @@ void VariableLocalExpression::Generator(LogicGenerateParameter& parameter)
 		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
 		CompilingDeclaration member(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, info.member, closure->Compiling()->declaration.index);
 		LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), variable, member, 0, parameter.finallyAddress);
+		DatabaseAddClosure(parameter, closure->LocalIndex(), info.member);
 	}
 	else
 	{
@@ -29,6 +37,7 @@ void VariableLocalExpression::GeneratorAssignment(LogicGenerateParameter& parame
 		LogicVariable variable = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
 		CompilingDeclaration member(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, info.member, closure->Compiling()->declaration.index);
 		LogicVariabelAssignment(parameter.manager, parameter.generator, variable, member, 0, parameter.results[0], parameter.finallyAddress);
+		DatabaseAddClosure(parameter, closure->LocalIndex(), info.member);
 	}
 	else if(parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
 	{
