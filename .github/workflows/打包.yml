@@ -38,27 +38,27 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: 构建RL real
-      if: success() && ${{ inputs.real-dlls == true }}
+      if: ${{ success() && inputs.real-dlls }}
       run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     - name: 构建Launcher real
-      if: success() && ${{ inputs.real-dlls == true && inputs.launcher == true }}
+      if: ${{ success() && inputs.real-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     - name: 构建Detector real
-      if: success() && ${{ inputs.real-dlls == true && inputs.debugger == true }}
+      if: ${{ success() && inputs.real-dlls && inputs.debugger }}
       run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
 
     - name: 构建RL fixed
-      if: success() && ${{ inputs.fixed-dlls == true }}
+      if: ${{ success() && inputs.fixed-dlls }}
       run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
     - name: 构建Launcher fixed
-      if: success() && ${{ inputs.fixed-dlls == true && inputs.launcher == true }}
+      if: ${{ success() && inputs.fixed-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
     - name: 构建Detector fixed
-      if: success() && ${{ inputs.fixed-dlls == true && inputs.debugger == true }}
+      if: ${{ success() && inputs.fixed-dlls && inputs.debugger }}
       run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
 
     - name: 构建Injector
-      if: success() && ${{ inputs.debugger == true }}
+      if: ${{ success() && inputs.debugger }}
       run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     
     - name: 复制Public和ExternC文件夹
@@ -67,7 +67,7 @@ jobs:
         xcopy /y /i RainLanguage\RainLanguage\Public ..\bin\Public
         xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\
         xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\
-        cd ..
+        cd ../bin
         dir
     
     - name: 上传
