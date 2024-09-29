@@ -1,6 +1,11 @@
 name: 打包
 on:
   workflow_dispatch:
+    inputs:
+      retention-days:
+        description: '打的包保留的天数'
+        required: false
+        default: '1'
 jobs:
   build:
     runs-on: windows-latest
@@ -28,13 +33,21 @@ jobs:
     - name: 构建Injector
       if: success()
       run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-
+    
+    - name: 复制Public和ExternC文件夹
+      if: success()
+      run: |
+        xcopy /y RainLanguage\RainLanguage\Public ..\bin\Public
+        xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\ExternC.h
+        xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\RainLanguageAdapter.cs
+        working-directory: ..
+    
     - name: 上传
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: RainLanguagePackage
-        path: ../bin/
-        retention-days: 1
+        path: bin/
+        retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
       
