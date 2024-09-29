@@ -1,0 +1,40 @@
+name: 打包
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: 拉取仓库
+      uses: actions/checkout@v4
+    
+    - name: 安装MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: 构建RL real
+      if: success()
+      run: |
+        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+        msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+        msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+      
+    - name: 构建RL fixed
+      if: success()
+      run: |
+        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+        msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+        msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+      
+    - name: 构建Injector
+      if: success()
+      run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+
+    - name: 上传
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: RainLanguagePackage
+        path: ../bin/
+        retention-days: 1
+        if-no-files-found: error
+      
