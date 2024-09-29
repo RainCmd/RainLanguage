@@ -1,6 +1,32 @@
 name: 打包
 on:
   workflow_dispatch:
+    inputs:
+      retention-days:
+        description: '打的包保留的天数'
+        required: false
+        default: '1'
+      real-dlls:
+        description: '构建实数的DLL'
+        required: true
+        default: true
+        type: boolean
+      fixed-dlls:
+        description: '构建定点数的DLL'
+        required: true
+        default: true
+        type: boolean
+      launcher:
+        description: '构建启动器相关的DLL'
+        required: true
+        default: false
+        type: boolean
+      debugger:
+        description: '构建调试器相关的DLL'
+        required: true
+        default: false
+        type: boolean
+      
 jobs:
   build:
     runs-on: windows-latest
@@ -12,29 +38,44 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: 构建RL real
-      if: success()
-      run: |
-        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-        msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-        msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-      
-    - name: 构建RL fixed
-      if: success()
-      run: |
-        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-        msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-        msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-      
-    - name: 构建Injector
-      if: success()
-      run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+      if: ${{ success() && inputs.real-dlls }}
+      run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+    - name: 构建Launcher real
+      if: ${{ success() && inputs.real-dlls && inputs.launcher }}
+      run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+    - name: 构建Detector real
+      if: ${{ success() && inputs.real-dlls && inputs.debugger }}
+      run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
 
+    - name: 构建RL fixed
+      if: ${{ success() && inputs.fixed-dlls }}
+      run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+    - name: 构建Launcher fixed
+      if: ${{ success() && inputs.fixed-dlls && inputs.launcher }}
+      run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+    - name: 构建Detector fixed
+      if: ${{ success() && inputs.fixed-dlls && inputs.debugger }}
+      run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+
+    - name: 构建Injector
+      if: ${{ success() && inputs.debugger }}
+      run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+    
+    - name: 复制Public和ExternC文件夹
+      if: success()
+      run: |
+        xcopy /y /i RainLanguage\RainLanguage\Public ..\bin\Public
+        xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\
+        xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\
+        cd ..
+        dir "./bin" /s
+    
     - name: 上传
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: RainLanguagePackage
-        path: ../bin/
-        retention-days: 1
+        path: bin
+        retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
       
