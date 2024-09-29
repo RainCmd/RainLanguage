@@ -1,4 +1,4 @@
-name: 打包
+name: 通用构建
 on:
   workflow_dispatch:
     inputs:
@@ -67,7 +67,7 @@ jobs:
       if: ${{ success() && inputs.debugger }}
       run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     
-    - name: 复制Public和ExternC文件夹
+    - name: 复制文件
       if: success()
       run: |
         xcopy /y /i RainLanguage\RainLanguage\Public ..\bin\Public
