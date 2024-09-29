@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       retention-days:
-        description: '打的包保留的天数'
+        description: '构建产物保留的天数'
         required: false
         default: '1'
       real-dlls:
@@ -39,7 +39,10 @@ jobs:
 
     - name: 构建RL real
       if: ${{ success() && inputs.real-dlls }}
-      run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+      run: |
+        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+        xcopy RainLanguage\x64\Release\RainLanguage.lib ..\bin\float
+        xcopy RainLanguage\x64\Release\RainLanguage.pdb ..\bin\float
     - name: 构建Launcher real
       if: ${{ success() && inputs.real-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
@@ -49,7 +52,10 @@ jobs:
 
     - name: 构建RL fixed
       if: ${{ success() && inputs.fixed-dlls }}
-      run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+      run: |
+        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+        xcopy RainLanguage\x64\ReleaseFixed\RainLanguage.lib ..\bin\fixed
+        xcopy RainLanguage\x64\ReleaseFixed\RainLanguage.pdb ..\bin\fixed
     - name: 构建Launcher fixed
       if: ${{ success() && inputs.fixed-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
