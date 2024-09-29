@@ -6,6 +6,27 @@ on:
         description: '打的包保留的天数'
         required: false
         default: '1'
+      real-dlls:
+        description: '构建实数的DLL'
+        required: true
+        default: true
+        type: boolean
+      fixed-dlls:
+        description: '构建定点数的DLL'
+        required: true
+        default: true
+        type: boolean
+      launcher:
+        description: '构建启动器相关的DLL'
+        required: true
+        default: false
+        type: boolean
+      debugger:
+        description: '构建调试器相关的DLL'
+        required: true
+        default: false
+        type: boolean
+      
 jobs:
   build:
     runs-on: windows-latest
@@ -17,30 +38,36 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: 构建RL real
-      if: success()
-      run: |
-        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-        msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-        msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-      
+      if: success() && ${{ real-dlls }}
+      run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+    - name: 构建Launcher real
+      if: success() && ${{ real-dlls }} && ${{ launcher }}
+      run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+    - name: 构建Detector real
+      if: success() && ${{ real-dlls }} && ${{ debugger }}
+      run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+
     - name: 构建RL fixed
-      if: success()
-      run: |
-        msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-        msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-        msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-      
+      if: success() && ${{ fixed-dlls }}
+      run: msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+    - name: 构建Launcher fixed
+      if: success() && ${{ fixed-dlls }} && ${{ launcher }}
+      run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+    - name: 构建Detector fixed
+      if: success() && ${{ fixed-dlls }} && ${{ debugger }}
+      run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+
     - name: 构建Injector
-      if: success()
+      if: success() && ${{ debugger }}
       run: msbuild RainDebuggerInjector\RainDebuggerInjector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
     
     - name: 复制Public和ExternC文件夹
       if: success()
       run: |
-        xcopy /y RainLanguage\RainLanguage\Public ..\bin\Public
-        xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\ExternC.h
-        xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\RainLanguageAdapter.cs
-        working-directory: ..
+        xcopy /y /i RainLanguage\RainLanguage\Public ..\bin\Public
+        xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\
+        xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\
+        cd ..
     
     - name: 上传
       if: success()
