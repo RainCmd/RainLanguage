@@ -41,8 +41,8 @@ jobs:
       if: ${{ success() && inputs.real-dlls }}
       run: |
         msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-        xcopy RainLanguage\x64\Release\RainLanguage.lib ../bin/float
-        xcopy RainLanguage\x64\Release\RainLanguage.pdb ../bin/float
+        xcopy RainLanguage\x64\Release\RainLanguage.lib ..\bin\float
+        xcopy RainLanguage\x64\Release\RainLanguage.pdb ..\bin\float
     - name: 构建Launcher real
       if: ${{ success() && inputs.real-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
@@ -54,8 +54,8 @@ jobs:
       if: ${{ success() && inputs.fixed-dlls }}
       run: |
         msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
-        xcopy RainLanguage\x64\ReleaseFixed\RainLanguage.lib ../bin/fixed
-        xcopy RainLanguage\x64\ReleaseFixed\RainLanguage.pdb ../bin/fixed
+        xcopy RainLanguage\x64\ReleaseFixed\RainLanguage.lib ..\bin\fixed
+        xcopy RainLanguage\x64\ReleaseFixed\RainLanguage.pdb ..\bin\fixed
     - name: 构建Launcher fixed
       if: ${{ success() && inputs.fixed-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
