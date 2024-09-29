@@ -67,7 +67,7 @@ jobs:
         xcopy /y /i RainLanguage\RainLanguage\Public ..\bin\Public
         xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\
         xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\
-        cd ../bin
+        cd ../bin/Public
         dir
     
     - name: 上传
