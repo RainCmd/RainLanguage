@@ -68,8 +68,7 @@ jobs:
         xcopy /y RainLanguage\RainLanguage\ExternC\ExternC.h ..\bin\ExternC\
         xcopy /y RainLanguage\RainLanguage\ExternC\RainLanguageAdapter.cs ..\bin\ExternC\
         cd ..
-        cd
-        dir "bin" /s
+        dir "./bin" /s
     
     - name: 上传
       if: success()
