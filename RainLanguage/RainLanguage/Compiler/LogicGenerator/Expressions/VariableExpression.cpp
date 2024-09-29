@@ -310,14 +310,6 @@ void VariableClosureExpression::GeneratorAssignment(LogicGenerateParameter& para
 	LogicVariabelAssignment(parameter.manager, parameter.generator, variable, member, 0, parameter.results[0], parameter.finallyAddress);
 }
 
-void VariableClosureExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
-{
-	LogicVariable variable;
-	CompilingDeclaration member;
-	GetVariable(parameter, variable, member);
-	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(index, returns[0]), variable, member, 0, parameter.finallyAddress);
-}
-
 void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	ASSERT_DEBUG(IsHandleType(target->returns[0]), "语义解析可能有bug");

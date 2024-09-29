@@ -73,7 +73,6 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
-	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
 };
 
 class VariableQuestionMemberExpression :public Expression
