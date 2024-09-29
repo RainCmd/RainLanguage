@@ -49,7 +49,8 @@ struct DebugMember
 {
 	uint32 local;
 	List<DebugMemberIndex> members;
-	inline DebugMember(uint32 local, const List<DebugMemberIndex>& members) :local(local), members(members) {}
+	inline DebugMember() : local(INVALID), members(0) {}
+	inline DebugMember(uint32 local, const List<DebugMemberIndex>& members) : local(local), members(members) {}
 };
 
 struct DebugFunction

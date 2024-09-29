@@ -45,6 +45,17 @@ ProgramDatabase::~ProgramDatabase()
 
 }
 
+void SerializeMembers(Serializer* serializer, List<DebugMemberIndex>& members)
+{
+	serializer->Serialize(members.Count());
+	for(uint32 i = 0; i < members.Count(); i++)
+	{
+		serializer->Serialize(members[i].declaration);
+		serializer->Serialize(members[i].member.index);
+		serializer->Serialize(members[i].index);
+	}
+}
+
 RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) //这里直接序列化String.index会导致反序列化时Agency中的字符串引用计数翻倍，但是不影响正常使用和内存释放
 {
 	ProgramDatabase* source = (ProgramDatabase*)&database;
@@ -63,6 +74,8 @@ RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) /
 			serializer->Serialize(local.name.index);
 			serializer->Serialize(local.address);
 			serializer->Serialize(local.type);
+			serializer->Serialize(local.start);
+			serializer->Serialize(local.end);
 		}
 		serializer->Serialize(function->localAnchors.Count());
 		Dictionary<DebugAnchor, uint32, true>::Iterator localIterator = function->localAnchors.GetIterator();
@@ -70,6 +83,14 @@ RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) /
 		{
 			serializer->Serialize(localIterator.CurrentKey());
 			serializer->Serialize(localIterator.CurrentValue());
+		}
+		serializer->Serialize(function->members.Count());
+		Dictionary<DebugAnchor, DebugMember>::Iterator memberIterator = function->members.GetIterator();
+		while(memberIterator.Next())
+		{
+			serializer->Serialize(memberIterator.CurrentKey());
+			serializer->Serialize(memberIterator.CurrentValue().local);
+			SerializeMembers(serializer, memberIterator.CurrentValue().members);
 		}
 	}
 	serializer->SerializeList(source->statements);
@@ -85,7 +106,9 @@ RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) /
 		while(globalIterator.Next())
 		{
 			serializer->Serialize(globalIterator.CurrentKey());
-			serializer->Serialize(globalIterator.CurrentValue());
+			serializer->Serialize(globalIterator.CurrentValue().library);
+			serializer->Serialize(globalIterator.CurrentValue().index);
+			SerializeMembers(serializer, globalIterator.CurrentValue().members);
 		}
 		serializer->Serialize(file->statements.Count());
 		Dictionary<uint32, uint32, true>::Iterator statementIterator = file->statements.GetIterator();
@@ -96,6 +119,18 @@ RAINLANGUAGE RainBuffer<uint8>* Serialize(const RainProgramDatabase& database) /
 		}
 	}
 	return serializer;
+}
+
+void DeserializeMembers(Deserializer& deserializer, List<DebugMemberIndex>& members, StringAgency* agency)
+{
+	uint32 count = deserializer.Deserialize<uint32>();
+	while(count--)
+	{
+		Declaration declaration = deserializer.Deserialize<Declaration>();
+		String member = agency->Get(deserializer.Deserialize<string>());
+		DebugAnchor index = deserializer.Deserialize<DebugAnchor>();
+		new (members.Add())DebugMemberIndex(declaration, member, index);
+	}
 }
 
 RAINLANGUAGE RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 size)
@@ -116,12 +151,23 @@ RAINLANGUAGE RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 
 			local->name = agency->Get(deserializer.Deserialize<string>());
 			local->address = deserializer.Deserialize<uint32>();
 			local->type = deserializer.Deserialize<Type>();
+			local->start = deserializer.Deserialize<uint32>();
+			local->end = deserializer.Deserialize<uint32>();
 		}
 		uint32 localAnchorCount = deserializer.Deserialize<uint32>();
 		while(localAnchorCount--)
 		{
 			DebugAnchor anchor = deserializer.Deserialize<DebugAnchor>();
 			function->localAnchors.Set(anchor, deserializer.Deserialize<uint32>());
+		}
+		uint32 memberCount = deserializer.Deserialize<uint32>();
+		while(memberCount--)
+		{
+			DebugAnchor anchor = deserializer.Deserialize<DebugAnchor>();
+			DebugMember member;
+			member.local = deserializer.Deserialize<uint32>();
+			DeserializeMembers(deserializer, member.members, agency);
+			function->members.Set(anchor, member);
 		}
 		result->functions.Add(function);
 	}
@@ -137,7 +183,11 @@ RAINLANGUAGE RainProgramDatabase* DeserializeDatabase(const uint8* data, uint32 
 		while(globalCount--)
 		{
 			DebugAnchor anchor = deserializer.Deserialize<DebugAnchor>();
-			file->globalAnchors.Set(anchor, deserializer.Deserialize<DebugGlobal>());
+			DebugGlobal global;
+			global.library = deserializer.Deserialize<uint32>();
+			global.index = deserializer.Deserialize<uint32>();
+			DeserializeMembers(deserializer, global.members, agency);
+			file->globalAnchors.Set(anchor, global);
 		}
 		uint32 statementCount = deserializer.Deserialize<uint32>();
 		while(statementCount--)
