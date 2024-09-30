@@ -347,12 +347,15 @@ RainString RainDebuggerVariable::GetValue() const
 		}
 		else if(targetType == TYPE_String)
 		{
-			String result = agency->Get(*(string*)valueAddress);
-			return RainString(result.GetPointer(), result.GetLength());
+			if(valueAddress)
+			{
+				String result = agency->Get(*(string*)valueAddress);
+				return RainString(result.GetPointer(), result.GetLength());
+			}
 		}
 		else if(targetType == TYPE_Entity)
 		{
-			Entity entity = *(Entity*)valueAddress;
+			Entity entity = valueAddress ? *(Entity*)valueAddress : NULL;
 			if(entity)
 			{
 				String fragments[4];
@@ -363,8 +366,7 @@ RainString RainDebuggerVariable::GetValue() const
 				String result = agency->Combine(fragments, 4);
 				return RainString(result.GetPointer(), result.GetLength());
 			}
-			String result = KeyWord_null();
-			return RainString(result.GetPointer(), result.GetLength());
+			else return RainString(KeyWord_null().GetPointer(), KeyWord_null().GetLength());
 		}
 		else if(targetType.dimension)
 		{
@@ -385,37 +387,42 @@ RainString RainDebuggerVariable::GetValue() const
 			String result = FRAME->library->enums[targetType.index].ToString(valueAddress ? *(integer*)valueAddress : 0, agency);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
-		else if(targetType.code == TypeCode::Delegate && valueAddress)
+		else if(valueAddress)
 		{
-			String result;
-			switch(((Delegate*)valueAddress)->type)
+
+			if(targetType.code == TypeCode::Delegate)
 			{
-				case FunctionType::Global: result = agency->Add(TEXT("Global")); break;
-				case FunctionType::Native: result = agency->Add(TEXT("Native")); break;
-				case FunctionType::Box: result = agency->Add(TEXT("Box")); break;
-				case FunctionType::Reality: result = agency->Add(TEXT("Reality")); break;
-				case FunctionType::Virtual: result = agency->Add(TEXT("Virtual")); break;
-				case FunctionType::Abstract: result = agency->Add(TEXT("Abstract")); break;
-			}
-			return RainString(result.GetPointer(), result.GetLength());
-		}
-		else if(targetType.code == TypeCode::Task && valueAddress)
-		{
-			uint64 id = *(uint64*)valueAddress;
-			Kernel* kernel = FRAME->library->kernel;
-			Invoker* invoker = kernel->taskAgency->GetInvoker(id);
-			if(invoker->name.IsEmpty())
-			{
-				String result = ToString(kernel->stringAgency, (integer)id);
+				String result;
+				switch(((Delegate*)valueAddress)->type)
+				{
+					case FunctionType::Global: result = agency->Add(TEXT("Global")); break;
+					case FunctionType::Native: result = agency->Add(TEXT("Native")); break;
+					case FunctionType::Box: result = agency->Add(TEXT("Box")); break;
+					case FunctionType::Reality: result = agency->Add(TEXT("Reality")); break;
+					case FunctionType::Virtual: result = agency->Add(TEXT("Virtual")); break;
+					case FunctionType::Abstract: result = agency->Add(TEXT("Abstract")); break;
+				}
 				return RainString(result.GetPointer(), result.GetLength());
 			}
-			else return RainString(invoker->name.GetPointer(), invoker->name.GetLength());
+			else if(targetType.code == TypeCode::Task)
+			{
+				uint64 id = *(uint64*)valueAddress;
+				Kernel* kernel = FRAME->library->kernel;
+				Invoker* invoker = kernel->taskAgency->GetInvoker(id);
+				if(invoker->name.IsEmpty())
+				{
+					String result = ToString(kernel->stringAgency, (integer)id);
+					return RainString(result.GetPointer(), result.GetLength());
+				}
+				else return RainString(invoker->name.GetPointer(), invoker->name.GetLength());
+			}
+			else
+			{
+				String result = agency->Get(::GetTypeName(FRAME->library->kernel, targetType));
+				return RainString(result.GetPointer(), result.GetLength());
+			}
 		}
-		else
-		{
-			String result = valueAddress ? agency->Get(::GetTypeName(FRAME->library->kernel, targetType)) : KeyWord_null();
-			return RainString(result.GetPointer(), result.GetLength());
-		}
+		else return RainString(KeyWord_null().GetPointer(), KeyWord_null().GetLength());
 	}
 	return RainString(nullptr, 0);
 }
