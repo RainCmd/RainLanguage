@@ -32,7 +32,7 @@ static wstring RS2WS(const RainString& src)
 static void WriteSummary(WritePackage& writer, const RainDebuggerVariable& variable)
 {
 	writer.WriteString(RS2WS(variable.GetName()));
-	writer.WriteBool(IsStructured(variable.GetRainType()) && variable.GetAddress() != NULL);
+	writer.WriteBool(variable.IsStructured() && variable.GetAddress() != NULL);
 	writer.WriteString(RS2WS(variable.GetTypeName()));
 	writer.WriteString(RS2WS(variable.GetValue()));
 }
@@ -519,7 +519,7 @@ static void OnRecv(ReadPackage& reader, SOCKET socket, Debugger* debugger)
 			if(variable.IsValid())
 			{
 				writer.WriteBool(true);
-				writer.WriteBool(IsStructured(variable.GetRainType()));
+				writer.WriteBool(variable.IsStructured());
 				writer.WriteString(RS2WS(variable.GetValue()));
 			}
 			else writer.WriteBool(false);

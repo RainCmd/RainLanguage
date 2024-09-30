@@ -29,14 +29,14 @@ static Type GetTargetType(const Type& type, uint8* address, DebugFrame* frame)
 		return frame->library->kernel->heapAgency->GetType(*(Handle*)address);
 	return type;
 }
-RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), address(NULL), internalType(NULL), type(RainType::Internal) {}
-RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), type(RainType::Internal)
+RainDebuggerVariable::RainDebuggerVariable() : debugFrame(NULL), name(NULL), address(NULL), internalType(NULL), rainType(RainType::Internal) {}
+RainDebuggerVariable::RainDebuggerVariable(void* debugFrame, void* name, uint8* address, void* internalType) : debugFrame(debugFrame), name(name), address(address), internalType(internalType), rainType(RainType::Internal)
 {
 	if(debugFrame) FRAME->Reference();
-	if(internalType) type = ::GetRainType(GetTargetType(*(Type*)internalType, address, FRAME));
+	if(internalType) rainType = ::GetRainType(GetTargetType(*(Type*)internalType, address, FRAME));
 }
 
-RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(other.name), address(other.address), internalType(other.internalType), type(other.type)
+RainDebuggerVariable::RainDebuggerVariable(const RainDebuggerVariable& other) : debugFrame(other.debugFrame), name(other.name), address(other.address), internalType(other.internalType), rainType(other.rainType)
 {
 	if(debugFrame) FRAME->Reference();
 	if(name) name = new String(*(String*)name);
@@ -56,7 +56,7 @@ RainDebuggerVariable& RainDebuggerVariable::operator=(const RainDebuggerVariable
 	address = other.address;
 	internalType = other.internalType;
 	if(internalType) internalType = new Type(*(Type*)internalType);
-	type = other.type;
+	rainType = other.rainType;
 	return *this;
 }
 
@@ -73,19 +73,59 @@ RainDebuggerVariable& RainDebuggerVariable::operator=(RainDebuggerVariable&& oth
 	address = other.address;
 	internalType = other.internalType;
 	if(internalType) internalType = new Type(*(Type*)internalType);
-	type = other.type;
+	rainType = other.rainType;
 
 	other.debugFrame = NULL;
 	other.name = NULL;
 	other.address = NULL;
 	other.internalType = NULL;
-	other.type = RainType::Internal;
+	other.rainType = RainType::Internal;
 	return *this;
 }
 
 bool RainDebuggerVariable::IsValid() const
 {
 	return debugFrame && FRAME->library && internalType;
+}
+
+bool RainDebuggerVariable::IsStructured() const
+{
+	if(!IsValid()) return false;
+	switch(rainType)
+	{
+		case RainType::Bool:
+		case RainType::Byte:
+		case RainType::Character:
+		case RainType::Integer:
+		case RainType::Real:
+		case RainType::Enum:
+		case RainType::String:
+		case RainType::Entity:
+			return false;
+	}
+	Type type = GetTargetType(*(Type*)internalType, address, FRAME);
+	if(!type.dimension)
+	{
+		if(type.code == TypeCode::Delegate)
+		{
+			uint8* valueAddress = GetAddress();
+			if(valueAddress)
+			{
+				switch(((Delegate*)valueAddress)->type)
+				{
+					case FunctionType::Global:
+					case FunctionType::Native: return false;
+					case FunctionType::Box:
+					case FunctionType::Reality:
+					case FunctionType::Virtual:
+					case FunctionType::Abstract: return true;
+				}
+			}
+			return false;
+		}
+		else if(type.code == TypeCode::Task) return false;
+	}
+	return true;
 }
 
 RainString RainDebuggerVariable::GetTypeName() const
@@ -122,7 +162,7 @@ uint8* RainDebuggerVariable::GetAddress() const
 
 uint32 RainDebuggerVariable::MemberCount() const
 {
-	if(IsStructured(type) && IsValid())
+	if(IsStructured() && IsValid())
 	{
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(!targetType.dimension)
@@ -141,6 +181,7 @@ uint32 RainDebuggerVariable::MemberCount() const
 				}
 				return count;
 			}
+			else if(targetType.code == TypeCode::Delegate) return 1;
 		}
 	}
 	return 0;
@@ -148,8 +189,8 @@ uint32 RainDebuggerVariable::MemberCount() const
 
 RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 {
-	uint8* variableAddress = GetAddress();
-	if(variableAddress && IsStructured(type) && IsValid())
+	uint8* valueAddress = GetAddress();
+	if(valueAddress && IsStructured() && IsValid())
 	{
 		Type targetType = GetTargetType(*(Type*)internalType, address, FRAME);
 		if(!targetType.dimension)
@@ -160,7 +201,7 @@ RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 			if(targetType.code == TypeCode::Struct)
 			{
 				const RuntimeMemberVariable& variable = library->structs[targetType.index].variables[index];
-				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(variable.name)), variableAddress + variable.address, new Type(variable.type));
+				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(variable.name)), valueAddress + variable.address, new Type(variable.type));
 			}
 			else if(targetType.code == TypeCode::Handle)
 			{
@@ -177,11 +218,17 @@ RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 						fragments[0] = kernel->stringAgency->Get(parentDeclaration.name);
 						fragments[1] = kernel->stringAgency->Add(TEXT(":"));
 						fragments[2] = kernel->stringAgency->Get(parentVariable.name);
-						return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Combine(fragments, 3)), variableAddress + parentDeclaration.offset + parentVariable.address, new Type(parentVariable.type));
+						return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Combine(fragments, 3)), valueAddress + parentDeclaration.offset + parentVariable.address, new Type(parentVariable.type));
 					}
 				}
 				const RuntimeMemberVariable& variable = runtimeClass.variables[index];
-				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(variable.name)), variableAddress + runtimeClass.offset + variable.address, new Type(variable.type));
+				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(variable.name)), valueAddress + runtimeClass.offset + variable.address, new Type(variable.type));
+			}
+			else if(targetType.code == TypeCode::Delegate)
+			{
+				const Delegate& value = *(Delegate*)valueAddress;
+				Type type = kernel->heapAgency->GetType(value.target);
+				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(::GetTypeName(kernel, type))), valueAddress + GET_FIELD_OFFSET(Delegate, target), new Type(type));
 			}
 		}
 	}
@@ -340,6 +387,32 @@ RainString RainDebuggerVariable::GetValue() const
 		{
 			String result = FRAME->library->enums[targetType.index].ToString(valueAddress ? *(integer*)valueAddress : 0, agency);
 			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if(targetType.code == TypeCode::Delegate)
+		{
+			String result;
+			switch(((Delegate*)valueAddress)->type)
+			{
+				case FunctionType::Global: result = agency->Add(TEXT("Global")); break;
+				case FunctionType::Native: result = agency->Add(TEXT("Native")); break;
+				case FunctionType::Box: result = agency->Add(TEXT("Box")); break;
+				case FunctionType::Reality: result = agency->Add(TEXT("Reality")); break;
+				case FunctionType::Virtual: result = agency->Add(TEXT("Virtual")); break;
+				case FunctionType::Abstract: result = agency->Add(TEXT("Abstract")); break;
+			}
+			return RainString(result.GetPointer(), result.GetLength());
+		}
+		else if(targetType.code == TypeCode::Task)
+		{
+			uint64 id = *(uint64*)valueAddress;
+			Kernel* kernel = FRAME->library->kernel;
+			Invoker* invoker = kernel->taskAgency->GetInvoker(id);
+			if(invoker->name.IsEmpty())
+			{
+				String result = ToString(kernel->stringAgency, (integer)id);
+				return RainString(result.GetPointer(), result.GetLength());
+			}
+			else return RainString(invoker->name.GetPointer(), invoker->name.GetLength());
 		}
 		else
 		{
@@ -724,7 +797,7 @@ static void GetMember(RainTrace* trace, DebugFrame* frame, const RainString& fil
 			if(!member.member.IsEmpty())
 			{
 				Declaration declaration = DebugToKernel(frame->library->index, frame->map, member.declaration);
-				Kernel* kernel = (Kernel*)frame->debugger->GetKernel();
+				Kernel* kernel = frame->library->kernel;
 				String name = kernel->stringAgency->Add(member.member);
 				RuntimeClass* runtime = kernel->libraryAgency->GetClass(Type(declaration, 0));
 				uint32 index = 0;
@@ -748,7 +821,7 @@ static void GetMember(RainTrace* trace, DebugFrame* frame, const RainString& fil
 				if(index.GetRainType() != RainType::Integer) goto label_fail;
 				uint8* indexAddress = index.GetAddress();
 				if(!indexAddress || *(integer*)indexAddress >= variable.ArrayLength()) goto label_fail;
-				variable = variable.GetElement((uint32)*(integer*)indexAddress);
+				variable = variable.GetElement((uint32) * (integer*)indexAddress);
 			}
 		}
 		else goto label_fail;

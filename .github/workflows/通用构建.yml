@@ -6,8 +6,8 @@ on:
         description: '构建产物保留的天数'
         required: false
         default: '1'
-      real-dlls:
-        description: '构建实数的DLL'
+      float-dlls:
+        description: '构建浮点数的DLL'
         required: true
         default: true
         type: boolean
@@ -37,17 +37,17 @@ jobs:
     - name: 安装MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: 构建RL real
-      if: ${{ success() && inputs.real-dlls }}
+    - name: 构建RL float
+      if: ${{ success() && inputs.float-dlls }}
       run: |
         msbuild RainLanguage\RainLanguage.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
         xcopy RainLanguage\x64\Release\RainLanguage.lib ..\bin\float
         xcopy RainLanguage\x64\Release\RainLanguage.pdb ..\bin\float
-    - name: 构建Launcher real
-      if: ${{ success() && inputs.real-dlls && inputs.launcher }}
+    - name: 构建Launcher float
+      if: ${{ success() && inputs.float-dlls && inputs.launcher }}
       run: msbuild RainLauncher\RainLauncher.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-    - name: 构建Detector real
-      if: ${{ success() && inputs.real-dlls && inputs.debugger }}
+    - name: 构建Detector float
+      if: ${{ success() && inputs.float-dlls && inputs.debugger }}
       run: msbuild RainDebuggerDetector\RainDebuggerDetector.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
 
     - name: 构建RL fixed
