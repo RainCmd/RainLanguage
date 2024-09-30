@@ -3,6 +3,16 @@ name: 构建.so文件
 on:
   workflow_dispatch:
     inputs:
+      float:
+        description: '浮点数'
+        required: true
+        default: true
+        type: boolean
+      fixed:
+        description: '定点数'
+        required: true
+        default: false
+        type: boolean
       ARM:
         description: 'ARM'
         required: true
@@ -36,51 +46,100 @@ jobs:
     - name: 安装py依赖
       run: pip install chardet
       
-    - name: 构建 RainLanguageSO - arm(android-19)
-      if: ${{ success() && inputs.ARM }}
+    - name: 构建 RainLanguageSO - arm(android-19) - float
+      if: ${{ success() && inputs.ARM && inputs.float }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM
-    - name: 上传RL.so-arm(android-19)
-      if: ${{ success() && inputs.ARM }}
+    - name: 上传RL.so-arm(android-19) - float
+      if: ${{ success() && inputs.ARM && inputs.float }}
       uses: actions/upload-artifact@v4
       with:
-        name: RL.so-arm
+        name: RL.so-arm-float
         path: RainLanguageSO\ARM\Release\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
         
-    - name: 构建 RainLanguageSO - arm64(android-31)
-      if: ${{ success() && inputs.ARM64 }}
+    - name: 构建 RainLanguageSO - arm64(android-31) - float
+      if: ${{ success() && inputs.ARM64 && inputs.float }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM64
-    - name: 上传RL.so-arm64(android-31)
-      if: ${{ success() && inputs.ARM64 }}
+    - name: 上传RL.so-arm64(android-31) - float
+      if: ${{ success() && inputs.ARM64 && inputs.float }}
       uses: actions/upload-artifact@v4
       with:
-        name: RL.so-arm64
+        name: RL.so-arm64-float
         path: RainLanguageSO\ARM64\Release\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
         
-    - name: 构建 RainLanguageSO - x64(android-31)
-      if: ${{ success() && inputs.x64 }}
+    - name: 构建 RainLanguageSO - x64(android-31) - float
+      if: ${{ success() && inputs.x64 && inputs.float }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-    - name: 上传RL.so-x64(android-31)
-      if: ${{ success() && inputs.x64 }}
+    - name: 上传RL.so-x64(android-31) - float
+      if: ${{ success() && inputs.x64 && inputs.float }}
       uses: actions/upload-artifact@v4
       with:
-        name: RL.so-x64
+        name: RL.so-x64-float
         path: RainLanguageSO\x64\Release\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
         
-    - name: 构建 RainLanguageSO - x86(android-19)
-      if: ${{ success() && inputs.x86 }}
+    - name: 构建 RainLanguageSO - x86(android-19) - float
+      if: ${{ success() && inputs.x86 && inputs.float }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x86
-    - name: 上传RL.so-x86(android-19)
-      if: ${{ success() && inputs.x86 }}
+    - name: 上传RL.so-x86(android-19) - float
+      if: ${{ success() && inputs.x86 && inputs.float }}
       uses: actions/upload-artifact@v4
       with:
-        name: RL.so-x86
+        name: RL.so-x86-float
         path: RainLanguageSO\x86\Release\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+        
+
+    - name: 构建 RainLanguageSO - arm(android-19) - fixed
+      if: ${{ success() && inputs.ARM && inputs.fixed }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=ARM
+    - name: 上传RL.so-arm(android-19) - fixed
+      if: ${{ success() && inputs.ARM && inputs.fixed }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-arm-fixed
+        path: RainLanguageSO\ARM\ReleaseFixed\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+        
+    - name: 构建 RainLanguageSO - arm64(android-31) - fixed
+      if: ${{ success() && inputs.ARM64 && inputs.fixed }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=ARM64
+    - name: 上传RL.so-arm64(android-31) - fixed
+      if: ${{ success() && inputs.ARM64 && inputs.fixed }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-arm64-fixed
+        path: RainLanguageSO\ARM64\ReleaseFixed\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+        
+    - name: 构建 RainLanguageSO - x64(android-31) - fixed
+      if: ${{ success() && inputs.x64 && inputs.fixed }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x64
+    - name: 上传RL.so-x64(android-31) - fixed
+      if: ${{ success() && inputs.x64 && inputs.fixed }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-x64-fixed
+        path: RainLanguageSO\x64\ReleaseFixed\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+        
+    - name: 构建 RainLanguageSO - x86(android-19) - fixed
+      if: ${{ success() && inputs.x86 && inputs.fixed }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=ReleaseFixed -property:Platform=x86
+    - name: 上传RL.so-x86(android-19) - fixed
+      if: ${{ success() && inputs.x86 && inputs.fixed }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-x86-fixed
+        path: RainLanguageSO\x86\ReleaseFixed\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
         
