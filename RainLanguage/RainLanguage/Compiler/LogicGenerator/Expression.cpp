@@ -9,6 +9,8 @@ void Expression::GeneratorAssignment(LogicGenerateParameter&)
 
 void Expression::FillResultVariable(LogicGenerateParameter&, uint32) {}
 
+void Expression::AddProgramDatabaseMember(const Anchor&, LogicGenerateParameter&, List<MemberIndex>&) {}
+
 bool Expression::TryEvaluation(bool&, LogicGenerateParameter&)
 {
     return false;

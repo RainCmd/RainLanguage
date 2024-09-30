@@ -43,6 +43,7 @@ public:
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter, uint32 offset);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices);
 	~ArrayEvaluationExpression();
 };
 

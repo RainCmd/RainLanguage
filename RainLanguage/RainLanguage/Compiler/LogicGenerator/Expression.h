@@ -2,8 +2,8 @@
 #include "../../Collections/List.h"
 #include "../../Type.h"
 #include "../Anchor.h"
-#include "Attribute.h"
 #include "../DeclarationManager.h"
+#include "Attribute.h"
 #include "Generator.h"
 #include "LogicGenerateParameter.h"
 
@@ -90,6 +90,7 @@ public:
 	virtual void Generator(LogicGenerateParameter& parameter);
 	virtual void GeneratorAssignment(LogicGenerateParameter& parameter);
 	virtual void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
+	virtual void AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices);
 	virtual bool TryEvaluation(bool& value, LogicGenerateParameter& parameter);
 	virtual bool TryEvaluation(uint8& value, LogicGenerateParameter& parameter);
 	virtual bool TryEvaluation(character& value, LogicGenerateParameter& parameter);

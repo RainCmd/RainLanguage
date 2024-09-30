@@ -217,6 +217,12 @@ void ArrayEvaluationExpression::GeneratorAssignment(LogicGenerateParameter& para
 	GeneratorAssignment(parameter, 0);
 }
 
+void ArrayEvaluationExpression::AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices)
+{
+	indices.Insert(0, MemberIndex(indexExpression->anchor.line, indexExpression->anchor.position));
+	arrayExpression->AddProgramDatabaseMember(memberAnchor, parameter, indices);
+}
+
 ArrayEvaluationExpression::~ArrayEvaluationExpression()
 {
 	delete arrayExpression; arrayExpression = NULL;

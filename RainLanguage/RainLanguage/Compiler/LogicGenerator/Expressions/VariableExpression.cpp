@@ -56,10 +56,23 @@ void VariableLocalExpression::FillResultVariable(LogicGenerateParameter& paramet
 	}
 }
 
+void VariableLocalExpression::AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices)
+{
+	CaptureInfo info;
+	if(parameter.localContext->captures.TryGet(declaration.index, info))
+	{
+		ClosureVariable* closure = parameter.localContext->GetClosure(info.closure);
+		indices.Insert(0, MemberIndex(info.member));
+		parameter.databaseGenerator->AddLocalMember(memberAnchor, closure->LocalIndex(), indices, parameter.generator->globalReference);
+	}
+	else parameter.databaseGenerator->AddLocalMember(memberAnchor, declaration.index, indices, parameter.generator->globalReference);
+}
+
 void VariableGlobalExpression::Generator(LogicGenerateParameter& parameter)
 {
 	parameter.results[0] = LogicVariable(declaration, returns[0], 0);
-	parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
+	List<MemberIndex> indices(0);
+	AddProgramDatabaseMember(anchor, parameter, indices);
 }
 
 void VariableGlobalExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
@@ -67,14 +80,21 @@ void VariableGlobalExpression::GeneratorAssignment(LogicGenerateParameter& param
 	if(parameter.results[0] != LogicVariable(declaration, returns[0], 0))
 	{
 		LogicVariabelAssignment(parameter.manager, parameter.generator, LogicVariable(declaration, returns[0], 0), parameter.results[0]);
-		parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
+		List<MemberIndex> indices(0);
+		AddProgramDatabaseMember(anchor, parameter, indices);
 	}
 }
 
 void VariableGlobalExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
 	parameter.results[index] = LogicVariable(declaration, returns[0], 0);
-	parameter.databaseGenerator->AddGlobal(anchor, declaration.library, declaration.index, parameter.generator->globalReference);
+	List<MemberIndex> indices(0);
+	AddProgramDatabaseMember(anchor, parameter, indices);
+}
+
+void VariableGlobalExpression::AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices)
+{
+	parameter.databaseGenerator->AddGlobal(memberAnchor, declaration.library, declaration.index, indices, parameter.generator->globalReference);
 }
 
 bool VariableGlobalExpression::TryEvaluation(bool& value, LogicGenerateParameter& parameter)
@@ -258,16 +278,44 @@ bool VariableMemberExpression::IsReferenceMember()
 void VariableMemberExpression::Generator(LogicGenerateParameter& parameter)
 {
 	Generator(parameter, 0, returns[0]);
+	List<MemberIndex> indices(0);
+	AddProgramDatabaseMember(anchor, parameter, indices);
 }
 
 void VariableMemberExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
 {
 	GeneratorAssignment(parameter, 0);
+	List<MemberIndex> indices(0);
+	AddProgramDatabaseMember(anchor, parameter, indices);
 }
 
 void VariableMemberExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
 {
 	FillResultVariable(parameter, index, 0, returns[0]);
+}
+
+void VariableMemberExpression::AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices)
+{
+	if(declaration.category == DeclarationCategory::StructVariable)
+	{
+		AbstractStruct* abstractStruct = parameter.manager->GetLibrary(declaration.library)->structs[declaration.definition];
+		Declaration definition;
+		if(abstractStruct->declaration.TryGetDeclaration(definition))
+		{
+			indices.Insert(0, MemberIndex(definition, abstractStruct->variables[declaration.index]->name));
+			target->AddProgramDatabaseMember(memberAnchor, parameter, indices);
+		}
+	}
+	else if(declaration.category == DeclarationCategory::ClassVariable || declaration.category == DeclarationCategory::LambdaClosureValue)
+	{
+		AbstractClass* abstractClass = parameter.manager->GetLibrary(declaration.library)->classes[declaration.definition];
+		Declaration definition;
+		if(abstractClass->declaration.TryGetDeclaration(definition))
+		{
+			indices.Insert(0, MemberIndex(definition, abstractClass->variables[declaration.index]->name));
+			target->AddProgramDatabaseMember(memberAnchor, parameter, indices);
+		}
+	}
 }
 
 VariableMemberExpression::~VariableMemberExpression()
@@ -280,24 +328,18 @@ void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, L
 	const ClosureVariable* index = closure;
 	variable = parameter.variableGenerator->GetLocal(parameter.manager, localIndex, index->Abstract()->declaration.DefineType());
 	List<uint32, true> path = closure->GetPath(pathIndex);
-	List<MemberIndex> indices(path.Count());
 	for(uint32 i = 0; i < path.Count(); i++)
 	{
 		member = CompilingDeclaration(LIBRARY_SELF, Visibility::Public, DeclarationCategory::ClassVariable, path[i], index->Abstract()->declaration.index);
-		if(index->Hold())
+		if(index->Hold() && i < path.Count() - 1)
 		{
-			indices.Add(MemberIndex(path[i]));
-			if(i < path.Count() - 1)
-			{
-				const Type& memberType = index->Abstract()->variables[member.index]->type;
-				LogicGenerateParameter transitional(parameter, 1);
-				LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
-				variable = transitional.results[0];
-			}
+			const Type& memberType = index->Abstract()->variables[member.index]->type;
+			LogicGenerateParameter transitional(parameter, 1);
+			LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
+			variable = transitional.results[0];
 		}
 		index = index->prevClosure;
 	}
-	parameter.databaseGenerator->AddLocalMember(anchor, localIndex, indices, parameter.generator->globalReference);
 }
 
 void VariableClosureExpression::Generator(LogicGenerateParameter& parameter)
@@ -306,6 +348,8 @@ void VariableClosureExpression::Generator(LogicGenerateParameter& parameter)
 	CompilingDeclaration member;
 	GetVariable(parameter, variable, member);
 	LogicVariabelAssignment(parameter.manager, parameter.generator, parameter.GetResult(0, returns[0]), variable, member, 0, parameter.finallyAddress);
+	List<MemberIndex> indices(0);
+	AddProgramDatabaseMember(anchor, parameter, indices);
 }
 
 void VariableClosureExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
@@ -314,6 +358,21 @@ void VariableClosureExpression::GeneratorAssignment(LogicGenerateParameter& para
 	CompilingDeclaration member;
 	GetVariable(parameter, variable, member);
 	LogicVariabelAssignment(parameter.manager, parameter.generator, variable, member, 0, parameter.results[0], parameter.finallyAddress);
+	List<MemberIndex> indices(0);
+	AddProgramDatabaseMember(anchor, parameter, indices);
+}
+
+void VariableClosureExpression::AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices)
+{
+	List<uint32, true> path = closure->GetPath(pathIndex);
+	uint32 count = path.Count();
+	const ClosureVariable* index = closure;
+	while(count--)
+	{
+		if(index->Hold()) indices.Insert(0, MemberIndex(path[count]));
+		index = index->prevClosure;
+	}
+	parameter.databaseGenerator->AddLocalMember(memberAnchor, localIndex, indices, parameter.generator->globalReference);
 }
 
 void VariableQuestionMemberExpression::Generator(LogicGenerateParameter& parameter)

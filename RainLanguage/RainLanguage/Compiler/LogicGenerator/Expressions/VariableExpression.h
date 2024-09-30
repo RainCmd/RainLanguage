@@ -16,6 +16,7 @@ public:
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
+	void AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices);
 };
 
 class VariableGlobalExpression :public VariableExpression
@@ -26,6 +27,7 @@ public:
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
+	void AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices);
 	bool TryEvaluation(bool& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(uint8& value, LogicGenerateParameter& parameter);
 	bool TryEvaluation(character& value, LogicGenerateParameter& parameter);
@@ -56,6 +58,7 @@ public:
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
 	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
+	void AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices);
 	~VariableMemberExpression();
 };
 
@@ -73,6 +76,7 @@ public:
 	}
 	void Generator(LogicGenerateParameter& parameter);
 	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void AddProgramDatabaseMember(const Anchor& memberAnchor, LogicGenerateParameter& parameter, List<MemberIndex>& indices);
 };
 
 class VariableQuestionMemberExpression :public Expression

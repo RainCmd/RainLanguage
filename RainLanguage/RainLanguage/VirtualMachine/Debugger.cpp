@@ -228,7 +228,7 @@ RainDebuggerVariable RainDebuggerVariable::GetMember(uint32 index) const
 			{
 				const Delegate& value = *(Delegate*)valueAddress;
 				Type type = kernel->heapAgency->GetType(value.target);
-				return RainDebuggerVariable(debugFrame, new String(kernel->stringAgency->Get(::GetTypeName(kernel, type))), valueAddress + GET_FIELD_OFFSET(Delegate, target), new Type(type));
+				return RainDebuggerVariable(debugFrame, new String(ClosureName()), valueAddress + GET_FIELD_OFFSET(Delegate, target), new Type(type));
 			}
 		}
 	}
@@ -787,6 +787,20 @@ RainDebuggerVariable RainTrace::GetLocal(const RainString& localName)
 	return RainDebuggerVariable();
 }
 
+static bool GetVariable(DebugFrame* frame, const String& name, RainDebuggerVariable& variable, List<RuntimeMemberVariable>& variables)
+{
+	uint32 index = 0;
+	while(index < variables.Count())
+		if(variables[index].name == name.index) break;
+		else index++;
+	if(index >= variables.Count()) return false;
+	RuntimeMemberVariable& runtimeVariable = variables[index];
+	uint8* address = variable.GetAddress();
+	if(!address) return false;
+	variable = RainDebuggerVariable(frame, new String(name), address + runtimeVariable.address, new Type(runtimeVariable.type));
+	return true;
+}
+
 static void GetMember(RainTrace* trace, DebugFrame* frame, const RainString& fileName, RainDebuggerVariable& variable, const List<DebugMemberIndex>& members)
 {
 	for(uint32 i = 0; i < members.Count(); i++)
@@ -799,16 +813,17 @@ static void GetMember(RainTrace* trace, DebugFrame* frame, const RainString& fil
 				Declaration declaration = DebugToKernel(frame->library->index, frame->map, member.declaration);
 				Kernel* kernel = frame->library->kernel;
 				String name = kernel->stringAgency->Add(member.member);
-				RuntimeClass* runtime = kernel->libraryAgency->GetClass(Type(declaration, 0));
-				uint32 index = 0;
-				while(index < runtime->variables.Count())
-					if(runtime->variables[index].name == name.index)
-						break;
-				if(index >= runtime->variables.Count()) goto label_fail;
-				RuntimeMemberVariable& runtimeVariable = runtime->variables[index];
-				uint8* address = variable.GetAddress();
-				if(!address) goto label_fail;
-				variable = RainDebuggerVariable(frame, new String(member.member), address + runtimeVariable.address, new Type(runtimeVariable.type));
+				if(declaration.code == TypeCode::Struct)
+				{
+					RuntimeStruct* runtime = kernel->libraryAgency->GetStruct(Type(declaration, 0));
+					if(!GetVariable(frame, name, variable, runtime->variables)) goto label_fail;
+				}
+				else if(declaration.code == TypeCode::Handle)
+				{
+					RuntimeClass* runtime = kernel->libraryAgency->GetClass(Type(declaration, 0));
+					if(!GetVariable(frame, name, variable, runtime->variables)) goto label_fail;
+				}
+				else goto label_fail;
 			}
 			else if(member.memberIndex != INVALID)
 			{
@@ -818,7 +833,7 @@ static void GetMember(RainTrace* trace, DebugFrame* frame, const RainString& fil
 			else
 			{
 				RainDebuggerVariable index = trace->GetVariable(fileName, member.index.line, member.index.index);
-				if(index.GetRainType() != RainType::Integer) goto label_fail;
+				if(!index.IsValid() || index.GetRainType() != RainType::Integer) goto label_fail;
 				uint8* indexAddress = index.GetAddress();
 				if(!indexAddress || *(integer*)indexAddress >= variable.ArrayLength()) goto label_fail;
 				variable = variable.GetElement((uint32) * (integer*)indexAddress);

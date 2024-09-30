@@ -13,7 +13,7 @@ void ClosureVariable::Init(Context& context)
 	manager->compilingLibrary.classes.Add(compiling = new CompilingClass(Anchor(), declaration, List<Anchor>(0), context.compilingSpace, 0, List<CompilingClass::Constructor*, true>(0), List<CompilingClass::Variable*, true>(0), List<uint32, true>(0), List<Line>(0)));
 	compiling->parent = TYPE_Handle;
 	compiling->relies = context.relies;
-	manager->selfLibaray->classes.Add(abstract = new AbstractClass(ClosureName(), declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
+	manager->selfLibaray->classes.Add(abstract = new AbstractClass(String(), declaration, List<String>(0), context.compilingSpace->abstract, TYPE_Handle, List<Type, true>(0), List<uint32, true>(0), List<AbstractVariable*, true>(0), List<uint32, true>(1), (uint32)0, (uint8)0));
 	if(prevClosure)
 	{
 		prevMember = compiling->variables.Count();
