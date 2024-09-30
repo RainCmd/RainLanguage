@@ -363,11 +363,8 @@ RainString RainDebuggerVariable::GetValue() const
 				String result = agency->Combine(fragments, 4);
 				return RainString(result.GetPointer(), result.GetLength());
 			}
-			else
-			{
-				String result = KeyWord_null();
-				return RainString(result.GetPointer(), result.GetLength());
-			}
+			String result = KeyWord_null();
+			return RainString(result.GetPointer(), result.GetLength());
 		}
 		else if(targetType.dimension)
 		{
@@ -388,7 +385,7 @@ RainString RainDebuggerVariable::GetValue() const
 			String result = FRAME->library->enums[targetType.index].ToString(valueAddress ? *(integer*)valueAddress : 0, agency);
 			return RainString(result.GetPointer(), result.GetLength());
 		}
-		else if(targetType.code == TypeCode::Delegate)
+		else if(targetType.code == TypeCode::Delegate && valueAddress)
 		{
 			String result;
 			switch(((Delegate*)valueAddress)->type)
@@ -402,7 +399,7 @@ RainString RainDebuggerVariable::GetValue() const
 			}
 			return RainString(result.GetPointer(), result.GetLength());
 		}
-		else if(targetType.code == TypeCode::Task)
+		else if(targetType.code == TypeCode::Task && valueAddress)
 		{
 			uint64 id = *(uint64*)valueAddress;
 			Kernel* kernel = FRAME->library->kernel;
