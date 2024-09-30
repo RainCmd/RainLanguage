@@ -1,4 +1,4 @@
-name: 构建.so文件(android-19)
+name: 构建.so文件
 
 on:
   workflow_dispatch:
@@ -36,10 +36,10 @@ jobs:
     - name: 安装py依赖
       run: pip install chardet
       
-    - name: 构建 RainLanguageSO - arm
+    - name: 构建 RainLanguageSO - arm(android-19)
       if: ${{ success() && inputs.ARM }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM
-    - name: 上传RL.so-arm
+    - name: 上传RL.so-arm(android-19)
       if: ${{ success() && inputs.ARM }}
       uses: actions/upload-artifact@v4
       with:
@@ -48,10 +48,10 @@ jobs:
         retention-days: 1
         if-no-files-found: error
         
-    - name: 构建 RainLanguageSO - arm64
+    - name: 构建 RainLanguageSO - arm64(android-31)
       if: ${{ success() && inputs.ARM64 }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM64
-    - name: 上传RL.so-arm64
+    - name: 上传RL.so-arm64(android-31)
       if: ${{ success() && inputs.ARM64 }}
       uses: actions/upload-artifact@v4
       with:
@@ -60,10 +60,10 @@ jobs:
         retention-days: 1
         if-no-files-found: error
         
-    - name: 构建 RainLanguageSO - x64
+    - name: 构建 RainLanguageSO - x64(android-31)
       if: ${{ success() && inputs.x64 }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-    - name: 上传RL.so-x64
+    - name: 上传RL.so-x64(android-31)
       if: ${{ success() && inputs.x64 }}
       uses: actions/upload-artifact@v4
       with:
@@ -72,10 +72,10 @@ jobs:
         retention-days: 1
         if-no-files-found: error
         
-    - name: 构建 RainLanguageSO - x86
+    - name: 构建 RainLanguageSO - x86(android-19)
       if: ${{ success() && inputs.x86 }}
       run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x86
-    - name: 上传RL.so-x86
+    - name: 上传RL.so-x86(android-19)
       if: ${{ success() && inputs.x86 }}
       uses: actions/upload-artifact@v4
       with:
