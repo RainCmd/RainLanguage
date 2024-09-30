@@ -1,8 +1,28 @@
-name: 构建 arm android-19
+name: 构建.so文件(android-19)
 
 on:
   workflow_dispatch:
-  
+    inputs:
+      ARM:
+        description: 'ARM'
+        required: true
+        default: false
+        type: boolean
+      ARM64:
+        description: 'ARM64'
+        required: true
+        default: true
+        type: boolean
+      x64:
+        description: 'x64'
+        required: true
+        default: false
+        type: boolean
+      x86:
+        description: 'x86'
+        required: true
+        default: false
+        type: boolean
 jobs:
   build:
     runs-on: windows-latest
@@ -15,25 +35,54 @@ jobs:
       uses: microsoft/setup-msbuild@v2
     - name: 安装py依赖
       run: pip install chardet
-    - name: 构建 RainLanguageSO
-      run: |
-        msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
-        msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM
-    - name: 上传.so文件
-      if: success()
+      
+    - name: 构建 RainLanguageSO - arm
+      if: ${{ success() && inputs.ARM }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM
+    - name: 上传RL.so-arm
+      if: ${{ success() && inputs.ARM }}
       uses: actions/upload-artifact@v4
       with:
         name: RL.so-arm
         path: RainLanguageSO\ARM\Release\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
-    - name: 上传.so文件
-      if: success()
+        
+    - name: 构建 RainLanguageSO - arm64
+      if: ${{ success() && inputs.ARM64 }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=ARM64
+    - name: 上传RL.so-arm64
+      if: ${{ success() && inputs.ARM64 }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-arm64
+        path: RainLanguageSO\ARM64\Release\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+        
+    - name: 构建 RainLanguageSO - x64
+      if: ${{ success() && inputs.x64 }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x64
+    - name: 上传RL.so-x64
+      if: ${{ success() && inputs.x64 }}
       uses: actions/upload-artifact@v4
       with:
         name: RL.so-x64
         path: RainLanguageSO\x64\Release\libRainLanguageSO.so
         retention-days: 1
         if-no-files-found: error
+        
+    - name: 构建 RainLanguageSO - x86
+      if: ${{ success() && inputs.x86 }}
+      run: msbuild RainLanguageSO\RainLanguageSO.vcxproj -t:rebuild -verbosity:m -property:Configuration=Release -property:Platform=x86
+    - name: 上传RL.so-x86
+      if: ${{ success() && inputs.x86 }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: RL.so-x86
+        path: RainLanguageSO\x86\Release\libRainLanguageSO.so
+        retention-days: 1
+        if-no-files-found: error
+        
 
 
