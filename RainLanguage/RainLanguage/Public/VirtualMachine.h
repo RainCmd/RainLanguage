@@ -1144,7 +1144,11 @@ public:
 class RAINLANGUAGE RainKernel
 {
 public:
-	RainKernel() = default;
+	/// <summary>
+	/// 自定义数据
+	/// </summary>
+	void* userData;
+	inline RainKernel() :userData(nullptr) {}
 	virtual ~RainKernel() {};
 
 	/// <summary>
