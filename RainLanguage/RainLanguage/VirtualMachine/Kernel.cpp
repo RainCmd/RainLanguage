@@ -175,7 +175,7 @@ Function FindFunction(Kernel* kernel, RuntimeLibrary* library, const character* 
 	RuntimeSpace* space = &library->spaces[0];
 	uint32 start = 0;
 	for(uint32 x = 0; x < nameLength; x++)
-		if(x == '.')
+		if(name[x] == '.')
 		{
 			if(x == start) return Function();
 			String spaceName = kernel->stringAgency->Add(name + start, x - start);

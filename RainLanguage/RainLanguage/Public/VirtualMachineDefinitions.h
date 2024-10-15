@@ -110,5 +110,5 @@ struct RainStackFrame;
 class CallerWrapper;
 typedef void (*EntityAction)(RainKernel& kernel, uint64);
 typedef void(*OnCaller)(RainKernel& kernel, CallerWrapper& caller);
-typedef OnCaller(*NativeCallerLoader)(RainKernel& kernel, const RainString fullName, const RainType* parameters, uint32 parametersCount);
+typedef OnCaller(*NativeCallerLoader)(RainKernel& kernel, const RainString fullName, const RainType* parameters, uint32 parameterCount);
 typedef void(*OnExceptionExit)(RainKernel& kernel, const RainStackFrame* stackFrames, uint32 stackFrameCount, const RainString message);
