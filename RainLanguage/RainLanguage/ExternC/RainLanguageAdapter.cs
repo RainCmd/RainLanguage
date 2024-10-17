@@ -1101,8 +1101,8 @@ namespace RainLanguage
             {
                 get
                 {
-                    using (var str = new NativeString(RainErrorMessageGetPath(msg)))
-                        return str.Value;
+                    var pchar = RainErrorMessageGetPath(msg, out var legnth);
+                    return new string(pchar, 0, legnth);
                 }
             }
             /// <summary>
@@ -1122,8 +1122,8 @@ namespace RainLanguage
             {
                 get
                 {
-                    using (var str = new NativeString(RainErrorMessageGetExtraMessage(msg)))
-                        return str.Value;
+                    var pchar = RainErrorMessageGetExtraMessage(msg, out var legnth);
+                    return new string(pchar, 0, legnth);
                 }
             }
             /// <summary>
@@ -1138,11 +1138,11 @@ namespace RainLanguage
             }
             ~ErrorMessage() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetPath", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* RainErrorMessageGetPath(void* msg);
+            private extern static char* RainErrorMessageGetPath(void* msg, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetDetail", CallingConvention = CallingConvention.Cdecl)]
             private extern static ErrorMessageDetail RainErrorMessageGetDetail(void* msg);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainErrorMessageGetExtraMessage", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* RainErrorMessageGetExtraMessage(void* msg);
+            private extern static char* RainErrorMessageGetExtraMessage(void* msg, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainErrorMessage", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* DeleteRainErrorMessage(void* msg);
 
@@ -1261,9 +1261,8 @@ namespace RainLanguage
             /// <param name="line">行数</param>
             public void GetPosition(uint instructAddress, out string file, out uint line)
             {
-                RainProgramDatabaseGetPosition(database, instructAddress, out var filePointer, out line);
-                using (var nativeString = new NativeString(filePointer))
-                    file = nativeString.Value;
+                RainProgramDatabaseGetPosition(database, instructAddress, out var fileName, out var fileNameLength, out line);
+                file = new string(fileName, 0, fileNameLength);
             }
             /// <summary>
             /// 销毁数据
@@ -1295,7 +1294,7 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeserializeRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* DeserializeRainProgramDatabase(void* data, uint length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainProgramDatabaseGetPosition", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void RainProgramDatabaseGetPosition(void* database, uint instructAddress, out void* file, out uint line);
+            private extern static void RainProgramDatabaseGetPosition(void* database, uint instructAddress, out char* fileName, out int fileNameLength, out uint line);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainProgramDatabase", CallingConvention = CallingConvention.Cdecl)]
             internal extern static void DeleteRainProgramDatabase(void* database);
 
@@ -1330,64 +1329,6 @@ namespace RainLanguage
             {
                 return new string(nativeString.value, 0, (int)nativeString.length);
             }
-        }
-        private class NativeString : IDisposable
-        {
-            private void* value;
-            private string result;
-            public NativeString(void* value)
-            {
-                this.value = value;
-                result = null;
-            }
-            public string Value
-            {
-                get
-                {
-                    if (value == null) return null;
-                    else if (result == null) result = new string(RainStringGetChars(value));
-                    return result;
-                }
-            }
-            public void Dispose()
-            {
-                if (value == null) return;
-                DeleteRainString(value);
-                value = null;
-                GC.SuppressFinalize(this);
-            }
-            ~NativeString() { Dispose(); }
-            internal static NativeString Create(char* value)
-            {
-                return new NativeString(CreateRainString(value));
-            }
-            internal static string GetString(void* value)
-            {
-                return new string(RainStringGetChars(value));
-            }
-            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CreateRainString", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* CreateRainString(char* msg);
-            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RainStringGetChars", CallingConvention = CallingConvention.Cdecl)]
-            private extern static char* RainStringGetChars(void* msg);
-            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteRainString", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void DeleteRainString(void* msg);
-
-            public override bool Equals(object obj)
-            {
-                return obj is NativeString value && value.value == this.value;
-            }
-            public override int GetHashCode()
-            {
-                return -494256651 + ((long)value).GetHashCode();
-            }
-            public static implicit operator bool(NativeString value) { return !ReferenceEquals(value, null) && value.value != null; }
-            public static bool operator ==(NativeString left, NativeString right)
-            {
-                if (!left && !right) return true;
-                if (left && right) return left.Value == right.Value;
-                return false;
-            }
-            public static bool operator !=(NativeString left, NativeString right) { return !(left == right); }
         }
         /// <summary>
         /// 二进制数据
@@ -1626,7 +1567,11 @@ namespace RainLanguage
 
             public override void EnableDebug(DataLoader progressDatabaseLoader)
             {
-                ExternProgramDatabaseLoader loader = name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name)));
+                ExternProgramDatabaseLoader loader = name =>
+                {
+                    var pchar = GetRainStringValue(name, out var length);
+                    return RainProgramDatabase.InternalCreate(progressDatabaseLoader(new string(pchar, 0, length)));
+                };
                 references.Add(loader);
                 RegistDebugger(kernel, loader, RainProgramDatabase.DeleteRainProgramDatabase);
             }
@@ -1909,13 +1854,13 @@ namespace RainLanguage
                 get
                 {
                     if (!IsValid) throw new InvalidOperationException("当前调用已失效");
-                    using (var nativeString = new NativeString(Extern_InvokerWrapperGetName(invoker)))
-                        return nativeString.Value;
+                    var pchar = InvokerWrapperGetName(invoker, out var length);
+                    return new string(pchar, 0, length);
                 }
                 set
                 {
                     if (!IsValid) throw new InvalidOperationException("当前调用已失效");
-                    fixed (char* pvalue = value) Extern_InvokerWrapperSetName(invoker, pvalue);
+                    fixed (char* pvalue = value) InvokerWrapperSetName(invoker, pvalue);
                 }
             }
             /// <summary>
@@ -1925,8 +1870,8 @@ namespace RainLanguage
             public string GetExceptionMessage()
             {
                 if (!IsValid) throw new InvalidOperationException("当前调用已失效");
-                using (var nativeString = new NativeString(Extern_InvokerWrapperGetExceptionMessage(invoker)))
-                    return nativeString.Value;
+                var pchar = InvokerWrapperGetExceptionMessage(invoker, out var length);
+                return new string(pchar, 0, length);
             }
             /// <summary>
             /// 获取错误信息
@@ -1935,8 +1880,8 @@ namespace RainLanguage
             public string GetError()
             {
                 if (!IsValid) throw new InvalidOperationException("当前调用已失效");
-                using (var nativeString = new NativeString(Extern_InvokerWrapperGetErrorMessage(invoker)))
-                    return nativeString.Value;
+                var pchar = InvokerWrapperGetErrorMessage(invoker, out var length);
+                return new string(pchar, 0, length);
             }
             /// <summary>
             /// 开始执行调用
@@ -2100,8 +2045,8 @@ namespace RainLanguage
             public string GetEnumNameReturnValue(uint index)
             {
                 if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
-                using (var nativeString = new NativeString(InvokerWrapperGetEnumNameReturnValue(invoker, index)))
-                    return nativeString.Value;
+                var pchar = InvokerWrapperGetEnumNameReturnValue(invoker, index, out var length);
+                return new string(pchar, 0, length);
             }
             /// <summary>
             /// 获取返回值
@@ -2114,8 +2059,8 @@ namespace RainLanguage
             public string GetStringReturnValue(uint index)
             {
                 if (State != InvaokerState.Completed) throw new InvalidOperationException("当前调用的状态不是：Completed");
-                using (var nativeString = new NativeString(InvokerWrapperGetStringReturnValue(invoker, index)))
-                    return nativeString.Value;
+                var pchar = InvokerWrapperGetStringReturnValue(invoker, index, out var length);
+                return new string(pchar, 0, length);
             }
             /// <summary>
             /// 获取返回值
@@ -2631,13 +2576,13 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetState", CallingConvention = CallingConvention.Cdecl)]
             private extern static byte InvokerWrapperGetState(void* invoker);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetName", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* Extern_InvokerWrapperGetName(void* invoker);
+            private extern static char* InvokerWrapperGetName(void* invoker, out int lenght);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperSetName", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void Extern_InvokerWrapperSetName(void* invoker, char* name);
+            private extern static void InvokerWrapperSetName(void* invoker, char* name);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetExceptionMessage", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* Extern_InvokerWrapperGetExceptionMessage(void* invoker);
+            private extern static char* InvokerWrapperGetExceptionMessage(void* invoker, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetErrorMessage", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* Extern_InvokerWrapperGetErrorMessage(void* invoker);
+            private extern static char* InvokerWrapperGetErrorMessage(void* invoker, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperStart", CallingConvention = CallingConvention.Cdecl)]
             private extern static void InvokerWrapperStart(void* invoker, bool immediately, bool ignoreWait);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperIsPause", CallingConvention = CallingConvention.Cdecl)]
@@ -2668,9 +2613,9 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetEnumValueReturnValue", CallingConvention = CallingConvention.Cdecl)]
             private extern static long InvokerWrapperGetEnumValueReturnValue(void* invoker, uint index);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetEnumNameReturnValue", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* InvokerWrapperGetEnumNameReturnValue(void* invoker, uint index);
+            private extern static char* InvokerWrapperGetEnumNameReturnValue(void* invoker, uint index, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetStringReturnValue", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* InvokerWrapperGetStringReturnValue(void* invoker, uint index);
+            private extern static char* InvokerWrapperGetStringReturnValue(void* invoker, uint index, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_InvokerWrapperGetEntityReturnValue", CallingConvention = CallingConvention.Cdecl)]
             private extern static ulong InvokerWrapperGetEntityReturnValue(void* invoker, uint index);
             //get return array value
@@ -2900,8 +2845,8 @@ namespace RainLanguage
             /// <returns>参数值</returns>
             public string GetEnumNameParameter(uint index)
             {
-                using (var name = new NativeString(CallerWrapperGetEnumNameParameter(caller, index)))
-                    return name.Value;
+                var pchar = CallerWrapperGetEnumNameParameter(caller, index, out var length);
+                return new string(pchar, 0, length);
             }
             /// <summary>
             /// 获取参数
@@ -2913,8 +2858,8 @@ namespace RainLanguage
             /// <returns>参数值</returns>
             public string GetStringParameter(uint index)
             {
-                using (var value = new NativeString(CallerWrapperGetStringParameter(caller, index)))
-                    return value.Value;
+                var pchar = CallerWrapperGetStringParameter(caller, index, out var length);
+                return new string(pchar, 0, length);
             }
             /// <summary>
             /// 获取参数
@@ -3417,8 +3362,8 @@ namespace RainLanguage
             /// <returns>错误信息</returns>
             public string GetError()
             {
-                using (var name = new NativeString(CallerWrapperGetError(caller)))
-                    return name.Value;
+                var pchar = CallerWrapperGetError(caller, out var length);
+                return new string(pchar, 0, length);
             }
             //get parameter
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetBoolParameter", CallingConvention = CallingConvention.Cdecl)]
@@ -3440,9 +3385,9 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEnumValueParameter", CallingConvention = CallingConvention.Cdecl)]
             private extern static long CallerWrapperGetEnumValueParameter(void* caller, uint index);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEnumNameParameter", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* CallerWrapperGetEnumNameParameter(void* caller, uint index);
+            private extern static char* CallerWrapperGetEnumNameParameter(void* caller, uint index, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetStringParameter", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* CallerWrapperGetStringParameter(void* caller, uint index);
+            private extern static char* CallerWrapperGetStringParameter(void* caller, uint index, out int length);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetEntityParameter", CallingConvention = CallingConvention.Cdecl)]
             private extern static ulong CallerWrapperGetEntityParameter(void* caller, uint index);
             //get parameters
@@ -3526,7 +3471,7 @@ namespace RainLanguage
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperSetException", CallingConvention = CallingConvention.Cdecl)]
             private extern static void CallerWrapperSetException(void* caller, char* value);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_CallerWrapperGetError", CallingConvention = CallingConvention.Cdecl)]
-            private extern static void* CallerWrapperGetError(void* caller);
+            private extern static char* CallerWrapperGetError(void* caller, out int length);
         }
         /// <summary>
         /// 清理虚拟机中所有缓存的静态数据
@@ -3581,7 +3526,11 @@ namespace RainLanguage
             {
                 return new Product(Build(new ExternBuildParameter(name, parameter.debug,
                     new CodeLoadHelper(parameter.files).LoadNext,
-                    libName => RainLibrary.InternalCreate(parameter.libraryLoader(NativeString.GetString(libName))),
+                    libName =>
+                    {
+                        var pchar = GetRainStringValue(libName, out var length);
+                        return RainLibrary.InternalCreate(parameter.libraryLoader(new string(pchar, 0, length)));
+                    },
                     RainLibrary.DeleteRainLibrary,
                     (uint)parameter.errorLevel)));
             }
@@ -3619,7 +3568,11 @@ namespace RainLanguage
                 references.Add(onReferenecEntity);
                 ExternEntityAction onReleaseEntity = (kernel, entity) => startupParameter.onReleaseEntity(new RainKernelCopy(kernel), entity);
                 references.Add(onReleaseEntity);
-                LibraryLoader libraryLoader = libName => RainLibrary.InternalCreate(startupParameter.libraryLoader(NativeString.GetString(libName)));
+                LibraryLoader libraryLoader = libName =>
+                {
+                    var pchar = GetRainStringValue(libName, out var length);
+                    return RainLibrary.InternalCreate(startupParameter.libraryLoader(new string(pchar, 0, length)));
+                };
                 references.Add(libraryLoader);
                 ExternNativeCallerLoader nativeCallerLoader = (kernel, fullName, parameters, parameterCount) =>
                 {
@@ -3645,7 +3598,11 @@ namespace RainLanguage
                 if (progressDatabaseLoader != null)
                 {
                     references.Add(progressDatabaseLoader);
-                    ExternProgramDatabaseLoader loader = name => RainProgramDatabase.InternalCreate(progressDatabaseLoader(NativeString.GetString(name)));
+                    ExternProgramDatabaseLoader loader = name =>
+                    {
+                        var pchar = GetRainStringValue(name, out var length);
+                        return RainProgramDatabase.InternalCreate(progressDatabaseLoader(new string(pchar, 0, length)));
+                    };
                     references.Add(loader);
                     return new RainKernelMain(CreateKernel(parameter, loader, RainProgramDatabase.DeleteRainProgramDatabase), references);
                 }
@@ -3656,6 +3613,8 @@ namespace RainLanguage
         private delegate void ExternProgramDatabaseUnloader(void* database);
         [DllImport(RainLanguageDLLName, EntryPoint = "Extern_RegistDebugger", CallingConvention = CallingConvention.Cdecl)]
         private extern static void RegistDebugger(void* kernel, ExternProgramDatabaseLoader loader, ExternProgramDatabaseUnloader unloader);
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_GetRainStringValue", CallingConvention = CallingConvention.Cdecl)]
+        private extern static char* GetRainStringValue(void* value, out int length);
         /// <summary>
         /// 分配内存
         /// </summary>

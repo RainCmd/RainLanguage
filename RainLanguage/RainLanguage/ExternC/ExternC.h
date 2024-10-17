@@ -60,15 +60,10 @@ extern "C"
 	RAINLANGUAGE const RainLibrary* Extern_ProductGetLibrary(RainProduct* product);
 	RAINLANGUAGE const RainProgramDatabase* Extern_ProductGetRainProgramDatabase(RainProduct* product);
 
-	RAINLANGUAGE RainString* Extern_RainErrorMessageGetPath(RainErrorMessage* message);
+	RAINLANGUAGE const character* Extern_RainErrorMessageGetPath(RainErrorMessage* message, uint32& length);
 	RAINLANGUAGE Extern_ErrorMessage Extern_RainErrorMessageGetDetail(RainErrorMessage* message);
-	RAINLANGUAGE RainString* Extern_RainErrorMessageGetExtraMessage(RainErrorMessage* message);
+	RAINLANGUAGE const character* Extern_RainErrorMessageGetExtraMessage(RainErrorMessage* message, uint32& length);
 	RAINLANGUAGE void Extern_DeleteRainErrorMessage(RainErrorMessage* message);
-
-	RAINLANGUAGE RainString* Extern_CreateRainString(character* value);
-	RAINLANGUAGE const character* Extern_RainStringGetChars(RainString* value);
-	RAINLANGUAGE uint32 Extern_RainStringGetLength(RainString* value);
-	RAINLANGUAGE void Extern_DeleteRainString(RainString* value);
 
 	RAINLANGUAGE RainKernel* Extern_CreateKernel(StartupParameter parameter);
 	RAINLANGUAGE RainKernel* Extern_CreateKernel2(StartupParameter parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
@@ -98,10 +93,10 @@ extern "C"
 	RAINLANGUAGE uint64 Extern_InvokerWrapperGetInstanceID(InvokerWrapper* invoker);
 	RAINLANGUAGE bool Extern_InvokerWrapperIsValid(InvokerWrapper* invoker);
 	RAINLANGUAGE uint8 Extern_InvokerWrapperGetState(InvokerWrapper* invoker);
-	RAINLANGUAGE RainString* Extern_InvokerWrapperGetName(InvokerWrapper* invoker);
+	RAINLANGUAGE const character* Extern_InvokerWrapperGetName(InvokerWrapper* invoker, uint32& length);
 	RAINLANGUAGE void Extern_InvokerWrapperSetName(InvokerWrapper* invoker, character* name);
-	RAINLANGUAGE RainString* Extern_InvokerWrapperGetExceptionMessage(InvokerWrapper* invoker);
-	RAINLANGUAGE RainString* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker);
+	RAINLANGUAGE const character* Extern_InvokerWrapperGetExceptionMessage(InvokerWrapper* invoker, uint32& length);
+	RAINLANGUAGE const character* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker, uint32& length);
 	RAINLANGUAGE void Extern_InvokerWrapperStart(InvokerWrapper* invoker, bool immediately, bool ignoreWait);
 	RAINLANGUAGE bool Extern_InvokerWrapperIsPause(InvokerWrapper* invoker);
 	RAINLANGUAGE void Extern_InvokerWrapperPause(InvokerWrapper* invoker);
@@ -116,8 +111,8 @@ extern "C"
 	RAINLANGUAGE Extern_Real3 Extern_InvokerWrapperGetReal3ReturnValue(InvokerWrapper* invoker, uint32 index);
 	RAINLANGUAGE Extern_Real4 Extern_InvokerWrapperGetReal4ReturnValue(InvokerWrapper* invoker, uint32 index);
 	RAINLANGUAGE integer Extern_InvokerWrapperGetEnumValueReturnValue(InvokerWrapper* invoker, uint32 index);
-	RAINLANGUAGE RainString* Extern_InvokerWrapperGetEnumNameReturnValue(InvokerWrapper* invoker, uint32 index);
-	RAINLANGUAGE RainString* Extern_InvokerWrapperGetStringReturnValue(InvokerWrapper* invoker, uint32 index);
+	RAINLANGUAGE const character* Extern_InvokerWrapperGetEnumNameReturnValue(InvokerWrapper* invoker, uint32 index, uint32& length);
+	RAINLANGUAGE const character* Extern_InvokerWrapperGetStringReturnValue(InvokerWrapper* invoker, uint32 index, uint32& length);
 	RAINLANGUAGE uint64 Extern_InvokerWrapperGetEntityReturnValue(InvokerWrapper* invoker, uint32 index);
 	RAINLANGUAGE uint32 Extern_InvokerWapperGetArrayReturnValueLength(InvokerWrapper* invoker, uint32 index);
 	RAINLANGUAGE bool* Extern_InvokerWapperGetBoolArrayReturnValue(InvokerWrapper* invoker, uint32 index);
@@ -166,9 +161,9 @@ extern "C"
 	RAINLANGUAGE Extern_Real2 Extern_CallerWrapperGetReal2Parameter(CallerWrapper* caller, uint32 index);
 	RAINLANGUAGE Extern_Real3 Extern_CallerWrapperGetReal3Parameter(CallerWrapper* caller, uint32 index);
 	RAINLANGUAGE Extern_Real4 Extern_CallerWrapperGetReal4Parameter(CallerWrapper* caller, uint32 index);
-	RAINLANGUAGE RainString* Extern_CallerWrapperGetEnumNameParameter(CallerWrapper* caller, uint32 index);
+	RAINLANGUAGE const character* Extern_CallerWrapperGetEnumNameParameter(CallerWrapper* caller, uint32 index, uint32& length);
 	RAINLANGUAGE integer Extern_CallerWrapperGetEnumValueParameter(CallerWrapper* caller, uint32 index);
-	RAINLANGUAGE RainString* Extern_CallerWrapperGetStringParameter(CallerWrapper* caller, uint32 index);
+	RAINLANGUAGE const character* Extern_CallerWrapperGetStringParameter(CallerWrapper* caller, uint32 index, uint32& length);
 	RAINLANGUAGE uint64 Extern_CallerWrapperGetEntityParameter(CallerWrapper* caller, uint32 index);
 	RAINLANGUAGE uint32 Extern_CallerWrapperGetArrayParameterLength(CallerWrapper* caller, uint32 index);
 	RAINLANGUAGE bool* Extern_CallerWrapperGetBoolArrayParameter(CallerWrapper* caller, uint32 index);
@@ -208,7 +203,7 @@ extern "C"
 	RAINLANGUAGE bool Extern_CallerWrapperSetStringReturnValues(CallerWrapper* caller, uint32 index, character** values, uint32 length);
 	RAINLANGUAGE bool Extern_CallerWrapperSetEntityReturnValues(CallerWrapper* caller, uint32 index, uint64* values, uint32 length);
 	RAINLANGUAGE void Extern_CallerWrapperSetException(CallerWrapper* caller, character* exception);
-	RAINLANGUAGE RainString* Extern_CallerWrapperGetError(CallerWrapper* caller);
+	RAINLANGUAGE const character* Extern_CallerWrapperGetError(CallerWrapper* caller, uint32& length);
 
 	RAINLANGUAGE const uint8* Extern_RainBufferGetData(RainBuffer<uint8>* buffer);
 	RAINLANGUAGE uint32 Extern_RainBufferGetCount(RainBuffer<uint8>* buffer);
@@ -218,10 +213,12 @@ extern "C"
 	RAINLANGUAGE void Extern_DeleteRainLibrary(RainLibrary* library);
 	RAINLANGUAGE const RainBuffer<uint8>* Extern_SerializeRainProgramDatabase(RainProgramDatabase* database);
 	RAINLANGUAGE const RainProgramDatabase* Extern_DeserializeRainProgramDatabase(uint8* data, uint32 size);
-	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const RainString*& file, uint32& line);
+	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const character*& fileName, uint32& fileNameLength, uint32& line);//todo
 	RAINLANGUAGE void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database);
 
 	RAINLANGUAGE void Extern_RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
+
+	RAINLANGUAGE const character* Extern_GetRainStringValue(const RainString& value, uint32& length);
 
 	RAINLANGUAGE void Extern_SetMemoryAllocator(__alloc rainAlloc, __free rainFree, __realloc rainRealloc);
 	RAINLANGUAGE void Extern_FreeArray(void* pointer);

@@ -74,9 +74,10 @@ const RainProgramDatabase* Extern_ProductGetRainProgramDatabase(RainProduct* pro
 	return product->GetRainProgramDatabase();
 }
 
-RainString* Extern_RainErrorMessageGetPath(RainErrorMessage* message)
+const character* Extern_RainErrorMessageGetPath(RainErrorMessage* message, uint32& length)
 {
-	return new RainString(message->path);
+	length = message->path.length;
+	return message->path.value;
 }
 
 Extern_ErrorMessage Extern_RainErrorMessageGetDetail(RainErrorMessage* message)
@@ -89,9 +90,10 @@ Extern_ErrorMessage Extern_RainErrorMessageGetDetail(RainErrorMessage* message)
 	return result;
 }
 
-RainString* Extern_RainErrorMessageGetExtraMessage(RainErrorMessage* message)
+const character* Extern_RainErrorMessageGetExtraMessage(RainErrorMessage* message, uint32& length)
 {
-	return new RainString(message->message);
+	length = message->message.length;
+	return message->message.value;
 }
 
 void Extern_DeleteRainErrorMessage(RainErrorMessage* message)
@@ -99,24 +101,10 @@ void Extern_DeleteRainErrorMessage(RainErrorMessage* message)
 	delete message;
 }
 
-RainString* Extern_CreateRainString(character* value)
+const character* Extern_GetRainStringValue(const RainString& value, uint32& length)
 {
-	return new RainString(ExternHelper_GetRainString(value));
-}
-
-const character* Extern_RainStringGetChars(RainString* value)
-{
-	return value->value;
-}
-
-uint32 Extern_RainStringGetLength(RainString* value)
-{
-	return value->length;
-}
-
-void Extern_DeleteRainString(RainString* value)
-{
-	delete value;
+	length = value.length;
+	return value.value;
 }
 
 RainKernel* Extern_CreateKernel(StartupParameter parameter)
@@ -241,9 +229,11 @@ uint8 Extern_InvokerWrapperGetState(InvokerWrapper* invoker)
 	return (uint8)invoker->GetState();
 }
 
-RainString* Extern_InvokerWrapperGetName(InvokerWrapper* invoker)
+const character* Extern_InvokerWrapperGetName(InvokerWrapper* invoker, uint32& length)
 {
-	return new RainString(invoker->GetName());
+	const RainString result = invoker->GetName();
+	length = result.length;
+	return result.value;
 }
 
 void Extern_InvokerWrapperSetName(InvokerWrapper* invoker, character* name)
@@ -251,14 +241,18 @@ void Extern_InvokerWrapperSetName(InvokerWrapper* invoker, character* name)
 	invoker->SetName(name);
 }
 
-RainString* Extern_InvokerWrapperGetExceptionMessage(InvokerWrapper* invoker)
+const character* Extern_InvokerWrapperGetExceptionMessage(InvokerWrapper* invoker, uint32& length)
 {
-	return new RainString(invoker->GetExceptionMessage());
+	const RainString result = invoker->GetExceptionMessage();
+	length = result.length;
+	return result.value;
 }
 
-RainString* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker)
+const character* Extern_InvokerWrapperGetErrorMessage(InvokerWrapper* invoker, uint32& length)
 {
-	return new RainString(invoker->GetErrorMessage());
+	const RainString result = invoker->GetErrorMessage();
+	length = result.length;
+	return result.value;
 }
 
 void Extern_InvokerWrapperStart(InvokerWrapper* invoker, bool immediately, bool ignoreWait)
@@ -334,14 +328,18 @@ integer Extern_InvokerWrapperGetEnumValueReturnValue(InvokerWrapper* invoker, ui
 	return invoker->GetEnumValueReturnValue(index);
 }
 
-RainString* Extern_InvokerWrapperGetEnumNameReturnValue(InvokerWrapper* invoker, uint32 index)
+const character* Extern_InvokerWrapperGetEnumNameReturnValue(InvokerWrapper* invoker, uint32 index, uint32& length)
 {
-	return new RainString(invoker->GetEnumNameReturnValue(index));
+	const RainString result = invoker->GetEnumNameReturnValue(index);
+	length = result.length;
+	return result.value;
 }
 
-RainString* Extern_InvokerWrapperGetStringReturnValue(InvokerWrapper* invoker, uint32 index)
+const character* Extern_InvokerWrapperGetStringReturnValue(InvokerWrapper* invoker, uint32 index, uint32& length)
 {
-	return new RainString(invoker->GetStringReturnValue(index));
+	const RainString result = invoker->GetStringReturnValue(index);
+	length = result.length;
+	return result.value;
 }
 
 uint64 Extern_InvokerWrapperGetEntityReturnValue(InvokerWrapper* invoker, uint32 index)
@@ -615,9 +613,11 @@ Extern_Real4 Extern_CallerWrapperGetReal4Parameter(CallerWrapper* caller, uint32
 	return CONVERT(Extern_Real4, value);
 }
 
-RainString* Extern_CallerWrapperGetEnumNameParameter(CallerWrapper* caller, uint32 index)
+const character* Extern_CallerWrapperGetEnumNameParameter(CallerWrapper* caller, uint32 index, uint32& length)
 {
-	return new RainString(caller->GetEnumNameParameter(index));
+	const RainString result = caller->GetEnumNameParameter(index);
+	length = result.length;
+	return result.value;
 }
 
 integer Extern_CallerWrapperGetEnumValueParameter(CallerWrapper* caller, uint32 index)
@@ -625,9 +625,11 @@ integer Extern_CallerWrapperGetEnumValueParameter(CallerWrapper* caller, uint32 
 	return caller->GetEnumValueParameter(index);
 }
 
-RainString* Extern_CallerWrapperGetStringParameter(CallerWrapper* caller, uint32 index)
+const character* Extern_CallerWrapperGetStringParameter(CallerWrapper* caller, uint32 index, uint32& length)
 {
-	return new RainString(caller->GetStringParameter(index));
+	const RainString result = caller->GetStringParameter(index);
+	length = result.length;
+	return result.value;
 }
 
 uint64 Extern_CallerWrapperGetEntityParameter(CallerWrapper* caller, uint32 index)
@@ -857,9 +859,11 @@ void Extern_CallerWrapperSetException(CallerWrapper* caller, character* message)
 	caller->SetException(ExternHelper_GetRainString(message));
 }
 
-RainString* Extern_CallerWrapperGetError(CallerWrapper* caller)
+const character* Extern_CallerWrapperGetError(CallerWrapper* caller, uint32& length)
 {
-	return new RainString(caller->GetError());
+	const RainString result = caller->GetError();
+	length = result.length;
+	return result.value;
 }
 
 const uint8* Extern_RainBufferGetData(RainBuffer<uint8>* buffer)
@@ -902,9 +906,11 @@ const RainProgramDatabase* Extern_DeserializeRainProgramDatabase(uint8* data, ui
 	return DeserializeDatabase(data, size);
 }
 
-void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const RainString*& file, uint32& line)
+void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const character*& fileName, uint32& fileNameLength, uint32& line)
 {
-	file = new RainString(database->GetPosition(instructAddress, line));
+	const RainString file = database->GetPosition(instructAddress, line);
+	fileName = file.value;
+	fileNameLength = file.length;
 }
 
 void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database)
