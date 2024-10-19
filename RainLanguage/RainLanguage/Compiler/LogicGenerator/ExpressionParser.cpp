@@ -1293,16 +1293,22 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& anchor, uint32& index, L
 	{
 		if(lexical.type == LexicalType::Word)
 		{
+			Type type = MatchBaseType(lexical.anchor.content);
+			if(type.IsValid())
+			{
+				index = lexical.anchor.GetEnd();
+				type.dimension = ExtractDimension(anchor, index);
+				declarations.Add(manager->GetDeclaration(type)->declaration);
+				return true;
+			}
 			if(TryFindDeclaration(lexical.anchor, declarations))
 			{
 				index = lexical.anchor.GetEnd();
 				return true;
 			}
-			else
-			{
-				AbstractSpace* space;
-				if(context.TryFindSpace(manager, lexical.anchor, space)) return TryFindDeclaration(anchor, index, lexical, space, declarations);
-			}
+			AbstractSpace* space;
+			if(context.TryFindSpace(manager, lexical.anchor, space)) 
+				return TryFindDeclaration(anchor, index, lexical, space, declarations);
 			MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
 			return false;
 		}
@@ -3155,7 +3161,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 					if(ContainAny(attribute, Attribute::Value))
 					{
 						Expression* expression = expressionStack.Pop();
-						if(expression->returns.Count() == 1 && IsHandleType(expression->returns[0]))
+						if(expression->returns.Count() == 1)
 						{
 							List<CompilingDeclaration, true> declarations(0);
 							index = lexical.anchor.GetEnd();
