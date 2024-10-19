@@ -2870,6 +2870,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 			case LexicalType::ConstChars:
 				if(ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
+					integer count = 0;
 					integer value = 0;
 					String& content = lexical.anchor.content;
 					for(uint32 i = 1, length = content.GetLength(); i < length; i++)
@@ -2881,9 +2882,11 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 							if(element != '\\') value += element & 0xff;
 							else if(++i < length) value += EscapeCharacter(i, content.GetPointer(), length) & 0xff;
 							else MESSAGE2(manager->messages, lexical.anchor.Sub(i + lexical.anchor.position - 1, 1), MessageType::ERROR_INVALID_ESCAPE_CHARACTER);
+							count++;
 						}
 					}
-					expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
+					if(count == 1) expressionStack.Add(new ConstantCharExpression(lexical.anchor, (character)value));
+					else expressionStack.Add(new ConstantIntegerExpression(lexical.anchor, value));
 					attribute = Attribute::Constant;
 					break;
 				}
