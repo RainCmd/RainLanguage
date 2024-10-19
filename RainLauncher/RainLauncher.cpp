@@ -145,14 +145,19 @@ static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, cons
 	return NativeHelper;
 }
 
+static RainProduct* product;
 static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frameCount, const RainString msg)
 {
-	wcout << L"异常信息:" << msg.value << L"\n";
+	RainProgramDatabase* pdb = product->GetRainProgramDatabase();
+	wcout << L"异常信息:" << (msg.value ? msg.value : L"") << L"\n";
 	for(size_t i = 0; i < frameCount; i++)
-		wcout << frames[i].libraryName.value << L"." << frames[i].functionName.value << "\t" << frames[i].address << endl;
+	{
+		uint32 line;
+		RainString file = pdb->GetPosition(frames[i].address, line);
+		wcout << file.value << L"\t" << frames[i].functionName.value << '[' << line << ']' << endl;
+	}
 }
 
-static RainProduct* product;
 static wstring name;
 static bool IsName(const RainString& name)
 {
