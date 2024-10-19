@@ -3334,7 +3334,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						}
 						else if(context.TryFindSpace(manager, lexical.anchor, space))
 						{
-							if(TryFindDeclaration(lexical.anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(lexical.anchor, index, expressionStack, lexical, declarations, attribute))
+							if(TryFindDeclaration(anchor, index, lexical, space, declarations) && TryPushDeclarationsExpression(lexical.anchor, index, expressionStack, lexical, declarations, attribute))
 								goto label_next_lexical;
 						}
 						else MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
