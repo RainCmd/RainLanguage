@@ -1083,6 +1083,8 @@ class RAINLANGUAGE RainFunction
 public:
 	RainFunction();
 	RainFunction(uint32 library, uint32 index, void* share);
+	RainFunction(const RainFunction& other);
+	RainFunction(RainFunction&& other) noexcept;
 	~RainFunction();
 
 	RainFunction& operator=(const RainFunction& other);

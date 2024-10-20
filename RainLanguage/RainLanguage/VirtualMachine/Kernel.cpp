@@ -34,6 +34,16 @@ RainFunction::RainFunction(uint32 library, uint32 index, void* share) : library(
 {
 	if(share) ((KernelShare*)share)->Reference();
 }
+RainFunction::RainFunction(const RainFunction& other) :library(other.library), index(other.index), share(other.share)
+{
+	if(share) ((KernelShare*)share)->Reference();
+}
+RainFunction::RainFunction(RainFunction&& other) noexcept :library(other.library), index(other.index), share(other.share)
+{
+	other.library = INVALID;
+	other.index = INVALID;
+	other.share = NULL;
+}
 RainFunction::~RainFunction()
 {
 	if(share) ((KernelShare*)share)->Release();
