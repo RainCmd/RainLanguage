@@ -761,7 +761,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 							ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, destructor);
 							Anchor exitcode = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
 							Expression* exitcodeExpression = NULL;
-							if(parser.TryParse(exitcode, exitcodeExpression))
+							if(!exitcode.content.IsEmpty() && parser.TryParse(exitcode, exitcodeExpression))
 							{
 								if(ContainAll(exitcodeExpression->type, ExpressionType::BlurryVariableDeclarationExpression))
 									parser.TryInferLeftValueType(exitcodeExpression, TYPE_String);
