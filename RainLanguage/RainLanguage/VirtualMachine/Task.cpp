@@ -106,10 +106,12 @@ label_next_instruct:
 			INSTRUCT_VARIABLE(string, 1) = invoker->error.index;
 			kernel->stringAgency->Reference(invoker->error.index);
 			invoker->error = String();
+			invoker->state = InvokerState::Running;
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_PopExitMessage:
 			invoker->error = kernel->stringAgency->Get(INSTRUCT_VARIABLE(string, 1));
+			if(!invoker->error.IsEmpty()) invoker->state = InvokerState::Exceptional;
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_ExitJump:

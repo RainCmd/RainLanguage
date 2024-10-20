@@ -28,7 +28,16 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 			if(catchBlock->exitcode)
 			{
 				parameter.databaseGenerator->AddStatement(parameter.generator, catchBlock->exitcode->anchor.line);
-				if(ContainAny(catchBlock->exitcode->attribute, Attribute::Value))
+				if(ContainAny(catchBlock->exitcode->attribute, Attribute::Assignable))
+				{
+					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);
+					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
+					logicParameter.results[0] = exitCode;
+					catchBlock->exitcode->GeneratorAssignment(logicParameter);
+					block.Finish();
+					catchBlock->catchBlock->Generator(catchBlockParameter);
+				}
+				else if(ContainAny(catchBlock->exitcode->attribute, Attribute::Value))
 				{
 					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);
 					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
@@ -43,15 +52,6 @@ LogicVariable TryStatement::GeneratorCatchBlocks(StatementGeneratorParameter& pa
 					block.Finish();
 					parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 					parameter.generator->WriteCode(&nextCatchAddress);
-					catchBlock->catchBlock->Generator(catchBlockParameter);
-				}
-				else if(ContainAny(catchBlock->exitcode->attribute, Attribute::Assignable))
-				{
-					TemporaryVariableBlock block = TemporaryVariableBlock(&catchBlockParameter);
-					LogicGenerateParameter logicParameter = LogicGenerateParameter(catchBlockParameter, 1);
-					logicParameter.results[0] = exitCode;
-					catchBlock->exitcode->GeneratorAssignment(logicParameter);
-					block.Finish();
 					catchBlock->catchBlock->Generator(catchBlockParameter);
 				}
 			}
