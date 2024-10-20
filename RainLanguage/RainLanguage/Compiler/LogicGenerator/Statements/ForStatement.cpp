@@ -13,10 +13,22 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 		block.Finish();
 	}
 	CodeLocalAddressReference loopAddress = CodeLocalAddressReference();
+	CodeLocalAddressReference conditionAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference elseAddress = CodeLocalAddressReference();
 	CodeLocalAddressReference breakAddress = CodeLocalAddressReference();
 	if(loopBlock) loopBlock->InitJumpTarget(&breakAddress, &loopAddress);
-	loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	if(back)
+	{
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&conditionAddress);
+		loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
+		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, back->returns.Count());
+		back->Generator(logicParameter);
+		block.Finish();
+	}
+	else loopAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	conditionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	if(condition)
 	{
 		parameter.databaseGenerator->AddStatement(parameter.generator, condition->anchor.line);
@@ -30,13 +42,6 @@ void ForStatement::Generator(StatementGeneratorParameter& parameter)
 		parameter.generator->WriteCode(&elseAddress);
 	}
 	if(loopBlock) loopBlock->Generator(parameter);
-	if(back)
-	{
-		TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
-		LogicGenerateParameter logicParameter = LogicGenerateParameter(parameter, back->returns.Count());
-		back->Generator(logicParameter);
-		block.Finish();
-	}
 	parameter.generator->WriteCode(Instruct::BASE_Jump);
 	parameter.generator->WriteCode(&loopAddress);
 	elseAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
