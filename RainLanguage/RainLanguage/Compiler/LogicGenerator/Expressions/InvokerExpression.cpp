@@ -121,11 +121,17 @@ void InvokerDelegateExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::FUNCTION_CustomCall);
 	parameter.generator->WriteCode(invokerParameter.results[0], VariableAccessType::Read);
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	parameter.generator->WriteCode(Instruct::BASE_Jump);
-	parameter.generator->WriteCode(&returnAddress);
-	clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	parameter.ClearVariables(returns);
+	if(returns.Count())
+	{
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&returnAddress);
+		clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		parameter.ClearVariables(returns);
+	}
+	else clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
 InvokerDelegateExpression::~InvokerDelegateExpression()
@@ -155,15 +161,19 @@ void InvokerFunctionExpression::Generator(LogicGenerateParameter& parameter)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_Call);
 		parameter.generator->WriteCodeGlobalAddressReference(declaration);
+		returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+		parameter.generator->WriteCode(parameter.finallyAddress);
 	}
 	else if (declaration.category == DeclarationCategory::Native)
 	{
 		parameter.generator->WriteCode(Instruct::FUNCTION_NativeCall);
 		parameter.generator->WriteCodeGlobalReference(declaration);
 		parameter.generator->WriteCode(Native(declaration.library, declaration.index));
+		parameter.generator->WriteCode(parameter.finallyAddress);
+		returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
 	else EXCEPTION("语言解析逻辑可能有bug");
-	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 }
 
 void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
@@ -214,6 +224,8 @@ void InvokerMemberExpression::Generator(LogicGenerateParameter& parameter)
 	clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	parameter.ClearVariables(returns);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
 InvokerMemberExpression::~InvokerMemberExpression()
@@ -259,11 +271,17 @@ void InvokerVirtualMemberExpression::Generator(LogicGenerateParameter& parameter
 	parameter.generator->WriteCodeGlobalReference(declaration);
 	parameter.generator->WriteCode(declaration.DefineMemberFunction());
 	parameter.generator->WriteCode(parameter.finallyAddress);
-	parameter.generator->WriteCode(Instruct::BASE_Jump);
-	parameter.generator->WriteCode(&returnAddress);
-	clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
-	parameter.ClearVariables(returns);
+	if(returns.Count())
+	{
+		parameter.generator->WriteCode(Instruct::BASE_Jump);
+		parameter.generator->WriteCode(&returnAddress);
+		clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+		parameter.ClearVariables(returns);
+	}
+	else clearResultsAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }
 
 InvokerVirtualMemberExpression::~InvokerVirtualMemberExpression()
@@ -294,4 +312,6 @@ void InvokerConstructorExpression::Generator(LogicGenerateParameter& parameter)
 	parameter.generator->WriteCode(Instruct::FUNCTION_MemberCall);
 	parameter.generator->WriteCodeGlobalAddressReference(declaration);
 	returnAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
+	parameter.generator->WriteCode(Instruct::BASE_ExitJump);
+	parameter.generator->WriteCode(parameter.finallyAddress);
 }

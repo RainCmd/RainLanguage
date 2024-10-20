@@ -146,19 +146,27 @@ static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, cons
 }
 
 static RainProduct* product;
+static wstring name;
 static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frameCount, const RainString msg)
 {
 	RainProgramDatabase* pdb = product->GetRainProgramDatabase();
 	wcout << L"异常信息:" << (msg.value ? msg.value : L"") << L"\n";
 	for(size_t i = 0; i < frameCount; i++)
 	{
-		uint32 line;
-		RainString file = pdb->GetPosition(frames[i].address, line);
-		wcout << file.value << L"\t" << frames[i].functionName.value << '[' << line << ']' << endl;
+		wstring libName = wstring(frames[i].libraryName.value, frames[i].libraryName.length);
+		if(name == libName)
+		{
+			uint32 line;
+			RainString file = pdb->GetPosition(frames[i].address, line);
+			wcout << file.value << L"\t" << frames[i].functionName.value << L"\tline: " << line << endl;
+		}
+		else
+		{
+			wcout << L"file not found\t" << frames[i].functionName.value << L"\taddress: " << frames[i].address << endl;
+		}
 	}
 }
 
-static wstring name;
 static bool IsName(const RainString& name)
 {
 	if(name.length != ::name.size()) return false;

@@ -19,9 +19,12 @@
 #define POINTER (uint32)(instruct - kernel->libraryAgency->code.GetPointer())
 #define EXCEPTION_EXIT(instructName,message) { Exit(kernel->stringAgency->Add(message), POINTER); goto label_exit_jump_##instructName; }
 #define EXCEPTION_JUMP(instructSize,instructName)\
+			instruct += 5 + (instructSize);\
+			goto label_next_instruct;\
 			label_exit_jump_##instructName:\
-			if (invoker->state == InvokerState::Running) instruct += 5 + (instructSize);\
-			else instruct += INSTRUCT_VALUE(uint32,(instructSize) + 1);
+			instruct += INSTRUCT_VALUE(uint32,(instructSize) + 1);\
+			goto label_next_instruct;
+#define EXCEPTION_EXIT_JUMP(instructSize,message) { Exit(kernel->stringAgency->Add(message), POINTER); instruct += INSTRUCT_VALUE(uint32,(instructSize) + 1); goto label_next_instruct; }
 
 #define CLASS_VARIABLE(instructOffset, instructName)\
 			uint32 handleValue = INSTRUCT_VALUE(uint32, instructOffset);\
@@ -82,6 +85,7 @@ void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 void Task::Exit(const String& error, uint32 exitPointer)
 {
 	pointer = exitPointer;
+	kernel->libraryAgency->OnException(instanceID, error);
 	invoker->Exception(error);
 	invoker->exceptionStackFrames.Add(pointer);
 	for(Frame* index = (Frame*)(stack + bottom); index->pointer != INVALID; index = (Frame*)(stack + index->bottom)) invoker->exceptionStackFrames.Add(index->pointer);
@@ -115,13 +119,7 @@ label_next_instruct:
 			instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_ExitJump:
-			if(invoker->state == InvokerState::Exceptional)
-			{
-				pointer = POINTER;
-				kernel->libraryAgency->OnException(instanceID, invoker->error);
-				instruct += INSTRUCT_VALUE(uint32, 1);
-			}
-			else if(invoker->state == InvokerState::Aborted) instruct += INSTRUCT_VALUE(uint32, 1);
+			if(invoker->state == InvokerState::Exceptional || invoker->state == InvokerState::Aborted)  instruct += INSTRUCT_VALUE(uint32, 1);
 			else instruct += 5;
 			goto label_next_instruct;
 		case Instruct::BASE_Wait:
@@ -150,7 +148,6 @@ label_next_instruct:
 				goto label_exit;
 			}
 			EXCEPTION_JUMP(4, BASE_WaitFlag);
-			goto label_next_instruct;
 		case Instruct::BASE_WaitTask:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
@@ -164,7 +161,6 @@ label_next_instruct:
 			else if(ignoreWait) EXCEPTION_EXIT(BASE_WaitTask, EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED);
 			EXCEPTION_JUMP(4, BASE_WaitTask);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_WaitBack:
 			instruct += 5;
 			goto label_next_instruct;
@@ -221,7 +217,6 @@ label_next_instruct:
 			kernel->heapAgency->StrongReference(handle);
 			EXCEPTION_JUMP(4 + SIZE(Declaration), BASE_CreateObject);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_CreateDelegate:
 		{
 			//Handle&		result
@@ -258,14 +253,12 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Global, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration), BASE_CreateDelegate_Global);
 				}
-				goto label_next_instruct;
 				case FunctionType::Native:
 				{
 					if(error.IsEmpty()) new (delegateInfo)Delegate(INSTRUCT_VALUE(Native, 6 + SIZE(Declaration)));
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Native, error);
 					EXCEPTION_JUMP(5 + SIZE(Declaration) + SIZE(Native), BASE_CreateDelegate_Native);
 				}
-				goto label_next_instruct;
 				case FunctionType::Box:
 				{
 					if(error.IsEmpty())
@@ -283,7 +276,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Box, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Box);
 				}
-				goto label_next_instruct;
 				case FunctionType::Reality:
 				{
 					if(error.IsEmpty())
@@ -301,7 +293,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Reality, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Reality);
 				}
-				goto label_next_instruct;
 				case FunctionType::Virtual:
 				{
 					if(error.IsEmpty())
@@ -320,7 +311,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Virtual, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Virtual);
 				}
-				goto label_next_instruct;
 				case FunctionType::Abstract:
 				{
 					if(error.IsEmpty())
@@ -339,7 +329,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateDelegate_Abstract, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateDelegate_Abstract);
 				}
-				goto label_next_instruct;
 				default: EXCEPTION("无效的函数类型");
 			}
 		}
@@ -387,7 +376,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateTask_Global, error);
 					EXCEPTION_JUMP(5 + SIZE(Declaration) + SIZE(Function), BASE_CreateTask_Global);
 				}
-				goto label_next_instruct;
 				case FunctionType::Native: EXCEPTION("无效的函数类型");
 				case FunctionType::Box:
 				{
@@ -411,7 +399,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateTask_Box, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask_Box);
 				}
-				goto label_next_instruct;
 				case FunctionType::Reality:
 				{
 					if(error.IsEmpty())
@@ -430,7 +417,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateTask_Reality, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction) + SIZE(Type), BASE_CreateTask_Reality);
 				}
-				goto label_next_instruct;
 				case FunctionType::Virtual:
 				case FunctionType::Abstract:
 				{
@@ -453,7 +439,6 @@ label_next_instruct:
 					else EXCEPTION_EXIT(BASE_CreateTask, error);
 					EXCEPTION_JUMP(9 + SIZE(Declaration) + SIZE(MemberFunction), BASE_CreateTask);
 				}
-				goto label_next_instruct;
 				default: EXCEPTION("无效的函数类型");
 			}
 		}
@@ -516,7 +501,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(8 + SIZE(Declaration), BASE_CreateDelegateTask);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_CreateArray:
 		{
 			uint32 reaultValue = INSTRUCT_VALUE(uint32, 1);
@@ -535,7 +519,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(SIZE(Type) + 8, BASE_CreateArray);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_ArrayInit:
 		{
 			uint32 arrayValue = INSTRUCT_VALUE(uint32, 1);
@@ -591,7 +574,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(8 + count * 4, BASE_ArrayInit);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_SetTaskParameter:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
@@ -701,7 +683,6 @@ label_next_instruct:
 				}
 			EXCEPTION_JUMP(-1, BASE_SetTaskParameter);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_GetTaskResult:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
@@ -824,7 +805,6 @@ label_next_instruct:
 				}
 			EXCEPTION_JUMP(-1, BASE_GetTaskResult);
 		}
-		goto label_next_instruct;
 		case Instruct::BASE_TaskStart:
 		{
 			uint32 handleValue = INSTRUCT_VALUE(uint32, 1);
@@ -840,7 +820,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(BASE_TaskStart, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4, BASE_TaskStart);
 		}
-		goto label_next_instruct;
 #pragma endregion Base
 #pragma region 函数
 		case Instruct::FUNCTION_Entrance://函数的第一条指令，用于确保函数执行所需的栈空间大小
@@ -849,14 +828,12 @@ label_next_instruct:
 			if(EnsureStackSize(top)) EXCEPTION_EXIT(FUNCTION_Entrance, EXCEPTION_STACK_OVERFLOW);
 			EXCEPTION_JUMP(4, FUNCTION_Entrance);
 		}
-		goto label_next_instruct;
 		case Instruct::FUNCTION_Ensure:
 		{
 			if(EnsureStackSize(top + INSTRUCT_VALUE(uint32, 1))) EXCEPTION_EXIT(FUNCTION_Ensure, EXCEPTION_STACK_OVERFLOW);//SIZE(Frame)+返回值空间大小+参数空间大小
 			*(Frame*)(stack + top) = Frame(bottom, POINTER + INSTRUCT_VALUE(uint32, 5));
 			EXCEPTION_JUMP(8, FUNCTION_Ensure);
 		}
-		goto label_next_instruct;
 		case Instruct::FUNCTION_CustomCallPretreater:
 		{
 			//Handle&		委托对象
@@ -905,7 +882,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(FUNCTION_CustomCallPretreater, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(12, FUNCTION_CustomCallPretreater);
 		}
-		goto label_next_instruct;
 		case Instruct::FUNCTION_PushReturnPoint:
 		{
 			uint32 address = INSTRUCT_VALUE(uint32, 5);
@@ -1111,10 +1087,8 @@ label_next_instruct:
 				instruct = agency->code.GetPointer() + agency->GetFunctionEntry(agency->GetFunction(INSTRUCT_VALUE(MemberFunction, 5), type));
 				goto label_next_instruct;
 			}
-			else EXCEPTION_EXIT(FUNCTION_VirtualCall, EXCEPTION_NULL_REFERENCE);
-			EXCEPTION_JUMP(4 + SIZE(MemberFunction), FUNCTION_VirtualCall);
+			else EXCEPTION_EXIT_JUMP(4 + SIZE(MemberFunction), EXCEPTION_NULL_REFERENCE);
 		}
-		goto label_next_instruct;
 		case Instruct::FUNCTION_CustomCall:
 		{
 			Delegate delegateInfo;
@@ -1131,7 +1105,7 @@ label_next_instruct:
 					case FunctionType::Native:
 					{
 						String error = kernel->libraryAgency->InvokeNative(delegateInfo.native, stack, top);
-						if(!error.IsEmpty()) EXCEPTION_EXIT(FUNCTION_CustomCall, error);
+						if(!error.IsEmpty()) EXCEPTION_EXIT_JUMP(SIZE(Handle), error);
 						instruct += 5 + SIZE(Handle);
 					}
 					goto label_next_instruct;
@@ -1161,17 +1135,14 @@ label_next_instruct:
 					default: EXCEPTION("无效的函数类型");
 				}
 			}
-			else EXCEPTION_EXIT(FUNCTION_CustomCall, EXCEPTION_NULL_REFERENCE);
-			EXCEPTION_JUMP(SIZE(Handle), FUNCTION_CustomCall);
+			else EXCEPTION_EXIT_JUMP(SIZE(Handle), EXCEPTION_NULL_REFERENCE);
 		}
-		goto label_next_instruct;
 		case Instruct::FUNCTION_NativeCall:
 		{
 			String error = kernel->libraryAgency->InvokeNative(INSTRUCT_VALUE(Native, 1), stack, top);
 			if(!error.IsEmpty()) EXCEPTION_EXIT(FUNCTION_NativeCall, error);
-			EXCEPTION_JUMP(SIZE(Handle), FUNCTION_NativeCall);
+			EXCEPTION_JUMP(SIZE(Native), FUNCTION_NativeCall);
 		}
-		goto label_next_instruct;
 		case Instruct::FUNCTION_KernelCall:
 		{
 			String error = KernelLibraryInfo::GetKernelLibraryInfo()->functions[INSTRUCT_VALUE(uint32, 1)].invoker(KernelInvokerParameter(kernel, this, stack, top));
@@ -1205,7 +1176,6 @@ label_next_instruct:
 			if(!error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Box, error);
 			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Box);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Unbox:
 		{
 			uint32 sourceValue = INSTRUCT_VALUE(uint32, 5);
@@ -1214,7 +1184,6 @@ label_next_instruct:
 			if(!error.IsEmpty()) EXCEPTION_EXIT(ASSIGNMENT_Unbox, error);
 			EXCEPTION_JUMP(SIZE(Type) + 8, ASSIGNMENT_Unbox);
 		}
-		goto label_next_instruct;
 #pragma region C2V
 		case Instruct::ASSIGNMENT_Address2Variable:
 		{
@@ -1417,7 +1386,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_1);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_2:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_2);
@@ -1427,7 +1395,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_2);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_4:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_4);
@@ -1437,7 +1404,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_4);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_8:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_8);
@@ -1447,7 +1413,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_8);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Bitwise:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Bitwise);
@@ -1457,7 +1422,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Handle_Bitwise);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Struct:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Struct);
@@ -1471,7 +1435,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12 + SIZE(Declaration), ASSIGNMENT_Variable2Handle_Struct);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_String:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_String);
@@ -1483,7 +1446,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_String);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Handle:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Handle);
@@ -1495,7 +1457,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_Handle);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Handle_Entity:
 		{
 			CLASS_VARIABLE(1, ASSIGNMENT_Variable2Handle_Entity);
@@ -1507,7 +1468,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Variable2Handle_Entity);
 		}
-		goto label_next_instruct;
 #pragma endregion V2H
 #pragma region V2A
 		case Instruct::ASSIGNMENT_Variable2Array_1:
@@ -1521,7 +1481,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_1, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_1);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_2:
 		{
 			ARRAY_VARIABLE(1);
@@ -1533,7 +1492,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_2, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_2);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_4:
 		{
 			ARRAY_VARIABLE(1);
@@ -1545,7 +1503,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_4, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_4);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_8:
 		{
 			ARRAY_VARIABLE(1);
@@ -1557,7 +1514,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_8, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_8);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Bitwise:
 		{
 			ARRAY_VARIABLE(1);
@@ -1569,7 +1525,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Variable2Array_Bitwise);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Struct:
 		{
 			ARRAY_VARIABLE(1);
@@ -1585,7 +1540,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Struct, error);
 			EXCEPTION_JUMP(16 + SIZE(Declaration), ASSIGNMENT_Variable2Array_Struct);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_String:
 		{
 			ARRAY_VARIABLE(1);
@@ -1599,7 +1553,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_String, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_String);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Handle:
 		{
 			ARRAY_VARIABLE(1);
@@ -1613,7 +1566,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Handle, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_Handle);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Variable2Array_Entity:
 		{
 			ARRAY_VARIABLE(1);
@@ -1627,7 +1579,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Variable2Array_Entity, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Variable2Array_Entity);
 		}
-		goto label_next_instruct;
 #pragma endregion V2A
 #pragma region H2V
 		case Instruct::ASSIGNMENT_Handle2Variable_1:
@@ -1639,7 +1590,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_1);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_2:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_2);
@@ -1649,7 +1599,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_2);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_4:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_4);
@@ -1659,7 +1608,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_4);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_8:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_8);
@@ -1669,7 +1617,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_8);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Bitwise:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Bitwise);
@@ -1679,7 +1626,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(16, ASSIGNMENT_Handle2Variable_Bitwise);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Struct:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Struct);
@@ -1696,7 +1642,6 @@ label_next_instruct:
 
 			EXCEPTION_JUMP(12 + SIZE(Declaration), ASSIGNMENT_Handle2Variable_Struct);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_String:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_String);
@@ -1709,7 +1654,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_String);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Handle:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Handle);
@@ -1722,7 +1666,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Handle);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Handle2Variable_Entity:
 		{
 			CLASS_VARIABLE(5, ASSIGNMENT_Handle2Variable_Entity);
@@ -1735,7 +1678,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, ASSIGNMENT_Handle2Variable_Entity);
 		}
-		goto label_next_instruct;
 #pragma endregion H2V
 #pragma region A2V
 		case Instruct::ASSIGNMENT_Array2Variable_1:
@@ -1749,7 +1691,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_1, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_1);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_2:
 		{
 			ARRAY_VARIABLE(5);
@@ -1761,7 +1702,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_2, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_2);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_4:
 		{
 			ARRAY_VARIABLE(5);
@@ -1773,7 +1713,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_4, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_4);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_8:
 		{
 			ARRAY_VARIABLE(5);
@@ -1785,7 +1724,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_8, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_8);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Bitwise:
 		{
 			ARRAY_VARIABLE(5);
@@ -1797,7 +1735,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Bitwise, error);
 			EXCEPTION_JUMP(20, ASSIGNMENT_Array2Variable_Bitwise);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Struct:
 		{
 			ARRAY_VARIABLE(5);
@@ -1814,7 +1751,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Struct, error);
 			EXCEPTION_JUMP(16 + SIZE(Declaration), ASSIGNMENT_Array2Variable_Struct);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_String:
 		{
 			ARRAY_VARIABLE(5);
@@ -1829,7 +1765,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_String, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_String);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Handle:
 		{
 			ARRAY_VARIABLE(5);
@@ -1844,7 +1779,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Handle, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_Handle);
 		}
-		goto label_next_instruct;
 		case Instruct::ASSIGNMENT_Array2Variable_Entity:
 		{
 			ARRAY_VARIABLE(5);
@@ -1859,7 +1793,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(ASSIGNMENT_Array2Variable_Entity, error);
 			EXCEPTION_JUMP(16, ASSIGNMENT_Array2Variable_Entity);
 		}
-		goto label_next_instruct;
 #pragma endregion A2V
 #pragma endregion 赋值
 #pragma region Bool
@@ -1926,7 +1859,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(INTEGER_Divide, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, INTEGER_Divide);
 		}
-		goto label_next_instruct;
 		case Instruct::INTEGER_Mod:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -1940,7 +1872,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(INTEGER_Mod, EXCEPTION_DIVIDE_BY_ZERO);
 			EXCEPTION_JUMP(12, INTEGER_Mod);
 		}
-		goto label_next_instruct;
 		case Instruct::INTEGER_And:
 			OPERATOR(integer, integer, &, integer);
 			instruct += 13;
@@ -2044,7 +1975,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL_Divide);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL_Equals:
 			OPERATOR(bool, real, == , real);
 			instruct += 13;
@@ -2128,7 +2058,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL2_Divide_rv);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL2_Divide_vr:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -2142,7 +2071,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL2_Divide_vr);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL2_Divide_vv:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -2156,7 +2084,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL2_Divide_vv);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL2_Equals:
 			OPERATOR(bool, Real2, == , Real2);
 			instruct += 13;
@@ -2208,7 +2135,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL3_Divide_rv);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL3_Divide_vr:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -2222,7 +2148,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL3_Divide_vr);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL3_Divide_vv:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -2236,7 +2161,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL3_Divide_vv);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL3_Equals:
 			OPERATOR(bool, Real3, == , Real3);
 			instruct += 13;
@@ -2288,7 +2212,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL4_Divide_rv);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL4_Divide_vr:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -2302,7 +2225,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL4_Divide_vr);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL4_Divide_vv:
 		{
 			uint32 rightValue = INSTRUCT_VALUE(uint32, 9);
@@ -2316,7 +2238,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, REAL4_Divide_vv);
 		}
-		goto label_next_instruct;
 		case Instruct::REAL4_Equals:
 			OPERATOR(bool, Real4, == , Real4);
 			instruct += 13;
@@ -2351,7 +2272,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(12, STRING_Element);
 		}
-		goto label_next_instruct;
 		case Instruct::STRING_Combine:
 		{
 			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
@@ -2405,7 +2325,6 @@ label_next_instruct:
 			}
 			EXCEPTION_JUMP(16, STRING_Sub);
 		}
-		goto label_next_instruct;
 		case Instruct::STRING_Equals:
 			OPERATOR(bool, string, == , string);
 			instruct += 13;
@@ -2485,7 +2404,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(HANDLE_ArrayCut, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(16, HANDLE_ArrayCut);
 		}
-		goto label_next_instruct;
 		case Instruct::HANDLE_CheckNull:
 		{
 			uint32 value = INSTRUCT_VALUE(uint32, 1);
@@ -2493,7 +2411,6 @@ label_next_instruct:
 				EXCEPTION_EXIT(HANDLE_CheckNull, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(4, HANDLE_CheckNull);
 		}
-		goto label_next_instruct;
 		case Instruct::HANDLE_Equals:
 			OPERATOR(bool, Handle, == , Handle);
 			instruct += 13;
@@ -2571,7 +2488,6 @@ label_next_instruct:
 			else EXCEPTION_EXIT(CASTING, EXCEPTION_NULL_REFERENCE);
 			EXCEPTION_JUMP(8 + SIZE(Type), CASTING);
 		}
-		goto label_next_instruct;
 		case Instruct::CASTING_IS:
 		{
 			uint32 resultValue = INSTRUCT_VALUE(uint32, 1);
