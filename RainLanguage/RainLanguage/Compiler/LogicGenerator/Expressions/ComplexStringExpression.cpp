@@ -45,7 +45,7 @@ void ComplexStringExpression::Generator(LogicGenerateParameter& parameter)
 		}
 		else if(elementType != TYPE_String)
 		{
-			AbstractFunction* system_getNameFunction = parameter.manager->kernelLibaray->functions[KERNEL_SPECIAL_FUNCTION_System_GetName];
+			AbstractFunction* system_getNameFunction = parameter.manager->kernelLibaray->functions[KERNEL_SPECIAL_FUNCTION_GetTypeName];
 			List<Expression*, true> expressions(2);
 			expressions.Add(element);
 			expressions.Add(new ConstantTypeExpression(element->anchor, elementType));

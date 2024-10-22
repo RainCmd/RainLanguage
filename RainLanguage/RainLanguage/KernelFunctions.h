@@ -103,6 +103,8 @@ String Operation_Increment_real(KernelInvokerParameter parameter);								// ++ 
 String Operation_Decrement_integer(KernelInvokerParameter parameter);							// -- (integer)
 String Operation_Decrement_real(KernelInvokerParameter parameter);								// -- (real)
 
+String GetTypeName(KernelInvokerParameter parameter);												//string (type)
+
 //BitConvert
 String BytesConvertInteger(KernelInvokerParameter parameter);									//integer (byte, byte, byte, byte, byte, byte, byte, byte)
 String BytesConvertReal(KernelInvokerParameter parameter);										//real (byte, byte, byte, byte, byte, byte, byte, byte)
@@ -167,7 +169,6 @@ String LoadAssembly(KernelInvokerParameter parameter);											//Reflection.As
 String GetAssembles(KernelInvokerParameter parameter);											//Reflection.Assembly[] ()
 String GetCurrentTaskInstantID(KernelInvokerParameter parameter);								//integer ()
 String CreateString(KernelInvokerParameter parameter);											//string (char[], integer, integer)
-String GetName(KernelInvokerParameter parameter);												//string (type)
 
 //成员函数
 String bool_ToString(KernelInvokerParameter parameter);											//string bool.()
@@ -225,6 +226,8 @@ String handle_ToString(KernelInvokerParameter parameter);										//string hand
 String handle_GetHandleID(KernelInvokerParameter parameter);									//integer handle.()
 String handle_GetType(KernelInvokerParameter parameter);										//type handle.()
 
+String delegate_Invoke(KernelInvokerParameter parameter);										//handle[] delegate.(handle[])
+
 String task_Start(KernelInvokerParameter parameter);											//task.(bool, bool)
 String task_Abort(KernelInvokerParameter parameter);											//task.()
 String task_SetName(KernelInvokerParameter parameter);											//task.(string)
@@ -235,6 +238,7 @@ String task_GetExitCode(KernelInvokerParameter parameter);										//string tas
 String task_IsPause(KernelInvokerParameter parameter);											//bool task.()
 String task_Pause(KernelInvokerParameter parameter);											//task.()
 String task_Resume(KernelInvokerParameter parameter);											//task.()
+String task_GetResults(KernelInvokerParameter parameter);										//handle[] task.()
 
 String array_GetLength(KernelInvokerParameter parameter);										//integer array.()
 String array_GetElement(KernelInvokerParameter parameter);										//handle array.(integer)

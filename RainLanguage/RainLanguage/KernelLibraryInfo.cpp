@@ -295,11 +295,13 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_SPECIAL_FUNCTIONS(true, root, TEXT("++"), KERNEL_SPECIAL_FUNCTION_Increment_real, TupleInfo_EMPTY, CreateTypeList(TYPE_Real), Operation_Increment_real);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, TEXT("--"), KERNEL_SPECIAL_FUNCTION_Decrement_integer, TupleInfo_EMPTY, CreateTypeList(TYPE_Integer), Operation_Decrement_integer);
 		REGISTER_SPECIAL_FUNCTIONS(true, root, TEXT("--"), KERNEL_SPECIAL_FUNCTION_Decrement_real, TupleInfo_EMPTY, CreateTypeList(TYPE_Real), Operation_Decrement_real);
+
+		REGISTER_SPECIAL_FUNCTIONS(true, root, TEXT("GetTypeName"), KERNEL_SPECIAL_FUNCTION_GetTypeName, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Type), GetTypeName);
 	}
 
 	//enum TaskState
 	{
-		List<KernelLibraryInfo::Enum::Element> elements(5);
+		List<KernelLibraryInfo::Enum::Element> elements(6);
 		REGISIER_ENUM_ELEMENT(TEXT("Unstart"), KERNEL_TASK_STATE_INDEX_Unstart, InvokerState::Unstart);
 		REGISIER_ENUM_ELEMENT(TEXT("Running"), KERNEL_TASK_STATE_INDEX_Running, InvokerState::Running);
 		REGISIER_ENUM_ELEMENT(TEXT("Completed"), KERNEL_TASK_STATE_INDEX_Completed, InvokerState::Completed);
@@ -341,7 +343,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	//struct real2
 	{
-		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
 		REGISTER_MEMBER_VARIABLES(true, TEXT("x"), TYPE_Real, GET_FIELD_OFFSET(Real2, x));
 		REGISTER_MEMBER_VARIABLES(true, TEXT("y"), TYPE_Real, GET_FIELD_OFFSET(Real2, y));
 		List<uint32, true> memberFunctions = List<uint32, true>(3);
@@ -352,7 +354,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	//struct real3
 	{
-		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(3);
 		REGISTER_MEMBER_VARIABLES(true, TEXT("x"), TYPE_Real, GET_FIELD_OFFSET(Real3, x));
 		REGISTER_MEMBER_VARIABLES(true, TEXT("y"), TYPE_Real, GET_FIELD_OFFSET(Real3, y));
 		REGISTER_MEMBER_VARIABLES(true, TEXT("z"), TYPE_Real, GET_FIELD_OFFSET(Real3, z));
@@ -364,7 +366,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	//struct real4
 	{
-		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(4);
 		REGISTER_MEMBER_VARIABLES(true, TEXT("x"), TYPE_Real, GET_FIELD_OFFSET(Real4, x));
 		REGISTER_MEMBER_VARIABLES(true, TEXT("y"), TYPE_Real, GET_FIELD_OFFSET(Real4, y));
 		REGISTER_MEMBER_VARIABLES(true, TEXT("z"), TYPE_Real, GET_FIELD_OFFSET(Real4, z));
@@ -377,13 +379,13 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	//struct enum
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(3);
+		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("ToString"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Enum), enum_ToString);
 		REGISTER_STRUCT(true, root, KeyWord_enum(), KERNEL_TYPE_STRUCT_INDEX_Enum, SIZE(integer), MEMORY_ALIGNMENT_8, EMPTY_VARIABLES, memberFunctions);
 	}
 	//struct type
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(0);
+		List<uint32, true> memberFunctions = List<uint32, true>(25);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Type), type_IsPublic);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Type), type_GetAttributes);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Type), type_GetName);
@@ -413,35 +415,38 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	//struct string
 	{
-		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
-		List<uint32, true> memberFunctions = List<uint32, true>(5);
+		List<uint32, true> memberFunctions = List<uint32, true>(6);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetLength"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_String), string_GetLength);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetStringID"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_String), string_GetStringID);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("ToBool"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_String), string_ToBool);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("ToInteger"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_String), string_ToInteger);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("ToReal"), CreateTypeList(TYPE_Real), CreateTypeList(TYPE_String), string_ToReal);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("ToChars"), CreateTypeList(Type(TYPE_Char, 1)), CreateTypeList(TYPE_String), string_ToChars);
-		REGISTER_STRUCT(true, root, KeyWord_string(), KERNEL_TYPE_STRUCT_INDEX_String, SIZE(string), MEMORY_ALIGNMENT_4, memberVariables, memberFunctions);
+		REGISTER_STRUCT(true, root, KeyWord_string(), KERNEL_TYPE_STRUCT_INDEX_String, SIZE(string), MEMORY_ALIGNMENT_4, EMPTY_VARIABLES, memberFunctions);
 	}
 	//struct entity
 	{
-		List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetEntityID"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Entity), entity_GetEntityID);
-		REGISTER_STRUCT(true, root, KeyWord_entity(), KERNEL_TYPE_STRUCT_INDEX_Entity, SIZE(Entity), MEMORY_ALIGNMENT_4, memberVariables, memberFunctions);
+		REGISTER_STRUCT(true, root, KeyWord_entity(), KERNEL_TYPE_STRUCT_INDEX_Entity, SIZE(Entity), MEMORY_ALIGNMENT_4, EMPTY_VARIABLES, memberFunctions);
 	}
 	//class handle
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(2);
+		List<uint32, true> memberFunctions = List<uint32, true>(3);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetHandleID"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Handle), handle_GetHandleID);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("ToString"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Handle), handle_ToString);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Handle), handle_GetType);
 		REGISTER_CLASS(true, root, KeyWord_handle(), KERNEL_TYPE_CLASS_INDEX_Handle, Declaration(), EMPTY_DECLARATIONS, 0, MEMORY_ALIGNMENT_0, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
-	REGISTER_CLASS(true, root, TEXT("Delegate"), KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
+	//class Delegate
+	{
+		List<uint32, true> memberFunctions = List<uint32, true>(1);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("Invoke"), CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Delegate, Type(TYPE_Handle, 1)), delegate_Invoke);
+		REGISTER_CLASS(true, root, TEXT("Delegate"), KERNEL_TYPE_CLASS_INDEX_Delegate, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(::Delegate), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
+	}
 	//class Task
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(7);
+		List<uint32, true> memberFunctions = List<uint32, true>(11);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("Start"), TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_Bool, TYPE_Bool), task_Start);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("Abort"), TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Abort);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("SetName"), TupleInfo_EMPTY, CreateTypeList(TYPE_Task, TYPE_String), task_SetName);
@@ -452,11 +457,12 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPause"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Task), task_IsPause);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("Pause"), TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Pause);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("Resume"), TupleInfo_EMPTY, CreateTypeList(TYPE_Task), task_Resume);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetResults"), CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Task), task_GetResults);
 		REGISTER_CLASS(true, root, TEXT("Task"), KERNEL_TYPE_CLASS_INDEX_Task, TYPE_Handle, EMPTY_DECLARATIONS, 8, MEMORY_ALIGNMENT_8, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//class array
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(1);
+		List<uint32, true> memberFunctions = List<uint32, true>(3);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetLength"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Array, TYPE_Integer), array_GetElement);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("SetElement"), TupleInfo_EMPTY, CreateTypeList(TYPE_Array, TYPE_Integer, TYPE_Handle), array_SetElement);
@@ -570,7 +576,6 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_FUNCTIONS(true, space, TEXT("GetAssembles"), CreateTypeList(Type(TYPE_Reflection_Assembly, 1)), TupleInfo_EMPTY, GetAssembles);
 		REGISTER_FUNCTIONS(true, space, TEXT("GetCurrentTaskInstantID"), CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, GetCurrentTaskInstantID);
 		REGISTER_FUNCTIONS(true, space, TEXT("CreateString"), CreateTypeList(TYPE_String), CreateTypeList(Type(TYPE_Char, 1), TYPE_Integer, TYPE_Integer), CreateString);
-		REGISTER_SPECIAL_FUNCTIONS(true, space, TEXT("GetName"), KERNEL_SPECIAL_FUNCTION_System_GetName, CreateTypeList(TYPE_String), CreateTypeList(TYPE_Type), GetName);
 	}
 	//space Reflection
 	{

@@ -1107,8 +1107,8 @@ label_next_instruct:
 						String error = kernel->libraryAgency->InvokeNative(delegateInfo.native, stack, top);
 						if(!error.IsEmpty()) EXCEPTION_EXIT_JUMP(SIZE(Handle), error);
 						instruct += 5 + SIZE(Handle);
+						goto label_next_instruct;
 					}
-					goto label_next_instruct;
 					case FunctionType::Box:
 					{
 						Type type;

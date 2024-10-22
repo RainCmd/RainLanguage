@@ -853,6 +853,16 @@ String Operation_Decrement_real(KernelInvokerParameter)// -- (real)
 {
 	return String();//目前不支持引用传递，所以反射调用无效
 }
+
+String GetTypeName(KernelInvokerParameter parameter)//string (type)
+{
+	Type& type = PARAMETER_VALUE(1, Type, 0);
+	string& name = RETURN_VALUE(string, 0);
+	parameter.kernel->stringAgency->Release(name);
+	name = GetTypeName(parameter.kernel, type);
+	parameter.kernel->stringAgency->Reference(name);
+	return String();
+}
 #pragma endregion 运算符
 
 #pragma region 字节码转换
@@ -1335,16 +1345,6 @@ String CreateString(KernelInvokerParameter parameter)//string (char[], integer, 
 	string result = RETURN_VALUE(string, 0);
 	agency->Release(result);
 	result = agency->AddAndRef((character*)parameter.kernel->heapAgency->GetArrayPoint(source, 0), (uint32)count);
-	return String();
-}
-
-String GetName(KernelInvokerParameter parameter)//string (type)
-{
-	Type& type = PARAMETER_VALUE(1, Type, 0);
-	string& name = RETURN_VALUE(string, 0);
-	parameter.kernel->stringAgency->Release(name);
-	name = GetTypeName(parameter.kernel, type);
-	parameter.kernel->stringAgency->Reference(name);
 	return String();
 }
 #pragma endregion 系统函数
@@ -2374,6 +2374,190 @@ String handle_GetType(KernelInvokerParameter parameter)
 	return String();
 }
 
+String InvokeDelegate(KernelInvokerParameter parameter, RuntimeDelegate* runtime, const Native& native, const Handle parameters, const Handle result)
+{
+	uint32 temporary = parameter.top + SIZE(Frame) + 4 + SIZE(Handle) * 2;
+	uint32 nativeBottom = temporary + MemoryAlignment(runtime->returns.size, MEMORY_ALIGNMENT_MAX);
+	uint32 nativeParameter = nativeBottom + SIZE(Frame) + runtime->returns.Count() * 4;
+	uint32 nativeTop = nativeParameter + runtime->parameters.size;
+	if(parameter.task->EnsureStackSize(nativeTop)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
+	Mzero(parameter.stack + temporary, nativeTop - temporary);
+	for(uint32 i = 0; i < runtime->returns.Count(); i++)
+		*(uint32*)(parameter.stack + nativeBottom + SIZE(Frame) + i * 4) = temporary + runtime->returns.GetOffset(i);
+	String error;
+	for(uint32 i = 0; i < runtime->parameters.Count(); i++)
+	{
+		Handle parameterHandle = *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i);
+		uint8* parameterAddress = parameter.stack + nativeParameter + runtime->parameters.GetOffset(i);
+		error = StrongUnbox(parameter.kernel, runtime->parameters.GetType(i), parameterHandle, parameterAddress);
+		if(!error.IsEmpty()) break;
+	}
+	if(error.IsEmpty()) error = parameter.kernel->libraryAgency->InvokeNative(native, parameter.stack, nativeBottom);
+	if(error.IsEmpty())
+		for(uint32 i = 0; i < runtime->returns.Count(); i++)
+		{
+			uint8* address = parameter.stack + temporary + runtime->returns.GetOffset(i);
+			error = WeakBox(parameter.kernel, runtime->returns.GetType(i), address, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(result, i));
+			if(!error.IsEmpty()) break;
+		}
+	ReleaseTuple(parameter.kernel, parameter.stack + temporary, runtime->returns);
+	ReleaseTuple(parameter.kernel, parameter.stack + nativeParameter, runtime->parameters);
+	return error;
+}
+
+String delegate_Invoke(KernelInvokerParameter parameter)//handle[] delegate.(handle[])
+{
+	if(parameter.task->kernelInvoker)
+	{
+		Invoker* invoker = parameter.task->kernelInvoker;
+		switch(parameter.task->kernelInvoker->state)
+		{
+			case InvokerState::Unstart: EXCEPTION("不该进入的分支");
+			case InvokerState::Running: return String();
+			case InvokerState::Completed:
+			{
+				String error = invoker->GetReturns(RETURN_VALUE(Handle, 0));
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return error;
+			}
+			case InvokerState::Exceptional:
+			{
+				String error = invoker->error;
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return error;
+			}
+			case InvokerState::Aborted:
+				parameter.task->invoker->Abort();
+				parameter.kernel->taskAgency->Release(invoker);
+				parameter.task->kernelInvoker = NULL;
+				return String();
+			case InvokerState::Invalid:
+			default: EXCEPTION("不该进入的分支");
+		}
+	}
+	else
+	{
+		CHECK_THIS_VALUE_NULL(1);
+		DECLARATION_THIS_VALUE(Delegate);
+		Handle parameters = PARAMETER_VALUE(1, Handle, 4);
+		RuntimeDelegate* runtime = parameter.kernel->libraryAgency->GetDelegate(parameter.kernel->heapAgency->GetType(thisHandle));
+		if(parameter.kernel->heapAgency->IsValid(parameters))
+		{
+			uint32 length = parameter.kernel->heapAgency->GetArrayLength(parameters);
+			if(length != runtime->parameters.Count()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+			for(uint32 i = 0; i < length; i++)
+				if(!parameter.kernel->libraryAgency->IsAssignable(runtime->parameters.GetType(i), *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i)))
+					return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+
+			Handle& result = RETURN_VALUE(Handle, 0);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			String error;
+			result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtime->returns.Count(), error);
+			if(!error.IsEmpty()) return error;
+			parameter.kernel->heapAgency->StrongReference(result);
+			Invoker* invoker;
+			switch(thisValue.type)
+			{
+				case FunctionType::Global:
+					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtime);
+					break;
+				case FunctionType::Native:
+					return InvokeDelegate(parameter, runtime, thisValue.native, parameters, result);
+				case FunctionType::Box:
+				case FunctionType::Reality:
+				case FunctionType::Virtual:
+				case FunctionType::Abstract:
+					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtime);
+					error = invoker->SetBoxParameter(0, thisHandle);
+					if(!error.IsEmpty()) return error;
+					break;
+				default: EXCEPTION("无效的函数类型");
+			}
+			parameter.kernel->taskAgency->Reference(invoker);
+			for(uint32 i = 0; i < length; i++)
+			{
+				error = invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+				if(!error.IsEmpty())
+				{
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				}
+			}
+			invoker->Start(true, parameter.task->ignoreWait);
+			switch(invoker->state)
+			{
+				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
+				case InvokerState::Running:
+					parameter.task->kernelInvoker = invoker;
+					return String();
+				case InvokerState::Completed:
+					error = invoker->GetReturns(result);
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				case InvokerState::Exceptional:
+					error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				case InvokerState::Aborted:
+					parameter.task->invoker->Abort();
+					parameter.kernel->taskAgency->Release(invoker);
+					return String();
+				case InvokerState::Invalid:
+				default: EXCEPTION("不该进入的分支");
+			}
+		}
+		else if(!runtime->parameters.Count())
+		{
+			Handle& result = RETURN_VALUE(Handle, 0);
+			parameter.kernel->heapAgency->StrongRelease(result);
+			String error;
+			result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, runtime->returns.Count(), error);
+			if(!error.IsEmpty()) return error;
+			parameter.kernel->heapAgency->StrongReference(result);
+			Invoker* invoker;
+			switch(thisValue.type)
+			{
+				case FunctionType::Global:
+					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtime);
+					break;
+				case FunctionType::Native:
+					return InvokeDelegate(parameter, runtime, thisValue.native, NULL, result);
+				case FunctionType::Box:
+				case FunctionType::Reality:
+				case FunctionType::Virtual:
+				case FunctionType::Abstract:
+					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtime);
+					error = invoker->SetBoxParameter(0, thisHandle);
+					if(!error.IsEmpty()) return error;
+					break;
+				default: EXCEPTION("无效的函数类型");
+			}
+			parameter.kernel->taskAgency->Reference(invoker);
+			invoker->Start(true, parameter.task->ignoreWait);
+			switch(invoker->state)
+			{
+				case InvokerState::Unstart: EXCEPTION("不该进入的分支");
+				case InvokerState::Running:
+					parameter.task->kernelInvoker = invoker;
+					return String();
+				case InvokerState::Completed:
+					error = invoker->GetReturns(result);
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				case InvokerState::Aborted:
+					error = invoker->error;
+					parameter.kernel->taskAgency->Release(invoker);
+					return error;
+				case InvokerState::Invalid:
+				default: EXCEPTION("不该进入的分支");
+			}
+		}
+		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	}
+}
+
 String task_Start(KernelInvokerParameter parameter)//task.(bool, bool)
 {
 	CHECK_THIS_VALUE_NULL(0);
@@ -2439,7 +2623,7 @@ String task_IsPause(KernelInvokerParameter parameter)//bool task.()
 {
 	CHECK_THIS_VALUE_NULL(1);
 	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
-	if(invoker->state != InvokerState::Running)RETURN_VALUE(bool, 0) = false;
+	if(invoker->state != InvokerState::Running) RETURN_VALUE(bool, 0) = false;
 	else RETURN_VALUE(bool, 0) = invoker->IsPause();
 	return String();
 }
@@ -2448,7 +2632,7 @@ String task_Pause(KernelInvokerParameter parameter)//task.()
 {
 	CHECK_THIS_VALUE_NULL(0);
 	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
-	if(invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	if(invoker->state != InvokerState::Running) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Pause();
 	return String();
 }
@@ -2457,9 +2641,24 @@ String task_Resume(KernelInvokerParameter parameter)//task.()
 {
 	CHECK_THIS_VALUE_NULL(0);
 	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
-	if(invoker->state != InvokerState::Running)return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
+	if(invoker->state != InvokerState::Running) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_RUNNING);
 	invoker->Resume();
 	return String();
+}
+
+String task_GetResults(KernelInvokerParameter parameter)//handle[] task.()
+{
+	CHECK_THIS_VALUE_NULL(1);
+	Invoker* invoker = parameter.kernel->taskAgency->GetInvoker(THIS_VALUE(uint64));
+	if(invoker->state != InvokerState::Completed) return parameter.kernel->stringAgency->Add(EXCEPTION_TASK_NOT_COMPLETED);
+	Handle& result = RETURN_VALUE(Handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(result);
+	String error;
+	result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, invoker->info->returns.Count(), error);
+	if(!error.IsEmpty()) return error;
+	error = invoker->GetReturns(result);
+	parameter.kernel->heapAgency->StrongReference(result);
+	return error;
 }
 
 String array_GetLength(KernelInvokerParameter parameter)//integer array.()
