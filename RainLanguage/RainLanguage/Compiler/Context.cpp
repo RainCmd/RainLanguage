@@ -66,6 +66,7 @@ bool Context::IsVisible(DeclarationManager* manager, const CompilingDeclaration&
 				if(define == declaration) return true;
 				if(IsVisible(manager, define))
 					if(ContainAny(target.visibility, Visibility::Public | Visibility::Internal)) return true;
+					else if(ContainAny(target.visibility, Visibility::Space)) return manager->GetDeclaration(target)->space->Contain(compilingSpace->abstract);
 					else if(declaration.category == DeclarationCategory::Class)
 						if(ContainAny(target.visibility, Visibility::Protected))
 						{
