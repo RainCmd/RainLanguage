@@ -1307,7 +1307,7 @@ bool ExpressionParser::TryFindDeclaration(const Anchor& anchor, uint32& index, L
 				return true;
 			}
 			AbstractSpace* space;
-			if(context.TryFindSpace(manager, lexical.anchor, space)) 
+			if(context.TryFindSpace(manager, lexical.anchor, space))
 				return TryFindDeclaration(anchor, index, lexical, space, declarations);
 			MESSAGE2(manager->messages, lexical.anchor, MessageType::ERROR_DECLARATION_NOT_FOUND);
 			return false;
@@ -3187,6 +3187,9 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 											index = lexical.anchor.GetEnd();
 										}
 									}
+									bool convert; uint32 measure;
+									if(TryConvert(manager, expression->returns[0], targetType, convert, measure)) { MESSAGE2(manager->messages, anchor, MessageType::WARNING_LEVEL1_REDUNDANT_CONVERSION); }
+									else if(!TryConvert(manager, targetType, expression->returns[0], convert, measure)) MESSAGE2(manager->messages, anchor, MessageType::WARNING_LEVEL1_INVALID_CONVERSION);
 									expression = new IsCastExpression(lexical.anchor, expression, localExpression, targetType);
 									expressionStack.Add(expression);
 									attribute = expression->attribute;

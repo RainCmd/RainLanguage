@@ -2466,6 +2466,85 @@ String array_GetLength(KernelInvokerParameter parameter)//integer array.()
 {
 	return parameter.kernel->heapAgency->TryGetArrayLength(PARAMETER_VALUE(1, Handle, 0), RETURN_VALUE(integer, 0));
 }
+String array_GetElement(KernelInvokerParameter parameter)//handle array.(integer)
+{
+	CHECK_THIS_VALUE_NULL(1);
+	integer length;
+	HeapAgency* heapAgency = parameter.kernel->heapAgency;
+	String error = heapAgency->TryGetArrayLength(thisHandle, length);
+	if(!error.IsEmpty()) return error;
+	integer index = PARAMETER_VALUE(1, integer, 4);
+	if(index < 0) index += length;
+	if(index < 0 || index >= length) return parameter.kernel->stringAgency->Add(EXCEPTION_OUT_OF_RANGE);
+	Type type = heapAgency->GetType(thisHandle);
+	type.dimension--;
+	Handle& returnValue = RETURN_VALUE(Handle, 0);
+	heapAgency->StrongRelease(returnValue);
+	uint8* address = heapAgency->GetArrayPoint(thisHandle, index);
+	if(IsHandleType(type)) returnValue = *(Handle*)address;
+	else if(type == TYPE_Entity && !*(Entity*)address) returnValue = NULL;
+	else
+	{
+		returnValue = heapAgency->Alloc((Declaration)type, error);
+		if(returnValue)
+		{
+			Mcopy(address, heapAgency->GetPoint(returnValue), parameter.kernel->libraryAgency->GetTypeStackSize(type));
+			if(type.code == TypeCode::Struct)
+				parameter.kernel->libraryAgency->GetStruct(type)->WeakReference(parameter.kernel, address);
+		}
+	}
+	heapAgency->StrongReference(returnValue);
+	return error;
+}
+String array_SetElement(KernelInvokerParameter parameter)//array.(integer, handle)
+{
+	CHECK_THIS_VALUE_NULL(0);
+	integer length;
+	HeapAgency* heapAgency = parameter.kernel->heapAgency;
+	String error = heapAgency->TryGetArrayLength(thisHandle, length);
+	if(!error.IsEmpty()) return error;
+	integer index = PARAMETER_VALUE(0, integer, 4);
+	if(index < 0) index += length;
+	if(index < 0 || index >= length) return parameter.kernel->stringAgency->Add(EXCEPTION_OUT_OF_RANGE);
+	Type type = heapAgency->GetType(thisHandle);
+	type.dimension--;
+	Handle& value = PARAMETER_VALUE(0, Handle, 4 + SIZE(integer));
+	uint8* address = heapAgency->GetArrayPoint(thisHandle, index);
+
+	if(parameter.kernel->libraryAgency->IsAssignable(type, value))
+	{
+		if(IsHandleType(type))
+		{
+			Handle& element = *(Handle*)address;
+			heapAgency->WeakRelease(element);
+			element = value;
+			heapAgency->WeakReference(element);
+		}
+		else if(type == TYPE_Entity)
+		{
+			Entity& element = *(Entity*)address;
+			parameter.kernel->entityAgency->Release(element);
+			if(value) element = *(Entity*)heapAgency->GetPoint(value);
+			else element = NULL;
+			parameter.kernel->entityAgency->Reference(element);
+		}
+		else
+		{
+			uint8* element = heapAgency->GetPoint(value);
+			RuntimeStruct* runtime = NULL;
+			if(type.code == TypeCode::Struct)
+			{
+				runtime = parameter.kernel->libraryAgency->GetStruct(type);
+				runtime->WeakRelease(parameter.kernel, element);
+			}
+			Mcopy(element, address, parameter.kernel->libraryAgency->GetTypeStackSize(type));
+			if(runtime) runtime->WeakReference(parameter.kernel, element);
+		}
+	}
+	else if(value) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
+	else return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
+	return String();
+}
 #pragma endregion 基础类型成员函数
 
 #pragma region 反射

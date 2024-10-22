@@ -237,6 +237,8 @@ String task_Pause(KernelInvokerParameter parameter);											//task.()
 String task_Resume(KernelInvokerParameter parameter);											//task.()
 
 String array_GetLength(KernelInvokerParameter parameter);										//integer array.()
+String array_GetElement(KernelInvokerParameter parameter);										//handle array.(integer)
+String array_SetElement(KernelInvokerParameter parameter);										//array.(integer, handle)
 
 String Reflection_ReadonlyValues_GetCount(KernelInvokerParameter parameter);					//integer Reflection.ReadonlyValues.()
 String Reflection_ReadonlyValues_GetStringElement(KernelInvokerParameter parameter);			//string Reflection.ReadonlyValues.(integer)

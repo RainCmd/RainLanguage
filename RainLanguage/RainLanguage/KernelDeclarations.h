@@ -224,7 +224,7 @@ enum KERNEL_OPERATOR
 	KERNEL_SPECIAL_FUNCTION_Decrement_real,
 
 	// string kernel.System.GetName(type)
-	KERNEL_SPECIAL_FUNCTION_System_GetName = 220,
+	KERNEL_SPECIAL_FUNCTION_System_GetName = 222,
 };
 enum MEMORY_ALIGNMENT
 {

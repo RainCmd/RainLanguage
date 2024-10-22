@@ -458,6 +458,8 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(1);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetLength"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Array, TYPE_Integer), array_GetElement);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("SetElement"), TupleInfo_EMPTY, CreateTypeList(TYPE_Array, TYPE_Integer, TYPE_Handle), array_SetElement);
 		REGISTER_CLASS(true, root, KeyWord_array(), KERNEL_TYPE_CLASS_INDEX_Array, TYPE_Handle, EMPTY_DECLARATIONS, 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//space BitConvert
