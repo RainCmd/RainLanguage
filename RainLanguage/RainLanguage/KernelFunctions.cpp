@@ -2458,6 +2458,7 @@ String delegate_Invoke(KernelInvokerParameter parameter)//handle[] delegate.(han
 			if(!error.IsEmpty()) return error;
 			parameter.kernel->heapAgency->StrongReference(result);
 			Invoker* invoker;
+			uint32 parameterStartIndex = 0;
 			switch(thisValue.type)
 			{
 				case FunctionType::Global:
@@ -2469,16 +2470,20 @@ String delegate_Invoke(KernelInvokerParameter parameter)//handle[] delegate.(han
 				case FunctionType::Reality:
 				case FunctionType::Virtual:
 				case FunctionType::Abstract:
-					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtime);
-					error = invoker->SetBoxParameter(0, thisHandle);
+				{
+					parameterStartIndex = 1;
+					RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue.function);
+					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtimeFunction);
+					error = invoker->SetBoxParameter(0, thisValue.target);
 					if(!error.IsEmpty()) return error;
-					break;
+				}
+				break;
 				default: EXCEPTION("无效的函数类型");
 			}
 			parameter.kernel->taskAgency->Reference(invoker);
 			for(uint32 i = 0; i < length; i++)
 			{
-				error = invoker->SetBoxParameter(i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
+				error = invoker->SetBoxParameter(parameterStartIndex + i, *(Handle*)parameter.kernel->heapAgency->GetArrayPoint(parameters, i));
 				if(!error.IsEmpty())
 				{
 					parameter.kernel->taskAgency->Release(invoker);
@@ -2528,10 +2533,14 @@ String delegate_Invoke(KernelInvokerParameter parameter)//handle[] delegate.(han
 				case FunctionType::Reality:
 				case FunctionType::Virtual:
 				case FunctionType::Abstract:
-					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtime);
-					error = invoker->SetBoxParameter(0, thisHandle);
+				{
+
+					RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(thisValue.function);
+					invoker = parameter.kernel->taskAgency->CreateInvoker(thisValue.entry, runtimeFunction);
+					error = invoker->SetBoxParameter(0, thisValue.target);
 					if(!error.IsEmpty()) return error;
-					break;
+				}
+				break;
 				default: EXCEPTION("无效的函数类型");
 			}
 			parameter.kernel->taskAgency->Reference(invoker);
@@ -2656,8 +2665,8 @@ String task_GetResults(KernelInvokerParameter parameter)//handle[] task.()
 	String error;
 	result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, invoker->info->returns.Count(), error);
 	if(!error.IsEmpty()) return error;
-	error = invoker->GetReturns(result);
 	parameter.kernel->heapAgency->StrongReference(result);
+	error = invoker->GetReturns(result);
 	return error;
 }
 

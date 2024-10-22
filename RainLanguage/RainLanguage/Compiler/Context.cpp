@@ -291,6 +291,7 @@ bool Context::TryFindMember(DeclarationManager* manager, const String& name, Typ
 {
 	if(type.dimension) type = TYPE_Array;
 	else if(type.code == TypeCode::Enum) type = TYPE_Enum;
+	else if(type.code == TypeCode::Delegate) type = TYPE_Delegate;
 	else if(type.code == TypeCode::Task) type = TYPE_Task;
 	AbstractLibrary* abstractLibrary = manager->GetLibrary(type.library);
 	if(type.code == TypeCode::Struct)

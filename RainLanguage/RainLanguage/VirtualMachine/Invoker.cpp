@@ -337,11 +337,10 @@ void Invoker::GetParameters(uint8* pointer)
 
 String Invoker::GetReturns(const Handle results)
 {
-	uint8* address;
 	for(uint32 i = 0; i < info->returns.Count(); i++)
 	{
-		address = kernel->heapAgency->GetArrayPoint(results, i);
-		String message = WeakBox(kernel, info->returns.GetType(i), data.GetPointer() + info->returns.GetOffset(i), *(Handle*)address);
+		Handle& element = *(Handle*)kernel->heapAgency->GetArrayPoint(results, i);
+		String message = WeakBox(kernel, info->returns.GetType(i), data.GetPointer() + info->returns.GetOffset(i), element);
 		if(!message.IsEmpty()) return message;
 	}
 	return String();
