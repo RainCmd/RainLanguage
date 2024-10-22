@@ -2383,7 +2383,7 @@ String InvokeDelegate(KernelInvokerParameter parameter, RuntimeDelegate* runtime
 	if(parameter.task->EnsureStackSize(nativeTop)) return parameter.kernel->stringAgency->Add(EXCEPTION_STACK_OVERFLOW);
 	Mzero(parameter.stack + temporary, nativeTop - temporary);
 	for(uint32 i = 0; i < runtime->returns.Count(); i++)
-		*(uint32*)(parameter.stack + nativeBottom + SIZE(Frame) + i * 4) = temporary + runtime->returns.GetOffset(i);
+		*(uint32*)(parameter.stack + nativeBottom + SIZE(Frame) + i * 4) = LOCAL(temporary + runtime->returns.GetOffset(i));
 	String error;
 	for(uint32 i = 0; i < runtime->parameters.Count(); i++)
 	{
