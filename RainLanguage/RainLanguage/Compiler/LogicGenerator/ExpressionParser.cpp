@@ -2913,7 +2913,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						}
 					}
 					expressionStack.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
-					attribute = Attribute::Constant;
+					attribute = expressionStack.Peek()->attribute;
 					break;
 				}
 				goto label_error_unexpected_lexcal;
@@ -2993,16 +2993,9 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 						parameters.Add(new ConstantStringExpression(lexical.anchor, manager->stringAgency->Add(stringBuilder.GetPointer(), stringBuilder.Count())));
 						stringBuilder.Clear();
 					}
-					if(parameters.Count())
-					{
-						expressionStack.Add(new ComplexStringExpression(lexical.anchor, parameters));
-						attribute = Attribute::Value;
-					}
-					else
-					{
-						expressionStack.Add(new ConstantStringExpression(lexical.anchor, String()));
-						attribute = Attribute::Constant;
-					}
+					if(parameters.Count()) expressionStack.Add(new ComplexStringExpression(lexical.anchor, parameters));
+					else expressionStack.Add(new ConstantStringExpression(lexical.anchor, String()));
+					attribute = expressionStack.Peek()->attribute;
 					break;
 				}
 				goto label_error_unexpected_lexcal;
