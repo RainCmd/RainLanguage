@@ -366,8 +366,8 @@ void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library
 	GetInstructPosition(pointer, library);
 	if(library->functions.Count() && pointer >= library->functions[0].entry)
 	{
-		function = 0;
-		uint32 start = 0, end = library->functions.Count();
+		function = INVALID;
+		uint32 start = 0, end = library->lambdaStart;
 		while(start < end)
 		{
 			function = (start + end) >> 1;
@@ -375,6 +375,20 @@ void LibraryAgency::GetInstructPosition(uint32 pointer, RuntimeLibrary*& library
 			else if(start == function) break;
 			else start = function;
 		}
+
+		uint32 lambda = INVALID;
+		start = library->lambdaStart;
+		end = library->functions.Count();
+		while(start < end)
+		{
+			lambda = (start + end) >> 1;
+			if(pointer < library->functions[lambda].entry) end = lambda;
+			else if(start == lambda) break;
+			else start = lambda;
+		}
+
+		if(function == INVALID || library->functions[function].entry > pointer) function = lambda;
+		else if(lambda != INVALID && library->functions[lambda].entry <= pointer && library->functions[function].entry < library->functions[lambda].entry) function = lambda;
 	}
 	else function = INVALID;
 }

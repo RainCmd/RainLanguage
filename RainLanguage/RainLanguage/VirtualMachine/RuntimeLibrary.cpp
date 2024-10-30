@@ -116,7 +116,7 @@ void SetDeclaratioinSpace(uint32 parent, uint32 index, RuntimeLibrary* library)
 }
 
 RuntimeLibrary::RuntimeLibrary(Kernel* kernel, uint32 index, const Library* library)
-	:kernel(NULL), debugger(NULL), index(index), codeOffset(MemoryAlignment(kernel->libraryAgency->code.Count(), MEMORY_ALIGNMENT_MAX)), dataOffset(MemoryAlignment(kernel->libraryAgency->data.Count(), MEMORY_ALIGNMENT_MAX)), spaces(library->spaces.Count()),
+	:kernel(NULL), debugger(NULL), index(index), codeOffset(MemoryAlignment(kernel->libraryAgency->code.Count(), MEMORY_ALIGNMENT_MAX)), dataOffset(MemoryAlignment(kernel->libraryAgency->data.Count(), MEMORY_ALIGNMENT_MAX)), lambdaStart(library->lambdaStart), spaces(library->spaces.Count()),
 	variables(library->variables.Count()), enums(library->enums.Count()), structs(library->structs.Count()), classes(library->classes.Count()),
 	interfaces(library->interfaces.Count()), delegates(library->delegates.Count()), tasks(library->tasks.Count()),
 	functions(library->functions.Count()), natives(library->natives.Count())

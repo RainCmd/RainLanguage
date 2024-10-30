@@ -24,13 +24,13 @@ struct Generator
 private:
 	List<uint8, true>code, data, insert;
 	uint32 insertAddress, instructAddress;
-	uint32 codeStartReference;
+	uint32 codeStartReference, lambdaStartFunctionIndex;
 	List<uint32, true> codeReferenceAddresses;
 	Set<uint32, true> insertCodeReferenceAddresses;
 	Dictionary<String, GeneratorStringAddresses*> codeStrings, dataStrings;
 public:
 	GlobalReference* globalReference;
-	inline Generator(DeclarationManager* manager) :code(0), data(manager->compilingLibrary.constantSize), insert(0), insertAddress(INVALID), instructAddress(INVALID), codeStartReference(0), codeReferenceAddresses(0), insertCodeReferenceAddresses(0), codeStrings(0), dataStrings(0), globalReference(NULL)
+	inline Generator(DeclarationManager* manager) :code(0), data(manager->compilingLibrary.constantSize), insert(0), insertAddress(INVALID), instructAddress(INVALID), codeStartReference(0), lambdaStartFunctionIndex(0), codeReferenceAddresses(0), insertCodeReferenceAddresses(0), codeStrings(0), dataStrings(0), globalReference(NULL)
 	{
 		data.SetCount(manager->compilingLibrary.constantSize);
 		globalReference = new GlobalReference(this, manager);

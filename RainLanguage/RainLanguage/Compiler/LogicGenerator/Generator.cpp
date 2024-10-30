@@ -47,7 +47,7 @@ void Generator::WriteDataString(String& value, uint32 address)
 void Generator::GeneratorLambdaFunction(GeneratorParameter& parameter, uint32 functionCount, uint32& lambdaIndex)
 {
 	LocalContext* localContext = parameter.localContext;
-	for(lambdaIndex; lambdaIndex < parameter.manager->lambdaGenerators.Count(); lambdaIndex++)
+	for(; lambdaIndex < parameter.manager->lambdaGenerators.Count(); lambdaIndex++)
 	{
 		parameter.databaseGenerator->AddFunction(parameter.manager->lambdaGenerators[lambdaIndex]->anchor.source);
 		parameter.manager->compilingLibrary.functions[functionCount + lambdaIndex]->entry = GetPointer();
@@ -59,7 +59,8 @@ void Generator::GeneratorLambdaFunction(GeneratorParameter& parameter, uint32 fu
 
 void Generator::GeneratorFunction(GeneratorParameter& parameter)
 {
-	uint32 functionCount = parameter.manager->compilingLibrary.functions.Count();
+	lambdaStartFunctionIndex = parameter.manager->compilingLibrary.functions.Count();
+	uint32 functionCount = lambdaStartFunctionIndex;
 	uint32 lambdaIndex = 0;
 	parameter.localContext = new LocalContext(parameter.manager, NULL);
 	FunctionGenerator(parameter).Generator(parameter);

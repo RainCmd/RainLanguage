@@ -1592,7 +1592,7 @@ bool TryParseLambdaParameter(const Anchor& anchor, Anchor& parameter, MessageCol
 	return false;
 }
 
-bool ExpressionParser::TryParseLambda(const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result)
+bool ExpressionParser::TryParseLambda(const Anchor& lambdaAnchor, const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result)
 {
 	Anchor localParameterAnchor = parameterAnchor;
 	Anchor anchor;
@@ -1607,7 +1607,7 @@ bool ExpressionParser::TryParseLambda(const Anchor& parameterAnchor, const Ancho
 	}
 	if(!TryParseLambdaParameter(anchor.Trim(), anchor, manager->messages)) return false;
 	else if(!anchor.content.IsEmpty()) parameters.Add(anchor);
-	result = new BlurryLambdaExpression(parameterAnchor.content.IsEmpty() ? expressionAnchor : parameterAnchor, parameters, expressionAnchor);
+	result = new BlurryLambdaExpression(lambdaAnchor, parameters, expressionAnchor);
 	return true;
 }
 
@@ -1917,7 +1917,7 @@ bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
 	if(TryParseTuple(SplitFlag::Semicolon, LexicalType::Semicolon, anchor, result)) return true;
 	Anchor splitLeft, splitRight;
 	LexicalType splitType = Split(anchor, anchor.position, SplitFlag::Lambda | SplitFlag::Assignment | SplitFlag::Question, splitLeft, splitRight, manager->messages);
-	if(splitType == LexicalType::Lambda) return TryParseLambda(splitLeft, splitRight, result);
+	if(splitType == LexicalType::Lambda) return TryParseLambda(anchor, splitLeft, splitRight, result);
 	else if(splitType == LexicalType::Question) return TryParseQuestion(splitLeft, splitRight, result);
 	else if(splitType != LexicalType::Unknow) return TryParseAssignment(splitType, anchor.Sub(splitLeft.position, splitRight.GetEnd() - splitLeft.position), splitLeft, splitRight, result);
 	if(TryParseTuple(SplitFlag::Comma, LexicalType::Comma, anchor, result)) return true;

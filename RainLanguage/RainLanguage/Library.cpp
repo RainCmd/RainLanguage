@@ -14,7 +14,7 @@ Serializer* Serialize(const Library* library)
 	Serializer* serializer = new Serializer(0x100);
 	serializer->SerializeStringAgency(library->stringAgency);
 	serializer->Serialize(library->spaces.Count());
-	for (uint32 i = 0; i < library->spaces.Count(); i++)
+	for(uint32 i = 0; i < library->spaces.Count(); i++)
 	{
 		const Space* space = &library->spaces[i];
 		serializer->Serialize(space->name);
@@ -33,8 +33,9 @@ Serializer* Serialize(const Library* library)
 	serializer->SerializeList(library->code);
 	serializer->SerializeList(library->constData);
 	serializer->Serialize(library->dataSize);
+	serializer->Serialize(library->lambdaStart);
 	serializer->Serialize(library->variables.Count());
-	for (uint32 i = 0; i < library->variables.Count(); i++)
+	for(uint32 i = 0; i < library->variables.Count(); i++)
 	{
 		const ReferenceVariableDeclarationInfo& info = library->variables[i];
 		serializer->Serialize(info.isPublic);
@@ -46,7 +47,7 @@ Serializer* Serialize(const Library* library)
 		serializer->SerializeList(info.references);
 	}
 	serializer->Serialize(library->enums.Count());
-	for (uint32 i = 0; i < library->enums.Count(); i++)
+	for(uint32 i = 0; i < library->enums.Count(); i++)
 	{
 		const EnumDeclarationInfo& info = library->enums[i];
 		serializer->Serialize(info.isPublic);
@@ -55,14 +56,14 @@ Serializer* Serialize(const Library* library)
 		serializer->SerializeList(info.elements);
 	}
 	serializer->Serialize(library->structs.Count());
-	for (uint32 x = 0; x < library->structs.Count(); x++)
+	for(uint32 x = 0; x < library->structs.Count(); x++)
 	{
 		const StructDeclarationInfo& info = library->structs[x];
 		serializer->Serialize(info.isPublic);
 		serializer->SerializeList(info.attributes);
 		serializer->Serialize(info.name);
 		serializer->Serialize(info.variables.Count());
-		for (uint32 y = 0; y < info.variables.Count(); y++)
+		for(uint32 y = 0; y < info.variables.Count(); y++)
 		{
 			const VariableDeclarationInfo& member = info.variables[y];
 			serializer->Serialize(member.isPublic);
@@ -77,7 +78,7 @@ Serializer* Serialize(const Library* library)
 		serializer->Serialize(info.alignment);
 	}
 	serializer->Serialize(library->classes.Count());
-	for (uint32 x = 0; x < library->classes.Count(); x++)
+	for(uint32 x = 0; x < library->classes.Count(); x++)
 	{
 		const ClassDeclarationInfo& info = library->classes[x];
 		serializer->Serialize(info.isPublic);
@@ -89,7 +90,7 @@ Serializer* Serialize(const Library* library)
 		serializer->Serialize(info.alignment);
 		serializer->SerializeList(info.constructors);
 		serializer->Serialize(info.variables.Count());
-		for (uint32 y = 0; y < info.variables.Count(); y++)
+		for(uint32 y = 0; y < info.variables.Count(); y++)
 		{
 			const ReferenceVariableDeclarationInfo& member = info.variables[y];
 			serializer->Serialize(member.isPublic);
@@ -105,7 +106,7 @@ Serializer* Serialize(const Library* library)
 		serializer->SerializeList(info.relocations);
 	}
 	serializer->Serialize(library->interfaces.Count());
-	for (uint32 x = 0; x < library->interfaces.Count(); x++)
+	for(uint32 x = 0; x < library->interfaces.Count(); x++)
 	{
 		const InterfaceDeclarationInfo& info = library->interfaces[x];
 		serializer->Serialize(info.isPublic);
@@ -113,7 +114,7 @@ Serializer* Serialize(const Library* library)
 		serializer->Serialize(info.name);
 		serializer->SerializeList(info.inherits);
 		serializer->Serialize(info.functions.Count());
-		for (uint32 y = 0; y < info.functions.Count(); y++)
+		for(uint32 y = 0; y < info.functions.Count(); y++)
 		{
 			const InterfaceDeclarationInfo::FunctionInfo& member = info.functions[y];
 			serializer->SerializeList(member.attributes);
@@ -124,7 +125,7 @@ Serializer* Serialize(const Library* library)
 		serializer->SerializeList(info.relocations);
 	}
 	serializer->Serialize(library->delegates.Count());
-	for (uint32 i = 0; i < library->delegates.Count(); i++)
+	for(uint32 i = 0; i < library->delegates.Count(); i++)
 	{
 		const DelegateDeclarationInfo& info = library->delegates[i];
 		serializer->Serialize(info.isPublic);
@@ -134,7 +135,7 @@ Serializer* Serialize(const Library* library)
 		Serialize(serializer, info.parameters);
 	}
 	serializer->Serialize(library->tasks.Count());
-	for (uint32 i = 0; i < library->tasks.Count(); i++)
+	for(uint32 i = 0; i < library->tasks.Count(); i++)
 	{
 		const TaskDeclarationInfo& info = library->tasks[i];
 		serializer->Serialize(info.isPublic);
@@ -143,7 +144,7 @@ Serializer* Serialize(const Library* library)
 		Serialize(serializer, info.returns);
 	}
 	serializer->Serialize(library->functions.Count());
-	for (uint32 i = 0; i < library->functions.Count(); i++)
+	for(uint32 i = 0; i < library->functions.Count(); i++)
 	{
 		const FunctionDeclarationInfo& info = library->functions[i];
 		serializer->Serialize(info.isPublic);
@@ -155,7 +156,7 @@ Serializer* Serialize(const Library* library)
 		serializer->SerializeList(info.references);
 	}
 	serializer->Serialize(library->natives.Count());
-	for (uint32 i = 0; i < library->natives.Count(); i++)
+	for(uint32 i = 0; i < library->natives.Count(); i++)
 	{
 		const NativeDeclarationInfo& info = library->natives[i];
 		serializer->Serialize(info.isPublic);
@@ -165,14 +166,14 @@ Serializer* Serialize(const Library* library)
 		Serialize(serializer, info.parameters);
 	}
 	serializer->Serialize(library->codeStrings.Count());
-	for (uint32 i = 0; i < library->codeStrings.Count(); i++)
+	for(uint32 i = 0; i < library->codeStrings.Count(); i++)
 	{
 		const StringAddresses& addresses = library->codeStrings[i];
 		serializer->Serialize(addresses.value);
 		serializer->SerializeList(addresses.addresses);
 	}
 	serializer->Serialize(library->dataStrings.Count());
-	for (uint32 i = 0; i < library->dataStrings.Count(); i++)
+	for(uint32 i = 0; i < library->dataStrings.Count(); i++)
 	{
 		const StringAddresses& addresses = library->dataStrings[i];
 		serializer->Serialize(addresses.value);
@@ -180,12 +181,12 @@ Serializer* Serialize(const Library* library)
 	}
 	serializer->SerializeList(library->libraryReferences);
 	serializer->Serialize(library->imports.Count());
-	for (uint32 x = 0; x < library->imports.Count(); x++)
+	for(uint32 x = 0; x < library->imports.Count(); x++)
 	{
 		const ImportLibrary& importLibrary = library->imports[x];
 		serializer->SerializeList(importLibrary.spaces);
 		serializer->Serialize(importLibrary.variables.Count());
-		for (uint32 y = 0; y < importLibrary.variables.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.variables.Count(); y++)
 		{
 			const ImportVariable& info = importLibrary.variables[y];
 			serializer->Serialize(info.space);
@@ -195,14 +196,14 @@ Serializer* Serialize(const Library* library)
 			serializer->SerializeList(info.addressReferences);
 		}
 		serializer->Serialize(importLibrary.enums.Count());
-		for (uint32 y = 0; y < importLibrary.enums.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.enums.Count(); y++)
 		{
 			const ImportEnum& info = importLibrary.enums[y];
 			serializer->Serialize(info.space);
 			serializer->Serialize(info.name);
 			serializer->SerializeList(info.references);
 			serializer->Serialize(info.elements.Count());
-			for (uint32 z = 0; z < info.elements.Count(); z++)
+			for(uint32 z = 0; z < info.elements.Count(); z++)
 			{
 				const ImportEnum::Element& element = info.elements[z];
 				serializer->Serialize(element.name);
@@ -210,21 +211,21 @@ Serializer* Serialize(const Library* library)
 			}
 		}
 		serializer->Serialize(importLibrary.structs.Count());
-		for (uint32 y = 0; y < importLibrary.structs.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.structs.Count(); y++)
 		{
 			const ImportStruct& info = importLibrary.structs[y];
 			serializer->Serialize(info.space);
 			serializer->Serialize(info.name);
 			serializer->SerializeList(info.references);
 			serializer->Serialize(info.variables.Count());
-			for (uint32 z = 0; z < info.variables.Count(); z++)
+			for(uint32 z = 0; z < info.variables.Count(); z++)
 			{
 				const ImportStruct::Variable& member = info.variables[z];
 				serializer->Serialize(member.type);
 				serializer->SerializeList(member.references);
 			}
 			serializer->Serialize(info.functions.Count());
-			for (uint32 z = 0; z < info.functions.Count(); z++)
+			for(uint32 z = 0; z < info.functions.Count(); z++)
 			{
 				const ImportStruct::Function& member = info.functions[z];
 				serializer->Serialize(member.name);
@@ -235,7 +236,7 @@ Serializer* Serialize(const Library* library)
 			}
 		}
 		serializer->Serialize(importLibrary.classes.Count());
-		for (uint32 y = 0; y < importLibrary.classes.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.classes.Count(); y++)
 		{
 			const ImportClass& info = importLibrary.classes[y];
 			serializer->Serialize(info.space);
@@ -244,7 +245,7 @@ Serializer* Serialize(const Library* library)
 			serializer->Serialize(info.parent);
 			serializer->SerializeList(info.inherits);
 			serializer->Serialize(info.variables.Count());
-			for (uint32 z = 0; z < info.variables.Count(); z++)
+			for(uint32 z = 0; z < info.variables.Count(); z++)
 			{
 				const ImportClass::Variable& member = info.variables[z];
 				serializer->Serialize(member.name);
@@ -253,7 +254,7 @@ Serializer* Serialize(const Library* library)
 				serializer->SerializeList(member.addressReferences);
 			}
 			serializer->Serialize(info.constructors.Count());
-			for (uint32 z = 0; z < info.constructors.Count(); z++)
+			for(uint32 z = 0; z < info.constructors.Count(); z++)
 			{
 				const ImportClass::Constructor& member = info.constructors[z];
 				serializer->SerializeList(member.parameters);
@@ -261,7 +262,7 @@ Serializer* Serialize(const Library* library)
 				serializer->SerializeList(member.addressReferences);
 			}
 			serializer->Serialize(info.functions.Count());
-			for (uint32 z = 0; z < info.functions.Count(); z++)
+			for(uint32 z = 0; z < info.functions.Count(); z++)
 			{
 				const ImportClass::Function& member = info.functions[z];
 				serializer->Serialize(member.name);
@@ -272,14 +273,14 @@ Serializer* Serialize(const Library* library)
 			}
 		}
 		serializer->Serialize(importLibrary.interfaces.Count());
-		for (uint32 y = 0; y < importLibrary.interfaces.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.interfaces.Count(); y++)
 		{
 			const ImportInterface& info = importLibrary.interfaces[y];
 			serializer->Serialize(info.space);
 			serializer->Serialize(info.name);
 			serializer->SerializeList(info.references);
 			serializer->Serialize(info.functions.Count());
-			for (uint32 z = 0; z < info.functions.Count(); z++)
+			for(uint32 z = 0; z < info.functions.Count(); z++)
 			{
 				const ImportInterface::Function& member = info.functions[z];
 				serializer->Serialize(member.name);
@@ -289,7 +290,7 @@ Serializer* Serialize(const Library* library)
 			}
 		}
 		serializer->Serialize(importLibrary.delegates.Count());
-		for (uint32 y = 0; y < importLibrary.delegates.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.delegates.Count(); y++)
 		{
 			const ImportDelegate& info = importLibrary.delegates[y];
 			serializer->Serialize(info.space);
@@ -299,7 +300,7 @@ Serializer* Serialize(const Library* library)
 			serializer->SerializeList(info.returns);
 		}
 		serializer->Serialize(importLibrary.tasks.Count());
-		for (uint32 y = 0; y < importLibrary.tasks.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.tasks.Count(); y++)
 		{
 			const ImportTask& info = importLibrary.tasks[y];
 			serializer->Serialize(info.space);
@@ -308,7 +309,7 @@ Serializer* Serialize(const Library* library)
 			serializer->SerializeList(info.returns);
 		}
 		serializer->Serialize(importLibrary.functions.Count());
-		for (uint32 y = 0; y < importLibrary.functions.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.functions.Count(); y++)
 		{
 			const ImportFunction& info = importLibrary.functions[y];
 			serializer->Serialize(info.space);
@@ -319,7 +320,7 @@ Serializer* Serialize(const Library* library)
 			serializer->SerializeList(info.addressReferences);
 		}
 		serializer->Serialize(importLibrary.natives.Count());
-		for (uint32 y = 0; y < importLibrary.natives.Count(); y++)
+		for(uint32 y = 0; y < importLibrary.natives.Count(); y++)
 		{
 			const ImportNative& info = importLibrary.natives[y];
 			serializer->Serialize(info.space);
@@ -349,9 +350,9 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 {
 	Deserializer deserializer(data, size);
 	StringAgency* stringAgency = deserializer.DeserializeStringAgency();
-	Library* result = new Library(stringAgency, List<uint8, true>(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	Library* result = new Library(stringAgency, List<uint8, true>(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	uint32 spaceCount = deserializer.Deserialize<uint32>();
-	while (spaceCount--)
+	while(spaceCount--)
 	{
 		Space* space = new (result->spaces.Add())Space(deserializer.Deserialize<string>(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		deserializer.Deserialize(space->attributes);
@@ -369,8 +370,9 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 	deserializer.Deserialize(result->code);
 	deserializer.Deserialize(result->constData);
 	result->dataSize = deserializer.Deserialize<uint32>();
+	result->lambdaStart = deserializer.Deserialize<uint32>();
 	uint32 variableCount = deserializer.Deserialize<uint32>();
-	while (variableCount--)
+	while(variableCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -382,7 +384,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->variables.Add())ReferenceVariableDeclarationInfo(isPublic, attributes, name, type, address, readonly, references);
 	}
 	uint32 enumCount = deserializer.Deserialize<uint32>();
-	while (enumCount--)
+	while(enumCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -391,14 +393,14 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->enums.Add())EnumDeclarationInfo(isPublic, attributes, name, elements);
 	}
 	uint32 structCount = deserializer.Deserialize<uint32>();
-	while (structCount--)
+	while(structCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
 		string		name = deserializer.Deserialize<string>();
 		uint32		memberVariableCount = deserializer.Deserialize<uint32>();
 		List<VariableDeclarationInfo> memberVariables(memberVariableCount);
-		while (memberVariableCount--)
+		while(memberVariableCount--)
 		{
 			bool		memberPublic = deserializer.Deserialize<bool>();
 			List<string, true> memberAttributes(0); deserializer.Deserialize(memberAttributes);
@@ -414,7 +416,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->structs.Add())StructDeclarationInfo(isPublic, attributes, name, memberVariables, memberFunctionns, structSize, alignment);
 	}
 	uint32 classCount = deserializer.Deserialize<uint32>();
-	while (classCount--)
+	while(classCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -426,7 +428,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		List<uint32, true> constructors(0); deserializer.Deserialize(constructors);
 		uint32		memberVariableCount = deserializer.Deserialize<uint32>();
 		List<ReferenceVariableDeclarationInfo> memberVariables(memberVariableCount);
-		while (memberVariableCount--)
+		while(memberVariableCount--)
 		{
 			bool		memberPublic = deserializer.Deserialize<bool>();
 			List<string, true> memberAttributes(0); deserializer.Deserialize(memberAttributes);
@@ -443,7 +445,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->classes.Add())ClassDeclarationInfo(isPublic, attributes, name, parent, inherits, classSize, alignment, constructors, memberVariables, functions, destructor, relocations);
 	}
 	uint32 interfaceCount = deserializer.Deserialize<uint32>();
-	while (interfaceCount--)
+	while(interfaceCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -451,7 +453,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		List<Declaration, true> inherits(0); deserializer.Deserialize(inherits);
 		uint32 memberFunctionCount = deserializer.Deserialize<uint32>();
 		List<InterfaceDeclarationInfo::FunctionInfo> memberFunctionn(memberFunctionCount);
-		while (memberFunctionCount--)
+		while(memberFunctionCount--)
 		{
 			List<string, true> memberAttributes(0); deserializer.Deserialize(memberAttributes);
 			string memberName = deserializer.Deserialize<string>();
@@ -463,7 +465,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->interfaces.Add())InterfaceDeclarationInfo(isPublic, attributes, name, inherits, memberFunctionn, relocations);
 	}
 	uint32 delegateCount = deserializer.Deserialize<uint32>();
-	while (delegateCount--)
+	while(delegateCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -473,7 +475,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->delegates.Add())DelegateDeclarationInfo(isPublic, attributes, name, returs, parameters);
 	}
 	uint32 taskCount = deserializer.Deserialize<uint32>();
-	while (taskCount--)
+	while(taskCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -482,7 +484,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->tasks.Add())TaskDeclarationInfo(isPublic, attributes, name, returs);
 	}
 	uint32 functionCount = deserializer.Deserialize<uint32>();
-	while (functionCount--)
+	while(functionCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -494,7 +496,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->functions.Add())FunctionDeclarationInfo(isPublic, attributes, name, returs, parameters, entry, references);
 	}
 	uint32 nativeCount = deserializer.Deserialize<uint32>();
-	while (nativeCount--)
+	while(nativeCount--)
 	{
 		bool		isPublic = deserializer.Deserialize<bool>();
 		List<string, true> attributes(0); deserializer.Deserialize(attributes);
@@ -504,14 +506,14 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 		new (result->natives.Add())NativeDeclarationInfo(isPublic, attributes, name, returs, parameters);
 	}
 	uint32 codeStringCount = deserializer.Deserialize<uint32>();
-	while (codeStringCount--)
+	while(codeStringCount--)
 	{
 		uint32 value = deserializer.Deserialize<uint32>();
 		List<uint32, true> addresses(0); deserializer.Deserialize(addresses);
 		new (result->codeStrings.Add())StringAddresses(value, addresses);
 	}
 	uint32 dataStringCount = deserializer.Deserialize<uint32>();
-	while (dataStringCount--)
+	while(dataStringCount--)
 	{
 		uint32 value = deserializer.Deserialize<uint32>();
 		List<uint32, true> addresses(0); deserializer.Deserialize(addresses);
@@ -519,12 +521,12 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 	}
 	deserializer.Deserialize(result->libraryReferences);
 	uint32 importLibraryCount = deserializer.Deserialize<uint32>();
-	while (importLibraryCount--)
+	while(importLibraryCount--)
 	{
 		ImportLibrary* importLibrary = new (result->imports.Add())ImportLibrary(0, 0, 0, 0, 0, 0, 0, 0, 0);
 		deserializer.Deserialize(importLibrary->spaces);
 		uint32 importVariableCount = deserializer.Deserialize<uint32>();
-		while (importVariableCount--)
+		while(importVariableCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
@@ -534,14 +536,14 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->variables.Add())ImportVariable(space, name, references, type, addressReferences);
 		}
 		uint32 importEnumCount = deserializer.Deserialize<uint32>();
-		while (importEnumCount--)
+		while(importEnumCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
 			List<uint32, true> references(0); deserializer.Deserialize(references);
 			uint32 importEnumElementCount = deserializer.Deserialize<uint32>();
 			List<ImportEnum::Element> importEnumElements(importEnumElementCount);
-			while (importEnumElementCount--)
+			while(importEnumElementCount--)
 			{
 				string elementName = deserializer.Deserialize<string>();
 				List<uint32, true> elementAddressReferences(0); deserializer.Deserialize(elementAddressReferences);
@@ -550,14 +552,14 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->enums.Add())ImportEnum(space, name, references, importEnumElements);
 		}
 		uint32 importStructCount = deserializer.Deserialize<uint32>();
-		while (importStructCount--)
+		while(importStructCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
 			List<uint32, true> references(0); deserializer.Deserialize(references);
 			uint32 importStructVariableCout = deserializer.Deserialize<uint32>();
 			List<ImportStruct::Variable> importStructVariables(importStructVariableCout);
-			while (importStructVariableCout--)
+			while(importStructVariableCout--)
 			{
 				Type memberType = deserializer.Deserialize<Type>();
 				List<uint32, true> memberReferences(0); deserializer.Deserialize(memberReferences);
@@ -565,7 +567,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			}
 			uint32 impoerStructFunctionCount = deserializer.Deserialize<uint32>();
 			List<ImportStruct::Function> importStructFunctions(impoerStructFunctionCount);
-			while (impoerStructFunctionCount--)
+			while(impoerStructFunctionCount--)
 			{
 				string memberName = deserializer.Deserialize<string>();
 				List<Type, true> memberParameters(0); deserializer.Deserialize(memberParameters);
@@ -577,7 +579,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->structs.Add())ImportStruct(space, name, references, importStructVariables, importStructFunctions);
 		}
 		uint32 importClassCount = deserializer.Deserialize<uint32>();
-		while (importClassCount--)
+		while(importClassCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
@@ -586,7 +588,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			List<Declaration, true> inherits(0); deserializer.Deserialize(inherits);
 			uint32 importClassVariableCount = deserializer.Deserialize<uint32>();
 			List<ImportClass::Variable> importClassVariables(importClassVariableCount);
-			while (importClassVariableCount--)
+			while(importClassVariableCount--)
 			{
 				string memberName = deserializer.Deserialize<uint32>();
 				Type memberType = deserializer.Deserialize<Type>();
@@ -596,7 +598,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			}
 			uint32 importConstructorCount = deserializer.Deserialize<uint32>();
 			List<ImportClass::Constructor> importConstructors(importConstructorCount);
-			while (importConstructorCount--)
+			while(importConstructorCount--)
 			{
 				List<Type, true> memberParameters(0); deserializer.Deserialize(memberParameters);
 				List<uint32, true> memberReferences(0); deserializer.Deserialize(memberReferences);
@@ -605,7 +607,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			}
 			uint32 importClassFunctionCount = deserializer.Deserialize<uint32>();
 			List<ImportClass::Function> importClassFunctions(importClassFunctionCount);
-			while (importClassFunctionCount--)
+			while(importClassFunctionCount--)
 			{
 				string memberName = deserializer.Deserialize<uint32>();
 				List<Type, true> memberParameters(0); deserializer.Deserialize(memberParameters);
@@ -617,14 +619,14 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->classes.Add())ImportClass(space, name, references, parent, inherits, importClassVariables, importConstructors, importClassFunctions);
 		}
 		uint32 importInterfaceCount = deserializer.Deserialize<uint32>();
-		while (importInterfaceCount--)
+		while(importInterfaceCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
 			List<uint32, true> references(0); deserializer.Deserialize(references);
 			uint32 importInterfaceFunctionCount = deserializer.Deserialize<uint32>();
 			List<ImportInterface::Function> importInterfaceFunctions(importInterfaceFunctionCount);
-			while (importInterfaceFunctionCount--)
+			while(importInterfaceFunctionCount--)
 			{
 				string memberName = deserializer.Deserialize<uint32>();
 				List<Type, true> memberParameters(0); deserializer.Deserialize(memberParameters);
@@ -635,7 +637,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->interfaces.Add())ImportInterface(space, name, references, importInterfaceFunctions);
 		}
 		uint32 importDelegateCount = deserializer.Deserialize<uint32>();
-		while (importDelegateCount--)
+		while(importDelegateCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
@@ -645,7 +647,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->delegates.Add())ImportDelegate(space, name, references, parameters, returns);
 		}
 		uint32 importTaskCount = deserializer.Deserialize<uint32>();
-		while (importTaskCount--)
+		while(importTaskCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
@@ -654,7 +656,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->tasks.Add())ImportTask(space, name, references, returns);
 		}
 		uint32 importFunctionCount = deserializer.Deserialize<uint32>();
-		while (importFunctionCount--)
+		while(importFunctionCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();
@@ -665,7 +667,7 @@ RainLibrary* DeserializeLibrary(const uint8* data, uint32 size)
 			new (importLibrary->functions.Add())ImportFunction(space, name, references, parameters, returns, addressReferences);
 		}
 		uint32 importNativeCount = deserializer.Deserialize<uint32>();
-		while (importNativeCount--)
+		while(importNativeCount--)
 		{
 			uint32 space = deserializer.Deserialize<uint32>();
 			string name = deserializer.Deserialize<string>();

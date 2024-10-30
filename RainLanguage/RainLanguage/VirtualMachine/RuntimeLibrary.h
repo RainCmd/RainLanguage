@@ -12,6 +12,7 @@ public:
 	uint32 index;
 	uint32 codeOffset;
 	uint32 dataOffset;
+	uint32 lambdaStart;
 	List<RuntimeSpace> spaces;
 	List<RuntimeVariable> variables;
 	List<RuntimeEnum> enums;
