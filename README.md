@@ -323,8 +323,8 @@ class Child Base
 
 Main()
     Base b = Child()
-    b.Func()            //输出 "Base Func"
-    b->Func()           //输出 "Child Func"
+    b.Func()            //输出 "Child Func"
+    b->Func()           //输出 "Base Func"
 ```
 #### 类型转换
 有3中方式进行类型转换，分别为强制类型转换、is和as。
@@ -525,5 +525,5 @@ catch Func Exception!!
 
 
 ## 其他
-* [kernel命名空间中的定义](https://github.com/RainCmd/RainLanguageVSCode/blob/main/kernel.rain)
-* [vscode雨言语法高亮插件](https://github.com/RainCmd/RainLanguageVSCode)
+* [kernel命名空间中的定义](https://github.com/RainCmd/RainLanguageVSCode/blob/main/kernel)
+* [vscode雨言插件](https://github.com/RainCmd/RainLanguageVSCode)
