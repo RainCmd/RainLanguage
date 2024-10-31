@@ -213,84 +213,84 @@ public:
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetBoolArrayReturnValue(uint32 index, bool*& result) const;
+	void GetBoolArrayReturnValue(uint32 index, bool* result) const;
 	/// <summary>
 	/// 获取字节类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetByteArrayReturnValue(uint32 index, uint8*& result) const;
+	void GetByteArrayReturnValue(uint32 index, uint8* result) const;
 	/// <summary>
 	/// 获取字符类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetCharArrayReturnValue(uint32 index, character*& result) const;
+	void GetCharArrayReturnValue(uint32 index, character* result) const;
 	/// <summary>
 	/// 获取整数类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetIntegerArrayReturnValue(uint32 index, integer*& result) const;
+	void GetIntegerArrayReturnValue(uint32 index, integer* result) const;
 	/// <summary>
 	/// 获取实数类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetRealArrayReturnValue(uint32 index, real*& result) const;
+	void GetRealArrayReturnValue(uint32 index, real* result) const;
 	/// <summary>
 	/// 获取二维向量类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetReal2ArrayReturnValue(uint32 index, Real2*& result) const;
+	void GetReal2ArrayReturnValue(uint32 index, Real2* result) const;
 	/// <summary>
 	/// 获取三维向量类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetReal3ArrayReturnValue(uint32 index, Real3*& result) const;
+	void GetReal3ArrayReturnValue(uint32 index, Real3* result) const;
 	/// <summary>
 	/// 获取四维向量类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetReal4ArrayReturnValue(uint32 index, Real4*& result) const;
+	void GetReal4ArrayReturnValue(uint32 index, Real4* result) const;
 	/// <summary>
 	/// 获取枚举类型值数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetEnumValueArrayReturnValue(uint32 index, integer*& result) const;
+	void GetEnumValueArrayReturnValue(uint32 index, integer* result) const;
 	/// <summary>
 	/// 获取枚举类型名称数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetEnumNameArrayReturnValue(uint32 index, RainString*& result) const;
+	void GetEnumNameArrayReturnValue(uint32 index, RainString* result) const;
 	/// <summary>
 	/// 获取字符串类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetStringArrayReturnValue(uint32 index, RainString*& result) const;
+	void GetStringArrayReturnValue(uint32 index, RainString* result) const;
 	/// <summary>
 	/// 获取实体类型数组返回值
 	/// </summary>
 	/// <param name="index">返回值索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果调用不是已完成状态或返回值类型不正确会抛异常</exception>
-	void GetEntityArrayReturnValue(uint32 index, uint64*& result) const;
+	void GetEntityArrayReturnValue(uint32 index, uint64* result) const;
 
 	/// <summary>
 	/// 设置布尔类型参数
@@ -626,84 +626,84 @@ public:
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetBoolArrayParameter(uint32 index, bool*& result) const = 0;
+	virtual void GetBoolArrayParameter(uint32 index, bool* result) const = 0;
 	/// <summary>
 	/// 获取字节数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetByteArrayParameter(uint32 index, uint8*& result) const = 0;
+	virtual void GetByteArrayParameter(uint32 index, uint8* result) const = 0;
 	/// <summary>
 	/// 获取字符数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetCharArrayParameter(uint32 index, character*& result) const = 0;
+	virtual void GetCharArrayParameter(uint32 index, character* result) const = 0;
 	/// <summary>
 	/// 获取整数数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetIntegerArrayParameter(uint32 index, integer*& result) const = 0;
+	virtual void GetIntegerArrayParameter(uint32 index, integer* result) const = 0;
 	/// <summary>
 	/// 获取实数数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetRealArrayParameter(uint32 index, real*& result) const = 0;
+	virtual void GetRealArrayParameter(uint32 index, real* result) const = 0;
 	/// <summary>
 	/// 获取二维向量数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetReal2ArrayParameter(uint32 index, Real2*& result) const = 0;
+	virtual void GetReal2ArrayParameter(uint32 index, Real2* result) const = 0;
 	/// <summary>
 	/// 获取三维向量数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetReal3ArrayParameter(uint32 index, Real3*& result) const = 0;
+	virtual void GetReal3ArrayParameter(uint32 index, Real3* result) const = 0;
 	/// <summary>
 	/// 获取四维向量数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetReal4ArrayParameter(uint32 index, Real4*& result) const = 0;
+	virtual void GetReal4ArrayParameter(uint32 index, Real4* result) const = 0;
 	/// <summary>
 	/// 获取枚举值数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetEnumArrayValueParameter(uint32 index, integer*& result) const = 0;
+	virtual void GetEnumArrayValueParameter(uint32 index, integer* result) const = 0;
 	/// <summary>
 	/// 获取枚举名数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetEnumArrayNameParameter(uint32 index, RainString*& result) const = 0;
+	virtual void GetEnumArrayNameParameter(uint32 index, RainString* result) const = 0;
 	/// <summary>
 	/// 获取字符串数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetStringArrayParameter(uint32 index, RainString*& result) const = 0;
+	virtual void GetStringArrayParameter(uint32 index, RainString* result) const = 0;
 	/// <summary>
 	/// 获取实体数组参数值
 	/// </summary>
 	/// <param name="index">参数索引</param>
 	/// <param name="result">用于填充返回值数组的地址</param>
 	/// <exception>如果参数类型不正确会抛异常</exception>
-	virtual void GetEntityArrayParameter(uint32 index, uint64*& result) const = 0;
+	virtual void GetEntityArrayParameter(uint32 index, uint64* result) const = 0;
 
 	/// <summary>
 	/// 设置布尔返回值

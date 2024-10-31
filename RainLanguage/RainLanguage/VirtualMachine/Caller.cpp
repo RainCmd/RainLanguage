@@ -132,7 +132,7 @@ uint32 Caller::GetArrayParameterLength(uint32 index) const
 	return 0;
 }
 
-void Caller::GetBoolArrayParameter(uint32 index, bool*& result) const
+void Caller::GetBoolArrayParameter(uint32 index, bool* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Bool, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -143,7 +143,7 @@ void Caller::GetBoolArrayParameter(uint32 index, bool*& result) const
 	}
 }
 
-void Caller::GetByteArrayParameter(uint32 index, uint8*& result) const
+void Caller::GetByteArrayParameter(uint32 index, uint8* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Byte, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -154,7 +154,7 @@ void Caller::GetByteArrayParameter(uint32 index, uint8*& result) const
 	}
 }
 
-void Caller::GetCharArrayParameter(uint32 index, character*& result) const
+void Caller::GetCharArrayParameter(uint32 index, character* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Char, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -165,7 +165,7 @@ void Caller::GetCharArrayParameter(uint32 index, character*& result) const
 	}
 }
 
-void Caller::GetIntegerArrayParameter(uint32 index, integer*& result) const
+void Caller::GetIntegerArrayParameter(uint32 index, integer* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Integer, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -176,7 +176,7 @@ void Caller::GetIntegerArrayParameter(uint32 index, integer*& result) const
 	}
 }
 
-void Caller::GetRealArrayParameter(uint32 index, real*& result) const
+void Caller::GetRealArrayParameter(uint32 index, real* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -187,7 +187,7 @@ void Caller::GetRealArrayParameter(uint32 index, real*& result) const
 	}
 }
 
-void Caller::GetReal2ArrayParameter(uint32 index, Real2*& result) const
+void Caller::GetReal2ArrayParameter(uint32 index, Real2* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real2, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -198,7 +198,7 @@ void Caller::GetReal2ArrayParameter(uint32 index, Real2*& result) const
 	}
 }
 
-void Caller::GetReal3ArrayParameter(uint32 index, Real3*& result) const
+void Caller::GetReal3ArrayParameter(uint32 index, Real3* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real3, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -209,7 +209,7 @@ void Caller::GetReal3ArrayParameter(uint32 index, Real3*& result) const
 	}
 }
 
-void Caller::GetReal4ArrayParameter(uint32 index, Real4*& result) const
+void Caller::GetReal4ArrayParameter(uint32 index, Real4* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Real4, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -220,7 +220,7 @@ void Caller::GetReal4ArrayParameter(uint32 index, Real4*& result) const
 	}
 }
 
-void Caller::GetEnumArrayValueParameter(uint32 index, integer*& result) const
+void Caller::GetEnumArrayValueParameter(uint32 index, integer* result) const
 {
 	Type type = info->parameters.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
@@ -232,7 +232,7 @@ void Caller::GetEnumArrayValueParameter(uint32 index, integer*& result) const
 	}
 }
 
-void Caller::GetEnumArrayNameParameter(uint32 index, RainString*& result) const
+void Caller::GetEnumArrayNameParameter(uint32 index, RainString* result) const
 {
 	Type type = info->parameters.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "参数类型错误");
@@ -249,7 +249,7 @@ void Caller::GetEnumArrayNameParameter(uint32 index, RainString*& result) const
 	}
 }
 
-void Caller::GetStringArrayParameter(uint32 index, RainString*& result) const
+void Caller::GetStringArrayParameter(uint32 index, RainString* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_String, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);
@@ -264,7 +264,7 @@ void Caller::GetStringArrayParameter(uint32 index, RainString*& result) const
 	}
 }
 
-void Caller::GetEntityArrayParameter(uint32 index, uint64*& result) const
+void Caller::GetEntityArrayParameter(uint32 index, uint64* result) const
 {
 	ASSERT(info->parameters.GetType(index) == Type(TYPE_Entity, 1), "参数类型错误");
 	Handle handle = PARAMETER_VALUE(Handle);

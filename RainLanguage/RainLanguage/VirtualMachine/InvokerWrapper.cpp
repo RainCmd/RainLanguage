@@ -226,7 +226,7 @@ Handle GetArrayReturnValue(const InvokerWrapper& wrapper, const Invoker* invoker
 	return *(Handle*)(invoker->data.GetPointer() + invoker->info->returns.GetOffset(index));
 }
 
-void InvokerWrapper::GetBoolArrayReturnValue(uint32 index, bool*& result) const
+void InvokerWrapper::GetBoolArrayReturnValue(uint32 index, bool* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Bool);
@@ -237,7 +237,7 @@ void InvokerWrapper::GetBoolArrayReturnValue(uint32 index, bool*& result) const
 	}
 }
 
-void InvokerWrapper::GetByteArrayReturnValue(uint32 index, uint8*& result) const
+void InvokerWrapper::GetByteArrayReturnValue(uint32 index, uint8* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Byte);
@@ -248,7 +248,7 @@ void InvokerWrapper::GetByteArrayReturnValue(uint32 index, uint8*& result) const
 	}
 }
 
-void InvokerWrapper::GetCharArrayReturnValue(uint32 index, character*& result) const
+void InvokerWrapper::GetCharArrayReturnValue(uint32 index, character* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Char);
@@ -259,7 +259,7 @@ void InvokerWrapper::GetCharArrayReturnValue(uint32 index, character*& result) c
 	}
 }
 
-void InvokerWrapper::GetIntegerArrayReturnValue(uint32 index, integer*& result) const
+void InvokerWrapper::GetIntegerArrayReturnValue(uint32 index, integer* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Integer);
@@ -270,7 +270,7 @@ void InvokerWrapper::GetIntegerArrayReturnValue(uint32 index, integer*& result) 
 	}
 }
 
-void InvokerWrapper::GetRealArrayReturnValue(uint32 index, real*& result) const
+void InvokerWrapper::GetRealArrayReturnValue(uint32 index, real* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Real);
@@ -281,7 +281,7 @@ void InvokerWrapper::GetRealArrayReturnValue(uint32 index, real*& result) const
 	}
 }
 
-void InvokerWrapper::GetReal2ArrayReturnValue(uint32 index, Real2*& result) const
+void InvokerWrapper::GetReal2ArrayReturnValue(uint32 index, Real2* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Real2);
@@ -292,7 +292,7 @@ void InvokerWrapper::GetReal2ArrayReturnValue(uint32 index, Real2*& result) cons
 	}
 }
 
-void InvokerWrapper::GetReal3ArrayReturnValue(uint32 index, Real3*& result) const
+void InvokerWrapper::GetReal3ArrayReturnValue(uint32 index, Real3* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Real3);
@@ -303,7 +303,7 @@ void InvokerWrapper::GetReal3ArrayReturnValue(uint32 index, Real3*& result) cons
 	}
 }
 
-void InvokerWrapper::GetReal4ArrayReturnValue(uint32 index, Real4*& result) const
+void InvokerWrapper::GetReal4ArrayReturnValue(uint32 index, Real4* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Real4);
@@ -314,7 +314,7 @@ void InvokerWrapper::GetReal4ArrayReturnValue(uint32 index, Real4*& result) cons
 	}
 }
 
-void InvokerWrapper::GetEnumValueArrayReturnValue(uint32 index, integer*& result) const
+void InvokerWrapper::GetEnumValueArrayReturnValue(uint32 index, integer* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Integer);
@@ -325,7 +325,7 @@ void InvokerWrapper::GetEnumValueArrayReturnValue(uint32 index, integer*& result
 	}
 }
 
-void InvokerWrapper::GetEnumNameArrayReturnValue(uint32 index, RainString*& result) const
+void InvokerWrapper::GetEnumNameArrayReturnValue(uint32 index, RainString* result) const
 {
 	ValidAssert(*this);
 	Invoker* source = INVOKER;
@@ -345,7 +345,7 @@ void InvokerWrapper::GetEnumNameArrayReturnValue(uint32 index, RainString*& resu
 	}
 }
 
-void InvokerWrapper::GetStringArrayReturnValue(uint32 index, RainString*& result) const
+void InvokerWrapper::GetStringArrayReturnValue(uint32 index, RainString* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_String);
@@ -360,7 +360,7 @@ void InvokerWrapper::GetStringArrayReturnValue(uint32 index, RainString*& result
 	}
 }
 
-void InvokerWrapper::GetEntityArrayReturnValue(uint32 index, uint64*& result) const
+void InvokerWrapper::GetEntityArrayReturnValue(uint32 index, uint64* result) const
 {
 	Invoker* source = INVOKER;
 	Handle handle = GetArrayReturnValue(*this, source, index, TYPE_Entity);

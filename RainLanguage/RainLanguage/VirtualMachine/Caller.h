@@ -40,18 +40,18 @@ public:
 	uint64 GetEntityParameter(uint32 index) const;
 
 	uint32 GetArrayParameterLength(uint32 index) const;
-	void GetBoolArrayParameter(uint32 index, bool*& result) const;
-	void GetByteArrayParameter(uint32 index, uint8*& result) const;
-	void GetCharArrayParameter(uint32 index, character*& result) const;
-	void GetIntegerArrayParameter(uint32 index, integer*& result) const;
-	void GetRealArrayParameter(uint32 index, real*& result) const;
-	void GetReal2ArrayParameter(uint32 index, Real2*& result) const;
-	void GetReal3ArrayParameter(uint32 index, Real3*& result) const;
-	void GetReal4ArrayParameter(uint32 index, Real4*& result) const;
-	void GetEnumArrayValueParameter(uint32 index, integer*& result) const;
-	void GetEnumArrayNameParameter(uint32 index, RainString*& result) const;
-	void GetStringArrayParameter(uint32 index, RainString*& result) const;
-	void GetEntityArrayParameter(uint32 index, uint64*& result) const;
+	void GetBoolArrayParameter(uint32 index, bool* result) const;
+	void GetByteArrayParameter(uint32 index, uint8* result) const;
+	void GetCharArrayParameter(uint32 index, character* result) const;
+	void GetIntegerArrayParameter(uint32 index, integer* result) const;
+	void GetRealArrayParameter(uint32 index, real* result) const;
+	void GetReal2ArrayParameter(uint32 index, Real2* result) const;
+	void GetReal3ArrayParameter(uint32 index, Real3* result) const;
+	void GetReal4ArrayParameter(uint32 index, Real4* result) const;
+	void GetEnumArrayValueParameter(uint32 index, integer* result) const;
+	void GetEnumArrayNameParameter(uint32 index, RainString* result) const;
+	void GetStringArrayParameter(uint32 index, RainString* result) const;
+	void GetEntityArrayParameter(uint32 index, uint64* result) const;
 
 	void SetReturnValue(uint32 index, bool value);
 	void SetReturnValue(uint32 index, uint8 value);
