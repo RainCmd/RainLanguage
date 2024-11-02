@@ -351,6 +351,12 @@
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ForeachStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\IteratorStatement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RainLanguage\KernelFunctions.cpp">
@@ -630,6 +636,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ForeachStatement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\IteratorStatement.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -13,6 +13,8 @@
 #include "Statements/LoopStatement.h"
 #include "Statements/WhileStatement.h"
 #include "Statements/ForStatement.h"
+#include "Statements/ForeachStatement.h"
+#include "Statements/IteratorStatement.h"
 #include "Statements/SubStatement.h"
 #include "Statements/TryStatement.h"
 #include "Statements/JumpStatement.h"
@@ -158,6 +160,15 @@ void CheckFunctionStatementValidity(MessageCollector* collector, Statement* stat
 void AddInitClosureStatement(BlockStatement* block, LocalContext* context, uint32 line)
 {
 	block->statements.Add(new InitClosureStatement(context->CurrentClosure(), INVALID, line));
+}
+
+void PushBlock(List<BlockStatement*, true>& blockStack, LocalContext* localContext, const Line& line)
+{
+	BlockStatement* block = new BlockStatement(Anchor(line.source, line.content, line.number, 0));
+	block->indent = line.indent;
+	blockStack.Peek()->statements.Add(block);
+	blockStack.Add(block);
+	localContext->PushBlock(NULL);
 }
 
 FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(), declaration(), parameters(0), returns(0), statements(new BlockStatement(Anchor()))
@@ -656,24 +667,108 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 				else if(lexical.anchor == KeyWord_for())
 				{
 					Anchor forExpression = lineAnchor.Sub(lexical.anchor.GetEnd()).Trim();
-					Anchor front, conditionAndBack;
-					if(Split(forExpression, forExpression.position, SplitFlag::Semicolon, front, conditionAndBack, parameter.manager->messages) == LexicalType::Semicolon)
+					Anchor element, collection;
+					if(Split(forExpression, forExpression.position, SplitFlag::Colon, element, collection, parameter.manager->messages) == LexicalType::Colon)
 					{
-						ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, destructor);
-						Expression* frontExpression = NULL, * conditionExpression = NULL, * backExpression = NULL;
-						parser.TryParse(front, frontExpression);
-						Anchor condition, back;
-						if(Split(conditionAndBack, conditionAndBack.position, SplitFlag::Semicolon, condition, back, parameter.manager->messages) == LexicalType::Semicolon)
+						if(!element.content.IsEmpty() && !collection.content.IsEmpty())
 						{
-							parser.TryParse(condition, conditionExpression);
-							parser.TryParse(back, backExpression);
+							PushBlock(blockStack, parameter.localContext, line);
+
+							ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, destructor);
+							Expression* collectionExpression = NULL;
+							if(parser.TryParse(collection, collectionExpression))
+							{
+								if(ContainAny(collectionExpression->attribute, Attribute::Value))
+								{
+									Expression* elementExpression = NULL;
+									const Type& type = collectionExpression->returns[0];
+									if(parameter.manager->IsInherit(TYPE_Collections_Enumerable, type))
+									{
+										if(parser.TryParse(element, elementExpression))
+										{
+											if(elementExpression->returns.Count() != 1) MESSAGE2(parameter.manager->messages, element, MessageType::ERROR_TYPE_NUMBER_ERROR)
+											else if(!ContainAny(elementExpression->attribute, Attribute::Assignable)) MESSAGE2(parameter.manager->messages, element, MessageType::ERROR_EXPRESSION_UNASSIGNABLE)
+											else if(ContainAny(elementExpression->type, ExpressionType::BlurryVariableDeclarationExpression)) parser.TryInferLeftValueType(elementExpression, TYPE_Handle);
+										}
+										blockStack.Peek()->statements.Add(new ForeachStatement(lexical.anchor, collectionExpression, elementExpression, parameter.manager, parameter.localContext));
+									}
+									else
+									{
+										//todo 支持对无参且第一个返回值是bool的委托迭代
+										//例如：
+										// delegate bool, integer Iterator()
+										// class A
+										//		integer[] values = {1, 2, 3}
+										//		public Iterator GetIterator()
+										//			var i = 0
+										//			return => i < values.GetLength(), (i < values.GetLength() ? values[i] : 0)
+										// Func()
+										//		var a = A()
+										//		for var v : a.GetIterator()
+										//			Print($"{v}\n")
+										AbstractDeclaration* abstractDeclaration = parameter.manager->GetDeclaration(type);
+										if(abstractDeclaration->declaration.category == DeclarationCategory::Delegate)
+										{
+											AbstractDelegate* abstractDelegate = (AbstractDelegate*)abstractDeclaration;
+											if(!abstractDelegate->parameters.Count() && abstractDelegate->returns.Count() > 1 && abstractDelegate->returns.GetType(0) == TYPE_Bool)
+											{
+												Span<Type, true> elementTypes = abstractDelegate->returns.GetTypesSpan().Slice(1);
+												if(parser.TryParse(element, elementExpression))
+												{
+													if(elementExpression->returns.Count() != elementTypes.Count()) MESSAGE2(parameter.manager->messages, element, MessageType::ERROR_TYPE_NUMBER_ERROR)
+													else if(!ContainAny(elementExpression->attribute, Attribute::Assignable)) MESSAGE2(parameter.manager->messages, element, MessageType::ERROR_EXPRESSION_UNASSIGNABLE)
+													else if(parser.TryInferLeftValueType(elementExpression, elementTypes))
+													{
+														List<Type, true> tuple(elementTypes.Count() + 1);
+														tuple.Add(TYPE_Bool);
+														tuple.Add(elementExpression->returns);
+														Local local = parameter.localContext->AddLocal(String(), element, TYPE_Bool);
+														List<Expression*, true> expressions(2);
+														expressions.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, TYPE_Bool));
+														expressions.Add(elementExpression);
+														elementExpression = new TupleExpression(element, tuple, expressions);
+
+													}
+												}
+											}
+											else MESSAGE2(parameter.manager->messages, collection, MessageType::ERROR_TYPE_NON_ITERABLE);
+										}
+										else MESSAGE2(parameter.manager->messages, collection, MessageType::ERROR_TYPE_NON_ITERABLE);
+										blockStack.Peek()->statements.Add(new IteratorStatement(lexical.anchor, collectionExpression, elementExpression));
+									}
+								}
+								else
+								{
+									MESSAGE2(parameter.manager->messages, collection, MessageType::ERROR_EXPRESSION_NOT_VALUE);
+									delete collectionExpression;
+								}
+							}
 						}
-						else parser.TryParse(conditionAndBack, conditionExpression);
-						if(conditionExpression && !(conditionExpression->returns.Count() == 1 && conditionExpression->returns[0] == TYPE_Bool))
-							MESSAGE2(parameter.manager->messages, conditionExpression->anchor, MessageType::ERROR_TYPE_MISMATCH);
-						blockStack.Peek()->statements.Add(new ForStatement(lexical.anchor, conditionExpression, frontExpression, backExpression));
+						else MESSAGE2(parameter.manager->messages, forExpression, MessageType::ERROR_MISSING_EXPRESSION);
 					}
-					else MESSAGE2(parameter.manager->messages, forExpression, MessageType::ERROR_MISSING_EXPRESSION);
+					else
+					{
+						Anchor front, conditionAndBack;
+						if(Split(forExpression, forExpression.position, SplitFlag::Semicolon, front, conditionAndBack, parameter.manager->messages) == LexicalType::Semicolon)
+						{
+							PushBlock(blockStack, parameter.localContext, line);
+
+							ExpressionParser parser = ExpressionParser(LogicGenerateParameter(parameter), context, parameter.localContext, NULL, destructor);
+							Expression* frontExpression = NULL, * conditionExpression = NULL, * backExpression = NULL;
+							parser.TryParse(front, frontExpression);
+							Anchor condition, back;
+							if(Split(conditionAndBack, conditionAndBack.position, SplitFlag::Semicolon, condition, back, parameter.manager->messages) == LexicalType::Semicolon)
+							{
+								parser.TryParse(condition, conditionExpression);
+								parser.TryParse(back, backExpression);
+							}
+							else parser.TryParse(conditionAndBack, conditionExpression);
+							if(conditionExpression && !(conditionExpression->returns.Count() == 1 && conditionExpression->returns[0] == TYPE_Bool))
+								MESSAGE2(parameter.manager->messages, conditionExpression->anchor, MessageType::ERROR_TYPE_MISMATCH);
+							blockStack.Peek()->statements.Add(new ForStatement(lexical.anchor, conditionExpression, frontExpression, backExpression));
+						}
+						else MESSAGE2(parameter.manager->messages, forExpression, MessageType::ERROR_MISSING_EXPRESSION);
+					}
 				}
 				else if(lexical.anchor == KeyWord_break())
 				{

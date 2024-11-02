@@ -612,7 +612,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_VARIABLES(false, TEXT("index"), TYPE_Integer, GET_FIELD_OFFSET(CollectionsArrayEnumerator, index));
 			List<uint32, true> memberFunctions = List<uint32, true>(1);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("Next"), CreateTypeList(TYPE_Bool, TYPE_Handle), CreateTypeList(TYPE_Collections_ArrayEnumerator), Collections_ArrayEnumerator_Next);
-			REGISTER_CLASS(true, root, TEXT("ArrayEnumerator"), KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, TYPE_Handle, CreateDeclarationList(TYPE_Collections_Enumerable), SIZE(CollectionsArrayEnumerator), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+			REGISTER_CLASS(true, root, TEXT("ArrayEnumerator"), KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, TYPE_Handle, CreateDeclarationList(TYPE_Collections_Enumerator), SIZE(CollectionsArrayEnumerator), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 	}
 	//space Reflection

@@ -74,6 +74,7 @@ enum class MessageType :uint32
 	ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT,					//委托返回值类型不一致
 	ERROR_INVALID_OPERATOR,					//无效的操作
 	ERROR_TYPE_MISMATCH,					//类型不匹配
+	ERROR_TYPE_NON_ITERABLE,				//类型不可迭代
 	ERROR_NOT_HANDLE_TYPE,					//不是句柄类型
 	ERROR_NOT_DELEGATE_TYPE,				//不是委托类型
 	ERROR_NOT_INTERFACE_TYPE,				//不是接口类型

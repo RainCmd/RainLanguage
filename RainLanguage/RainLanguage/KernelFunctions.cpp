@@ -2776,11 +2776,10 @@ String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter)//bool,
 	CHECK_THIS_VALUE_NULL(2);
 	HeapAgency* heapAgency = parameter.kernel->heapAgency;
 	bool& hasNext = RETURN_VALUE(bool, 0);
-	Handle& current = RETURN_VALUE(Handle, 0);
+	Handle& current = RETURN_VALUE(Handle, 1);
 	heapAgency->StrongRelease(current);
 	CollectionsArrayEnumerator& enumerator = THIS_VALUE(CollectionsArrayEnumerator);
-	integer length = heapAgency->GetArrayLength(enumerator.source);
-	hasNext = enumerator.index < current;
+	hasNext = enumerator.index < heapAgency->GetArrayLength(enumerator.source);
 	if(hasNext)
 	{
 		Type type = heapAgency->GetType(enumerator.source);

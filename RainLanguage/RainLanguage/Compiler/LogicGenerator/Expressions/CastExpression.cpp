@@ -1,6 +1,7 @@
 ﻿#include "CastExpression.h"
-#include "../../../Instruct.h"
 #include "Vector.h"
+#include "../../../Instruct.h"
+#include "../LocalContext.h"
 #include "../VariableGenerator.h"
 #include "VariableExpression.h"
 
@@ -78,7 +79,9 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 		parameter.generator->WriteCode(Instruct::BASE_JumpNotFlag);
 		parameter.generator->WriteCode(&endAddress);
 		LogicGenerateParameter localParameter = LogicGenerateParameter(parameter, 1);
-		local->Generator(localParameter);
+		bool isCaptures = parameter.localContext->captures.Contains(local->declaration.index);
+		if(isCaptures) localParameter.results[0] = parameter.variableGenerator->DecareTemporary(parameter.manager, local->returns[0]);
+		else local->Generator(localParameter);
 		if (IsHandleType(targetType))
 		{
 			parameter.generator->WriteCode(Instruct::ASSIGNMENT_Variable2Variable_Handle);
@@ -93,6 +96,7 @@ void IsCastExpression::Generator(LogicGenerateParameter& parameter)
 			parameter.generator->WriteCodeGlobalReference(targetType);
 			parameter.generator->WriteCode(parameter.finallyAddress);
 		}
+		if(isCaptures) local->GeneratorAssignment(localParameter);
 		endAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
 	}
 }

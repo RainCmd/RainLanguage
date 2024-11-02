@@ -262,6 +262,7 @@ bool DeclarationManager::TryGetInherit(const Type& baseType, const Type& subType
 				depth = 2;
 				return true;
 			}
+			return TryGetInherit(baseType, TYPE_Array, depth);
 		}
 		else if(subType.code == TypeCode::Delegate)
 		{
