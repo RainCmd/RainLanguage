@@ -230,7 +230,7 @@ RuntimeLibrary* LibraryAgency::Load(const Library* library)
 
 bool LibraryAgency::IsAssignable(const Type& variableType, const Type& objectType)
 {
-	if(variableType == objectType) return true;
+	if(variableType == objectType || variableType == TYPE_Handle) return true;
 	else if(!variableType.dimension)
 	{
 		if(objectType.dimension) return variableType == TYPE_Handle || variableType == TYPE_Array;
