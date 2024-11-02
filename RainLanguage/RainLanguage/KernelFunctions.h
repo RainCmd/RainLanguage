@@ -243,6 +243,9 @@ String task_GetResults(KernelInvokerParameter parameter);										//handle[] ta
 String array_GetLength(KernelInvokerParameter parameter);										//integer array.()
 String array_GetElement(KernelInvokerParameter parameter);										//handle array.(integer)
 String array_SetElement(KernelInvokerParameter parameter);										//array.(integer, handle)
+String array_GetEnumerator(KernelInvokerParameter parameter);									//Collections.ArrayEnumerator array.()
+
+String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter);						//bool, handle Collections.ArrayEnumerator.()
 
 String Reflection_ReadonlyValues_GetCount(KernelInvokerParameter parameter);					//integer Reflection.ReadonlyValues.()
 String Reflection_ReadonlyValues_GetStringElement(KernelInvokerParameter parameter);			//string Reflection.ReadonlyValues.(integer)

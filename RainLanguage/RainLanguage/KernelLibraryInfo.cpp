@@ -32,6 +32,14 @@
 		space->classes.Add(classes.Count());\
 		new (classes.Add())KernelLibraryInfo::Class(isPublic, parent, inherits, KERNEL_STRING(name), size, alignment, constructors, variables, functions);
 
+#define REGISTER_INTERFACE_FUNCTIONS(name,returns,parameters)\
+		new (memberFunctions.Add())Interface::Function(KERNEL_STRING(name), returns, parameters);
+
+#define REGISTER_INTERFACE(isPublic,space,name,index,inherits)\
+		ASSERT_DEBUG(interfaces.Count() == index, "接口类型索引错误");\
+		space->interfaces.Add(interfaces.Count());\
+		new (interfaces.Add())KernelLibraryInfo::Interface(isPublic, inherits, KERNEL_STRING(name), memberFunctions);
+
 #define REGISTER_FUNCTIONS(isPublic,space,name,returns,parameters,invoker)\
 		space->functions.Add(functions.Count());\
 		new (functions.Add())KernelLibraryInfo::Function(isPublic, KERNEL_STRING(name), returns, parameters, invoker);
@@ -77,7 +85,6 @@ inline TupleInfo CreateTypeList(const Type& type)
 	result.AddElement(type, 0);
 	return result;
 }
-
 inline TupleInfo CreateTypeList(const Type& type1, const Type& type2)
 {
 	TupleInfo result(2);
@@ -85,7 +92,6 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2)
 	result.AddElement(type2, 0);
 	return result;
 }
-
 inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3)
 {
 	TupleInfo result(3);
@@ -94,7 +100,6 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 	result.AddElement(type3, 0);
 	return result;
 }
-
 inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3, const Type& type4)
 {
 	TupleInfo result(4);
@@ -102,6 +107,13 @@ inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type
 	result.AddElement(type2, 0);
 	result.AddElement(type3, 0);
 	result.AddElement(type4, 0);
+	return result;
+}
+
+inline List<Declaration, true> CreateDeclarationList(const Declaration& declaration)
+{
+	List<Declaration, true> result(1);
+	result.Add(declaration);
 	return result;
 }
 
@@ -462,11 +474,12 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	}
 	//class array
 	{
-		List<uint32, true> memberFunctions = List<uint32, true>(3);
+		List<uint32, true> memberFunctions = List<uint32, true>(4);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetLength"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Array), array_GetLength);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Array, TYPE_Integer), array_GetElement);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("SetElement"), TupleInfo_EMPTY, CreateTypeList(TYPE_Array, TYPE_Integer, TYPE_Handle), array_SetElement);
-		REGISTER_CLASS(true, root, KeyWord_array(), KERNEL_TYPE_CLASS_INDEX_Array, TYPE_Handle, EMPTY_DECLARATIONS, 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetEnumerator"), CreateTypeList(TYPE_Collections_Enumerator), CreateTypeList(TYPE_Array), array_GetEnumerator);
+		REGISTER_CLASS(true, root, KeyWord_array(), KERNEL_TYPE_CLASS_INDEX_Array, TYPE_Handle, CreateDeclarationList(TYPE_Collections_Enumerable), 4, MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 	}
 	//space BitConvert
 	{
@@ -577,6 +590,31 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		REGISTER_FUNCTIONS(true, space, TEXT("GetCurrentTaskInstantID"), CreateTypeList(TYPE_Integer), TupleInfo_EMPTY, GetCurrentTaskInstantID);
 		REGISTER_FUNCTIONS(true, space, TEXT("CreateString"), CreateTypeList(TYPE_String), CreateTypeList(Type(TYPE_Char, 1), TYPE_Integer, TYPE_Integer), CreateString);
 	}
+	//space Collections
+	{
+		Space* space = new KernelLibraryInfo::Space(KERNEL_STRING(TEXT("Collections")), root);
+		//interface Enumerable
+		{
+			List<Interface::Function, true> memberFunctions = List<Interface::Function, true>(1);
+			REGISTER_INTERFACE_FUNCTIONS(TEXT("GetEnumerator"), CreateTypeList(TYPE_Collections_Enumerator), CreateTypeList(TYPE_Collections_Enumerable));
+			REGISTER_INTERFACE(true, space, TEXT("Enumerable"), KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerable, EMPTY_DECLARATIONS);
+		}
+		//interface Enumerator
+		{
+			List<Interface::Function, true> memberFunctions = List<Interface::Function, true>(1);
+			REGISTER_INTERFACE_FUNCTIONS(TEXT("Next"), CreateTypeList(TYPE_Bool, TYPE_Handle), CreateTypeList(TYPE_Collections_Enumerator));
+			REGISTER_INTERFACE(true, space, TEXT("Enumerator"), KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator, EMPTY_DECLARATIONS);
+		}
+		//class ArrayEnumerator
+		{
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
+			REGISTER_MEMBER_VARIABLES(false, TEXT("source"), TYPE_Handle, GET_FIELD_OFFSET(CollectionsArrayEnumerator, source));
+			REGISTER_MEMBER_VARIABLES(false, TEXT("index"), TYPE_Integer, GET_FIELD_OFFSET(CollectionsArrayEnumerator, index));
+			List<uint32, true> memberFunctions = List<uint32, true>(1);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("Next"), CreateTypeList(TYPE_Bool, TYPE_Handle), CreateTypeList(TYPE_Collections_ArrayEnumerator), Collections_ArrayEnumerator_Next);
+			REGISTER_CLASS(true, root, TEXT("ArrayEnumerator"), KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, TYPE_Handle, CreateDeclarationList(TYPE_Collections_Enumerable), SIZE(CollectionsArrayEnumerator), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+		}
+	}
 	//space Reflection
 	{
 		Space* space = new KernelLibraryInfo::Space(KERNEL_STRING(TEXT("Reflection")), root);
@@ -606,88 +644,88 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class ReadonlyStrings
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_ReadonlyStrings, TYPE_Integer), Reflection_ReadonlyValues_GetStringElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyStrings), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyStrings"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyTypes
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_ReadonlyTypes, TYPE_Integer), Reflection_ReadonlyValues_GetTypeElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyTypes), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyTypes"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyVariables
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Variable), CreateTypeList(TYPE_Reflection_ReadonlyVariables, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyVariables), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyVariables"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyVariables, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyMemberConstructors
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_MemberConstructor), CreateTypeList(TYPE_Reflection_ReadonlyMemberConstructors, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyMemberConstructors), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyMemberConstructors"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberConstructors, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyMemberVariables
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_MemberVariable), CreateTypeList(TYPE_Reflection_ReadonlyMemberVariables, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyMemberVariables), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyMemberVariables"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberVariables, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyMemberFunctions
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_MemberFunction), CreateTypeList(TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyMemberFunctions), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyMemberFunctions"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberFunctions, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyFunctions
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Function), CreateTypeList(TYPE_Reflection_ReadonlyFunctions, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyFunctions), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyFunctions"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyFunctions, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlyNatives
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Native), CreateTypeList(TYPE_Reflection_ReadonlyNatives, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyNatives), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlyNatives"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyNatives, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class ReadonlySpaces
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(2);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_ReadonlySpaces, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlySpaces), Reflection_ReadonlyValues_GetCount);
 			REGISTER_CLASS(true, space, TEXT("ReadonlySpaces"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlySpaces, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
 		}
 		//class Variable
 		{
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_IsPublic);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetSpace);
@@ -699,9 +737,9 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class MemberConstructor
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionMemberConstructor, parameters));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(5);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_IsPublic);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetDeclaringType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetDeclaringType);
@@ -711,7 +749,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class MemberVariable
 		{
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_IsPublic);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetDeclaringType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetDeclaringType);
@@ -723,10 +761,10 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class MemberFunction
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionMemberFunction, parameters));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("returns"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionMemberFunction, returns));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_IsPublic);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetDeclaringType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetDeclaringType);
@@ -738,10 +776,10 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class Function
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionFunction, parameters));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("returns"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionFunction, returns));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_IsPublic);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetSpace);
@@ -753,10 +791,10 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class Native
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionNative, parameters));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("returns"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionNative, returns));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_IsPublic);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetSpace);
@@ -768,14 +806,14 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class Space
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(0);
+			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(6);
 			REGISTER_MEMBER_VARIABLES(false, TEXT("attributes"), TYPE_Reflection_ReadonlyStrings, GET_FIELD_OFFSET(ReflectionSpace, attributes));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("children"), TYPE_Reflection_ReadonlySpaces, GET_FIELD_OFFSET(ReflectionSpace, children));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("types"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionSpace, types));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("variables"), TYPE_Reflection_ReadonlyVariables, GET_FIELD_OFFSET(ReflectionSpace, variables));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("functions"), TYPE_Reflection_ReadonlyFunctions, GET_FIELD_OFFSET(ReflectionSpace, functions));
 			REGISTER_MEMBER_VARIABLES(false, TEXT("natives"), TYPE_Reflection_ReadonlyNatives, GET_FIELD_OFFSET(ReflectionSpace, natives));
-			List<uint32, true> memberFunctions = List<uint32, true>(0);
+			List<uint32, true> memberFunctions = List<uint32, true>(9);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParent"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetParent);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetChildren"), CreateTypeList(TYPE_Reflection_ReadonlySpaces), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetChildren);

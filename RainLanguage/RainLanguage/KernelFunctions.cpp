@@ -2753,7 +2753,60 @@ String array_SetElement(KernelInvokerParameter parameter)//array.(integer, handl
 	else return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	return String();
 }
+String array_GetEnumerator(KernelInvokerParameter parameter)//Collections.ArrayEnumerator array.()
+{
+	CHECK_THIS_VALUE_NULL(1);
+	Handle& returnValue = RETURN_VALUE(Handle, 0);
+	HeapAgency* heapAgency = parameter.kernel->heapAgency;
+	heapAgency->StrongRelease(returnValue);
+	String error;
+	returnValue = heapAgency->Alloc((Declaration)TYPE_Collections_ArrayEnumerator, error);
+	heapAgency->StrongReference(returnValue);
+	if(!error.IsEmpty()) return error;
+	CollectionsArrayEnumerator* result = (CollectionsArrayEnumerator*)heapAgency->GetPoint(returnValue);
+	result->source = thisHandle;
+	heapAgency->WeakReference(thisHandle);
+	return String();
+}
 #pragma endregion 基础类型成员函数
+
+#pragma region 集合
+String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter)//bool, handle Collections.ArrayEnumerator.()
+{
+	CHECK_THIS_VALUE_NULL(2);
+	HeapAgency* heapAgency = parameter.kernel->heapAgency;
+	bool& hasNext = RETURN_VALUE(bool, 0);
+	Handle& current = RETURN_VALUE(Handle, 0);
+	heapAgency->StrongRelease(current);
+	CollectionsArrayEnumerator& enumerator = THIS_VALUE(CollectionsArrayEnumerator);
+	integer length = heapAgency->GetArrayLength(enumerator.source);
+	hasNext = enumerator.index < current;
+	if(hasNext)
+	{
+		Type type = heapAgency->GetType(enumerator.source);
+		type.dimension--;
+		uint8* address = heapAgency->GetArrayPoint(enumerator.source, enumerator.index);
+		if(IsHandleType(type)) current = *(Handle*)address;
+		else
+		{
+			String error;
+			current = heapAgency->Alloc((Declaration)type, error);
+			if(!error.IsEmpty()) return error;
+			Mcopy(address, heapAgency->GetPoint(current), parameter.kernel->libraryAgency->GetTypeStackSize(type));
+			if(type.code == TypeCode::Struct)
+				parameter.kernel->libraryAgency->GetStruct(type)->WeakReference(parameter.kernel, address);
+		}
+		heapAgency->StrongReference(current);
+		enumerator.index++;
+	}
+	else
+	{
+		enumerator.index = 0;
+		current = NULL;
+	}
+	return String();
+}
+#pragma endregion 集合
 
 #pragma region 反射
 String Reflection_ReadonlyValues_GetCount(KernelInvokerParameter parameter)//integer Reflection.ReadonlyValues.()

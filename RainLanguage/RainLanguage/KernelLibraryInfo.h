@@ -94,11 +94,13 @@ public:
 		struct Function : CallableInfo
 		{
 			String name;
+			inline Function(const String& name, const TupleInfo& returns, const TupleInfo& parameters) :name(name), CallableInfo(returns, parameters) {}
 		};
 		bool isPublic;
 		List<Declaration, true> inherits;
 		String name;
 		List<Function, true> functions;
+		inline Interface(bool isPublic, const List<Declaration, true>& inherits, const String& name, const List<Function, true>& functions) :isPublic(isPublic), inherits(inherits), name(name), functions(functions) {}
 	};
 	struct Delegate : CallableInfo
 	{

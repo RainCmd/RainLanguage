@@ -22,10 +22,15 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_STRUCT_INDEX_Entity,
 	KERNEL_TYPE_STRUCT_COUNT,
 
+	KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerable = 0,
+	KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator,
+	KERNEL_TYPE_INTERFACE_COUNT,
+
 	KERNEL_TYPE_CLASS_INDEX_Handle = 0,
 	KERNEL_TYPE_CLASS_INDEX_Delegate,
 	KERNEL_TYPE_CLASS_INDEX_Task,
 	KERNEL_TYPE_CLASS_INDEX_Array,
+	KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyVariables,
@@ -258,6 +263,10 @@ const Type TYPE_Delegate = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CL
 const Type TYPE_Task = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Task, 0);
 const Type TYPE_Array = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Array, 0);
 
+const Type TYPE_Collections_Enumerable = Type(LIBRARY_KERNEL, TypeCode::Interface, KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerable, 0);
+const Type TYPE_Collections_Enumerator = Type(LIBRARY_KERNEL, TypeCode::Interface, KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator, 0);
+const Type TYPE_Collections_ArrayEnumerator = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, 0);
+
 const Type TYPE_Reflection_ReadonlyStrings = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings, 0);
 const Type TYPE_Reflection_ReadonlyTypes = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes, 0);
 const Type TYPE_Reflection_ReadonlyVariables = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyVariables, 0);
@@ -275,6 +284,14 @@ const Type TYPE_Reflection_Function = Type(LIBRARY_KERNEL, TypeCode::Handle, KER
 const Type TYPE_Reflection_Native = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Native, 0);
 const Type TYPE_Reflection_Space = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Space, 0);
 const Type TYPE_Reflection_Assembly = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly, 0);
+
+const struct CollectionsArrayEnumerator
+{
+	Handle source;
+	integer index;
+	inline CollectionsArrayEnumerator() :source(NULL), index(0) {}
+	inline CollectionsArrayEnumerator(Handle source, integer index) : source(source), index(index) {}
+};
 
 const struct ReflectionReadonlyValues
 {
@@ -324,8 +341,8 @@ const struct ReflectionSpace
 
 inline bool IsHandleType(const Type& type)
 {
-	if (type.dimension) return true;
-	switch (type.code)
+	if(type.dimension) return true;
+	switch(type.code)
 	{
 		case TypeCode::Handle:
 		case TypeCode::Interface:
@@ -337,3 +354,5 @@ inline bool IsHandleType(const Type& type)
 
 const MemberFunction MEMBER_FUNCTION_Enum_ToString = MemberFunction(TYPE_Enum, 0);
 const MemberFunction MEMBER_FUNCTION_Handle_ToString = MemberFunction(TYPE_Handle, 1);
+const MemberFunction MEMBER_FUNCTION_Enumerable_GetEnumerator = MemberFunction(TYPE_Collections_Enumerable, 0);
+const MemberFunction MEMBER_FUNCTION_Enumerator_Next = MemberFunction(TYPE_Collections_Enumerator, 0);
