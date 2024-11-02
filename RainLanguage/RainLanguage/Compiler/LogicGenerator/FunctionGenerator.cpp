@@ -694,47 +694,24 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 									}
 									else
 									{
-										//todo 支持对无参且第一个返回值是bool的委托迭代
-										//例如：
-										// delegate bool, integer Iterator()
-										// class A
-										//		integer[] values = {1, 2, 3}
-										//		public Iterator GetIterator()
-										//			var i = 0
-										//			return => i < values.GetLength(), (i < values.GetLength() ? values[i] : 0)
-										// Func()
-										//		var a = A()
-										//		for var v : a.GetIterator()
-										//			Print($"{v}\n")
 										AbstractDeclaration* abstractDeclaration = parameter.manager->GetDeclaration(type);
 										if(abstractDeclaration->declaration.category == DeclarationCategory::Delegate)
 										{
 											AbstractDelegate* abstractDelegate = (AbstractDelegate*)abstractDeclaration;
-											if(!abstractDelegate->parameters.Count() && abstractDelegate->returns.Count() > 1 && abstractDelegate->returns.GetType(0) == TYPE_Bool)
+											if(!abstractDelegate->parameters.Count() && abstractDelegate->returns.Count() > 0 && abstractDelegate->returns.GetType(0) == TYPE_Bool)
 											{
 												Span<Type, true> elementTypes = abstractDelegate->returns.GetTypesSpan().Slice(1);
 												if(parser.TryParse(element, elementExpression))
 												{
 													if(elementExpression->returns.Count() != elementTypes.Count()) MESSAGE2(parameter.manager->messages, element, MessageType::ERROR_TYPE_NUMBER_ERROR)
 													else if(!ContainAny(elementExpression->attribute, Attribute::Assignable)) MESSAGE2(parameter.manager->messages, element, MessageType::ERROR_EXPRESSION_UNASSIGNABLE)
-													else if(parser.TryInferLeftValueType(elementExpression, elementTypes))
-													{
-														List<Type, true> tuple(elementTypes.Count() + 1);
-														tuple.Add(TYPE_Bool);
-														tuple.Add(elementExpression->returns);
-														Local local = parameter.localContext->AddLocal(String(), element, TYPE_Bool);
-														List<Expression*, true> expressions(2);
-														expressions.Add(new VariableLocalExpression(lexical.anchor, local.GetDeclaration(), Attribute::Assignable, TYPE_Bool));
-														expressions.Add(elementExpression);
-														elementExpression = new TupleExpression(element, tuple, expressions);
-
-													}
+													else parser.TryInferLeftValueType(elementExpression, elementTypes);
 												}
 											}
 											else MESSAGE2(parameter.manager->messages, collection, MessageType::ERROR_TYPE_NON_ITERABLE);
 										}
 										else MESSAGE2(parameter.manager->messages, collection, MessageType::ERROR_TYPE_NON_ITERABLE);
-										blockStack.Peek()->statements.Add(new IteratorStatement(lexical.anchor, collectionExpression, elementExpression));
+										blockStack.Peek()->statements.Add(new IteratorStatement(lexical.anchor, collectionExpression, elementExpression, parameter.manager, &parser));
 									}
 								}
 								else

@@ -1,8 +1,6 @@
 #pragma once
 #include "LoopStatement.h"
 
-class LocalContext;
-struct DeclarationManager;
 class ForeachStatement :public LoopStatement
 {
 public:

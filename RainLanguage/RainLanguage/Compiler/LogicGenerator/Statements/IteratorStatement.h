@@ -1,10 +1,12 @@
 #pragma once
 #include "LoopStatement.h"
+struct ExpressionParser;
 class IteratorStatement : public LoopStatement
 {
 public:
 	Expression* element;
-	IteratorStatement(const Anchor& anchor, Expression* condition, Expression* element) : LoopStatement(StatementType::Iterator, anchor, condition), element(element) {}
+	uint32 conditionLocalIndex;
+	IteratorStatement(const Anchor& anchor, Expression* condition, Expression* element, DeclarationManager* manager, ExpressionParser* parser);
 	void Generator(StatementGeneratorParameter& parameter);
 	~IteratorStatement();
 };
