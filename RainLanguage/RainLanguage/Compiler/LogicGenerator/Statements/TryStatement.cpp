@@ -108,6 +108,9 @@ void TryStatement::Generator(StatementGeneratorParameter& parameter)
 
 		CodeLocalAddressReference catchBlockExceptionAddress = CodeLocalAddressReference();
 		LogicVariable exitCode = GeneratorCatchBlocks(parameter, &catchBlockExceptionAddress);
+		parameter.generator->WriteCode(Instruct::ASSIGNMENT_Address2Variable);
+		parameter.generator->WriteCode(finallyTarget, VariableAccessType::Write);
+		parameter.generator->WriteCode(&tryEndAddress);
 		parameter.generator->WriteCode(Instruct::BASE_Jump);
 		parameter.generator->WriteCode(&finallyAddress);
 		catchBlockExceptionAddress.SetAddress(parameter.generator, parameter.generator->GetPointer());
