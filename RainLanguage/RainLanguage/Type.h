@@ -95,14 +95,6 @@ const struct MemberVariable
 	inline MemberVariable(const Declaration& declaration, uint32 variable) : declaration(declaration), variable(variable) {}
 	inline MemberVariable(uint32 library, TypeCode code, uint32 index, uint32 variable) : declaration(library, code, index), variable(variable) {}
 };
-const struct ConstructorFunction
-{
-	Declaration declaration;
-	uint32 function;//成员函数索引，不是全局的
-	inline ConstructorFunction() :declaration(), function(INVALID) {}
-	inline ConstructorFunction(const Declaration& declaration, uint32 function) : declaration(declaration), function(function) {}
-	inline ConstructorFunction(uint32 library, TypeCode code, uint32 index, uint32 function) : declaration(library, code, index), function(function) {}
-};
 const struct MemberFunction
 {
 	Declaration declaration;

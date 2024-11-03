@@ -66,26 +66,14 @@ void GCFieldInfo::ColletcGCFields(Kernel* kernel, const List<RuntimeMemberVariab
 
 Handle RuntimeInfo::GetReflectionAttributes(Kernel* kernel, String& error)
 {
-	if(!reflectionAttributes)
+	Handle result = kernel->heapAgency->Alloc(TYPE_String, attributes.Count(), error);
+	if(!error.IsEmpty()) return NULL;
+	for(uint32 i = 0; i < attributes.Count(); i++)
 	{
-		reflectionAttributes = kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_ReadonlyStrings, error);
-		if(!error.IsEmpty()) return NULL;
-		kernel->heapAgency->StrongReference(reflectionAttributes);
-		Handle result = kernel->heapAgency->Alloc(TYPE_String, attributes.Count(), error);
-		if(!error.IsEmpty())
-		{
-			kernel->heapAgency->StrongRelease(reflectionAttributes);
-			return NULL;
-		}
-		*(Handle*)kernel->heapAgency->GetPoint(reflectionAttributes) = result;
-		kernel->heapAgency->WeakReference(result);
-		for(uint32 i = 0; i < attributes.Count(); i++)
-		{
-			*(string*)kernel->heapAgency->GetArrayPoint(result, i) = attributes[i];
-			kernel->stringAgency->Reference(attributes[i]);
-		}
+		*(string*)kernel->heapAgency->GetArrayPoint(result, i) = attributes[i];
+		kernel->stringAgency->Reference(attributes[i]);
 	}
-	return reflectionAttributes;
+	return result;
 }
 
 String RuntimeInfo::GetFullName(Kernel* kernel, uint32 library)
@@ -151,13 +139,13 @@ String RuntimeEnum::ToString(integer value, StringAgency* agency)
 
 Handle RuntimeFunction::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Function, ReflectionFunction, libraryIndex, functionIndex, error);
+	CREATE_REFLECTION((Declaration)TYPE_Reflection_Function, Function, libraryIndex, functionIndex, error);
 	return reflection;
 }
 
 Handle RuntimeNative::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Native, ReflectionNative, libraryIndex, nativeIndex, error);
+	CREATE_REFLECTION((Declaration)TYPE_Reflection_Native, Native, libraryIndex, nativeIndex, error);
 	return reflection;
 }
 

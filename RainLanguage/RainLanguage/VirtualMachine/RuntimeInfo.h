@@ -18,9 +18,8 @@ struct GCFieldInfo
 };
 struct RuntimeInfo :DeclarationInfo
 {
-	Handle reflectionAttributes;
 	uint32 space;
-	inline RuntimeInfo(bool isPublic, const List<string, true>& attributes, string name, uint32 space) :DeclarationInfo(isPublic, attributes, name), reflectionAttributes(NULL), space(space) {}
+	inline RuntimeInfo(bool isPublic, const List<string, true>& attributes, string name, uint32 space) :DeclarationInfo(isPublic, attributes, name), space(space) {}
 	Handle GetReflectionAttributes(Kernel* kernel, String& error);
 	String GetFullName(Kernel* kernel, uint32 library);
 };
@@ -43,9 +42,8 @@ struct RuntimeEnum :RuntimeInfo
 		integer value;
 		inline Element(string name, integer value) :name(name), value(value) {}
 	};
-	Handle reflectionFunctions;
 	List<Element, true>values;
-	inline RuntimeEnum(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const List<Element, true>& values) :RuntimeInfo(isPublic, attributes, name, space), reflectionFunctions(NULL), values(values) {}
+	inline RuntimeEnum(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const List<Element, true>& values) :RuntimeInfo(isPublic, attributes, name, space), values(values) {}
 	String ToString(integer value, StringAgency* agency);
 };
 
@@ -59,13 +57,11 @@ struct RuntimeMemberVariable :RuntimeInfo
 
 struct RuntimeStruct :RuntimeInfo, GCFieldInfo
 {
-	Handle reflectionFunctions;
-	Handle reflectionVariables;
 	List<RuntimeMemberVariable> variables;
 	List<uint32, true> functions;
 	uint32 size;
 	uint8 alignment;
-	inline RuntimeStruct(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const List<RuntimeMemberVariable>& variables, const List<uint32, true>& functions, uint32 size, uint8 alignment) : RuntimeInfo(isPublic, attributes, name, space), reflectionFunctions(NULL), reflectionVariables(NULL), variables(variables), functions(functions), size(size), alignment(alignment) {}
+	inline RuntimeStruct(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const List<RuntimeMemberVariable>& variables, const List<uint32, true>& functions, uint32 size, uint8 alignment) : RuntimeInfo(isPublic, attributes, name, space), variables(variables), functions(functions), size(size), alignment(alignment) {}
 	inline void ColletcGCFields(Kernel* kernel) { GCFieldInfo::ColletcGCFields(kernel, variables); }
 };
 
@@ -78,10 +74,6 @@ public:
 		uint32 characteristic;
 		inline FunctionInfo(uint32 index) :index(index), characteristic(INVALID) {}
 	};
-	Handle reflectionInherits;
-	Handle reflectionConstructors;
-	Handle reflectionFunctions;
-	Handle reflectionVariables;
 	List<Declaration, true> parents;
 	Set<Declaration, true> inherits;//包含父类继承的接口
 	uint32 offset;
@@ -92,7 +84,7 @@ public:
 	List<FunctionInfo, true> functions;
 	Dictionary<uint32, MemberFunction, true> relocations;//包含所有继承类的接口和函数
 	uint32 destructor;//析构函数地址，INVALID表示没有析构函数
-	inline RuntimeClass(bool isPublic, const List<string, true>& attributes, string name, uint32 space, List<Declaration, true> parents, Set<Declaration, true> inherits, uint32 size, uint8 alignment, List<uint32, true> constructors, List<RuntimeMemberVariable> variables, List<FunctionInfo, true> functions, uint32 destructor) : RuntimeInfo(isPublic, attributes, name, space), reflectionInherits(NULL), reflectionConstructors(NULL), reflectionFunctions(NULL), reflectionVariables(NULL), parents(parents), inherits(inherits), offset(INVALID), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions), relocations(0), destructor(destructor) {}
+	inline RuntimeClass(bool isPublic, const List<string, true>& attributes, string name, uint32 space, List<Declaration, true> parents, Set<Declaration, true> inherits, uint32 size, uint8 alignment, List<uint32, true> constructors, List<RuntimeMemberVariable> variables, List<FunctionInfo, true> functions, uint32 destructor) : RuntimeInfo(isPublic, attributes, name, space), parents(parents), inherits(inherits), offset(INVALID), size(size), alignment(alignment), constructors(constructors), variables(variables), functions(functions), relocations(0), destructor(destructor) {}
 	inline void ColletcGCFields(Kernel* kernel) { GCFieldInfo::ColletcGCFields(kernel, variables); }
 };
 
@@ -103,17 +95,14 @@ struct RuntimeInterface :RuntimeInfo
 		uint32 characteristic;
 		inline FunctionInfo(bool isPublic, const List<string, true>& attributes, string name, const TupleInfo& returns, const TupleInfo& parameters) :DeclarationInfo(isPublic, attributes, name), CallableInfo(returns, parameters), characteristic(INVALID) {}
 	};
-	Handle reflectionInherits;
-	Handle reflectionFunctions;
 	Set<Declaration, true> inherits;//包含所有继承的接口
 	List<FunctionInfo> functions;
-	inline RuntimeInterface(bool isPublic, const List<string, true>& attributes, string name, uint32 space, Set<Declaration, true> inherits, List<FunctionInfo> functions) :RuntimeInfo(isPublic, attributes, name, space), reflectionInherits(NULL), reflectionFunctions(NULL), inherits(inherits), functions(functions) {}
+	inline RuntimeInterface(bool isPublic, const List<string, true>& attributes, string name, uint32 space, Set<Declaration, true> inherits, List<FunctionInfo> functions) :RuntimeInfo(isPublic, attributes, name, space), inherits(inherits), functions(functions) {}
 };
 
 struct RuntimeDelegate :RuntimeInfo, CallableInfo
 {
-	Handle reflectionParameters, reflectionReturns;
-	inline RuntimeDelegate(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflectionParameters(NULL), reflectionReturns(NULL) {}
+	inline RuntimeDelegate(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters) {}
 };
 
 struct RuntimeTask :RuntimeInfo

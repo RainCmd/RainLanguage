@@ -63,13 +63,6 @@ public:
 		else if(function.declaration.code == TypeCode::Handle)return library->functions[library->classes[function.declaration.index].functions[function.function].index].entry;
 		EXCEPTION("类型错误");
 	}
-	inline uint32 GetFunctionEntry(const ConstructorFunction& function)
-	{
-		RuntimeLibrary* library = GetLibrary(function.declaration.library);
-		if(function.declaration.code == TypeCode::Handle)
-			return library->functions[library->classes[function.declaration.index].constructors[function.function]].entry;
-		EXCEPTION("类型错误");
-	}
 	inline uint32 GetFunctionEntry(const Function& function)
 	{
 		RuntimeLibrary* library = GetLibrary(function.library);
