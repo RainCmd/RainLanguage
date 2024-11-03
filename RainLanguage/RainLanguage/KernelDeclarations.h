@@ -22,24 +22,11 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_STRUCT_INDEX_Entity,
 	KERNEL_TYPE_STRUCT_COUNT,
 
-	KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerable = 0,
-	KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator,
-	KERNEL_TYPE_INTERFACE_COUNT,
-
 	KERNEL_TYPE_CLASS_INDEX_Handle = 0,
 	KERNEL_TYPE_CLASS_INDEX_Delegate,
 	KERNEL_TYPE_CLASS_INDEX_Task,
 	KERNEL_TYPE_CLASS_INDEX_Array,
 	KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyVariables,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberConstructors,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberVariables,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberFunctions,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyFunctions,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyNatives,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlySpaces,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_Variable,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_MemberConstructor,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_MemberVariable,
@@ -49,6 +36,10 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_CLASS_INDEX_Reflection_Space,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly,
 	KERNEL_TYPE_CLASS_COUNT,
+
+	KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerable = 0,
+	KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator,
+	KERNEL_TYPE_INTERFACE_COUNT,
 };
 enum KERNEL_TASK_STATE_INDEX
 {
@@ -267,15 +258,6 @@ const Type TYPE_Collections_Enumerable = Type(LIBRARY_KERNEL, TypeCode::Interfac
 const Type TYPE_Collections_Enumerator = Type(LIBRARY_KERNEL, TypeCode::Interface, KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator, 0);
 const Type TYPE_Collections_ArrayEnumerator = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, 0);
 
-const Type TYPE_Reflection_ReadonlyStrings = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings, 0);
-const Type TYPE_Reflection_ReadonlyTypes = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes, 0);
-const Type TYPE_Reflection_ReadonlyVariables = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyVariables, 0);
-const Type TYPE_Reflection_ReadonlyMemberConstructors = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberConstructors, 0);
-const Type TYPE_Reflection_ReadonlyMemberVariables = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberVariables, 0);
-const Type TYPE_Reflection_ReadonlyMemberFunctions = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberFunctions, 0);
-const Type TYPE_Reflection_ReadonlyFunctions = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyFunctions, 0);
-const Type TYPE_Reflection_ReadonlyNatives = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyNatives, 0);
-const Type TYPE_Reflection_ReadonlySpaces = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlySpaces, 0);
 const Type TYPE_Reflection_Variable = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Variable, 0);
 const Type TYPE_Reflection_MemberConstructor = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_MemberConstructor, 0);
 const Type TYPE_Reflection_MemberVariable = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_MemberVariable, 0);
@@ -285,6 +267,7 @@ const Type TYPE_Reflection_Native = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNE
 const Type TYPE_Reflection_Space = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Space, 0);
 const Type TYPE_Reflection_Assembly = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly, 0);
 
+
 const struct CollectionsArrayEnumerator
 {
 	Handle source;
@@ -293,50 +276,12 @@ const struct CollectionsArrayEnumerator
 	inline CollectionsArrayEnumerator(Handle source, integer index) : source(source), index(index) {}
 };
 
-const struct ReflectionReadonlyValues
-{
-	Handle values;
-	inline ReflectionReadonlyValues() :values(NULL) {}
-	inline ReflectionReadonlyValues(Handle values) : values(values) {}
-};
-
-const struct ReflectionMemberConstructor :MemberFunction
-{
-	Handle parameters;
-	inline ReflectionMemberConstructor() :MemberFunction(), parameters(NULL) {}
-	inline ReflectionMemberConstructor(const Declaration& declaration, uint32 function) : MemberFunction(declaration, function), parameters(NULL) {}
-	inline ReflectionMemberConstructor(uint32 library, TypeCode code, uint32 index, uint32 function) : MemberFunction(library, code, index, function), parameters(NULL) {}
-};
-
-const struct ReflectionMemberFunction :MemberFunction
-{
-	Handle parameters, returns;
-	inline ReflectionMemberFunction() :MemberFunction(), parameters(NULL), returns(NULL) {}
-	inline ReflectionMemberFunction(const Declaration& declaration, uint32 function) : MemberFunction(declaration, function), parameters(NULL), returns(NULL) {}
-	inline ReflectionMemberFunction(uint32 library, TypeCode code, uint32 index, uint32 function) : MemberFunction(library, code, index, function), parameters(NULL), returns(NULL) {}
-};
-
-const struct ReflectionFunction :Function
-{
-	Handle parameters, returns;
-	inline ReflectionFunction() :Function(), parameters(NULL), returns(NULL) {}
-	inline ReflectionFunction(uint32 library, uint32 index) : Function(library, index), parameters(NULL), returns(NULL) {}
-};
-
-const struct ReflectionNative :Native
-{
-	Handle parameters, returns;
-	inline ReflectionNative() :Native(), parameters(NULL), returns(NULL) {}
-	inline ReflectionNative(uint32 library, uint32 index) : Native(library, index), parameters(NULL), returns(NULL) {}
-};
-
 const struct ReflectionSpace
 {
 	uint32 library;
 	uint32 index;
-	Handle attributes, children, types, variables, functions, natives;
-	inline ReflectionSpace() :library(INVALID), index(INVALID), attributes(NULL), children(NULL), types(NULL), variables(NULL), functions(NULL), natives(NULL) {}
-	inline ReflectionSpace(uint32 library, uint32 index) : library(library), index(index), attributes(NULL), children(NULL), types(NULL), variables(NULL), functions(NULL), natives(NULL) {}
+	inline ReflectionSpace() :library(INVALID), index(INVALID) {}
+	inline ReflectionSpace(uint32 library, uint32 index) : library(library), index(index) {}
 };
 
 inline bool IsHandleType(const Type& type)

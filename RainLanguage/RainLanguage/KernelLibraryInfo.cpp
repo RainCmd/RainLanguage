@@ -399,21 +399,21 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 	{
 		List<uint32, true> memberFunctions = List<uint32, true>(25);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Type), type_IsPublic);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Type), type_GetAttributes);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Type), type_GetAttributes);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Type), type_GetName);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParent"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Type), type_GetParent);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetInherits"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetInherits);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetConstructors"), CreateTypeList(TYPE_Reflection_ReadonlyMemberConstructors), CreateTypeList(TYPE_Type), type_GetConstructors);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetVariables"), CreateTypeList(TYPE_Reflection_ReadonlyMemberVariables), CreateTypeList(TYPE_Type), type_GetVariables);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetFunctions"), CreateTypeList(TYPE_Reflection_ReadonlyMemberFunctions), CreateTypeList(TYPE_Type), type_GetFunctions);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetInherits"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Type), type_GetInherits);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetConstructors"), CreateTypeList(Type(TYPE_Reflection_MemberConstructor, 1)), CreateTypeList(TYPE_Type), type_GetConstructors);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetVariables"), CreateTypeList(Type(TYPE_Reflection_MemberVariable, 1)), CreateTypeList(TYPE_Type), type_GetVariables);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetFunctions"), CreateTypeList(Type(TYPE_Reflection_MemberFunction, 1)), CreateTypeList(TYPE_Type), type_GetFunctions);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Type), type_GetSpace);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetTypeCode"), CreateTypeList(TYPE_Reflection_TypeCode), CreateTypeList(TYPE_Type), type_GetTypeCode);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsAssignable"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Type, TYPE_Type), type_IsAssignable);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsValid"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Type), type_IsValid);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetEnumElements"), CreateTypeList(Type(TYPE_Integer, 1)), CreateTypeList(TYPE_Type), type_GetEnumElements);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetEnumElementNames"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Type), type_GetEnumElementNames);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetParameters);
-		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Type), type_GetReturns);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Type), type_GetParameters);
+		REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Type), type_GetReturns);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("CreateUninitialized"), CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Type), type_CreateUninitialized);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("CreateDelegate"), CreateTypeList(TYPE_Delegate), CreateTypeList(TYPE_Type, TYPE_Reflection_Native), type_CreateDelegate2);
 		REGISTER_MEMBER_FUNCTIONS(true, TEXT("CreateDelegate"), CreateTypeList(TYPE_Delegate), CreateTypeList(TYPE_Type, TYPE_Reflection_MemberFunction, TYPE_Handle), type_CreateDelegate3);
@@ -642,92 +642,11 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISIER_ENUM_ELEMENT(TEXT("Array"), KERNEL_TYPE_CODE_Array, KernelReflectionTypeCode::Array);
 			REGISIER_ENUM(true, space, TEXT("TypeCode"), KERNEL_TYPE_ENUM_INDEX_TypeCode, elements);
 		}
-		//class ReadonlyStrings
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_ReadonlyStrings, TYPE_Integer), Reflection_ReadonlyValues_GetStringElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyStrings), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyStrings"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyStrings, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyTypes
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_ReadonlyTypes, TYPE_Integer), Reflection_ReadonlyValues_GetTypeElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyTypes), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyTypes"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyTypes, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyVariables
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Variable), CreateTypeList(TYPE_Reflection_ReadonlyVariables, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyVariables), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyVariables"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyVariables, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyMemberConstructors
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_MemberConstructor), CreateTypeList(TYPE_Reflection_ReadonlyMemberConstructors, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyMemberConstructors), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyMemberConstructors"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberConstructors, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyMemberVariables
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_MemberVariable), CreateTypeList(TYPE_Reflection_ReadonlyMemberVariables, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyMemberVariables), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyMemberVariables"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberVariables, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyMemberFunctions
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_MemberFunction), CreateTypeList(TYPE_Reflection_ReadonlyMemberFunctions, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyMemberFunctions), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyMemberFunctions"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyMemberFunctions, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyFunctions
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Function), CreateTypeList(TYPE_Reflection_ReadonlyFunctions, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyFunctions), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyFunctions"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyFunctions, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlyNatives
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Native), CreateTypeList(TYPE_Reflection_ReadonlyNatives, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlyNatives), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlyNatives"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlyNatives, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
-		//class ReadonlySpaces
-		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("values"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionReadonlyValues, values));
-			List<uint32, true> memberFunctions = List<uint32, true>(2);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetElement"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_ReadonlySpaces, TYPE_Integer), Reflection_ReadonlyValues_GetHandleElement);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetCount"), CreateTypeList(TYPE_Integer), CreateTypeList(TYPE_Reflection_ReadonlySpaces), Reflection_ReadonlyValues_GetCount);
-			REGISTER_CLASS(true, space, TEXT("ReadonlySpaces"), KERNEL_TYPE_CLASS_INDEX_Reflection_ReadonlySpaces, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionReadonlyValues), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
-		}
 		//class Variable
 		{
 			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_IsPublic);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetSpace);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetName);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetVariableType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetVariableType);
@@ -737,21 +656,19 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class MemberConstructor
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(1);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionMemberConstructor, parameters));
 			List<uint32, true> memberFunctions = List<uint32, true>(5);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_IsPublic);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetDeclaringType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetDeclaringType);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetParameters);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_MemberConstructor), Reflection_MemberConstructor_GetParameters);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("Invoke"), CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Reflection_MemberConstructor, Type(TYPE_Handle, 1)), Reflection_MemberConstructor_Invoke);
-			REGISTER_CLASS(true, space, TEXT("MemberConstructor"), KERNEL_TYPE_CLASS_INDEX_Reflection_MemberConstructor, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionMemberConstructor), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+			REGISTER_CLASS(true, space, TEXT("MemberConstructor"), KERNEL_TYPE_CLASS_INDEX_Reflection_MemberConstructor, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(MemberFunction), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class MemberVariable
 		{
 			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_IsPublic);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetDeclaringType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetDeclaringType);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetName);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetVariableType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetVariableType);
@@ -761,69 +678,53 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 		}
 		//class MemberFunction
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionMemberFunction, parameters));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("returns"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionMemberFunction, returns));
 			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_IsPublic);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetDeclaringType"), CreateTypeList(TYPE_Type), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetDeclaringType);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetName);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetParameters);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetReturns);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetParameters);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_MemberFunction), Reflection_MemberFunction_GetReturns);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("Invoke"), CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Reflection_MemberFunction, TYPE_Handle, Type(TYPE_Handle, 1)), Reflection_MemberFunction_Invoke);
-			REGISTER_CLASS(true, space, TEXT("MemberFunction"), KERNEL_TYPE_CLASS_INDEX_Reflection_MemberFunction, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionMemberFunction), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+			REGISTER_CLASS(true, space, TEXT("MemberFunction"), KERNEL_TYPE_CLASS_INDEX_Reflection_MemberFunction, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(MemberFunction), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class Function
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionFunction, parameters));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("returns"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionFunction, returns));
 			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_IsPublic);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetSpace);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetName);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetParameters);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetReturns);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetParameters);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_Function), Reflection_Function_GetReturns);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("Invoke"), CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Reflection_Function, Type(TYPE_Handle, 1)), Reflection_Function_Invoke);
-			REGISTER_CLASS(true, space, TEXT("Function"), KERNEL_TYPE_CLASS_INDEX_Reflection_Function, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionFunction), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+			REGISTER_CLASS(true, space, TEXT("Function"), KERNEL_TYPE_CLASS_INDEX_Reflection_Function, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(Function), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class Native
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(2);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("parameters"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionNative, parameters));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("returns"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionNative, returns));
 			List<uint32, true> memberFunctions = List<uint32, true>(7);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsPublic"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_IsPublic);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetSpace"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetSpace);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetName);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetParameters);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetReturns);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParameters"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetParameters);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetReturns"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_Native), Reflection_Native_GetReturns);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("Invoke"), CreateTypeList(Type(TYPE_Handle, 1)), CreateTypeList(TYPE_Reflection_Native, Type(TYPE_Handle, 1)), Reflection_Native_Invoke);
-			REGISTER_CLASS(true, space, TEXT("Native"), KERNEL_TYPE_CLASS_INDEX_Reflection_Native, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionNative), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+			REGISTER_CLASS(true, space, TEXT("Native"), KERNEL_TYPE_CLASS_INDEX_Reflection_Native, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(Native), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class Space
 		{
-			List<KernelLibraryInfo::Variable> memberVariables = List<KernelLibraryInfo::Variable>(6);
-			REGISTER_MEMBER_VARIABLES(false, TEXT("attributes"), TYPE_Reflection_ReadonlyStrings, GET_FIELD_OFFSET(ReflectionSpace, attributes));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("children"), TYPE_Reflection_ReadonlySpaces, GET_FIELD_OFFSET(ReflectionSpace, children));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("types"), TYPE_Reflection_ReadonlyTypes, GET_FIELD_OFFSET(ReflectionSpace, types));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("variables"), TYPE_Reflection_ReadonlyVariables, GET_FIELD_OFFSET(ReflectionSpace, variables));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("functions"), TYPE_Reflection_ReadonlyFunctions, GET_FIELD_OFFSET(ReflectionSpace, functions));
-			REGISTER_MEMBER_VARIABLES(false, TEXT("natives"), TYPE_Reflection_ReadonlyNatives, GET_FIELD_OFFSET(ReflectionSpace, natives));
 			List<uint32, true> memberFunctions = List<uint32, true>(9);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(TYPE_Reflection_ReadonlyStrings), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetAttributes);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetParent"), CreateTypeList(TYPE_Reflection_Space), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetParent);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetChildren"), CreateTypeList(TYPE_Reflection_ReadonlySpaces), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetChildren);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetChildren"), CreateTypeList(Type(TYPE_Reflection_Space, 1)), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetChildren);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAssembly"), CreateTypeList(TYPE_Reflection_Assembly), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetAssembly);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetName"), CreateTypeList(TYPE_String), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetName);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetVariables"), CreateTypeList(TYPE_Reflection_ReadonlyVariables), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetVariables);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetFunctions"), CreateTypeList(TYPE_Reflection_ReadonlyFunctions), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetFunctions);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetNatives"), CreateTypeList(TYPE_Reflection_ReadonlyNatives), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetNatives);
-			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetTypes"), CreateTypeList(TYPE_Reflection_ReadonlyTypes), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetTypes);
-			REGISTER_CLASS(true, space, TEXT("Space"), KERNEL_TYPE_CLASS_INDEX_Reflection_Space, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionSpace), MEMORY_ALIGNMENT_4, EMPTY_INDICES, memberVariables, memberFunctions);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetVariables"), CreateTypeList(Type(TYPE_Reflection_Variable, 1)), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetVariables);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetFunctions"), CreateTypeList(Type(TYPE_Reflection_Function, 1)), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetFunctions);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetNatives"), CreateTypeList(Type(TYPE_Reflection_Native, 1)), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetNatives);
+			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetTypes"), CreateTypeList(Type(TYPE_Type, 1)), CreateTypeList(TYPE_Reflection_Space), Reflection_Space_GetTypes);
+			REGISTER_CLASS(true, space, TEXT("Space"), KERNEL_TYPE_CLASS_INDEX_Reflection_Space, TYPE_Handle, EMPTY_DECLARATIONS, SIZE(ReflectionSpace), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, memberFunctions);
 		}
 		//class Assembly
 		REGISTER_CLASS(true, space, TEXT("Assembly"), KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly, TYPE_Reflection_Space, EMPTY_DECLARATIONS, SIZE(ReflectionSpace), MEMORY_ALIGNMENT_4, EMPTY_INDICES, EMPTY_VARIABLES, EMPTY_INDICES);
