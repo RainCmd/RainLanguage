@@ -30,7 +30,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 					}
 					else MESSAGE2(messages, bracket.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				}
-				MESSAGE2(messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+				else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				return LexicalType::Unknow;
 			case LexicalType::BracketRight1:
 				if (stack.Count())
@@ -48,7 +48,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 					}
 					else MESSAGE2(messages, bracket.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				}
-				MESSAGE2(messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+				else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				return LexicalType::Unknow;
 			case LexicalType::BracketRight2:
 				if (stack.Count())
@@ -66,7 +66,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 					}
 					else MESSAGE2(messages, bracket.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				}
-				MESSAGE2(messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
+				else MESSAGE2(messages, lexical.anchor, MessageType::ERROR_MISSING_PAIRED_SYMBOL);
 				return LexicalType::Unknow;
 			case LexicalType::Comma:
 				if (!stack.Count() && ContainAny(flag, SplitFlag::Comma))
@@ -162,7 +162,7 @@ LexicalType Split(const Anchor& anchor, uint32 start, SplitFlag flag, Anchor& le
 			case LexicalType::Colon:
 				if (stack.Count())
 				{
-					if (stack.Pop().type == LexicalType::Question)break;
+					if (stack.Pop().type == LexicalType::Question) break;
 				}
 				else if (ContainAny(flag, SplitFlag::Colon))
 				{
