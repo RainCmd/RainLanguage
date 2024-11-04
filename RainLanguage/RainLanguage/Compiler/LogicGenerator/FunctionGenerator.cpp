@@ -575,7 +575,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 				if(statement->indent > line.indent)
 				{
 					blockStack.Pop();
-					parameter.localContext->PopBlock(line.number);
+					parameter.localContext->PopBlock(line.number - 1);
 				}
 				else if(statement->indent < line.indent)
 				{
@@ -590,7 +590,7 @@ void FunctionGenerator::ParseBody(GeneratorParameter& parameter, const Context& 
 						while(blockStack.Count() && blockStack.Peek()->indent == line.indent)
 						{
 							statement = blockStack.Pop();
-							parameter.localContext->PopBlock(line.number);
+							parameter.localContext->PopBlock(line.number - 1);
 						}
 						blockStack.Add(statement);
 					}
