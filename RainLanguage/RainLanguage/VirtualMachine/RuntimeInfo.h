@@ -26,12 +26,10 @@ struct RuntimeInfo :DeclarationInfo
 
 struct RuntimeVariable :RuntimeInfo
 {
-	Handle reflection;
 	Type type;
 	uint32 address;
 	bool readonly;
-	inline RuntimeVariable(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const Type& type, uint32 address, bool readonly) :RuntimeInfo(isPublic, attributes, name, space), reflection(NULL), type(type), address(address), readonly(readonly) {}
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 variableIndex, String& error);
+	inline RuntimeVariable(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const Type& type, uint32 address, bool readonly) :RuntimeInfo(isPublic, attributes, name, space), type(type), address(address), readonly(readonly) {}
 };
 
 struct RuntimeEnum :RuntimeInfo
@@ -114,21 +112,14 @@ struct RuntimeTask :RuntimeInfo
 
 struct RuntimeFunction :RuntimeInfo, CallableInfo
 {
-	Handle reflection;
 	uint32 entry;
-	inline RuntimeFunction(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters, uint32 entry) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), entry(entry) {}
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex, String& error);
+	inline RuntimeFunction(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters, uint32 entry) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), entry(entry) {}
 };
 
 struct RuntimeNative :RuntimeInfo, CallableInfo
 {
-	Handle reflection;
 	OnCaller caller;
-	inline RuntimeNative(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters)
-		:RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), reflection(NULL), caller(NULL)
-	{
-	}
-	Handle GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex, String& error);
+	inline RuntimeNative(bool isPublic, const List<string, true>& attributes, string name, uint32 space, const TupleInfo& returns, const TupleInfo& parameters) :RuntimeInfo(isPublic, attributes, name, space), CallableInfo(returns, parameters), caller(NULL) {}
 };
 
 struct RuntimeSpace

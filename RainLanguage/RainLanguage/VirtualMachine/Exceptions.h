@@ -23,3 +23,5 @@ constexpr auto EXCEPTION_IGNORE_WAIT_BUT_CONDITION_NOT_VAILD = TEXT("忽略等�
 constexpr auto EXCEPTION_IGNORE_WAIT_BUT_TASK_NOT_COMPLETED = TEXT("忽略等待的任务中出现了等待一个未完成的任务");
 constexpr auto EXCEPTION_ALLOC_HEAP_MEMORY_ON_GC = TEXT("GC时申请堆内存");
 constexpr auto EXCEPTION_HEAP_OVERFLOW = TEXT("堆溢出");
+constexpr auto EXCEPTION_INVALID_OPERATION = TEXT("无效的操作");
+constexpr auto EXCEPTION_INVALID_REFLECTION = TEXT("无效的反射");

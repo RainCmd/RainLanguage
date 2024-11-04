@@ -20,6 +20,12 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_STRUCT_INDEX_Type,
 	KERNEL_TYPE_STRUCT_INDEX_String,
 	KERNEL_TYPE_STRUCT_INDEX_Entity,
+	KERNEL_TYPE_STRUCT_INDEX_Reflection_Variable,
+	KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberConstructor,
+	KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberVariable,
+	KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberFunction,
+	KERNEL_TYPE_STRUCT_INDEX_Reflection_Function,
+	KERNEL_TYPE_STRUCT_INDEX_Reflection_Native,
 	KERNEL_TYPE_STRUCT_COUNT,
 
 	KERNEL_TYPE_CLASS_INDEX_Handle = 0,
@@ -27,12 +33,7 @@ enum KERNEL_TYPE_INDEX
 	KERNEL_TYPE_CLASS_INDEX_Task,
 	KERNEL_TYPE_CLASS_INDEX_Array,
 	KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_Variable,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_MemberConstructor,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_MemberVariable,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_MemberFunction,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_Function,
-	KERNEL_TYPE_CLASS_INDEX_Reflection_Native,
+
 	KERNEL_TYPE_CLASS_INDEX_Reflection_Space,
 	KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly,
 	KERNEL_TYPE_CLASS_COUNT,
@@ -233,6 +234,7 @@ enum MEMORY_ALIGNMENT
 	MEMORY_ALIGNMENT_MAX = 2,
 };
 const Type TYPE_TaskState = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNEL_TYPE_ENUM_INDEX_TaskState, 0);
+const Type TYPE_Reflection_TypeCode = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNEL_TYPE_ENUM_INDEX_TypeCode, 0);
 
 const Type TYPE_Bool = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Bool, 0);
 const Type TYPE_Byte = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Byte, 0);
@@ -247,8 +249,6 @@ const Type TYPE_Type = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT
 const Type TYPE_String = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_String, 0);
 const Type TYPE_Entity = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Entity, 0);
 
-const Type TYPE_Reflection_TypeCode = Type(LIBRARY_KERNEL, TypeCode::Enum, KERNEL_TYPE_ENUM_INDEX_TypeCode, 0);
-
 const Type TYPE_Handle = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Handle, 0);
 const Type TYPE_Delegate = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Delegate, 0);
 const Type TYPE_Task = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Task, 0);
@@ -258,12 +258,12 @@ const Type TYPE_Collections_Enumerable = Type(LIBRARY_KERNEL, TypeCode::Interfac
 const Type TYPE_Collections_Enumerator = Type(LIBRARY_KERNEL, TypeCode::Interface, KERNEL_TYPE_INTERFACE_INDEX_Collections_Enumerator, 0);
 const Type TYPE_Collections_ArrayEnumerator = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, 0);
 
-const Type TYPE_Reflection_Variable = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Variable, 0);
-const Type TYPE_Reflection_MemberConstructor = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_MemberConstructor, 0);
-const Type TYPE_Reflection_MemberVariable = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_MemberVariable, 0);
-const Type TYPE_Reflection_MemberFunction = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_MemberFunction, 0);
-const Type TYPE_Reflection_Function = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Function, 0);
-const Type TYPE_Reflection_Native = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Native, 0);
+const Type TYPE_Reflection_Variable = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_Variable, 0);
+const Type TYPE_Reflection_MemberConstructor = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberConstructor, 0);
+const Type TYPE_Reflection_MemberVariable = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberVariable, 0);
+const Type TYPE_Reflection_MemberFunction = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberFunction, 0);
+const Type TYPE_Reflection_Function = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_Function, 0);
+const Type TYPE_Reflection_Native = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_Native, 0);
 const Type TYPE_Reflection_Space = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Space, 0);
 const Type TYPE_Reflection_Assembly = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly, 0);
 
@@ -274,6 +274,55 @@ const struct CollectionsArrayEnumerator
 	integer index;
 	inline CollectionsArrayEnumerator() :source(NULL), index(0) {}
 	inline CollectionsArrayEnumerator(Handle source, integer index) : source(source), index(index) {}
+};
+
+const struct ReflectionVariable : public Variable
+{
+	bool isPublic;
+	Handle owningSpace;
+	string name;
+	Type variableType;
+	inline ReflectionVariable(const Variable& variable, bool isPublic, Handle owningSpace, string name, Type variableType) :Variable(variable), isPublic(isPublic), owningSpace(owningSpace), name(name), variableType(variableType) {}
+};
+
+const struct ReflectionMemberConstructor : public MemberFunction
+{
+	bool isPublic;
+	Type declaringType;
+	inline ReflectionMemberConstructor(const MemberFunction& memberFunction, bool isPublic, const Type& declaringType) :MemberFunction(memberFunction), isPublic(isPublic), declaringType(declaringType) {}
+};
+
+const struct ReflectionMemberVariable : public MemberVariable
+{
+	bool isPublic;
+	Type declaringType;
+	string name;
+	Type variableType;
+	inline ReflectionMemberVariable(const MemberVariable& memberVariable, bool isPublic, Type declaringType, string name, Type variableType) :MemberVariable(memberVariable), isPublic(isPublic), declaringType(declaringType), name(name), variableType(variableType) {}
+};
+
+const struct ReflectionMemberFunction : public MemberFunction
+{
+	bool isPublic;
+	Type declaringType;
+	string name;
+	inline ReflectionMemberFunction(const MemberFunction& memberFunction, bool isPublic, const Type& declaringType, string name) :MemberFunction(memberFunction), isPublic(isPublic), declaringType(declaringType), name(name) {}
+};
+
+const struct ReflectionFunction : public Function
+{
+	bool isPublic;
+	Handle owningSpace;
+	string name;
+	inline ReflectionFunction(const Function& function, bool isPublic, Handle owningSpace, string name) :Function(function), isPublic(isPublic), owningSpace(owningSpace), name(name) {}
+};
+
+const struct ReflectionNative : public Native
+{
+	bool isPublic;
+	Handle owningSpace;
+	string name;
+	inline ReflectionNative(const Native& function, bool isPublic, Handle owningSpace, string name) :Native(function), isPublic(isPublic), owningSpace(owningSpace), name(name) {}
 };
 
 const struct ReflectionSpace

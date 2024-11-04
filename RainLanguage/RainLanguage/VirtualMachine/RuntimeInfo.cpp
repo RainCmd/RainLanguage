@@ -12,17 +12,6 @@
 									for (uint32 i = 0; i < entityFields.Count(); i++)\
 										kernel->entityAgency->function(*(Entity*)(address + entityFields[i]));
 
-#define CREATE_REFLECTION(declaration, type, library, index, error)	\
-	if (!reflection)\
-	{\
-		reflection = kernel->heapAgency->Alloc(declaration, error);\
-		if(error.IsEmpty())\
-		{\
-			kernel->heapAgency->StrongReference(reflection); \
-			new ((type*)kernel->heapAgency->GetPoint(reflection))type(library, index); \
-		}\
-	}
-
 void GCFieldInfo::StrongReference(Kernel* kernel, const uint8* address) const
 {
 	GC_FIELDS(Strong, Reference);
@@ -98,12 +87,6 @@ RuntimeSpace::RuntimeSpace(StringAgency* agency, const Library* library, const S
 {
 }
 
-Handle RuntimeVariable::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 variableIndex, String& error)
-{
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Variable, Variable, libraryIndex, variableIndex, error);
-	return reflection;
-}
-
 String RuntimeEnum::ToString(integer value, StringAgency* agency)
 {
 	for(uint32 i = 0; i < values.Count(); i++)
@@ -137,20 +120,16 @@ String RuntimeEnum::ToString(integer value, StringAgency* agency)
 	return result;
 }
 
-Handle RuntimeFunction::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 functionIndex, String& error)
-{
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Function, Function, libraryIndex, functionIndex, error);
-	return reflection;
-}
-
-Handle RuntimeNative::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 nativeIndex, String& error)
-{
-	CREATE_REFLECTION((Declaration)TYPE_Reflection_Native, Native, libraryIndex, nativeIndex, error);
-	return reflection;
-}
-
 Handle RuntimeSpace::GetReflection(Kernel* kernel, uint32 libraryIndex, uint32 spaceIndex, String& error)
 {
-	CREATE_REFLECTION((Declaration)(spaceIndex ? TYPE_Reflection_Space : TYPE_Reflection_Assembly), ReflectionSpace, libraryIndex, spaceIndex, error);
+	if(!reflection)
+	{
+		reflection = kernel->heapAgency->Alloc((Declaration)(spaceIndex ? TYPE_Reflection_Space : TYPE_Reflection_Assembly), error);
+		if(error.IsEmpty())
+		{
+			kernel->heapAgency->StrongReference(reflection); 
+			new ((ReflectionSpace*)kernel->heapAgency->GetPoint(reflection))ReflectionSpace(libraryIndex, spaceIndex);
+		}
+	}
 	return reflection;
 }
