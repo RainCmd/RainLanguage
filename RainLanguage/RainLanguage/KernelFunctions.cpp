@@ -143,6 +143,54 @@ String Operation_Equals_type_type(KernelInvokerParameter parameter)// bool == (t
 	return String();
 }
 
+String Operation_Equals_ReflectionVariable(KernelInvokerParameter parameter)// bool == (Reflection.Variable, Reflection.Variable)
+{
+	Variable& left = PARAMETER_VALUE(1, ReflectionVariable, 0);
+	Variable& right = PARAMETER_VALUE(1, ReflectionVariable, SIZE(ReflectionVariable));
+	RETURN_VALUE(bool, 0) = left == right;
+	return String();
+}
+
+String Operation_Equals_ReflectionMemberConstructor(KernelInvokerParameter parameter)// bool == (Reflection.MemberConstructor, Reflection.MemberConstructor)
+{
+	MemberFunction& left = PARAMETER_VALUE(1, ReflectionMemberConstructor, 0);
+	MemberFunction& right = PARAMETER_VALUE(1, ReflectionMemberConstructor, SIZE(ReflectionMemberConstructor));
+	RETURN_VALUE(bool, 0) = left == right;
+	return String();
+}
+
+String Operation_Equals_ReflectionMemberVariable(KernelInvokerParameter parameter)// bool == (Reflection.MemberVariable, Reflection.MemberVariable)
+{
+	MemberVariable& left = PARAMETER_VALUE(1, ReflectionMemberVariable, 0);
+	MemberVariable& right = PARAMETER_VALUE(1, ReflectionMemberVariable, SIZE(ReflectionMemberVariable));
+	RETURN_VALUE(bool, 0) = left == right;
+	return String();
+}
+
+String Operation_Equals_ReflectionMemberFunction(KernelInvokerParameter parameter)// bool == (Reflection.MemberFunction, Reflection.MemberFunction)
+{
+	MemberFunction& left = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
+	MemberFunction& right = PARAMETER_VALUE(1, ReflectionMemberFunction, SIZE(ReflectionMemberFunction));
+	RETURN_VALUE(bool, 0) = left == right;
+	return String();
+}
+
+String Operation_Equals_ReflectionFunction(KernelInvokerParameter parameter)// bool == (Reflection.Function, Reflection.Function)
+{
+	Function& left = PARAMETER_VALUE(1, ReflectionFunction, 0);
+	Function& right = PARAMETER_VALUE(1, ReflectionFunction, SIZE(ReflectionFunction));
+	RETURN_VALUE(bool, 0) = left == right;
+	return String();
+}
+
+String Operation_Equals_ReflectionNative(KernelInvokerParameter parameter)// bool == (Reflection.Native, Reflection.Native)
+{
+	Native& left = PARAMETER_VALUE(1, ReflectionNative, 0);
+	Native& right = PARAMETER_VALUE(1, ReflectionNative, SIZE(ReflectionNative));
+	RETURN_VALUE(bool, 0) = left == right;
+	return String();
+}
+
 String Operation_Not_Equals_bool_bool(KernelInvokerParameter parameter)// bool != (bool, bool)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, bool, 0) != PARAMETER_VALUE(1, bool, SIZE(bool));
@@ -209,6 +257,54 @@ String Operation_Not_Equals_delegate_delegate(KernelInvokerParameter parameter)/
 String Operation_Not_Equals_type_type(KernelInvokerParameter parameter)// bool != (type, type)
 {
 	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, Type, 0) != PARAMETER_VALUE(1, Type, SIZE(Type));
+	return String();
+}
+
+String Operation_Not_Equals_ReflectionVariable(KernelInvokerParameter parameter)// bool != (Reflection.Variable, Reflection.Variable)
+{
+	Variable& left = PARAMETER_VALUE(1, ReflectionVariable, 0);
+	Variable& right = PARAMETER_VALUE(1, ReflectionVariable, SIZE(ReflectionVariable));
+	RETURN_VALUE(bool, 0) = left != right;
+	return String();
+}
+
+String Operation_Not_Equals_ReflectionMemberConstructor(KernelInvokerParameter parameter)// bool != (Reflection.MemberConstructor, Reflection.MemberConstructor)
+{
+	MemberFunction& left = PARAMETER_VALUE(1, ReflectionMemberConstructor, 0);
+	MemberFunction& right = PARAMETER_VALUE(1, ReflectionMemberConstructor, SIZE(ReflectionMemberConstructor));
+	RETURN_VALUE(bool, 0) = left != right;
+	return String();
+}
+
+String Operation_Not_Equals_ReflectionMemberVariable(KernelInvokerParameter parameter)// bool != (Reflection.MemberVariable, Reflection.MemberVariable)
+{
+	MemberVariable& left = PARAMETER_VALUE(1, ReflectionMemberVariable, 0);
+	MemberVariable& right = PARAMETER_VALUE(1, ReflectionMemberVariable, SIZE(ReflectionMemberVariable));
+	RETURN_VALUE(bool, 0) = left != right;
+	return String();
+}
+
+String Operation_Not_Equals_ReflectionMemberFunction(KernelInvokerParameter parameter)// bool != (Reflection.MemberFunction, Reflection.MemberFunction)
+{
+	MemberFunction& left = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
+	MemberFunction& right = PARAMETER_VALUE(1, ReflectionMemberFunction, SIZE(ReflectionMemberFunction));
+	RETURN_VALUE(bool, 0) = left != right;
+	return String();
+}
+
+String Operation_Not_Equals_ReflectionFunction(KernelInvokerParameter parameter)// bool != (Reflection.Function, Reflection.Function)
+{
+	Function& left = PARAMETER_VALUE(1, ReflectionFunction, 0);
+	Function& right = PARAMETER_VALUE(1, ReflectionFunction, SIZE(ReflectionFunction));
+	RETURN_VALUE(bool, 0) = left != right;
+	return String();
+}
+
+String Operation_Not_Equals_ReflectionNative(KernelInvokerParameter parameter)// bool != (Reflection.Native, Reflection.Native)
+{
+	Native& left = PARAMETER_VALUE(1, ReflectionNative, 0);
+	Native& right = PARAMETER_VALUE(1, ReflectionNative, SIZE(ReflectionNative));
+	RETURN_VALUE(bool, 0) = left != right;
 	return String();
 }
 
