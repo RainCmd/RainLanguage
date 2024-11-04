@@ -62,7 +62,7 @@ void ProgramDatabaseGenerator::AddLocal(const Anchor& anchor, uint32 index, cons
 
 uint32 ProgramDatabaseGenerator::AddLocal(const String& name, uint32 line, uint32 index, const Type& type, uint32 address, GlobalReference* globalReference, LocalContext* context)
 {
-	if(database->functions.Count())
+	if(database->functions.Count() && context->GetLocalAnchors()->Contains(index))
 	{
 		DebugFunction* function = database->functions.Peek();
 		uint32 localIndex;
