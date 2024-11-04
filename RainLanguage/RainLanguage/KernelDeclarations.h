@@ -278,51 +278,57 @@ const struct CollectionsArrayEnumerator
 
 const struct ReflectionVariable : public Variable
 {
+	bool valid;
 	bool isPublic;
 	Handle owningSpace;
 	string name;
 	Type variableType;
-	inline ReflectionVariable(const Variable& variable, bool isPublic, Handle owningSpace, string name, Type variableType) :Variable(variable), isPublic(isPublic), owningSpace(owningSpace), name(name), variableType(variableType) {}
+	inline ReflectionVariable(const Variable& variable, bool isPublic, Handle owningSpace, string name, Type variableType) :Variable(variable), valid(true), isPublic(isPublic), owningSpace(owningSpace), name(name), variableType(variableType) {}
 };
 
 const struct ReflectionMemberConstructor : public MemberFunction
 {
+	bool valid;
 	bool isPublic;
 	Type declaringType;
-	inline ReflectionMemberConstructor(const MemberFunction& memberFunction, bool isPublic, const Type& declaringType) :MemberFunction(memberFunction), isPublic(isPublic), declaringType(declaringType) {}
+	inline ReflectionMemberConstructor(const MemberFunction& memberFunction, bool isPublic, const Type& declaringType) :MemberFunction(memberFunction), valid(true), isPublic(isPublic), declaringType(declaringType) {}
 };
 
 const struct ReflectionMemberVariable : public MemberVariable
 {
+	bool valid;
 	bool isPublic;
 	Type declaringType;
 	string name;
 	Type variableType;
-	inline ReflectionMemberVariable(const MemberVariable& memberVariable, bool isPublic, Type declaringType, string name, Type variableType) :MemberVariable(memberVariable), isPublic(isPublic), declaringType(declaringType), name(name), variableType(variableType) {}
+	inline ReflectionMemberVariable(const MemberVariable& memberVariable, bool isPublic, Type declaringType, string name, Type variableType) :MemberVariable(memberVariable), valid(true), isPublic(isPublic), declaringType(declaringType), name(name), variableType(variableType) {}
 };
 
 const struct ReflectionMemberFunction : public MemberFunction
 {
+	bool valid;
 	bool isPublic;
 	Type declaringType;
 	string name;
-	inline ReflectionMemberFunction(const MemberFunction& memberFunction, bool isPublic, const Type& declaringType, string name) :MemberFunction(memberFunction), isPublic(isPublic), declaringType(declaringType), name(name) {}
+	inline ReflectionMemberFunction(const MemberFunction& memberFunction, bool isPublic, const Type& declaringType, string name) :MemberFunction(memberFunction), valid(true), isPublic(isPublic), declaringType(declaringType), name(name) {}
 };
 
 const struct ReflectionFunction : public Function
 {
+	bool valid;
 	bool isPublic;
 	Handle owningSpace;
 	string name;
-	inline ReflectionFunction(const Function& function, bool isPublic, Handle owningSpace, string name) :Function(function), isPublic(isPublic), owningSpace(owningSpace), name(name) {}
+	inline ReflectionFunction(const Function& function, bool isPublic, Handle owningSpace, string name) :Function(function), valid(true), isPublic(isPublic), owningSpace(owningSpace), name(name) {}
 };
 
 const struct ReflectionNative : public Native
 {
+	bool valid;
 	bool isPublic;
 	Handle owningSpace;
 	string name;
-	inline ReflectionNative(const Native& function, bool isPublic, Handle owningSpace, string name) :Native(function), isPublic(isPublic), owningSpace(owningSpace), name(name) {}
+	inline ReflectionNative(const Native& function, bool isPublic, Handle owningSpace, string name) :Native(function), valid(true), isPublic(isPublic), owningSpace(owningSpace), name(name) {}
 };
 
 const struct ReflectionSpace

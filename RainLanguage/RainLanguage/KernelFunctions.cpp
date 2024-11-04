@@ -1915,7 +1915,7 @@ String type_CreateDelegate(KernelInvokerParameter parameter)//Delegate type.(Ref
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
-	if(!function.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!function.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
 	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
@@ -1938,7 +1938,7 @@ String type_CreateDelegate2(KernelInvokerParameter parameter)//Delegate type.(Re
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	ReflectionNative& native = PARAMETER_VALUE(1, ReflectionNative, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
-	if(!native.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!native.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
 	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
@@ -1961,7 +1961,7 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//Delegate type.(Re
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
 	ReflectionMemberFunction& memberFunction = PARAMETER_VALUE(1, ReflectionMemberFunction, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
-	if(!memberFunction.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!memberFunction.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
 	Handle& target = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX) + SIZE(ReflectionMemberFunction));
 	Type targetType;
@@ -2020,7 +2020,7 @@ String type_CreateTask(KernelInvokerParameter parameter)//Task type.(Reflection.
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
 	ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
-	if(!function.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!function.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
 	Handle parameters = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX) + SIZE(ReflectionFunction));
 
@@ -2076,7 +2076,7 @@ String type_CreateTask2(KernelInvokerParameter parameter)//Task type.(Reflection
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Task)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_TASK);
 	ReflectionMemberFunction& memberFunction = PARAMETER_VALUE(1, ReflectionMemberFunction, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
-	if(!memberFunction.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!memberFunction.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
 	Handle target = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX) + SIZE(ReflectionMemberFunction));
 	Type targetType;
@@ -2691,7 +2691,7 @@ String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter)//bool,
 String Reflection_Variable_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.Variable.()
 {
 	ReflectionVariable& variable = PARAMETER_VALUE(1, ReflectionVariable, 0);
-	if(!variable.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!variable.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
@@ -2703,7 +2703,7 @@ String Reflection_Variable_GetAttributes(KernelInvokerParameter parameter)//stri
 String Reflection_Variable_GetValue(KernelInvokerParameter parameter)//handle Reflection.Variable.()
 {
 	ReflectionVariable& variable = PARAMETER_VALUE(1, ReflectionVariable, 0);
-	if(!variable.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!variable.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(variable.library);
 	RuntimeVariable& info = library->variables[variable.variable];
 	return StrongBox(parameter.kernel, info.type, parameter.kernel->libraryAgency->data.GetPointer() + info.address, RETURN_VALUE(Handle, 0));
@@ -2712,7 +2712,7 @@ String Reflection_Variable_GetValue(KernelInvokerParameter parameter)//handle Re
 String Reflection_Variable_SetValue(KernelInvokerParameter parameter)//Reflection.Variable.(handle)
 {
 	ReflectionVariable& variable = PARAMETER_VALUE(0, ReflectionVariable, 0);
-	if(!variable.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!variable.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeLibrary* library = parameter.kernel->libraryAgency->GetLibrary(variable.library);
 	RuntimeVariable& info = library->variables[variable.variable];
 	if(info.readonly) return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
@@ -2722,7 +2722,7 @@ String Reflection_Variable_SetValue(KernelInvokerParameter parameter)//Reflectio
 String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.MemberConstructor.()
 {
 	ReflectionMemberConstructor& member = PARAMETER_VALUE(1, ReflectionMemberConstructor, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	ASSERT_DEBUG(member.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
@@ -2735,7 +2735,7 @@ String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter paramet
 String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter parameter)//type[] Reflection.MemberConstructor.()
 {
 	ReflectionMemberConstructor& member = PARAMETER_VALUE(1, ReflectionMemberConstructor, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	ASSERT_DEBUG(member.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 	RuntimeFunction* info = parameter.kernel->libraryAgency->GetConstructorFunction(member);
 	Handle& result = RETURN_VALUE(Handle, 0);
@@ -2781,7 +2781,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 	else
 	{
 		ReflectionMemberConstructor& member = PARAMETER_VALUE(1, ReflectionMemberConstructor, 0);
-		if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+		if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 		ASSERT_DEBUG(member.declaration.code == TypeCode::Handle, "只有托管类型才有构造函数");
 		Handle parameters = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(ReflectionMemberConstructor), MEMORY_ALIGNMENT_MAX));
 		RuntimeFunction* constructor = parameter.kernel->libraryAgency->GetConstructorFunction(member);
@@ -2873,7 +2873,7 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 String Reflection_MemberVariable_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.MemberVariable.()
 {
 	ReflectionMemberVariable& member = PARAMETER_VALUE(1, ReflectionMemberVariable, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
@@ -2885,7 +2885,7 @@ String Reflection_MemberVariable_GetAttributes(KernelInvokerParameter parameter)
 String Reflection_MemberVariable_GetValue(KernelInvokerParameter parameter)//handle Reflection.MemberVariable.(handle)
 {
 	ReflectionMemberVariable& member = PARAMETER_VALUE(1, ReflectionMemberVariable, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle& result = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(ReflectionMemberVariable), MEMORY_ALIGNMENT_MAX));
 	if(!parameter.kernel->heapAgency->IsValid(result)) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
 	parameter.kernel->heapAgency->StrongRelease(result);
@@ -2899,7 +2899,7 @@ String Reflection_MemberVariable_GetValue(KernelInvokerParameter parameter)//han
 String Reflection_MemberVariable_SetValue(KernelInvokerParameter parameter)//Reflection.MemberVariable.(handle, handle)
 {
 	ReflectionMemberVariable& member = PARAMETER_VALUE(0, ReflectionMemberVariable, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeMemberVariable* info = parameter.kernel->libraryAgency->GetMemberVariable(member);
 	if(info->readonly) return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
 	Handle handle = PARAMETER_VALUE(0, Handle, MemoryAlignment(SIZE(ReflectionMemberVariable), MEMORY_ALIGNMENT_MAX));
@@ -2916,7 +2916,7 @@ String Reflection_MemberVariable_SetValue(KernelInvokerParameter parameter)//Ref
 String Reflection_MemberFunction_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.MemberFunction.()
 {
 	ReflectionMemberFunction& member = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
@@ -2929,10 +2929,18 @@ String Reflection_MemberFunction_GetAttributes(KernelInvokerParameter parameter)
 String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)//type[] Reflection.MemberFunction.()
 {
 	ReflectionMemberFunction& member = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	if(member.declaration.code == TypeCode::Interface)
 	{
-		//todo 接口函数参数列表
+		RuntimeInterface::FunctionInfo& info = parameter.kernel->libraryAgency->GetInterface(Type(member.declaration, 0))->functions[member.function];
+		Handle& result = RETURN_VALUE(Handle, 0);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		String error;
+		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info.parameters.Count(), error);
+		if(!error.IsEmpty()) return error;
+		for(uint32 i = 0; i < info.parameters.Count(); i++)
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info.parameters.GetType(i);
+		parameter.kernel->heapAgency->StrongReference(result);
 	}
 	else
 	{
@@ -2952,10 +2960,18 @@ String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)
 String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter)//type[] Reflection.MemberFunction.()
 {
 	ReflectionMemberFunction& member = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
-	if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	if(member.declaration.code == TypeCode::Interface)
 	{
-		//todo 接口函数的返回值列表
+		RuntimeInterface::FunctionInfo& info = parameter.kernel->libraryAgency->GetInterface(Type(member.declaration, 0))->functions[member.function];
+		Handle& result = RETURN_VALUE(Handle, 0);
+		parameter.kernel->heapAgency->StrongRelease(result);
+		String error;
+		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info.returns.Count(), error);
+		if(!error.IsEmpty()) return error;
+		for(uint32 i = 0; i < info.returns.Count(); i++)
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info.returns.GetType(i);
+		parameter.kernel->heapAgency->StrongReference(result);
 	}
 	else
 	{
@@ -3007,7 +3023,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 	else
 	{
 		ReflectionMemberFunction& member = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
-		if(!member.declaration.IsValid()) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+		if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
 		Handle target = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(ReflectionMemberVariable), MEMORY_ALIGNMENT_MAX));
 		if(!target) return parameter.kernel->stringAgency->Add(EXCEPTION_NULL_REFERENCE);
@@ -3124,7 +3140,7 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 String Reflection_Function_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.Function.()
 {
 	ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, 0);
-	if(!function.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!function.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
@@ -3136,7 +3152,7 @@ String Reflection_Function_GetAttributes(KernelInvokerParameter parameter)//stri
 String Reflection_Function_GetParameters(KernelInvokerParameter parameter)//type[] Reflection.Function.()
 {
 	ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, 0);
-	if(!function.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!function.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
@@ -3152,7 +3168,7 @@ String Reflection_Function_GetParameters(KernelInvokerParameter parameter)//type
 String Reflection_Function_GetReturns(KernelInvokerParameter parameter)//type[] Reflection.Function.()
 {
 	ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, 0);
-	if(!function.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!function.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
@@ -3200,7 +3216,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 	else
 	{
 		ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, 0);
-		if(!function.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+		if(!function.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 		Handle parameters = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(ReflectionMemberVariable), MEMORY_ALIGNMENT_MAX));
 		RuntimeFunction* runtimeFunction = parameter.kernel->libraryAgency->GetFunction(function);
 		if(parameter.kernel->heapAgency->IsValid(parameters))
@@ -3287,7 +3303,7 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 String Reflection_Native_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.Native.()
 {
 	ReflectionNative& native = PARAMETER_VALUE(1, ReflectionNative, 0);
-	if(!native.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!native.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
@@ -3299,7 +3315,7 @@ String Reflection_Native_GetAttributes(KernelInvokerParameter parameter)//string
 String Reflection_Native_GetParameters(KernelInvokerParameter parameter)//type[] Reflection.Native.()
 {
 	ReflectionNative& native = PARAMETER_VALUE(1, ReflectionNative, 0);
-	if(!native.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!native.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
@@ -3315,7 +3331,7 @@ String Reflection_Native_GetParameters(KernelInvokerParameter parameter)//type[]
 String Reflection_Native_GetReturns(KernelInvokerParameter parameter)//type[] Reflection.Native.()
 {
 	ReflectionNative& native = PARAMETER_VALUE(1, ReflectionNative, 0);
-	if(!native.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!native.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
@@ -3331,7 +3347,7 @@ String Reflection_Native_GetReturns(KernelInvokerParameter parameter)//type[] Re
 String Reflection_Native_Invoke(KernelInvokerParameter parameter)//handle[] Reflection.Native.(handle[])
 {
 	ReflectionNative& native = PARAMETER_VALUE(1, ReflectionNative, 0);
-	if(!native.owningSpace) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	if(!native.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 	Handle parameters = PARAMETER_VALUE(1, Handle, MemoryAlignment(SIZE(ReflectionNative), MEMORY_ALIGNMENT_MAX));
 	uint32 nativeLocal = parameter.top + SIZE(Frame) + 12;//返回值 + 反射对象 + 参数数组
 	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
