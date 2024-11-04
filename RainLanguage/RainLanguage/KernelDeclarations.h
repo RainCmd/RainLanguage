@@ -271,11 +271,11 @@ const Type TYPE_Collections_Enumerator = Type(LIBRARY_KERNEL, TypeCode::Interfac
 const Type TYPE_Collections_ArrayEnumerator = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Collections_ArrayEnumerator, 0);
 
 const Type TYPE_Reflection_Variable = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_Variable, 0);
-const Type TYPE_Reflection_MemberConstructor = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberConstructor, 0);
-const Type TYPE_Reflection_MemberVariable = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberVariable, 0);
-const Type TYPE_Reflection_MemberFunction = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberFunction, 0);
-const Type TYPE_Reflection_Function = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_Function, 0);
-const Type TYPE_Reflection_Native = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_STRUCT_INDEX_Reflection_Native, 0);
+const Type TYPE_Reflection_MemberConstructor = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberConstructor, 0);
+const Type TYPE_Reflection_MemberVariable = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberVariable, 0);
+const Type TYPE_Reflection_MemberFunction = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberFunction, 0);
+const Type TYPE_Reflection_Function = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_Function, 0);
+const Type TYPE_Reflection_Native = Type(LIBRARY_KERNEL, TypeCode::Struct, KERNEL_TYPE_STRUCT_INDEX_Reflection_Native, 0);
 const Type TYPE_Reflection_Space = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Space, 0);
 const Type TYPE_Reflection_Assembly = Type(LIBRARY_KERNEL, TypeCode::Handle, KERNEL_TYPE_CLASS_INDEX_Reflection_Assembly, 0);
 
