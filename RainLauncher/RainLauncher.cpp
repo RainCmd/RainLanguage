@@ -71,6 +71,9 @@ public:
 	const RainString CurrentPath()
 	{
 		rpath = path.substr(workspace.size());
+		for(uint32 i = 0; i < rpath.length(); i++)
+			if(rpath[i] == '\\')
+				rpath[i] = '/';
 		return RainString(rpath.c_str(), (uint32)rpath.length());
 	}
 	const RainString CurrentContent()
