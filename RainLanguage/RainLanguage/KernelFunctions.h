@@ -259,28 +259,34 @@ String array_GetEnumerator(KernelInvokerParameter parameter);									//Collecti
 
 String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter);						//bool, handle Collections.ArrayEnumerator.()
 
+String Reflection_Variable_IsValid(KernelInvokerParameter parameter);							//bool Reflection.Variable.()
 String Reflection_Variable_GetAttributes(KernelInvokerParameter parameter);						//string[] Reflection.Variable.()
 String Reflection_Variable_GetValue(KernelInvokerParameter parameter);							//handle Reflection.Variable.()
 String Reflection_Variable_SetValue(KernelInvokerParameter parameter);							//Reflection.Variable.(handle)
 
+String Reflection_MemberConstructor_IsValid(KernelInvokerParameter parameter);					//bool Reflection.MemberConstructor.()
 String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter parameter);			//string[] Reflection.MemberConstructor.()
 String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter parameter);			//type[] Reflection.MemberConstructor.()
 String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter);					//handle Reflection.MemberConstructor.(handle[])
 
+String Reflection_MemberVariable_IsValid(KernelInvokerParameter parameter);						//bool Reflection.MemberVariable.()
 String Reflection_MemberVariable_GetAttributes(KernelInvokerParameter parameter);				//string[] Reflection.MemberVariable.()
 String Reflection_MemberVariable_GetValue(KernelInvokerParameter parameter);					//handle Reflection.MemberVariable.(handle)
 String Reflection_MemberVariable_SetValue(KernelInvokerParameter parameter);					//Reflection.MemberVariable.(handle, handle)
 
+String Reflection_MemberFunction_IsValid(KernelInvokerParameter parameter);						//bool Reflection.MemberFunction.()
 String Reflection_MemberFunction_GetAttributes(KernelInvokerParameter parameter);				//string[] Reflection.MemberFunction.()
 String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter);				//type[] Reflection.MemberFunction.()
 String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter);					//type[] Reflection.MemberFunction.()
 String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter);						//handle[] Reflection.MemberFunction.(handle, handle[], bool)
 
+String Reflection_Function_IsValid(KernelInvokerParameter parameter);							//bool Reflection.Function.()
 String Reflection_Function_GetAttributes(KernelInvokerParameter parameter);						//string[] Reflection.Function.()
 String Reflection_Function_GetParameters(KernelInvokerParameter parameter);						//type[] Reflection.Function.()
 String Reflection_Function_GetReturns(KernelInvokerParameter parameter);						//type[] Reflection.Function.()
 String Reflection_Function_Invoke(KernelInvokerParameter parameter);							//handle[] Reflection.Function.(handle[])
 
+String Reflection_Native_IsValid(KernelInvokerParameter parameter);								//bool Reflection.Native.()
 String Reflection_Native_GetAttributes(KernelInvokerParameter parameter);						//string[] Reflection.Native.()
 String Reflection_Native_GetParameters(KernelInvokerParameter parameter);						//type[] Reflection.Native.()
 String Reflection_Native_GetReturns(KernelInvokerParameter parameter);							//type[] Reflection.Native.()

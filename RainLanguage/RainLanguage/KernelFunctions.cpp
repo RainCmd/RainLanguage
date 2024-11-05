@@ -2784,6 +2784,12 @@ String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter)//bool,
 #pragma endregion 集合
 
 #pragma region 反射
+String Reflection_Variable_IsValid(KernelInvokerParameter parameter)//bool Reflection.Variable.()
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, ReflectionVariable, 0).valid;
+	return String();
+}
+
 String Reflection_Variable_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.Variable.()
 {
 	ReflectionVariable& variable = PARAMETER_VALUE(1, ReflectionVariable, 0);
@@ -2813,6 +2819,12 @@ String Reflection_Variable_SetValue(KernelInvokerParameter parameter)//Reflectio
 	RuntimeVariable& info = library->variables[variable.variable];
 	if(info.readonly) return parameter.kernel->stringAgency->Add(EXCEPTION_ASSIGNMENT_READONLY_VARIABLE);
 	return StrongUnbox(parameter.kernel, info.type, PARAMETER_VALUE(0, Handle, MemoryAlignment(SIZE(ReflectionVariable), MEMORY_ALIGNMENT_MAX)), parameter.kernel->libraryAgency->data.GetPointer() + info.address);
+}
+
+String Reflection_MemberConstructor_IsValid(KernelInvokerParameter parameter)//bool Reflection.MemberConstructor.()
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(0, ReflectionMemberConstructor, 0).valid;
+	return String();
 }
 
 String Reflection_MemberConstructor_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.MemberConstructor.()
@@ -2966,6 +2978,12 @@ String Reflection_MemberConstructor_Invoke(KernelInvokerParameter parameter)//ha
 	}
 }
 
+String Reflection_MemberVariable_IsValid(KernelInvokerParameter parameter)//bool Reflection.MemberVariable.()
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, ReflectionMemberVariable, 0).valid;
+	return String();
+}
+
 String Reflection_MemberVariable_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.MemberVariable.()
 {
 	ReflectionMemberVariable& member = PARAMETER_VALUE(1, ReflectionMemberVariable, 0);
@@ -3007,6 +3025,12 @@ String Reflection_MemberVariable_SetValue(KernelInvokerParameter parameter)//Ref
 	if(member.declaration.code == TypeCode::Handle)
 		pointer += parameter.kernel->libraryAgency->GetClass(Type(member.declaration, 0))->offset;
 	return StrongUnbox(parameter.kernel, info->type, value, pointer);
+}
+
+String Reflection_MemberFunction_IsValid(KernelInvokerParameter parameter)//bool Reflection.MemberFunction.()
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, ReflectionMemberFunction, 0).valid;
+	return String();
 }
 
 String Reflection_MemberFunction_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.MemberFunction.()
@@ -3233,6 +3257,12 @@ String Reflection_MemberFunction_Invoke(KernelInvokerParameter parameter)//handl
 	}
 }
 
+String Reflection_Function_IsValid(KernelInvokerParameter parameter)//bool Reflection.Function.()
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, ReflectionFunction, 0).valid;
+	return String();
+}
+
 String Reflection_Function_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.Function.()
 {
 	ReflectionFunction& function = PARAMETER_VALUE(1, ReflectionFunction, 0);
@@ -3394,6 +3424,12 @@ String Reflection_Function_Invoke(KernelInvokerParameter parameter)//handle[] Re
 		}
 		else return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_CAST);
 	}
+}
+
+String Reflection_Native_IsValid(KernelInvokerParameter parameter)//bool Reflection.Native.()
+{
+	RETURN_VALUE(bool, 0) = PARAMETER_VALUE(1, ReflectionNative, 0).valid;
+	return String();
 }
 
 String Reflection_Native_GetAttributes(KernelInvokerParameter parameter)//string[] Reflection.Native.()
