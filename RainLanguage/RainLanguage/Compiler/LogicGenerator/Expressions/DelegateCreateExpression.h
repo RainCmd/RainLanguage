@@ -34,7 +34,7 @@ public:
 	Expression* source;
 	CompilingDeclaration declaration;
 	bool question;
-	inline VirtualFunctionDelegateCreateExpression(const Anchor& anchor, const Type& delegateType, Expression* source, const CompilingDeclaration& declaration, bool question) :Expression(ExpressionType::VirtualFunctionDelegateCreateExpression, anchor, List<Type, true>(1)), source(source), declaration(declaration), question(question)
+	inline VirtualFunctionDelegateCreateExpression(const Anchor& anchor, const Type& delegateType, Expression* source, const CompilingDeclaration& declaration, bool question) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), source(source), declaration(declaration), question(question)
 	{
 		returns.Add(delegateType);
 		attribute = CombineType(Attribute::Value, delegateType);
@@ -49,8 +49,7 @@ public:
 	CompilingDeclaration closure;
 	Type closureType;
 	uint32 functionIndex;
-	inline LambdaClosureDelegateCreateExpression(const Anchor& anchor, const Type& delegateType, const CompilingDeclaration& closure, const Type& closureType, uint32 functionIndex)
-		:Expression(ExpressionType::VirtualFunctionDelegateCreateExpression, anchor, List<Type, true>(1)), closure(closure), closureType(closureType), functionIndex(functionIndex)
+	inline LambdaClosureDelegateCreateExpression(const Anchor& anchor, const Type& delegateType, const CompilingDeclaration& closure, const Type& closureType, uint32 functionIndex) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), closure(closure), closureType(closureType), functionIndex(functionIndex)
 	{
 		returns.Add(delegateType);
 		attribute = Attribute::Value | Attribute::Callable;
