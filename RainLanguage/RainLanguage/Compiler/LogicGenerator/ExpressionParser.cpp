@@ -1375,7 +1375,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 				if(ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					Expression* thisExpression;
-					if(TryGetThisValueExpression(lexical.anchor, thisExpression))
+					if(TryGetThisValueExpression(lexical.anchor.Sub(0, 0), thisExpression))
 					{
 						VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
 						expressionStack.Add(expression);
@@ -1390,7 +1390,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 				if(ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					Expression* thisExpression;
-					if(TryGetThisValueExpression(lexical.anchor, thisExpression))
+					if(TryGetThisValueExpression(lexical.anchor.Sub(0, 0), thisExpression))
 					{
 						MethodMemberExpression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
 						expressionStack.Add(expression);
@@ -1416,7 +1416,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 				if(ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					Expression* thisExpression;
-					if(TryGetThisValueExpression(lexical.anchor, thisExpression))
+					if(TryGetThisValueExpression(lexical.anchor.Sub(0, 0), thisExpression))
 					{
 						VariableMemberExpression* expression = new VariableMemberExpression(lexical.anchor, declaration, GetVariableAttribute(declaration), thisExpression, GetVariableType(declaration));
 						expressionStack.Add(expression);
@@ -1431,7 +1431,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 				if(ContainAny(attribute, Attribute::None | Attribute::Operator))
 				{
 					Expression* thisExpression;
-					if(TryGetThisValueExpression(lexical.anchor, thisExpression))
+					if(TryGetThisValueExpression(lexical.anchor.Sub(0, 0), thisExpression))
 					{
 						MethodVirtualExpression* expression = new MethodVirtualExpression(lexical.anchor, thisExpression, declarations, false);
 						expressionStack.Add(expression);
@@ -1513,7 +1513,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 		if(declarations.Peek().category == DeclarationCategory::StructFunction)
 		{
 			Expression* thisExpression;
-			if(TryGetThisValueExpression(lexical.anchor, thisExpression))
+			if(TryGetThisValueExpression(lexical.anchor.Sub(0, 0), thisExpression))
 			{
 				MethodMemberExpression* expression = new MethodMemberExpression(lexical.anchor, thisExpression, declarations, false);
 				expressionStack.Add(expression);
@@ -1524,7 +1524,7 @@ bool ExpressionParser::TryPushDeclarationsExpression(const Anchor& anchor, uint3
 		else if(declarations.Peek().category == DeclarationCategory::ClassFunction)
 		{
 			Expression* thisExpression;
-			if(TryGetThisValueExpression(lexical.anchor, thisExpression))
+			if(TryGetThisValueExpression(lexical.anchor.Sub(0, 0), thisExpression))
 			{
 				MethodVirtualExpression* expression = new MethodVirtualExpression(lexical.anchor, thisExpression, declarations, false);
 				expressionStack.Add(expression);
