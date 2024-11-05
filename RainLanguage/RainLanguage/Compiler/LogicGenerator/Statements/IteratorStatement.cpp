@@ -11,17 +11,17 @@
 IteratorStatement::IteratorStatement(const Anchor& anchor, Expression* condition, Expression* element, DeclarationManager* manager, ExpressionParser* parser) : LoopStatement(StatementType::Iterator, anchor, condition), element(element), conditionLocalIndex(INVALID)
 {
 	Local local = parser->localContext->AddLocal(String(), condition->anchor, condition->returns[0]);
-	this->condition = new TupleAssignmentExpression(condition->anchor, new VariableLocalExpression(condition->anchor, local.GetDeclaration(), Attribute::Assignable, local.type), condition);
+	this->condition = new TupleAssignmentExpression(condition->anchor, new VariableTemporaryExpression(condition->anchor, local.GetDeclaration(), Attribute::Assignable, local.type), condition);
 
 	AbstractDeclaration* abstractDeclaration = manager->GetDeclaration(local.type);
 	if(abstractDeclaration->declaration.category == DeclarationCategory::Delegate)
 	{
 		AbstractDelegate* abstractDelegate = (AbstractDelegate*)abstractDeclaration;
-		Expression* invoker = new InvokerDelegateExpression(element->anchor, abstractDelegate->returns.GetTypes(), new VariableLocalExpression(condition->anchor, local.GetDeclaration(), Attribute::Assignable | Attribute::Value, local.type), GetEmptyTupleExpression(element->anchor), false);
+		Expression* invoker = new InvokerDelegateExpression(element->anchor, abstractDelegate->returns.GetTypes(), new VariableTemporaryExpression(condition->anchor, local.GetDeclaration(), Attribute::Assignable | Attribute::Value, local.type), GetEmptyTupleExpression(element->anchor), false);
 		local = parser->localContext->AddLocal(String(), element->anchor, TYPE_Bool);
 		conditionLocalIndex = local.index;
 		List<Expression*, true> expressions(2);
-		expressions.Add(new VariableLocalExpression(condition->anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
+		expressions.Add(new VariableTemporaryExpression(condition->anchor, local.GetDeclaration(), Attribute::Assignable, local.type));
 		expressions.Add(element);
 		List<Type, true> types(abstractDelegate->returns.Count());
 		types.Add(TYPE_Bool);

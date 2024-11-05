@@ -7,6 +7,16 @@ public:
 	inline VariableExpression(ExpressionType type, const Anchor& anchor, const Type variableType) :Expression(type | ExpressionType::VariableExpression, anchor, List<Type, true>(1)) { returns.Add(variableType); }
 };
 
+class VariableTemporaryExpression :public VariableExpression
+{
+public:
+	CompilingDeclaration declaration;
+	inline VariableTemporaryExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Attribute attribute, const Type& type) :VariableExpression(ExpressionType::Unused, anchor, type), declaration(declaration) { this->attribute = CombineType(attribute, type); }
+	void Generator(LogicGenerateParameter& parameter);
+	void GeneratorAssignment(LogicGenerateParameter& parameter);
+	void FillResultVariable(LogicGenerateParameter& parameter, uint32 index);
+};
+
 class VariableLocalExpression :public VariableExpression
 {
 	void DatabaseAddClosure(LogicGenerateParameter& parameter, uint32 localIndex, uint32 memberIndex) const;

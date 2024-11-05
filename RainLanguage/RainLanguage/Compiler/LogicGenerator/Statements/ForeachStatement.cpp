@@ -15,13 +15,13 @@ ForeachStatement::ForeachStatement(const Anchor& anchor, Expression* condition, 
 
 	AbstractCallable* Enumerable_GetEnumerator = manager->kernelLibaray->interfaces[MEMBER_FUNCTION_Enumerable_GetEnumerator.declaration.index]->functions[MEMBER_FUNCTION_Enumerable_GetEnumerator.function];
 	condition = new InvokerVirtualMemberExpression(condition->anchor, tuple, GetEmptyTupleExpression(condition->anchor), condition, Enumerable_GetEnumerator->declaration, false);
-	this->condition = new TupleAssignmentExpression(condition->anchor, new VariableLocalExpression(condition->anchor, localIterator, Attribute::Assignable, TYPE_Collections_Enumerator), condition);
+	this->condition = new TupleAssignmentExpression(condition->anchor, new VariableTemporaryExpression(condition->anchor, localIterator, Attribute::Assignable, TYPE_Collections_Enumerator), condition);
 
 	tuple.Clear();
 	tuple.Add(TYPE_Bool);
 	tuple.Add(TYPE_Handle);
 	AbstractCallable* Enumerator_Next = manager->kernelLibaray->interfaces[MEMBER_FUNCTION_Enumerator_Next.declaration.index]->functions[MEMBER_FUNCTION_Enumerator_Next.function];
-	invoker = new InvokerVirtualMemberExpression(condition->anchor, tuple, GetEmptyTupleExpression(condition->anchor), new VariableLocalExpression(condition->anchor, localIterator, Attribute::Assignable | Attribute::Value, TYPE_Collections_Enumerator), Enumerator_Next->declaration, false);
+	invoker = new InvokerVirtualMemberExpression(condition->anchor, tuple, GetEmptyTupleExpression(condition->anchor), new VariableTemporaryExpression(condition->anchor, localIterator, Attribute::Assignable | Attribute::Value, TYPE_Collections_Enumerator), Enumerator_Next->declaration, false);
 
 	localItem = localContext->AddLocal(String(), element->anchor, TYPE_Handle).index;
 }

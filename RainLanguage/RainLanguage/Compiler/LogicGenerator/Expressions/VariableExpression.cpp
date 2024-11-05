@@ -3,6 +3,25 @@
 #include "../LocalContext.h"
 #include "ArrayExpression.h"
 
+void VariableTemporaryExpression::Generator(LogicGenerateParameter& parameter)
+{
+	parameter.results[0] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+}
+
+void VariableTemporaryExpression::GeneratorAssignment(LogicGenerateParameter& parameter)
+{
+	if(parameter.results[0] != parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]))
+	{
+		LogicVariable local = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+		LogicVariabelAssignment(parameter.manager, parameter.generator, local, parameter.results[0]);
+	}
+}
+
+void VariableTemporaryExpression::FillResultVariable(LogicGenerateParameter& parameter, uint32 index)
+{
+	parameter.results[index] = parameter.variableGenerator->GetLocal(parameter.manager, declaration.index, returns[0]);
+}
+
 void VariableLocalExpression::DatabaseAddClosure(LogicGenerateParameter& parameter, uint32 localIndex, uint32 memberIndex) const
 {
 	List<MemberIndex> indices(1);
