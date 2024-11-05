@@ -5,7 +5,7 @@ class QuestionNullExpression : public Expression
 {
 public:
 	Expression* left, * right;
-	inline QuestionNullExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::QuestionNullExpression, anchor, left->returns), left(left), right(right)
+	inline QuestionNullExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::Unused, anchor, left->returns), left(left), right(right)
 	{
 		attribute = CombineType(Attribute::Value, left->returns.Peek());
 	}

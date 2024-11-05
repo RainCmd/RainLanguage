@@ -5,7 +5,7 @@ class ConstantBooleanExpression :public Expression
 {
 public:
 	bool value;
-	inline ConstantBooleanExpression(const Anchor& anchor, bool value) :Expression(ExpressionType::ConstantBooleanExpression, anchor, List<Type, true>(1)), value(value)
+	inline ConstantBooleanExpression(const Anchor& anchor, bool value) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), value(value)
 	{
 		returns.Add(TYPE_Bool);
 		attribute = Attribute::Constant;
@@ -18,7 +18,7 @@ class ConstantByteExpression :public Expression
 {
 public:
 	uint8 value;
-	inline ConstantByteExpression(const Anchor& anchor, uint8 value) :Expression(ExpressionType::ConstantByteExpression, anchor, List<Type, true>(1)), value(value)
+	inline ConstantByteExpression(const Anchor& anchor, uint8 value) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), value(value)
 	{
 		returns.Add(TYPE_Byte);
 		attribute = Attribute::Constant;
@@ -79,7 +79,7 @@ class ConstantStringExpression :public Expression
 {
 public:
 	String value;
-	inline ConstantStringExpression(const Anchor& anchor, const String& value) :Expression(ExpressionType::ConstantStringExpression, anchor, List<Type, true>(1)), value(value)
+	inline ConstantStringExpression(const Anchor& anchor, const String& value) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), value(value)
 	{
 		returns.Add(TYPE_String);
 		attribute = Attribute::Constant | Attribute::Array;
@@ -103,7 +103,7 @@ public:
 class ConstantHandleNullExpression :public Expression
 {
 public:
-	inline ConstantHandleNullExpression(const Anchor& anchor, const Type& type) :Expression(ExpressionType::ConstantHandleNullExpression, anchor, List<Type, true>(1))
+	inline ConstantHandleNullExpression(const Anchor& anchor, const Type& type) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1))
 	{
 		returns.Add(type);
 		attribute = Attribute::Constant;
@@ -115,7 +115,7 @@ public:
 class ConstantEntityNullExpression :public Expression
 {
 public:
-	inline ConstantEntityNullExpression(const Anchor& anchor) :Expression(ExpressionType::ConstantEntityNullExpression, anchor, List<Type, true>(1))
+	inline ConstantEntityNullExpression(const Anchor& anchor) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1))
 	{
 		returns.Add(TYPE_Entity);
 		attribute = Attribute::Constant;
@@ -128,7 +128,7 @@ class ConstantTypeExpression :public Expression
 {
 public:
 	const Type customType;
-	inline ConstantTypeExpression(const Anchor& anchor, const Type& customType) :Expression(ExpressionType::ConstantTypeExpression, anchor, List<Type, true>(1)), customType(customType)
+	inline ConstantTypeExpression(const Anchor& anchor, const Type& customType) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), customType(customType)
 	{
 		returns.Add(TYPE_Type);
 		attribute = Attribute::Constant;

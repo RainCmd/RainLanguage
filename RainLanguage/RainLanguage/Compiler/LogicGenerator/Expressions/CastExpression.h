@@ -6,7 +6,7 @@ class CastExpression :public Expression//这个表达式只是为了满足语法
 {
 public:
 	Expression* expression;
-	inline CastExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::CastExpression, anchor, List<Type, true>(1)), expression(expression)
+	inline CastExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), expression(expression)
 	{
 		returns.Add(targetType);
 		attribute = CombineType((expression->attribute & Attribute::Constant) | Attribute::Value, targetType);
@@ -32,7 +32,7 @@ public:
 	Expression* expression;
 	VariableLocalExpression* local;
 	Type targetType;
-	inline IsCastExpression(const Anchor& anchor, Expression* expression, VariableLocalExpression* local, const Type& targetType) :Expression(ExpressionType::IsCastExpression, anchor, List<Type, true>(1)), expression(expression), local(local), targetType(targetType) 
+	inline IsCastExpression(const Anchor& anchor, Expression* expression, VariableLocalExpression* local, const Type& targetType) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), expression(expression), local(local), targetType(targetType) 
 	{
 		returns.Add(TYPE_Bool);
 		attribute = Attribute::Value;
@@ -45,7 +45,7 @@ class AsCastExpression :public Expression
 {
 public:
 	Expression* expression;
-	inline AsCastExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::AsCastExpression, anchor, List<Type, true>(1)), expression(expression) 
+	inline AsCastExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), expression(expression) 
 	{
 		returns.Add(targetType);
 		attribute = (expression->attribute & Attribute::Constant) | Attribute::Value;
@@ -59,7 +59,7 @@ class HandleCastExpression :public Expression
 {
 public:
 	Expression* expression;
-	inline HandleCastExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::HandleCastExpression, anchor, List<Type, true>(1)), expression(expression)
+	inline HandleCastExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), expression(expression)
 	{
 		returns.Add(targetType);
 		attribute = (expression->attribute & Attribute::Constant) | Attribute::Value;
@@ -73,7 +73,7 @@ class TupleCastExpression :public Expression
 {
 public:
 	Expression* source;
-	inline TupleCastExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source) :Expression(ExpressionType::TupleCastExpression, anchor, returns), source(source)
+	inline TupleCastExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source) :Expression(ExpressionType::Unused, anchor, returns), source(source)
 	{
 		if (returns.Count() == 1)attribute = CombineType(Attribute::Value, returns.Peek());
 		else attribute = Attribute::Tuple;
@@ -90,7 +90,7 @@ class UnboxExpression :public Expression
 {
 public:
 	Expression* expression;
-	inline UnboxExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::UnboxExpression, anchor, List<Type, true>(1)), expression(expression)
+	inline UnboxExpression(const Anchor& anchor, const Type& targetType, Expression* expression) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), expression(expression)
 	{
 		returns.Add(targetType);
 		attribute = (expression->attribute & Attribute::Constant) | Attribute::Value;

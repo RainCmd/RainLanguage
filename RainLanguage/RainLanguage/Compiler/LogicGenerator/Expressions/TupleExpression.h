@@ -38,7 +38,7 @@ class TupleEvaluationExpression :public Expression
 public:
 	Expression* source;
 	List<integer, true>elementIndices;
-	inline TupleEvaluationExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source, const List<integer, true>& elementIndices) :Expression(ExpressionType::TupleEvaluationExpression, anchor, returns), source(source), elementIndices(elementIndices)
+	inline TupleEvaluationExpression(const Anchor& anchor, const List<Type, true>& returns, Expression* source, const List<integer, true>& elementIndices) :Expression(ExpressionType::Unused, anchor, returns), source(source), elementIndices(elementIndices)
 	{
 		if(returns.Count() == 1)attribute = CombineType(Attribute::Value, returns[0]);
 		else attribute = Attribute::Tuple;
@@ -53,7 +53,7 @@ class TupleAssignmentExpression :public Expression
 public:
 	Expression* left;
 	Expression* right;
-	inline TupleAssignmentExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::TupleAssignmentExpression, anchor, left->returns), left(left), right(right)
+	inline TupleAssignmentExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::Unused, anchor, left->returns), left(left), right(right)
 	{
 		attribute = left->attribute & ~Attribute::Assignable;
 	}

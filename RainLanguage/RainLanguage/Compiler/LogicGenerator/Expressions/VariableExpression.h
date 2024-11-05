@@ -84,7 +84,7 @@ class VariableQuestionMemberExpression :public Expression
 public:
 	Expression* target;
 	CompilingDeclaration declaration;
-	inline VariableQuestionMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Expression* target, const Type& type) :Expression(ExpressionType::VariableQuestionMemberExpression, anchor, List<Type, true>(1)), declaration(declaration), target(target)
+	inline VariableQuestionMemberExpression(const Anchor& anchor, const CompilingDeclaration& declaration, Expression* target, const Type& type) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), declaration(declaration), target(target)
 	{
 		returns.Add(type);
 		attribute = CombineType(Attribute::Value, type);

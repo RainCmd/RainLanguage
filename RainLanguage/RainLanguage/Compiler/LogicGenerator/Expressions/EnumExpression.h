@@ -5,7 +5,7 @@ class EnumElementExpression :public Expression
 {
 public:
 	CompilingDeclaration element;
-	inline EnumElementExpression(const Anchor& anchor, const CompilingDeclaration& element) :Expression(ExpressionType::ArrayCreateExpression, anchor, List<Type, true>(1)), element(element)
+	inline EnumElementExpression(const Anchor& anchor, const CompilingDeclaration& element) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), element(element)
 	{
 		returns.Add(Type(element.library, TypeCode::Enum, element.definition, 0));
 		attribute = Attribute::Value;

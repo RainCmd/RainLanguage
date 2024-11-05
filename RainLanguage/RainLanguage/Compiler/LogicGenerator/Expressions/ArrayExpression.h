@@ -5,7 +5,7 @@ class ArrayCreateExpression :public Expression
 {
 public:
 	Expression* length;
-	inline ArrayCreateExpression(const Anchor& anchor, Expression* length, const Type& type) :Expression(ExpressionType::ArrayCreateExpression, anchor, List<Type, true>(1)), length(length)
+	inline ArrayCreateExpression(const Anchor& anchor, Expression* length, const Type& type) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), length(length)
 	{
 		returns.Add(type);
 		attribute = Attribute::Value | Attribute::Array;
@@ -18,7 +18,7 @@ class ArrayInitExpression :public Expression
 {
 public:
 	Expression* elements;
-	inline ArrayInitExpression(const Anchor& anchor, Expression* elements, const Type& type) :Expression(ExpressionType::ArrayInitExpression, anchor, List<Type, true>(1)), elements(elements)
+	inline ArrayInitExpression(const Anchor& anchor, Expression* elements, const Type& type) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), elements(elements)
 	{
 		returns.Add(type);
 		attribute = Attribute::Value | Attribute::Array;
@@ -51,7 +51,7 @@ class ArrayQuestionEvaluationExpression :public Expression
 {
 public:
 	Expression* arrayExpression, * indexExpression;
-	inline ArrayQuestionEvaluationExpression(const Anchor& anchor, Expression* arrayExpression, Expression* indexExpression, const Type& elementType) :Expression(ExpressionType::ArrayQuestionEvaluationExpression, anchor, List<Type, true>(1)), arrayExpression(arrayExpression), indexExpression(indexExpression)
+	inline ArrayQuestionEvaluationExpression(const Anchor& anchor, Expression* arrayExpression, Expression* indexExpression, const Type& elementType) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), arrayExpression(arrayExpression), indexExpression(indexExpression)
 	{
 		returns.Add(elementType);
 		attribute = CombineType(Attribute::Value, elementType);
@@ -65,7 +65,7 @@ class StringEvaluationExpression :public Expression
 {
 public:
 	Expression* source, * index;
-	inline StringEvaluationExpression(const Anchor& anchor, Expression* source, Expression* index) :Expression(ExpressionType::StringEvaluationExpression, anchor, List<Type, true>(1)), source(source), index(index)
+	inline StringEvaluationExpression(const Anchor& anchor, Expression* source, Expression* index) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), source(source), index(index)
 	{
 		returns.Add(TYPE_Char);
 		attribute = Attribute::Value;
@@ -78,7 +78,7 @@ class ArraySubExpression :public Expression
 {
 public:
 	Expression* source, * range;
-	inline ArraySubExpression(const Anchor& anchor, Expression* source, Expression* range) :Expression(ExpressionType::ArraySubExpression, anchor, source->returns), source(source), range(range)
+	inline ArraySubExpression(const Anchor& anchor, Expression* source, Expression* range) :Expression(ExpressionType::Unused, anchor, source->returns), source(source), range(range)
 	{
 		attribute = Attribute::Value | Attribute::Array;
 	}
@@ -90,7 +90,7 @@ class ArrayQuestionSubExpression :public Expression
 {
 public:
 	Expression* source, * range;
-	inline ArrayQuestionSubExpression(const Anchor& anchor, Expression* source, Expression* range) :Expression(ExpressionType::ArrayQuestionSubExpression, anchor, source->returns), source(source), range(range)
+	inline ArrayQuestionSubExpression(const Anchor& anchor, Expression* source, Expression* range) :Expression(ExpressionType::Unused, anchor, source->returns), source(source), range(range)
 	{
 		attribute = Attribute::Value | Attribute::Array;
 	}

@@ -5,7 +5,7 @@ class LogicAndExpression :public Expression
 {
 public:
 	Expression* left, * right;
-	inline LogicAndExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::LogicAndExpression, anchor, List<Type, true>(1)), left(left), right(right)
+	inline LogicAndExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), left(left), right(right)
 	{
 		returns.Add(TYPE_Bool);
 		attribute = Attribute::Value;
@@ -18,7 +18,7 @@ class LogicOrExpression :public Expression
 {
 public:
 	Expression* left, * right;
-	inline LogicOrExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::LogicOrExpression, anchor, List<Type, true>(1)), left(left), right(right)
+	inline LogicOrExpression(const Anchor& anchor, Expression* left, Expression* right) :Expression(ExpressionType::Unused, anchor, List<Type, true>(1)), left(left), right(right)
 	{
 		returns.Add(TYPE_Bool);
 		attribute = Attribute::Value;
