@@ -13,7 +13,7 @@
 
 static void Save(RainBuffer<uint8>* buffer, wstring path)
 {
-	fstream file(path, ios::out | ios::trunc);
+	fstream file(path, ios::out | ios::binary);
 	file.write((char*)buffer->Data(), buffer->Count());
 	file.close();
 }
@@ -170,28 +170,26 @@ static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint3
 	}
 }
 
-static bool IsName(const RainString& name)
-{
-	if(name.length != args.name.size()) return false;
-	for(uint32 i = 0; i < name.length; i++)
-		if(name.value[i] != args.name.c_str()[i])return false;
-	return true;
-}
-static vector<uint8>* GetData(wstring path, const wstring& name)
+static wstring NormalPath(wstring path)
 {
 	if(path[0] == L'.') path = args.path + L"/" + path;
 	wchar_t last = path[path.size() - 1];
 	if(last != '/' && last != '\\') path += '/';
+	return path;
+}
+static vector<uint8>* GetData(wstring path, const wstring& name)
+{
+	path = NormalPath(path) + name;
 
-	ifstream file(path + name);
+	ifstream file(path, ios::binary);
 	vector<uint8>* result = nullptr;
 	if(file.good() && file.is_open())
 	{
 		streamsize size = file.tellg();
 		file.seekg(0, ios::beg);
 
-		result = new vector<uint8>(size);
-		file.read(reinterpret_cast<char*>(result->data()), size);
+		result = new vector<uint8>(istreambuf_iterator<char>(file), istreambuf_iterator<char>());
+		file.close();
 	}
 	return result;
 }
@@ -204,6 +202,13 @@ static vector<uint8>* GetData(wstring name)
 		if(result) return result;
 	}
 	return nullptr;
+}
+static bool IsName(const RainString& name)
+{
+	if(name.length != args.name.size()) return false;
+	for(uint32 i = 0; i < name.length; i++)
+		if(name.value[i] != args.name.c_str()[i])return false;
+	return true;
 }
 static RainLibrary* LibraryLoader(const RainString& name)
 {
@@ -273,6 +278,7 @@ int main(int cnt, char** _args)
 	{
 		if(args.out.size())
 		{
+			args.out = NormalPath(args.out);
 			if(!_wmkdir(args.out.c_str()) || errno == EEXIST)
 			{
 				RainBuffer<uint8>* buffer = Serialize(*product->GetLibrary());
