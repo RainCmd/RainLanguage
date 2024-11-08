@@ -149,7 +149,7 @@ static OnCaller NativeLoader(RainKernel& kernel, const RainString fullName, cons
 }
 
 static RainProduct* product;
-static wstring name;
+static Args args;
 static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint32 frameCount, const RainString msg)
 {
 	RainProgramDatabase* pdb = product->GetRainProgramDatabase();
@@ -157,7 +157,7 @@ static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint3
 	for(size_t i = 0; i < frameCount; i++)
 	{
 		wstring libName = wstring(frames[i].libraryName.value, frames[i].libraryName.length);
-		if(name == libName)
+		if(args.name == libName)
 		{
 			uint32 line;
 			RainString file = pdb->GetPosition(frames[i].address, line);
@@ -172,29 +172,78 @@ static void OnExceptionExitFunc(RainKernel&, const RainStackFrame* frames, uint3
 
 static bool IsName(const RainString& name)
 {
-	if(name.length != ::name.size()) return false;
+	if(name.length != args.name.size()) return false;
 	for(uint32 i = 0; i < name.length; i++)
-		if(name.value[i] != ::name.c_str()[i])return false;
+		if(name.value[i] != args.name.c_str()[i])return false;
 	return true;
+}
+static vector<uint8>* GetData(wstring path, const wstring& name)
+{
+	if(path[0] == L'.') path = args.path + L"/" + path;
+	wchar_t last = path[path.size() - 1];
+	if(last != '/' && last != '\\') path += '/';
+
+	ifstream file(path + name);
+	vector<uint8>* result = nullptr;
+	if(file.good() && file.is_open())
+	{
+		streamsize size = file.tellg();
+		file.seekg(0, ios::beg);
+
+		result = new vector<uint8>(size);
+		file.read(reinterpret_cast<char*>(result->data()), size);
+	}
+	return result;
+}
+static vector<uint8>* GetData(wstring name)
+{
+	vector<uint8>* result = nullptr;
+	for(uint32 i = 0; i < args.referencePath.size(); i++)
+	{
+		result = GetData(args.referencePath[i], name);
+		if(result) return result;
+	}
+	return nullptr;
 }
 static RainLibrary* LibraryLoader(const RainString& name)
 {
 	if(IsName(name)) return product->GetLibrary();
+	vector<uint8>* data = GetData(wstring(name.value, name.length).append(L".rdll"));
+	if(data)
+	{
+		RainLibrary* result = DeserializeLibrary(data->data(), data->size());
+		delete data; data = nullptr;
+		return result;
+	}
 	return nullptr;
+}
+static void LibraryUnloader(RainLibrary* library)
+{
+	Delete(library);
 }
 static RainProgramDatabase* ProgramDatabaseLoader(const RainString& name)
 {
 	if(IsName(name)) return product->GetRainProgramDatabase();
+	vector<uint8>* data = GetData(wstring(name.value, name.length).append(L".rpdb"));
+	if(data)
+	{
+		RainProgramDatabase* result = DeserializeDatabase(data->data(), data->size());
+		delete data; data = nullptr;
+		return result;
+	}
 	return nullptr;
+}
+static void ProgramDatabaseUnloader(RainProgramDatabase* database)
+{
+	Delete(database);
 }
 int main(int cnt, char** _args)
 {
 	wcout.imbue(locale("zh_CN"));
-	Args args = Parse(cnt, _args);
+	args = Parse(cnt, _args);
 
-	name = args.name;
 	CodeLoadHelper helper(args.path);
-	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, nullptr, nullptr, (ErrorLevel)args.errorLevel);
+	BuildParameter parameter(RainString(args.name.c_str(), (uint32)args.name.size()), args.debug, &helper, LibraryLoader, LibraryUnloader, (ErrorLevel)args.errorLevel);
 	if(!args.silent) wcout << L"开始编译" << endl;
 	clock_t startTime = clock();
 	product = Build(parameter);
@@ -224,13 +273,15 @@ int main(int cnt, char** _args)
 	{
 		if(args.out.size())
 		{
-			_wmkdir(args.out.c_str());
-			RainBuffer<uint8>* buffer = Serialize(*product->GetLibrary());
-			Save(buffer, args.out + L"\\" + name + L".rdll");
-			Delete(buffer);
-			buffer = Serialize(*product->GetRainProgramDatabase());
-			Save(buffer, args.out + L"\\" + name + L".rpdb");
-			Delete(buffer);
+			if(!_wmkdir(args.out.c_str()) || errno == EEXIST)
+			{
+				RainBuffer<uint8>* buffer = Serialize(*product->GetLibrary());
+				Save(buffer, args.out + L"\\" + args.name + L".rdll");
+				Delete(buffer);
+				buffer = Serialize(*product->GetRainProgramDatabase());
+				Save(buffer, args.out + L"\\" + args.name + L".rpdb");
+				Delete(buffer);
+			}
 		}
 		if(args.debug)
 		{
@@ -246,8 +297,8 @@ int main(int cnt, char** _args)
 			}
 		}
 		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(library, nullptr, nullptr, LibraryLoader, nullptr, NativeLoader, OnExceptionExitFunc);
-		RainKernel* kernel = CreateKernel(parameter, ProgramDatabaseLoader, nullptr);
+		StartupParameter parameter(library, nullptr, nullptr, LibraryLoader, LibraryUnloader, NativeLoader, OnExceptionExitFunc);
+		RainKernel* kernel = CreateKernel(parameter, ProgramDatabaseLoader, ProgramDatabaseUnloader);
 		RainFunction entry = kernel->FindFunction(args.entry.c_str(), true);
 		if(entry.IsValid())
 		{

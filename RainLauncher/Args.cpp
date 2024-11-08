@@ -1,5 +1,6 @@
 ﻿#include "windows.h"
 #include <stringapiset.h>
+#include <sstream>
 #include "Args.h"
 
 static wstring S2WS(string src)
@@ -15,12 +16,20 @@ static wstring S2WS(string src)
 }
 static bool CheckCmd(const char* left, const char* right)
 {
-	while(*left == *right)
+	while((*left | 0x20) == (*right | 0x20))
 	{
 		if(!*left) return true;
 		left++; right++;
 	}
 	return false;
+}
+static void SplitPath(vector<wstring>& paths, const wstring& str)
+{
+	wstringstream ss(str);
+	wstring path;
+	while(getline(ss, path, L';'))
+		if(!path.empty())
+			paths.push_back(path);
 }
 Args Parse(int cnt, char** args)
 {
@@ -40,6 +49,11 @@ Args Parse(int cnt, char** args)
 		{
 			if(++i >= cnt) break;
 			result.path = S2WS(args[i]);
+		}
+		else if(CheckCmd(arg, "referencePath"))
+		{
+			if(++i >= cnt) break;
+			SplitPath(result.referencePath, S2WS(args[i]));
 		}
 		else if(CheckCmd(arg, "entry"))
 		{

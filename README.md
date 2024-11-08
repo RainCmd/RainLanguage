@@ -1,7 +1,7 @@
 
 <div align="center">
 
-# 雨言
+# RainLanguage
 
 ![GitHub Release](https://img.shields.io/github/v/release/RainCmd/RainLanguage)[![GitHub Code License](https://img.shields.io/github/license/RainCmd/RainLanguage)](LICENSE)
 
@@ -19,7 +19,7 @@ RainLanguage是一种专为游戏开发设计的编程语言，采用了类似Py
 **如果宿主语言是c++则可以直接使用Public文件夹下的头文件来调用，c语言可以使用ExternC文件夹下的ExternC.h中的接口，csharp可以使用ExternC中RainLanguageAdapter.cs已经封装好的接口。**
 
 ## 尝试一下
-搜索vscode RainLanguage扩展，输入以下代码，然后点击Main函数上面的播放按钮即可输出hello world
+搜索下载vscode RainLanguage扩展，创建main.rain文件并输入以下代码，然后点击Main函数上面的播放按钮即可输出hello world
 ``` cs
 native Print(string)
 
