@@ -2851,8 +2851,8 @@ String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter paramet
 	String error;
 	result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info->parameters.Count(), error);
 	if(!error.IsEmpty()) return error;
-	for(uint32 i = 1; i < info->parameters.Count(); i++)
-		*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, (integer)i - 1) = info->parameters.GetType(i);
+	for(uint32 i = 0; i < info->parameters.Count(); i++)
+		*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info->parameters.GetType(i);
 	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
 }
@@ -3050,12 +3050,12 @@ String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)
 {
 	ReflectionMemberFunction& member = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
 	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	Handle& result = RETURN_VALUE(Handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(result);
+	String error;
 	if(member.declaration.code == TypeCode::Interface)
 	{
 		RuntimeInterface::FunctionInfo& info = parameter.kernel->libraryAgency->GetInterface(Type(member.declaration, 0))->functions[member.function];
-		Handle& result = RETURN_VALUE(Handle, 0);
-		parameter.kernel->heapAgency->StrongRelease(result);
-		String error;
 		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info.parameters.Count(), error);
 		if(!error.IsEmpty()) return error;
 		for(uint32 i = 0; i < info.parameters.Count(); i++)
@@ -3065,15 +3065,12 @@ String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)
 	else
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(member);
-		Handle& result = RETURN_VALUE(Handle, 0);
-		parameter.kernel->heapAgency->StrongRelease(result);
-		String error;
 		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info->parameters.Count(), error);
 		if(!error.IsEmpty()) return error;
-		for(uint32 i = 1; i < info->parameters.Count(); i++)
-			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, (integer)i - 1) = info->parameters.GetType(i);
-		parameter.kernel->heapAgency->StrongReference(result);
+		for(uint32 i = 0; i < info->parameters.Count(); i++)
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info->parameters.GetType(i);
 	}
+	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
 }
 
@@ -3081,30 +3078,26 @@ String Reflection_MemberFunction_GetReturns(KernelInvokerParameter parameter)//t
 {
 	ReflectionMemberFunction& member = PARAMETER_VALUE(1, ReflectionMemberFunction, 0);
 	if(!member.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	Handle& result = RETURN_VALUE(Handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(result);
+	String error;
 	if(member.declaration.code == TypeCode::Interface)
 	{
 		RuntimeInterface::FunctionInfo& info = parameter.kernel->libraryAgency->GetInterface(Type(member.declaration, 0))->functions[member.function];
-		Handle& result = RETURN_VALUE(Handle, 0);
-		parameter.kernel->heapAgency->StrongRelease(result);
-		String error;
 		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info.returns.Count(), error);
 		if(!error.IsEmpty()) return error;
 		for(uint32 i = 0; i < info.returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info.returns.GetType(i);
-		parameter.kernel->heapAgency->StrongReference(result);
 	}
 	else
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(member);
-		Handle& result = RETURN_VALUE(Handle, 0);
-		parameter.kernel->heapAgency->StrongRelease(result);
-		String error;
 		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info->returns.Count(), error);
 		if(!error.IsEmpty()) return error;
 		for(uint32 i = 0; i < info->returns.Count(); i++)
 			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info->returns.GetType(i);
-		parameter.kernel->heapAgency->StrongReference(result);
 	}
+	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
 }
 
