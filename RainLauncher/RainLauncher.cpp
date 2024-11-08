@@ -303,7 +303,7 @@ int main(int cnt, char** _args)
 			}
 		}
 		RainLibrary* forcedReference = nullptr;
-		if(!args.forcedReference.empty()) forcedReference = LibraryLoader(RainString(args.forcedReference.c_str(), args.forcedReference.length()));
+		if(!args.forcedReference.empty()) forcedReference = LibraryLoader(RainString(args.forcedReference.c_str(), (uint32)args.forcedReference.length()));
 
 		RainKernel* kernel;
 		if(forcedReference)
