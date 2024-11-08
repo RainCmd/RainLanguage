@@ -216,7 +216,7 @@ static RainLibrary* LibraryLoader(const RainString& name)
 	vector<uint8>* data = GetData(wstring(name.value, name.length).append(L".rdll"));
 	if(data)
 	{
-		RainLibrary* result = DeserializeLibrary(data->data(), data->size());
+		RainLibrary* result = DeserializeLibrary(data->data(), (uint32)data->size());
 		delete data; data = nullptr;
 		return result;
 	}
@@ -232,7 +232,7 @@ static RainProgramDatabase* ProgramDatabaseLoader(const RainString& name)
 	vector<uint8>* data = GetData(wstring(name.value, name.length).append(L".rpdb"));
 	if(data)
 	{
-		RainProgramDatabase* result = DeserializeDatabase(data->data(), data->size());
+		RainProgramDatabase* result = DeserializeDatabase(data->data(), (uint32)data->size());
 		delete data; data = nullptr;
 		return result;
 	}
