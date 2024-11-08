@@ -302,13 +302,28 @@ int main(int cnt, char** _args)
 				return 0;
 			}
 		}
-		const RainLibrary* library = product->GetLibrary();
-		StartupParameter parameter(library, nullptr, nullptr, LibraryLoader, LibraryUnloader, NativeLoader, OnExceptionExitFunc);
-		RainKernel* kernel = CreateKernel(parameter, ProgramDatabaseLoader, ProgramDatabaseUnloader);
+		RainLibrary* forcedReference = nullptr;
+		if(!args.forcedReference.empty()) forcedReference = LibraryLoader(RainString(args.forcedReference.c_str(), args.forcedReference.length()));
+
+		RainKernel* kernel;
+		if(forcedReference)
+		{
+			RainLibrary* libraries[2]{ product->GetLibrary(), forcedReference };
+			StartupParameter parameter(libraries, 2, nullptr, nullptr, LibraryLoader, LibraryUnloader, NativeLoader, OnExceptionExitFunc);
+			kernel = CreateKernel(parameter, ProgramDatabaseLoader, ProgramDatabaseUnloader);
+			Delete(forcedReference);
+		}
+		else
+		{
+			StartupParameter parameter(product->GetLibrary(), nullptr, nullptr, LibraryLoader, LibraryUnloader, NativeLoader, OnExceptionExitFunc);
+			kernel = CreateKernel(parameter, ProgramDatabaseLoader, ProgramDatabaseUnloader);
+		}
 		RainFunction entry = kernel->FindFunction(args.entry.c_str(), true);
 		if(entry.IsValid())
 		{
 			InvokerWrapper invoker = entry.CreateInvoker();
+			if(!args.forcedReference.empty() && entry.GetParameters().Count() && entry.GetParameters()[0] == RainType::String)
+				invoker.SetParameter(0, args.forcedReference.c_str());
 			invoker.Start(true, false);
 			while(kernel->GetState().taskCount)
 			{

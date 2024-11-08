@@ -60,6 +60,11 @@ Args Parse(int cnt, char** args)
 			if(++i >= cnt) break;
 			result.entry = S2WS(args[i]);
 		}
+		else if(CheckCmd(arg, "forcedReference"))
+		{
+			if(++i >= cnt) break;
+			result.forcedReference = S2WS(args[i]);
+		}
 		else if(CheckCmd(arg, "errorlevel"))
 		{
 			if(++i >= cnt) break;

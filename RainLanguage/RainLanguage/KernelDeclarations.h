@@ -291,11 +291,12 @@ const struct CollectionsArrayEnumerator
 const struct ReflectionVariable : public Variable
 {
 	bool valid;
+	bool readonly;
 	bool isPublic;
 	Handle owningSpace;
 	string name;
 	Type variableType;
-	inline ReflectionVariable(const Variable& variable, bool isPublic, Handle owningSpace, string name, Type variableType) :Variable(variable), valid(true), isPublic(isPublic), owningSpace(owningSpace), name(name), variableType(variableType) {}
+	inline ReflectionVariable(const Variable& variable, bool readonly, bool isPublic, Handle owningSpace, string name, Type variableType) :Variable(variable), valid(true), readonly(readonly), isPublic(isPublic), owningSpace(owningSpace), name(name), variableType(variableType) {}
 };
 
 const struct ReflectionMemberConstructor : public MemberFunction
@@ -309,11 +310,12 @@ const struct ReflectionMemberConstructor : public MemberFunction
 const struct ReflectionMemberVariable : public MemberVariable
 {
 	bool valid;
+	bool readonly;
 	bool isPublic;
 	Type declaringType;
 	string name;
 	Type variableType;
-	inline ReflectionMemberVariable(const MemberVariable& memberVariable, bool isPublic, Type declaringType, string name, Type variableType) :MemberVariable(memberVariable), valid(true), isPublic(isPublic), declaringType(declaringType), name(name), variableType(variableType) {}
+	inline ReflectionMemberVariable(const MemberVariable& memberVariable, bool readonly, bool isPublic, Type declaringType, string name, Type variableType) :MemberVariable(memberVariable), valid(true), readonly(readonly), isPublic(isPublic), declaringType(declaringType), name(name), variableType(variableType) {}
 };
 
 const struct ReflectionMemberFunction : public MemberFunction

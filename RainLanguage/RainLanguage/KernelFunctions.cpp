@@ -1731,7 +1731,7 @@ String type_GetVariables(KernelInvokerParameter parameter)//Reflection.MemberVar
 			{
 				MemberVariable memberVariable(type, i);
 				RuntimeMemberVariable* runtime = parameter.kernel->libraryAgency->GetMemberVariable(memberVariable);
-				ReflectionMemberVariable* variable = new (parameter.kernel->heapAgency->GetArrayPoint(result, i))ReflectionMemberVariable(memberVariable, runtime->isPublic, type, runtime->name, runtime->type);
+				ReflectionMemberVariable* variable = new (parameter.kernel->heapAgency->GetArrayPoint(result, i))ReflectionMemberVariable(memberVariable, runtime->readonly, runtime->isPublic, type, runtime->name, runtime->type);
 				parameter.kernel->stringAgency->Reference(variable->name);
 			}
 		}
@@ -1749,7 +1749,7 @@ String type_GetVariables(KernelInvokerParameter parameter)//Reflection.MemberVar
 			{
 				MemberVariable memberVariable(type, i);
 				RuntimeMemberVariable* runtime = parameter.kernel->libraryAgency->GetMemberVariable(memberVariable);
-				ReflectionMemberVariable* variable = new (parameter.kernel->heapAgency->GetArrayPoint(result, i))ReflectionMemberVariable(memberVariable, runtime->isPublic, type, runtime->name, runtime->type);
+				ReflectionMemberVariable* variable = new (parameter.kernel->heapAgency->GetArrayPoint(result, i))ReflectionMemberVariable(memberVariable, runtime->readonly, runtime->isPublic, type, runtime->name, runtime->type);
 				parameter.kernel->stringAgency->Reference(variable->name);
 			}
 		}
@@ -3678,7 +3678,7 @@ String Reflection_Space_GetVariables(KernelInvokerParameter parameter)//Reflecti
 	for(uint32 i = 0; i < space.variables.Count(); i++)
 	{
 		RuntimeVariable& runtime = library->variables[space.variables[i]];
-		ReflectionVariable* variable = new (parameter.kernel->heapAgency->GetArrayPoint(result, i))ReflectionVariable(Variable(thisValue.library, i), runtime.isPublic, thisHandle, runtime.name, runtime.type);
+		ReflectionVariable* variable = new (parameter.kernel->heapAgency->GetArrayPoint(result, i))ReflectionVariable(Variable(thisValue.library, i), runtime.readonly, runtime.isPublic, thisHandle, runtime.name, runtime.type);
 		parameter.kernel->heapAgency->WeakReference(variable->owningSpace);
 		parameter.kernel->stringAgency->Reference(variable->name);
 	}
