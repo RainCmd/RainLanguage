@@ -671,7 +671,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_VARIABLES(true, TEXT("isPublic"), TYPE_Bool, GET_FIELD_OFFSET(ReflectionVariable, isPublic));
 			REGISTER_MEMBER_VARIABLES(true, TEXT("owningSpace"), TYPE_Handle, GET_FIELD_OFFSET(ReflectionVariable, owningSpace));
 			REGISTER_MEMBER_VARIABLES(true, TEXT("name"), TYPE_String, GET_FIELD_OFFSET(ReflectionVariable, name));
-			REGISTER_MEMBER_VARIABLES(true, TEXT("type"), TYPE_Type, GET_FIELD_OFFSET(ReflectionVariable, variableType));
+			REGISTER_MEMBER_VARIABLES(true, TEXT("variableType"), TYPE_Type, GET_FIELD_OFFSET(ReflectionVariable, variableType));
 			List<uint32, true> memberFunctions = List<uint32, true>(4);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("IsValid"), CreateTypeList(TYPE_Bool), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_IsValid);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_Variable), Reflection_Variable_GetAttributes);
@@ -704,7 +704,7 @@ KernelLibraryInfo::KernelLibraryInfo() :root(NULL), data(64), variables(0), enum
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetAttributes"), CreateTypeList(Type(TYPE_String, 1)), CreateTypeList(TYPE_Reflection_MemberVariable), Reflection_MemberVariable_GetAttributes);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("GetValue"), CreateTypeList(TYPE_Handle), CreateTypeList(TYPE_Reflection_MemberVariable, TYPE_Handle), Reflection_MemberVariable_GetValue);
 			REGISTER_MEMBER_FUNCTIONS(true, TEXT("SetValue"), TupleInfo_EMPTY, CreateTypeList(TYPE_Reflection_MemberVariable, TYPE_Handle, TYPE_Handle), Reflection_MemberVariable_SetValue);
-			REGISTER_STRUCT(true, space, TEXT("MemberVariable"), KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberVariable, SIZE(ReflectionMemberVariable), MEMORY_ALIGNMENT_4, EMPTY_VARIABLES, memberFunctions);
+			REGISTER_STRUCT(true, space, TEXT("MemberVariable"), KERNEL_TYPE_STRUCT_INDEX_Reflection_MemberVariable, SIZE(ReflectionMemberVariable), MEMORY_ALIGNMENT_4, memberVariables, memberFunctions);
 		}
 		//struct MemberFunction
 		{
