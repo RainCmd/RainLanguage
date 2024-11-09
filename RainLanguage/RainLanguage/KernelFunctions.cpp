@@ -1838,14 +1838,12 @@ String type_GetSpace(KernelInvokerParameter parameter)//Reflection.Space type.()
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	uint32 space;
 	if(!parameter.kernel->libraryAgency->TryGetSpace(type, space))return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_TYPE);
-	Handle* handle = &RETURN_VALUE(Handle, 0);
-	parameter.kernel->heapAgency->StrongRelease(*handle);
+	Handle& result = RETURN_VALUE(Handle, 0);
+	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
-	*handle = parameter.kernel->heapAgency->Alloc((Declaration)TYPE_Reflection_Space, error);
-	if(!error.IsEmpty()) return error;
-	parameter.kernel->heapAgency->StrongReference(*handle);
-	new ((ReflectionSpace*)parameter.kernel->heapAgency->GetPoint(*handle))ReflectionSpace(type.library, space);
-	return String();
+	result = parameter.kernel->libraryAgency->GetLibrary(type.library)->spaces[space].GetReflection(parameter.kernel, type.library, space, error);
+	parameter.kernel->heapAgency->StrongReference(result);
+	return error;
 }
 
 String type_GetTypeCode(KernelInvokerParameter parameter)//Reflection.TypeCode type.()
@@ -2754,29 +2752,30 @@ String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter)//bool,
 	bool& hasNext = RETURN_VALUE(bool, 0);
 	Handle& current = RETURN_VALUE(Handle, 1);
 	heapAgency->StrongRelease(current);
-	CollectionsArrayEnumerator& enumerator = THIS_VALUE(CollectionsArrayEnumerator);
-	hasNext = enumerator.index < heapAgency->GetArrayLength(enumerator.source);
+	CollectionsArrayEnumerator* enumerator = &THIS_VALUE(CollectionsArrayEnumerator);
+	hasNext = enumerator->index < heapAgency->GetArrayLength(enumerator->source);
 	if(hasNext)
 	{
-		Type type = heapAgency->GetType(enumerator.source);
+		Type type = heapAgency->GetType(enumerator->source);
 		type.dimension--;
-		uint8* address = heapAgency->GetArrayPoint(enumerator.source, enumerator.index);
-		if(IsHandleType(type)) current = *(Handle*)address;
+		if(IsHandleType(type)) current = *(Handle*)heapAgency->GetArrayPoint(enumerator->source, enumerator->index);
 		else
 		{
 			String error;
 			current = heapAgency->Alloc((Declaration)type, error);
+			enumerator = &THIS_VALUE(CollectionsArrayEnumerator);
 			if(!error.IsEmpty()) return error;
+			uint8* address = heapAgency->GetArrayPoint(enumerator->source, enumerator->index);
 			Mcopy(address, heapAgency->GetPoint(current), parameter.kernel->libraryAgency->GetTypeStackSize(type));
 			if(type.code == TypeCode::Struct)
 				parameter.kernel->libraryAgency->GetStruct(type)->WeakReference(parameter.kernel, address);
 		}
 		heapAgency->StrongReference(current);
-		enumerator.index++;
+		enumerator->index++;
 	}
 	else
 	{
-		enumerator.index = 0;
+		enumerator->index = 0;
 		current = NULL;
 	}
 	return String();
@@ -2849,10 +2848,10 @@ String Reflection_MemberConstructor_GetParameters(KernelInvokerParameter paramet
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
-	result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info->parameters.Count(), error);
+	result = parameter.kernel->heapAgency->Alloc(TYPE_Type, (integer)info->parameters.Count() - 1, error);
 	if(!error.IsEmpty()) return error;
-	for(uint32 i = 0; i < info->parameters.Count(); i++)
-		*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info->parameters.GetType(i);
+	for(uint32 i = 1; i < info->parameters.Count(); i++)
+		*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, (integer)i - 1) = info->parameters.GetType(i);
 	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
 }
@@ -3056,19 +3055,19 @@ String Reflection_MemberFunction_GetParameters(KernelInvokerParameter parameter)
 	if(member.declaration.code == TypeCode::Interface)
 	{
 		RuntimeInterface::FunctionInfo& info = parameter.kernel->libraryAgency->GetInterface(Type(member.declaration, 0))->functions[member.function];
-		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info.parameters.Count(), error);
+		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, (integer)info.parameters.Count() - 1, error);
 		if(!error.IsEmpty()) return error;
-		for(uint32 i = 0; i < info.parameters.Count(); i++)
-			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info.parameters.GetType(i);
+		for(uint32 i = 1; i < info.parameters.Count(); i++)
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, (integer)i - 1) = info.parameters.GetType(i);
 		parameter.kernel->heapAgency->StrongReference(result);
 	}
 	else
 	{
 		RuntimeFunction* info = parameter.kernel->libraryAgency->GetMemberFunction(member);
-		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, info->parameters.Count(), error);
+		result = parameter.kernel->heapAgency->Alloc(TYPE_Type, (integer)info->parameters.Count() - 1, error);
 		if(!error.IsEmpty()) return error;
-		for(uint32 i = 0; i < info->parameters.Count(); i++)
-			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, i) = info->parameters.GetType(i);
+		for(uint32 i = 1; i < info->parameters.Count(); i++)
+			*(Type*)parameter.kernel->heapAgency->GetArrayPoint(result, (integer)i - 1) = info->parameters.GetType(i);
 	}
 	parameter.kernel->heapAgency->StrongReference(result);
 	return String();
@@ -3641,7 +3640,7 @@ String Reflection_Space_GetAssembly(KernelInvokerParameter parameter)//Reflectio
 	DECLARATION_THIS_VALUE(ReflectionSpace);
 	String error;
 	handle = parameter.kernel->libraryAgency->GetLibrary(thisValue.library)->spaces[0].GetReflection(parameter.kernel, thisValue.library, 0, error);
-	if(error.IsEmpty()) parameter.kernel->heapAgency->StrongReference(handle);
+	parameter.kernel->heapAgency->StrongReference(handle);
 	return error;
 }
 
