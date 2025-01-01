@@ -106,6 +106,7 @@ namespace RainLanguage
         ERROR_DELEGATE_RETURN_TYPES_INCONSISTENT,                   //委托返回值类型不一致
         ERROR_INVALID_OPERATOR,                 //无效的操作
         ERROR_TYPE_MISMATCH,                    //类型不匹配
+        ERROR_TYPE_NON_ITERABLE,                //类型不可迭代
         ERROR_NOT_HANDLE_TYPE,                  //不是句柄类型
         ERROR_NOT_DELEGATE_TYPE,                //不是委托类型
         ERROR_NOT_INTERFACE_TYPE,               //不是接口类型
@@ -130,7 +131,8 @@ namespace RainLanguage
         ERROR_ONLY_BE_USED_IN_LOOP,             //只能在循环中使用
         ERROR_CANNOT_USE_RETURN_IN_CATCH_AND_FINALLY,               //不能在catch和finally中使用return语句
         ERROR_NOT_SUPPORTED_CREATION_NATIVE_TASK,                   //不支持用本地函数创建任务
-        ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,						//不支持的特殊函数
+        ERROR_NOT_SUPPORTED_SPECIAL_FUNCTION,                       //不支持的特殊函数
+        ERROR_ACCESSIBILITY_IS_INCONSISTENT,						//可访问性不一致
 
         WARNING_LEVEL1 = RainErrorLevel.WarningLevel1 << 24,
         WARNING_LEVEL1_REPEATED_VISIBILITY,     //重复的可访问性修饰
