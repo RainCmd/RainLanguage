@@ -30,7 +30,7 @@ void InitClosureStatement::Generator(StatementGeneratorParameter& parameter)
 {
 	if(!closure->Inited()) return;
 	TemporaryVariableBlock block = TemporaryVariableBlock(&parameter);
-	if(closure->Hold())
+	if(closure->Hold() || !closure->prevClosure)
 	{
 		LogicVariable localClosure = parameter.variableGenerator->GetLocal(parameter.manager, closure->LocalIndex(), closure->Compiling()->declaration.DefineType());
 		parameter.databaseGenerator->AddLocal(ClosureName(), line, closure->LocalIndex(), localClosure.type, localClosure.address, parameter.generator->globalReference, parameter.localContext);
