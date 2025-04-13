@@ -169,6 +169,7 @@ void PushBlock(List<BlockStatement*, true>& blockStack, LocalContext* localConte
 	blockStack.Peek()->statements.Add(block);
 	blockStack.Add(block);
 	localContext->PushBlock(NULL);
+	AddInitClosureStatement(block, localContext, line.number);
 }
 
 FunctionGenerator::FunctionGenerator(GeneratorParameter& parameter) :errorCount(parameter.manager->messages->GetMessages(ErrorLevel::Error)->Count()), name(), declaration(), parameters(0), returns(0), statements(new BlockStatement(Anchor()))
