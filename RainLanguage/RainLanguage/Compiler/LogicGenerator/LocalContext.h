@@ -42,9 +42,9 @@ class ClosureVariable
 	AbstractClass* abstract;
 	void Init(Context& context);
 	void MakeClosure(Context& context, const Local& local, uint32 deep, List<uint32, true>& path);
-public:
 	List<ClosureMemberVariable, true> variables;
 	ClosureVariable* prevClosure;
+public:
 	inline ClosureVariable(LocalContext* localContent, DeclarationManager* manager, uint32 id, uint32 level, ClosureVariable* prevClosure)
 		:localContent(localContent), manager(manager), hold(false), id(id), level(level), localIndex(INVALID), prevMember(INVALID), paths(0), compiling(NULL), abstract(NULL), variables(0), prevClosure(prevClosure)
 	{
@@ -61,6 +61,8 @@ public:
 	inline uint32 PrevMember() const { return prevMember; }
 	inline CompilingClass* Compiling() const { return compiling; }
 	inline AbstractClass* Abstract() const { return abstract; }
+	inline List<ClosureMemberVariable, true>& Variables() { return variables; }
+	inline ClosureVariable* PrevClosure() const { return prevClosure; }
 	inline List<uint32, true> GetPath(uint32 pathIndex) const { return paths[pathIndex]; }
 	Type GetClosureType(uint32 pathIndex);
 	uint32 MakeClosure(Context& context, const Local& local, uint32 deep);

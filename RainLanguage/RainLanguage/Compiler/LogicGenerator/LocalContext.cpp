@@ -36,7 +36,7 @@ void ClosureVariable::MakeClosure(Context& context, const Local& local, uint32 d
 	{
 		path.Add(prevMember);
 		if(prevClosure->localContent != localContent) hold = true;
-		return prevClosure->MakeClosure(context, local, deep, path);
+		prevClosure->MakeClosure(context, local, deep, path);
 	}
 	else
 	{

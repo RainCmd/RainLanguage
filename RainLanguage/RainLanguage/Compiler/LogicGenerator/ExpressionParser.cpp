@@ -1592,7 +1592,7 @@ bool TryParseLambdaParameter(const Anchor& anchor, Anchor& parameter, MessageCol
 	return false;
 }
 
-bool ExpressionParser::TryParseLambda(const Anchor& lambdaAnchor, const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result)
+bool ExpressionParser::TryParseLambda(const Anchor& lambdaAnchor, const Anchor& parameterAnchor, const Anchor& expressionAnchor, Expression*& result) const
 {
 	Anchor localParameterAnchor = parameterAnchor;
 	Anchor anchor;
@@ -1905,24 +1905,8 @@ bool ExpressionParser::TryParseTuple(SplitFlag flag, LexicalType type, Anchor an
 	return false;
 }
 
-bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
+bool ExpressionParser::TryParseExpression(const Anchor& anchor, Expression*& result)
 {
-	if(anchor.content.IsEmpty())
-	{
-		result = GetEmptyTupleExpression(anchor);
-		return true;
-	}
-	Anchor trim;
-	if(TryRemoveBracket(anchor, trim, manager->messages)) return TryParse(trim, result);
-	if(TryParseTuple(SplitFlag::Semicolon, LexicalType::Semicolon, anchor, result)) return true;
-	Anchor splitLeft, splitRight;
-	LexicalType splitType = Split(anchor, anchor.position, SplitFlag::Lambda | SplitFlag::Assignment | SplitFlag::Question, splitLeft, splitRight, manager->messages);
-	if(splitType == LexicalType::Lambda) return TryParseLambda(anchor, splitLeft, splitRight, result);
-	else if(splitType == LexicalType::Question) return TryParseQuestion(splitLeft, splitRight, result);
-	else if(splitType != LexicalType::Unknow) return TryParseAssignment(splitType, anchor.Sub(splitLeft.position, splitRight.GetEnd() - splitLeft.position), splitLeft, splitRight, result);
-	if(TryParseTuple(SplitFlag::Comma, LexicalType::Comma, anchor, result)) return true;
-	if(Split(anchor, anchor.position, SplitFlag::QuestionNull, splitLeft, splitRight, manager->messages) == LexicalType::QuestionNull) return TryParseQuestionNull(splitLeft, splitRight, result);
-
 	List<Expression*, true>expressionStack(0);
 	List<Token> tokenStack(0);
 	Attribute attribute = Attribute::None;
@@ -3376,4 +3360,25 @@ label_parse_fail:
 	while(expressionStack.Count()) delete expressionStack.Pop();
 	result = NULL;
 	return false;
+}
+
+bool ExpressionParser::TryParse(const Anchor& anchor, Expression*& result)
+{
+	if(anchor.content.IsEmpty())
+	{
+		result = GetEmptyTupleExpression(anchor);
+		return true;
+	}
+	Anchor trim;
+	if(TryRemoveBracket(anchor, trim, manager->messages)) return TryParse(trim, result);
+	if(TryParseTuple(SplitFlag::Semicolon, LexicalType::Semicolon, anchor, result)) return true;
+	Anchor splitLeft, splitRight;
+	LexicalType splitType = Split(anchor, anchor.position, SplitFlag::Lambda | SplitFlag::Assignment | SplitFlag::Question, splitLeft, splitRight, manager->messages);
+	if(splitType == LexicalType::Lambda) return TryParseLambda(anchor, splitLeft, splitRight, result);
+	else if(splitType == LexicalType::Question) return TryParseQuestion(splitLeft, splitRight, result);
+	else if(splitType != LexicalType::Unknow) return TryParseAssignment(splitType, anchor.Sub(splitLeft.position, splitRight.GetEnd() - splitLeft.position), splitLeft, splitRight, result);
+	if(TryParseTuple(SplitFlag::Comma, LexicalType::Comma, anchor, result)) return true;
+	if(Split(anchor, anchor.position, SplitFlag::QuestionNull, splitLeft, splitRight, manager->messages) == LexicalType::QuestionNull) return TryParseQuestionNull(splitLeft, splitRight, result);
+
+	return TryParseExpression(anchor, result);
 }

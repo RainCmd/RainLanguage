@@ -357,7 +357,7 @@ void VariableClosureExpression::GetVariable(LogicGenerateParameter& parameter, L
 			LogicVariabelAssignment(parameter.manager, parameter.generator, transitional.GetResult(0, memberType), variable, member, 0, parameter.finallyAddress);
 			variable = transitional.results[0];
 		}
-		index = index->prevClosure;
+		index = index->PrevClosure();
 	}
 }
 
@@ -389,7 +389,7 @@ void VariableClosureExpression::AddProgramDatabaseMember(const Anchor& memberAnc
 	while(count--)
 	{
 		if(index->Hold()) indices.Insert(0, MemberIndex(path[count]));
-		index = index->prevClosure;
+		index = index->PrevClosure();
 	}
 	parameter.databaseGenerator->AddLocalMember(memberAnchor, localIndex, indices, parameter.generator->globalReference);
 }
