@@ -620,8 +620,10 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\BranchStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ExitStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ExpressionStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ForeachStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ForStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.cpp" />
+    <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\IteratorStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\JumpStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\LoopStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ReturnStatement.cpp" />
@@ -720,8 +722,10 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\BranchStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ExitStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ExpressionStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ForeachStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ForStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.h" />
+    <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\IteratorStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\JumpStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\LoopStatement.h" />
     <ClInclude Include="RainLanguage\Compiler\LogicGenerator\Statements\ReturnStatement.h" />
