@@ -79,44 +79,19 @@ void ClearKernelLibraryInfo()
 	kernelLibraryInfo = NULL;
 }
 
-inline TupleInfo CreateTypeList(const Type& type)
+void AddType(TupleInfo&) {}
+template<typename...Args>
+void AddType(TupleInfo& info, const Type& type, Args...args)
 {
-	TupleInfo result(1);
+	info.AddElement(type, 0);
+	AddType(info, args...);
+}
+template<typename...Args>
+TupleInfo CreateTypeList(const Type& type, Args...args)
+{
+	TupleInfo result(sizeof...(args) + 1);
 	result.AddElement(type, 0);
-	return result;
-}
-inline TupleInfo CreateTypeList(const Type& type1, const Type& type2)
-{
-	TupleInfo result(2);
-	result.AddElement(type1, 0);
-	result.AddElement(type2, 0);
-	return result;
-}
-inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3)
-{
-	TupleInfo result(3);
-	result.AddElement(type1, 0);
-	result.AddElement(type2, 0);
-	result.AddElement(type3, 0);
-	return result;
-}
-inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3, const Type& type4)
-{
-	TupleInfo result(4);
-	result.AddElement(type1, 0);
-	result.AddElement(type2, 0);
-	result.AddElement(type3, 0);
-	result.AddElement(type4, 0);
-	return result;
-}
-inline TupleInfo CreateTypeList(const Type& type1, const Type& type2, const Type& type3, const Type& type4, const Type& type5)
-{
-	TupleInfo result(5);
-	result.AddElement(type1, 0);
-	result.AddElement(type2, 0);
-	result.AddElement(type3, 0);
-	result.AddElement(type4, 0);
-	result.AddElement(type5, 0);
+	AddType(result, args...);
 	return result;
 }
 
