@@ -50,7 +50,7 @@ const struct Delegate
 	inline Delegate() :entry(INVALID), target(NULL), function(), type((FunctionType)0) {}
 	inline Delegate(uint32 entry, uint32 target, Function function, FunctionType type) : entry(entry), target(target), function(function), type(type) {}
 	inline Delegate(uint32 entry) : entry(entry), target(NULL), function(), type(FunctionType::Global) {}
-	inline Delegate(Native native) : entry(INVALID), target(NULL), native(native), type(FunctionType::Native) {}
+	inline Delegate(const Native& native) : entry(INVALID), target(NULL), native(native), type(FunctionType::Native) {}
 	inline bool operator==(const Delegate& other) const { return entry == other.entry && target == other.target && type == other.type; }
 	inline bool operator!=(const Delegate& other) const { return !(*this == other); }
 };
@@ -128,7 +128,8 @@ inline uint32 GetHash(const Declaration& declaration)
 }
 inline uint32 GetHash(const Type& type)
 {
-	uint32 result = GetHash((Declaration)type);
+	const Declaration& declaration = type;
+	uint32 result = GetHash(declaration);
 	result = HASH32(result, (uint32)type.dimension);
 	return result;
 }

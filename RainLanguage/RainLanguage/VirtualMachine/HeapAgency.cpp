@@ -365,11 +365,12 @@ HeapAgency::HeapAgency(Kernel* kernel, const StartupParameter* parameter) :kerne
 
 Handle HeapAgency::Alloc(const Type elementType, integer length, String& error)
 {
+	const Declaration& declaration = elementType;
 	uint32 elementSize = MemoryAlignment(kernel->libraryAgency->GetTypeStackSize(elementType), kernel->libraryAgency->GetTypeAlignment(elementType));
-	Handle result = Alloc(elementSize * (uint32)length + 8, kernel->libraryAgency->GetTypeAlignment(Type((Declaration)elementType, elementType.dimension + 1)), error);
+	Handle result = Alloc(elementSize * (uint32)length + 8, kernel->libraryAgency->GetTypeAlignment(Type(declaration, elementType.dimension + 1)), error);
 	if(!result) return NULL;
 	Head& value = heads[result];
-	value.type = Type((Declaration)elementType, elementType.dimension + 1);
+	value.type = Type(declaration, elementType.dimension + 1);
 	uint32* pointer = (uint32*)(heap.GetPointer() + value.pointer);
 	pointer[0] = (uint32)length;
 	pointer[1] = elementSize;

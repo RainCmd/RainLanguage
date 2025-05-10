@@ -1999,7 +1999,8 @@ String type_CreateUninitialized(KernelInvokerParameter parameter)//handle type.(
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	String error;
-	handle = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+	const Declaration& declaration = type;
+	handle = parameter.kernel->heapAgency->Alloc(declaration, error);
 	if(error.IsEmpty()) parameter.kernel->heapAgency->StrongReference(handle);
 	return error;
 }
@@ -2020,7 +2021,8 @@ String type_CreateDelegate(KernelInvokerParameter parameter)//Delegate type.(Ref
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	String error;
-	handle = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+	const Declaration& declaration = type;
+	handle = parameter.kernel->heapAgency->Alloc(declaration, error);
 	if(!error.IsEmpty()) return error;
 	parameter.kernel->heapAgency->StrongReference(handle);
 	new ((Delegate*)parameter.kernel->heapAgency->GetPoint(handle))Delegate(runtimeFunction->entry);
@@ -2031,10 +2033,10 @@ String type_CreateDelegate2(KernelInvokerParameter parameter)//Delegate type.(Re
 {
 	Type& type = PARAMETER_VALUE(1, Type, 0);
 	if(type.dimension || type.code != TypeCode::Delegate)return parameter.kernel->stringAgency->Add(EXCEPTION_NOT_DELEGATE);
-	ReflectionNative& native = PARAMETER_VALUE(1, ReflectionNative, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
-	if(!native.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
+	ReflectionNative& reflectionNative = PARAMETER_VALUE(1, ReflectionNative, MemoryAlignment(SIZE(Type), MEMORY_ALIGNMENT_MAX));
+	if(!reflectionNative.valid) return parameter.kernel->stringAgency->Add(EXCEPTION_INVALID_REFLECTION);
 
-	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(native);
+	RuntimeNative* runtimeNative = parameter.kernel->libraryAgency->GetNative(reflectionNative);
 	RuntimeDelegate* runtimeDelegate = parameter.kernel->libraryAgency->GetDelegate(type);
 	if(runtimeNative->parameters != runtimeDelegate->parameters)
 		return parameter.kernel->stringAgency->Add(EXCEPTION_PARAMETER_LIST_DOES_NOT_MATCH);
@@ -2043,9 +2045,11 @@ String type_CreateDelegate2(KernelInvokerParameter parameter)//Delegate type.(Re
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	String error;
-	handle = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+	const Declaration& declaration = type;
+	handle = parameter.kernel->heapAgency->Alloc(declaration, error);
 	if(!error.IsEmpty()) return error;
 	parameter.kernel->heapAgency->StrongReference(handle);
+	Native& native = reflectionNative;
 	new ((Delegate*)parameter.kernel->heapAgency->GetPoint(handle))Delegate(native);
 	return String();
 }
@@ -2086,7 +2090,8 @@ String type_CreateDelegate3(KernelInvokerParameter parameter)//Delegate type.(Re
 	Handle& handle = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(handle);
 	String error;
-	handle = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+	const Declaration& declaration = type;
+	handle = parameter.kernel->heapAgency->Alloc(declaration, error);
 	if(!error.IsEmpty()) return error;
 	parameter.kernel->heapAgency->StrongReference(handle);
 	Delegate* pointer = (Delegate*)parameter.kernel->heapAgency->GetPoint(handle);
@@ -2133,7 +2138,8 @@ String type_CreateTask(KernelInvokerParameter parameter)//Task type.(Reflection.
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
 		String error;
-		result = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+		const Declaration& declaration = type;
+		result = parameter.kernel->heapAgency->Alloc(declaration, error);
 		if(!error.IsEmpty()) return error;
 		parameter.kernel->heapAgency->StrongReference(result);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
@@ -2154,7 +2160,8 @@ String type_CreateTask(KernelInvokerParameter parameter)//Task type.(Reflection.
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
 		String error;
-		result = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+		const Declaration& declaration = type;
+		result = parameter.kernel->heapAgency->Alloc(declaration, error);
 		if(!error.IsEmpty()) return error;
 		parameter.kernel->heapAgency->StrongReference(result);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(function);
@@ -2206,7 +2213,8 @@ String type_CreateTask2(KernelInvokerParameter parameter)//Task type.(Reflection
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
 		String error;
-		result = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+		const Declaration& declaration = type;
+		result = parameter.kernel->heapAgency->Alloc(declaration, error);
 		if(!error.IsEmpty()) return error;
 		parameter.kernel->heapAgency->StrongReference(result);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
@@ -2228,7 +2236,8 @@ String type_CreateTask2(KernelInvokerParameter parameter)//Task type.(Reflection
 		Handle& result = RETURN_VALUE(Handle, 0);
 		parameter.kernel->heapAgency->StrongRelease(result);
 		String error;
-		result = parameter.kernel->heapAgency->Alloc((Declaration)type, error);
+		const Declaration& declaration = type;
+		result = parameter.kernel->heapAgency->Alloc(declaration, error);
 		if(!error.IsEmpty()) return error;
 		parameter.kernel->heapAgency->StrongReference(result);
 		Invoker* invoker = parameter.kernel->taskAgency->CreateInvoker(runtimeFunction->entry, runtimeFunction);
@@ -2665,7 +2674,8 @@ String array_GetElement(KernelInvokerParameter parameter)//handle array.(integer
 	else if(type == TYPE_Entity && !*(Entity*)address) returnValue = NULL;
 	else
 	{
-		returnValue = heapAgency->Alloc((Declaration)type, error);
+		const Declaration& declaration = type;
+		returnValue = heapAgency->Alloc(declaration, error);
 		if(returnValue)
 		{
 			Mcopy(address, heapAgency->GetPoint(returnValue), parameter.kernel->libraryAgency->GetTypeStackSize(type));
@@ -2734,7 +2744,8 @@ String array_GetEnumerator(KernelInvokerParameter parameter)//Collections.ArrayE
 	HeapAgency* heapAgency = parameter.kernel->heapAgency;
 	heapAgency->StrongRelease(returnValue);
 	String error;
-	returnValue = heapAgency->Alloc((Declaration)TYPE_Collections_ArrayEnumerator, error);
+	const Declaration& declaration = TYPE_Collections_ArrayEnumerator;
+	returnValue = heapAgency->Alloc(declaration, error);
 	heapAgency->StrongReference(returnValue);
 	if(!error.IsEmpty()) return error;
 	CollectionsArrayEnumerator* result = (CollectionsArrayEnumerator*)heapAgency->GetPoint(returnValue);
@@ -2762,7 +2773,8 @@ String Collections_ArrayEnumerator_Next(KernelInvokerParameter parameter)//bool,
 		else
 		{
 			String error;
-			current = heapAgency->Alloc((Declaration)type, error);
+			const Declaration& declaration = type;
+			current = heapAgency->Alloc(declaration, error);
 			enumerator = &THIS_VALUE(CollectionsArrayEnumerator);
 			if(!error.IsEmpty()) return error;
 			uint8* address = heapAgency->GetArrayPoint(enumerator->source, enumerator->index);
