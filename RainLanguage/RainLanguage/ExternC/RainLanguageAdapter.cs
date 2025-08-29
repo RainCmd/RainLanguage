@@ -420,6 +420,33 @@ namespace RainLanguage
         }
     }
     /// <summary>
+    /// 虚拟机反序列化参数
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DeserializeParameter
+    {
+        internal EntityAction onReferenceEntity, onReleaseEntity;
+        internal DataLoader libraryLoader;
+        internal CallerLoader callerLoader;
+        internal ExceptionExit onExceptionExit;
+        /// <summary>
+        /// 虚拟机反序列化参数
+        /// </summary>
+        /// <param name="onReferenceEntity">实体的引用回调</param>
+        /// <param name="onReleaseEntity">实体的释放回调</param>
+        /// <param name="libraryLoader">引用库的加载回调</param>
+        /// <param name="callerLoader">native调用的加载回调</param>
+        /// <param name="onExceptionExit">异常消息回调</param>
+        public DeserializeParameter(EntityAction onReferenceEntity, EntityAction onReleaseEntity, DataLoader libraryLoader, CallerLoader callerLoader, ExceptionExit onExceptionExit)
+        {
+            this.onReferenceEntity = onReferenceEntity;
+            this.onReleaseEntity = onReleaseEntity;
+            this.libraryLoader = libraryLoader;
+            this.callerLoader = callerLoader;
+            this.onExceptionExit = onExceptionExit;
+        }
+    }
+    /// <summary>
     /// native调用自动绑定工具
     /// </summary>
     public readonly struct CallerHelper
@@ -1528,6 +1555,14 @@ namespace RainLanguage
                 kernel = null;
                 System.GC.SuppressFinalize(this);
             }
+            /// <summary>
+            /// 序列化
+            /// </summary>
+            /// <returns>序列化后的二进制数据</returns>
+            public RainBuffer Serialize()
+            {
+                return new RainBuffer(SerializeKernel(kernel));
+            }
             ~RainKernel() { Dispose(); }
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelFindFunction", CallingConvention = CallingConvention.Cdecl)]
             private extern static void* KernelFindFunction(void* kernel, char* name, bool allowNoPublic);
@@ -1541,6 +1576,8 @@ namespace RainLanguage
             private extern static void KernelUpdate(void* kernel);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteKernel", CallingConvention = CallingConvention.Cdecl)]
             private extern static void DeleteKernel(void* kernel);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_SerializeKernel", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* SerializeKernel(void* kernel);
 
             public override bool Equals(object obj)
             {
@@ -3610,6 +3647,19 @@ namespace RainLanguage
                 }
                 else return new RainKernelMain(CreateKernel(parameter), references);
             }
+        }
+        [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeserializeKernel", CallingConvention = CallingConvention.Cdecl)]
+        private extern static void* DeserializeKernel(void* data, uint length, DeserializeParameter parameter);
+        /// <summary>
+        /// 反序列化
+        /// </summary>
+        /// <param name="data">数据</param>
+        /// <returns>虚拟机</returns>
+        public static RainKernel DeserializeKernel(byte[] data, DeserializeParameter parameter)
+        {
+            if (data == null) return null;
+            fixed (byte* pdata = data)
+                return new RainKernelMain(DeserializeKernel(pdata, (uint)data.Length, parameter), new List<object>());
         }
         private delegate void* ExternProgramDatabaseLoader(void* name);
         private delegate void ExternProgramDatabaseUnloader(void* database);

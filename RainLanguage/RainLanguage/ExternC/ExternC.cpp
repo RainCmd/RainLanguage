@@ -122,6 +122,16 @@ void Extern_DeleteKernel(RainKernel* kernel)
 	Delete(kernel);
 }
 
+const RainBuffer<uint8>* Extern_SerializeKernel(RainKernel* kernel)
+{
+	return Serialize(kernel);
+}
+
+const RainKernel* Extern_DeserializeKernel(uint8* data, uint32 size, DeserializeParameter parameter)
+{
+	return DeserializeKerenl(data, size, parameter);
+}
+
 RainFunction* Extern_KernelFindFunction(RainKernel* kernel, character* name, bool allowNoPublic)
 {
 	return new RainFunction(kernel->FindFunction(name, allowNoPublic));
