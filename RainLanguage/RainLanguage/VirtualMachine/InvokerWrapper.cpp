@@ -179,7 +179,7 @@ Real4 InvokerWrapper::GetReal4ReturnValue(uint32 index) const
 integer InvokerWrapper::GetEnumValueReturnValue(uint32 index) const
 {
 	ValidAssert(*this);
-	const Type& type = INVOKER->info->returns.GetType(index);
+	const Type& type = INVOKER->info.returns.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "返回值类型错误");
 	return INVOKER->GetEnumReturnValue(index, type);
 }
@@ -187,7 +187,7 @@ integer InvokerWrapper::GetEnumValueReturnValue(uint32 index) const
 const RainString InvokerWrapper::GetEnumNameReturnValue(uint32 index) const
 {
 	ValidAssert(*this);
-	const Type& type = INVOKER->info->returns.GetType(index);
+	const Type& type = INVOKER->info.returns.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "返回值类型错误");
 	String result = INVOKER->kernel->libraryAgency->GetEnum(type)->ToString(INVOKER->GetEnumReturnValue(index, type), INVOKER->kernel->stringAgency);
 	return RainString(result.GetPointer(), result.GetLength());
@@ -211,8 +211,8 @@ uint32 InvokerWrapper::GetArrayReturnValueLength(uint32 index) const
 	ValidAssert(*this);
 	Invoker* source = INVOKER;
 	source->StateAssert(InvokerState::Completed);
-	ASSERT(source->info->returns.GetType(index).dimension, "不是数组");
-	Handle handle = *(Handle*)(source->data.GetPointer() + source->info->returns.GetOffset(index));
+	ASSERT(source->info.returns.GetType(index).dimension, "不是数组");
+	Handle handle = *(Handle*)(source->data.GetPointer() + source->info.returns.GetOffset(index));
 	if(handle) return source->kernel->heapAgency->GetArrayLength(handle);
 	else return 0;
 }
@@ -221,9 +221,9 @@ Handle GetArrayReturnValue(const InvokerWrapper& wrapper, const Invoker* invoker
 {
 	ValidAssert(wrapper);
 	invoker->StateAssert(InvokerState::Completed);
-	Type type = invoker->info->returns.GetType(index);
+	Type type = invoker->info.returns.GetType(index);
 	ASSERT(type == Type(declaration, 1), "返回值类型错误");
-	return *(Handle*)(invoker->data.GetPointer() + invoker->info->returns.GetOffset(index));
+	return *(Handle*)(invoker->data.GetPointer() + invoker->info.returns.GetOffset(index));
 }
 
 void InvokerWrapper::GetBoolArrayReturnValue(uint32 index, bool* result) const
@@ -330,9 +330,9 @@ void InvokerWrapper::GetEnumNameArrayReturnValue(uint32 index, RainString* resul
 	ValidAssert(*this);
 	Invoker* source = INVOKER;
 	source->StateAssert(InvokerState::Completed);
-	Type type = source->info->returns.GetType(index);
+	Type type = source->info.returns.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
-	Handle handle = *(Handle*)(source->data.GetPointer() + source->info->returns.GetOffset(index));
+	Handle handle = *(Handle*)(source->data.GetPointer() + source->info.returns.GetOffset(index));
 	if(handle)
 	{
 		uint32 length = source->kernel->heapAgency->GetArrayLength(handle);
@@ -423,7 +423,7 @@ void InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString& elemen
 {
 	ValidAssert(*this);
 	INVOKER->StateAssert(InvokerState::Unstart);
-	const Type& type = INVOKER->info->parameters.GetType(index);
+	const Type& type = INVOKER->info.parameters.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "参数类型错误");
 	INVOKER->SetParameter(index, GetEnumValue(INVOKER->kernel, type, elementName.value, elementName.length));
 }
@@ -439,7 +439,7 @@ void InvokerWrapper::SetEnumValueParameter(uint32 index, integer value) const
 {
 	ValidAssert(*this);
 	INVOKER->StateAssert(InvokerState::Unstart);
-	const Type& type = INVOKER->info->parameters.GetType(index);
+	const Type& type = INVOKER->info.parameters.GetType(index);
 	ASSERT(type.code == TypeCode::Enum, "参数类型错误");
 	INVOKER->SetParameter(index, value, type);
 }
@@ -468,9 +468,9 @@ Handle& GetArrayParameter(const InvokerWrapper& wrapper, const Invoker* invoker,
 {
 	ValidAssert(wrapper);
 	invoker->StateAssert(InvokerState::Unstart);
-	Type type = invoker->info->parameters.GetType(index);
+	Type type = invoker->info.parameters.GetType(index);
 	ASSERT(type == Type(declaration, 1), "返回值类型错误");
-	Handle& handle = *(Handle*)(invoker->data.GetPointer() + invoker->info->parameters.GetOffset(index));
+	Handle& handle = *(Handle*)(invoker->data.GetPointer() + invoker->info.parameters.GetOffset(index));
 	invoker->kernel->heapAgency->StrongRelease(handle);
 	handle = invoker->kernel->heapAgency->Alloc(Type(declaration, 0), length, error);
 	if(error.IsEmpty()) invoker->kernel->heapAgency->StrongReference(handle);
@@ -554,9 +554,9 @@ bool InvokerWrapper::SetEnumValueParameter(uint32 index, const integer* values, 
 	Invoker* source = INVOKER;
 	ValidAssert(*this);
 	source->StateAssert(InvokerState::Unstart);
-	Type type = source->info->parameters.GetType(index);
+	Type type = source->info.parameters.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
-	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
+	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info.parameters.GetOffset(index));
 	source->kernel->heapAgency->StrongRelease(handle);
 	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length, *ERROR);
 	if(!ERROR->IsEmpty()) return false;
@@ -571,9 +571,9 @@ bool InvokerWrapper::SetEnumNameParameter(uint32 index, const RainString* values
 	Invoker* source = INVOKER;
 	ValidAssert(*this);
 	source->StateAssert(InvokerState::Unstart);
-	Type type = source->info->parameters.GetType(index);
+	Type type = source->info.parameters.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
-	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
+	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info.parameters.GetOffset(index));
 	source->kernel->heapAgency->StrongRelease(handle);
 	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length, *ERROR);
 	if(!ERROR->IsEmpty()) return false;
@@ -588,9 +588,9 @@ bool InvokerWrapper::SetEnumNameParameter(uint32 index, const character** values
 	Invoker* source = INVOKER;
 	ValidAssert(*this);
 	source->StateAssert(InvokerState::Unstart);
-	Type type = source->info->parameters.GetType(index);
+	Type type = source->info.parameters.GetType(index);
 	ASSERT(type.dimension == 1 && type.code == TypeCode::Enum, "返回值类型错误");
-	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info->parameters.GetOffset(index));
+	Handle& handle = *(Handle*)(source->data.GetPointer() + source->info.parameters.GetOffset(index));
 	source->kernel->heapAgency->StrongRelease(handle);
 	handle = source->kernel->heapAgency->Alloc(Type(type, 0), length, *ERROR);
 	if(!ERROR->IsEmpty()) return false;

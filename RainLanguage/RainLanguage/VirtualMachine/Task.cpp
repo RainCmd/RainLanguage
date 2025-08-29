@@ -73,14 +73,14 @@ void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 	kernelInvoker = NULL;
 	ignoreWait = isIgnoreWait;
 	this->pointer = invoker->entry;
-	bottom = top = invoker->info->returns.size;
-	if(EnsureStackSize(top + SIZE(Frame) + invoker->info->returns.Count() * 4 + invoker->info->parameters.size)) EXCEPTION("栈溢出");
+	bottom = top = invoker->info.returns.size;
+	if(EnsureStackSize(top + SIZE(Frame) + invoker->info.returns.Count() * 4 + invoker->info.parameters.size)) EXCEPTION("栈溢出");
 	Mzero(stack, bottom);
 	*(Frame*)(stack + bottom) = Frame();
 	uint32* returnAddress = (uint32*)(stack + bottom + SIZE(Frame));
-	for(uint32 i = 0; i < invoker->info->returns.Count(); i++)
-		returnAddress[i] = LOCAL(invoker->info->returns.GetOffsets()[i]);
-	invoker->GetParameters(stack + bottom + SIZE(Frame) + invoker->info->returns.Count() * 4);
+	for(uint32 i = 0; i < invoker->info.returns.Count(); i++)
+		returnAddress[i] = LOCAL(invoker->info.returns.GetOffsets()[i]);
+	invoker->GetParameters(stack + bottom + SIZE(Frame) + invoker->info.returns.Count() * 4);
 }
 void Task::Exit(const String& error, uint32 exitPointer)
 {

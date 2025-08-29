@@ -41,9 +41,9 @@ public:
 	inline uint32 Count() const { return types.Count(); }
 	inline bool operator == (const TupleInfo& other)const
 	{
-		if (other.Count() != Count())return false;
-		for (uint32 i = 0; i < Count(); i++)
-			if (other.types[i] != types[i])
+		if(other.Count() != Count())return false;
+		for(uint32 i = 0; i < Count(); i++)
+			if(other.types[i] != types[i])
 				return false;
 		return true;
 	}
@@ -55,6 +55,7 @@ struct CallableInfo
 	TupleInfo returns;
 	TupleInfo parameters;
 	inline CallableInfo(const TupleInfo& returns, const TupleInfo& parameters) :returns(returns), parameters(parameters) {}
+	inline CallableInfo(const CallableInfo& info) :returns(info.returns), parameters(info.parameters) {}
 };
 const CallableInfo CallableInfo_EMPTY = CallableInfo(TupleInfo_EMPTY, TupleInfo_EMPTY);
 
