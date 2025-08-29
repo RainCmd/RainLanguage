@@ -900,6 +900,7 @@ void Serialize(Serializer* serializer, const GCFieldInfo* info)
 
 void RuntimeLibrary::Serialize(Serializer* serializer)
 {
+	if(debugger) debugger->ClearBreakpoints();
 	serializer->Serialize(index);
 	serializer->Serialize(codeOffset);
 	serializer->Serialize(dataOffset);
