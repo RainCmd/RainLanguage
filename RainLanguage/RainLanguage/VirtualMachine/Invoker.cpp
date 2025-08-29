@@ -6,6 +6,7 @@
 #include "LibraryAgency.h"
 #include "EntityAgency.h"
 #include "TaskAgency.h"
+#include "../Serialization.h"
 
 inline bool TryMatch(const Type& source, const Type& target)
 {
@@ -364,4 +365,36 @@ void Invoker::Exception(const String& message)
 	StateAssert(InvokerState::Running);
 	error = message;
 	state = InvokerState::Exceptional;
+}
+
+void Invoker::Serialize(Serializer* serializer)
+{
+	serializer->SerializeList(data);
+	serializer->SerializeList(exceptionStackFrames);
+	serializer->Serialize(instanceID);
+	serializer->Serialize((uint8)state);
+	serializer->SerializeList(info.returns.GetTypes());
+	serializer->SerializeList(info.returns.GetOffsets());
+	serializer->SerializeList(info.parameters.GetTypes());
+	serializer->SerializeList(info.parameters.GetOffsets());
+	serializer->Serialize(entry);
+	serializer->Serialize(name.index);
+	serializer->Serialize(error.index);
+	serializer->Serialize(hold);
+}
+
+Invoker::Invoker(Kernel* kernel, Deserializer* deserializer) :kernel(kernel), data(0), exceptionStackFrames(0), instanceID(0), state(InvokerState::Invalid), info(CallableInfo_EMPTY), entry(NULL), name(), error(), hold(0), task(NULL)
+{
+	deserializer->Deserialize(data);
+	deserializer->Deserialize(exceptionStackFrames);
+	instanceID = deserializer->Deserialize<uint64>();
+	state = (InvokerState)deserializer->Deserialize<uint8>();
+	deserializer->Deserialize(info.returns.GetTypes());
+	deserializer->Deserialize(info.returns.GetOffsets());
+	deserializer->Deserialize(info.parameters.GetTypes());
+	deserializer->Deserialize(info.parameters.GetOffsets());
+	entry = deserializer->Deserialize<uint32>();
+	name = kernel->stringAgency->Get(deserializer->Deserialize<string>());
+	error = kernel->stringAgency->Get(deserializer->Deserialize<string>());
+	hold = deserializer->Deserialize<uint32>();
 }

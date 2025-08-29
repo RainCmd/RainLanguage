@@ -9,6 +9,7 @@
 #include "KernelLibraryGenerator.h"
 
 struct StartupParameter;
+struct DeserializeParameter;
 class Kernel;
 class Serializer;
 struct Deserializer;
@@ -89,7 +90,7 @@ public:
 	void Update();
 
 	void Serialize(Serializer* serializer);
-	LibraryAgency(Kernel* kernel, Deserializer* deserializer);
+	LibraryAgency(Kernel* kernel, Deserializer* deserializer, const DeserializeParameter& parameter);
 };
 
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo);

@@ -354,13 +354,13 @@ Kernel::~Kernel()
 	delete stringAgency; stringAgency = NULL;
 }
 
-Kernel::Kernel(Deserializer* deserializer) : share(NULL), random(deserializer)
+Kernel::Kernel(Deserializer* deserializer, const DeserializeParameter& parameter) : share(NULL), random(deserializer)
 {
 	share = new KernelShare(this);
 	stringAgency = new StringAgency(deserializer);
-	entityAgency = new EntityAgency(this, deserializer);
-	libraryAgency = new LibraryAgency(this, deserializer);
-	taskAgency = new TaskAgency(this, deserializer);
+	entityAgency = new EntityAgency(this, deserializer, parameter);
+	libraryAgency = new LibraryAgency(this, deserializer, parameter);
+	taskAgency = new TaskAgency(this, deserializer, parameter);
 	heapAgency = new HeapAgency(this, deserializer);
 }
 

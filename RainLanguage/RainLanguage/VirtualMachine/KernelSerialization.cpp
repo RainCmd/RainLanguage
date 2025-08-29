@@ -25,8 +25,8 @@ RainBuffer<uint8>* Serialize(RainKernel* kernel)
 	return Serialize((Kernel*)kernel);
 }
 
-RainKernel* DeserializeKerenl(const uint8* data, uint32 size)
+RainKernel* DeserializeKerenl(const uint8* data, uint32 size, const DeserializeParameter& parameter)
 {
 	Deserializer deserializer(data, size);
-	return new Kernel(&deserializer);
+	return new Kernel(&deserializer, parameter);
 }

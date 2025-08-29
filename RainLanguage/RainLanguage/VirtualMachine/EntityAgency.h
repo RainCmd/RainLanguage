@@ -5,6 +5,7 @@
 #include "VirtualMachineDefinitions.h"
 
 struct StartupParameter;
+struct DeserializeParameter;
 class Kernel;
 class Serializer;
 struct Deserializer;
@@ -30,7 +31,7 @@ public:
 	inline uint32 Count() { return map.Count(); }
 
 	void Serialize(Serializer* serializer);
-	explicit EntityAgency(Kernel* kernel, Deserializer* deserializer);
+	explicit EntityAgency(Kernel* kernel, Deserializer* deserializer, const DeserializeParameter& parameter);
 	~EntityAgency();
 };
 

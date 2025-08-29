@@ -47,7 +47,7 @@ public:
 	Kernel(Kernel&&) = delete;
 	Kernel(const Kernel&&) = delete;
 
-	explicit Kernel(Deserializer* deserializer);
+	explicit Kernel(Deserializer* deserializer, const DeserializeParameter& parameter);
 };
 
 inline RainType GetRainType(const Type& type)

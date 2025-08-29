@@ -10,6 +10,7 @@
 #include "HeapAgency.h"
 #include "EntityAgency.h"
 #include "Exceptions.h"
+#include "../Serialization.h"
 
 #define VARIABLE(type,address) (*(type*)(cacheData[address >> 31] + LOCAL_ADDRESS(address)))
 #define INSTRUCT_VALUE(type,offset) (*(type*)(instruct + (offset)))
@@ -67,12 +68,12 @@ void Task::Initialize(Invoker* sourceInvoker, bool isIgnoreWait)
 {
 	pause = false;
 	wait = 0;
-	this->invoker = sourceInvoker;
+	invoker = sourceInvoker;
 	instanceID = invoker->instanceID;
 	invoker->task = this;
 	kernelInvoker = NULL;
 	ignoreWait = isIgnoreWait;
-	this->pointer = invoker->entry;
+	pointer = invoker->entry;
 	bottom = top = invoker->info.returns.size;
 	if(EnsureStackSize(top + SIZE(Frame) + invoker->info.returns.Count() * 4 + invoker->info.parameters.size)) EXCEPTION("栈溢出");
 	Mzero(stack, bottom);
@@ -2663,4 +2664,40 @@ void Task::Recycle()
 Task::~Task()
 {
 	Free(stack); stack = NULL;
+}
+
+void Task::Serialize(Serializer* serializer)
+{
+	serializer->Serialize(instanceID);
+	if(kernelInvoker) serializer->Serialize(kernelInvoker->instanceID);
+	else serializer->Serialize((uint64)0);
+	serializer->Serialize(ignoreWait);
+	serializer->Serialize(pause);
+	serializer->Serialize(flag);
+	serializer->Serialize(size);
+	serializer->Serialize(top);
+	serializer->Serialize(bottom);
+	serializer->Serialize(pointer);
+	serializer->Serialize(wait);
+	serializer->Serialize(stack, size);
+}
+
+Task::Task(Kernel* kernel, Deserializer* deserializer, Dictionary<uint64, Invoker*, true>* invokers) :kernel(kernel)
+{
+	instanceID = deserializer->Deserialize<uint64>();
+	invokers->TryGet(instanceID, invoker);
+	invokers->TryGet(deserializer->Deserialize<uint64>(), kernelInvoker);
+	next = NULL;
+	ignoreWait = deserializer->Deserialize<bool>();
+	pause = deserializer->Deserialize<bool>();
+	flag = deserializer->Deserialize<bool>();
+	size = deserializer->Deserialize<uint32>();
+	top = deserializer->Deserialize<uint32>();
+	bottom = deserializer->Deserialize<uint32>();
+	pointer = deserializer->Deserialize<uint32>();
+	wait = deserializer->Deserialize<integer>();
+	stack = Malloc<uint8>(size);
+	deserializer->Deserialize(stack, size);
+	cacheData[0] = kernel->libraryAgency->data.GetPointer();
+	cacheData[1] = stack;
 }

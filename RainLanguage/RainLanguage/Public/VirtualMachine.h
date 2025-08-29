@@ -1231,4 +1231,28 @@ RAINLANGUAGE void Delete(RainKernel*& kernel);
 
 RAINLANGUAGE RainBuffer<uint8>* Serialize(RainKernel* kernel);
 
-RAINLANGUAGE RainKernel* DeserializeKerenl(const uint8* data, uint32 size);
+struct RAINLANGUAGE DeserializeParameter
+{
+	/// <summary>
+	/// 虚拟机引用和释放实体时的回调函数
+	/// </summary>
+	EntityAction onReferenceEntity, onReleaseEntity;
+	/// <summary>
+	/// 库加载器
+	/// </summary>
+	RainLibraryLoader libraryLoader;
+	/// <summary>
+	/// 库卸载器
+	/// </summary>
+	RainLibraryUnloader libraryUnloader;
+	/// <summary>
+	/// 本地调用的加载器
+	/// </summary>
+	NativeCallerLoader nativeCallerLoader;
+	/// <summary>
+	/// 任务异常的回调函数
+	/// </summary>
+	OnExceptionExit onExceptionExit;
+};
+
+RAINLANGUAGE RainKernel* DeserializeKerenl(const uint8* data, uint32 size, const DeserializeParameter& parameter);

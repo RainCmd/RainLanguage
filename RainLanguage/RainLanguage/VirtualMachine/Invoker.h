@@ -7,6 +7,8 @@
 
 class Kernel;
 class Task;
+class Serializer;
+struct Deserializer;
 class Invoker
 {
 public:
@@ -76,4 +78,7 @@ public:
 	void Start(bool immediately, bool ignoreWait);
 	void Abort();
 	void Exception(const String& message);
+
+	void Serialize(Serializer* serializer);
+	Invoker(Kernel* kernel, Deserializer* deserializer);
 };

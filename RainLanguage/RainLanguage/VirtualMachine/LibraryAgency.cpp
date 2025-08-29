@@ -444,8 +444,7 @@ void LibraryAgency::Serialize(Serializer* serializer)//todo debuggerBreakCount
 	serializer->SerializeList(data);
 }
 
-//todo 初始化libraryLoader，libraryUnloader， nativeCallerLoader
-LibraryAgency::LibraryAgency(Kernel* kernel, Deserializer* deserializer) :kernel(kernel), libraryLoader(NULL), libraryUnloader(NULL), nativeCallerLoader(NULL), libraries(0), code(0), data(0)
+LibraryAgency::LibraryAgency(Kernel* kernel, Deserializer* deserializer, const DeserializeParameter& parameter) :kernel(kernel), libraryLoader(parameter.libraryLoader), libraryUnloader(parameter.libraryUnloader), nativeCallerLoader(parameter.nativeCallerLoader), libraries(0), code(0), data(0)
 {
 	functionCharacteristic = deserializer->Deserialize<uint32>();
 	kernelLibrary = new RuntimeLibrary(kernel, deserializer);

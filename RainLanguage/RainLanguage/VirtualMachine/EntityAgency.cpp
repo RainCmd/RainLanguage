@@ -1,6 +1,7 @@
 ﻿#include "EntityAgency.h"
 #include "Kernel.h"
 #include "../Serialization.h"
+#include "VirtualMachine.h"
 
 EntityAgency::EntityAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), slots(parameter->entityCapacity), frees(0), map(parameter->entityCapacity), reference(parameter->onReferenceEntity), release(parameter->onReleaseEntity)
 {
@@ -66,7 +67,7 @@ void EntityAgency::Serialize(Serializer* serializer)
 	serializer->SerializeList(frees);
 }
 
-EntityAgency::EntityAgency(Kernel* kernel, Deserializer* deserializer) :kernel(kernel), slots(0), frees(0), map(0), reference(NULL), release(NULL)
+EntityAgency::EntityAgency(Kernel* kernel, Deserializer* deserializer, const DeserializeParameter& parameter) :kernel(kernel), slots(0), frees(0), map(0), reference(parameter.onReferenceEntity), release(parameter.onReleaseEntity)
 {
 	uint32 count = deserializer->Deserialize<uint32>();
 	slots.SetCount(count);

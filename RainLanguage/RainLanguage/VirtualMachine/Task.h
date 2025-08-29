@@ -4,6 +4,8 @@
 
 class Kernel;
 class Invoker;
+class Serializer;
+struct Deserializer;
 class Task
 {
 public:
@@ -40,5 +42,8 @@ public:
 	void Abort();
 	void Recycle();
 	~Task();
+
+	void Serialize(Serializer* serializer);
+	Task(Kernel* kernel, Deserializer* deserializer, Dictionary<uint64, Invoker*, true>* invokers);
 };
 

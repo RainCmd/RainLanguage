@@ -6,6 +6,7 @@
 #include "Invoker.h"
 
 struct StartupParameter;
+struct DeserializeParameter;
 class Kernel;
 class Serializer;
 struct Deserializer;
@@ -78,6 +79,6 @@ public:
 	~TaskAgency();
 
 	void Serialize(Serializer* serializer);
-	TaskAgency(Kernel* kernel, Deserializer* deserializer);
+	TaskAgency(Kernel* kernel, Deserializer* deserializer, const DeserializeParameter& parameter);
 };
 
