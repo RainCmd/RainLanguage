@@ -8,6 +8,7 @@
 #include "TaskAgency.h"
 #include "Caller.h"
 #include "../Instruct.h"
+#include "../Serialization.h"
 
 LibraryAgency::LibraryAgency(Kernel* kernel, const StartupParameter* parameter) :kernel(kernel), kernelLibrary(NULL), libraryLoader(parameter->libraryLoader), libraryUnloader(parameter->libraryUnloader), nativeCallerLoader(parameter->nativeCallerLoader), libraries(1), code(0), data(0) {}
 
@@ -430,6 +431,29 @@ void LibraryAgency::Update()
 	for(uint32 i = 0; i < libraries.Count(); i++)
 		if(libraries[i]->debugger)
 			libraries[i]->debugger->OnUpdate();
+}
+
+void LibraryAgency::Serialize(Serializer* serializer)//todo debuggerBreakCount
+{
+	serializer->Serialize(functionCharacteristic);
+	kernelLibrary->Serialize(serializer);
+	serializer->Serialize(libraries.Count());
+	for(uint32 i = 0; i < libraries.Count(); i++)
+		libraries[i]->Serialize(serializer);
+	serializer->SerializeList(code);
+	serializer->SerializeList(data);
+}
+
+//todo 初始化libraryLoader，libraryUnloader， nativeCallerLoader
+LibraryAgency::LibraryAgency(Kernel* kernel, Deserializer* deserializer) :kernel(kernel), libraryLoader(NULL), libraryUnloader(NULL), nativeCallerLoader(NULL), libraries(0), code(0), data(0)
+{
+	functionCharacteristic = deserializer->Deserialize<uint32>();
+	kernelLibrary = new RuntimeLibrary(kernel, deserializer);
+	libraries.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < libraries.Count(); i++)
+		libraries[i] = new RuntimeLibrary(kernel, deserializer);
+	deserializer->Deserialize(code);
+	deserializer->Deserialize(data);
 }
 
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo)

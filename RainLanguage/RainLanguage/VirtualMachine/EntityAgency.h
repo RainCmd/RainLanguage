@@ -6,6 +6,8 @@
 
 struct StartupParameter;
 class Kernel;
+class Serializer;
+struct Deserializer;
 class EntityAgency
 {
 	struct Slot
@@ -26,6 +28,9 @@ public:
 	void Release(Entity entity);
 	inline bool IsValid(Entity entity) const { return entity != NULL && entity < slots.Count(); }
 	inline uint32 Count() { return map.Count(); }
+
+	void Serialize(Serializer* serializer);
+	explicit EntityAgency(Kernel* kernel, Deserializer* deserializer);
 	~EntityAgency();
 };
 

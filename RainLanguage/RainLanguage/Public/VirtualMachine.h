@@ -1228,3 +1228,7 @@ RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter);
 RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 
 RAINLANGUAGE void Delete(RainKernel*& kernel);
+
+RAINLANGUAGE RainBuffer<uint8>* Serialize(RainKernel* kernel);
+
+RAINLANGUAGE RainKernel* DeserializeKerenl(const uint8* data, uint32 size);

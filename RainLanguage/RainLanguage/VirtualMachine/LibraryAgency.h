@@ -10,6 +10,8 @@
 
 struct StartupParameter;
 class Kernel;
+class Serializer;
+struct Deserializer;
 class LibraryAgency
 {
 public:
@@ -85,6 +87,9 @@ public:
 	void OnBreakpoint(uint64 taskId, uint32 deep, uint32 address);
 	void OnException(uint64 taskId, const String& message);
 	void Update();
+
+	void Serialize(Serializer* serializer);
+	LibraryAgency(Kernel* kernel, Deserializer* deserializer);
 };
 
 void ReleaseTuple(Kernel* kernel, uint8* address, const TupleInfo& tupleInfo);

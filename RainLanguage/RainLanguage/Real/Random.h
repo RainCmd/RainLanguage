@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "../Language.h"
 
+class Serializer;
+struct Deserializer;
 struct Random
 {
 private:
@@ -11,5 +13,8 @@ public:
 	void SetSeed(integer seed);
 	inline integer Next() { return (integer)InternalSample() << 32 | InternalSample(); }
 	real NextReal();
+
+	void Serialize(Serializer* serializer);
+	explicit Random(Deserializer* deserializer);
 };
 

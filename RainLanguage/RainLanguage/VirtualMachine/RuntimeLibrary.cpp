@@ -2,6 +2,7 @@
 #include "Kernel.h"
 #include "LibraryAgency.h"
 #include "Debugger.h"
+#include "../Serialization.h"
 
 #define GET_LIBRARY_STRING(target) kernel->stringAgency->Add(library->stringAgency->Get(target)).index
 
@@ -196,7 +197,7 @@ void MakeLocalToGlobalMap(Kernel* kernel, LocalToGlobalMap* map, const Library* 
 	const ImportLibrary* importLibrary = &library->imports[index];
 	RuntimeLibrary* runtimeLibrary = kernel->libraryAgency->Load(GET_LIBRARY_STRING(importLibrary->spaces[0].name), true);
 	new (map)LocalToGlobalMap(runtimeLibrary, importLibrary->enums.Count(), importLibrary->structs.Count(), importLibrary->classes.Count(),
-							  importLibrary->interfaces.Count(), importLibrary->delegates.Count(), importLibrary->tasks.Count());
+		importLibrary->interfaces.Count(), importLibrary->delegates.Count(), importLibrary->tasks.Count());
 	for(uint32 x = 0; x < importLibrary->enums.Count(); x++)
 	{
 		const ImportEnum* importEnum = &importLibrary->enums[x];
@@ -870,4 +871,342 @@ RuntimeLibrary::~RuntimeLibrary()
 {
 	if(debugger) delete debugger;
 	debugger = NULL;
+}
+
+void Serialize(Serializer* serializer, const CallableInfo* info)
+{
+	serializer->SerializeList(info->returns.GetTypes());
+	serializer->SerializeList(info->returns.GetOffsets());
+	serializer->SerializeList(info->parameters.GetTypes());
+	serializer->SerializeList(info->parameters.GetOffsets());
+}
+void Serialize(Serializer* serializer, const DeclarationInfo* info)
+{
+	serializer->Serialize(info->isPublic);
+	serializer->SerializeList(info->attributes);
+	serializer->Serialize(info->name);
+}
+void Serialize(Serializer* serializer, const RuntimeInfo* info)
+{
+	Serialize(serializer, (DeclarationInfo*)info);
+	serializer->Serialize(info->space);
+}
+void Serialize(Serializer* serializer, const GCFieldInfo* info)
+{
+	serializer->SerializeList(info->handleFields);
+	serializer->SerializeList(info->stringFields);
+	serializer->SerializeList(info->entityFields);
+}
+
+void RuntimeLibrary::Serialize(Serializer* serializer)
+{
+	serializer->Serialize(index);
+	serializer->Serialize(codeOffset);
+	serializer->Serialize(dataOffset);
+	serializer->Serialize(lambdaStart);
+	serializer->Serialize(spaces.Count());
+	for(uint32 i = 0; i < spaces.Count(); i++)
+	{
+		const RuntimeSpace* space = &spaces[i];
+		serializer->Serialize(space->reflection);
+		serializer->Serialize(space->name);
+		serializer->Serialize(space->parent);
+		serializer->SerializeList(space->attributes);
+		serializer->SerializeList(space->children);
+		serializer->SerializeList(space->variables);
+		serializer->SerializeList(space->enums);
+		serializer->SerializeList(space->structs);
+		serializer->SerializeList(space->classes);
+		serializer->SerializeList(space->interfaces);
+		serializer->SerializeList(space->delegates);
+		serializer->SerializeList(space->tasks);
+		serializer->SerializeList(space->functions);
+		serializer->SerializeList(space->natives);
+	}
+	serializer->Serialize(variables.Count());
+	for(uint32 i = 0; i < variables.Count(); i++)
+	{
+		const RuntimeVariable* variable = &variables[i];
+		::Serialize(serializer, (RuntimeInfo*)variable);
+		serializer->Serialize(variable->type);
+		serializer->Serialize(variable->address);
+		serializer->Serialize(variable->readonly);
+	}
+	serializer->Serialize(enums.Count());
+	for(uint32 i = 0; i < enums.Count(); i++)
+	{
+		const RuntimeEnum* enumeration = &enums[i];
+		::Serialize(serializer, (RuntimeInfo*)enumeration);
+		serializer->SerializeList(enumeration->values);
+	}
+	serializer->Serialize(structs.Count());
+	for(uint32 x = 0; x < structs.Count(); x++)
+	{
+		const RuntimeStruct* structure = &structs[x];
+		::Serialize(serializer, (RuntimeInfo*)structure);
+		::Serialize(serializer, (GCFieldInfo*)structure);
+		serializer->Serialize(structure->variables.Count());
+		for(uint32 y = 0; y < structure->variables.Count(); y++)
+		{
+			const RuntimeMemberVariable* variable = &structure->variables[y];
+			::Serialize(serializer, (RuntimeInfo*)variable);
+			serializer->Serialize(variable->type);
+			serializer->Serialize(variable->address);
+			serializer->Serialize(variable->readonly);
+		}
+		serializer->SerializeList(structure->functions);
+		serializer->Serialize(structure->size);
+		serializer->Serialize(structure->alignment);
+	}
+	serializer->Serialize(classes.Count());
+	for(uint32 x = 0; x < classes.Count(); x++)
+	{
+		const RuntimeClass* runtimeClass = &classes[x];
+		::Serialize(serializer, (RuntimeInfo*)runtimeClass);
+		::Serialize(serializer, (GCFieldInfo*)runtimeClass);
+		serializer->SerializeList(runtimeClass->parents);
+		serializer->Serialize(runtimeClass->inherits.Count());
+		Set<Declaration, true>::Iterator iterator = runtimeClass->inherits.GetIterator();
+		while(iterator.Next())
+			serializer->Serialize(iterator.Current());
+		serializer->Serialize(runtimeClass->offset);
+		serializer->Serialize(runtimeClass->size);
+		serializer->Serialize(runtimeClass->alignment);
+		serializer->SerializeList(runtimeClass->constructors);
+		serializer->Serialize(runtimeClass->variables.Count());
+		for(uint32 y = 0; y < runtimeClass->variables.Count(); y++)
+		{
+			const RuntimeMemberVariable* variable = &runtimeClass->variables[y];
+			::Serialize(serializer, (RuntimeInfo*)variable);
+			serializer->Serialize(variable->type);
+			serializer->Serialize(variable->address);
+			serializer->Serialize(variable->readonly);
+		}
+		serializer->SerializeList(runtimeClass->functions);
+		serializer->Serialize(runtimeClass->relocations.Count());
+		Dictionary<uint32, MemberFunction, true>::Iterator iterator2 = runtimeClass->relocations.GetIterator();
+		while(iterator2.Next())
+		{
+			serializer->Serialize(iterator2.CurrentKey());
+			serializer->Serialize(iterator2.CurrentValue());
+		}
+		serializer->Serialize(runtimeClass->destructor);
+	}
+	serializer->Serialize(interfaces.Count());
+	for(uint32 x = 0; x < interfaces.Count(); x++)
+	{
+		const RuntimeInterface* runtimeInterface = &interfaces[x];
+		::Serialize(serializer, (RuntimeInfo*)runtimeInterface);
+		serializer->Serialize(runtimeInterface->inherits.Count());
+		Set<Declaration, true>::Iterator iterator = runtimeInterface->inherits.GetIterator();
+		while(iterator.Next())
+			serializer->Serialize(iterator.Current());
+		serializer->Serialize(runtimeInterface->functions.Count());
+		for(uint32 y = 0; y < runtimeInterface->functions.Count(); y++)
+		{
+			const RuntimeInterface::FunctionInfo* function = &runtimeInterface->functions[y];
+			::Serialize(serializer, (DeclarationInfo*)function);
+			::Serialize(serializer, (CallableInfo*)function);
+			serializer->Serialize(function->characteristic);
+		}
+	}
+	serializer->Serialize(delegates.Count());
+	for(uint32 i = 0; i < delegates.Count(); i++)
+	{
+		const RuntimeDelegate* runtimeDelegate = &delegates[i];
+		::Serialize(serializer, (RuntimeInfo*)runtimeDelegate);
+		::Serialize(serializer, (CallableInfo*)runtimeDelegate);
+	}
+	serializer->Serialize(tasks.Count());
+	for(uint32 i = 0; i < tasks.Count(); i++)
+	{
+		const RuntimeTask* runtimeTask = &tasks[i];
+		::Serialize(serializer, (RuntimeInfo*)runtimeTask);
+		serializer->SerializeList(runtimeTask->returns.GetTypes());
+		serializer->SerializeList(runtimeTask->returns.GetOffsets());
+		serializer->Serialize(runtimeTask->reflectionReturns);
+	}
+	serializer->Serialize(functions.Count());
+	for(uint32 i = 0; i < functions.Count(); i++)
+	{
+		const RuntimeFunction* function = &functions[i];
+		::Serialize(serializer, (RuntimeInfo*)function);
+		::Serialize(serializer, (CallableInfo*)function);
+		serializer->Serialize(function->entry);
+	}
+	serializer->Serialize(natives.Count());
+	for(uint32 i = 0; i < natives.Count(); i++)
+	{
+		const RuntimeNative* native = &natives[i];
+		::Serialize(serializer, (RuntimeInfo*)native);
+		::Serialize(serializer, (CallableInfo*)native);
+	}
+}
+
+void Deserialize(Deserializer* deserializer, CallableInfo* info)
+{
+	deserializer->Deserialize(info->returns.GetTypes());
+	deserializer->Deserialize(info->returns.GetOffsets());
+	deserializer->Deserialize(info->parameters.GetTypes());
+	deserializer->Deserialize(info->parameters.GetOffsets());
+}
+void Deserialize(Deserializer* deserializer, DeclarationInfo* info)
+{
+	info->isPublic = deserializer->Deserialize<bool>();
+	deserializer->Deserialize(info->attributes);
+	info->name = deserializer->Deserialize<string>();
+}
+void Deserialize(Deserializer* deserializer, RuntimeInfo* info)
+{
+	Deserialize(deserializer, (DeclarationInfo*)info);
+	info->space = deserializer->Deserialize<uint32>();
+}
+void Deserialize(Deserializer* deserializer, GCFieldInfo* info)
+{
+	deserializer->Deserialize(info->handleFields);
+	deserializer->Deserialize(info->stringFields);
+	deserializer->Deserialize(info->entityFields);
+}
+RuntimeLibrary::RuntimeLibrary(Kernel* kernel, Deserializer* deserializer) :kernel(kernel), debugger(NULL),
+spaces(0), variables(0), enums(0), structs(0), classes(0), interfaces(0), delegates(0), tasks(0), functions(0), natives(0)
+{
+	index = deserializer->Deserialize<uint32>();
+	codeOffset = deserializer->Deserialize<uint32>();
+	dataOffset = deserializer->Deserialize<uint32>();
+	lambdaStart = deserializer->Deserialize<uint32>();
+	spaces.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < spaces.Count(); i++)
+	{
+		RuntimeSpace* space = &spaces[i];
+		space->reflection = deserializer->Deserialize<Handle>();
+		space->name = deserializer->Deserialize<string>();
+		space->parent = deserializer->Deserialize<uint32>();
+		deserializer->Deserialize(space->attributes);
+		deserializer->Deserialize(space->children);
+		deserializer->Deserialize(space->variables);
+		deserializer->Deserialize(space->enums);
+		deserializer->Deserialize(space->structs);
+		deserializer->Deserialize(space->classes);
+		deserializer->Deserialize(space->interfaces);
+		deserializer->Deserialize(space->delegates);
+		deserializer->Deserialize(space->tasks);
+		deserializer->Deserialize(space->functions);
+		deserializer->Deserialize(space->natives);
+	}
+	variables.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < variables.Count(); i++)
+	{
+		RuntimeVariable* variable = &variables[i];
+		::Deserialize(deserializer, (RuntimeInfo*)variable);
+		variable->type = deserializer->Deserialize<Type>();
+		variable->address = deserializer->Deserialize<uint32>();
+		variable->readonly = deserializer->Deserialize<bool>();
+	}
+	enums.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < enums.Count(); i++)
+	{
+		RuntimeEnum* enumeration = &enums[i];
+		::Deserialize(deserializer, (RuntimeInfo*)enumeration);
+		deserializer->Deserialize(enumeration->values);
+	}
+	structs.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 x = 0; x < structs.Count(); x++)
+	{
+		RuntimeStruct* structure = &structs[x];
+		::Deserialize(deserializer, (RuntimeInfo*)structure);
+		::Deserialize(deserializer, (GCFieldInfo*)structure);
+		structure->variables.SetCount(deserializer->Deserialize<uint32>());
+		for(uint32 y = 0; y < structure->variables.Count(); y++)
+		{
+			RuntimeMemberVariable* variable = &structure->variables[y];
+			::Deserialize(deserializer, (RuntimeInfo*)variable);
+			variable->type = deserializer->Deserialize<Type>();
+			variable->address = deserializer->Deserialize<uint32>();
+			variable->readonly = deserializer->Deserialize<bool>();
+		}
+		deserializer->Deserialize(structure->functions);
+		structure->size = deserializer->Deserialize<uint32>();
+		structure->alignment = deserializer->Deserialize<uint8>();
+	}
+	classes.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 x = 0; x < classes.Count(); x++)
+	{
+		RuntimeClass* runtimeClass = &classes[x];
+		::Deserialize(deserializer, (RuntimeInfo*)runtimeClass);
+		::Deserialize(deserializer, (GCFieldInfo*)runtimeClass);
+		deserializer->Deserialize(runtimeClass->parents);
+		uint32 count = deserializer->Deserialize<uint32>();
+		while(count--)
+			runtimeClass->inherits.Add(deserializer->Deserialize<Declaration>());
+		runtimeClass->offset = deserializer->Deserialize<uint32>();
+		runtimeClass->size = deserializer->Deserialize<uint32>();
+		runtimeClass->alignment = deserializer->Deserialize<uint8>();
+		deserializer->Deserialize(runtimeClass->constructors);
+		runtimeClass->variables.SetCount(deserializer->Deserialize<uint32>());
+		for(uint32 y = 0; y < runtimeClass->variables.Count(); y++)
+		{
+			RuntimeMemberVariable* variable = &runtimeClass->variables[y];
+			::Deserialize(deserializer, (RuntimeInfo*)variable);
+			variable->type = deserializer->Deserialize<Type>();
+			variable->address = deserializer->Deserialize<uint32>();
+			variable->readonly = deserializer->Deserialize<bool>();
+		}
+		deserializer->Deserialize(runtimeClass->functions);
+		count = deserializer->Deserialize<uint32>();
+		while(count--)
+		{
+			uint32 key = deserializer->Deserialize<uint32>();
+			MemberFunction value = deserializer->Deserialize<MemberFunction>();
+			runtimeClass->relocations.Set(key, value);
+		}
+		runtimeClass->destructor = deserializer->Deserialize<uint32>();
+	}
+	interfaces.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 x = 0; x < interfaces.Count(); x++)
+	{
+		RuntimeInterface* runtimeInterface = &interfaces[x];
+		::Deserialize(deserializer, (RuntimeInfo*)runtimeInterface);
+		uint32 count = deserializer->Deserialize<uint32>();
+		while(count--)
+			runtimeInterface->inherits.Add(deserializer->Deserialize<Declaration>());
+		runtimeInterface->functions.SetCount(deserializer->Deserialize<uint32>());
+		for(uint32 y = 0; y < runtimeInterface->functions.Count(); y++)
+		{
+			RuntimeInterface::FunctionInfo* function = &runtimeInterface->functions[y];
+			::Deserialize(deserializer, (DeclarationInfo*)function);
+			::Deserialize(deserializer, (CallableInfo*)function);
+			function->characteristic = deserializer->Deserialize<uint32>();
+		}
+	}
+	delegates.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < delegates.Count(); i++)
+	{
+		RuntimeDelegate* runtimeDelegate = &delegates[i];
+		::Deserialize(deserializer, (RuntimeInfo*)runtimeDelegate);
+		::Deserialize(deserializer, (CallableInfo*)runtimeDelegate);
+	}
+	tasks.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < tasks.Count(); i++)
+	{
+		RuntimeTask* runtimeTask = &tasks[i];
+		::Deserialize(deserializer, (RuntimeInfo*)runtimeTask);
+		deserializer->Deserialize(runtimeTask->returns.GetTypes());
+		deserializer->Deserialize(runtimeTask->returns.GetOffsets());
+		runtimeTask->reflectionReturns = deserializer->Deserialize<Handle>();
+	}
+	functions.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < functions.Count(); i++)
+	{
+		RuntimeFunction* function = &functions[i];
+		::Deserialize(deserializer, (RuntimeInfo*)function);
+		::Deserialize(deserializer, (CallableInfo*)function);
+		function->entry = deserializer->Deserialize<uint32>();
+	}
+	natives.SetCount(deserializer->Deserialize<uint32>());
+	for(uint32 i = 0; i < natives.Count(); i++)
+	{
+		RuntimeNative* native = &natives[i];
+		::Deserialize(deserializer, (RuntimeInfo*)native);
+		::Deserialize(deserializer, (CallableInfo*)native);
+	}
 }

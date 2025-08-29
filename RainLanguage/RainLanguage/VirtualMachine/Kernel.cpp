@@ -1,5 +1,6 @@
 ﻿#include "Kernel.h"
 #include "../String.h"
+#include "../Serialization.h"
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
@@ -351,6 +352,14 @@ Kernel::~Kernel()
 	delete libraryAgency; libraryAgency = NULL;
 	delete entityAgency; entityAgency = NULL;
 	delete stringAgency; stringAgency = NULL;
+}
+
+Kernel::Kernel(Deserializer* deserializer) : share(NULL), random(deserializer)
+{
+	stringAgency = new StringAgency(deserializer);
+	entityAgency = new EntityAgency(this, deserializer);
+	libraryAgency = new LibraryAgency(this, deserializer);
+	//todo 反序列化
 }
 
 integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementName, uint32 elementNameLength)
