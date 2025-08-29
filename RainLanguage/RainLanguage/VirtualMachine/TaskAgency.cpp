@@ -132,3 +132,14 @@ TaskAgency::~TaskAgency()
 	}
 	free = NULL;
 }
+
+void TaskAgency::Serialize(Serializer* serializer)
+{
+	ASSERT(current, "不能在运行时进行序列化");
+	//todo 序列化task agency
+}
+
+TaskAgency::TaskAgency(Kernel* kernel, Deserializer* deserializer) :kernel(kernel), tasks(0), invokerPool(0), invokerMap(0)
+{
+	//todo 反序列化task agency
+}

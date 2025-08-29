@@ -10,6 +10,8 @@
 struct StartupParameter;
 class Kernel;
 struct RuntimeClass;
+class Serializer;
+struct Deserializer;
 class HeapAgency
 {
 	struct Head
@@ -130,6 +132,9 @@ public:
 	uint32 CountHandle();
 
 	~HeapAgency();
+
+	void Serialize(Serializer* serializer);
+	HeapAgency(Kernel* kernel, Deserializer* deserializer);
 };
 
 String StrongBox(Kernel* kernel, const Type& type, uint8* address, Handle& result);

@@ -7,6 +7,8 @@
 
 struct StartupParameter;
 class Kernel;
+class Serializer;
+struct Deserializer;
 class TaskAgency
 {
 private:
@@ -74,5 +76,8 @@ public:
 	inline Task* GetCurrentTask() { return current; }
 	uint32 CountTask();
 	~TaskAgency();
+
+	void Serialize(Serializer* serializer);
+	TaskAgency(Kernel* kernel, Deserializer* deserializer);
 };
 

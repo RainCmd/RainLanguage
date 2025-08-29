@@ -213,7 +213,7 @@ extern "C"
 	RAINLANGUAGE void Extern_DeleteRainLibrary(RainLibrary* library);
 	RAINLANGUAGE const RainBuffer<uint8>* Extern_SerializeRainProgramDatabase(RainProgramDatabase* database);
 	RAINLANGUAGE const RainProgramDatabase* Extern_DeserializeRainProgramDatabase(uint8* data, uint32 size);
-	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const character*& fileName, uint32& fileNameLength, uint32& line);//todo
+	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const character*& fileName, uint32& fileNameLength, uint32& line);
 	RAINLANGUAGE void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database);
 
 	RAINLANGUAGE void Extern_RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);

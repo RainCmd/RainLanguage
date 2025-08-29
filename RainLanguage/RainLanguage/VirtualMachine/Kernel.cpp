@@ -356,10 +356,12 @@ Kernel::~Kernel()
 
 Kernel::Kernel(Deserializer* deserializer) : share(NULL), random(deserializer)
 {
+	share = new KernelShare(this);
 	stringAgency = new StringAgency(deserializer);
 	entityAgency = new EntityAgency(this, deserializer);
 	libraryAgency = new LibraryAgency(this, deserializer);
-	//todo 反序列化
+	taskAgency = new TaskAgency(this, deserializer);
+	heapAgency = new HeapAgency(this, deserializer);
 }
 
 integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementName, uint32 elementNameLength)

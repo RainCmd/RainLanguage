@@ -4,6 +4,8 @@
 #include "../Real/Random.h"
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
+#include "TaskAgency.h"
+#include "HeapAgency.h"
 
 RainBuffer<uint8>* Serialize(Kernel* kernel)
 {
@@ -13,7 +15,8 @@ RainBuffer<uint8>* Serialize(Kernel* kernel)
 	kernel->stringAgency->Serialize(serializer);
 	kernel->entityAgency->Serialize(serializer);
 	kernel->libraryAgency->Serialize(serializer);
-	//todo ÐòÁÐ»¯
+	kernel->taskAgency->Serialize(serializer);
+	kernel->heapAgency->Serialize(serializer);
 	return serializer;
 }
 
@@ -24,5 +27,6 @@ RainBuffer<uint8>* Serialize(RainKernel* kernel)
 
 RainKernel* DeserializeKerenl(const uint8* data, uint32 size)
 {
-	return NULL;
+	Deserializer deserializer(data, size);
+	return new Kernel(&deserializer);
 }
