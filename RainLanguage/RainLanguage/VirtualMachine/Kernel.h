@@ -39,6 +39,7 @@ public:
 	RainFunctions FindFunctions(const character* name, bool allowNoPublic);
 	const RainKernelState GetState();
 	uint32 GC(bool full);
+	InvokerWrapper FindRunningInvoker(uint64 instanceID) const;
 	void Update();
 
 	~Kernel();

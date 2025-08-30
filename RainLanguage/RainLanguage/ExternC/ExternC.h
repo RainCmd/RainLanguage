@@ -76,6 +76,7 @@ extern "C"
 	RAINLANGUAGE RainFunctions* Extern_KernelFindFunctions(RainKernel* kernel, character* name, bool allowNoPublic);
 	RAINLANGUAGE Extern_RainKernelState Extern_KernelGetState(RainKernel* kernel);
 	RAINLANGUAGE uint32 Extern_KernelGC(RainKernel* kernel, bool full);
+	RAINLANGUAGE InvokerWrapper* Extern_KernelFindRunningInvoker(RainKernel* kernel, uint64 instanceID);
 	RAINLANGUAGE void Extern_KernelUpdate(RainKernel* kernel);
 
 	RAINLANGUAGE bool Extern_RainFunctionIsValid(RainFunction* function);

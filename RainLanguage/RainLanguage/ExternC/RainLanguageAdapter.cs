@@ -1534,6 +1534,15 @@ namespace RainLanguage
                 return KernelGC(kernel, full);
             }
             /// <summary>
+            /// 查找正在运行的调用
+            /// </summary>
+            /// <param name="instanceID">调用的实例id</param>
+            /// <returns>调用</returns>
+            public RainInvoker FindRunningInvoker(ulong instanceID)
+            {
+                return new RainInvoker(KernelFindRunningInvoker(kernel, instanceID));
+            }
+            /// <summary>
             /// 虚拟机的逻辑更新
             /// </summary>
             public void Update()
@@ -1572,6 +1581,8 @@ namespace RainLanguage
             private extern static KernelState KernelGetState(void* kernel);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelGC", CallingConvention = CallingConvention.Cdecl)]
             private extern static uint KernelGC(void* kernel, bool full);
+            [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelFindRunningInvoker", CallingConvention = CallingConvention.Cdecl)]
+            private extern static void* KernelFindRunningInvoker(void* kernel, ulong instanceID);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_KernelUpdate", CallingConvention = CallingConvention.Cdecl)]
             private extern static void KernelUpdate(void* kernel);
             [DllImport(RainLanguageDLLName, EntryPoint = "Extern_DeleteKernel", CallingConvention = CallingConvention.Cdecl)]

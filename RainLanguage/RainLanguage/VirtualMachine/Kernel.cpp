@@ -332,6 +332,14 @@ uint32 Kernel::GC(bool full)
 	return top - heapAgency->GetHeapTop();
 }
 
+InvokerWrapper Kernel::FindRunningInvoker(uint64 instanceID) const
+{
+	for(Task* index = taskAgency->GetHeadTask(); index; index = index->next)
+		if(index->invoker->instanceID == instanceID)
+			return InvokerWrapper(index->invoker);
+	return InvokerWrapper();
+}
+
 void Kernel::Update()
 {
 	libraryAgency->Update();

@@ -159,6 +159,11 @@ uint32 Extern_KernelGC(RainKernel* kernel, bool full)
 	return kernel->GC(full);
 }
 
+InvokerWrapper* Extern_KernelFindRunningInvoker(RainKernel* kernel, uint64 instanceID)
+{
+	return new InvokerWrapper(kernel->FindRunningInvoker(instanceID));
+}
+
 void Extern_KernelUpdate(RainKernel* kernel)
 {
 	kernel->Update();
