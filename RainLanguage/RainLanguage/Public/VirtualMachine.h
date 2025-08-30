@@ -1208,6 +1208,12 @@ public:
 	/// <param name="full">进行完整的垃圾回收</param>
 	/// <returns>本次垃圾回收释放的托管堆大小</returns>
 	virtual uint32 GC(bool full) = 0;
+	/// <summary>
+	/// 查找运行中的函数调用
+	/// </summary>
+	/// <param name="instanceID">调用的实例id</param>
+	/// <returns>函数调用</returns>
+	virtual InvokerWrapper FindRunningInvoker(uint64 instanceID) const = 0;
 
 	/// <summary>
 	/// 更新虚拟机
@@ -1228,3 +1234,40 @@ RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter);
 RAINLANGUAGE RainKernel* CreateKernel(const StartupParameter& parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 
 RAINLANGUAGE void Delete(RainKernel*& kernel);
+
+/// <summary>
+/// 序列化虚拟机
+/// </summary>
+/// <param name="kernel"></param>
+/// <returns></returns>
+/// <attention>
+/// 只有状态为InvokerState::Running的Invoker会被序列化。
+/// 如果序列化时存在非Running状态的Invoker，反序列化后的虚拟机后续的invoker的id可能会和序列化前不一致。
+/// </attention>
+RAINLANGUAGE RainBuffer<uint8>* Serialize(RainKernel* kernel);
+
+struct RAINLANGUAGE DeserializeParameter
+{
+	/// <summary>
+	/// 虚拟机引用和释放实体时的回调函数
+	/// </summary>
+	EntityAction onReferenceEntity, onReleaseEntity;
+	/// <summary>
+	/// 库加载器
+	/// </summary>
+	RainLibraryLoader libraryLoader;
+	/// <summary>
+	/// 库卸载器
+	/// </summary>
+	RainLibraryUnloader libraryUnloader;
+	/// <summary>
+	/// 本地调用的加载器
+	/// </summary>
+	NativeCallerLoader nativeCallerLoader;
+	/// <summary>
+	/// 任务异常的回调函数
+	/// </summary>
+	OnExceptionExit onExceptionExit;
+};
+
+RAINLANGUAGE RainKernel* DeserializeKerenl(const uint8* data, uint32 size, const DeserializeParameter& parameter);

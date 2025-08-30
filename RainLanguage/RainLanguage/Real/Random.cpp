@@ -1,5 +1,6 @@
 ﻿#include "Random.h"
 #include "MathReal.h"
+#include "../Serialization.h"
 
 #undef INT32_MAX
 constexpr int32 INT32_MAX = 0x7FFFFFFF;
@@ -69,4 +70,18 @@ real Random::NextReal()
 #else
 	return (real)InternalSample() * 4.6566128752457969E-10;
 #endif // FIXED
+}
+
+void Random::Serialize(Serializer* serializer)
+{
+	serializer->Serialize(inext);
+	serializer->Serialize(inextp);
+	serializer->Serialize(seedArray, 56);
+}
+
+Random::Random(Deserializer* deserializer)
+{
+	inext = deserializer->Deserialize<int32>();
+	inextp = deserializer->Deserialize<int32>();
+	deserializer->Deserialize<int32>(seedArray, 56);
 }

@@ -69,10 +69,14 @@ extern "C"
 	RAINLANGUAGE RainKernel* Extern_CreateKernel2(StartupParameter parameter, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);
 	RAINLANGUAGE void Extern_DeleteKernel(RainKernel* kernel);
 
+	RAINLANGUAGE const RainBuffer<uint8>* Extern_SerializeKernel(RainKernel* kernel);
+	RAINLANGUAGE const RainKernel* Extern_DeserializeKernel(uint8* data, uint32 size, DeserializeParameter parameter);
+
 	RAINLANGUAGE RainFunction* Extern_KernelFindFunction(RainKernel* kernel, character* name, bool allowNoPublic);
 	RAINLANGUAGE RainFunctions* Extern_KernelFindFunctions(RainKernel* kernel, character* name, bool allowNoPublic);
 	RAINLANGUAGE Extern_RainKernelState Extern_KernelGetState(RainKernel* kernel);
 	RAINLANGUAGE uint32 Extern_KernelGC(RainKernel* kernel, bool full);
+	RAINLANGUAGE InvokerWrapper* Extern_KernelFindRunningInvoker(RainKernel* kernel, uint64 instanceID);
 	RAINLANGUAGE void Extern_KernelUpdate(RainKernel* kernel);
 
 	RAINLANGUAGE bool Extern_RainFunctionIsValid(RainFunction* function);
@@ -213,7 +217,7 @@ extern "C"
 	RAINLANGUAGE void Extern_DeleteRainLibrary(RainLibrary* library);
 	RAINLANGUAGE const RainBuffer<uint8>* Extern_SerializeRainProgramDatabase(RainProgramDatabase* database);
 	RAINLANGUAGE const RainProgramDatabase* Extern_DeserializeRainProgramDatabase(uint8* data, uint32 size);
-	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const character*& fileName, uint32& fileNameLength, uint32& line);//todo
+	RAINLANGUAGE void Extern_RainProgramDatabaseGetPosition(RainProgramDatabase* database, uint32 instructAddress, const character*& fileName, uint32& fileNameLength, uint32& line);
 	RAINLANGUAGE void Extern_DeleteRainProgramDatabase(RainProgramDatabase* database);
 
 	RAINLANGUAGE void Extern_RegistDebugger(RainKernel* kernel, RainProgramDatabaseLoader loader, RainProgramDatabaseUnloader unloader);

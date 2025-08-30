@@ -39,6 +39,7 @@ public:
 	RainFunctions FindFunctions(const character* name, bool allowNoPublic);
 	const RainKernelState GetState();
 	uint32 GC(bool full);
+	InvokerWrapper FindRunningInvoker(uint64 instanceID) const;
 	void Update();
 
 	~Kernel();
@@ -46,6 +47,8 @@ public:
 	Kernel(const Kernel&) = delete;
 	Kernel(Kernel&&) = delete;
 	Kernel(const Kernel&&) = delete;
+
+	explicit Kernel(Deserializer* deserializer, const DeserializeParameter& parameter);
 };
 
 inline RainType GetRainType(const Type& type)

@@ -4,6 +4,8 @@
 
 class Kernel;
 class RainDebugger;
+class Serializer;
+struct Deserializer;
 class RuntimeLibrary
 {
 public:
@@ -28,4 +30,7 @@ public:
 	RuntimeLibrary(const RuntimeLibrary&&) = delete;
 	void InitRuntimeData(const Library* library, uint32 selfLibraryIndex);
 	~RuntimeLibrary();
+
+	void Serialize(Serializer* serializer);
+	RuntimeLibrary(Kernel* kernel, Deserializer* deserializer);
 };

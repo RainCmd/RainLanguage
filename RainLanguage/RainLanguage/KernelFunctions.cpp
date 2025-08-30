@@ -2643,7 +2643,7 @@ String task_GetResults(KernelInvokerParameter parameter)//handle[] task.()
 	Handle& result = RETURN_VALUE(Handle, 0);
 	parameter.kernel->heapAgency->StrongRelease(result);
 	String error;
-	result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, invoker->info->returns.Count(), error);
+	result = parameter.kernel->heapAgency->Alloc(TYPE_Handle, invoker->info.returns.Count(), error);
 	if(!error.IsEmpty()) return error;
 	parameter.kernel->heapAgency->StrongReference(result);
 	error = invoker->GetReturns(result);

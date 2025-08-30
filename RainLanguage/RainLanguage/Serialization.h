@@ -44,10 +44,15 @@ struct Deserializer
 		return *pointer;
 	}
 	template<typename T>
+	void Deserialize(T* pointer, uint32 count)
+	{
+		Mcopy((T*)(data + point), pointer, count);
+		point += SIZE(T) * count;
+	}
+	template<typename T>
 	void Deserialize(List<T, true>& list)
 	{
 		list.SetCount(Deserialize<uint32>());
-		Mcopy((T*)(data + point), list.GetPointer(), list.Count());
-		point += SIZE(T) * list.Count();
+		Deserialize(list.GetPointer(), list.Count());
 	}
 };

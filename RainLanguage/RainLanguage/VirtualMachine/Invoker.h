@@ -1,12 +1,14 @@
 ﻿#pragma once
 #include "../String.h"
 #include "../Type.h"
+#include "../DeclarationInfos.h"
 #include "Vector.h"
 #include "VirtualMachineDefinitions.h"
 
 class Kernel;
 class Task;
-struct CallableInfo;
+class Serializer;
+struct Deserializer;
 class Invoker
 {
 public:
@@ -15,13 +17,13 @@ public:
 	List<uint32, true> exceptionStackFrames;
 	uint64 instanceID;
 	InvokerState state;
-	const CallableInfo* info;
+	CallableInfo info;
 	uint32 entry;
 	String name;
 	String error;
 	uint32 hold;
 	Task* task;
-	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(NULL), entry(NULL), name(), error(), hold(0), task(NULL) {}
+	inline Invoker(Kernel* kernel, uint64 instanceID) :kernel(kernel), data(64), exceptionStackFrames(0), instanceID(instanceID), state(InvokerState::Invalid), info(CallableInfo_EMPTY), entry(NULL), name(), error(), hold(0), task(NULL) {}
 	inline void StateAssert(InvokerState invokerState) const { ASSERT(state == invokerState, "无效的操作"); }
 	void ReturnTypeAssert(uint32 index, Type type) const;
 	void ParameterTypeAssert(uint32 index, Type type) const;
@@ -76,4 +78,7 @@ public:
 	void Start(bool immediately, bool ignoreWait);
 	void Abort();
 	void Exception(const String& message);
+
+	void Serialize(Serializer* serializer);
+	Invoker(Kernel* kernel, Deserializer* deserializer);
 };

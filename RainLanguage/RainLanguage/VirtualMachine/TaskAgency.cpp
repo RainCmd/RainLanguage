@@ -2,6 +2,7 @@
 #include "Task.h"
 #include "VirtualMachine.h"
 #include "Exceptions.h"
+#include "../Serialization.h"
 
 Invoker* TaskAgency::GetInvoker()
 {
@@ -131,4 +132,58 @@ TaskAgency::~TaskAgency()
 		delete task;
 	}
 	free = NULL;
+}
+
+void TaskAgency::Serialize(Serializer* serializer)
+{
+	ASSERT(current, "不能在运行时进行序列化");
+	uint32 count = 0;
+	for(Task* index = head; index; index = index->next) count++;
+	serializer->Serialize(count);
+	for(Task* index = head; index; index = index->next)
+		index->invoker->Serialize(serializer);
+	for(Task* index = head; index; index = index->next)
+		index->Serialize(serializer);
+	serializer->Serialize(invokerCount);
+	serializer->Serialize(invokerInstance);
+	serializer->Serialize(invokerPool.Count());
+	for(uint32 i = 0; i < invokerPool.Count(); i++)
+		serializer->Serialize((uint32)invokerPool[i]->instanceID);
+	serializer->Serialize(invokerMap.Count());
+	Dictionary<uint64, Invoker*, true>::Iterator iterator = invokerMap.GetIterator();
+	while(iterator.Next())
+		serializer->Serialize(iterator.CurrentKey());
+	serializer->Serialize(executeStackCapacity);
+}
+
+TaskAgency::TaskAgency(Kernel* kernel, Deserializer* deserializer, const DeserializeParameter& parameter) :kernel(kernel), head(NULL), free(NULL), current(NULL), tasks(0), invokerPool(0), invokerMap(0), onExceptionExit(parameter.onExceptionExit)
+{
+	uint32 count = deserializer->Deserialize<uint32>();
+	Dictionary<uint64, Invoker*, true>* invokers = new Dictionary<uint64, Invoker*, true>(count);
+	for(uint32 i = 0; i < count; i++)
+	{
+		Invoker* invoker = new Invoker(kernel, deserializer);
+		invokers->Set(invoker->instanceID, invoker);
+	}
+	Task* index = head;
+	for(uint32 i = 0; i < count; i++)
+	{
+		Task* task = new Task(kernel, deserializer, invokers);
+		if(index) index->next = task;
+		else head = task;
+		index = task;
+	}
+	invokerCount = deserializer->Deserialize<uint32>();
+	invokerInstance = deserializer->Deserialize<uint32>();
+	count = deserializer->Deserialize<uint32>();
+	while(count--)
+		invokerPool.Add(new Invoker(kernel, deserializer->Deserialize<uint32>()));
+	count = deserializer->Deserialize<uint32>();
+	while(count--)
+	{
+		Invoker* invoker;
+		if(invokers->TryGet(deserializer->Deserialize<uint64>(), invoker)) invokerMap.Set(invoker->instanceID, invoker);
+		else EXCEPTION("invoker没找到，序列化逻辑有问题？");
+	}
+	executeStackCapacity = deserializer->Deserialize<uint32>();
 }

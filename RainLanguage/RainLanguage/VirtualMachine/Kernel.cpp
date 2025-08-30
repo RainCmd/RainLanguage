@@ -1,5 +1,6 @@
 ﻿#include "Kernel.h"
 #include "../String.h"
+#include "../Serialization.h"
 #include "EntityAgency.h"
 #include "LibraryAgency.h"
 #include "HeapAgency.h"
@@ -331,6 +332,14 @@ uint32 Kernel::GC(bool full)
 	return top - heapAgency->GetHeapTop();
 }
 
+InvokerWrapper Kernel::FindRunningInvoker(uint64 instanceID) const
+{
+	for(Task* index = taskAgency->GetHeadTask(); index; index = index->next)
+		if(index->invoker->instanceID == instanceID)
+			return InvokerWrapper(index->invoker);
+	return InvokerWrapper();
+}
+
 void Kernel::Update()
 {
 	libraryAgency->Update();
@@ -351,6 +360,16 @@ Kernel::~Kernel()
 	delete libraryAgency; libraryAgency = NULL;
 	delete entityAgency; entityAgency = NULL;
 	delete stringAgency; stringAgency = NULL;
+}
+
+Kernel::Kernel(Deserializer* deserializer, const DeserializeParameter& parameter) : share(NULL), random(deserializer)
+{
+	share = new KernelShare(this);
+	stringAgency = new StringAgency(deserializer);
+	entityAgency = new EntityAgency(this, deserializer, parameter);
+	libraryAgency = new LibraryAgency(this, deserializer, parameter);
+	taskAgency = new TaskAgency(this, deserializer, parameter);
+	heapAgency = new HeapAgency(this, deserializer);
 }
 
 integer GetEnumValue(Kernel* kernel, const Type& type, const character* elementName, uint32 elementNameLength)

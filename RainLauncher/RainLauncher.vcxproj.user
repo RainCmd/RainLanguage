@@ -9,8 +9,9 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>-path $(ProjectDir)..\..\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug -out $(ProjectDir)..\..\test\lib</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-path E:\Projects\VSCodePlugins\RainLanguageVSCode\RainLanguage\RainLauncher\..\..\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug -out E:\Projects\VSCodePlugins\RainLanguageVSCode\RainLanguage\RainLauncher\..\..\test\lib</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerCommandArguments>-path E:\Projects\VSCodePlugins\RainLanguageVSCode\RainLanguage\RainLauncher\..\..\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug -out E:\Projects\VSCodePlugins\RainLanguageVSCode\RainLanguage\RainLauncher\..\..\test\lib</RemoteDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFixed|x64'">
     <LocalDebuggerCommandArguments>-path $(ProjectDir)..\..\test -name 雨言测试工程 -errorlevel 4 -entry Main -timestep 10 -debug -out $(ProjectDir)..\..\test\lib</LocalDebuggerCommandArguments>

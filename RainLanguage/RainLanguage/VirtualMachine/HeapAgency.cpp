@@ -7,6 +7,7 @@
 #include "TaskAgency.h"
 #include "EntityAgency.h"
 #include "Exceptions.h"
+#include "../Serialization.h"
 
 inline bool IsTask(const Type& type)
 {
@@ -438,6 +439,37 @@ HeapAgency::~HeapAgency()
 	}
 	delete generations;
 	generations = NULL;
+}
+
+void HeapAgency::Serialize(Serializer* serializer)
+{
+	FullGC();
+	serializer->SerializeList(heads);
+	serializer->SerializeList(heap);
+	serializer->Serialize(free);
+	serializer->Serialize(head);
+	serializer->Serialize(tail);
+	serializer->Serialize(youngGeneration);
+	serializer->Serialize(maxGeneration);
+	serializer->Serialize(generations, maxGeneration);
+	serializer->Serialize(flag);
+	serializer->Serialize(gc);
+
+}
+
+HeapAgency::HeapAgency(Kernel* kernel, Deserializer* deserializer):kernel(kernel),heads(0), heap(0), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
+{
+	deserializer->Deserialize(heads);
+	deserializer->Deserialize(heap);
+	free = deserializer->Deserialize<uint32>();
+	head = deserializer->Deserialize<uint32>();
+	tail = deserializer->Deserialize<uint32>();
+	youngGeneration = deserializer->Deserialize<uint32>();
+	maxGeneration = deserializer->Deserialize<uint32>();
+	generations = Malloc<uint32>(maxGeneration);
+	deserializer->Deserialize(generations, maxGeneration);
+	flag = deserializer->Deserialize<bool>();
+	gc = deserializer->Deserialize<bool>();
 }
 
 inline String Box(Kernel* kernel, const Type& type, uint8* address, Handle& result)
