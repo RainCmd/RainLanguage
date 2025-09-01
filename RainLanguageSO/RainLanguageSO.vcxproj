@@ -657,6 +657,7 @@ python $(ProjectDir)to_utf8.py $(ProjectDir)RainLanguage\</Command>
     <ClCompile Include="RainLanguage\VirtualMachine\InvokerWrapper.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\Kernel.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\KernelLibraryGenerator.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\KernelSerialization.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\LibraryAgency.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\RuntimeInfo.cpp" />
     <ClCompile Include="RainLanguage\VirtualMachine\RuntimeLibrary.cpp" />

@@ -97,6 +97,7 @@
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\InitClosureStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\ForeachStatement.cpp" />
     <ClCompile Include="RainLanguage\Compiler\LogicGenerator\Statements\IteratorStatement.cpp" />
+    <ClCompile Include="RainLanguage\VirtualMachine\KernelSerialization.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RainLanguageSO.h" />
