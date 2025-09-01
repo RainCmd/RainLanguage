@@ -445,6 +445,7 @@ void HeapAgency::Serialize(Serializer* serializer)
 {
 	FullGC();
 	serializer->SerializeList(heads);
+	serializer->Serialize(heap.Capacity());
 	serializer->SerializeList(heap);
 	serializer->Serialize(free);
 	serializer->Serialize(head);
@@ -460,6 +461,8 @@ void HeapAgency::Serialize(Serializer* serializer)
 HeapAgency::HeapAgency(Kernel* kernel, Deserializer* deserializer):kernel(kernel),heads(0), heap(0), destructorCallable(CallableInfo(TupleInfo_EMPTY, TupleInfo(1, SIZE(Handle))))
 {
 	deserializer->Deserialize(heads);
+	uint32 capacity = deserializer->Deserialize<uint32>();
+	heap.SetCount(capacity);
 	deserializer->Deserialize(heap);
 	free = deserializer->Deserialize<uint32>();
 	head = deserializer->Deserialize<uint32>();
